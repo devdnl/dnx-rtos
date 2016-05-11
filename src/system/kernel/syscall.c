@@ -136,6 +136,7 @@ static void syscall_mutexcreate(syscallrq_t *rq);
 static void syscall_mutexdestroy(syscallrq_t *rq);
 static void syscall_queuecreate(syscallrq_t *rq);
 static void syscall_queuedestroy(syscallrq_t *rq);
+#if __ENABLE_NETWORK__ == _YES_
 static void syscall_netifup(syscallrq_t *rq);
 static void syscall_netifdown(syscallrq_t *rq);
 static void syscall_netifstatus(syscallrq_t *rq);
@@ -155,6 +156,7 @@ static void syscall_netshutdown(syscallrq_t *rq);
 static void syscall_netsendto(syscallrq_t *rq);
 static void syscall_netrecvfrom(syscallrq_t *rq);
 static void syscall_netgetaddress(syscallrq_t *rq);
+#endif
 
 /*==============================================================================
   Local objects
@@ -223,6 +225,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MUTEXDESTROY     ] = syscall_mutexdestroy,
         [SYSCALL_QUEUECREATE      ] = syscall_queuecreate,
         [SYSCALL_QUEUEDESTROY     ] = syscall_queuedestroy,
+#if __ENABLE_NETWORK__ == _YES_
         [SYSCALL_NETIFUP          ] = syscall_netifup,
         [SYSCALL_NETIFDOWN        ] = syscall_netifdown,
         [SYSCALL_NETIFSTATUS      ] = syscall_netifstatus,
@@ -242,6 +245,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETSENDTO        ] = syscall_netsendto,
         [SYSCALL_NETRECVFROM      ] = syscall_netrecvfrom,
         [SYSCALL_NETGETADDRESS    ] = syscall_netgetaddress,
+#endif
 };
 
 /*==============================================================================
@@ -1121,7 +1125,7 @@ static void syscall_system(syscallrq_t *rq)
 //        GETARG(pid_t *, pid);
 //        GETARG(sem_t **, exit_sem);
 
-        //TODO syscall system()
+        //TODO system() syscall
 }
 
 //==============================================================================
@@ -1477,6 +1481,7 @@ static void syscall_queuedestroy(syscallrq_t *rq)
         SETERRNO(err);
 }
 
+#if __ENABLE_NETWORK__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall up network.
@@ -1820,6 +1825,7 @@ static void syscall_netgetaddress(syscallrq_t *rq)
         SETERRNO(_net_socket_getaddress(socket, sockaddr));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
 /*==============================================================================
   End of file

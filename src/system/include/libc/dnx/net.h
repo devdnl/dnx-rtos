@@ -47,6 +47,8 @@ extern "C" {
 #include <kernel/builtinfunc.h>
 #include <stddef.h>
 #include <net/netm.h>
+#include <lib/unarg.h>
+#include <errno.h>
 
 /*==============================================================================
   Exported macros
@@ -81,9 +83,15 @@ extern "C" {
 //==============================================================================
 static inline int ifup(NET_family_t family, const NET_generic_config_t *config)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETIFUP, &result, &family, config);
         return result;
+#else
+        UNUSED_ARG2(family, config);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -98,9 +106,15 @@ static inline int ifup(NET_family_t family, const NET_generic_config_t *config)
 //==============================================================================
 static inline int ifdown(NET_family_t family)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETIFDOWN, &result, &family);
         return result;
+#else
+        UNUSED_ARG1(family);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -117,9 +131,15 @@ static inline int ifdown(NET_family_t family)
 //==============================================================================
 static inline int ifstatus(NET_family_t family, NET_generic_status_t *status)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETIFSTATUS, &result, &family, status);
         return result;
+#else
+        UNUSED_ARG2(family, status);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 
@@ -136,9 +156,15 @@ static inline int ifstatus(NET_family_t family, NET_generic_status_t *status)
 //==============================================================================
 static inline SOCKET *socket_new(NET_family_t family, NET_protocol_t protocol)
 {
+#if __ENABLE_NETWORK__ == _YES_
         SOCKET *socket = NULL;
         syscall(SYSCALL_NETSOCKETCREATE, &socket, &family, &protocol);
         return socket;
+#else
+        UNUSED_ARG2(family, protocol);
+        _errno = ENOTSUP;
+        return NULL;
+#endif
 }
 
 //==============================================================================
@@ -150,7 +176,11 @@ static inline SOCKET *socket_new(NET_family_t family, NET_protocol_t protocol)
 //==============================================================================
 static inline void socket_delete(SOCKET *socket)
 {
+#if __ENABLE_NETWORK__ == _YES_
         syscall(SYSCALL_NETSOCKETDESTROY, NULL, socket);
+#else
+        UNUSED_ARG1(socket);
+#endif
 }
 
 //==============================================================================
@@ -172,9 +202,15 @@ static inline void socket_delete(SOCKET *socket)
 //==============================================================================
 static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETBIND, &result, socket, sockAddr);
         return result;
+#else
+        UNUSED_ARG2(socket, sockAddr);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -190,9 +226,15 @@ static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sock
 //==============================================================================
 static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETCONNECT, &result, socket, sockAddr);
         return result;
+#else
+        UNUSED_ARG2(socket, sockAddr);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -207,9 +249,15 @@ static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *s
 //==============================================================================
 static inline int socket_disconnect(SOCKET *socket)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETDISCONNECT, &result, socket);
         return result;
+#else
+        UNUSED_ARG1(socket);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -224,9 +272,15 @@ static inline int socket_disconnect(SOCKET *socket)
 //==============================================================================
 static inline int socket_listen(SOCKET *socket)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETLISTEN, &result, socket);
         return result;
+#else
+        UNUSED_ARG1(socket);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -236,15 +290,21 @@ static inline int socket_listen(SOCKET *socket)
  * @param socket        The listen connection
  * @param new_socket    The new connection
  *
- * @return On error 0 is returned end @ref errno value is set appropriately,
- *         otherwise new socket descriptor.
+ * @return On error -1 is returned end @ref errno value is set appropriately,
+ *         otherwise 0 and new socket is set.
  */
 //==============================================================================
 static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETACCEPT, &result, socket, new_socket);
         return result;
+#else
+        UNUSED_ARG2(socket, new_socket);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -266,9 +326,15 @@ static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 //==============================================================================
 static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETRECV, &result, socket, buf, &len, &flags);
         return result;
+#else
+        UNUSED_ARG4(socket, buf, len, flags);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -286,7 +352,13 @@ static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t
 //==============================================================================
 static inline int socket_read(SOCKET *socket, void *buf, size_t len)
 {
+#if __ENABLE_NETWORK__ == _YES_
         return socket_recv(socket, buf, len, NET_FLAGS__NONE);
+#else
+        UNUSED_ARG3(socket, buf, len);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -311,9 +383,15 @@ static inline int socket_recvfrom(SOCKET                 *socket,
                                   NET_flags_t             flags,
                                   NET_generic_sockaddr_t *from_sockaddr)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETRECVFROM, &result, socket, buf, &len, &flags, from_sockaddr);
         return result;
+#else
+        UNUSED_ARG5(socket, buf, len, flags, from_sockaddr);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -338,9 +416,15 @@ static inline int socket_sendto(SOCKET                       *socket,
                                 NET_flags_t                   flags,
                                 const NET_generic_sockaddr_t *to_sockaddr)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSENDTO, &result, socket, buf, &len, &flags, to_sockaddr);
         return result;
+#else
+        UNUSED_ARG5(socket, buf, len, flags, to_sockaddr);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -363,9 +447,15 @@ static inline int socket_sendto(SOCKET                       *socket,
 //==============================================================================
 static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSEND, &result, socket, buf, &len, &flags);
         return result;
+#else
+        UNUSED_ARG4(socket, buf, len, flags);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -384,28 +474,47 @@ static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_f
 //==============================================================================
 static inline int socket_write(SOCKET *socket, const void *buf, size_t len)
 {
+#if __ENABLE_NETWORK__ == _YES_
         return socket_send(socket, buf, len, NET_FLAGS__NONE);
+#else
+        UNUSED_ARG3(socket, buf, len);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  The function shutdown selected communication direction.
+ *
+ * @param  socket       The socket to shutdown.
+ * @param  how          The flags of direction to shutdown.
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
  */
 //==============================================================================
 static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSHUTDOWN, &result, socket, &how);
         return result;
+#else
+        UNUSED_ARG2(socket, how);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  The function close socket.
+ *
+ * @param  socket       The socket to close.
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
  */
 //==============================================================================
 static inline int socket_close(SOCKET *socket)
@@ -415,138 +524,221 @@ static inline int socket_close(SOCKET *socket)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  The function set receive timeout value.
+ *
+ * @param  socket       The socket to set timeout.
+ * @param  timeout      The timeout value.
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
  */
 //==============================================================================
 static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSETRECVTIMEOUT, &result, socket, &timeout);
         return result;
+#else
+        UNUSED_ARG2(socket, timeout);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  The function set send timeout value.
+ *
+ * @param  socket       The socket to set timeout.
+ * @param  timeout      The timeout value.
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
  */
 //==============================================================================
 static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSETSENDTIMEOUT, &result, socket, &timeout);
         return result;
+#else
+        UNUSED_ARG2(socket, timeout);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  The function gets connection address of socket.
+ *
+ * @param  socket       The socket.
+ * @param  addr         Obtained remote address.
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
  */
 //==============================================================================
 static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETGETADDRESS, &result, socket, addr);
         return result;
+#else
+        UNUSED_ARG2(socket, addr);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  The function gets host address by its name.
+ *
+ * @param  family       Network family.
+ * @param  name         Host name.
+ * @param  sock_addr    Obtained host address.
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
  */
 //==============================================================================
 static inline int get_host_by_name(NET_family_t            family,
                                    const char             *name,
                                    NET_generic_sockaddr_t *sock_addr)
 {
+#if __ENABLE_NETWORK__ == _YES_
         int result = -1;
         syscall(SYSCALL_NETGETHOSTBYNAME, &result, &family, name, sock_addr);
         return result;
+#else
+        UNUSED_ARG3(family, name, sock_addr);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
 /**
+ * @brief  The function converts host byte order to network.
  *
- * @param family
- * @param value
- * @return
+ * @param  family       Network family.
+ * @param  value        Value to convert.
+ *
+ * @return Converted value.
  */
 //==============================================================================
 static inline u16_t hton_u16(NET_family_t family, u16_t value)
 {
+#if __ENABLE_NETWORK__ == _YES_
         return _builtinfunc(net_hton_u16, family, value);
+#else
+        UNUSED_ARG1(family);
+        return value;
+#endif
 }
 
 //==============================================================================
 /**
+ * @brief  The function converts host byte order to network.
  *
- * @param family
- * @param value
- * @return
+ * @param  family       Network family.
+ * @param  value        Value to convert.
+ *
+ * @return Converted value.
  */
 //==============================================================================
 static inline u32_t hton_u32(NET_family_t family, u32_t value)
 {
+#if __ENABLE_NETWORK__ == _YES_
         return _builtinfunc(net_hton_u32, family, value);
+#else
+        UNUSED_ARG1(family);
+        return value;
+#endif
 }
 
 //==============================================================================
 /**
+ * @brief  The function converts host byte order to network.
  *
- * @param family
- * @param value
- * @return
+ * @param  family       Network family.
+ * @param  value        Value to convert.
+ *
+ * @return Converted value.
  */
 //==============================================================================
 static inline u64_t hton_u64(NET_family_t family, u64_t value)
 {
+#if __ENABLE_NETWORK__ == _YES_
         return _builtinfunc(net_hton_u64, family, value);
+#else
+        UNUSED_ARG1(family);
+        return value;
+#endif
 }
 
 //==============================================================================
 /**
+ * @brief  The function converts network byte order to host.
  *
- * @param family
- * @param value
- * @return
+ * @param  family       Network family.
+ * @param  value        Value to convert.
+ *
+ * @return Converted value.
  */
 //==============================================================================
 static inline u16_t ntoh_u16(NET_family_t family, u16_t value)
 {
+#if __ENABLE_NETWORK__ == _YES_
         return _builtinfunc(net_hton_u16, family, value);
+#else
+        UNUSED_ARG1(family);
+        return value;
+#endif
 }
 
 //==============================================================================
 /**
+ * @brief  The function converts network byte order to host.
  *
- * @param family
- * @param value
- * @return
+ * @param  family       Network family.
+ * @param  value        Value to convert.
+ *
+ * @return Converted value.
  */
 //==============================================================================
 static inline u32_t ntoh_u32(NET_family_t family, u32_t value)
 {
+#if __ENABLE_NETWORK__ == _YES_
         return _builtinfunc(net_hton_u32, family, value);
+#else
+        UNUSED_ARG1(family);
+        return value;
+#endif
 }
 
 //==============================================================================
 /**
+ * @brief  The function converts network byte order to host.
  *
- * @param family
- * @param value
- * @return
+ * @param  family       Network family.
+ * @param  value        Value to convert.
+ *
+ * @return Converted value.
  */
 //==============================================================================
 static inline u64_t ntoh_u64(NET_family_t family, u64_t value)
 {
+#if __ENABLE_NETWORK__ == _YES_
         return _builtinfunc(net_hton_u64, family, value);
+#else
+        UNUSED_ARG1(family);
+        return value;
+#endif
 }
 
 #ifdef __cplusplus

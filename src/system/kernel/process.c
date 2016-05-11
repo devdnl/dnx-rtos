@@ -1575,8 +1575,12 @@ static int resource_destroy(res_header_t *resource)
                 break;
 
         case RES_TYPE_SOCKET:
+#if __ENABLE_NETWORK__ == _YES_
                 _net_socket_destroy(cast(SOCKET*, res2free));
                 break;
+#else
+                return ENOTSUP;
+#endif
 
         default:
                 return EINVAL;

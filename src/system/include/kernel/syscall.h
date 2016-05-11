@@ -107,6 +107,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SYSLOGDISABLE,          // | int            |                           |                                     |                           |                           |                                           |
         SYSCALL_SYSTEM,                 // | int            | const char *command       | pid_t *pid                          | sem_t **exit_sem          |                           |                                           |
 #define _SYSCALL_GROUP_1_FS_BLOCKING      SYSCALL_SYSTEM // this group ends at this syscall ----------------------------------+---------------------------+---------------------------+-------------------------------------------+
+#if __ENABLE_NETWORK__ == _YES_
         SYSCALL_NETIFUP,                // | int            | NET_family_t *family      | const NET_generic_config_t *config  |                           |                           |                                           |
         SYSCALL_NETIFDOWN,              // | int            | NET_family_t *family      |                                     |                           |                           |                                           |
         SYSCALL_NETIFSTATUS,            // | int            | NET_family_t *family      | NET_generic_status_t *status        |                           |                           |                                           |
@@ -126,6 +127,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_NETSENDTO,              // | int            | SOCKET *socket            | const void *buf                     | size_t *len               | NET_flags_t *flags        | const NET_generic_sockaddr_t *to_sockaddr |
         SYSCALL_NETRECVFROM,            // | int            | SOCKET *socket            | void *buf                           | size_t *len               | NET_flags_t *flags        | NET_generic_sockaddr_t *from_sockaddr     |
         SYSCALL_NETGETADDRESS,          // | int            | SOCKET *socket            | NET_generic_sockaddr_t *addr        |                           |                           |                                           |
+#endif
 #define _SYSCALL_GROUP_2_NET_BLOCKING     _SYSCALL_COUNT // network group --------------+-------------------------------------+---------------------------+---------------------------+-------------------------------------------+
         _SYSCALL_COUNT
 } syscall_t;
