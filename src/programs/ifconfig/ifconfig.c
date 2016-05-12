@@ -64,22 +64,6 @@ GLOBAL_VARIABLES_SECTION {
 
 //==============================================================================
 /**
- * @brief  Convert string to IP
- * @param  str          string IP
- * @return String converted to IP address
- */
-//==============================================================================
-//static net_ip_t strtoip(const char *str)
-//{
-//        int a = 0, b = 0, c = 0, d = 0;
-//
-//        sscanf(str, "%3d.%3d.%3d.%3d", &a, &b, &c, &d);
-//
-//        return net_IP_set(a, b, c, d);
-//}
-
-//==============================================================================
-/**
  * @brief  Select unit according to value size
  * @param  val          value
  * @return Selected unit. Value is changed according to selected unit.
@@ -100,18 +84,100 @@ static const char *convert_unit(u64_t *val)
 
 //==============================================================================
 /**
- * @brief  Shows connection details
- * @param  None
+ * @brief  Print help message
+ * @param  prog_name    program name
  * @return None
  */
 //==============================================================================
-static void show_details()
+static void print_help_msg(const char *prog_name)
+{
+        printf("Usage: %s <network> [up=<options>] [down]\n"
+               "General options:\n"
+               "  INET,...      network name\n"
+               "  up=<options>  configure network\n"
+               "  down          disable network\n"
+               "  -h, --help    this help\n\n"
+
+               "Options for INET:\n"
+               "  Static: INET up=address,netmask,gateway\n"
+               "  DHCP  : INET up=dhcp\n",
+
+               prog_name);
+}
+
+//==============================================================================
+/**
+ * @brief Function setup INET connection.
+ * @param options       string options
+ */
+//==============================================================================
+static void INET_up(const char *options)
+{
+        if (isstreq(options, "dhcp")) {
+                static const NET_INET_config_t DHCP = {
+                        .mode    = NET_INET_MODE__DHCP_START,
+                        .address = NET_INET_IPv4_ANY,
+                        .mask    = NET_INET_IPv4_ANY,
+                        .gateway = NET_INET_IPv4_ANY
+                };
+
+                if (ifup(NET_FAMILY__INET, &DHCP) != 0) {
+                        perror("INET");
+                }
+
+        } else {
+                uint aa = UINT_MAX, ab = UINT_MAX, ac = UINT_MAX, ad = UINT_MAX;
+                uint ma = UINT_MAX, mb = UINT_MAX, mc = UINT_MAX, md = UINT_MAX;
+                uint ga = UINT_MAX, gb = UINT_MAX, gc = UINT_MAX, gd = UINT_MAX;
+
+                sscanf(options, "%4d.%4d.%4d.%4d,"
+                                "%4d.%4d.%4d.%4d,"
+                                "%4d.%4d.%4d.%4d",
+
+                       &aa, &ab, &ac, &ad,
+                       &ma, &mb, &mc, &md,
+                       &ga, &gb, &gc, &gd);
+
+                if ((aa > 255) or (ab > 255) or (ac > 255) or (ad > 255)) {
+                        fputs("Incorrect format of IP address.\n", stderr);
+                        return;
+                }
+
+                if ((ma > 255) or (mb > 255) or (mc > 255) or (md > 255)) {
+                        fputs("Incorrect format of network mask.\n", stderr);
+                        return;
+                }
+
+                if ((ga > 255) or (gb > 255) or (gc > 255) or (gd > 255)) {
+                        fputs("Incorrect format of gateway address.\n", stderr);
+                        return;
+                }
+
+                NET_INET_config_t config = {
+                        .mode    = NET_INET_MODE__STATIC,
+                        .address = NET_INET_IPv4(aa,ab,ac,ad),
+                        .mask    = NET_INET_IPv4(ma,mb,mc,md),
+                        .gateway = NET_INET_IPv4(ga,gb,gc,gd)
+                };
+
+                if (ifup(NET_FAMILY__INET, &config) != 0) {
+                        perror("INET");
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function gets INET connection status.
+ */
+//==============================================================================
+static void INET_status(void)
 {
         static const char *if_status[] = {
                "NOT CONFIGURED",
                "STATIC IP",
                "DHCP CONFIGURING",
-               "DHCP CONFIGURED",
+               "DHCP",
                "LINK DISCONNECTED"
         };
 
@@ -121,45 +187,43 @@ static void show_details()
                 const char *tx_unit = convert_unit(&ifstat.tx_bytes);
                 const char *rx_unit = convert_unit(&ifstat.rx_bytes);
 
-                printf("Network status: %s\n"
-                       "HWaddr %2X:%2X:%2X:%2X:%2X:%2X\n"
-                       "Addr:%d.%d.%d.%d\n"
-                       "Gateway:%d.%d.%d.%d\n"
-                       "Mask:%d.%d.%d.%d\n"
-                       "RX packets:%d (%d %s)\n"
-                       "TX packets:%d (%d %s)\n",
+                printf("INET\n"
+                       "  Status : %s\n"
+                       "  HWaddr : %02X:%02X:%02X:%02X:%02X:%02X\n"
+                       "  Address: %d.%d.%d.%d\n"
+                       "  Gateway: %d.%d.%d.%d\n"
+                       "  Netmask: %d.%d.%d.%d\n"
+                       "  RX packets: %u (%u %s)\n"
+                       "  TX packets: %u (%u %s)\n",
+
                        if_status[ifstat.state],
-                       ifstat.hw_addr[0], ifstat.hw_addr[1], ifstat.hw_addr[2],
-                       ifstat.hw_addr[3], ifstat.hw_addr[4], ifstat.hw_addr[5],
-                       NET_INET_IPv4_a(ifstat.address), NET_INET_IPv4_b(ifstat.address),
-                       NET_INET_IPv4_c(ifstat.address), NET_INET_IPv4_d(ifstat.address),
-                       NET_INET_IPv4_a(ifstat.gateway), NET_INET_IPv4_b(ifstat.gateway),
-                       NET_INET_IPv4_c(ifstat.gateway), NET_INET_IPv4_d(ifstat.gateway),
-                       NET_INET_IPv4_a(ifstat.mask), NET_INET_IPv4_b(ifstat.mask),
-                       NET_INET_IPv4_c(ifstat.mask), NET_INET_IPv4_d(ifstat.mask),
-                       (u32_t)ifstat.rx_packets, cast(int, ifstat.rx_bytes), rx_unit,
-                       (u32_t)ifstat.tx_packets, cast(int, ifstat.tx_bytes), tx_unit);
+
+                       ifstat.hw_addr[0],
+                       ifstat.hw_addr[1],
+                       ifstat.hw_addr[2],
+                       ifstat.hw_addr[3],
+                       ifstat.hw_addr[4],
+                       ifstat.hw_addr[5],
+
+                       NET_INET_IPv4_a(ifstat.address),
+                       NET_INET_IPv4_b(ifstat.address),
+                       NET_INET_IPv4_c(ifstat.address),
+                       NET_INET_IPv4_d(ifstat.address),
+
+                       NET_INET_IPv4_a(ifstat.gateway),
+                       NET_INET_IPv4_b(ifstat.gateway),
+                       NET_INET_IPv4_c(ifstat.gateway),
+                       NET_INET_IPv4_d(ifstat.gateway),
+
+                       NET_INET_IPv4_a(ifstat.mask),
+                       NET_INET_IPv4_b(ifstat.mask),
+                       NET_INET_IPv4_c(ifstat.mask),
+                       NET_INET_IPv4_d(ifstat.mask),
+
+                       (uint)ifstat.rx_packets, cast(uint, ifstat.rx_bytes), rx_unit,
+                       (uint)ifstat.tx_packets, cast(uint, ifstat.tx_bytes), tx_unit);
         }
 }
-
-////==============================================================================
-///**
-// * @brief  Print help message
-// * @param  prog_name    program name
-// * @return None
-// */
-////==============================================================================
-//static void print_help_msg(const char *prog_name)
-//{
-//        printf("Usage: %s <options>\n"
-//               "  addr=<address>\n"
-//               "  mask=<netmask>\n"
-//               "  gw=<gateway>\n"
-//               "  dhcp\n"
-//               "  up\n"
-//               "  down\n",
-//               prog_name);
-//}
 
 //==============================================================================
 /**
@@ -174,97 +238,52 @@ static void show_details()
 int_main(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc == 1) {
-                show_details();
+                // print statuses of all networks
+                INET_status();
+
+        } else if (argc >= 4) {
+                // print help if too many arguments are given
+                print_help_msg(argv[0]);
+
         } else {
-//                bool up   = false;
-//                bool down = false;
-//                bool dhcp = false;
-//
-//                net_ip_t ip      = net_IP_set(0,0,0,0);
-//                net_ip_t netmask = net_IP_set(0,0,0,0);
-//                net_ip_t gateway = net_IP_set(0,0,0,0);
-//
-//                for (int i = 1; i < argc; i++) {
-//                        if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
-//                                print_help_msg(argv[0]);
-//                                return 0;
-//                        } else if (strncmp(argv[i], "addr=", 5) == 0) {
-//                                if (argv[i]) {
-//                                        ip = strtoip(argv[i] + 5);
-//                                }
-//                        } else if (strncmp(argv[i], "mask=", 5) == 0) {
-//                                if (argv[i]) {
-//                                        netmask = strtoip(argv[i] + 5);
-//                                }
-//                        } else if (strncmp(argv[i], "gw=", 3) == 0) {
-//                                if (argv[i]) {
-//                                        gateway = strtoip(argv[i] + 3);
-//                                }
-//                        } else if (strcmp(argv[i], "dhcp") == 0) {
-//                                dhcp = true;
-//                        } else if (strcmp(argv[i], "up") == 0) {
-//                                up = true;
-//                        } else if (strcmp(argv[i], "down") == 0) {
-//                                down = true;
-//                        } else {
-//                                print_help_msg(argv[0]);
-//                                return 0;
-//                        }
-//                }
-//
-//                if (down && up) {
-//                        puts("Wrong flags!");
-//                        return 0;
-//                }
-//
-//                net_config_t ifcfg;
-//                memset(&ifcfg, 0, sizeof(net_config_t));
-//                net_get_ifconfig(&ifcfg);
-//
-//                if (down) {
-//                        if (  ifcfg.status == NET_STATUS_DHCP_CONFIGURED
-//                           || ifcfg.status == NET_STATUS_DHCP_CONFIGURING) {
-//
-//                                if (net_DHCP_stop() != 0 && ifcfg.status != NET_STATUS_NOT_CONFIGURED) {
-//                                        puts("DHCP stop error!");
-//                                }
-//                        } else {
-//                                if (net_ifdown() != 0 && ifcfg.status != NET_STATUS_NOT_CONFIGURED) {
-//                                        puts("Interface down fail!");
-//                                }
-//                        }
-//                }
-//
-//                if (up) {
-//                        if (dhcp) {
-//                                if (net_DHCP_start() == 0) {
-//                                        show_details();
-//                                } else {
-//                                        puts("DHCP start error!");
-//                                }
-//                        } else {
-//                                if (ip.addr == 0) {
-//                                        puts("Bad IP address!");
-//                                        return 0;
-//                                }
-//
-//                                if (netmask.addr == 0) {
-//                                        puts("Bad netmask!");
-//                                        return 0;
-//                                }
-//
-//                                if (gateway.addr == 0) {
-//                                        puts("Bad gateway address!");
-//                                        return 0;
-//                                }
-//
-//                                if (net_ifup(&ip, &netmask, &gateway) == 0) {
-//                                        show_details();
-//                                } else {
-//                                        puts("Configuration fail!");
-//                                }
-//                        }
-//                }
+                bool        down    = false;
+                const char *up_args = NULL;
+                const char *net     = NULL;
+
+                // analyze arguments
+                for (int i = 1; i < argc; i++) {
+                        if (isstreq(argv[i], "-h") || isstreq(argv[i], "--help")) {
+                                print_help_msg(argv[0]);
+                                return 0;
+
+                        } else if (isstreq(argv[i], "down")) {
+                                down = true;
+
+                        } else if (isstreqn(argv[i], "up=", 3)) {
+                                up_args = argv[i] + 3;
+
+                        } else {
+                                net = argv[i];
+                        }
+                }
+
+                // configure selected network
+                if (net) {
+                        if (isstreq(net, "INET")) {
+                                if (down) {
+                                        ifdown(NET_FAMILY__INET);
+                                } else if (up_args) {
+                                        INET_up(up_args);
+                                } else {
+                                        INET_status();
+                                }
+
+                        } else {
+                                fputs("Unknown network family.\n", stderr);
+                        }
+                } else {
+                        fputs("Unknown network family.\n", stderr);
+                }
         }
 
         return 0;
