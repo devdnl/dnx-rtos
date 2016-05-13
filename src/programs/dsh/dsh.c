@@ -142,6 +142,7 @@ static bool read_input()
 
                 if (feof(global->input)) {
                         global->stream_closed = true;
+                        return false;
                 }
 
                 /* remove LF at the end of line */
@@ -486,7 +487,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidmaster_attr.f_stdout   = pipe;
                 global->pidmaster_attr.f_stderr   = pipe;
                 global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
@@ -498,7 +499,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidslave_attr.f_stdout   = fout;
                 global->pidslave_attr.f_stderr   = fout;
                 global->pidslave_attr.cwd        = global->cwd;
-                global->pidslave_attr.has_parent = true;
+                global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
                 pidslave = process_create(slave, &global->pidslave_attr);
                 if (pidslave == 0) {
@@ -516,7 +517,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidmaster_attr.f_stdout   = pipe;
                 global->pidmaster_attr.f_stderr   = pipe;
                 global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
@@ -528,7 +529,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidslave_attr.f_stdout   = stdout;
                 global->pidslave_attr.f_stderr   = stderr;
                 global->pidslave_attr.cwd        = global->cwd;
-                global->pidslave_attr.has_parent = true;
+                global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
                 pidslave = process_create(slave, &global->pidslave_attr);
                 if (pidslave == 0) {
@@ -546,7 +547,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidmaster_attr.f_stdout   = fout;
                 global->pidmaster_attr.f_stderr   = fout;
                 global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
@@ -561,7 +562,7 @@ static bool start_program(char *master, char *slave, char *file)
                 global->pidmaster_attr.f_stdout   = stdout;
                 global->pidmaster_attr.f_stderr   = stderr;
                 global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.has_parent = true;
+                global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
@@ -680,7 +681,7 @@ int_main(dsh, STACK_DEPTH_CUSTOM(110), int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;
-        global->pipe_file     = "/tmp/dsh-";
+        global->pipe_file     = "/run/dsh-";
 
         if (argc == 2) {
                 global->input = fopen(argv[1], "r");
@@ -689,6 +690,8 @@ int_main(dsh, STACK_DEPTH_CUSTOM(110), int argc, char *argv[])
                         return EXIT_FAILURE;
                 }
         }
+
+        mkdir("/run", 0777);
 
         getcwd(global->cwd, CWD_PATH_LEN);
 

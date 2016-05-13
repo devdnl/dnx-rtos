@@ -31,7 +31,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-//#include <dnx/net.h>
+#include <errno.h>
+#include <dnx/net.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -49,11 +51,12 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
+        char buf[128];
 };
 
-static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+static const char HTTP_HTML_HDR[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
 
-static const char index_html[] =
+static const char INDEX_HTML[] =
         "<!DOCTYPE html>"
         "<html>"
                 "<head>"
@@ -112,31 +115,28 @@ static const char index_html[] =
 /**
  * @brief  HTTP server
  * @param  conn  connection
- * @return None
+ * @return None./t
  */
 //==============================================================================
-//static void serve(net_conn_t *conn)
-//{
-//        net_buf_t *inbuf;
-//        if (net_conn_receive(conn, &inbuf) == NET_ERR_OK) {
-//
-//                char *buf;
-//                u16_t buf_len;
-//                net_buf_data(inbuf, (void**)&buf, &buf_len);
-//
-//                if (buf_len >= 5 && (strncmp("GET /", buf, 5) == 0)) {
-//                        net_conn_write(conn, http_html_hdr, sizeof(http_html_hdr) - 1, NET_CONN_FLAG_NOCOPY);
-//                        net_conn_write(conn, index_html, sizeof(index_html) - 1, NET_CONN_FLAG_NOCOPY);
-//                }
-//
-//                puts("Connection closed");
-//
-//                net_buf_delete(inbuf);
-//        }
-//
-//        net_conn_close(conn);
-//        net_conn_delete(conn);
-//}
+static void serve(SOCKET *socket)
+{
+        NET_INET_sockaddr_t addr;
+        socket_get_address(socket, &addr);
+
+        printf("New connection from: %d.%d.%d.%d\n",
+               NET_INET_IPv4_a(addr.addr),
+               NET_INET_IPv4_b(addr.addr),
+               NET_INET_IPv4_c(addr.addr),
+               NET_INET_IPv4_d(addr.addr));
+
+        int sz = socket_recv(socket, global->buf, sizeof(global->buf), NET_FLAGS__FREEBUF);
+        if (sz >= 5 && isstreqn("GET /", global->buf, 5)) {
+                socket_send(socket, HTTP_HTML_HDR, sizeof(HTTP_HTML_HDR) - 1, NET_FLAGS__NOCOPY);
+                socket_send(socket, INDEX_HTML, sizeof(INDEX_HTML) - 1, NET_FLAGS__NOCOPY);
+        }
+
+        socket_delete(socket);
+}
 
 //==============================================================================
 /**
@@ -150,34 +150,34 @@ static const char index_html[] =
 //==============================================================================
 int_main(httpd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        (void) argc;
-        (void) argv;
+        UNUSED_ARG2(argc, argv);
 
-#warning httpd: TODO network sockets
+        static const NET_INET_sockaddr_t ADDR_ANY = {
+            .addr = NET_INET_IPv4_ANY,
+            .port = 80
+        };
 
-//        net_conn_t *conn = net_conn_new(NET_CONN_TYPE_TCP);
-//        if (conn) {
-//                if (net_conn_bind(conn, NULL, 80) == NET_ERR_OK) {
-//                        if (net_conn_listen(conn) == NET_ERR_OK) {
-//                                puts("Listen connection");
-//
-//                                net_err_t err;
-//                                do {
-//                                        net_conn_t *new_conn;
-//                                        err = net_conn_accept(conn, &new_conn);
-//                                        if (err == NET_ERR_OK) {
-//                                                puts("Accept connection");
-//                                                serve(new_conn);
-//                                        }
-//
-//                                } while (err == NET_ERR_OK);
-//                        }
-//                }
-//
-//                net_conn_delete(conn);
-//        }
-//
-//        puts("Exit");
+        SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        if (socket) {
+                if (socket_bind(socket, &ADDR_ANY) == 0) {
+                        if (socket_listen(socket) == 0) {
+                                int err;
+                                do {
+                                        SOCKET *new_socket;
+                                        err = socket_accept(socket, &new_socket);
+                                        if (!err) {
+                                                serve(new_socket);
+                                        }
+                                } while (!err);
+                        }
+                }
+
+                socket_delete(socket);
+        }
+
+        if (errno != 0) {
+                perror("Socket error");
+        }
 
         return 0;
 }

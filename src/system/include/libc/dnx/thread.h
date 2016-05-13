@@ -676,6 +676,79 @@ static inline int thread_cancel(tid_t tid)
 
 //==============================================================================
 /**
+ * @brief Function join thread to main thread (wait for close by selected time).
+ *
+ * The function thread_join2() joins selected thread <i>tid</i> to parent
+ * program. Function wait until thread was closed or timeout occurred.
+ *
+ * @param tid           thread ID
+ * @param timeout_ms    timeout in milliseconds
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ETIME
+ *
+ * @return On success, 0 is returned. On error, -1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <unistd.h>
+
+        // ...
+
+        void thread(void *arg)
+        {
+                // ...
+
+                // thread function exit without any function,
+                // or just by return
+        }
+
+        void some_function()
+        {
+                errno = 0;
+
+                tid_t tid = thread_create(thread, NULL, (void*)0);
+                if (tid) {
+                        printf("Thread %d created\n", (int)tid);
+                        sleep(1);
+
+                        if (thread_join2(tid, MAX_DELAY_MS) == 0) {
+                                puts("Joinded with thread");
+                        } else {
+                                perror("Thread join error");
+                        }
+
+                } else {
+                        perror("Thread not created");
+                }
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see thread_create(), thread_cancel()
+ */
+//==============================================================================
+static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
+{
+        int r      = -1;
+        sem_t *sem = NULL;
+
+        syscall(SYSCALL_THREADGETEXITSEM, &r, &tid, &sem);
+
+        if (sem && r == 0) {
+                _builtinfunc(semaphore_wait, sem, timeout_ms);
+                syscall(SYSCALL_THREADDESTROY, &r, &tid);
+        }
+
+        return r;
+}
+
+//==============================================================================
+/**
  * @brief Function join thread to main thread (wait for close).
  *
  * The function thread_join() joins selected thread <i>tid</i> to parent
@@ -733,17 +806,7 @@ static inline int thread_cancel(tid_t tid)
 //==============================================================================
 static inline int thread_join(tid_t tid)
 {
-        int r      = -1;
-        sem_t *sem = NULL;
-
-        syscall(SYSCALL_THREADGETEXITSEM, &r, &tid, &sem);
-
-        if (sem && r == 0) {
-                _builtinfunc(semaphore_wait, sem, MAX_DELAY_MS);
-                syscall(SYSCALL_THREADDESTROY, &r, &tid);
-        }
-
-        return r;
+        return thread_join2(tid, MAX_DELAY_MS);
 }
 
 //==============================================================================

@@ -27,15 +27,11 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <dnx/os.h>
-#include <dnx/misc.h>
+#include "inet_types.h"
+#include "kernel/sysfunc.h"
+#include "drivers/ioctl_requests.h"
 #include "netif/etharp.h"
-#include "net/netman.h"
 
 /*==============================================================================
   Local macros
@@ -44,7 +40,6 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef _netman_t netman_t;
 
 /*==============================================================================
   Local function prototypes
@@ -69,25 +64,26 @@ typedef _netman_t netman_t;
 /**
  * @brief  Function allocate memory for network interface.
  *         The function is called after that interface file was opened. Allocated
- *         memory pointer should be written to the netman->if_mem variable. If
+ *         memory pointer should be written to the inet->if_mem variable. If
  *         interface does not need additional memory then this value can be set
  *         to NULL and status should be returned as true.
  *
- * @param  netman       network manager object
+ * @param  inet         inet container
  *
- * @return If memory was successfully allocated then true is returned, otherwise false.
+ * @return One of @ref errno value.
  *
  * @note   Called from network interface thread.
  */
 //==============================================================================
-bool _netman_ifmem_alloc(netman_t *netman)
+int _inet_port_alloc(inet_t *inet)
 {
         /*
          * The memory is not allocated because this interface does not need additional
          * memory (interface specific).
          */
-        netman->if_mem = NULL;
-        return true;
+        inet->if_mem = NULL;
+
+        return ESUCC;
 }
 
 //==============================================================================
@@ -96,19 +92,17 @@ bool _netman_ifmem_alloc(netman_t *netman)
  *         The functin shall free memory allocated in the _netman_ifmem_alloc()
  *         function.
  *
- * @param  netman       network manager object
- *
- * @return None
+ * @param  inet         inet container
  *
  * @note   Called from network interface thread.
  */
 //==============================================================================
-void _netman_ifmem_free(netman_t *netman)
+void _inet_port_free(inet_t *inet)
 {
         /*
          * Nothing to free because memory was not allocated for this interface.
          */
-        netman->if_mem = NULL;
+        inet->if_mem = NULL;
 }
 
 //==============================================================================
@@ -118,46 +112,51 @@ void _netman_ifmem_free(netman_t *netman)
  *         MAC address, etc. By using this function the network interface should
  *         be started.
  *
- * @param  netman       network manager object
+ * @param  inet         inet container
  *
- * @return If interface was successfully configured then true is returned, otherwise false.
+ * @return One of @ref errno value.
  *
  * @note   Called from network interface thread.
  */
 //==============================================================================
-bool _netman_HW_init(netman_t *netman)
+int _inet_port_hardware_init(inet_t *inet)
 {
         /* set MAC address */
-        if (ioctl(netman->if_file, IOCTL_ETHMAC__SET_MAC_ADDR, netman->netif.hwaddr) != 0) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_hw_init: MAC set fail\n"));
-                return false;
+        int err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__SET_MAC_ADDR, inet->netif.hwaddr);
+        if (err) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inet_port_hardware_init: MAC set fail\n"));
+                return err;
         }
 
         /* start Ethernet interface */
-        if (ioctl(netman->if_file, IOCTL_ETHMAC__ETHERNET_START) != 0) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_hw_init: start fail\n"));
-                return false;
+        err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__ETHERNET_START);
+        if (err) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inet_port_hardware_init: start fail\n"));
+                return err;
         }
 
-        return true;
+        return err;
 }
 
 //==============================================================================
 /**
  * @brief  Function de-initialize configured network interface.
  *
- * @param  netman       network manager object
+ * @param  inet         inet container
  *
- * @return None
+ * @return One of @ref errno value.
  *
  * @note   Called from network interface thread.
  */
 //==============================================================================
-void _netman_HW_deinit(netman_t *netman)
+int _inet_port_hardware_deinit(inet_t *inet)
 {
-        if (ioctl(netman->if_file, IOCTL_ETHMAC__ETHERNET_STOP) != 0) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_hw_deinit: stop fail\n"));
+        int err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__ETHERNET_STOP);
+        if (err) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inet_port_hardware_deinit: stop fail\n"));
         }
+
+        return err;
 }
 
 //==============================================================================
@@ -167,50 +166,48 @@ void _netman_HW_deinit(netman_t *netman)
  *         Function should try receive packet by specified time passed by
  *         'input_timeout'. If function does not receive any packet due to
  *         specified time then function should exit.
- *         If packet was recieved then the function should allocate buffer for
+ *         If packet was received then the function should allocate buffer for
  *         transfer by using pbuf_alloc() function and put this buffer to then
- *         TCPIP stack by using netman->netif.input() function. If packets are
+ *         TCPIP stack by using inet->netif.input() function. If packets are
  *         received every loop then the function should not exit.
  *
- * @param  netman               network manager object
+ * @param  inet                 inet container
  * @param  input_timeout        packet receive timeout
- *
- * @return None
  *
  * @note   Called from network interface thread.
  */
 //==============================================================================
-void _netman_handle_input(netman_t *netman, uint input_timeout)
+void _inet_port_handle_input(inet_t *inet, u32_t timeout)
 {
-        ethmac_packet_wait_t pw = {.timeout = input_timeout};
-        int r = ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
+        ETHMAC_packet_wait_t pw = {.timeout = timeout};
+        int r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
 
-        while (r == 0 && pw.size > 0) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: packet size = %d\n", pw.size));
+        while (r == 0 && pw.pkt_size > 0) {
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: packet size = %d\n", pw.pkt_size));
 
                 // NOTE: subtract packet size by 4 to discard CRC32
-                struct pbuf *p = pbuf_alloc(PBUF_RAW, pw.size - 4, PBUF_RAM);
+                struct pbuf *p = pbuf_alloc(PBUF_RAW, pw.pkt_size - 4, PBUF_RAM);
                 if (p) {
-                        r = ioctl(netman->if_file, IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, p);
+                        r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, p);
 
                         LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: received = %d\n", p->tot_len));
 
                         if (r == 0) {
-                                if (netman->netif.input(p, &netman->netif) != ERR_OK) {
+                                if (inet->netif.input(p, &inet->netif) != ERR_OK) {
                                         pbuf_free(p);
                                 } else {
-                                        netman->rx_packets++;
-                                        netman->rx_bytes += p->tot_len;
+                                        inet->rx_packets++;
+                                        inet->rx_bytes += p->tot_len;
                                 }
                         } else {
                                 LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: receive error\n"));
                                 pbuf_free(p);
                         }
 
-                        r = ioctl(netman->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
+                        r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
                 } else {
                         LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: not enough free memory\n"));
-                        msleep(10);
+                        sys_sleep_ms(10);
                 }
         }
 
@@ -227,7 +224,7 @@ void _netman_handle_input(netman_t *netman, uint input_timeout)
  * @param  netif        the lwip network interface structure
  * @param  p            the MAC packet to send (e.g. IP packet including MAC addresses and type)
  *
- * @return ERR_OK if the packet could be sent an err_t value if the packet couldn't be sent
+ * @return ERR_OK if the packet could be sent an err_t value if the packet couldn't be sent.
  *
  * @note   Returning ERR_MEM here if a DMA queue of your MAC is full can lead to
  *         strange results. You might consider waiting for space in the DMA queue
@@ -237,13 +234,13 @@ void _netman_handle_input(netman_t *netman, uint input_timeout)
  * @note   Called from TCPIP thread.
  */
 //==============================================================================
-err_t _netman_handle_output(struct netif *netif, struct pbuf *p)
+err_t _inet_port_handle_output(struct netif *netif, struct pbuf *p)
 {
-      netman_t *netman = netif->state;
+      inet_t *inet = netif->state;
 
-      if (ioctl(netman->if_file, IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN, p) == 0) {
-              netman->tx_packets++;
-              netman->tx_bytes += p->tot_len;
+      if (sys_ioctl(inet->if_file, IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN, p) == 0) {
+              inet->tx_packets++;
+              inet->tx_bytes += p->tot_len;
               return ERR_OK;
       } else {
               LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_output: packet send error\n"));
@@ -264,22 +261,22 @@ err_t _netman_handle_output(struct netif *netif, struct pbuf *p)
  * @note   Called at system startup.
  */
 //==============================================================================
-err_t _netman_netif_init(struct netif *netif)
+err_t _inet_port_netif_init(struct netif *netif)
 {
-        netif->hostname   = const_cast(char*, get_host_name());
+        netif->hostname   = const_cast(char*, __OS_HOSTNAME__);
         netif->name[0]    = 'E';
         netif->name[1]    = 'T';
         netif->output     = etharp_output;
-        netif->linkoutput = _netman_handle_output;
+        netif->linkoutput = _inet_port_handle_output;
         netif->mtu        = 1500;
         netif->hwaddr_len = ETHARP_HWADDR_LEN;
         netif->flags      = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;
-        netif->hwaddr[0]  = __NETWORK_MAC_ADDR_0__;
-        netif->hwaddr[1]  = __NETWORK_MAC_ADDR_1__;
-        netif->hwaddr[2]  = __NETWORK_MAC_ADDR_2__;
-        netif->hwaddr[3]  = __NETWORK_MAC_ADDR_3__;
-        netif->hwaddr[4]  = __NETWORK_MAC_ADDR_4__;
-        netif->hwaddr[5]  = __NETWORK_MAC_ADDR_5__;
+        netif->hwaddr[0]  = __NETWORK_TCPIP_MAC_ADDR0__;
+        netif->hwaddr[1]  = __NETWORK_TCPIP_MAC_ADDR1__;
+        netif->hwaddr[2]  = __NETWORK_TCPIP_MAC_ADDR2__;
+        netif->hwaddr[3]  = __NETWORK_TCPIP_MAC_ADDR3__;
+        netif->hwaddr[4]  = __NETWORK_TCPIP_MAC_ADDR4__;
+        netif->hwaddr[5]  = __NETWORK_TCPIP_MAC_ADDR5__;
 
         return ERR_OK;
 }
@@ -292,18 +289,18 @@ err_t _netman_netif_init(struct netif *netif)
  *         If link is disconnected then function should return false, if link
  *         is connected then should return true.
  *
- * @param  netman               network manager object
+ * @param  inet                 inet container
  *
  * @return If link is connected then true is returned, otherwise false.
  *
  * @note   Called at system startup.
  */
 //==============================================================================
-bool _netman_is_link_connected(netman_t *netman)
+bool _inet_port_is_link_connected(inet_t *inet)
 {
-        ethmac_link_status_t linkstat;
-        if (ioctl(netman->if_file, IOCTL_ETHMAC__GET_LINK_STATUS) == 0) {
-                return linkstat == ETHMAC_LINK_STATUS_CONNECTED;
+        ETHMAC_link_status_t linkstat;
+        if (sys_ioctl(inet->if_file, IOCTL_ETHMAC__GET_LINK_STATUS, &linkstat) == 0) {
+                return linkstat == ETHMAC_LINK_STATUS__CONNECTED;
         } else {
                 return false;
         }

@@ -35,13 +35,14 @@
 #define _LWIP_FLAGS_H
 
 /*--
-this:SetLayout("TitledGridBack", 2, "Home > Network > LwIP",
-               function() this:LoadFile("network/network_flags.h") end)
+this.backFile = "network/tcpip_flags.h"
+this:SetLayout("TitledGridBack", 2, "Home > Network > TCP/IP Stack > LwIP",
+               function() this:LoadFile(this.backFile) end)
 
 this.GoBackWidget = function(this, name)
     this:AddExtraWidget("Hyperlink", "Hl"..name, "Back")
     this:SetEvent("clicked", "Hl"..name,
-        function() this:LoadFile("network/network_flags.h") end)
+        function() this:LoadFile(this.backFile) end)
 end
 
 this.AddDebugItems = function(this)

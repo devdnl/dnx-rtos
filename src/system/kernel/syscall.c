@@ -41,6 +41,7 @@
 #include "kernel/time.h"
 #include "lib/cast.h"
 #include "lib/unarg.h"
+#include "net/netm.h"
 
 /*==============================================================================
   Local macros
@@ -135,6 +136,27 @@ static void syscall_mutexcreate(syscallrq_t *rq);
 static void syscall_mutexdestroy(syscallrq_t *rq);
 static void syscall_queuecreate(syscallrq_t *rq);
 static void syscall_queuedestroy(syscallrq_t *rq);
+#if __ENABLE_NETWORK__ == _YES_
+static void syscall_netifup(syscallrq_t *rq);
+static void syscall_netifdown(syscallrq_t *rq);
+static void syscall_netifstatus(syscallrq_t *rq);
+static void syscall_netsocketcreate(syscallrq_t *rq);
+static void syscall_netsocketdestroy(syscallrq_t *rq);
+static void syscall_netbind(syscallrq_t *rq);
+static void syscall_netlisten(syscallrq_t *rq);
+static void syscall_netaccept(syscallrq_t *rq);
+static void syscall_netrecv(syscallrq_t *rq);
+static void syscall_netsend(syscallrq_t *rq);
+static void syscall_netgethostbyname(syscallrq_t *rq);
+static void syscall_netsetrecvtimeout(syscallrq_t *rq);
+static void syscall_netsetsendtimeout(syscallrq_t *rq);
+static void syscall_netconnect(syscallrq_t *rq);
+static void syscall_netdisconnect(syscallrq_t *rq);
+static void syscall_netshutdown(syscallrq_t *rq);
+static void syscall_netsendto(syscallrq_t *rq);
+static void syscall_netrecvfrom(syscallrq_t *rq);
+static void syscall_netgetaddress(syscallrq_t *rq);
+#endif
 
 /*==============================================================================
   Local objects
@@ -203,6 +225,27 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MUTEXDESTROY     ] = syscall_mutexdestroy,
         [SYSCALL_QUEUECREATE      ] = syscall_queuecreate,
         [SYSCALL_QUEUEDESTROY     ] = syscall_queuedestroy,
+#if __ENABLE_NETWORK__ == _YES_
+        [SYSCALL_NETIFUP          ] = syscall_netifup,
+        [SYSCALL_NETIFDOWN        ] = syscall_netifdown,
+        [SYSCALL_NETIFSTATUS      ] = syscall_netifstatus,
+        [SYSCALL_NETSOCKETCREATE  ] = syscall_netsocketcreate,
+        [SYSCALL_NETSOCKETDESTROY ] = syscall_netsocketdestroy,
+        [SYSCALL_NETBIND          ] = syscall_netbind,
+        [SYSCALL_NETLISTEN        ] = syscall_netlisten,
+        [SYSCALL_NETACCEPT        ] = syscall_netaccept,
+        [SYSCALL_NETRECV          ] = syscall_netrecv,
+        [SYSCALL_NETSEND          ] = syscall_netsend,
+        [SYSCALL_NETGETHOSTBYNAME ] = syscall_netgethostbyname,
+        [SYSCALL_NETSETRECVTIMEOUT] = syscall_netsetrecvtimeout,
+        [SYSCALL_NETSETSENDTIMEOUT] = syscall_netsetsendtimeout,
+        [SYSCALL_NETCONNECT       ] = syscall_netconnect,
+        [SYSCALL_NETDISCONNECT    ] = syscall_netdisconnect,
+        [SYSCALL_NETSHUTDOWN      ] = syscall_netshutdown,
+        [SYSCALL_NETSENDTO        ] = syscall_netsendto,
+        [SYSCALL_NETRECVFROM      ] = syscall_netrecvfrom,
+        [SYSCALL_NETGETADDRESS    ] = syscall_netgetaddress,
+#endif
 };
 
 /*==============================================================================
@@ -219,11 +262,7 @@ static const syscallfunc_t syscalltab[] = {
 
 //==============================================================================
 /**
- * @brief  Initialize system calls
- *
- * @param  None
- *
- * @return None
+ * @brief  Initialize system calls.
  */
 //==============================================================================
 void _syscall_init()
@@ -241,13 +280,11 @@ void _syscall_init()
 
 //==============================================================================
 /**
- * @brief  Function call selected syscall [USERSPACE]
+ * @brief  Function call selected syscall [USERSPACE].
  *
  * @param  syscall      syscall number
  * @param  retptr       pointer to return value
  * @param  ...          additional arguments
- *
- * @return None
  */
 //==============================================================================
 void syscall(syscall_t syscall, void *retptr, ...)
@@ -269,7 +306,9 @@ void syscall(syscall_t syscall, void *retptr, ...)
                                 if (_builtinfunc(queue_send, call_request, &syscallrq_ptr, MAX_DELAY_MS) ==  ESUCC) {
                                         _builtinfunc(process_set_syscall_pending_flag, syscallrq.task, true);
                                         if (_builtinfunc(semaphore_wait, syscall_sem, MAX_DELAY_MS) == ESUCC) {
-                                                _errno = syscallrq.err;
+                                                if (syscallrq.err) {
+                                                        _errno = syscallrq.err;
+                                                }
                                         }
                                         _builtinfunc(process_set_syscall_pending_flag, syscallrq.task, false);
                                 }
@@ -283,7 +322,7 @@ void syscall(syscall_t syscall, void *retptr, ...)
 
 //==============================================================================
 /**
- * @brief  Main syscall process (master) [KERNELSPACE]
+ * @brief  Main syscall process (master) [KERNELSPACE].
  *
  * @param  argc         argument count
  * @param  argv         arguments
@@ -348,11 +387,9 @@ int _syscall_kworker_process(int argc, char *argv[])
 
 //==============================================================================
 /**
- * @brief  This thread is responsible for handle syscall
+ * @brief  This thread is responsible for handle syscall.
  *
  * @param  arg          thread argument
- *
- * @return None
  */
 //==============================================================================
 static void syscall_kworker_thread(void *arg)
@@ -362,11 +399,9 @@ static void syscall_kworker_thread(void *arg)
 
 //==============================================================================
 /**
- * @brief  Function inform syscall owner about finished request
+ * @brief  Function inform syscall owner about finished request.
  *
  * @param  rq           request information
- *
- * @return None
  */
 //==============================================================================
 static void syscall_do(syscallrq_t *rq)
@@ -392,11 +427,9 @@ static void syscall_do(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall mount selected file system to selected path
+ * @brief  This syscall mount selected file system to selected path.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_mount(syscallrq_t *rq)
@@ -410,11 +443,9 @@ static void syscall_mount(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall unmount selected file system
+ * @brief  This syscall unmount selected file system.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_umount(syscallrq_t *rq)
@@ -426,11 +457,9 @@ static void syscall_umount(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return information about selected file system
+ * @brief  This syscall return information about selected file system.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_getmntentry(syscallrq_t *rq)
@@ -451,11 +480,9 @@ static void syscall_getmntentry(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall create device node
+ * @brief  This syscall create device node.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_mknod(syscallrq_t *rq)
@@ -470,11 +497,9 @@ static void syscall_mknod(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall create directory
+ * @brief  This syscall create directory.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_mkdir(syscallrq_t *rq)
@@ -487,11 +512,9 @@ static void syscall_mkdir(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall create FIFO pipe
+ * @brief  This syscall create FIFO pipe.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_mkfifo(syscallrq_t *rq)
@@ -504,11 +527,9 @@ static void syscall_mkfifo(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall open selected directory
+ * @brief  This syscall open selected directory.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_opendir(syscallrq_t *rq)
@@ -531,11 +552,9 @@ static void syscall_opendir(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall close selected directory
+ * @brief  This syscall close selected directory.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_closedir(syscallrq_t *rq)
@@ -557,11 +576,9 @@ static void syscall_closedir(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall read selected directory
+ * @brief  This syscall read selected directory.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_readdir(syscallrq_t *rq)
@@ -574,11 +591,9 @@ static void syscall_readdir(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall remove selected file
+ * @brief  This syscall remove selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_remove(syscallrq_t *rq)
@@ -590,11 +605,9 @@ static void syscall_remove(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall rename selected file
+ * @brief  This syscall rename selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_rename(syscallrq_t *rq)
@@ -607,11 +620,9 @@ static void syscall_rename(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall change mode of selected file
+ * @brief  This syscall change mode of selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_chmod(syscallrq_t *rq)
@@ -624,11 +635,9 @@ static void syscall_chmod(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall change owner and group of selected file
+ * @brief  This syscall change owner and group of selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_chown(syscallrq_t *rq)
@@ -642,11 +651,9 @@ static void syscall_chown(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall read statistics of selected file by path
+ * @brief  This syscall read statistics of selected file by path.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_stat(syscallrq_t *rq)
@@ -659,11 +666,9 @@ static void syscall_stat(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall read statistics of selected file by FILE object
+ * @brief  This syscall read statistics of selected file by FILE object.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_fstat(syscallrq_t *rq)
@@ -676,11 +681,9 @@ static void syscall_fstat(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall read statistics of file system mounted in selected path
+ * @brief  This syscall read statistics of file system mounted in selected path.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_statfs(syscallrq_t *rq)
@@ -693,11 +696,9 @@ static void syscall_statfs(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall open selected file
+ * @brief  This syscall open selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_fopen(syscallrq_t *rq)
@@ -721,11 +722,9 @@ static void syscall_fopen(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall close selected file
+ * @brief  This syscall close selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_fclose(syscallrq_t *rq)
@@ -747,11 +746,9 @@ static void syscall_fclose(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall write data to selected file
+ * @brief  This syscall write data to selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_fwrite(syscallrq_t *rq)
@@ -768,11 +765,9 @@ static void syscall_fwrite(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall read data from selected file
+ * @brief  This syscall read data from selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================;
 static void syscall_fread(syscallrq_t *rq)
@@ -789,11 +784,9 @@ static void syscall_fread(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall move file pointer
+ * @brief  This syscall move file pointer.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================;
 static void syscall_fseek(syscallrq_t *rq)
@@ -807,11 +800,9 @@ static void syscall_fseek(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return file pointer value
+ * @brief  This syscall return file pointer value.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_ftell(syscallrq_t *rq)
@@ -824,11 +815,9 @@ static void syscall_ftell(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall perform not standard operation on selected file/device
+ * @brief  This syscall perform not standard operation on selected file/device.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_ioctl(syscallrq_t *rq)
@@ -842,11 +831,9 @@ static void syscall_ioctl(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall flush buffers of selected file
+ * @brief  This syscall flush buffers of selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_fflush(syscallrq_t *rq)
@@ -858,11 +845,9 @@ static void syscall_fflush(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall check that end-of-file occurred
+ * @brief  This syscall check that end-of-file occurred.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_feof(syscallrq_t *rq)
@@ -875,11 +860,9 @@ static void syscall_feof(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall clear file errors
+ * @brief  This syscall clear file errors.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_clearerr(syscallrq_t *rq)
@@ -890,11 +873,9 @@ static void syscall_clearerr(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return file error indicator
+ * @brief  This syscall return file error indicator.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_ferror(syscallrq_t *rq)
@@ -907,11 +888,9 @@ static void syscall_ferror(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall synchronize all buffers of filesystems
+ * @brief  This syscall synchronize all buffers of filesystems.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_sync(syscallrq_t *rq)
@@ -922,11 +901,9 @@ static void syscall_sync(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return current time value (UTC timestamp)
+ * @brief  This syscall return current time value (UTC timestamp).
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_gettime(syscallrq_t *rq)
@@ -938,11 +915,9 @@ static void syscall_gettime(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall set current system time (UTC timestamp)
+ * @brief  This syscall set current system time (UTC timestamp).
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_settime(syscallrq_t *rq)
@@ -954,11 +929,9 @@ static void syscall_settime(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall initialize selected driver and create node
+ * @brief  This syscall initialize selected driver and create node.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_driverinit(syscallrq_t *rq)
@@ -974,11 +947,9 @@ static void syscall_driverinit(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall release selected driver
+ * @brief  This syscall release selected driver.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_driverrelease(syscallrq_t *rq)
@@ -992,11 +963,9 @@ static void syscall_driverrelease(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall allocate memory for application
+ * @brief  This syscall allocate memory for application.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_malloc(syscallrq_t *rq)
@@ -1018,11 +987,9 @@ static void syscall_malloc(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall allocate memory for application and clear allocated block
+ * @brief  This syscall allocate memory for application and clear allocated block.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_zalloc(syscallrq_t *rq)
@@ -1044,11 +1011,9 @@ static void syscall_zalloc(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall free allocated memory by application
+ * @brief  This syscall free allocated memory by application.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_free(syscallrq_t *rq)
@@ -1068,11 +1033,9 @@ static void syscall_free(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall enable system log functionality in selected file
+ * @brief  This syscall enable system log functionality in selected file.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_syslogenable(syscallrq_t *rq)
@@ -1084,11 +1047,9 @@ static void syscall_syslogenable(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall disable system log functionality
+ * @brief  This syscall disable system log functionality.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_syslogdisable(syscallrq_t *rq)
@@ -1099,11 +1060,9 @@ static void syscall_syslogdisable(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall restart entire system
+ * @brief  This syscall restart entire system.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_restart(syscallrq_t *rq)
@@ -1114,11 +1073,9 @@ static void syscall_restart(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall check if kernel panic occurred in last session
+ * @brief  This syscall check if kernel panic occurred in last session.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_kernelpanicdetect(syscallrq_t *rq)
@@ -1129,11 +1086,9 @@ static void syscall_kernelpanicdetect(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall abort current process (caller) and set exit code as -1
+ * @brief  This syscall abort current process (caller) and set exit code as -1.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_abort(syscallrq_t *rq)
@@ -1144,11 +1099,9 @@ static void syscall_abort(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall close current process (caller)
+ * @brief  This syscall close current process (caller).
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_exit(syscallrq_t *rq)
@@ -1159,11 +1112,9 @@ static void syscall_exit(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall start shell application to run command line
+ * @brief  This syscall start shell application to run command line.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_system(syscallrq_t *rq)
@@ -1174,16 +1125,14 @@ static void syscall_system(syscallrq_t *rq)
 //        GETARG(pid_t *, pid);
 //        GETARG(sem_t **, exit_sem);
 
-        //TODO syscall system()
+        //TODO system() syscall
 }
 
 //==============================================================================
 /**
- * @brief  This syscall create new process
+ * @brief  This syscall create new process.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_processcreate(syscallrq_t *rq)
@@ -1197,11 +1146,9 @@ static void syscall_processcreate(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall destroy existing process
+ * @brief  This syscall destroy existing process.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_processdestroy(syscallrq_t *rq)
@@ -1214,12 +1161,10 @@ static void syscall_processdestroy(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return exit semaphore
+ * @brief  This syscall return exit semaphore.
  *         then
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_processgetexitsem(syscallrq_t *rq)
@@ -1232,11 +1177,9 @@ static void syscall_processgetexitsem(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall read process statistics by seek
+ * @brief  This syscall read process statistics by seek.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_processstatseek(syscallrq_t *rq)
@@ -1249,11 +1192,9 @@ static void syscall_processstatseek(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall read process statistics by pid
+ * @brief  This syscall read process statistics by pid.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_processstatpid(syscallrq_t *rq)
@@ -1266,11 +1207,9 @@ static void syscall_processstatpid(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return PID of caller process
+ * @brief  This syscall return PID of caller process.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_processgetpid(syscallrq_t *rq)
@@ -1282,11 +1221,9 @@ static void syscall_processgetpid(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return PID's priority
+ * @brief  This syscall return PID's priority.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_processgetprio(syscallrq_t *rq)
@@ -1299,11 +1236,9 @@ static void syscall_processgetprio(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return CWD of current process
+ * @brief  This syscall return CWD of current process.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_getcwd(syscallrq_t *rq)
@@ -1322,11 +1257,9 @@ static void syscall_getcwd(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall create new thread
+ * @brief  This syscall create new thread.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_threadcreate(syscallrq_t *rq)
@@ -1342,11 +1275,9 @@ static void syscall_threadcreate(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall destroy thread
+ * @brief  This syscall destroy thread.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_threaddestroy(syscallrq_t *rq)
@@ -1355,12 +1286,21 @@ static void syscall_threaddestroy(syscallrq_t *rq)
 
         task_t *task = NULL;
         if (_process_thread_get_task(GETTHREAD(*tid), &task) == ESUCC) {
-                bool flag = true;
-                if (_process_get_syscall_pending_flag(task, &flag) == ESUCC && flag == false) {
+                bool syscall_pending = true;
+                bool detached        = false;
+
+                if (  (  (_process_get_detached_flag(task, &detached) == ESUCC)
+                      && (detached == true)  )
+                   ||
+                      (  (_process_get_syscall_pending_flag(task, &syscall_pending) == ESUCC)
+                      && (syscall_pending == false)  )  ) {
+
                         SETERRNO(_process_release_resource(GETPROCESS(),
                                                            cast(res_header_t*, GETTHREAD(*tid)),
                                                            RES_TYPE_THREAD));
+
                         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
                 } else {
                         SETRETURN(int, EAGAIN);
                 }
@@ -1372,11 +1312,9 @@ static void syscall_threaddestroy(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall destroy thread
+ * @brief  This syscall destroy thread.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_threadexit(syscallrq_t *rq)
@@ -1387,11 +1325,9 @@ static void syscall_threadexit(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall join thread with parent (parent wait until thread finish)
+ * @brief  This syscall join thread with parent (parent wait until thread finish).
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_threadgetexitsem(syscallrq_t *rq)
@@ -1404,11 +1340,9 @@ static void syscall_threadgetexitsem(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall create new semaphore
+ * @brief  This syscall create new semaphore.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_semaphorecreate(syscallrq_t *rq)
@@ -1432,11 +1366,9 @@ static void syscall_semaphorecreate(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall destroy selected semaphore
+ * @brief  This syscall destroy selected semaphore.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_semaphoredestroy(syscallrq_t *rq)
@@ -1456,11 +1388,9 @@ static void syscall_semaphoredestroy(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall create new mutex
+ * @brief  This syscall create new mutex.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_mutexcreate(syscallrq_t *rq)
@@ -1483,11 +1413,9 @@ static void syscall_mutexcreate(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall destroy selected mutex
+ * @brief  This syscall destroy selected mutex.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_mutexdestroy(syscallrq_t *rq)
@@ -1507,11 +1435,9 @@ static void syscall_mutexdestroy(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall create new queue
+ * @brief  This syscall create new queue.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_queuecreate(syscallrq_t *rq)
@@ -1535,11 +1461,9 @@ static void syscall_queuecreate(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall destroy selected queue
+ * @brief  This syscall destroy selected queue.
  *
  * @param  rq                   syscall request
- *
- * @return None
  */
 //==============================================================================
 static void syscall_queuedestroy(syscallrq_t *rq)
@@ -1556,6 +1480,352 @@ static void syscall_queuedestroy(syscallrq_t *rq)
 
         SETERRNO(err);
 }
+
+#if __ENABLE_NETWORK__ == _YES_
+//==============================================================================
+/**
+ * @brief  This syscall up network.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netifup(syscallrq_t *rq)
+{
+        GETARG(NET_family_t *, family);
+        GETARG(const NET_generic_config_t *, config);
+
+        SETERRNO(_net_ifup(*family, config));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall down network.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netifdown(syscallrq_t *rq)
+{
+        GETARG(NET_family_t *, family);
+
+        SETERRNO(_net_ifdown(*family));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall return network status.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netifstatus(syscallrq_t *rq)
+{
+        GETARG(NET_family_t *, family);
+        GETARG(NET_generic_status_t *, status);
+
+        SETERRNO(_net_ifstatus(*family, status));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall create new socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netsocketcreate(syscallrq_t *rq)
+{
+        GETARG(NET_family_t*, family);
+        GETARG(NET_protocol_t*, protocol);
+
+        SOCKET *socket = NULL;
+        int     err    = _net_socket_create(*family, *protocol, &socket);
+        if (err == ESUCC) {
+                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socket));
+                if (err != ESUCC) {
+                        _net_socket_destroy(socket);
+                        socket = NULL;
+                }
+        }
+
+        SETERRNO(err);
+        SETRETURN(SOCKET*, socket);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netsocketdestroy(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+
+        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, socket), RES_TYPE_SOCKET);
+        if (err != ESUCC) {
+                const char *msg = "*** Error: object is not a socket! ***\n";
+                size_t wrcnt;
+                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+                syscall_abort(rq);
+        }
+
+        SETERRNO(err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall bind socket with address.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netbind(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(const NET_generic_sockaddr_t *, addr);
+
+        SETERRNO(_net_socket_bind(socket, addr));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall listen connection on selected socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netlisten(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+
+        SETERRNO(_net_socket_listen(socket));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall accept incoming connection.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netaccept(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(SOCKET **, new_socket);
+
+        SOCKET *socknew = NULL;
+        int     err     = _net_socket_accept(socket, &socknew);
+        if (!err) {
+                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socknew));
+                if (err) {
+                        _net_socket_destroy(socknew);
+                        socknew = NULL;
+                }
+        }
+
+        *new_socket = socknew;
+
+        SETERRNO(err);
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall receive incoming bytes on socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netrecv(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(void *, buf);
+        GETARG(size_t *, len);
+        GETARG(NET_flags_t *, flags);
+
+        size_t recved = 0;
+        SETERRNO(_net_socket_recv(socket, buf, *len, *flags, &recved));
+        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, recved) : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall receive incoming bytes on socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netrecvfrom(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(void *, buf);
+        GETARG(size_t *, len);
+        GETARG(NET_flags_t *, flags);
+        GETARG(NET_generic_sockaddr_t *, sockaddr);
+
+        size_t recved = 0;
+        SETERRNO(_net_socket_recvfrom(socket, buf, *len, *flags, sockaddr, &recved));
+        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, recved) : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall send buffer to socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netsend(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(const void *, buf);
+        GETARG(size_t *, len);
+        GETARG(NET_flags_t *, flags);
+
+        size_t sent = 0;
+        SETERRNO(_net_socket_send(socket, buf, *len, *flags, &sent));
+        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, sent) : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall send buffer to socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netsendto(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(const void *, buf);
+        GETARG(size_t *, len);
+        GETARG(NET_flags_t *, flags);
+        GETARG(const NET_generic_sockaddr_t *, to_addr);
+
+        size_t sent = 0;
+        SETERRNO(_net_socket_sendto(socket, buf, *len, *flags, to_addr, &sent));
+        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, sent) : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall gets address of server by name.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netgethostbyname(syscallrq_t *rq)
+{
+        GETARG(NET_family_t *, family);
+        GETARG(const char *, name);
+        GETARG(NET_generic_sockaddr_t *, addr);
+
+        SETERRNO(_net_gethostbyname(*family, name, addr));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall set receive timeout of socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netsetrecvtimeout(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(uint32_t *, timeout);
+
+        SETERRNO(_net_socket_set_recv_timeout(socket, *timeout));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall set send timeout of socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netsetsendtimeout(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(uint32_t *, timeout);
+
+        SETERRNO(_net_socket_set_send_timeout(socket, *timeout));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall connect socket to address.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netconnect(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(const NET_generic_sockaddr_t *, addr);
+
+        SETERRNO(_net_socket_connect(socket, addr));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall disconnect socket.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netdisconnect(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+
+        SETERRNO(_net_socket_disconnect(socket));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall shut down selected connection direction.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netshutdown(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(NET_shut_t *, how);
+
+        SETERRNO(_net_socket_shutdown(socket, *how));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall return socket address.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netgetaddress(syscallrq_t *rq)
+{
+        GETARG(SOCKET *, socket);
+        GETARG(NET_generic_sockaddr_t *, sockaddr);
+
+        SETERRNO(_net_socket_getaddress(socket, sockaddr));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+#endif
 
 /*==============================================================================
   End of file

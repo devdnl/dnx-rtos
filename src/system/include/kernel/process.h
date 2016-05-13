@@ -118,7 +118,7 @@ typedef struct {
         const char *p_stderr;           //!< stderr file path (minor)
         const char *cwd;                //!< working directory path
         i16_t       priority;           //!< process priority
-        bool        has_parent;         //!< parent exist and is waiting for this process
+        bool        detached;           //!< independent process (no parent)
 } process_attr_t;
 
 /** USERSPACE: process attributes */
@@ -130,7 +130,7 @@ typedef struct {
         u16_t       files_count;        //!< number of opened files
         u16_t       dir_count;          //!< number of opened directories
         u16_t       mutexes_count;      //!< number of used mutexes
-        u16_t       semaphores_count;   //!< number of used sempahores
+        u16_t       semaphores_count;   //!< number of used semaphores
         u16_t       queue_count;        //!< number of used queues
         u16_t       socket_count;       //!< number of used sockets
         u16_t       threads_count;      //!< number of threads
@@ -138,13 +138,14 @@ typedef struct {
         u16_t       stack_size;         //!< stack size
         u16_t       stack_max_usage;    //!< max stack usage
         i16_t       priority;           //!< priority
-        bool        zombie;             //!< process finished and wait for destory
+        bool        zombie;             //!< process finished and wait for destroy
 } process_stat_t;
 
 /** USERSPACE: thread attributes */
 typedef struct {
         size_t stack_depth;             //!< stack depth
         i16_t  priority;                //!< thread priority
+        bool   detached;                //!< independent thread (without join possibility)
 } thread_attr_t;
 
 /** USERSPACE: average CPU load */
@@ -186,11 +187,13 @@ extern int         _process_get_exit_sem                (pid_t, sem_t **);
 extern int         _process_get_priority                (pid_t, int*);
 extern int         _process_get_stat_seek               (size_t, process_stat_t*);
 extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
+extern u32_t       _process_get_id                      (task_t *taskhdl);
 extern _process_t *_process_get_container_by_task       (task_t*, bool*);
 extern sem_t      *_process_get_syscall_sem_by_task     (task_t*);
 extern int         _process_set_syscall_sem_by_task     (task_t*, sem_t*);
 extern int         _process_set_syscall_pending_flag    (task_t*, bool);
 extern int         _process_get_syscall_pending_flag    (task_t*, bool*);
+extern int         _process_get_detached_flag           (task_t*, bool*);
 extern int         _process_thread_create               (_process_t*, thread_func_t, const thread_attr_t*, bool, void*, tid_t*, task_t**);
 extern _thread_t  *_process_thread_get_container        (_process_t*, tid_t);
 extern _thread_t  *_process_thread_get_container_by_task(task_t *taskhdl);

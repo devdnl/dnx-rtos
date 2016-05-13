@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ktypes.h
+File     inet.h
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   This file contains kernel types
+Brief
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,87 +24,80 @@
 
 *//*==========================================================================*/
 
-#ifndef _KTYPES_H_
-#define _KTYPES_H_
+/**
+@defgroup INET_H_ INET_H_
+
+Detailed Doxygen description.
+*/
+/**@{*/
+
+#ifndef _INET_H_
+#define _INET_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include <sys/types.h>
+#include "net/netm.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include <sys/types.h>
-
-/*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
 ==============================================================================*/
-
-/*==============================================================================
-  Exported types, enums definitions
-==============================================================================*/
-/** KERNELSPACE: resource type */
-typedef enum {
-        RES_TYPE_UNKNOWN       = 0,
-        RES_TYPE_PROCESS       = 0x958701BA,
-        RES_TYPE_THREAD        = 0x1EE62243,
-        RES_TYPE_MUTEX         = 0x300C6B74,
-        RES_TYPE_SEMAPHORE     = 0x4E59901B,
-        RES_TYPE_QUEUE         = 0x83D50ADB,
-        RES_TYPE_FILE          = 0x7D129250,
-        RES_TYPE_DIR           = 0x19586E97,
-        RES_TYPE_MEMORY        = 0x9E834645,
-        RES_TYPE_SOCKET        = 0x63ACC316
-} res_type_t;
-
-/** KERNELSPACE: object header (must be the first in object) */
-typedef struct res_header {
-        struct res_header *next;
-        res_type_t         type;
-} res_header_t;
-
-/** KERNELSPACE: task type */
-typedef void task_t;
-
-/** KERNELSPACE: task function type */
-typedef void (*task_func_t)(void*);
-
-/** KERNELSPACE/USERSPACE: semaphore type */
 typedef struct {
-        res_header_t  header;
-        void         *object;
-} sem_t;
-
-/** KERNELSPACE/USERSPACE: queue type */
-typedef struct {
-        res_header_t  header;
-        void         *object;
-} queue_t;
-
-/** KERNELSPACE/USERSPACE: mutex type */
-typedef struct {
-        res_header_t  header;
-        void         *object;
-        bool          recursive;
-} mutex_t;
+        struct netconn *netconn;
+        struct netbuf  *netbuf;
+        uint16_t        seek;
+} INET_socket_t;
 
 /*==============================================================================
-   Exported object declarations
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
+==============================================================================*/
+extern int   INET_ifup(const NET_INET_config_t*);
+extern int   INET_ifdown(void);
+extern int   INET_ifstatus(NET_INET_status_t*);
+extern int   INET_socket_create(NET_protocol_t, INET_socket_t*);
+extern int   INET_socket_destroy(INET_socket_t*);
+extern int   INET_socket_connect(INET_socket_t*, const NET_INET_sockaddr_t*);
+extern int   INET_socket_disconnect(INET_socket_t*);
+extern int   INET_socket_shutdown(INET_socket_t*, NET_shut_t);
+extern int   INET_socket_bind(INET_socket_t*, const NET_INET_sockaddr_t*);
+extern int   INET_socket_listen(INET_socket_t*);
+extern int   INET_socket_accept(INET_socket_t*, INET_socket_t*);
+extern int   INET_socket_recv(INET_socket_t*, void*, size_t, NET_flags_t, size_t*);
+extern int   INET_socket_recvfrom(INET_socket_t*, void*, size_t, NET_flags_t, NET_INET_sockaddr_t*, size_t*);
+extern int   INET_socket_send(INET_socket_t*, const void*, size_t, NET_flags_t, size_t*);
+extern int   INET_socket_sendto(INET_socket_t*, const void*, size_t, NET_flags_t, const NET_INET_sockaddr_t*, size_t*);
+extern int   INET_gethostbyname(const char*, NET_INET_sockaddr_t*);
+extern int   INET_socket_set_recv_timeout(INET_socket_t*, uint32_t);
+extern int   INET_socket_set_send_timeout(INET_socket_t*, uint32_t);
+extern int   INET_socket_getaddress(INET_socket_t*, NET_INET_sockaddr_t*);
+extern u16_t INET_hton_u16(u16_t);
+extern u32_t INET_hton_u32(u32_t);
+extern u64_t INET_hton_u64(u64_t);
+
+/*==============================================================================
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _KTYPES_H_ */
+#endif /* _INET_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

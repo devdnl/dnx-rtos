@@ -3,7 +3,7 @@
 #
 # @author  Daniel Zorychta
 #
-# @brief   This file contains list of existing modules
+# @brief   This file contains list of existing network stacks.
 #          Hybrid file: included both by Make and CC.
 #
 # @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
@@ -36,130 +36,54 @@
 #define _NETWORK_FLAGS_H_
 
 #/*--
-# this:SetLayout("TitledGridBack", 3, "Home > Network",
-#     function() -- back button
-#         local save = this:CheckFormatCorrections()
-#         this:LoadFile("config.h", save)
-#     end
-# )
-#
-# this:SetEvent("PreSave",
-#     function()
-#         return this:CheckFormatCorrections()
-#     end
-# )
-#
-# this.CheckFormatCorrections = function(this)
-#         local correct = true
-#         if this:IsMACFormatCorrect("__NETWORK_TCPIP_MAC_ADDR__", "LabelMACInfo") == false then correct = false end
-#         if this:IsIPFormatCorrect("__NETWORK_TCPIP_IP_ADDR__", "LabelIPInfo") == false then correct = false end
-#         if this:IsIPFormatCorrect("__NETWORK_TCPIP_IP_MASK__", "LabelIPMaskInfo") == false then correct = false end
-#         if this:IsIPFormatCorrect("__NETWORK_TCPIP_IP_GATEWAY__", "LabelIPGwInfo") == false then correct = false end
-#         return correct
-# end
-#
-# this.IsMACFormatCorrect = function(this, flag, flagInfo)
-#     local MAC = this:GetFlagValue(flag):upper()
-#     local EL  = "[A-F0-9][A-F0-9]"
-#     if MAC:match("^\""..EL..":"..EL..":"..EL..":"..EL..":"..EL..":"..EL.."\"$") then
-#         this:SetFlagValue("LabelMACInfo", "")
-#         return true
-#     else
-#         this:SetFlagValue(flagInfo, "Invalid format (HH:HH:HH:HH:HH:HH)")
-#         return false
-#     end
-# end
-#
-# this.IsIPFormatCorrect = function(this, flag, flagInfo)
-#     local IP = this:GetFlagValue(flag)
-#     if IP:match('^"%d+%.%d+%.%d+%.%d+"$') then
-#         local IPa, IPb, IPc, IPd = IP:match('^"(%d+)%.(%d+)%.(%d+)%.(%d+)"$')
-#         if  tonumber(IPa) <= 255 and tonumber(IPb) <= 255
-#         and tonumber(IPc) <= 255 and tonumber(IPd) <= 255 then
-#             this:SetFlagValue(flagInfo, "")
-#             return true
-#         end
-#     end
-#
-#     this:SetFlagValue(flagInfo, "Invalid format (DDD.DDD.DDD.DDD)")
-#     return false
-# end
+# this:SetLayout("TitledGridBack", 2, "Home > Network",
+#                function() this:LoadFile("config.h", true) end)
 #++*/
 
 
 #/*--
 # this:AddExtraWidget("Label", "LabelGeneral", "General", -1, "bold")
 # this:AddExtraWidget("Void", "VoidGeneral0")
-# this:AddExtraWidget("Void", "VoidGeneral1")
 #
-# this:AddWidget("Combobox", "Enable network")
-# this:AddItem("Disable", "_NO_")
-# this:AddItem("Enable\t\t\t\t", "_YES_")
+# this:AddWidget("Checkbox", "Enable network subsystem")
 # this:AddExtraWidget("Void", "VoidEnable")
 #--*/
-#define __ENABLE_NETWORK__ _NO_
+#define __ENABLE_NETWORK__ _YES_
 #/*
-__ENABLE_NETWORK__=_NO_
+__ENABLE_NETWORK__=_YES_
 #*/
 
-#/* existing stacks */
-#define STACK_LWIP 0xf986f02e
 #/*--
-# --this:AddWidget("Combobox", "TCP/IP stack")
-# --this:AddItem("LwIP", "STACK_LWIP")
-# --this:AddExtraWidget("Void", "VoidStack")
-#--*/
-#define __NETWORK_STACK__ STACK_LWIP
-
-
-#/*--
-# this:AddExtraWidget("Label", "LabelTCPIP", "\nTCP/IP", -1, "bold")
-# this:AddExtraWidget("Void", "VoidTCPIP0")
-# this:AddExtraWidget("Void", "VoidTCPIP1")
-#
-# this:AddExtraWidget("Label", "LabelLwIP", "LwIP stack")
-# this:AddExtraWidget("Hyperlink", "HLLwIP", "Configure")
-# this:SetEvent("clicked", "HLLwIP", function() this:LoadFile("network/lwip_flags.h") end)
-# this:AddExtraWidget("Void", "VoidLwIPCfg")
+# this:AddExtraWidget("Label", "LabelStacks", "\nStacks", -1, "bold")
+# this:AddExtraWidget("Void", "VoidStacks")
 #++*/
 
 #/*--
-# this:AddWidget("Editline", true, "MAC address")
-# this:AddExtraWidget("Label", "LabelMACInfo", "")
+# this:AddWidget("Checkbox", "Enable TCP/IP stack")
+# this:AddExtraWidget("Hyperlink", "TCPIPConfigure", "Configure")
+# this:SetEvent("clicked", "TCPIPConfigure", function() this:LoadFile("network/tcpip_flags.h") end)
 #--*/
-#define __NETWORK_TCPIP_MAC_ADDR__ "50:E5:49:37:B5:BD"
+#define __ENABLE_TCPIP_STACK__ _YES_
+#/*
+__ENABLE_TCPIP_STACK__=_YES_
+#*/
 
 #/*--
-# this:AddWidget("Editline", true, "IP address")
-# this:AddExtraWidget("Label", "LabelIPInfo", "")
+# --this:AddWidget("Checkbox", "Enable dnx stack")
+# --this:AddExtraWidget("Hyperlink", "dnxStackConfigure", "Configure")
+# --this:SetEvent("clicked", "dnxStackConfigure", function() this:LoadFile("network/dnx_flags.h") end)
 #--*/
-#define __NETWORK_TCPIP_IP_ADDR__ "192.168.0.100"
-
-#/*--
-# this:AddWidget("Editline", true, "IP mask")
-# this:AddExtraWidget("Label", "LabelIPMaskInfo", "")
-#--*/
-#define __NETWORK_TCPIP_IP_MASK__ "255.255.255.0"
-
-#/*--
-# this:AddWidget("Editline", true, "IP gateway")
-# this:AddExtraWidget("Label", "LabelIPGwInfo", "")
-#--*/
-#define __NETWORK_TCPIP_IP_GATEWAY__ "192.168.0.1"
+#define __ENABLE_DNX_STACK__ _YES_
+#/*
+__ENABLE_DNX_STACK__=_YES
+#*/
 
 
-#/*--
-# this:AddExtraWidget("Label", "LabelEthDev", "\nDevices", -1, "bold")
-# this:AddExtraWidget("Void", "VoidEthDev0")
-# this:AddExtraWidget("Void", "VoidEthDev1")
-#
-# this:AddWidget("Editline", true, "Ethernet device path")
-# this:AddExtraWidget("Void", "VoidEth", "")
-#--*/
-#define __NETWORK_ETHIF_FILE__ "/dev/ethmac"
-
-#if __NETWORK_STACK__ == STACK_LWIP
-#include "lwip_flags.h"
+#if __ENABLE_TCPIP_STACK__ == _YES_
+#include "tcpip_flags.h"
+#/*
+include ./config/network/tcpip_flags.h
+#*/
 #endif
 
 #endif /* _NETWORK_FLAGS_H_ */

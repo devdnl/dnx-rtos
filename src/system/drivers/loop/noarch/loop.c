@@ -304,7 +304,7 @@ API_MOD_READ(LOOP,
 
         loop_t *hdl = device_handle;
 
-        if (hdl->host_lock == NULL)
+        if (sys_device_is_unlocked(&hdl->host_lock))
                 return ESRCH;
 
         int result = sys_mutex_lock(hdl->mtx, OPERATION_TIMEOUT);

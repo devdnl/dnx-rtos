@@ -35,6 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <dnx/os.h>
+#include "kernel/sysfunc.h"
 
 /*==============================================================================
   Exported macros
@@ -45,7 +46,7 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef task_t          *sys_thread_t;
+typedef thread_t         sys_thread_t;
 typedef int              sys_prot_t;
 typedef mutex_t         *sys_mutex_t;
 typedef sem_t           *sys_sem_t;

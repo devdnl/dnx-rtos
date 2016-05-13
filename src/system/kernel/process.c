@@ -32,6 +32,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "fs/vfs.h"
+#include "net/netm.h"
 #include "kernel/process.h"
 #include "kernel/kwrapper.h"
 #include "kernel/kpanic.h"
@@ -51,6 +52,9 @@
 #define try(_x)                         if ((*__ = (_x)) != 0) break
 #define onsuccess(_x)                   if ((_x) == 0)
 #define onfailure(_x)                   if ((_x) != 0)
+
+#define ATOMIC for (int __ = 0; __ == 0;)\
+        for (_kernel_scheduler_lock(); __ == 0; _kernel_scheduler_unlock(), __++)
 
 /*==============================================================================
   Local types, enums definitions
@@ -73,10 +77,10 @@ struct _process {
         pid_t            pid;                   /* process ID                           */
         int              errnov;                /* program error number                 */
         u32_t            timecnt;               /* counter used to calculate CPU load   */
-        u16_t            CPU_load;              /* CPU load * 1000 (10 = 1%)            */
+        u16_t            CPU_load;              /* CPU load (10 = 1%)                   */
         u8_t             argc;                  /* number of arguments                  */
         i8_t             status;                /* program status (return value)        */
-        bool             has_parent:1;          /* process has parent                   */
+        bool             detached:1;            /* independent process (no parent)      */
         bool             syscall_pending:1;     /* syscall is pending                   */
 };
 
@@ -89,6 +93,7 @@ struct _thread {
         sem_t           *syscall_sem;           /* syscall semaphore                    */
         size_t           stack_depth;           /* stack size                           */
         tid_t            tid;                   /* thread ID                            */
+        bool             detached:1;            /* independent thread (no join)         */
         bool             syscall_pending:1;     /* syscall is pending                   */
 };
 
@@ -187,8 +192,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 
                 proc->pid = ++PID_cnt;
 
-                _kernel_scheduler_lock();
-                {
+                ATOMIC {
                         catcherrno(result) {
                                 try(_task_create(process_code,
                                                  proc->pdata->name,
@@ -213,14 +217,13 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                                 }
                         }
                 }
-                _kernel_scheduler_unlock();
 
-                } onfailure(result) {
-                        if (proc) {
-                                process_destroy_all_resources(proc);
-                                _kfree(_MM_KRN, cast(void**, &proc));
-                        }
+        } onfailure(result) {
+                if (proc) {
+                        process_destroy_all_resources(proc);
+                        _kfree(_MM_KRN, cast(void**, &proc));
                 }
+        }
 
         return result;
 }
@@ -242,21 +245,19 @@ KERNELSPACE int _process_destroy(pid_t pid, int *status)
         _process_t *prev = NULL;
         foreach_process(process) {
                 if (process->pid == pid) {
-                        _kernel_scheduler_lock();
-                        {
+                        ATOMIC {
                                 if (process_list == process) {
                                         process_list = cast(_process_t*, process->header.next);
                                 } else {
                                         prev->header.next = process->header.next;
                                 }
                         }
-                        _kernel_scheduler_unlock();
 
                         if (status) {
                                 *status = process->status;
                         }
 
-                        process->has_parent = false;
+                        process->detached = true;
                         process_destroy_all_resources(process);
 
                         process->header.next = NULL;
@@ -369,8 +370,7 @@ KERNELSPACE int _process_set_CWD(_process_t *proc, const char *CWD)
 KERNELSPACE int _process_register_resource(_process_t *proc, res_header_t *resource)
 {
         if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                _kernel_scheduler_lock();
-                {
+                ATOMIC {
                         if (proc->res_list == NULL) {
                                 proc->res_list = resource;
                         } else {
@@ -378,7 +378,6 @@ KERNELSPACE int _process_register_resource(_process_t *proc, res_header_t *resou
                                 proc->res_list = resource;
                         }
                 }
-                _kernel_scheduler_unlock();
 
                 return ESUCC;
         } else {
@@ -402,42 +401,45 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
         int result = ESRCH;
 
         if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                _kernel_scheduler_lock();
-
                 result = ENOENT;
+                res_header_t *obj_to_destroy = NULL;
 
-                res_header_t *prev     = NULL;
-                int           max_deep = 1024;
+                ATOMIC {
+                        res_header_t *prev     = NULL;
+                        int           max_deep = 1024;
 
-                foreach_resource(curr, proc->res_list) {
-                        if (curr == resource) {
-                                if (curr->type == type) {
-                                        if (proc->res_list == curr) {
-                                                proc->res_list = proc->res_list->next;
+                        foreach_resource(curr, proc->res_list) {
+                                if (curr == resource) {
+                                        if (curr->type == type) {
+                                                if (proc->res_list == curr) {
+                                                        proc->res_list = proc->res_list->next;
+                                                } else {
+                                                        prev->next = curr->next;
+                                                }
+
+                                                obj_to_destroy = curr;
                                         } else {
-                                                prev->next = curr->next;
-                                        }
-
-                                        result = resource_destroy(curr);
-                                        if (result != ESUCC) {
-                                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                                                result = EFAULT;
                                         }
 
                                         break;
                                 } else {
-                                        result = EFAULT;
-                                        break;
+
+                                        prev = curr;
+
+                                        if (--max_deep == 0) {
+                                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                                        }
                                 }
-                        }
-
-                        prev = curr;
-
-                        if (--max_deep == 0) {
-                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
                         }
                 }
 
-                _kernel_scheduler_unlock();
+                if (obj_to_destroy) {
+                        result = resource_destroy(obj_to_destroy);
+                        if (result != ESUCC) {
+                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                        }
+                }
         }
 
         return result;
@@ -460,19 +462,17 @@ KERNELSPACE int _process_get_stat_seek(size_t seek, process_stat_t *stat)
         if (stat) {
                 result = ENOENT;
 
-                _kernel_scheduler_lock();
+                ATOMIC {
+                        foreach_process(proc) {
+                                if (seek == 0) {
+                                        process_get_stat(proc, stat);
+                                        result = ESUCC;
+                                        break;
+                                }
 
-                foreach_process(proc) {
-                        if (seek == 0) {
-                                process_get_stat(proc, stat);
-                                result = ESUCC;
-                                break;
+                                seek--;
                         }
-
-                        seek--;
                 }
-
-                _kernel_scheduler_unlock();
         }
 
         return result;
@@ -495,17 +495,15 @@ KERNELSPACE int _process_get_stat_pid(pid_t pid, process_stat_t *stat)
         if (pid) {
                 result = ENOENT;
 
-                _kernel_scheduler_lock();
-
-                foreach_process(proc) {
-                        if (proc->pid == pid) {
-                                process_get_stat(proc, stat);
-                                result = ESUCC;
-                                break;
+                ATOMIC {
+                        foreach_process(proc) {
+                                if (proc->pid == pid) {
+                                        process_get_stat(proc, stat);
+                                        result = ESUCC;
+                                        break;
+                                }
                         }
                 }
-
-                _kernel_scheduler_unlock();
         }
 
         return result;
@@ -564,13 +562,11 @@ KERNELSPACE size_t _process_get_count(void)
 {
         size_t count = 0;
 
-        _kernel_scheduler_lock();
-        {
+        ATOMIC {
                 foreach_process(proc) {
                         count++;
                 }
         }
-        _kernel_scheduler_unlock();
 
         return count;
 }
@@ -626,17 +622,15 @@ KERNELSPACE int _process_get_exit_sem(pid_t pid, sem_t **sem)
         int result = EINVAL;
 
         if (pid && sem) {
-                _kernel_scheduler_lock();
-
-                foreach_process(proc) {
-                        if (proc->pid == pid) {
-                                *sem   = proc->exit_sem;
-                                result = ESUCC;
-                                break;
+                ATOMIC {
+                        foreach_process(proc) {
+                                if (proc->pid == pid) {
+                                        *sem   = proc->exit_sem;
+                                        result = ESUCC;
+                                        break;
+                                }
                         }
                 }
-
-                _kernel_scheduler_unlock();
         }
 
         return result;
@@ -657,16 +651,15 @@ KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
         int result = EINVAL;
 
         if (pid && prio) {
-                _kernel_scheduler_lock();
-                foreach_process(proc) {
-                        if (proc->pid == pid) {
-                                *prio  = _task_get_priority(proc->task);
-                                result = ESUCC;
-                                break;
+                ATOMIC {
+                        foreach_process(proc) {
+                                if (proc->pid == pid) {
+                                        *prio  = _task_get_priority(proc->task);
+                                        result = ESUCC;
+                                        break;
+                                }
                         }
                 }
-
-                _kernel_scheduler_unlock();
         }
 
         return result;
@@ -705,6 +698,26 @@ KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *ma
 
 //==============================================================================
 /**
+ * @brief  Function return process/thread ID (address translated to ID).
+ *
+ * @param  taskhdl      task handle
+ *
+ * @return Process/thread ID.
+ */
+//==============================================================================
+KERNELSPACE u32_t _process_get_id(task_t *taskhdl)
+{
+        u32_t id;
+
+        ATOMIC {
+                id = cast(u32_t, _task_get_tag(taskhdl));
+        }
+
+        return id;
+}
+
+//==============================================================================
+/**
  * @brief  Function return syscall semaphore handle of selected task
  *
  * @param  taskhdl      task handle (NULL for current task)
@@ -716,8 +729,7 @@ KERNELSPACE sem_t *_process_get_syscall_sem_by_task(task_t *taskhdl)
 {
         sem_t *sem = NULL;
 
-        _kernel_scheduler_lock();
-        {
+        ATOMIC {
                 res_header_t *res = _task_get_tag(taskhdl);
 
                 if (res->type == RES_TYPE_PROCESS) {
@@ -727,7 +739,6 @@ KERNELSPACE sem_t *_process_get_syscall_sem_by_task(task_t *taskhdl)
                         sem = cast(_thread_t*, res)->syscall_sem;
                 }
         }
-        _kernel_scheduler_unlock();
 
         return sem;
 }
@@ -745,8 +756,7 @@ KERNELSPACE int _process_set_syscall_sem_by_task(task_t *taskhdl, sem_t *sem)
 {
         int result = EINVAL;
 
-        _kernel_scheduler_lock();
-        {
+        ATOMIC {
                 res_header_t *res = _task_get_tag(taskhdl);
 
                 if (res->type == RES_TYPE_PROCESS) {
@@ -758,7 +768,6 @@ KERNELSPACE int _process_set_syscall_sem_by_task(task_t *taskhdl, sem_t *sem)
                         result = ESUCC;
                 }
         }
-        _kernel_scheduler_unlock();
 
         return result;
 }
@@ -777,8 +786,7 @@ KERNELSPACE int _process_set_syscall_pending_flag(task_t *taskhdl, bool state)
 {
         int result = EINVAL;
 
-        _kernel_scheduler_lock();
-        {
+        ATOMIC {
                 res_header_t *res = _task_get_tag(taskhdl);
 
                 if (res->type == RES_TYPE_PROCESS) {
@@ -790,14 +798,13 @@ KERNELSPACE int _process_set_syscall_pending_flag(task_t *taskhdl, bool state)
                         result = ESUCC;
                 }
         }
-        _kernel_scheduler_unlock();
 
         return result;
 }
 
 //==============================================================================
 /**
- * @brief  Function set syscall in progress flag
+ * @brief  Function get syscall progress flag
  *
  * @param  taskhdl      task
  * @param  state        flag state
@@ -810,8 +817,7 @@ KERNELSPACE int _process_get_syscall_pending_flag(task_t *taskhdl, bool *state)
         int result = EINVAL;
 
         if (state) {
-                _kernel_scheduler_lock();
-                {
+                ATOMIC {
                         res_header_t *res = _task_get_tag(taskhdl);
 
                         if (res->type == RES_TYPE_PROCESS) {
@@ -823,7 +829,38 @@ KERNELSPACE int _process_get_syscall_pending_flag(task_t *taskhdl, bool *state)
                                 result = ESUCC;
                         }
                 }
-                _kernel_scheduler_unlock();
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Function get detached flag.
+ *
+ * @param  taskhdl      task
+ * @param  state        flag state
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_get_detached_flag(task_t *taskhdl, bool *state)
+{
+        int result = EINVAL;
+
+        if (state) {
+                ATOMIC {
+                        res_header_t *res = _task_get_tag(taskhdl);
+
+                        if (res->type == RES_TYPE_PROCESS) {
+                                *state = cast(_process_t*, res)->detached;
+                                result = ESUCC;
+
+                        } else if (res->type == RES_TYPE_THREAD) {
+                                *state = cast(_thread_t*, res)->detached;
+                                result = ESUCC;
+                        }
+                }
         }
 
         return result;
@@ -863,17 +900,20 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                         thread->arg         = arg;
 
                         if (sys == false) {
-                                result = _semaphore_create(1, 0, &thread->exit_sem);
-                                if (result != ESUCC)
-                                        goto finish;
+                                thread->detached = attr->detached;
+
+                                if (!attr->detached) {
+                                        result = _semaphore_create(1, 0, &thread->exit_sem);
+                                        if (result != ESUCC)
+                                                goto finish;
+                                }
 
                                 result = _semaphore_create(1, 0, &thread->syscall_sem);
                                 if (result != ESUCC)
                                         goto finish;
                         }
 
-                        _kernel_scheduler_lock();
-                        {
+                        ATOMIC {
                                 result = _task_create(thread_code,
                                                       "th",
                                                       (attr ? attr->stack_depth : STACK_DEPTH_LOW),
@@ -901,7 +941,6 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                                         }
                                 }
                         }
-                        _kernel_scheduler_unlock();
 
                         finish:
                         if (result != ESUCC) {
@@ -1066,18 +1105,16 @@ KERNELSPACE int _process_thread_get_exit_sem(_process_t *proc, tid_t tid, sem_t 
         int result = EINVAL;
 
         if (proc && proc->header.type == RES_TYPE_PROCESS && tid && sem) {
-                _kernel_scheduler_lock();
-
-                foreach_resource(res, proc->res_list) {
-                        _thread_t *thread = cast(_thread_t*, res);
-                        if (thread->header.type == RES_TYPE_THREAD && thread->tid == tid) {
-                                *sem   = thread->exit_sem;
-                                result = ESUCC;
-                                break;
+                ATOMIC {
+                        foreach_resource(res, proc->res_list) {
+                                _thread_t *thread = cast(_thread_t*, res);
+                                if (thread->header.type == RES_TYPE_THREAD && thread->tid == tid) {
+                                        *sem   = thread->exit_sem;
+                                        result = ESUCC;
+                                        break;
+                                }
                         }
                 }
-
-                _kernel_scheduler_unlock();
         }
 
         return result;
@@ -1165,10 +1202,10 @@ USERSPACE static void process_code(void *mainfn)
 
         proc->status = funcmain(proc->argc, proc->argv);
 
-        if (proc->has_parent) {
-                syscall(SYSCALL_EXIT, NULL, &proc->status);
-        } else {
+        if (proc->detached) {
                 syscall(SYSCALL_PROCESSDESTROY, NULL, &proc->pid, NULL);
+        } else {
+                syscall(SYSCALL_EXIT, NULL, &proc->status);
         }
 
         /* should never achieve this function */
@@ -1192,8 +1229,11 @@ USERSPACE static void thread_code(void *thrfunc)
         func(thread->arg);
 
         if (thread->exit_sem) {
-                // userspace thread
                 syscall(SYSCALL_THREADEXIT, NULL, &thread->tid);
+
+        } else if (thread->detached) {
+                syscall(SYSCALL_THREADDESTROY, NULL, &thread->tid);
+
         } else {
                 // system thread
                 thread->task = NULL;    // object release at the end of thread
@@ -1265,12 +1305,12 @@ static void process_destroy_all_resources(_process_t *proc)
         }
 
         if (proc->exit_sem) {
-                if (proc->has_parent) {
-                        _semaphore_signal(proc->exit_sem);
-                        proc->has_parent = false;
-                } else {
+                if (proc->detached) {
                         _semaphore_destroy(proc->exit_sem);
-                        proc->exit_sem   = NULL;
+                        proc->exit_sem = NULL;
+                } else {
+                        _semaphore_signal(proc->exit_sem);
+                        proc->detached = true;
                 }
         }
 
@@ -1393,6 +1433,9 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
 {
         int result = ESUCC;
 
+        // by default process is detached
+        proc->detached = true;
+
         if (attr) {
                 /*
                  * Apply stdin settings
@@ -1467,7 +1510,7 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                 /*
                  * Create exit semaphore object if parent exists
                  */
-                if (attr->has_parent) {
+                if (attr->detached == false) {
                         result = _semaphore_create(1, 0, &proc->exit_sem);
                         if (result != ESUCC) {
                                 goto finish;
@@ -1477,7 +1520,7 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                 /*
                  * Apply no-parent attribute
                  */
-                proc->has_parent = attr->has_parent;
+                proc->detached = attr->detached;
 
                 /*
                  * Apply Current Working Directory path
@@ -1530,6 +1573,14 @@ static int resource_destroy(res_header_t *resource)
         case RES_TYPE_THREAD:
                 process_thread_destroy(cast(_thread_t*, res2free));
                 break;
+
+        case RES_TYPE_SOCKET:
+#if __ENABLE_NETWORK__ == _YES_
+                _net_socket_destroy(cast(SOCKET*, res2free));
+                break;
+#else
+                return ENOTSUP;
+#endif
 
         default:
                 return EINVAL;

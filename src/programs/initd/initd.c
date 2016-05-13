@@ -30,11 +30,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <dnx/misc.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
+#include <dnx/net.h>
 #include <unistd.h>
 
 #include "stm32f1/gpio_cfg.h"
@@ -104,7 +106,7 @@ static void thread(void *arg)
  * @return program status
  */
 //==============================================================================
-int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
+int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
@@ -250,6 +252,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                 result = mount("ramfs", "", "/");
 
                 result = mkdir("/dev", 0777);
+                mkdir("/tmp", 0777);
 //                result = mkdir("/proc", 0777);
 
 //                result = mount("devfs", "", "/dev");
@@ -281,6 +284,8 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
 
                 driver_init("RTC", 0, 0, "/dev/rtc");
 
+                driver_init("ETHMAC", 0, 0, "/dev/ethmac");
+
 //                driver_release("SPI", 2, 0);
 //                driver_release("SPI", 2, 1);
 //                driver_release("SPI", 2, 2);
@@ -289,15 +294,67 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
 
 
 
+                stdout = fopen("/dev/tty0", "r+");
+                stderr = stdout;
+
+
+                sleep(2);
+                puts("Starting DHCP client...\n");
+
+                static const NET_INET_config_t cfg_static = {
+                        .mode    = NET_INET_MODE__STATIC,
+                        .address = NET_INET_IPv4(192,168,0,150),
+                        .mask    = NET_INET_IPv4(255,255,255,0),
+                        .gateway = NET_INET_IPv4(192,168,0,1)
+                };
+
+                static const NET_INET_config_t cfg_dhcp = {
+                        .mode    = NET_INET_MODE__DHCP_START,
+                        .address = NET_INET_IPv4_ANY,
+                        .mask    = NET_INET_IPv4_ANY,
+                        .gateway = NET_INET_IPv4_ANY
+                };
+
+                errno = 0;
+                if (ifup(NET_FAMILY__INET, &cfg_dhcp) != 0) {
+                        perror("ifup");
+                }
+
+              /*  if (ifup(NET_FAMILY__INET, &cfg2, sizeof(NET_INET_cfg_t)) != 0) {
+                        perror("DHCP inform");
+                }*/
+
+                sleep(1);
+
+                NET_INET_status_t status;
+                if (ifstatus(NET_FAMILY__INET, &status) != 0) {
+                        perror(NULL);
+                } else {
+                        printf("Status: %d\n", status.state);
+                        printf("Address: %d.%d.%d.%d\n", NET_INET_IPv4_a(status.address), NET_INET_IPv4_b(status.address), NET_INET_IPv4_c(status.address), NET_INET_IPv4_d(status.address));
+                        printf("Mask: %d.%d.%d.%d\n", NET_INET_IPv4_a(status.mask), NET_INET_IPv4_b(status.mask), NET_INET_IPv4_c(status.mask), NET_INET_IPv4_d(status.mask));
+                        printf("Gateway: %d.%d.%d.%d\n", NET_INET_IPv4_a(status.gateway), NET_INET_IPv4_b(status.gateway), NET_INET_IPv4_c(status.gateway), NET_INET_IPv4_d(status.gateway));
+                        printf("MAC0: %02X\n", status.hw_addr[0]);
+                        printf("MAC1: %02X\n", status.hw_addr[1]);
+                        printf("MAC2: %02X\n", status.hw_addr[2]);
+                        printf("MAC3: %02X\n", status.hw_addr[3]);
+                        printf("MAC4: %02X\n", status.hw_addr[4]);
+                        printf("MAC5: %02X\n", status.hw_addr[5]);
+                        printf("tx bytes: %d\n", status.tx_bytes);
+                        printf("rx bytes: %d\n", status.rx_bytes);
+                }
+
+
+                sleep(2);
+
                 syslog_enable("/dev/tty3");
-                sleep(3);
 
                 static const process_attr_t attr0 = {
                        .cwd = "/",
                        .f_stderr   = NULL,
                        .f_stdin    = NULL,
                        .f_stdout   = NULL,
-                       .has_parent = false,
+                       .detached   = true,
                        .p_stderr   = "/dev/tty0",
                        .p_stdin    = "/dev/tty0",
                        .p_stdout   = "/dev/tty0"
@@ -309,7 +366,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                        .f_stderr   = NULL,
                        .f_stdin    = NULL,
                        .f_stdout   = NULL,
-                       .has_parent = false,
+                       .detached   = true,
                        .p_stderr   = "/dev/tty1",
                        .p_stdin    = "/dev/tty1",
                        .p_stdout   = "/dev/tty1"
@@ -321,12 +378,14 @@ int_main(initd, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
                        .f_stderr   = NULL,
                        .f_stdin    = NULL,
                        .f_stdout   = NULL,
-                       .has_parent = false,
+                       .detached   = true,
                        .p_stderr   = "/dev/tty2",
                        .p_stdin    = "/dev/tty2",
                        .p_stdout   = "/dev/tty2"
                 };
                 process_create("dsh", &attr2);
+
+//                _netman_start_DHCP_client();
 
 //                FILE *f = fopen("/dev/tty0", "w");
 //                stdout = f;

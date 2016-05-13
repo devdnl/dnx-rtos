@@ -187,7 +187,7 @@ static inline void usleep(const u32_t microseconds)
  * @see sleep(), msleep(), sleep_until(), msleep_until()
  */
 //==============================================================================
-static inline int prepare_sleep_until(void)
+static inline u32_t prepare_sleep_until(void)
 {
         return _builtinfunc(kernel_get_tick_counter);
 }

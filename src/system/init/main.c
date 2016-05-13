@@ -35,10 +35,6 @@
 #include "kernel/kpanic.h"
 #include "kernel/kwrapper.h"
 
-#if (__NETWORK_ENABLE__ != 0)
-#       include "net/netman.h"
-#endif
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -67,10 +63,6 @@
 /**
  * @brief  Task used to initialize dnx RTOS system. This task decrease stack
  *         usage in startup phase. Task after system initialization is deleted.
- *
- * @param  None
- *
- * @return None
  */
 //==============================================================================
 void dnxinit(void *arg)
@@ -79,21 +71,12 @@ void dnxinit(void *arg)
 
         _vfs_init();
         _syscall_init();
-
-#if (__NETWORK_ENABLE__ != 0)
-        _netman_init();
-#endif
-
         _task_exit();
 }
 
 //==============================================================================
 /**
  * @brief Main function
- *
- * @param None
- *
- * @return None (if exist the error occurred)
  */
 //==============================================================================
 int main(void)
@@ -102,7 +85,7 @@ int main(void)
         _heap_init();
         _mm_init();
         _kernel_panic_init();
-        _task_create(dnxinit, "dnxinit", 2*__OS_TASK_MIN_STACK_DEPTH__, NULL, NULL, NULL);
+        _task_create(dnxinit, "", 2*__OS_TASK_MIN_STACK_DEPTH__, NULL, NULL, NULL);
         _kernel_start();
         return -1;
 }
