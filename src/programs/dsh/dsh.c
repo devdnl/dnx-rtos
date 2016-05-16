@@ -87,8 +87,6 @@ GLOBAL_VARIABLES_SECTION {
         const char     *pipe_file;
 };
 
-//const char *pipe_file = "/tmp/dsh-";
-
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -677,7 +675,7 @@ static bool analyze_line(char *cmd)
  * @brief Terminal main function
  */
 //==============================================================================
-int_main(dsh, STACK_DEPTH_CUSTOM(110), int argc, char *argv[])
+int_main(dsh, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;
