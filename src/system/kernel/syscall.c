@@ -51,7 +51,7 @@
 #define GETARG(type, var)       type var = va_arg(rq->args, type)
 #define GETRETURN(type, var)    type var = rq->retptr
 #define GETTASKHDL()            rq->task
-#define GETPROCESS()            _process_get_container_by_task(rq->task, NULL)
+#define GETPROCESS()            _process_get_container_by_task(rq->task_client, NULL)
 #define GETTHREAD(_tid)         _process_thread_get_container(GETPROCESS(), _tid)
 #define SETRETURN(type, var)    if (rq->retptr) {*((type*)rq->retptr) = (var);}
 #define SETERRNO(var)           rq->err = var
@@ -62,11 +62,12 @@
   Local object types
 ==============================================================================*/
 typedef struct {
-        void     *retptr;
-        task_t   *task;
-        syscall_t syscall;
-        va_list   args;
-        int       err;
+        void      *retptr;
+        task_t    *task_client;
+        _thread_t *syscall_thread;
+        syscall_t  syscall_no;
+        va_list    args;
+        int        err;
 } syscallrq_t;
 
 typedef void (*syscallfunc_t)(syscallrq_t*);
@@ -74,8 +75,8 @@ typedef void (*syscallfunc_t)(syscallrq_t*);
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void syscall_do(syscallrq_t *rq);
-static void syscall_kworker_thread(void *arg);
+static task_t *destroy_top_process(void);
+static void syscall_do(void *rq);
 static void syscall_mount(syscallrq_t *rq);
 static void syscall_umount(syscallrq_t *rq);
 static void syscall_getmntentry(syscallrq_t *rq);
@@ -293,24 +294,37 @@ void syscall(syscall_t syscall, void *retptr, ...)
                 sem_t *syscall_sem = _builtinfunc(process_get_syscall_sem_by_task, _THIS_TASK);
                 if (syscall_sem) {
 
-                        syscallrq_t syscallrq;
-                        syscallrq.syscall = syscall;
-                        syscallrq.task    = _builtinfunc(task_get_handle);
-                        syscallrq.retptr  = retptr;
-                        syscallrq.err     = ESUCC;
+                        syscallrq_t syscallrq = {
+                                .syscall_no     = syscall,
+                                .syscall_thread = NULL,
+                                .task_client    = _builtinfunc(task_get_handle),
+                                .retptr         = retptr,
+                                .err            = ESUCC
+                        };
 
                         va_start(syscallrq.args, retptr);
                         {
                                 syscallrq_t *syscallrq_ptr = &syscallrq;
 
-                                if (_builtinfunc(queue_send, call_request, &syscallrq_ptr, MAX_DELAY_MS) ==  ESUCC) {
-                                        _builtinfunc(process_set_syscall_pending_flag, syscallrq.task, true);
-                                        if (_builtinfunc(semaphore_wait, syscall_sem, MAX_DELAY_MS) == ESUCC) {
+                                if (_builtinfunc(queue_send,
+                                                 call_request,
+                                                 &syscallrq_ptr,
+                                                 MAX_DELAY_MS) ==  ESUCC) {
+
+                                        _builtinfunc(process_set_syscall_by_task,
+                                                     syscallrq.task_client,
+                                                     syscallrq_ptr);
+
+                                        if (_builtinfunc(semaphore_wait,
+                                                         syscall_sem,
+                                                         MAX_DELAY_MS) == ESUCC) {
+
                                                 if (syscallrq.err) {
                                                         _errno = syscallrq.err;
                                                 }
                                         }
-                                        _builtinfunc(process_set_syscall_pending_flag, syscallrq.task, false);
+                                        _builtinfunc(process_set_syscall_by_task,
+                                                     syscallrq.task_client, NULL);
                                 }
                         }
                         va_end(syscallrq.args);
@@ -347,14 +361,14 @@ int _syscall_kworker_process(int argc, char *argv[])
         for (;;) {
                 syscallrq_t *rq;
                 if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
-                        if (rq->syscall <= _SYSCALL_GROUP_0_OS_NON_BLOCKING) {
+                        if (rq->syscall_no <= _SYSCALL_GROUP_0_OS_NON_BLOCKING) {
                                 syscall_do(rq);
                         } else {
                                 /* select stack size according to syscall group */
                                 const thread_attr_t *thread_attr = NULL;
-                                if (rq->syscall <= _SYSCALL_GROUP_1_FS_BLOCKING) {
+                                if (rq->syscall_no <= _SYSCALL_GROUP_1_FS_BLOCKING) {
                                         thread_attr = &fs_blocking_thread_attr;
-                                } else if (rq->syscall <= _SYSCALL_GROUP_2_NET_BLOCKING) {
+                                } else if (rq->syscall_no <= _SYSCALL_GROUP_2_NET_BLOCKING) {
                                         thread_attr = &net_blocking_thread_attr;
                                 } else {
                                         _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
@@ -365,18 +379,33 @@ int _syscall_kworker_process(int argc, char *argv[])
                                 _sleep_ms(1);
 
                                 /* create new syscall task */
-                                if (_process_thread_create(_process_get_container_by_task(_THIS_TASK, NULL),
-                                                           syscall_kworker_thread,
-                                                           thread_attr,
-                                                           true,
-                                                           rq,
-                                                           NULL,
-                                                           NULL) == ESUCC) {
-
+                                _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
+                                switch (_process_thread_create(proc,
+                                                               syscall_do,
+                                                               thread_attr,
+                                                               true,
+                                                               rq,
+                                                               NULL,
+                                                               NULL) ) {
+                                case ESUCC:
                                         _task_yield();
-                                } else {
+                                        break;
+
+                                // destroy top process to get free memory
+                                case ENOMEM: {
+                                        task_t *task = destroy_top_process();
+                                        if (task == rq->task_client) {
+                                                break;
+                                        } else {
+                                                // go through
+                                        }
+                                }
+
+                                // all other errors
+                                default:
                                         _queue_send(call_request, &rq, MAX_DELAY_MS);
                                         _sleep_ms(5);
+                                        break;
                                 }
                         }
                 }
@@ -387,14 +416,54 @@ int _syscall_kworker_process(int argc, char *argv[])
 
 //==============================================================================
 /**
- * @brief  This thread is responsible for handle syscall.
- *
- * @param  arg          thread argument
+ * @brief  Function destroy top process to get free memory.
+ * @return Client task handle.
  */
 //==============================================================================
-static void syscall_kworker_thread(void *arg)
+static task_t *destroy_top_process(void)
 {
-        syscall_do(arg);
+        _process_t  *proc    = _process_get_top();
+        syscallrq_t *syscall = NULL;
+        task_t      *task    = NULL;
+
+        _process_get_task(proc, &task);
+        _process_get_syscall_by_task(task, cast(void*, &syscall));
+
+        // release syscall thread of current process if is pending
+        if (syscall && syscall->syscall_thread) {
+
+                _process_t *kworker = _process_get_active();
+                task_t     *syscall_task = NULL;
+
+                _process_thread_get_task(syscall->syscall_thread, &syscall_task);
+                _task_suspend(syscall_task);
+
+                _process_release_resource(kworker,
+                                          cast(res_header_t*, syscall->syscall_thread),
+                                          RES_TYPE_THREAD);
+
+                syscall->syscall_thread = NULL;
+        }
+
+        // inform parent process that current is closed
+        pid_t  pid      = 0;
+        sem_t *exit_sem = NULL;
+        _process_get_pid(proc, &pid);
+        _process_get_exit_sem(pid, &exit_sem);
+        _semaphore_signal(exit_sem);
+
+        // print error message
+        FILE *stderr = _process_get_stderr(proc);
+        const char *msg = "*** Error: out of memory ***\n";
+        size_t wrcnt;
+        _vfs_fwrite(msg, strlen(msg), &wrcnt, stderr);
+
+        _sleep_ms(20);
+
+        // destroy process
+        _process_destroy(pid, NULL);
+
+        return task;
 }
 
 //==============================================================================
@@ -404,11 +473,12 @@ static void syscall_kworker_thread(void *arg)
  * @param  rq           request information
  */
 //==============================================================================
-static void syscall_do(syscallrq_t *rq)
+static void syscall_do(void *rq)
 {
-        _process_t *client = GETPROCESS();
-        _process_t *server = _process_get_container_by_task(_THIS_TASK, NULL);
-        sem_t      *sem    = _process_get_syscall_sem_by_task(rq->task);
+        syscallrq_t *sysrq  = rq;
+        _process_t  *client = _process_get_container_by_task(sysrq->task_client, NULL);
+        _process_t  *server = _process_get_container_by_task(_THIS_TASK, NULL);
+        sem_t       *sem    = _process_get_syscall_sem_by_task(sysrq->task_client);
 
         if (_process_set_CWD(server, _process_get_CWD(client)) != ESUCC) {
                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
@@ -418,7 +488,9 @@ static void syscall_do(syscallrq_t *rq)
                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
         }
 
-        syscalltab[rq->syscall](rq);
+        sysrq->syscall_thread = _process_thread_get_container_by_task(_task_get_handle());
+
+        syscalltab[sysrq->syscall_no](sysrq);
 
         _process_set_syscall_sem_by_task(_THIS_TASK, NULL);
 
@@ -1126,6 +1198,9 @@ static void syscall_system(syscallrq_t *rq)
 //        GETARG(sem_t **, exit_sem);
 
         //TODO system() syscall
+
+        SETERRNO(ENOTSUP);
+        SETRETURN(int, -1);
 }
 
 //==============================================================================
@@ -1286,14 +1361,14 @@ static void syscall_threaddestroy(syscallrq_t *rq)
 
         task_t *task = NULL;
         if (_process_thread_get_task(GETTHREAD(*tid), &task) == ESUCC) {
-                bool syscall_pending = true;
-                bool detached        = false;
+                syscallrq_t *syscall  = NULL;
+                bool         detached = false;
 
                 if (  (  (_process_get_detached_flag(task, &detached) == ESUCC)
                       && (detached == true)  )
                    ||
-                      (  (_process_get_syscall_pending_flag(task, &syscall_pending) == ESUCC)
-                      && (syscall_pending == false)  )  ) {
+                      (  (_process_get_syscall_by_task(task, cast(void*, &syscall)) == ESUCC)
+                      && (syscall == NULL)  )  ) {
 
                         SETERRNO(_process_release_resource(GETPROCESS(),
                                                            cast(res_header_t*, GETTHREAD(*tid)),

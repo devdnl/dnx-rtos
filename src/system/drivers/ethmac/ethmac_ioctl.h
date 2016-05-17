@@ -82,11 +82,6 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- * Size of Ethernet Packet.
- */
-#define ETHMAC_PACKET_SIZE                              1520
-
-/**
  * @brief  Wait for receive of Rx packet.
  * @param  [WR,RD] @ref ETHMAC_packet_wait_t*        timeout value and received size
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set

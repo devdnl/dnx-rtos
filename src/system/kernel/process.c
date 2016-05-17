@@ -73,6 +73,7 @@ struct _process {
         const pdata_t   *pdata;                 /* program data                         */
         sem_t           *exit_sem;              /* process exit semaphore               */
         sem_t           *syscall_sem;           /* syscall semaphore                    */
+        void            *syscall_obj;           /* syscall object                       */
         char            **argv;                 /* program arguments                    */
         pid_t            pid;                   /* process ID                           */
         int              errnov;                /* program error number                 */
@@ -81,7 +82,6 @@ struct _process {
         u8_t             argc;                  /* number of arguments                  */
         i8_t             status;                /* program status (return value)        */
         bool             detached:1;            /* independent process (no parent)      */
-        bool             syscall_pending:1;     /* syscall is pending                   */
 };
 
 struct _thread {
@@ -91,10 +91,10 @@ struct _thread {
         void            *arg;                   /* thread function argument             */
         sem_t           *exit_sem;              /* thread exit semaphore (join func.)   */
         sem_t           *syscall_sem;           /* syscall semaphore                    */
+        void            *syscall_obj;           /* syscall is pending                   */
         size_t           stack_depth;           /* stack size                           */
         tid_t            tid;                   /* thread ID                            */
         bool             detached:1;            /* independent thread (no join)         */
-        bool             syscall_pending:1;     /* syscall is pending                   */
 };
 
 /*==============================================================================
@@ -575,14 +575,24 @@ KERNELSPACE size_t _process_get_count(void)
 /**
  * @brief  Function return active process
  *
- * @param  None
- *
  * @return Object of active process or NULL if unknown process (e.g. idle task)
  */
 //==============================================================================
 KERNELSPACE _process_t *_process_get_active(void)
 {
         return active_process;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return top process
+ *
+ * @return Object of active process or NULL if unknown process (e.g. idle task)
+ */
+//==============================================================================
+KERNELSPACE _process_t *_process_get_top(void)
+{
+        return process_list;
 }
 
 //==============================================================================
@@ -601,6 +611,28 @@ KERNELSPACE int _process_get_pid(_process_t *proc, pid_t *pid)
 
         if (proc && proc->header.type == RES_TYPE_PROCESS && pid) {
                 *pid   = proc->pid;
+                result = ESUCC;
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return task connected to process
+ *
+ * @param[in]  proc         process container
+ * @param[out] pid          process PID
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_get_task(_process_t *proc, task_t **task)
+{
+        int result = EINVAL;
+
+        if (proc && proc->header.type == RES_TYPE_PROCESS && task) {
+                *task  = proc->task;
                 result = ESUCC;
         }
 
@@ -782,7 +814,7 @@ KERNELSPACE int _process_set_syscall_sem_by_task(task_t *taskhdl, sem_t *sem)
  * @return One of errno value.
  */
 //==============================================================================
-KERNELSPACE int _process_set_syscall_pending_flag(task_t *taskhdl, bool state)
+KERNELSPACE int _process_set_syscall_by_task(task_t *taskhdl, void *object)
 {
         int result = EINVAL;
 
@@ -790,11 +822,11 @@ KERNELSPACE int _process_set_syscall_pending_flag(task_t *taskhdl, bool state)
                 res_header_t *res = _task_get_tag(taskhdl);
 
                 if (res->type == RES_TYPE_PROCESS) {
-                        cast(_process_t*, res)->syscall_pending = state;
+                        cast(_process_t*, res)->syscall_obj = object;
                         result = ESUCC;
 
                 } else if (res->type == RES_TYPE_THREAD) {
-                        cast(_thread_t*, res)->syscall_pending = state;
+                        cast(_thread_t*, res)->syscall_obj = object;
                         result = ESUCC;
                 }
         }
@@ -812,21 +844,21 @@ KERNELSPACE int _process_set_syscall_pending_flag(task_t *taskhdl, bool state)
  * @return One of errno value.
  */
 //==============================================================================
-KERNELSPACE int _process_get_syscall_pending_flag(task_t *taskhdl, bool *state)
+KERNELSPACE int _process_get_syscall_by_task(task_t *taskhdl, void **object)
 {
         int result = EINVAL;
 
-        if (state) {
+        if (object) {
                 ATOMIC {
                         res_header_t *res = _task_get_tag(taskhdl);
 
                         if (res->type == RES_TYPE_PROCESS) {
-                                *state = cast(_process_t*, res)->syscall_pending;
-                                result = ESUCC;
+                                *object = cast(_process_t*, res)->syscall_obj;
+                                result  = ESUCC;
 
                         } else if (res->type == RES_TYPE_THREAD) {
-                                *state = cast(_thread_t*, res)->syscall_pending;
-                                result = ESUCC;
+                                *object = cast(_thread_t*, res)->syscall_obj;
+                                result  = ESUCC;
                         }
                 }
         }
@@ -1326,9 +1358,9 @@ static void process_destroy_all_resources(_process_t *proc)
         }
 
         // free all resources
-        foreach_resource(res, proc->res_list) {
-                if (resource_destroy(res) != ESUCC) {
-                        _printk("Unknown object: %p\n", res);
+        while (proc->res_list) {
+                if (_process_release_resource(proc, proc->res_list, proc->res_list->type) != ESUCC) {
+                        _printk("Unknown object: %p\n", proc->res_list);
                 }
         }
 
