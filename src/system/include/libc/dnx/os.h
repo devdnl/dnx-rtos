@@ -866,26 +866,56 @@ static inline ssize_t get_number_of_module_instances(size_t n)
 /**
  * @brief Function restarts the system.
  *
- * The function restart_system() restart system. Reset operation can
- * be software or hardware, but this depends on CPU port implementation.
+ * The function restart system. Function does not write unsaved data.
  *
- * @return This function not return.
+ * @return This function does not return.
  *
  * @b Example
  * @code
         #include <dnx/os.h>
+        #include <unistd.h>
 
         // ...
 
+        sync();
+
         // e.g. user requests system restart
-        restart_system();
+        system_reboot();
 
    @endcode
  */
 //==============================================================================
-static inline void restart_system(void)
+static inline void system_reboot(void)
 {
-        syscall(SYSCALL_RESTART, NULL);
+        _builtinfunc(cpuctl_restart_system);
+}
+
+//==============================================================================
+/**
+ * @brief Function shutdown the system.
+ *
+ * The function shutdown system. Function does not write unsaved data.
+ *
+ * @return This function does not return.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+        #include <unistd.h>
+
+        // ...
+
+        sync();
+
+        // e.g. user requests system restart
+        system_shutdown();
+
+   @endcode
+ */
+//==============================================================================
+static inline void system_shutdown(void)
+{
+        _builtinfunc(cpuctl_shutdown_system);
 }
 
 //==============================================================================

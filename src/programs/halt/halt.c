@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    cpuctl.h
+@file    halt.c
 
 @author  Daniel Zorychta
 
-@brief   This file support CPU control
+@brief   Halt system
 
-@note    Copyright (C) 2012-2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,55 +24,55 @@
 
 *//*==========================================================================*/
 
-#ifndef _CPUCTL_H_
-#define _CPUCTL_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
-#include "config.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <dnx/os.h>
 
 /*==============================================================================
-  Exported symbolic constants/macros
-==============================================================================*/
-/* CPU/platform name */
-#define _CPUCTL_PLATFORM_NAME                   "ARM Cortex-M3 STM32F1xx"
-#define _CPUCTL_VENDOR_NAME                     "STMicroelectronics"
-#define _CPUCTL_BYTE_ORDER                      _BYTE_ORDER_LITTLE_ENDIAN
-
-/* renames of interrupts vectors for kernel purposes */
-#define xPortPendSVHandler                      PendSV_Handler
-#define xPortSysTickHandler                     SysTick_Handler
-#define vPortSVCHandler                         SVC_Handler
-
-/*==============================================================================
-  Exported types, enums definitions
+  Local symbolic constants/macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Local types, enums definitions
 ==============================================================================*/
-extern void  _cpuctl_init                       (void);
-extern void  _cpuctl_restart_system             (void);
-extern void  _cpuctl_shutdown_system            (void);
-extern void  _cpuctl_sleep                      (void);
-extern void  _cpuctl_update_system_clocks       (void);
 
-#if (__OS_MONITOR_CPU_LOAD__ > 0)
-extern void  _cpuctl_init_CPU_load_counter      (void);
-extern u32_t _cpuctl_get_CPU_load_counter_delta (void);
-#endif
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
 
-#ifdef __cplusplus
+/*==============================================================================
+  Local object definitions
+==============================================================================*/
+GLOBAL_VARIABLES_SECTION {
+};
+
+/*==============================================================================
+  Exported object definitions
+==============================================================================*/
+
+/*==============================================================================
+  Function definitions
+==============================================================================*/
+//==============================================================================
+/**
+ * @brief Program main function
+ */
+//==============================================================================
+int_main(halt, STACK_DEPTH_MINIMAL, int argc, char *argv[])
+{
+        (void) argc;
+        (void) argv;
+
+        sync();
+        system_shutdown();
+
+        return EXIT_SUCCESS;
 }
-#endif
 
-#endif /* _CPUCTL_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

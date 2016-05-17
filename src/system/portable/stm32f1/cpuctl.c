@@ -37,6 +37,9 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+/* Cortex System Control register address */
+#define SCB_SysCtrl             (*((__IO uint32_t *)0xE000ED10))
+#define SysCtrl_SLEEPDEEP       ((uint32_t)0x00000004)
 
 /*==============================================================================
   Local types, enums definitions
@@ -83,17 +86,34 @@ void _cpuctl_init(void)
 
 //==============================================================================
 /**
- * @brief  This function restart CPU (by using system reset flag, watchdog
- *         reset, or so on)
- *
- * @param  None
- *
- * @return None
+ * @brief  This function restart CPU.
  */
 //==============================================================================
 void _cpuctl_restart_system(void)
 {
         NVIC_SystemReset();
+}
+
+//==============================================================================
+/**
+ * @brief  This function restart CPU.
+ */
+//==============================================================================
+void _cpuctl_shutdown_system(void)
+{
+        // Note: implementation enters to deep sleep mode.
+
+        /* Clear Wake-up flag */
+        PWR->CR |= PWR_CR_CWUF;
+
+        /* Select STANDBY mode */
+        PWR->CR |= PWR_CR_PDDS;
+
+        /* Set SLEEPDEEP bit of Cortex System Control Register */
+        SCB_SysCtrl |= SysCtrl_SLEEPDEEP;
+
+        /* Request Wait For Interrupt */
+        __WFI();
 }
 
 //==============================================================================

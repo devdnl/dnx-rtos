@@ -68,7 +68,7 @@ int_main(reboot, STACK_DEPTH_MINIMAL, int argc, char *argv[])
         (void) argv;
 
         sync();
-        restart_system();
+        system_reboot();
 
         return EXIT_SUCCESS;
 }

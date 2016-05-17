@@ -114,7 +114,6 @@ static void syscall_zalloc(syscallrq_t *rq);
 static void syscall_free(syscallrq_t *rq);
 static void syscall_syslogenable(syscallrq_t *rq);
 static void syscall_syslogdisable(syscallrq_t *rq);
-static void syscall_restart(syscallrq_t *rq);
 static void syscall_kernelpanicdetect(syscallrq_t *rq);
 static void syscall_abort(syscallrq_t *rq);
 static void syscall_exit(syscallrq_t *rq);
@@ -203,7 +202,6 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_FREE             ] = syscall_free,
         [SYSCALL_SYSLOGENABLE     ] = syscall_syslogenable,
         [SYSCALL_SYSLOGDISABLE    ] = syscall_syslogdisable,
-        [SYSCALL_RESTART          ] = syscall_restart,
         [SYSCALL_KERNELPANICDETECT] = syscall_kernelpanicdetect,
         [SYSCALL_ABORT            ] = syscall_abort,
         [SYSCALL_EXIT             ] = syscall_exit,
@@ -1128,19 +1126,6 @@ static void syscall_syslogdisable(syscallrq_t *rq)
 {
         SETERRNO(_printk_disable());
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall restart entire system.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_restart(syscallrq_t *rq)
-{
-        UNUSED_RQ();
-        _cpuctl_restart_system();
 }
 
 //==============================================================================
