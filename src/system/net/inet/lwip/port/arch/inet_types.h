@@ -55,7 +55,6 @@ extern "C" {
 typedef struct {
         mutex_t        *access;
         FILE           *if_file;
-        void           *if_mem;
         thread_t        if_thread;
         struct netif    netif;
         uint            rx_packets;

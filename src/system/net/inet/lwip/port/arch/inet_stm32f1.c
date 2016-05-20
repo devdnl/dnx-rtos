@@ -31,7 +31,6 @@
 #include "inet_types.h"
 #include "kernel/sysfunc.h"
 #include "drivers/ioctl_requests.h"
-#include "netif/etharp.h"
 
 /*==============================================================================
   Local macros
@@ -60,51 +59,6 @@
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief  Function allocate memory for network interface.
- *         The function is called after that interface file was opened. Allocated
- *         memory pointer should be written to the inet->if_mem variable. If
- *         interface does not need additional memory then this value can be set
- *         to NULL and status should be returned as true.
- *
- * @param  inet         inet container
- *
- * @return One of @ref errno value.
- *
- * @note   Called from network interface thread.
- */
-//==============================================================================
-int _inet_port_alloc(inet_t *inet)
-{
-        /*
-         * The memory is not allocated because this interface does not need additional
-         * memory (interface specific).
-         */
-        inet->if_mem = NULL;
-
-        return ESUCC;
-}
-
-//==============================================================================
-/**
- * @brief  Function is called when network manager is closed
- *         The functin shall free memory allocated in the _netman_ifmem_alloc()
- *         function.
- *
- * @param  inet         inet container
- *
- * @note   Called from network interface thread.
- */
-//==============================================================================
-void _inet_port_free(inet_t *inet)
-{
-        /*
-         * Nothing to free because memory was not allocated for this interface.
-         */
-        inet->if_mem = NULL;
-}
-
 //==============================================================================
 /**
  * @brief  Function initializes hardware interface.
@@ -246,39 +200,6 @@ err_t _inet_port_handle_output(struct netif *netif, struct pbuf *p)
               LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_output: packet send error\n"));
               return ERR_IF;
       }
-}
-
-//==============================================================================
-/**
- * @brief  Function initializes network interface (TCPIP stack configuration).
- *         The function must not allocate any memory and block program flow.
- *
- * @param  netif        the lwip network interface structure for this interface
- *
- * @return ERR_OK       if the loopif is initialized
- *         ERR_MEM      if private data couldn't be allocated any other err_t on error
- *
- * @note   Called at system startup.
- */
-//==============================================================================
-err_t _inet_port_netif_init(struct netif *netif)
-{
-        netif->hostname   = const_cast(char*, __OS_HOSTNAME__);
-        netif->name[0]    = 'E';
-        netif->name[1]    = 'T';
-        netif->output     = etharp_output;
-        netif->linkoutput = _inet_port_handle_output;
-        netif->mtu        = 1500;
-        netif->hwaddr_len = ETHARP_HWADDR_LEN;
-        netif->flags      = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;
-        netif->hwaddr[0]  = __NETWORK_TCPIP_MAC_ADDR0__;
-        netif->hwaddr[1]  = __NETWORK_TCPIP_MAC_ADDR1__;
-        netif->hwaddr[2]  = __NETWORK_TCPIP_MAC_ADDR2__;
-        netif->hwaddr[3]  = __NETWORK_TCPIP_MAC_ADDR3__;
-        netif->hwaddr[4]  = __NETWORK_TCPIP_MAC_ADDR4__;
-        netif->hwaddr[5]  = __NETWORK_TCPIP_MAC_ADDR5__;
-
-        return ERR_OK;
 }
 
 //==============================================================================
