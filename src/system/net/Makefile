@@ -5,6 +5,7 @@ ifeq ($(__ENABLE_NETWORK__), _YES_)
    ifeq ($(__ENABLE_TCPIP_STACK__), _YES_)
       ifeq ($(__NETWORK_TCPIP_STACK__), __STACK_LWIP__)
          CSRC_CORE   += net/inet/lwip/port/arch/inet.c
+         CSRC_ARCH   += net/inet/lwip/port/arch/inet_drv.c
          CSRC_CORE   += net/inet/lwip/api/api_lib.c
          CSRC_CORE   += net/inet/lwip/api/api_msg.c
          CSRC_CORE   += net/inet/lwip/api/err.c
@@ -43,10 +44,6 @@ ifeq ($(__ENABLE_NETWORK__), _YES_)
          HDRLOC_CORE += net/inet/lwip/include/ipv4
          HDRLOC_CORE += net/inet/lwip/include
          HDRLOC_CORE += net/inet/lwip/port
-
-         ifeq ($(TARGET), stm32f1)
-         	CSRC_ARCH   += net/inet/lwip/port/arch/inet_stm32f1.c
-         endif
       endif
    endif
 endif

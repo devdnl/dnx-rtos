@@ -34,11 +34,12 @@ Brief    Network management.
 #include "lwip/netif.h"
 #include "lwip/ip_addr.h"
 #include "lwip/tcpip.h"
+#include "netif/etharp.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define MAXIMUM_SAFE_UDP_PAYLOAD                508
+#define MAXIMUM_SAFE_UDP_PAYLOAD                1024
 
 /*==============================================================================
   Local object types
@@ -47,24 +48,23 @@ Brief    Network management.
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void network_interface_thread(void *sem);
-static void clear_rx_tx_counters();
-static bool is_init_done();
-static bool DHCP_is_started();
-static void restore_configuration();
-static int  DHCP_start_client();
-static int  IF_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const ip_addr_t *gateway);
+static void  network_interface_thread(void *sem);
+static void  clear_rx_tx_counters();
+static bool  is_init_done();
+static bool  DHCP_is_started();
+static void  restore_configuration();
+static int   DHCP_start_client();
+static err_t netif_configure(struct netif *netif);
+static int   IF_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const ip_addr_t *gateway);
 
 /*==============================================================================
   External function prototypes
 ==============================================================================*/
-extern bool  _inet_port_alloc            (inet_t *netman);
-extern void  _inet_port_free             (inet_t *netman);
-extern int   _inet_port_hardware_init    (inet_t *netman);
-extern int   _inet_port_hardware_deinit  (inet_t *netman);
-extern void  _inet_port_handle_input     (inet_t *netman, u32_t timeout);
-extern err_t _inet_port_netif_init       (struct netif *netif);
-extern bool  _inet_port_is_link_connected(inet_t *netman);
+extern int   _inetdrv_hardware_init    (inet_t *inet);
+extern int   _inetdrv_hardware_deinit  (inet_t *inet);
+extern err_t _inetdrv_handle_output    (struct netif *netif, struct pbuf *p);
+extern void  _inetdrv_handle_input     (inet_t *inet, u32_t timeout);
+extern bool  _inetdrv_is_link_connected(inet_t *inet);
 
 /*==============================================================================
   Local objects
@@ -145,7 +145,7 @@ static void restore_configuration()
 
         if (sys_mutex_lock(inet->access, MAX_DELAY_MS) == ESUCC) {
 
-                while (!_inet_port_is_link_connected(inet)) {
+                while (!_inetdrv_is_link_connected(inet)) {
                         sys_msleep(LINK_POLL_TIME);
                 }
 
@@ -193,30 +193,19 @@ static void network_interface_thread(void *arg)
         }
 
         /* initialize interface */
-        if (_inet_port_alloc(inet) == ESUCC) {
+        if (_inetdrv_hardware_init(inet) == ESUCC) {
 
-                if (_inet_port_hardware_init(inet) == ESUCC) {
+                inet->ready = true;
 
-                        inet->ready = true;
+                while (true) {
+                        _inetdrv_handle_input(inet, INPUT_TIMEOUT);
 
-                        while (true) {
-                                u32_t pkt_recved   = 0;
-                                u32_t bytes_recved = 0;
-
-                                _inet_port_handle_input(inet, INPUT_TIMEOUT);
-
-                                inet->rx_packets += pkt_recved;
-                                inet->rx_bytes   += bytes_recved;
-
-                                if (!_inet_port_is_link_connected(inet)) {
-                                        restore_configuration();
-                                }
+                        if (!_inetdrv_is_link_connected(inet)) {
+                                restore_configuration();
                         }
-
-                        _inet_port_hardware_deinit(inet);
                 }
 
-                _inet_port_free(inet);
+                _inetdrv_hardware_deinit(inet);
         }
 
         // error occurred
@@ -225,9 +214,9 @@ static void network_interface_thread(void *arg)
 
 //==============================================================================
 /**
- *
- * @param err
- * @return
+ * @brief Function replace lwIP status to errno.
+ * @param err   lwIP error number.
+ * @return Errno value.
  */
 //==============================================================================
 static int lwIP_status_to_errno(err_t err)
@@ -255,9 +244,9 @@ static int lwIP_status_to_errno(err_t err)
 
 //==============================================================================
 /**
- *
- * @param addr
- * @param lwip_addr
+ * @brief Function createNET_INET_IPv4_t address from lwIP address.
+ * @param addr          INET address
+ * @param lwip_addr     lwIP address
  */
 //==============================================================================
 static void create_addr(NET_INET_IPv4_t *addr, const ip_addr_t *lwip_addr)
@@ -270,9 +259,9 @@ static void create_addr(NET_INET_IPv4_t *addr, const ip_addr_t *lwip_addr)
 
 //==============================================================================
 /**
- *
- * @param lwip_addr
- * @param addr
+ * @brief Function create lwIP address by using INET address.
+ * @param lwip_addr     lwIP address
+ * @param addr          INET address
  */
 //==============================================================================
 static void create_lwIP_addr(ip_addr_t *lwip_addr, const NET_INET_IPv4_t *addr)
@@ -316,7 +305,7 @@ static int stack_init()
                                                     const_cast(ip_addr_t*, &ip_addr_any),
                                                     const_cast(ip_addr_t*, &ip_addr_any),
                                                     inet,
-                                                    _inet_port_netif_init,
+                                                    netif_configure,
                                                     tcpip_input));
                         return ESUCC;
 
@@ -421,7 +410,7 @@ static int DHCP_start_client()
  * @return One of @ref errno value.
  */
 //==============================================================================
-int DHCP_inform_server()
+static int DHCP_inform_server()
 {
         int status = ENONET;
 
@@ -445,7 +434,7 @@ int DHCP_inform_server()
  * @return One of @ref errno value.
  */
 //==============================================================================
-int DHCP_renew_connection()
+static int DHCP_renew_connection()
 {
         int status = ENONET;
 
@@ -483,6 +472,39 @@ int DHCP_renew_connection()
 static bool DHCP_is_started()
 {
         return (inet->netif.flags & NETIF_FLAG_DHCP);
+}
+
+//==============================================================================
+/**
+ * @brief  Function configures network interface (TCPIP stack configuration).
+ *         The function must not allocate any memory and block program flow.
+ *
+ * @param  netif        the lwip network interface structure for this interface
+ *
+ * @return ERR_OK       if the loopif is initialized
+ *         ERR_MEM      if private data couldn't be allocated any other err_t on error
+ *
+ * @note   Called at system startup.
+ */
+//==============================================================================
+static err_t netif_configure(struct netif *netif)
+{
+        netif->hostname   = const_cast(char*, __OS_HOSTNAME__);
+        netif->name[0]    = 'E';
+        netif->name[1]    = 'T';
+        netif->output     = etharp_output;
+        netif->linkoutput = _inetdrv_handle_output;
+        netif->mtu        = 1500;
+        netif->hwaddr_len = ETHARP_HWADDR_LEN;
+        netif->flags      = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;
+        netif->hwaddr[0]  = __NETWORK_TCPIP_MAC_ADDR0__;
+        netif->hwaddr[1]  = __NETWORK_TCPIP_MAC_ADDR1__;
+        netif->hwaddr[2]  = __NETWORK_TCPIP_MAC_ADDR2__;
+        netif->hwaddr[3]  = __NETWORK_TCPIP_MAC_ADDR3__;
+        netif->hwaddr[4]  = __NETWORK_TCPIP_MAC_ADDR4__;
+        netif->hwaddr[5]  = __NETWORK_TCPIP_MAC_ADDR5__;
+
+        return ERR_OK;
 }
 
 //==============================================================================
