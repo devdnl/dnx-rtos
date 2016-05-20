@@ -38,6 +38,7 @@ Brief    Base64 code and encode program.
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define WRAP 76
 
 /*==============================================================================
   Local types, enums definitions
@@ -51,7 +52,12 @@ Brief    Base64 code and encode program.
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        uint8_t buf[6];
+        FILE   *file;
+
+        union {
+                char    decode[240];    // must be multiple of 4
+                uint8_t encode[240];    // must be multiple of 6
+        } buf;
 };
 
 /*==============================================================================
@@ -75,6 +81,87 @@ static void print_help(char *name)
         puts("  -d, --decode    decode data");
         puts("  -h, --help      show this help\n");
         puts("If file is not set then stdin is read.");
+}
+
+//==============================================================================
+/**
+ * @brief Function converts string coded in base64 to binary.
+ */
+//==============================================================================
+static void do_decode(void)
+{
+        while (feof(global->file) == 0) {
+                memset(global->buf.decode, 0, sizeof(global->buf.decode));
+                if (fgets(global->buf.decode, sizeof(global->buf.decode) - 3, global->file)) {
+                        size_t buf_len = 0;
+                        uint8_t *buf = base64_decode(global->buf.decode,
+                                                     strlen(global->buf.decode),
+                                                     &buf_len);
+                        if (!buf) {
+                                return;
+                        }
+
+                        if (fwrite(buf, 1, buf_len, stdout) != buf_len) {
+                                free(buf);
+                                perror(NULL);
+                                return;
+                        }
+
+                        free(buf);
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function converts binary buffer to string coded in base64.
+ */
+//==============================================================================
+static void do_encode(void)
+{
+        size_t col = 0;
+
+        while (feof(global->file) == 0) {
+                int n = fread(global->buf.encode, 1, sizeof(global->buf.encode),
+                              global->file);
+
+                if (  (global->file == stdin)
+                   && (global->buf.encode[n - 1] == 0)
+                   && (global->buf.encode[n - 2] == '\n') ) {
+
+                        n--;
+                }
+
+                if (n) {
+                        size_t buf_len = 0;
+                        char *buf = base64_encode(global->buf.encode, n, &buf_len);
+                        if (!buf) {
+                                return;
+                        }
+
+                        char *ptr = buf;
+                        while (buf_len > 0) {
+                                size_t sz = min(WRAP - col, buf_len);
+
+                                if ((col + sz) < WRAP) {
+                                        printf(ptr);
+                                        col += sz;
+                                } else {
+                                        printf("%.*s\n", sz, ptr);
+                                        col = 0;
+                                }
+
+                                ptr     += sz;
+                                buf_len -= sz;
+                        }
+
+                        free(buf);
+                }
+        }
+
+        if (col != 0) {
+                puts("");
+        }
 }
 
 //==============================================================================
@@ -106,71 +193,25 @@ int_main(base64, STACK_DEPTH_LOW, int argc, char *argv[])
         }
 
         // open input file
-        FILE *file = stdin;
+        global->file = stdin;
         if (infile != NULL) {
-                file = fopen(infile, "r");
-                if (!file) {
+                global->file = fopen(infile, "r");
+                if (!global->file) {
                         perror(infile);
                         return EXIT_FAILURE;
                 }
         }
 
         // do job
-        int    n   = 0;
-        size_t col = 0;
-        while (feof(file) == 0) {
-                if (decode) {
-                        n = 0;
-                        do {
-                                int c = fgetc(file);
-                                if (c != EOF) {
-                                        if ((c != '\r') && (c != '\n')) {
-                                                global->buf[n++] = c;
-                                        }
-                                } else {
-                                        break;
-                                }
-                        } while (n < 4);
-
-                } else {
-                        n = fread(global->buf, 1, 6, file);
-                }
-
-                if (n > 0) {
-                        size_t  len    = 0;
-                        void   *result = NULL;
-
-                        if (decode) {
-                                result = base64_decode((char *)global->buf, n, &len);
-                        } else {
-                                result = base64_encode(global->buf, n, &len);
-                        }
-
-                        if (result) {
-                                fwrite(result, 1, len, stdout);
-                                free(result);
-
-                                if (!decode) {
-                                        if (++col >= 72/8) {
-                                                col = 0;
-                                                fputs("\n", stdout);
-                                        }
-                                }
-                        } else {
-                                break;
-                        }
-                } else {
-                        break;
-                }
-        }
-
-        if (!decode && col != 0) {
-                puts("");
+        if (decode) {
+                do_decode();
+        } else {
+                do_encode();
         }
 
         // free resources
-        if (file && file != stdin) {
-                fclose(file);
+        if (global->file && (global->file != stdin)) {
+                fclose(global->file);
         }
 
         return EXIT_SUCCESS;
