@@ -79,7 +79,7 @@ static void print_help(char *name)
 
 //==============================================================================
 /**
- * @brief Cat main function
+ * @brief Program main function
  */
 //==============================================================================
 int_main(base64, STACK_DEPTH_LOW, int argc, char *argv[])
@@ -116,27 +116,46 @@ int_main(base64, STACK_DEPTH_LOW, int argc, char *argv[])
         }
 
         // do job
-        int n = 0;
+        int    n   = 0;
+        size_t col = 0;
         while (feof(file) == 0) {
-                n = fread(global->buf, 1, 6, file);
+                if (decode) {
+                        n = 0;
+                        do {
+                                int c = fgetc(file);
+                                if (c != EOF) {
+                                        if ((c != '\r') && (c != '\n')) {
+                                                global->buf[n++] = c;
+                                        }
+                                } else {
+                                        break;
+                                }
+                        } while (n < 4);
+
+                } else {
+                        n = fread(global->buf, 1, 6, file);
+                }
 
                 if (n > 0) {
-                        if (file == stdin && global->buf[n - 1] == 0 && global->buf[n - 2] == '\n') {
-                                n -= 1;
-                        }
-
                         size_t  len    = 0;
                         void   *result = NULL;
 
                         if (decode) {
                                 result = base64_decode((char *)global->buf, n, &len);
                         } else {
-                                result = base64_encode(global->buf, n, &len); // TODO nie działa
+                                result = base64_encode(global->buf, n, &len);
                         }
 
                         if (result) {
                                 fwrite(result, 1, len, stdout);
                                 free(result);
+
+                                if (!decode) {
+                                        if (++col >= 72/8) {
+                                                col = 0;
+                                                fputs("\n", stdout);
+                                        }
+                                }
                         } else {
                                 break;
                         }
@@ -145,7 +164,9 @@ int_main(base64, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
         }
 
-        puts("");
+        if (!decode && col != 0) {
+                puts("");
+        }
 
         // free resources
         if (file && file != stdin) {
