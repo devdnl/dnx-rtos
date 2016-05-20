@@ -60,11 +60,11 @@ static int   IF_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const
 /*==============================================================================
   External function prototypes
 ==============================================================================*/
-extern int   _inet_port_hardware_init    (inet_t *inet);
-extern int   _inet_port_hardware_deinit  (inet_t *inet);
-extern err_t _inet_port_handle_output    (struct netif *netif, struct pbuf *p);
-extern void  _inet_port_handle_input     (inet_t *inet, u32_t timeout);
-extern bool  _inet_port_is_link_connected(inet_t *inet);
+extern int   _inetdrv_hardware_init    (inet_t *inet);
+extern int   _inetdrv_hardware_deinit  (inet_t *inet);
+extern err_t _inetdrv_handle_output    (struct netif *netif, struct pbuf *p);
+extern void  _inetdrv_handle_input     (inet_t *inet, u32_t timeout);
+extern bool  _inetdrv_is_link_connected(inet_t *inet);
 
 /*==============================================================================
   Local objects
@@ -145,7 +145,7 @@ static void restore_configuration()
 
         if (sys_mutex_lock(inet->access, MAX_DELAY_MS) == ESUCC) {
 
-                while (!_inet_port_is_link_connected(inet)) {
+                while (!_inetdrv_is_link_connected(inet)) {
                         sys_msleep(LINK_POLL_TIME);
                 }
 
@@ -193,19 +193,19 @@ static void network_interface_thread(void *arg)
         }
 
         /* initialize interface */
-        if (_inet_port_hardware_init(inet) == ESUCC) {
+        if (_inetdrv_hardware_init(inet) == ESUCC) {
 
                 inet->ready = true;
 
                 while (true) {
-                        _inet_port_handle_input(inet, INPUT_TIMEOUT);
+                        _inetdrv_handle_input(inet, INPUT_TIMEOUT);
 
-                        if (!_inet_port_is_link_connected(inet)) {
+                        if (!_inetdrv_is_link_connected(inet)) {
                                 restore_configuration();
                         }
                 }
 
-                _inet_port_hardware_deinit(inet);
+                _inetdrv_hardware_deinit(inet);
         }
 
         // error occurred
@@ -493,7 +493,7 @@ static err_t netif_configure(struct netif *netif)
         netif->name[0]    = 'E';
         netif->name[1]    = 'T';
         netif->output     = etharp_output;
-        netif->linkoutput = _inet_port_handle_output;
+        netif->linkoutput = _inetdrv_handle_output;
         netif->mtu        = 1500;
         netif->hwaddr_len = ETHARP_HWADDR_LEN;
         netif->flags      = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_IGMP;

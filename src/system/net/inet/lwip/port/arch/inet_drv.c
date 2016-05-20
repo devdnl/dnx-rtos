@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    netman_stm32f1.c
+@file    inet_drv.c
 
 @author  Daniel Zorychta
 
-@brief   Network manager. Interface handle.
+@brief   Network manager. Driver handling.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@
  * @note   Called from network interface thread.
  */
 //==============================================================================
-int _inet_port_hardware_init(inet_t *inet)
+int _inetdrv_hardware_init(inet_t *inet)
 {
         /* set MAC address */
         int err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__SET_MAC_ADDR, inet->netif.hwaddr);
@@ -103,7 +103,7 @@ int _inet_port_hardware_init(inet_t *inet)
  * @note   Called from network interface thread.
  */
 //==============================================================================
-int _inet_port_hardware_deinit(inet_t *inet)
+int _inetdrv_hardware_deinit(inet_t *inet)
 {
         int err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__ETHERNET_STOP);
         if (err) {
@@ -131,7 +131,7 @@ int _inet_port_hardware_deinit(inet_t *inet)
  * @note   Called from network interface thread.
  */
 //==============================================================================
-void _inet_port_handle_input(inet_t *inet, u32_t timeout)
+void _inetdrv_handle_input(inet_t *inet, u32_t timeout)
 {
         ETHMAC_packet_wait_t pw = {.timeout = timeout};
         int r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
@@ -188,7 +188,7 @@ void _inet_port_handle_input(inet_t *inet, u32_t timeout)
  * @note   Called from TCPIP thread.
  */
 //==============================================================================
-err_t _inet_port_handle_output(struct netif *netif, struct pbuf *p)
+err_t _inetdrv_handle_output(struct netif *netif, struct pbuf *p)
 {
       inet_t *inet = netif->state;
 
@@ -217,7 +217,7 @@ err_t _inet_port_handle_output(struct netif *netif, struct pbuf *p)
  * @note   Called at system startup.
  */
 //==============================================================================
-bool _inet_port_is_link_connected(inet_t *inet)
+bool _inetdrv_is_link_connected(inet_t *inet)
 {
         ETHMAC_link_status_t linkstat;
         if (sys_ioctl(inet->if_file, IOCTL_ETHMAC__GET_LINK_STATUS, &linkstat) == 0) {
