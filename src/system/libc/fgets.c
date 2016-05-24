@@ -63,7 +63,7 @@
 
 //==============================================================================
 /**
- * @brief Function gets number of bytes from file
+ * @brief Function receive string from selected file.
  *
  * @param[out] *str          buffer with string
  * @param[in]   size         buffer size

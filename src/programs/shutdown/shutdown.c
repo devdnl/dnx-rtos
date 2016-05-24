@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    halt.c
+File     shutdown.c
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   Halt system
+Brief    Shutdown system
 
-@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Program main function
  */
 //==============================================================================
-int_main(halt, STACK_DEPTH_MINIMAL, int argc, char *argv[])
+int_main(shutdown, STACK_DEPTH_MINIMAL, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
