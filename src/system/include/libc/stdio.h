@@ -49,6 +49,7 @@ extern "C" {
 #include <stdarg.h>
 #include <kernel/process.h>
 #include <kernel/syscall.h>
+#include <kernel/builtinfunc.h>
 
 /*==============================================================================
   Exported macros
@@ -596,9 +597,9 @@ static inline void rewind(FILE *file)
 //==============================================================================
 static inline i64_t ftell(FILE *file)
 {
-        i64_t r = -1;
-        syscall(SYSCALL_FTELL, &r, file);
-        return r;
+        i64_t lseek = 0;
+        _errno = _builtinfunc(vfs_ftell, file, &lseek);
+        return _errno ? -1 : 0;
 }
 
 //==============================================================================
@@ -743,9 +744,9 @@ static inline int fflush(FILE *file)
 //==============================================================================
 static inline int feof(FILE *file)
 {
-        int r = EOF;
-        syscall(SYSCALL_FEOF, &r, file);
-        return r;
+        int eof = 0;
+        _errno = _builtinfunc(vfs_feof, file, &eof);
+        return _errno | eof;
 }
 
 //==============================================================================
@@ -791,7 +792,7 @@ static inline int feof(FILE *file)
 //==============================================================================
 static inline void clearerr(FILE *file)
 {
-        syscall(SYSCALL_CLEARERROR, NULL, file);
+        _builtinfunc(vfs_clearerr, file);
 }
 
 //==============================================================================
@@ -841,9 +842,9 @@ static inline void clearerr(FILE *file)
 //==============================================================================
 static inline int ferror(FILE *file)
 {
-        int r = EOF;
-        syscall(SYSCALL_FERROR, &r, file);
-        return r;
+        int err = 0;
+        _errno = _builtinfunc(vfs_ferror, file, &err);
+        return _errno | err;
 }
 
 //==============================================================================

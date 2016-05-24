@@ -97,13 +97,9 @@ static void syscall_fclose(syscallrq_t *rq);
 static void syscall_fwrite(syscallrq_t *rq);
 static void syscall_fread(syscallrq_t *rq);
 static void syscall_fseek(syscallrq_t *rq);
-static void syscall_ftell(syscallrq_t *rq);
 static void syscall_ioctl(syscallrq_t *rq);
 static void syscall_fstat(syscallrq_t *rq);
 static void syscall_fflush(syscallrq_t *rq);
-static void syscall_feof(syscallrq_t *rq);
-static void syscall_clearerr(syscallrq_t *rq);
-static void syscall_ferror(syscallrq_t *rq);
 static void syscall_sync(syscallrq_t *rq);
 static void syscall_gettime(syscallrq_t *rq);
 static void syscall_settime(syscallrq_t *rq);
@@ -185,13 +181,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_FWRITE           ] = syscall_fwrite,
         [SYSCALL_FREAD            ] = syscall_fread,
         [SYSCALL_FSEEK            ] = syscall_fseek,
-        [SYSCALL_FTELL            ] = syscall_ftell,
         [SYSCALL_IOCTL            ] = syscall_ioctl,
         [SYSCALL_FSTAT            ] = syscall_fstat,
         [SYSCALL_FFLUSH           ] = syscall_fflush,
-        [SYSCALL_FEOF             ] = syscall_feof,
-        [SYSCALL_CLEARERROR       ] = syscall_clearerr,
-        [SYSCALL_FERROR           ] = syscall_ferror,
         [SYSCALL_SYNC             ] = syscall_sync,
         [SYSCALL_GETTIME          ] = syscall_gettime,
         [SYSCALL_SETTIME          ] = syscall_settime,
@@ -870,21 +862,6 @@ static void syscall_fseek(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return file pointer value.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_ftell(syscallrq_t *rq)
-{
-        GETARG(FILE *, file);
-        i64_t lseek = -1;
-        SETERRNO(_vfs_ftell(file, &lseek));
-        SETRETURN(i64_t, lseek);
-}
-
-//==============================================================================
-/**
  * @brief  This syscall perform not standard operation on selected file/device.
  *
  * @param  rq                   syscall request
@@ -911,49 +888,6 @@ static void syscall_fflush(syscallrq_t *rq)
         GETARG(FILE *, file);
         SETERRNO(_vfs_fflush(file));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall check that end-of-file occurred.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_feof(syscallrq_t *rq)
-{
-        GETARG(FILE *, file);
-        int eof = EOF;
-        SETERRNO(_vfs_feof(file, &eof));
-        SETRETURN(int, eof);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall clear file errors.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_clearerr(syscallrq_t *rq)
-{
-        GETARG(FILE *, file);
-        SETERRNO(_vfs_clearerr(file));
-}
-
-//==============================================================================
-/**
- * @brief  This syscall return file error indicator.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_ferror(syscallrq_t *rq)
-{
-        GETARG(FILE *, file);
-        int error = EOF;
-        SETERRNO(_vfs_ferror(file, &error));
-        SETRETURN(int, error);
 }
 
 //==============================================================================
