@@ -46,7 +46,7 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if (__OS_PRINTF_ENABLE__ > 0)
+#if (__OS_PRINTF_ENABLE__ > 0) && (__OS_ENABLE_TIMEMAN__ == _YES_)
 /** buffer used to store converted time to string */
 static char timestr[32];
 #endif
@@ -62,7 +62,7 @@ static char timestr[32];
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 //==============================================================================
 /**
  * @brief  Convert time value (Epoch) to human readable string: Www Mmm dd hh:mm:ss zzzzz yyyy
@@ -242,6 +242,7 @@ char *asctime_r(const struct tm *timeptr, char *buf)
 {
         return _ctime_r(NULL, timeptr, buf);
 }
+#endif
 
 /*==============================================================================
   End of file

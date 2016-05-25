@@ -42,6 +42,8 @@ The library provides time functions.
 #include <stddef.h>
 #include <kernel/syscall.h>
 #include <kernel/kwrapper.h>
+#include <kernel/errno.h>
+#include <lib/unarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -415,7 +417,15 @@ static inline double difftime(time_t end, time_t beginning)
  * @see time_t, struct tm, time()
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern time_t mktime(struct tm *timeptr);
+#else
+static inline time_t mktime(struct tm *timeptr)
+{
+        UNUSED_ARG1(timeptr);
+        return 0;
+}
+#endif
 
 //==============================================================================
 /**
@@ -467,6 +477,7 @@ extern time_t mktime(struct tm *timeptr);
 //==============================================================================
 static inline time_t time(time_t *timer)
 {
+#if __OS_ENABLE_TIMEMAN__ == _YES_
         time_t time = -1;
         syscall(SYSCALL_GETTIME, &time);
 
@@ -475,6 +486,10 @@ static inline time_t time(time_t *timer)
         }
 
         return time;
+#else
+        UNUSED_ARG1(timer);
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -495,9 +510,14 @@ static inline time_t time(time_t *timer)
 //==============================================================================
 static inline int stime(time_t *timer)
 {
+#if __OS_ENABLE_TIMEMAN__ == _YES_
         int r = -1;
         syscall(SYSCALL_SETTIME, &r, timer);
         return r;
+#else
+        UNUSED_ARG1(timer);
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -511,7 +531,11 @@ static inline int stime(time_t *timer)
 //==============================================================================
 static inline void tzset(int tdiff)
 {
+#if __OS_ENABLE_TIMEMAN__ == _YES_
         _ltimeoff = tdiff;
+#else
+        UNUSED_ARG1(tdiff);
+#endif
 }
 
 //==============================================================================
@@ -523,7 +547,11 @@ static inline void tzset(int tdiff)
 //==============================================================================
 static inline int timezone()
 {
+#if __OS_ENABLE_TIMEMAN__ == _YES_
         return _ltimeoff;
+#else
+        return 0;
+#endif
 }
 
 //==============================================================================
@@ -574,7 +602,15 @@ static inline int timezone()
  * @see tm, asctime_r()
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern char *asctime(const struct tm *timeptr);
+#else
+static inline char *asctime(const struct tm *timeptr)
+{
+        UNUSED_ARG1(timeptr);
+        return "";
+}
+#endif
 
 //==============================================================================
 /**
@@ -607,7 +643,15 @@ extern char *asctime(const struct tm *timeptr);
  * @see tm, asctime()
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern char *asctime_r(const struct tm *timeptr, char *buf);
+#else
+static inline char *asctime_r(const struct tm *timeptr, char *buf)
+{
+        UNUSED_ARG2(timeptr, buf);
+        return "";
+}
+#endif
 
 //==============================================================================
 /**
@@ -642,7 +686,15 @@ extern char *asctime_r(const struct tm *timeptr, char *buf);
  * @see time_t, asctime(), ctime_r()
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern char *ctime(const time_t *timer);
+#else
+static inline char *ctime(const time_t *timer)
+{
+        UNUSED_ARG1(timer);
+        return "";
+}
+#endif
 
 //==============================================================================
 /**
@@ -680,7 +732,15 @@ extern char *ctime(const time_t *timer);
  * @see time_t, asctime(), ctime()
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern char *ctime_r(const time_t *timer, char *buf);
+#else
+static inline char *ctime_r(const time_t *timer, char *buf)
+{
+        UNUSED_ARG2(timer, buf);
+        return "";
+}
+#endif
 
 //==============================================================================
 /**
@@ -700,7 +760,15 @@ extern char *ctime_r(const time_t *timer, char *buf);
  * @see time_t, tm, gmtime_r(), localtime(), localtime_r()
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern struct tm *gmtime(const time_t *timer);
+#else
+static inline struct tm *gmtime(const time_t *timer)
+{
+        UNUSED_ARG1(timer);
+        return NULL;
+}
+#endif
 
 //==============================================================================
 /**
@@ -743,7 +811,15 @@ extern struct tm *gmtime(const time_t *timer);
  * @see time_t, tm, gmtime(), localtime(), localtime_r()
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern struct tm *gmtime_r(const time_t *timer, struct tm *tm);
+#else
+static inline struct tm *gmtime_r(const time_t *timer, struct tm *tm)
+{
+        UNUSED_ARG2(timer, tm);
+        return NULL;
+}
+#endif
 
 //==============================================================================
 /**
@@ -762,7 +838,15 @@ extern struct tm *gmtime_r(const time_t *timer, struct tm *tm);
  * @see time_t, tm, gmtime(), gmtime_r(), localtime_r()
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern struct tm *localtime(const time_t *timer);
+#else
+static inline struct tm *localtime(const time_t *timer)
+{
+        UNUSED_ARG1(timer);
+        return NULL;
+}
+#endif
 
 //==============================================================================
 /**
@@ -804,7 +888,15 @@ extern struct tm *localtime(const time_t *timer);
  * @see time_t, tm, gmtime(), gmtime_r(), localtime()
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern struct tm *localtime_r(const time_t *timer, struct tm *tm);
+#else
+static inline struct tm *localtime_r(const time_t *timer, struct tm *tm)
+{
+        UNUSED_ARG2(timer, tm);
+        return NULL;
+}
+#endif
 
 //==============================================================================
 /**
@@ -858,7 +950,15 @@ extern struct tm *localtime_r(const time_t *timer, struct tm *tm);
  * @arg z - ISO 8601 offset from UTC in timezone (1 minute=1, 1 hour=100) +0100, -1230
  */
 //==============================================================================
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 extern size_t strftime(char *ptr, size_t maxsize, const char *format, const struct tm *timeptr);
+#else
+static inline size_t strftime(char *ptr, size_t maxsize, const char *format, const struct tm *timeptr)
+{
+        UNUSED_ARG4(ptr, maxsize, format, timeptr);
+        return 0;
+}
+#endif
 
 #ifdef __cplusplus
 }

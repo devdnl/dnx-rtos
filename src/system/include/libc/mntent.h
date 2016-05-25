@@ -44,6 +44,8 @@ extern "C" {
 ==============================================================================*/
 #include <sys/types.h>
 #include <kernel/syscall.h>
+#include <kernel/errno.h>
+#include <lib/unarg.h>
 
 /*==============================================================================
   Exported macros
@@ -111,9 +113,15 @@ struct mntent {
 //==============================================================================
 static inline int getmntentry(int seek, struct mntent *mntent)
 {
+#if __OS_ENABLE_STATFS__ == _YES_
         int r = -1;
         syscall(SYSCALL_GETMNTENTRY, &r, &seek, mntent);
         return r;
+#else
+        UNUSED_ARG2(seek, mntent);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 #ifdef __cplusplus

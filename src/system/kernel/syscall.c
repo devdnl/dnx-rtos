@@ -79,34 +79,54 @@ static task_t *destroy_top_process(void);
 static void syscall_do(void *rq);
 static void syscall_mount(syscallrq_t *rq);
 static void syscall_umount(syscallrq_t *rq);
+#if __OS_ENABLE_STATFS__ == _YES_
 static void syscall_getmntentry(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_MKNOD__ == _YES_
 static void syscall_mknod(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_MKDIR__ == _YES_
 static void syscall_mkdir(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_MKFIFO__ == _YES_
 static void syscall_mkfifo(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_DIRBROWSE__ == _YES_
 static void syscall_opendir(syscallrq_t *rq);
 static void syscall_closedir(syscallrq_t *rq);
 static void syscall_readdir(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_REMOVE__ == _YES_
 static void syscall_remove(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_RENAME__ == _YES_
 static void syscall_rename(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_CHMOD__ == _YES_
 static void syscall_chmod(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_CHOWN__ == _YES_
 static void syscall_chown(syscallrq_t *rq);
-static void syscall_stat(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_STATFS__ == _YES_
 static void syscall_statfs(syscallrq_t *rq);
+#endif
+#if __OS_ENABLE_FSTAT__ == _YES_
+static void syscall_stat(syscallrq_t *rq);
+static void syscall_fstat(syscallrq_t *rq);
+#endif
 static void syscall_fopen(syscallrq_t *rq);
 static void syscall_fclose(syscallrq_t *rq);
 static void syscall_fwrite(syscallrq_t *rq);
 static void syscall_fread(syscallrq_t *rq);
 static void syscall_fseek(syscallrq_t *rq);
-static void syscall_ftell(syscallrq_t *rq);
 static void syscall_ioctl(syscallrq_t *rq);
-static void syscall_fstat(syscallrq_t *rq);
 static void syscall_fflush(syscallrq_t *rq);
-static void syscall_feof(syscallrq_t *rq);
-static void syscall_clearerr(syscallrq_t *rq);
-static void syscall_ferror(syscallrq_t *rq);
 static void syscall_sync(syscallrq_t *rq);
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 static void syscall_gettime(syscallrq_t *rq);
 static void syscall_settime(syscallrq_t *rq);
+#endif
 static void syscall_driverinit(syscallrq_t *rq);
 static void syscall_driverrelease(syscallrq_t *rq);
 static void syscall_malloc(syscallrq_t *rq);
@@ -117,7 +137,9 @@ static void syscall_syslogdisable(syscallrq_t *rq);
 static void syscall_kernelpanicdetect(syscallrq_t *rq);
 static void syscall_abort(syscallrq_t *rq);
 static void syscall_exit(syscallrq_t *rq);
+#if __OS_ENABLE_SYSTEMFUNC__ == _YES_
 static void syscall_system(syscallrq_t *rq);
+#endif
 static void syscall_processcreate(syscallrq_t *rq);
 static void syscall_processdestroy(syscallrq_t *rq);
 static void syscall_processgetexitsem(syscallrq_t *rq);
@@ -125,7 +147,9 @@ static void syscall_processstatseek(syscallrq_t *rq);
 static void syscall_processstatpid(syscallrq_t *rq);
 static void syscall_processgetpid(syscallrq_t *rq);
 static void syscall_processgetprio(syscallrq_t *rq);
+#if __OS_ENABLE_GETCWD__ == _YES_
 static void syscall_getcwd(syscallrq_t *rq);
+#endif
 static void syscall_threadcreate(syscallrq_t *rq);
 static void syscall_threaddestroy(syscallrq_t *rq);
 static void syscall_threadexit(syscallrq_t *rq);
@@ -167,34 +191,56 @@ static queue_t *call_request;
 static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MOUNT            ] = syscall_mount,
         [SYSCALL_UMOUNT           ] = syscall_umount,
+    #if __OS_ENABLE_STATFS__ == _YES_
         [SYSCALL_GETMNTENTRY      ] = syscall_getmntentry,
+    #endif
+    #if __OS_ENABLE_MKNOD__ == _YES_
         [SYSCALL_MKNOD            ] = syscall_mknod,
+    #endif
+    #if __OS_ENABLE_MKDIR__ == _YES_
         [SYSCALL_MKDIR            ] = syscall_mkdir,
+    #endif
+    #if __OS_ENABLE_MKFIFO__ == _YES_
         [SYSCALL_MKFIFO           ] = syscall_mkfifo,
+    #endif
+    #if __OS_ENABLE_DIRBROWSE__ == _YES_
         [SYSCALL_OPENDIR          ] = syscall_opendir,
         [SYSCALL_CLOSEDIR         ] = syscall_closedir,
         [SYSCALL_READDIR          ] = syscall_readdir,
+    #endif
+    #if __OS_ENABLE_REMOVE__ == _YES_
         [SYSCALL_REMOVE           ] = syscall_remove,
+    #endif
+    #if __OS_ENABLE_RENAME__ == _YES_
         [SYSCALL_RENAME           ] = syscall_rename,
+    #endif
+    #if __OS_ENABLE_CHMOD__ == _YES_
         [SYSCALL_CHMOD            ] = syscall_chmod,
+    #endif
+    #if __OS_ENABLE_CHOWN__ == _YES_
         [SYSCALL_CHOWN            ] = syscall_chown,
-        [SYSCALL_STAT             ] = syscall_stat,
+    #endif
+    #if __OS_ENABLE_STATFS__ == _YES_
         [SYSCALL_STATFS           ] = syscall_statfs,
+    #endif
+    #if __OS_ENABLE_FSTAT__ == _YES_
+        [SYSCALL_STAT             ] = syscall_stat,
+    #endif
+    #if __OS_ENABLE_FSTAT__ == _YES_
+        [SYSCALL_FSTAT            ] = syscall_fstat,
+    #endif
         [SYSCALL_FOPEN            ] = syscall_fopen,
         [SYSCALL_FCLOSE           ] = syscall_fclose,
         [SYSCALL_FWRITE           ] = syscall_fwrite,
         [SYSCALL_FREAD            ] = syscall_fread,
         [SYSCALL_FSEEK            ] = syscall_fseek,
-        [SYSCALL_FTELL            ] = syscall_ftell,
         [SYSCALL_IOCTL            ] = syscall_ioctl,
-        [SYSCALL_FSTAT            ] = syscall_fstat,
         [SYSCALL_FFLUSH           ] = syscall_fflush,
-        [SYSCALL_FEOF             ] = syscall_feof,
-        [SYSCALL_CLEARERROR       ] = syscall_clearerr,
-        [SYSCALL_FERROR           ] = syscall_ferror,
         [SYSCALL_SYNC             ] = syscall_sync,
+    #if __OS_ENABLE_TIMEMAN__ == _YES_
         [SYSCALL_GETTIME          ] = syscall_gettime,
         [SYSCALL_SETTIME          ] = syscall_settime,
+    #endif
         [SYSCALL_DRIVERINIT       ] = syscall_driverinit,
         [SYSCALL_DRIVERRELEASE    ] = syscall_driverrelease,
         [SYSCALL_MALLOC           ] = syscall_malloc,
@@ -205,7 +251,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_KERNELPANICDETECT] = syscall_kernelpanicdetect,
         [SYSCALL_ABORT            ] = syscall_abort,
         [SYSCALL_EXIT             ] = syscall_exit,
+    #if __OS_ENABLE_SYSTEMFUNC__ == _YES_
         [SYSCALL_SYSTEM           ] = syscall_system,
+    #endif
         [SYSCALL_PROCESSCREATE    ] = syscall_processcreate,
         [SYSCALL_PROCESSDESTROY   ] = syscall_processdestroy,
         [SYSCALL_PROCESSGETEXITSEM] = syscall_processgetexitsem,
@@ -213,7 +261,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_PROCESSSTATPID   ] = syscall_processstatpid,
         [SYSCALL_PROCESSGETPID    ] = syscall_processgetpid,
         [SYSCALL_PROCESSGETPRIO   ] = syscall_processgetprio,
+    #if __OS_ENABLE_GETCWD__ == _YES_
         [SYSCALL_GETCWD           ] = syscall_getcwd,
+    #endif
         [SYSCALL_THREADCREATE     ] = syscall_threadcreate,
         [SYSCALL_THREADDESTROY    ] = syscall_threaddestroy,
         [SYSCALL_THREADEXIT       ] = syscall_threadexit,
@@ -525,6 +575,7 @@ static void syscall_umount(syscallrq_t *rq)
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
+#if __OS_ENABLE_STATFS__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall return information about selected file system.
@@ -547,7 +598,9 @@ static void syscall_getmntentry(syscallrq_t *rq)
 
         SETRETURN(int, ret);
 }
+#endif
 
+#if __OS_ENABLE_MKNOD__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall create device node.
@@ -564,7 +617,9 @@ static void syscall_mknod(syscallrq_t *rq)
         SETERRNO(_vfs_mknod(pathname, _dev_t__create(_module_get_ID(mod_name), *major, *minor)));
         SETRETURN(int, GETERRNO() ? 0 : -1);
 }
+#endif
 
+#if __OS_ENABLE_MKDIR__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall create directory.
@@ -579,7 +634,9 @@ static void syscall_mkdir(syscallrq_t *rq)
         SETERRNO(_vfs_mkdir(path, *mode));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
+#if __OS_ENABLE_MKFIFO__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall create FIFO pipe.
@@ -594,7 +651,9 @@ static void syscall_mkfifo(syscallrq_t *rq)
         SETERRNO(_vfs_mkfifo(path, *mode));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
+#if __OS_ENABLE_DIRBROWSE__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall open selected directory.
@@ -658,7 +717,9 @@ static void syscall_readdir(syscallrq_t *rq)
         SETERRNO(_vfs_readdir(dir, &dirent));
         SETRETURN(dirent_t*, dirent);
 }
+#endif
 
+#if __OS_ENABLE_REMOVE__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall remove selected file.
@@ -672,7 +733,9 @@ static void syscall_remove(syscallrq_t *rq)
         SETERRNO(_vfs_remove(path));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
+#if __OS_ENABLE_RENAME__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall rename selected file.
@@ -687,7 +750,9 @@ static void syscall_rename(syscallrq_t *rq)
         SETERRNO(_vfs_rename(oldname, newname));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
+#if __OS_ENABLE_CHMOD__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall change mode of selected file.
@@ -702,7 +767,9 @@ static void syscall_chmod(syscallrq_t *rq)
         SETERRNO(_vfs_chmod(path, *mode));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
+#if __OS_ENABLE_CHOWN__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall change owner and group of selected file.
@@ -718,7 +785,9 @@ static void syscall_chown(syscallrq_t *rq)
         SETERRNO(_vfs_chown(path, *owner, *group));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
+#if __OS_ENABLE_FSTAT__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall read statistics of selected file by path.
@@ -748,7 +817,9 @@ static void syscall_fstat(syscallrq_t *rq)
         SETERRNO(_vfs_fstat(file, buf));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
+#if __OS_ENABLE_STATFS__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall read statistics of file system mounted in selected path.
@@ -763,6 +834,7 @@ static void syscall_statfs(syscallrq_t *rq)
         SETERRNO(_vfs_statfs(path, buf));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
 //==============================================================================
 /**
@@ -870,21 +942,6 @@ static void syscall_fseek(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall return file pointer value.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_ftell(syscallrq_t *rq)
-{
-        GETARG(FILE *, file);
-        i64_t lseek = -1;
-        SETERRNO(_vfs_ftell(file, &lseek));
-        SETRETURN(i64_t, lseek);
-}
-
-//==============================================================================
-/**
  * @brief  This syscall perform not standard operation on selected file/device.
  *
  * @param  rq                   syscall request
@@ -915,49 +972,6 @@ static void syscall_fflush(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall check that end-of-file occurred.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_feof(syscallrq_t *rq)
-{
-        GETARG(FILE *, file);
-        int eof = EOF;
-        SETERRNO(_vfs_feof(file, &eof));
-        SETRETURN(int, eof);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall clear file errors.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_clearerr(syscallrq_t *rq)
-{
-        GETARG(FILE *, file);
-        SETERRNO(_vfs_clearerr(file));
-}
-
-//==============================================================================
-/**
- * @brief  This syscall return file error indicator.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_ferror(syscallrq_t *rq)
-{
-        GETARG(FILE *, file);
-        int error = EOF;
-        SETERRNO(_vfs_ferror(file, &error));
-        SETRETURN(int, error);
-}
-
-//==============================================================================
-/**
  * @brief  This syscall synchronize all buffers of filesystems.
  *
  * @param  rq                   syscall request
@@ -969,6 +983,7 @@ static void syscall_sync(syscallrq_t *rq)
         _vfs_sync();
 }
 
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall return current time value (UTC timestamp).
@@ -996,6 +1011,7 @@ static void syscall_settime(syscallrq_t *rq)
         SETERRNO(_settime(time));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
+#endif
 
 //==============================================================================
 /**
@@ -1167,6 +1183,7 @@ static void syscall_exit(syscallrq_t *rq)
         SETERRNO(_process_exit(GETPROCESS(), *status));
 }
 
+#if __OS_ENABLE_SYSTEMFUNC__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall start shell application to run command line.
@@ -1187,6 +1204,7 @@ static void syscall_system(syscallrq_t *rq)
         SETERRNO(ENOTSUP);
         SETRETURN(int, -1);
 }
+#endif
 
 //==============================================================================
 /**
@@ -1294,6 +1312,7 @@ static void syscall_processgetprio(syscallrq_t *rq)
         SETRETURN(int, prio);
 }
 
+#if __OS_ENABLE_GETCWD__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall return CWD of current process.
@@ -1314,6 +1333,7 @@ static void syscall_getcwd(syscallrq_t *rq)
 
         SETRETURN(char*, cwd ? buf : NULL);
 }
+#endif
 
 //==============================================================================
 /**

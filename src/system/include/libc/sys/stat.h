@@ -46,6 +46,8 @@ extern "C" {
 ==============================================================================*/
 #include <sys/types.h>
 #include <kernel/syscall.h>
+#include <kernel/errno.h>
+#include <lib/unarg.h>
 
 /*==============================================================================
   Exported macros
@@ -118,9 +120,15 @@ extern "C" {
 //==============================================================================
 static inline int mknod(const char *pathname, const char *mod_name, int major, int minor)
 {
+#if __OS_ENABLE_MKNOD__ == _YES_
         int r = -1;
         syscall(SYSCALL_MKNOD, &r, pathname, mod_name, &major, &minor);
         return r;
+#else
+        UNUSED_ARG4(pathname, mod_name, major, minor);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -157,9 +165,15 @@ static inline int mknod(const char *pathname, const char *mod_name, int major, i
 //==============================================================================
 static inline int mkdir(const char *pathname, mode_t mode)
 {
+#if __OS_ENABLE_MKDIR__ == _YES_
         int r = -1;
         syscall(SYSCALL_MKDIR, &r, pathname, &mode);
         return r;
+#else
+        UNUSED_ARG2(pathname, mode);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -199,9 +213,15 @@ static inline int mkdir(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int mkfifo(const char *pathname, mode_t mode)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         int r = -1;
         syscall(SYSCALL_MKFIFO, &r, pathname, &mode);
         return r;
+#else
+        UNUSED_ARG2(pathname, mode);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -237,9 +257,15 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int chmod(const char *pathname, mode_t mode)
 {
+#if __OS_ENABLE_CHMOD__ == _YES_
         int r = -1;
         syscall(SYSCALL_CHMOD, &r, pathname, &mode);
         return r;
+#else
+        UNUSED_ARG2(pathname, mode);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -282,9 +308,15 @@ static inline int chmod(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int stat(const char *pathname, struct stat *buf)
 {
+#if __OS_ENABLE_FSTAT__ == _YES_
         int r = -1;
         syscall(SYSCALL_STAT, &r, pathname, buf);
         return r;
+#else
+        UNUSED_ARG2(pathname, buf);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -334,9 +366,15 @@ static inline int stat(const char *pathname, struct stat *buf)
 //==============================================================================
 static inline int fstat(FILE *file, struct stat *buf)
 {
+#if __OS_ENABLE_FSTAT__ == _YES_
         int r = -1;
         syscall(SYSCALL_FSTAT, &r, file, buf);
         return r;
+#else
+        UNUSED_ARG2(file, buf);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 #ifdef __cplusplus

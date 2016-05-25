@@ -48,7 +48,7 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if (__OS_PRINTF_ENABLE__ > 0)
+#if (__OS_PRINTF_ENABLE__ > 0) && (__OS_ENABLE_TIMEMAN__ == _YES_)
 /** days of week */
 static const char *week_day_abbr[] = {
         "Sun", "Mon", "Tue",
@@ -89,7 +89,7 @@ static const char *month_full[] = {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 //==============================================================================
 /**
  * @brief  Format time as string
@@ -288,7 +288,7 @@ size_t strftime(char *buf, size_t size, const char *format, const struct tm *tim
         return 0;
 #endif
 }
-
+#endif
 
 /*==============================================================================
   End of file

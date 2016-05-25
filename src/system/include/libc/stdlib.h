@@ -677,6 +677,7 @@ static inline void exit(int status)
 //==============================================================================
 static inline int system(const char *command)
 {
+#if __OS_ENABLE_SYSTEMFUNC__ == _YES_
         int    r      = -1;    // TEST system()
         pid_t  pid    = 0;
         sem_t *sem    = NULL;
@@ -692,6 +693,10 @@ static inline int system(const char *command)
         }
 
         return r;
+#else
+        (void)command;
+        return -1;
+#endif
 }
 
 //==============================================================================
