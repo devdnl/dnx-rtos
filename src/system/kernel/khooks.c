@@ -91,7 +91,9 @@ void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 //==============================================================================
 void vApplicationTickHook(void)
 {
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
         _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
+#endif
 
         if (++sec_divider >= configTICK_RATE_HZ) {
                 sec_divider = 0;

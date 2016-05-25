@@ -111,6 +111,8 @@ int _printk_disable(void)
         } else {
                 return ESUCC;
         }
+#else
+        return ENOTSUP;
 #endif
 }
 
