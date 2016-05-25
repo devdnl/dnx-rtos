@@ -28,6 +28,7 @@
   Include files
 ==============================================================================*/
 #include "lib/conv.h"
+#include "config.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdbool.h>
@@ -56,24 +57,29 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 /** number of days in months for leap and normal years */
 static const uint8_t _ytab[2][12] = {
         {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
         {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
 };
+#endif
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 /** statically allocated time structure */
 struct tm _tmbuf;
 
 /** local time offset */
 int _ltimeoff;
+#endif
 
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 //==============================================================================
 /**
  * @brief  Function check that given year is leap year or not
@@ -85,6 +91,7 @@ static bool is_leap_year(int year)
 {
         return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
 }
+#endif
 
 //==============================================================================
 /**
@@ -480,6 +487,7 @@ double _atof(const char *str)
         return _strtod(str, NULL);
 }
 
+#if __OS_ENABLE_TIMEMAN__ == _YES_
 //==============================================================================
 /**
  * @brief  Convert date to UNIX time (Epoch)
@@ -583,6 +591,7 @@ struct tm *_localtime_r(const time_t *timer, struct tm *tmbuf)
                 return NULL;
         }
 }
+#endif
 
 /*==============================================================================
   End of file

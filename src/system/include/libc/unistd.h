@@ -47,6 +47,8 @@ extern "C" {
 #include <sys/types.h>
 #include <kernel/syscall.h>
 #include <kernel/kwrapper.h>
+#include <kernel/errno.h>
+#include <lib/unarg.h>
 
 /*==============================================================================
   Exported macros
@@ -292,9 +294,14 @@ static inline void sleep_until(const uint seconds, u32_t *time_ref)
 //==============================================================================
 static inline char *getcwd(char *buf, size_t size)
 {
+#if __OS_ENABLE_GETCWD__ == _YES_
         char *cwd;
         syscall(SYSCALL_GETCWD, &cwd, buf, &size);
         return cwd;
+#else
+        UNUSED_ARG1(size);
+        return buf;
+#endif
 }
 
 //==============================================================================
@@ -360,9 +367,15 @@ static inline pid_t getpid(void)
 //==============================================================================
 static inline int chown(const char *pathname, uid_t owner, gid_t group)
 {
+#if __OS_ENABLE_CHOWN__ == _YES_
         int r = -1;
         syscall(SYSCALL_CHOWN, &r, pathname, &owner, &group);
         return r;
+#else
+        UNUSED_ARG3(pathname, owner, group);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================

@@ -1393,7 +1393,12 @@ static inline int sys_mknod(const char *path, dev_t dev)
 //==============================================================================
 static inline int sys_mkdir(const char *pathname, mode_t mode)
 {
+#if __OS_ENABLE_MKDIR__ == _YES_
         return _vfs_mkdir(pathname, mode);
+#else
+        UNUSED_ARG2(pathname, mode);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -1426,7 +1431,12 @@ static inline int sys_mkdir(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int sys_mkfifo(const char *pathname, mode_t mode)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         return _vfs_mkfifo(pathname, mode);
+#else
+        UNUSED_ARG2(pathname, mode);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -1591,7 +1601,12 @@ static inline int sys_readdir(DIR *dir, dirent_t **dirent)
 //==============================================================================
 static inline int sys_remove(const char *path)
 {
+#if __OS_ENABLE_REMOVE__ == _YES_
         return _vfs_remove(path);
+#else
+        UNUSED_ARG1(path);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -1621,7 +1636,12 @@ static inline int sys_remove(const char *path)
 //==============================================================================
 static inline int sys_rename(const char *old_name, const char *new_name)
 {
+#if __OS_ENABLE_RENAME__ == _YES_
         return _vfs_rename(old_name, new_name);
+#else
+        UNUSED_ARG2(old_name, new_name);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -1650,7 +1670,12 @@ static inline int sys_rename(const char *old_name, const char *new_name)
 //==============================================================================
 static inline int sys_chmod(const char *path, mode_t mode)
 {
+#if __OS_ENABLE_CHMOD__ == _YES_
         return _vfs_chmod(path, mode);
+#else
+        UNUSED_ARG2(path, mode);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -1679,7 +1704,12 @@ static inline int sys_chmod(const char *path, mode_t mode)
 //==============================================================================
 static inline int sys_chown(const char *path, uid_t owner, gid_t group)
 {
+#if __OS_ENABLE_CHOWN__ == _YES_
         return _vfs_chown(path, owner, group);
+#else
+        UNUSED_ARG3(path, owner, group);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -1714,7 +1744,12 @@ static inline int sys_chown(const char *path, uid_t owner, gid_t group)
 //==============================================================================
 static inline int sys_stat(const char *path, struct stat *buf)
 {
+#if __OS_ENABLE_FSTAT__ == _YES_
         return _vfs_stat(path, buf);
+#else
+        UNUSED_ARG2(path, buf);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -1748,7 +1783,12 @@ static inline int sys_stat(const char *path, struct stat *buf)
 //==============================================================================
 static inline int sys_statfs(const char *path, struct statfs *statfs)
 {
+#if __OS_ENABLE_STATFS__ == _YES_
         return _vfs_statfs(path, statfs);
+#else
+        UNUSED_ARG2(path, statfs);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -4529,7 +4569,12 @@ static inline int sys_settime(time_t *timer)
 //==============================================================================
 static inline struct tm *sys_gmtime_r(const time_t *timer, struct tm *tm)
 {
+#if __OS_ENABLE_TIMEMAN__ == _YES_
         return _gmtime_r(timer, tm);
+#else
+        UNUSED_ARG1(timer);
+        return tm;
+#endif
 }
 
 //==============================================================================
@@ -4556,7 +4601,12 @@ static inline struct tm *sys_gmtime_r(const time_t *timer, struct tm *tm)
 //==============================================================================
 static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
 {
+#if __OS_ENABLE_TIMEMAN__ == _YES_
         return _localtime_r(timer, tm);
+#else
+        UNUSED_ARG1(timer);
+        return tm;
+#endif
 }
 
 #ifdef __cplusplus

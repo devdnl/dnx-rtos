@@ -50,6 +50,8 @@ extern "C" {
 #include <kernel/process.h>
 #include <kernel/syscall.h>
 #include <kernel/builtinfunc.h>
+#include <kernel/errno.h>
+#include <lib/unarg.h>
 
 /*==============================================================================
   Exported macros
@@ -1064,9 +1066,15 @@ static inline char *tmpnam(char *str)
 //==============================================================================
 static inline int remove(const char *path)
 {
+#if __OS_ENABLE_REMOVE__ == _YES_
         int r = EOF;
         syscall(SYSCALL_REMOVE, &r, path);
         return r;
+#else
+        UNUSED_ARG1(path);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -1101,9 +1109,15 @@ static inline int remove(const char *path)
 //==============================================================================
 static inline int rename(const char *old_name, const char *new_name)
 {
+#if __OS_ENABLE_RENAME__ == _YES_
         int r = EOF;
         syscall(SYSCALL_RENAME, &r, old_name, new_name);
         return r;
+#else
+        UNUSED_ARG2(old_name, new_name);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================

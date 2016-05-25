@@ -97,7 +97,7 @@ this:SetToolTip("Context switch frequency has influence to system response for e
 
 
 /*--
-this:AddExtraWidget("Label", "LabelFeatures", "\nSystem features", -1, "bold")
+this:AddExtraWidget("Label", "LabelFeatures", "\nSystem features (advanced)", -1, "bold")
 this:AddExtraWidget("Void", "VoidFeatures")
 ++*/
 /*--
@@ -105,18 +105,6 @@ this:AddWidget("Checkbox", "Sleep on idle")
 this:SetToolTip("If this option is selected then system is halted in the idle task (CPU goes to sleep mode). This option can prevent debugging.")
 --*/
 #define __OS_SLEEP_ON_IDLE__ _NO_
-
-/*--
-this:AddWidget("Checkbox", "printf() family functions")
-this:SetToolTip("If this function is selected then printf() family function can be used by the application.")
---*/
-#define __OS_PRINTF_ENABLE__ _YES_
-
-/*--
-this:AddWidget("Checkbox", "scanf() family functions")
-this:SetToolTip("If this function is selected then scanf() family function can be used by the application.")
---*/
-#define __OS_SCANF_ENABLE__ _YES_
 
 /*--
 this:AddWidget("Checkbox", "System log function")
@@ -137,6 +125,97 @@ this:SetToolTip("This function enables CPU load measurement.")
 #define __OS_MONITOR_CPU_LOAD__ _YES_
 
 /*--
+this:AddWidget("Checkbox", "Directory browse functions")
+this:SetToolTip("This option enables opendir(), readdir(), and closedir() functions.")
+--*/
+#define __OS_ENABLE_DIRBROWSE__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "Time management functions")
+this:SetToolTip("This function enables time management (RTC).")
+--*/
+#define __OS_ENABLE_TIMEMAN__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "printf() family functions")
+this:SetToolTip("If this function is selected then printf() family function can be used by the application.")
+--*/
+#define __OS_PRINTF_ENABLE__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "scanf() family functions")
+this:SetToolTip("If this function is selected then scanf() family function can be used by the application.")
+--*/
+#define __OS_SCANF_ENABLE__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "mkdir() function")
+this:SetToolTip("This option enables mkdir() function.")
+--*/
+#define __OS_ENABLE_MKDIR__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "getcwd() function")
+this:SetToolTip("This function is used to read current working directory.")
+--*/
+#define __OS_ENABLE_GETCWD__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "mkfifo() function")
+this:SetToolTip("This function is used to create pipe file.")
+--*/
+#define __OS_ENABLE_MKFIFO__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "remove() function")
+this:SetToolTip("This function enables file remove functionality.")
+--*/
+#define __OS_ENABLE_REMOVE__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "rename() function")
+this:SetToolTip("This function enables file rename functionality.")
+--*/
+#define __OS_ENABLE_RENAME__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "chmod() function")
+this:SetToolTip("This function enables changing of file mode.")
+--*/
+#define __OS_ENABLE_CHMOD__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "chown() function")
+this:SetToolTip("This function enables changing of file owner.")
+--*/
+#define __OS_ENABLE_CHOWN__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "statfs() and getmntentry() functions")
+this:SetToolTip("This option enables reading of file system statistics.")
+--*/
+#define __OS_ENABLE_STATFS__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "mknod() function")
+this:SetToolTip("This option enables creating of device files.")
+--*/
+#define __OS_ENABLE_MKNOD__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "stat() and fstat() functions")
+this:SetToolTip("This option enables getting statistics of file.")
+--*/
+#define __OS_ENABLE_FSTAT__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "system() function")
+this:SetToolTip("This option enables system() function.")
+--*/
+#define __OS_ENABLE_SYSTEMFUNC__ _YES_
+
+/*--
+this:AddExtraWidget("Void", "VoidOption")
 this:AddWidget("Spinbox", 0, 16777216, "Network memory limit [Bytes]")
 this:SetToolTip("This option enables memory limit for network subsystem. Use 0 for no limit.")
 --*/

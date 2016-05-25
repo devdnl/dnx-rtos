@@ -126,17 +126,35 @@ int _vfs_mount(const char *src_path, const char *mount_point, const struct vfs_F
            || !fsif->fs_ioctl
            || !fsif->fs_fstat
            || !fsif->fs_flush
-           || !fsif->fs_mkdir
-           || !fsif->fs_mkfifo
            || !fsif->fs_mknod
-           || !fsif->fs_opendir
-           || !fsif->fs_remove
-           || !fsif->fs_rename
-           || !fsif->fs_chmod
-           || !fsif->fs_chown
-           || !fsif->fs_stat
-           || !fsif->fs_statfs
            || !fsif->fs_sync
+    #if __OS_ENABLE_FSTAT__ == _YES_
+           || !fsif->fs_stat
+    #endif
+    #if __OS_ENABLE_MKDIR__ == _YES_
+           || !fsif->fs_mkdir
+    #endif
+    #if __OS_ENABLE_MKFIFO__ == _YES_
+           || !fsif->fs_mkfifo
+    #endif
+    #if __OS_ENABLE_DIRBROWSE__ == _YES_
+           || !fsif->fs_opendir
+    #endif
+    #if __OS_ENABLE_REMOVE__ == _YES_
+           || !fsif->fs_remove
+    #endif
+    #if __OS_ENABLE_RENAME__ == _YES_
+           || !fsif->fs_rename
+    #endif
+    #if __OS_ENABLE_CHMOD__ == _YES_
+           || !fsif->fs_chmod
+    #endif
+    #if __OS_ENABLE_CHOWN__ == _YES_
+           || !fsif->fs_chown
+    #endif
+    #if __OS_ENABLE_STATFS__ == _YES_
+           || !fsif->fs_statfs
+    #endif
            || fsif->fs_magic != _VFS_FILE_SYSTEM_MAGIC_NO) {
 
                 return EINVAL;
@@ -269,6 +287,7 @@ int _vfs_umount(const char *path)
         return result;
 }
 
+#if __OS_ENABLE_STATFS__ == _YES_
 //==============================================================================
 /**
  * @brief Function return file system describe object
@@ -310,6 +329,7 @@ int _vfs_getmntentry(int seek, struct mntent *mntent)
 
         return result;
 }
+#endif
 
 //==============================================================================
 /**
@@ -346,6 +366,7 @@ int _vfs_mknod(const char *path, dev_t dev)
         return result;
 }
 
+#if __OS_ENABLE_MKDIR__ == _YES_
 //==============================================================================
 /**
  * @brief Create directory
@@ -380,7 +401,9 @@ int _vfs_mkdir(const char *path, mode_t mode)
 
         return result;
 }
+#endif
 
+#if __OS_ENABLE_MKFIFO__ == _YES_
 //==============================================================================
 /**
  * @brief Create pipe
@@ -415,6 +438,7 @@ int _vfs_mkfifo(const char *path, mode_t mode)
 
         return result;
 }
+#endif
 
 //==============================================================================
 /**
@@ -508,6 +532,7 @@ int _vfs_readdir(DIR *dir, dirent_t **dirent)
         return result;
 }
 
+#if __OS_ENABLE_REMOVE__ == _YES_
 //==============================================================================
 /**
  * @brief Remove file
@@ -558,7 +583,9 @@ int _vfs_remove(const char *path)
 
         return result;
 }
+#endif
 
+#if __OS_ENABLE_RENAME__ == _YES_
 //==============================================================================
 /**
  * @brief Rename file name
@@ -628,7 +655,9 @@ int _vfs_rename(const char *old_name, const char *new_name)
 
         return result;
 }
+#endif
 
+#if __OS_ENABLE_CHMOD__ == _YES_
 //==============================================================================
 /**
  * @brief Function change file mode
@@ -663,7 +692,9 @@ int _vfs_chmod(const char *path, mode_t mode)
 
         return result;
 }
+#endif
 
+#if __OS_ENABLE_CHOWN__ == _YES_
 //==============================================================================
 /**
  * @brief Function change file owner and group
@@ -699,7 +730,9 @@ int _vfs_chown(const char *path, uid_t owner, gid_t group)
 
         return result;
 }
+#endif
 
+#if __OS_ENABLE_FSTAT__ == _YES_
 //==============================================================================
 /**
  * @brief Function returns file/dir status
@@ -734,7 +767,9 @@ int _vfs_stat(const char *path, struct stat *stat)
 
         return result;
 }
+#endif
 
+#if __OS_ENABLE_STATFS__ == _YES_
 //==============================================================================
 /**
  * @brief Function returns file system status
@@ -767,6 +802,7 @@ int _vfs_statfs(const char *path, struct statfs *statfs)
 
         return result;
 }
+#endif
 
 //==============================================================================
 /**

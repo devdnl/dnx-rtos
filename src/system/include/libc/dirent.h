@@ -43,6 +43,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <kernel/syscall.h>
+#include <kernel/errno.h>
+#include <lib/unarg.h>
 
 /*==============================================================================
   Exported macros
@@ -134,9 +136,15 @@ extern "C" {
 //==============================================================================
 static inline DIR *opendir(const char *name)
 {
+#if __OS_ENABLE_DIRBROWSE__ == _YES_
         DIR *dir = NULL;
         syscall(SYSCALL_OPENDIR, &dir, name);
         return dir;
+#else
+        UNUSED_ARG1(name);
+        _errno = ENOTSUP;
+        return NULL;
+#endif
 }
 
 //==============================================================================
@@ -188,9 +196,15 @@ static inline DIR *opendir(const char *name)
 //==============================================================================
 static inline int closedir(DIR *dir)
 {
+#if __OS_ENABLE_DIRBROWSE__ == _YES_
         int r = -1;
         syscall(SYSCALL_CLOSEDIR, &r, dir);
         return r;
+#else
+        UNUSED_ARG1(dir);
+        _errno = ENOTSUP;
+        return -1;
+#endif
 }
 
 //==============================================================================
@@ -244,9 +258,15 @@ static inline int closedir(DIR *dir)
 //==============================================================================
 static inline struct dirent *readdir(DIR *dir)
 {
+#if __OS_ENABLE_DIRBROWSE__ == _YES_
         struct dirent *dirent = NULL;
         syscall(SYSCALL_READDIR, &dirent, dir);
         return dirent;
+#else
+        UNUSED_ARG1(dir);
+        _errno = ENOTSUP;
+        return NULL;
+#endif
 }
 
 #ifdef __cplusplus

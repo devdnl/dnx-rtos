@@ -164,17 +164,33 @@ typedef struct vfs_FS_itf {
         int (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *arg);
         int (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct stat *stat);
         int (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
-        int (*fs_mkdir  )(void *fshdl, const char *path, mode_t);
-        int (*fs_mkfifo )(void *fshdl, const char *path, mode_t);
         int (*fs_mknod  )(void *fshdl, const char *path, const dev_t dev);
-        int (*fs_opendir)(void *fshdl, const char *path, DIR *dir);
-        int (*fs_remove )(void *fshdl, const char *path);
-        int (*fs_rename )(void *fshdl, const char *old_name, const char *new_name);
-        int (*fs_chmod  )(void *fshdl, const char *path, mode_t mode);
-        int (*fs_chown  )(void *fshdl, const char *path, uid_t owner, gid_t group);
-        int (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
-        int (*fs_statfs )(void *fshdl, struct statfs *statfs);
         int (*fs_sync   )(void *fshdl);
+        int (*fs_opendir)(void *fshdl, const char *path, DIR *dir);
+    #if __OS_ENABLE_FSTAT__ == _YES_
+        int (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
+    #endif
+    #if __OS_ENABLE_STATFS__ == _YES_
+        int (*fs_statfs )(void *fshdl, struct statfs *statfs);
+    #endif
+    #if __OS_ENABLE_MKDIR__ == _YES_
+        int (*fs_mkdir  )(void *fshdl, const char *path, mode_t);
+    #endif
+    #if __OS_ENABLE_MKFIFO__ == _YES_
+        int (*fs_mkfifo )(void *fshdl, const char *path, mode_t);
+    #endif
+    #if __OS_ENABLE_REMOVE__ == _YES_
+        int (*fs_remove )(void *fshdl, const char *path);
+    #endif
+    #if __OS_ENABLE_RENAME__ == _YES_
+        int (*fs_rename )(void *fshdl, const char *old_name, const char *new_name);
+    #endif
+    #if __OS_ENABLE_CHMOD__ == _YES_
+        int (*fs_chmod  )(void *fshdl, const char *path, mode_t mode);
+    #endif
+    #if __OS_ENABLE_CHOWN__ == _YES_
+        int (*fs_chown  )(void *fshdl, const char *path, uid_t owner, gid_t group);
+    #endif
         uint32_t fs_magic;
 } vfs_FS_itf_t;
 
