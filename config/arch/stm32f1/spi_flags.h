@@ -62,6 +62,7 @@ this.PortExist = function(this, devNo)
     SPI_PER["STM32F103RExx"] = 3
     SPI_PER["STM32F103RGxx"] = 3
     SPI_PER["STM32F103T8xx"] = 1
+    SPI_PER["STM32F103TBxx"] = 1
     SPI_PER["STM32F103V8xx"] = 2
     SPI_PER["STM32F103VBxx"] = 2
     SPI_PER["STM32F103VCxx"] = 3

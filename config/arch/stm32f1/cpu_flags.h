@@ -68,6 +68,7 @@
 #                  {"STM32F103RExx", "_STM32F10X_HD_"   },
 #                  {"STM32F103RGxx", "_STM32F10X_XL_"   },
 #                  {"STM32F103T8xx", "_STM32F10X_MD_"   },
+#                  {"STM32F103TBxx", "_STM32F10X_MD_"   },
 #                  {"STM32F103V8xx", "_STM32F10X_MD_"   },
 #                  {"STM32F103VBxx", "_STM32F10X_MD_"   },
 #                  {"STM32F103VCxx", "_STM32F10X_HD_"   },

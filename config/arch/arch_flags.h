@@ -101,6 +101,7 @@
 #     uC.PERIPH["STM32F103RExx"] = {GPIO = true, PLL = true, CRC = true, WDG = true, UART = true, SPI = true, AFIO = true, IRQ = true, I2C = true, RTC = true, USBD = true}
 #     uC.PERIPH["STM32F103RGxx"] = {GPIO = true, PLL = true, CRC = true, WDG = true, UART = true, SPI = true, AFIO = true, IRQ = true, I2C = true, RTC = true, USBD = true}
 #     uC.PERIPH["STM32F103T8xx"] = {GPIO = true, PLL = true, CRC = true, WDG = true, UART = true, SPI = true, AFIO = true, IRQ = true, I2C = true, RTC = true, USBD = true}
+#     uC.PERIPH["STM32F103TBxx"] = {GPIO = true, PLL = true, CRC = true, WDG = true, UART = true, SPI = true, AFIO = true, IRQ = true, I2C = true, RTC = true, USBD = true}
 #     uC.PERIPH["STM32F103V8xx"] = {GPIO = true, PLL = true, CRC = true, WDG = true, UART = true, SPI = true, AFIO = true, IRQ = true, I2C = true, RTC = true, USBD = true}
 #     uC.PERIPH["STM32F103VBxx"] = {GPIO = true, PLL = true, CRC = true, WDG = true, UART = true, SPI = true, AFIO = true, IRQ = true, I2C = true, RTC = true, USBD = true}
 #     uC.PERIPH["STM32F103VCxx"] = {GPIO = true, PLL = true, CRC = true, WDG = true, UART = true, SPI = true, AFIO = true, IRQ = true, I2C = true, RTC = true, USBD = true}

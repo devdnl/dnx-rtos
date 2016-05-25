@@ -62,6 +62,7 @@ this.PortExist = function(this, devNo)
     UART_PER["STM32F103RExx"] = 5
     UART_PER["STM32F103RGxx"] = 5
     UART_PER["STM32F103T8xx"] = 2
+    UART_PER["STM32F103TBxx"] = 2
     UART_PER["STM32F103V8xx"] = 3
     UART_PER["STM32F103VBxx"] = 3
     UART_PER["STM32F103VCxx"] = 5

@@ -62,6 +62,7 @@ this.PortExist = function(this, devNo)
     I2C_PER["STM32F103RExx"] = 2
     I2C_PER["STM32F103RGxx"] = 2
     I2C_PER["STM32F103T8xx"] = 1
+    I2C_PER["STM32F103TBxx"] = 1
     I2C_PER["STM32F103V8xx"] = 2
     I2C_PER["STM32F103VBxx"] = 2
     I2C_PER["STM32F103VCxx"] = 2
