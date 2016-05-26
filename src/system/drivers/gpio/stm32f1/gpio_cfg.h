@@ -43,7 +43,7 @@ extern "C" {
 /** macro creates an enumerator with pin data */
 #define _PIN_CONFIGURATION(port, port_idx, number, pin_name, mode, state) \
 enum port##_##number##_CFG {\
-        _CONCAT(IOCTL_GPIO_PIN_NO__, pin_name) = number,\
+        _CONCAT(IOCTL_GPIO_PIN_IDX__, pin_name) = number,\
         _CONCAT(IOCTL_GPIO_PIN_MASK__, pin_name) = (1 << (number)),\
         _CONCAT(IOCTL_GPIO_PORT_IDX__, pin_name) = port_idx,\
         _CONCAT(_GPIO_, pin_name) = port##_BASE,\

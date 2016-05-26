@@ -30,6 +30,7 @@
 #include "drivers/driver.h"
 #include "stm32f1/spi_cfg.h"
 #include "stm32f1/stm32f10x.h"
+#include "gpio_ddi.h"
 #include "../spi_ioctl.h"
 
 /*==============================================================================
@@ -166,31 +167,6 @@ static const struct SPI_info SPI_INFO[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .DMAEN                 = RCC_AHBENR_DMA2EN,
                 #endif
         }
-        #endif
-};
-
-/* GPIO peripherals */
-static const GPIO_t *GPIOx[] = {
-        #if defined(RCC_APB2ENR_IOPAEN)
-                GPIOA,
-        #endif
-        #if defined(RCC_APB2ENR_IOPBEN)
-                GPIOB,
-        #endif
-        #if defined(RCC_APB2ENR_IOPCEN)
-                GPIOC,
-        #endif
-        #if defined(RCC_APB2ENR_IOPDEN)
-                GPIOD,
-        #endif
-        #if defined(RCC_APB2ENR_IOPEEN)
-                GPIOE,
-        #endif
-        #if defined(RCC_APB2ENR_IOPFEN)
-                GPIOF,
-        #endif
-        #if defined(RCC_APB2ENR_IOPGEN)
-                GPIOG,
         #endif
 };
 
@@ -764,11 +740,7 @@ static void apply_SPI_safe_config(u8_t major)
 //==============================================================================
 static void select_slave(struct SPI_slave *hdl)
 {
-        if (  hdl->config.CS_port_idx < ARRAY_SIZE(GPIOx)
-           && hdl->config.CS_pin_idx  < 16) {
-                GPIO_t *GPIO = const_cast(GPIO_t*, GPIOx[hdl->config.CS_port_idx]);
-                GPIO->BRR    = (1 << hdl->config.CS_pin_idx);
-        }
+        _GPIO_DDI_clear_pin(hdl->config.CS_port_idx, hdl->config.CS_pin_idx);
 }
 
 //==============================================================================
@@ -780,11 +752,7 @@ static void select_slave(struct SPI_slave *hdl)
 //==============================================================================
 static void deselect_slave(struct SPI_slave *hdl)
 {
-        if (  hdl->config.CS_port_idx < ARRAY_SIZE(GPIOx)
-           && hdl->config.CS_pin_idx  < 16) {
-                GPIO_t *GPIO = const_cast(GPIO_t*, GPIOx[hdl->config.CS_port_idx]);
-                GPIO->BSRR   = (1 << hdl->config.CS_pin_idx);
-        }
+        _GPIO_DDI_set_pin(hdl->config.CS_port_idx, hdl->config.CS_pin_idx);
 }
 
 //==============================================================================

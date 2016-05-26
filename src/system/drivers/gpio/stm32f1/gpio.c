@@ -391,6 +391,51 @@ API_MOD_STAT(GPIO, void *device_handle, struct vfs_dev_stat *device_stat)
         return ESUCC;
 }
 
+//==============================================================================
+/**
+ * @brief Function set pin to 1.
+ * @param port_idx      Port index
+ * @param pin_idx       Pin index
+ */
+//==============================================================================
+void _GPIO_DDI_set_pin(u8_t port_idx, u8_t pin_idx)
+{
+        if ((port_idx < ARRAY_SIZE(GPIOx)) && (pin_idx < 16)) {
+                GPIOx[port_idx].GPIO->BSRR = (1 << pin_idx);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function clear pin to 0.
+ * @param port_idx      Port index.
+ * @param pin_idx       Pin index.
+ */
+//==============================================================================
+void _GPIO_DDI_clear_pin(u8_t port_idx, u8_t pin_idx)
+{
+        if ((port_idx < ARRAY_SIZE(GPIOx)) && (pin_idx < 16)) {
+                GPIOx[port_idx].GPIO->BRR = (1 << pin_idx);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function get pin state.
+ * @param  port_idx      Port index.
+ * @param  pin_idx       Pin index.
+ * @return Pin value. On error -1.
+ */
+//==============================================================================
+i8_t _GPIO_DDI_get_pin(u8_t port_idx, u8_t pin_idx)
+{
+        if ((port_idx < ARRAY_SIZE(GPIOx)) && (pin_idx < 16)) {
+                return GPIOx[port_idx].GPIO->IDR & (1 << pin_idx) ? 1 : 0;
+        } else {
+                return -1;
+        }
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/
