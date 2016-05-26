@@ -516,6 +516,8 @@ int _driver_stat(dev_t id, struct vfs_dev_stat *stat)
 
         int result = driver__get_module_no_and_mem(id, &modno, &mem);
         if (result == ESUCC) {
+                stat->st_major = _dev_t__extract_major(id);
+                stat->st_minor = _dev_t__extract_minor(id);
                 result = _drvreg_module_table[modno].IF.drv_stat(mem, stat);
         }
 
