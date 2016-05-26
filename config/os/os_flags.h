@@ -55,7 +55,7 @@ this:SetToolTip("This value determines the lowest possible stack size that can b
 this:AddWidget("Spinbox", 48, 8192, "Size of file systems stack [levels]")
 this:SetToolTip("This value determines the size of stack that is used by the file systems. This value depends on used file systems.")
 --*/
-#define __OS_FILE_SYSTEM_STACK_DEPTH__ 160
+#define __OS_FILE_SYSTEM_STACK_DEPTH__ 256
 
 /*--
 this:AddWidget("Spinbox", 48, 8192, "Size of network stack [levels]")
@@ -67,7 +67,7 @@ this:SetToolTip("This value determines the size of stack that is used by network
 this:AddWidget("Spinbox", 48, 8192, "Size of system stack (syscall) [levels]")
 this:SetToolTip("This value determines the size of stack that is used by syscalls.")
 --*/
-#define __OS_SYSCALL_STACK_DEPTH__ 140
+#define __OS_SYSCALL_STACK_DEPTH__ 256
 
 /*--
 this:AddWidget("Spinbox", 48, 8192, "Size of interrupt stack [levels]")

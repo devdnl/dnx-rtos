@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <dnx/misc.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
@@ -275,16 +276,34 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 driver_init("TTY", 3, 0, "/dev/tty3");
                 driver_init("CRC", 0, 0, "/dev/crc");
 
-                driver_init("SPI", 2, 0, "/dev/SPI3-0");
+                driver_init("SPI", 0, 0, "/dev/spi_sda");
                 driver_init("SPI", 2, 1, "/dev/SPI3-1");
                 driver_init("SPI", 2, 2, "/dev/SPI3-2");
                 driver_init("SPI", 2, 3, "/dev/SPI3-3");
+
+                FILE *f = fopen("/dev/spi_sda", "r+");
+                if (f) {
+                        static const SPI_config_t cfg = {
+                                .flush_byte  = 0xFF,
+                                .clk_divider = SPI_CLK_DIV__8,
+                                .mode        = SPI_MODE__0,
+                                .msb_first   = true,
+                                .CS_port_idx = IOCTL_GPIO_PORT_IDX__SD_CS,
+                                .CS_pin_idx  = IOCTL_GPIO_PIN_IDX__SD_CS
+                        };
+                        ioctl(f, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+                        fclose(f);
+                }
+
+                driver_init("SDSPI", 0, 0, "/dev/sda");
+                driver_init("SDSPI", 0, 1, "/dev/sda1");
 
                 driver_init("LOOP", 0, 0, "/dev/l0");
 
                 driver_init("RTC", 0, 0, "/dev/rtc");
 
                 driver_init("ETHMAC", 0, 0, "/dev/ethmac");
+
 
 //                driver_release("SPI", 2, 0);
 //                driver_release("SPI", 2, 1);

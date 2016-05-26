@@ -72,33 +72,18 @@ int_main(storinit, STACK_DEPTH_LOW, int argc, char *argv[])
         }
 
         errno = 0;
-        FILE *stor = fopen(argv[1], "r");
-        if (stor) {
-                switch (ioctl(stor, IOCTL_STORAGE__INITIALIZE)) {
-                case 1:
-                        switch (ioctl(stor, IOCTL_STORAGE__READ_MBR)) {
-                        case 1:
-                                puts("Storage initialized.");
-                                status = EXIT_SUCCESS;
-                                break;
-
-                        case 0:
-                                puts("Storage initialized. MBR not exist.");
-                                status = EXIT_SUCCESS;
-                                break;
-
-                        case -1:
+        FILE *storage = fopen(argv[1], "r");
+        if (storage) {
+                if (ioctl(storage, IOCTL_STORAGE__INITIALIZE) == 0) {
+                        if (ioctl(storage, IOCTL_STORAGE__READ_MBR) != 0) {
                                 perror(argv[1]);
-                                break;
                         }
-                        break;
 
-                default:
+                } else {
                         perror(argv[1]);
-                        break;
                 }
 
-                fclose(stor);
+                fclose(storage);
         } else {
                 perror(argv[1]);
         }

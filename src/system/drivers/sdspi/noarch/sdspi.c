@@ -1323,18 +1323,19 @@ static u32_t MBR_get_partition_number_of_sectors(int partition, u8_t *sector)
 //==============================================================================
 static int MBR_detect_partitions(sdpart_t *hdl)
 {
-        int status = EIO;
+        int err = EIO;
 
         u8_t *MBR;
-        status = sys_malloc(sector_size, cast(void**, &MBR));
-        if (status == ESUCC) {
+        err = sys_malloc(sector_size, cast(void**, &MBR));
+        if (err == ESUCC) {
                 size_t rdcnt;
-                if (card_read(hdl, MBR, sector_size, 0, &rdcnt) != sector_size) {
+                err = card_read(hdl, MBR, sector_size, 0, &rdcnt);
+                if (!err && (rdcnt != sector_size)) {
                         goto error;
                 }
 
                 if (MBR_get_boot_signature(MBR) != 0xAA55) {
-                        status = EMEDIUMTYPE;
+                        err = EMEDIUMTYPE;
                         goto error;
                 }
 
@@ -1346,15 +1347,13 @@ static int MBR_detect_partitions(sdpart_t *hdl)
                         }
                 }
 
-                status = ESUCC;
-
                 error:
                 sys_free(cast(void**, &MBR));
         } else {
-                status = ENOMEM;
+                err = ENOMEM;
         }
 
-        return status;
+        return err;
 }
 
 /*==============================================================================

@@ -116,9 +116,9 @@ __ENABLE_PROCFS__=_YES_
 # this:AddExtraWidget("Hyperlink", "FATFS_CONFIGURE", "Configure")
 # this:SetEvent("clicked", "FATFS_CONFIGURE", function() this:LoadFile("filesystems/fatfs_flags.h") end)
 #--*/
-#define __ENABLE_FATFS__ _NO_
+#define __ENABLE_FATFS__ _YES_
 #/*
-__ENABLE_FATFS__=_NO_
+__ENABLE_FATFS__=_YES_
 #*/
 
 #/*--
