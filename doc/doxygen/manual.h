@@ -45,6 +45,7 @@ Project contains several folders:
 \section sec-drivers Drivers
 \li \subpage drv-afio
 \li \subpage drv-crc
+\li \subpage drv-dht11
 \li \subpage drv-ethmac
 \li \subpage drv-gpio
 \li \subpage drv-i2c

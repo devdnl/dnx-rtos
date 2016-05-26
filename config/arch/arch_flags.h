@@ -130,6 +130,7 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "noarch/loop_flags.h"
 #include "noarch/tty_flags.h"
 #include "noarch/sdspi_flags.h"
+#include "noarch/dht11_flags.h"
 
 #if (__CPU_ARCH__ == stm32f1)
 #include "stm32f1/rtc_flags.h"
@@ -345,6 +346,14 @@ __ENABLE_SDSPI__=_YES_
 #define __ENABLE_TTY__ _YES_
 #/*
 __ENABLE_TTY__=_YES_
+#*/
+
+#/*--
+# this:PutWidgets("DHT11")
+#--*/
+#define __ENABLE_DHT11__ _YES_
+#/*
+__ENABLE_DHT11__=_YES_
 #*/
 
 #//-----------------------------------------------------------------------------
