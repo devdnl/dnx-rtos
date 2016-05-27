@@ -149,9 +149,9 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
 
         struct fatfs *hdl = fs_handle;
 
-        int result = sys_zalloc(sizeof(FATFILE), extra);
-        if (result != ESUCC)
-                return result;
+        int err = sys_zalloc(sizeof(FATFILE), extra);
+        if (err)
+                return err;
 
         FATFILE *fat_file = *extra;
 
@@ -160,7 +160,7 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                 fat_mode = LIBFAT_FA_READ | LIBFAT_FA_OPEN_EXISTING;
         } else if (flags == O_RDWR) {
                 fat_mode = LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_EXISTING;
-        } else if (flags == (O_WRONLY | O_CREAT)) {
+        } else if (flags == (O_WRONLY | O_CREAT | O_TRUNC)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS;
         } else if (flags == (O_RDWR | O_CREAT)) {
                 fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_CREATE_ALWAYS;
@@ -173,23 +173,17 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                 return EINVAL;
         }
 
-        result = faterr_2_errno(libfat_open(&hdl->fatfs, fat_file, path, fat_mode));
-        if (result != ESUCC) {
+        err = faterr_2_errno(libfat_open(&hdl->fatfs, fat_file, path, fat_mode));
+        if (err) {
                 sys_free(extra);
-                return result;
-        }
-
-        result = faterr_2_errno(libfat_open(&hdl->fatfs, fat_file, path, fat_mode));
-        if (result == ESUCC) {
-                sys_free(extra);
-                return result;
+                return err;
         }
 
         if (flags & O_APPEND) {
-                result = faterr_2_errno(libfat_lseek(fat_file, libfat_size(fat_file)));
-                if (result == ESUCC) {
+                err = faterr_2_errno(libfat_lseek(fat_file, libfat_size(fat_file)));
+                if (err) {
                         sys_free(extra);
-                        return result;
+                        return err;
                 }
                 *fpos = libfat_size(fat_file);
         } else {
@@ -198,7 +192,7 @@ API_FS_OPEN(fatfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
 
         hdl->opened_files++;
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -259,20 +253,21 @@ API_FS_WRITE(fatfs,
         UNUSED_ARG3(fs_handle, fd, fattr);
 
         FATFILE *fat_file = extra;
-        int      result   = ESPIPE;
+        int      err      = ESUCC;
 
         if (libfat_tell(fat_file) != (u32_t)*fpos) {
-                result = faterr_2_errno(libfat_lseek(fat_file, (u32_t)*fpos));
-                if (result == ESUCC) {
-                        uint n = 0;
-                        result = faterr_2_errno(libfat_write(fat_file, src, count, &n));
-                        if (result == ESUCC) {
-                                *wrcnt = n;
-                        }
+                err = faterr_2_errno(libfat_lseek(fat_file, (u32_t)*fpos));
+        }
+
+        if (err == ESUCC) {
+                uint n = 0;
+                err = faterr_2_errno(libfat_write(fat_file, src, count, &n));
+                if (err == ESUCC) {
+                        *wrcnt = n;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -304,20 +299,21 @@ API_FS_READ(fatfs,
         UNUSED_ARG3(fs_handle, fd, fattr);
 
         FATFILE *fat_file = extra;
-        int      result   = ESPIPE;
+        int      err      = ESUCC;
 
         if (libfat_tell(fat_file) != (u32_t)*fpos) {
-                result = faterr_2_errno(libfat_lseek(fat_file, (u32_t)*fpos));
-                if (result == ESUCC) {
-                        uint n = 0;
-                        result = faterr_2_errno(libfat_read(fat_file, dst, count, &n));
-                        if (result == ESUCC) {
-                                *rdcnt = n;
-                        }
+                err = faterr_2_errno(libfat_lseek(fat_file, (u32_t)*fpos));
+        }
+
+        if (err == ESUCC) {
+                uint n = 0;
+                err = faterr_2_errno(libfat_read(fat_file, dst, count, &n));
+                if (err == ESUCC) {
+                        *rdcnt = n;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -472,17 +468,17 @@ API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, DIR *dir)
 {
         struct fatfs *hdl = fs_handle;
 
-        char *dospath;
-        int result = sys_zalloc(strlen(path) + 1, cast(void**, &dospath));
-        if (result == ESUCC) {
+        size_t pathlen = strlen(path);
+        char  *dospath = NULL;
+        int err = sys_zalloc(pathlen + 1, cast(void*, &dospath));
+        if (err == ESUCC) {
 
-                result = sys_malloc(sizeof(struct fatdir), &dir->f_dd);
-                if (result == ESUCC) {
+                err = sys_malloc(sizeof(struct fatdir), &dir->f_dd);
+                if (err == ESUCC) {
 
-                        if (strlen(path) == 1) {
-                                strcpy(dospath, path);
-                        } else {
-                                strncpy(dospath, path, strlen(path) - 1);
+                        strcpy(dospath, path);
+                        if (pathlen > 1) {
+                                dospath[pathlen - 1] = '\0';
                         }
 
                         dir->f_handle   = hdl;
@@ -492,20 +488,20 @@ API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, DIR *dir)
                         dir->f_items    = 0;
 
                         struct fatdir *fatdir = dir->f_dd;
-                        int result = faterr_2_errno(libfat_opendir(&hdl->fatfs, &fatdir->dir, dospath));
-                        if (result == ESUCC) {
+                        err = faterr_2_errno(libfat_opendir(&hdl->fatfs,
+                                                            &fatdir->dir,
+                                                            dospath));
+                        if (err == ESUCC) {
                                 hdl->opened_dirs++;
                         } else {
                                 sys_free(&dir->f_dd);
                         }
-
-                        sys_free(cast(void**, &dospath));
-                } else {
-                        sys_free(&dir->f_dd);
                 }
+
+                sys_free(cast(void*, &dospath));
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
