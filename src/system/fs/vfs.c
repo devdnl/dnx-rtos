@@ -267,7 +267,6 @@ int _vfs_umount(const char *path)
                         int position; FS_entry_t *mount_fs;
                         result = get_path_FS(cwd_path, PATH_MAX_LEN, &position, &mount_fs);
 
-                        _kfree(_MM_KRN, cast(void**, &cwd_path));
 
                         if (result == ESUCC) {
                                 if (mount_fs->children_cnt == 0) {
@@ -282,6 +281,8 @@ int _vfs_umount(const char *path)
 
                         _mutex_unlock(vfs_resource_mtx);
                 }
+
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         return result;
@@ -464,7 +465,6 @@ int _vfs_opendir(const char *path, DIR **dir)
 
                         const char *external_path; FS_entry_t *fs;
                         result = get_path_base_FS(cwd_path, &external_path, &fs);
-                        _kfree(_MM_KRN, cast(void**, &cwd_path));
 
                         if (result == ESUCC) {
                                 (*dir)->f_handle = fs->handle;
@@ -473,6 +473,8 @@ int _vfs_opendir(const char *path, DIR **dir)
                                 result = fs->interface->fs_opendir(fs->handle, external_path, *dir);
                                 restore_priority(priority);
                         }
+
+                        _kfree(_MM_KRN, cast(void**, &cwd_path));
                 }
 
                 if (result == ESUCC) {
@@ -790,14 +792,16 @@ int _vfs_statfs(const char *path, struct statfs *statfs)
         int result = new_CWD_path(path, ADD_SLASH, &cwd_path);
         if (result == ESUCC) {
 
-                const char *external_path; FS_entry_t *fs;
-                result = get_path_base_FS(cwd_path, &external_path, &fs);
+                FS_entry_t *fs;
+                result = get_path_base_FS(cwd_path, NULL, &fs);
                 if (result == ESUCC) {
 
                         int priority = increase_task_priority();
                         result = fs->interface->fs_statfs(fs->handle, statfs);
                         restore_priority(priority);
                 }
+
+                _kfree(_MM_KRN, cast(void**, &cwd_path));
         }
 
         return result;
