@@ -128,22 +128,22 @@ static avg_CPU_load_t avg_CPU_load_result;
   Exported object definitions
 ==============================================================================*/
 /* CPU total time */
-u32_t _CPU_total_time;
+u32_t _CPU_total_time = 0;
 
 /* standard input */
-FILE *stdin;
+FILE *stdin = NULL;
 
 /* standard output */
-FILE *stdout;
+FILE *stdout = NULL;
 
 /* standard error */
-FILE *stderr;
+FILE *stderr = NULL;
 
 /* error number */
-int _errno;
+int _errno = NULL;
 
 /* global variables */
-struct _GVAR_STRUCT_NAME *global;
+struct _GVAR_STRUCT_NAME *global = NULL;
 
 /*==============================================================================
   External object definitions
