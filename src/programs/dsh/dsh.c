@@ -332,9 +332,11 @@ static void change_directory(char *str)
                 if (lastslash) {
                         if (lastslash != global->cwd) {
                                 *lastslash = '\0';
-                         } else {
+                        } else {
                                  *(lastslash + 1) = '\0';
-                         }
+                        }
+
+                        chdir(global->cwd);
                 }
 
         } else if (strcmp(arg, ".") == 0) {
@@ -371,6 +373,7 @@ static void change_directory(char *str)
                 if (dir) {
                         closedir(dir);
                         strncpy(global->cwd, newpath, CWD_PATH_LEN);
+                        chdir(global->cwd);
                 } else {
                         perror(arg);
                 }
@@ -692,6 +695,7 @@ int_main(dsh, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
         mkdir("/run", 0777);
 
         getcwd(global->cwd, CWD_PATH_LEN);
+        chdir(global->cwd);
 
         for (;;) {
                 clear_prompt();

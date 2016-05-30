@@ -149,6 +149,7 @@ static void syscall_processgetpid(syscallrq_t *rq);
 static void syscall_processgetprio(syscallrq_t *rq);
 #if __OS_ENABLE_GETCWD__ == _YES_
 static void syscall_getcwd(syscallrq_t *rq);
+static void syscall_setcwd(syscallrq_t *rq);
 #endif
 static void syscall_threadcreate(syscallrq_t *rq);
 static void syscall_threaddestroy(syscallrq_t *rq);
@@ -263,6 +264,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_PROCESSGETPRIO   ] = syscall_processgetprio,
     #if __OS_ENABLE_GETCWD__ == _YES_
         [SYSCALL_GETCWD           ] = syscall_getcwd,
+        [SYSCALL_SETCWD           ] = syscall_setcwd,
     #endif
         [SYSCALL_THREADCREATE     ] = syscall_threadcreate,
         [SYSCALL_THREADDESTROY    ] = syscall_threaddestroy,
@@ -1332,6 +1334,20 @@ static void syscall_getcwd(syscallrq_t *rq)
         }
 
         SETRETURN(char*, cwd ? buf : NULL);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall set CWD of current process.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_setcwd(syscallrq_t *rq)
+{
+        GETARG(const char *, cwd);
+        SETERRNO(_process_set_CWD(GETPROCESS(), cwd));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 #endif
 

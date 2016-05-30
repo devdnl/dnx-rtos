@@ -306,6 +306,41 @@ static inline char *getcwd(char *buf, size_t size)
 
 //==============================================================================
 /**
+ * @brief Function set current working directory.
+ *
+ * The chdir() function set current working directory of program.
+ * This path should never disappear when program is running. Path is set by
+ * reference not by value.
+ *
+ * @param cwd   Current Working Directory path.
+ *
+ * @return On success, this function return 0. On error -1 is returned and
+ *         appropriate @ref errno value is set.
+ *
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        chdir("/new/path");
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int chdir(const char *cwd)
+{
+#if __OS_ENABLE_GETCWD__ == _YES_
+        int result = -1;
+        syscall(SYSCALL_SETCWD, &result, cwd);
+        return result;
+#else
+        UNUSED_ARG1(size);
+        return buf;
+#endif
+}
+
+//==============================================================================
+/**
  * @brief Function returns PID of current process.
  *
  * The function getpid() return PID of current process (caller).

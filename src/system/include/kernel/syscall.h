@@ -55,6 +55,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_PROCESSGETPRIO,         // | int            | pid_t *pid                |                                     |                           |                           |                                           |
     #if __OS_ENABLE_GETCWD__ == _YES_
         SYSCALL_GETCWD,                 // | char*          | char *buf                 | size_t *size                        |                           |                           |                                           |
+        SYSCALL_SETCWD,                 // | int            | const char *cwd           |                                     |                           |                           |                                           |
     #endif
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr                 | void *arg                 |                           |                                           |
         SYSCALL_THREADEXIT,             // | void           | tid_t *tid                |                                     |                           |                           |                                           |
