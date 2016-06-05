@@ -290,68 +290,116 @@ API_MOD_READ(GPIO,
 //==============================================================================
 API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         const struct GPIO_reg *hdl = device_handle;
 
         if (arg) {
                 switch (request) {
                 case IOCTL_GPIO__SET_PIN: {
-                        GPIO_pin_t pin = *cast(GPIO_pin_t*, arg);
+                        u8_t pin = *cast(u8_t*, arg);
                         if (pin < PINS_PER_PORT) {
                                 hdl->GPIO->BSRR = (1 << pin);
-                                result = ESUCC;
+                                err = ESUCC;
                         }
                         break;
                 }
 
                 case IOCTL_GPIO__CLEAR_PIN: {
-                        GPIO_pin_t pin = *cast(GPIO_pin_t*, arg);
+                        u8_t pin = *cast(u8_t*, arg);
                         if (pin < PINS_PER_PORT) {
                                 hdl->GPIO->BRR = (1 << pin);
-                                result = ESUCC;
+                                err = ESUCC;
                         }
                         break;
                 }
 
                 case IOCTL_GPIO__TOGGLE_PIN: {
-                        GPIO_pin_t pin = *cast(GPIO_pin_t*, arg);
+                        u8_t pin = *cast(u8_t*, arg);
                         if (pin < PINS_PER_PORT) {
                                 hdl->GPIO->ODR ^= (1 << pin);
-                                result = ESUCC;
+                                err = ESUCC;
                         }
                         break;
                 }
 
                 case IOCTL_GPIO__SET_PIN_STATE: {
                         GPIO_pin_state_t *pinstate = arg;
-                        if (pinstate->pin < PINS_PER_PORT) {
+                        if (pinstate->pin_idx < PINS_PER_PORT) {
                                 if (pinstate->state) {
-                                        hdl->GPIO->BSRR = (1 << pinstate->pin);
+                                        hdl->GPIO->BSRR = (1 << pinstate->pin_idx);
                                 } else {
-                                        hdl->GPIO->BRR  = (1 << pinstate->pin);
+                                        hdl->GPIO->BRR  = (1 << pinstate->pin_idx);
                                 }
-                                result = ESUCC;
+                                err = ESUCC;
                         }
                         break;
                 }
 
                 case IOCTL_GPIO__GET_PIN_STATE: {
                         GPIO_pin_state_t *pinstate = arg;
-                        if (pinstate->pin < PINS_PER_PORT) {
-                                pinstate->state = (hdl->GPIO->IDR & (1 << pinstate->pin)) ? true : false;
-                                result = ESUCC;
+                        if (pinstate->pin_idx < PINS_PER_PORT) {
+                                pinstate->state = (hdl->GPIO->IDR & (1 << pinstate->pin_idx)) ? 1 : 0;
+                                err = ESUCC;
+                        }
+                        break;
+                }
+
+                case IOCTL_GPIO__SET_PIN_IN_PORT: {
+                        GPIO_pin_in_port_t *pin = arg;
+                        if ((pin->port_idx < ARRAY_SIZE(GPIOx)) && (pin->pin_idx < 16)) {
+                                GPIOx[pin->port_idx].GPIO->BSRR = (1 << pin->pin_idx);
+                                err = ESUCC;
+                        }
+                        break;
+                }
+
+                case IOCTL_GPIO__CLEAR_PIN_IN_PORT: {
+                        GPIO_pin_in_port_t *pin = arg;
+                        if ((pin->port_idx < ARRAY_SIZE(GPIOx)) && (pin->pin_idx < 16)) {
+                                GPIOx[pin->port_idx].GPIO->BRR = (1 << pin->pin_idx);
+                        }
+                        break;
+                }
+
+                case IOCTL_GPIO__TOGGLE_PIN_IN_PORT: {
+                        GPIO_pin_in_port_t *pin = arg;
+                        if ((pin->port_idx < ARRAY_SIZE(GPIOx)) && (pin->pin_idx < 16)) {
+                                GPIOx[pin->port_idx].GPIO->ODR ^= (1 << pin->pin_idx);
+                                err = ESUCC;
+                        }
+                        break;
+                }
+
+                case IOCTL_GPIO__SET_PIN_STATE_IN_PORT: {
+                        GPIO_pin_in_port_state_t *pin = arg;
+                        if ((pin->port_idx < ARRAY_SIZE(GPIOx)) && (pin->pin_idx < 16)) {
+                                if (pin->state) {
+                                        GPIOx[pin->port_idx].GPIO->BSRR = (1 << pin->pin_idx);
+                                } else {
+                                        GPIOx[pin->port_idx].GPIO->BRR = (1 << pin->pin_idx);
+                                }
+                                err = ESUCC;
+                        }
+                        break;
+                }
+
+                case IOCTL_GPIO__GET_PIN_STATE_IN_PORT: {
+                        GPIO_pin_in_port_state_t *pin = arg;
+                        if ((pin->port_idx < ARRAY_SIZE(GPIOx)) && (pin->pin_idx < 16)) {
+                                pin->state = (GPIOx[pin->port_idx].GPIO->IDR & (1 << pin->pin_idx)) ? 1 : 0;
+                                err = ESUCC;
                         }
                         break;
                 }
 
                 default:
-                        result = EBADRQC;
+                        err = EBADRQC;
                         break;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

@@ -33,8 +33,86 @@
  * \section drv-gpio-sup-arch Supported architectures
  * \li STM32F10x
  *
- * @todo Details
+ * \section drv-gpio-ddesc Details
+ * \subsection drv-gpio-ddesc-num Meaning of major and minor numbers
+ * Some manufactures enumerate devices starting from 1 instead of 0 (e.g. ST).
+ * In this case major number starts from 0 and is connected to the first device
+ * e.g. GPIOA. Major number selects GPIO peripheral.
  *
+ * \subsubsection drv-gpio-ddesc-numres Numeration restrictions
+ * Number of peripherals determines how big the major number can be. If there is
+ * only one GPIO peripheral then the major number is always 0.
+ *
+ * \subsection drv-gpio-ddesc-init Driver initialization
+ * To initialize driver the following code can be used:
+ *
+ * @code
+   driver_init("GPIO", 0, 0, "/dev/GPIOA");
+   @endcode
+   @code
+   driver_init("GPIO", 1, 0, "/dev/GPIOB");
+   @endcode
+ *
+ * \subsection drv-gpio-ddesc-release Driver release
+ * To release driver the following code can be used:
+ * @code
+   driver_release("GPIO", 0, 0);
+   @endcode
+   @code
+   driver_release("GPIO", 1, 0);
+   @endcode
+ *
+ * \subsection drv-gpio-ddesc-cfg Driver configuration
+ * Driver configuration can be done by using Configtool or configuration files.
+ *
+ * \subsection drv-gpio-ddesc-write Data write
+ * Data to the GPIO device can be wrote as regular file. The entire wide of port
+ * is used to send bytes. If port is 16-bit then entire word will set output
+ * pins to selected state.
+ *
+ * \subsection drv-gpio-ddesc-read Data read
+ * Data to the GPIO device can be read as regular file. The entire word of port
+ * is read to buffer in read operation.
+ *
+ * \subsection drv-gpio-ddesc-pinctr Pin control
+ * Each bit can be controlled by using ioctl() function. There is possibility to
+ * control selected pin on not opened port for example: user opened GPIOA and
+ * by using IOCTL_GPIO__SET_PIN_IN_PORT ioctl()'s request can control pin in
+ * GPIOB. This is possible only by port index.
+ *
+ * @code
+   FILE *f = fopen("/dev/GPIOA", "r+);
+   if (f) {
+
+        // control pin on port A...
+        static const u8_t LED = IOCTL_GPIO_PIN_IDX__LED;
+        ioctl(f, IOCTL_GPIO__CLEAR_PIN, &LED);
+
+        // ... this same can be done by using alternative interface:
+        static const GPIO_pin_in_port_t LED_PORT = {
+               .pin_idx  = IOCTL_GPIO_PIN_IDX__LED,
+               .port_idx = IOCTL_GPIO_PIN_IDX__LED
+        };
+        ioctl(f, IOCTL_GPIO__CLEAR_PIN_IN_PORT, &LED_PORT);
+
+
+        // there is possiblity to control pin on other port
+        static const GPIO_pin_in_port_t OTHER_PIN = {
+               .pin_idx  = IOCTL_GPIO_PIN_IDX__OTHER_PIN,
+               .port_idx = IOCTL_GPIO_PORT_IDX__OTHER_PIN
+        };
+        ioctl(f, IOCTL_GPIO__SET_PIN_IN_PORT, &OTHER_PIN);
+
+        fclose(f);
+
+   } else {
+        perror(NULL);
+   }
+   @endcode
+ *
+ * There are restrictions that allow user to control pins by using other port
+ * file: the port that is controlled should be earlier initialized. If port is
+ * not initialized then pin behavior is undefined (depends on microcontroller).
  *
  * @{
  */
@@ -60,55 +138,74 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 /**
- * Type represent pin number (natural number).
- */
-typedef uint GPIO_pin_t;
-
-/**
  * Type used to read pin state
  */
 typedef struct {
-        GPIO_pin_t pin;         //!< Pin number.
-        int        state;       //!< Pin state.
+        u8_t pin_idx;           //!< Pin index.
+        int  state;             //!< Pin state.
 } GPIO_pin_state_t;
+
+/**
+ * Type represent pin on port selected by index.
+ */
+typedef struct {
+        u8_t port_idx;
+        u8_t pin_idx;
+} GPIO_pin_in_port_t;
+
+/**
+ * Type represent pin state on port selected by index.
+ */
+typedef struct {
+        u8_t port_idx;          //!< Port index.
+        u8_t pin_idx;           //!< Pin index.
+        int  state;             //!< Pin state.
+} GPIO_pin_in_port_state_t;
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
 /**
  *  @brief  Set selected pin (set pin to Hi state).
- *  @param  [WR] @ref GPIO_pin_t*                 pin number
+ *  @param  [WR] @ref u8_t*                     pin index
  *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
-#define IOCTL_GPIO__SET_PIN             _IOW(GPIO, 0, const GPIO_pin_t*)
+#define IOCTL_GPIO__SET_PIN                     _IOW(GPIO, 0, const u8_t*)
 
 /**
  *  @brief  Clear selected pin (set pin to Low state).
- *  @param  [WR] @ref GPIO_pin_t*                 pin number
+ *  @param  [WR] @ref u8_t*                     pin index
  *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
-#define IOCTL_GPIO__CLEAR_PIN           _IOW(GPIO, 1, const GPIO_pin_t*)
+#define IOCTL_GPIO__CLEAR_PIN                   _IOW(GPIO, 1, const u8_t*)
 
 /**
  *  @brief  Toggle pin state.
- *  @param  [WR] @ref GPIO_pin_t*                 pin number
+ *  @param  [WR] @ref u8_t*                     pin index
  *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
-#define IOCTL_GPIO__TOGGLE_PIN          _IOW(GPIO, 2, const GPIO_pin_t*)
+#define IOCTL_GPIO__TOGGLE_PIN                  _IOW(GPIO, 2, const u8_t*)
 
 /**
  *  @brief  Set pin state.
- *  @param  [WR] @ref GPIO_pin_state_t*              pin number and state to set
+ *  @param  [WR] @ref GPIO_pin_state_t*         pin index and state to set
  *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
-#define IOCTL_GPIO__SET_PIN_STATE       _IOW(GPIO, 3, const GPIO_pin_state_t*)
+#define IOCTL_GPIO__SET_PIN_STATE               _IOW(GPIO, 3, const GPIO_pin_state_t*)
 
 /**
  *  @brief  Gets pin state.
- *  @param  [RD] @ref GPIO_pin_state_t*           pin number and state
+ *  @param  [RD] @ref GPIO_pin_state_t*         pin index and read state
  *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
-#define IOCTL_GPIO__GET_PIN_STATE       _IOR(GPIO, 4, GPIO_pin_state_t*)
+#define IOCTL_GPIO__GET_PIN_STATE               _IOR(GPIO, 4, GPIO_pin_state_t*)
+
+#define IOCTL_GPIO__SET_PIN_IN_PORT             _IOW(GPIO, 5, GPIO_pin_in_port_t*)
+#define IOCTL_GPIO__CLEAR_PIN_IN_PORT           _IOW(GPIO, 6, GPIO_pin_in_port_t*)
+#define IOCTL_GPIO__TOGGLE_PIN_IN_PORT          _IOW(GPIO, 7, GPIO_pin_in_port_t*)
+#define IOCTL_GPIO__SET_PIN_STATE_IN_PORT       _IOW(GPIO, 8, GPIO_pin_in_port_state_t*)
+#define IOCTL_GPIO__GET_PIN_STATE_IN_PORT       _IOR(GPIO, 9, GPIO_pin_in_port_state_t*)
+
 
 /*==============================================================================
   Exported objects
