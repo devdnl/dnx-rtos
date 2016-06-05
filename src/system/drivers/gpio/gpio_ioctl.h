@@ -81,6 +81,9 @@
  * GPIOB. This is possible only by port index.
  *
  * @code
+   #include <stdio.h>
+   #include <sys/ioctl.h>
+
    FILE *f = fopen("/dev/GPIOA", "r+);
    if (f) {
 
@@ -91,7 +94,7 @@
         // ... this same can be done by using alternative interface:
         static const GPIO_pin_in_port_t LED_PORT = {
                .pin_idx  = IOCTL_GPIO_PIN_IDX__LED,
-               .port_idx = IOCTL_GPIO_PIN_IDX__LED
+               .port_idx = IOCTL_GPIO_PORT_IDX__LED
         };
         ioctl(f, IOCTL_GPIO__CLEAR_PIN_IN_PORT, &LED_PORT);
 
@@ -200,10 +203,39 @@ typedef struct {
  */
 #define IOCTL_GPIO__GET_PIN_STATE               _IOR(GPIO, 4, GPIO_pin_state_t*)
 
+/**
+ *  @brief  Set selected pin in port (set pin to Hi state).
+ *  @param  [WR] @ref GPIO_pin_in_port_t*       pin and port index
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
+ */
 #define IOCTL_GPIO__SET_PIN_IN_PORT             _IOW(GPIO, 5, GPIO_pin_in_port_t*)
+
+/**
+ *  @brief  Set selected pin in port (set pin to Low state).
+ *  @param  [WR] @ref GPIO_pin_in_port_t*       pin and port index
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
+ */
 #define IOCTL_GPIO__CLEAR_PIN_IN_PORT           _IOW(GPIO, 6, GPIO_pin_in_port_t*)
+
+/**
+ *  @brief  Toggle selected pin in port.
+ *  @param  [WR] @ref GPIO_pin_in_port_t*       pin and port index
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
+ */
 #define IOCTL_GPIO__TOGGLE_PIN_IN_PORT          _IOW(GPIO, 7, GPIO_pin_in_port_t*)
+
+/**
+ *  @brief  Set pin state in selected port.
+ *  @param  [WR] @ref GPIO_pin_in_port_state_t* pin and port index and state to set
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
+ */
 #define IOCTL_GPIO__SET_PIN_STATE_IN_PORT       _IOW(GPIO, 8, GPIO_pin_in_port_state_t*)
+
+/**
+ *  @brief  Gets pin state in selected port.
+ *  @param  [RD] @ref GPIO_pin_in_port_state_t* pin and port index and read state
+ *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
+ */
 #define IOCTL_GPIO__GET_PIN_STATE_IN_PORT       _IOR(GPIO, 9, GPIO_pin_in_port_state_t*)
 
 
