@@ -425,8 +425,7 @@ int _syscall_kworker_process(int argc, char *argv[])
                                         continue;
                                 }
 
-                                /* give time for kernel to free resources after last syscall task */
-                                _sleep_ms(1);
+                                _kernel_release_resources();
 
                                 /* create new syscall task */
                                 _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);

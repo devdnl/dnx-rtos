@@ -68,9 +68,20 @@ extern u32_t _CPU_total_time;
 //==============================================================================
 void vApplicationIdleHook(void)
 {
-#if (__OS_SLEEP_ON_IDLE__ > 0)
+        /*
+         * Set priority of idle task to lowest possible.
+         * The _kernel_release_resources() function set idle task with the highest
+         * priority to release finished tasks. This function restore original
+         * idle task priority.
+         */
+        vTaskPrioritySet(xTaskGetIdleTaskHandle(), 0);
+
+        /*
+         * Sleep CPU for single tick to save energy.
+         */
+        #if (__OS_SLEEP_ON_IDLE__ > 0)
         _cpuctl_sleep();
-#endif
+        #endif
 }
 
 //==============================================================================

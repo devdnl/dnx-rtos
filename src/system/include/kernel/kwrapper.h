@@ -90,6 +90,7 @@ extern u32_t    _kernel_get_tick_counter           (void);
 extern int      _kernel_get_number_of_tasks        (void);
 extern void     _kernel_scheduler_lock             (void);
 extern void     _kernel_scheduler_unlock           (void);
+extern void     _kernel_release_resources          (void);
 
 extern int      _task_create                       (task_func_t, const char*, const size_t, void*, void*, task_t**);
 extern void     _task_destroy                      (task_t*);

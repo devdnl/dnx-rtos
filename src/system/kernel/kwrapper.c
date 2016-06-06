@@ -145,10 +145,6 @@ int _kernel_get_number_of_tasks(void)
 /**
  * @brief  Function lock context switch (caller task is running only).
  *         All IRQs works normally.
- *
- * @param  None
- *
- * @return a number of tasks
  */
 //==============================================================================
 void _kernel_scheduler_lock(void)
@@ -159,15 +155,26 @@ void _kernel_scheduler_lock(void)
 //==============================================================================
 /**
  * @brief  Function unlock context switch
- *
- * @param  None
- *
- * @return a number of tasks
  */
 //==============================================================================
 void _kernel_scheduler_unlock(void)
 {
         xTaskResumeAll();
+}
+
+//==============================================================================
+/**
+ * @brief  Function release kernel resources: finished tasks and not used memory.
+ */
+//==============================================================================
+void _kernel_release_resources(void)
+{
+        /*
+         * Force context switch to Idle task to delete finished tasks. Task
+         * priority is restored in the vApplicationIdleHook().
+         */
+        vTaskPrioritySet(xTaskGetIdleTaskHandle(), configMAX_PRIORITIES);
+        taskYIELD();
 }
 
 //==============================================================================
