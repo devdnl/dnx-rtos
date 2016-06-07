@@ -601,7 +601,7 @@ static inline i64_t ftell(FILE *file)
 {
         i64_t lseek = 0;
         _errno = _builtinfunc(vfs_ftell, file, &lseek);
-        return _errno ? -1 : 0;
+        return lseek;
 }
 
 //==============================================================================

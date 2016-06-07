@@ -75,74 +75,72 @@
 char *fgets(char *str, int size, FILE *stream)
 {
 #if (__OS_PRINTF_ENABLE__ > 0)
-        if (!str || size < 2 || !stream) {
+        if (!str || size < 1 || !stream) {
                 return NULL;
         }
 
         struct stat file_stat;
         if (fstat(stream, &file_stat) == 0) {
                 if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
-                        int n = 0;
-                        for (int i = 0; i < size - 1; i++) {
-                                int m = fread(str + i, sizeof(char), 1, stream);
-                                if (m == 0) {
-                                        str[i] = '\0';
-                                        return str;
-                                } else {
-                                        n += m;
-                                }
 
-                                if (ferror(stream) || feof(stream)) {
-                                        if (n == 0) {
-                                                return NULL;
-                                        } else {
-                                                str[i + 1] = '\0';
-                                                return str;
-                                        }
-                                }
+                        int   c = EOF;
+                        char *p = str;
 
-                                if (str[i] == '\n') {
-                                        str[i + 1] = '\0';
+                        for (p = str, size--; size > 0; size--) {
+                                if ((c = fgetc(stream)) == EOF)
+                                        break;
+                                *p++ = c;
+                                if (c == '\n') {
                                         break;
                                 }
                         }
 
-                        return str;
-                } else {
-                        u64_t fpos = ftell(stream);
+                        *p = '\0';
+                        if (p == str || c == EOF)
+                                return NULL;
+                        else
+                                return str;
 
-                        int n;
-                        while ((n = fread(str, sizeof(char), size - 1, stream)) == 0) {
+                } else {
+                        i64_t fpos = ftell(stream);
+
+                        int   l = 0;
+                        char *p = str;
+                        size--;
+
+                        while (true) {
+                                char cache[16];
+                                int n = fread(cache, 1, sizeof(cache), stream);
+
+                                for (int i = 0; size > 0 && i < n; size--, i++) {
+                                        int c = cache[i];
+
+                                        *p++ = c;
+                                        fpos++;
+                                        if (c == '\n') {
+                                                goto finish;
+                                        }
+                                }
+
                                 if (ferror(stream) || feof(stream)) {
-                                        return NULL;
+                                        if (l == 0) {
+                                                str = NULL;
+                                        }
+
+                                        break;
                                 }
                         }
 
-                        char *end;
-                        if ((end = strchr(str, '\n'))) {
-                                end++;
-                                *end = '\0';
-                        } else {
-                                str[n] = '\0';
-                        }
+                        finish:
+                        *p = '\0';
 
-                        int len = strlen(str);
-
-                        if (len != 0 && len < n && feof(stream))
-                                clearerr(stream);
-
-                        if (len == 0)
-                                len = 1;
-
-                        fseek(stream, fpos + len, SEEK_SET);
+                        fseek(stream, fpos, SEEK_SET);
 
                         return str;
                 }
         }
 #else
-        UNUSED_ARG1(str);
-        UNUSED_ARG1(size);
-        UNUSED_ARG1(stream);
+        UNUSED_ARG3(str, size, stream);
 #endif
         return NULL;
 }

@@ -239,9 +239,9 @@ static const scsi_mode_parameter_header10_t mode_sense10 = {
         .block_descriptor_length        = 0
 };
 
-static const GPIO_pin_t GPIO_LED_RED   = IOCTL_GPIO_PIN_IDX__NONE;
-static const GPIO_pin_t GPIO_LED_GREEN = IOCTL_GPIO_PIN_IDX__NONE;
-static const char      *GPIO_PORT_PATH = "/dev/GPIOA";
+static const u8_t  GPIO_LED_RED   = IOCTL_GPIO_PIN_IDX__NONE;
+static const u8_t  GPIO_LED_GREEN = IOCTL_GPIO_PIN_IDX__NONE;
+static const char *GPIO_PORT_PATH = "/dev/GPIOA";
 
 /*==============================================================================
   Exported object definitions

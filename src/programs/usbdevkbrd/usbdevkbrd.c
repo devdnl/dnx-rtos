@@ -217,10 +217,10 @@ static const usb_max_string_descriptor_t *string[] = {
         cast(usb_max_string_descriptor_t*, &string_serial)
 };
 
-static const GPIO_pin_t GPIO_LED_WHITE = IOCTL_GPIO_PIN_IDX__NONE;
-static const GPIO_pin_t GPIO_LED_RED   = IOCTL_GPIO_PIN_IDX__NONE;
-static const GPIO_pin_t GPIO_LED_GREEN = IOCTL_GPIO_PIN_IDX__NONE;
-static const char      *GPIO_PORT_PATH = "/dev/GPIOA";
+static const u8_t  GPIO_LED_WHITE = IOCTL_GPIO_PIN_IDX__NONE;
+static const u8_t  GPIO_LED_RED   = IOCTL_GPIO_PIN_IDX__NONE;
+static const u8_t  GPIO_LED_GREEN = IOCTL_GPIO_PIN_IDX__NONE;
+static const char *GPIO_PORT_PATH = "/dev/GPIOA";
 
 /*==============================================================================
   Exported object definitions

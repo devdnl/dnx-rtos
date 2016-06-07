@@ -1092,13 +1092,34 @@ int _vfs_vfioctl(FILE *file, int rq, va_list arg)
 {
         if (is_file_valid(file)) {
                 switch (rq) {
-                case IOCTL_VFS__NON_BLOCKING_RD_MODE: file->f_flag.fattr.non_blocking_rd = true;  return ESUCC;
-                case IOCTL_VFS__NON_BLOCKING_WR_MODE: file->f_flag.fattr.non_blocking_wr = true;  return ESUCC;
-                case IOCTL_VFS__DEFAULT_RD_MODE     : file->f_flag.fattr.non_blocking_rd = false; return ESUCC;
-                case IOCTL_VFS__DEFAULT_WR_MODE     : file->f_flag.fattr.non_blocking_wr = false; return ESUCC;
+                case IOCTL_VFS__NON_BLOCKING_RD_MODE:
+                        file->f_flag.fattr.non_blocking_rd = true;
+                        return ESUCC;
+
+                case IOCTL_VFS__NON_BLOCKING_WR_MODE:
+                        file->f_flag.fattr.non_blocking_wr = true;
+                        return ESUCC;
+
+                case IOCTL_VFS__DEFAULT_RD_MODE:
+                        file->f_flag.fattr.non_blocking_rd = false;
+                        return ESUCC;
+
+                case IOCTL_VFS__DEFAULT_WR_MODE:
+                        file->f_flag.fattr.non_blocking_wr = false;
+                        return ESUCC;
+
+                case IOCTL_VFS__IS_NON_BLOCKING_RD_MODE:
+                        *va_arg(arg, bool*) = file->f_flag.fattr.non_blocking_rd;
+                        return ESUCC;
+
+                case IOCTL_VFS__IS_NON_BLOCKING_WR_MODE:
+                        *va_arg(arg, bool*) = file->f_flag.fattr.non_blocking_wr;
+                        return ESUCC;
                 }
 
-                return file->FS_if->fs_ioctl(file->FS_hdl, file->f_extra_data, file->fd, rq, va_arg(arg, void*));
+                return file->FS_if->fs_ioctl(file->FS_hdl,
+                                             file->f_extra_data,
+                                             file->fd, rq, va_arg(arg, void*));
         } else {
                 return EINVAL;
         }

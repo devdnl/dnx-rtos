@@ -116,8 +116,10 @@ extern "C" {
 #define IOCTL_PIPE__CLEAR                       _IO(PIPE, 0x01)
 #define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(VFS,  0x00)
 #define IOCTL_VFS__DEFAULT_RD_MODE              _IO(VFS,  0x01)
-#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(VFS,  0x02)
-#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(VFS,  0x03)
+#define IOCTL_VFS__IS_NON_BLOCKING_RD_MODE      _IO(VFS,  0x02)
+#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(VFS,  0x03)
+#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(VFS,  0x04)
+#define IOCTL_VFS__IS_NON_BLOCKING_WR_MODE      _IO(VFS,  0x05)
 
 /* file system identificator */
 #define _VFS_FILE_SYSTEM_MAGIC_NO               0xD9EFD24F
