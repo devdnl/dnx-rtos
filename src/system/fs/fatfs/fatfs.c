@@ -357,7 +357,7 @@ API_FS_FLUSH(fatfs, void *fs_handle, void *extra, fd_t fd)
         UNUSED_ARG1(fd);
 
         FATFILE *fat_file = extra;
-        return faterr_2_errno(libfat_sync(fat_file));
+        return faterr_2_errno(libfat_flush(fat_file));
 }
 
 //==============================================================================
@@ -734,8 +734,8 @@ API_FS_STATFS(fatfs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_SYNC(fatfs, void *fs_handle)
 {
-        UNUSED_ARG1(fs_handle);
-        return ESUCC;
+        struct fatfs *hdl = fs_handle;
+        return faterr_2_errno(libfat_sync(&hdl->fatfs));
 }
 
 //==============================================================================

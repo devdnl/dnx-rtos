@@ -229,6 +229,7 @@ typedef enum {
 ==============================================================================*/
 extern FRESULT  libfat_mount     (FILE*, FATFS*);
 extern FRESULT  libfat_umount    (FATFS*);
+extern FRESULT  libfat_sync      (FATFS*);
 extern FRESULT  libfat_open      (FATFS*, FATFILE*, const TCHAR*, uint8_t);
 extern FRESULT  libfat_read      (FATFILE*, void*, uint, uint*);
 extern FRESULT  libfat_lseek     (FATFILE*, uint32_t);
@@ -239,7 +240,7 @@ extern FRESULT  libfat_stat      (FATFS*, const TCHAR*, FILEINFO*);
 extern FRESULT  libfat_write     (FATFILE*, const void*, uint, uint*);
 extern FRESULT  libfat_getfree   (FATFS *fs, uint32_t *nclst);
 extern FRESULT  libfat_truncate  (FATFILE*);
-extern FRESULT  libfat_sync      (FATFILE*);
+extern FRESULT  libfat_flush     (FATFILE*);
 extern FRESULT  libfat_unlink    (FATFS*, const TCHAR*);
 extern FRESULT  libfat_mkdir     (FATFS*, const TCHAR*);
 extern FRESULT  libfat_chmod     (FATFS*, const TCHAR*, uint8_t, uint8_t);

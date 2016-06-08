@@ -736,7 +736,10 @@ static FRESULT sync_fs(FATFS *fs)
                         STORE_UINT32(fs->win+FSI_Nxt_Free, fs->last_clust);
 
                         /* Write it into the FSInfo sector */
-                        _libfat_disk_write(fs->srcfile, fs->win, fs->fsi_sector, 1);
+                        if (_libfat_disk_write(fs->srcfile, fs->win, fs->fsi_sector, 1) != RES_OK) {
+                                res = FR_DISK_ERR;
+                        }
+
                         fs->fsi_flag = 0;
                 }
 
@@ -2494,11 +2497,28 @@ FRESULT libfat_mount(FILE *fsfile, FATFS *fs)
 FRESULT libfat_umount(FATFS *fs)
 {
         if (fs) {
+                libfat_sync(fs);
                 _libfat_delete_mutex(fs->sobj);
                 return FR_OK;
         }
 
         return FR_DISK_ERR;
+}
+
+//==============================================================================
+/**
+ * @brief Function synchronize FS.
+ *
+ * @param[in] *fs       pointer to existing library instance
+ *
+ * @retval FR_OK
+ * @retval FR_DISK_ERR
+ */
+//==============================================================================
+FRESULT libfat_sync(FATFS *fs)
+{
+        fs->fsi_flag = 1;
+        return sync_fs(fs);
 }
 
 //==============================================================================
@@ -3008,7 +3028,7 @@ FRESULT libfat_write(FATFILE *fp, const void *buff, uint btw, uint *bw)
  * @retval FR_INT_ERR
  */
 //==============================================================================
-FRESULT libfat_sync(FATFILE *fp)
+FRESULT libfat_flush(FATFILE *fp)
 {
         FRESULT  res;
         uint32_t tm;
@@ -3072,7 +3092,7 @@ FRESULT libfat_close(FATFILE *fp)
         FRESULT res;
 
         /* Flush cached data */
-        res = libfat_sync(fp);
+        res = libfat_flush(fp);
 #if _LIBFAT_FS_LOCK
         /* Decrement open counter */
         if (res == FR_OK) {
