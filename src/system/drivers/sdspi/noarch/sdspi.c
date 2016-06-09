@@ -1027,7 +1027,8 @@ static int card_initialize(sdpart_t *hdl)
 
         SPI_deselect_card(hdl);
         for (int n = 0; n < 50; n++) {
-                sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, 0xFF);
+                static const u8_t BYTE = 0xFF;
+                sys_ioctl(SDSPI->card[hdl->major]->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, &BYTE);
         }
 
         SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
