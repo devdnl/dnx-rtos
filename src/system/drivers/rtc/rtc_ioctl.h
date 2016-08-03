@@ -54,6 +54,19 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+/**
+ *  @brief  Set RTC alarm. This function can be used to wake up CPU from sleep.
+ *  @param  [WR] @ref time_t *  UNIX timestamp.
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_RTC__SET_ALARM    _IOW(RTC, 0x00, time_t*)
+
+/**
+ *  @brief  Get RTC alarm value.
+ *  @param  [RD] @ref time_t *  UNIX timestamp.
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_RTC__GET_ALARM    _IOR(RTC, 0x01, time_t*)
 
 /*==============================================================================
   Exported object types

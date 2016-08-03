@@ -254,6 +254,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
 
                 result = mkdir("/dev", 0777);
                 mkdir("/tmp", 0777);
+                mkdir("/mnt", 0777);
 //                result = mkdir("/proc", 0777);
 
 //                result = mount("devfs", "", "/dev");
@@ -304,6 +305,15 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
 
                 driver_init("ETHMAC", 0, 0, "/dev/ethmac");
 
+                f = fopen("/dev/sda", "r+");
+                if (f) {
+                        ioctl(f, IOCTL_STORAGE__INITIALIZE);
+                        ioctl(f, IOCTL_STORAGE__READ_MBR);
+                        fclose(f);
+                }
+
+                mount("fatfs", "/dev/sda1", "/mnt");
+
 
 //                driver_release("SPI", 2, 0);
 //                driver_release("SPI", 2, 1);
@@ -317,7 +327,6 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 stderr = stdout;
 
 
-                sleep(2);
                 puts("Starting DHCP client...\n");
 
                 static const NET_INET_config_t cfg_static = {
@@ -343,7 +352,6 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                         perror("DHCP inform");
                 }*/
 
-                sleep(1);
 
                 NET_INET_status_t status;
                 if (ifstatus(NET_FAMILY__INET, &status) != 0) {
@@ -364,12 +372,12 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 }
 
 
-                sleep(2);
+                sleep(1);
 
                 syslog_enable("/dev/tty3");
 
                 static const process_attr_t attr0 = {
-                       .cwd = "/",
+                       .cwd = "/mnt",
                        .f_stderr   = NULL,
                        .f_stdin    = NULL,
                        .f_stdout   = NULL,
@@ -378,7 +386,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                        .p_stdin    = "/dev/tty0",
                        .p_stdout   = "/dev/tty0"
                 };
-                process_create("top", &attr0);
+                process_create("dsh", &attr0);
 
                 static const process_attr_t attr1 = {
                        .cwd = "/",
@@ -391,7 +399,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                        .p_stdout   = "/dev/tty1"
                 };
                 process_create("dsh", &attr1);
-
+/*
                 static const process_attr_t attr2 = {
                        .cwd = "/",
                        .f_stderr   = NULL,
@@ -403,7 +411,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                        .p_stdout   = "/dev/tty2"
                 };
                 process_create("dsh", &attr2);
-
+*/
 //                _netman_start_DHCP_client();
 
 //                FILE *f = fopen("/dev/tty0", "w");

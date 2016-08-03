@@ -281,9 +281,46 @@ API_MOD_READ(RTC,
 //==============================================================================
 API_MOD_IOCTL(RTC, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG3(device_handle, request, arg);
+        UNUSED_ARG1(device_handle);
 
-        return EBADRQC;
+        int err = EINVAL;
+
+        if (arg) {
+                err = EBADRQC;
+
+                switch (request) {
+                case IOCTL_RTC__SET_ALARM: {
+                        sys_critical_section_begin();
+                        {
+                                u16_t attempts = RTC_WRITE_ATTEMPTS;
+                                while (!(RTCP->CRL & RTC_CRL_RTOFF)) {
+                                        if (--attempts == 0) {
+                                                sys_critical_section_end();
+                                                err = EIO;
+                                        }
+                                }
+
+                                if (attempts) {
+                                        time_t *time = arg;
+
+                                        SET_BIT(RTCP->CRL, RTC_CRL_CNF);
+                                        WRITE_REG(RTCP->ALRH, (*time) >> 16);
+                                        WRITE_REG(RTCP->ALRL, (*time));
+                                        CLEAR_BIT(RTCP->CRL, RTC_CRL_CNF);
+                                        while (!(RTCP->CRL & RTC_CRL_RTOFF) && attempts--);
+                                        err = ESUCC;
+                                }
+                        }
+                        sys_critical_section_end();
+                        break;
+                }
+
+                default:
+                        break;
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -321,6 +358,15 @@ API_MOD_STAT(RTC, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_minor = 0;
 
         return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief RTC Alarm IRQ
+ */
+//==============================================================================
+void RTCAlarm_IRQHandler(void)
+{
 }
 
 /*==============================================================================

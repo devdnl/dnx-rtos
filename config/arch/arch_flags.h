@@ -350,6 +350,7 @@ __ENABLE_TTY__=_YES_
 
 #/*--
 # this:PutWidgets("DHT11")
+# this:SetToolTip("To use this module set devices pins to open drain.")
 #--*/
 #define __ENABLE_DHT11__ _YES_
 #/*
