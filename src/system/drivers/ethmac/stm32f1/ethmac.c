@@ -199,6 +199,8 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                         for (uint i = 0; i < NUMBER_OF_RX_BUFFERS; i++) {
                                 ETH_DMARxDescReceiveITConfig(&ethmac->DMA_rx_descriptor[i], ENABLE);
                         }
+
+                        sys_sleep_ms(ETHMAC_PHY_CONFIG_DELAY);
                 } else {
                         result = EIO;
                 }

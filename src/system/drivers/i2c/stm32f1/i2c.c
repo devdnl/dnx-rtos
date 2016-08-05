@@ -332,14 +332,16 @@ API_MOD_WRITE(I2C,
 
         I2C_dev_t *hdl = device_handle;
 
-        int status = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
-        if (status == ESUCC) {
+        int err = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+        if (err == ESUCC) {
 
                 if (!start(hdl)) {
+                        err = EIO;
                         goto error;
                 }
 
                 if (!send_address(hdl, true)) {
+                        err = ENXIO;
                         goto error;
                 } else {
                         clear_send_address_event(hdl);
@@ -347,18 +349,18 @@ API_MOD_WRITE(I2C,
 
                 if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                         if (!send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode)) {
+                                err = EIO;
                                 goto error;
                         }
                 }
 
                 *wrcnt = transmit(hdl, src, count);
-                status = ESUCC;
 
                 error:
                 sys_mutex_unlock(I2C[hdl->major]->lock);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -387,42 +389,46 @@ API_MOD_READ(I2C,
 
         I2C_dev_t *hdl = device_handle;
 
-        int status = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
-        if (status == ESUCC) {
+        int err = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+        if (err == ESUCC) {
 
                 if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                         if (!start(hdl)) {
+                                err = EIO;
                                 goto error;
                         }
 
                         if (!send_address(hdl, true)) {
+                                err = ENXIO;
                                 goto error;
                         } else {
                                 clear_send_address_event(hdl);
                         }
 
                         if (!send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode)) {
+                                err = EIO;
                                 goto error;
                         }
                 }
 
                 if (!start(hdl)) {
+                        err = EIO;
                         goto error;
                 }
 
                 set_ACK_according_to_reception_size(hdl, count);
                 if (!send_address(hdl,  false)) {
+                        err = ENXIO;
                         goto error;
                 }
 
                 *rdcnt = receive(hdl, dst, count);
-                status = ESUCC;
 
                 error:
                 sys_mutex_unlock(I2C[hdl->major]->lock);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -438,25 +444,25 @@ API_MOD_READ(I2C,
 //==============================================================================
 API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
 {
-        I2C_dev_t *hdl    = device_handle;
-        int        result = EINVAL;
+        I2C_dev_t *hdl = device_handle;
+        int        err = EINVAL;
 
         if (arg) {
                 switch (request) {
                 case IOCTL_I2C__CONFIGURE: {
                         const I2C_config_t *cfg   = arg;
                         hdl->config = *cfg;
-                        result      = ESUCC;
+                        err = ESUCC;
                         break;
                 }
 
                 default:
-                        result = EBADRQC;
+                        err = EBADRQC;
                         break;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

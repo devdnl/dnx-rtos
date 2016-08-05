@@ -99,7 +99,9 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
                 SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
                 SET_BIT(PWR->CR, PWR_CR_DBP);
 
-                if (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
+                if (   (_PLL_CFG__LSE_ON != RCC_LSE_Bypass)
+                   && !(RCC->BDCR & RCC_BDCR_LSERDY)) {
+
                         RCC_LSEConfig(_PLL_CFG__LSE_ON);
                         wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS);
                         // this oscillator not causes an error because is not a main osc.
