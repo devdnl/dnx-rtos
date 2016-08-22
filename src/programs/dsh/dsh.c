@@ -32,6 +32,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <stdbool.h>
 #include <sys/ioctl.h>
@@ -65,11 +66,12 @@ static bool  command_hint         ();
 static char *find_cmd_begin       ();
 static bool  is_cd_cmd            (const char *cmd);
 static bool  is_exit_cmd          (const char *cmd);
+static bool  is_detached_cmd      (char *cmd);
 static char *find_arg             (char *cmd);
 static void  change_directory     (char *str);
 static char *remove_leading_spaces(char *str);
 static void  print_fail_message   (char *cmd);
-static bool  start_program        (char *master, char *slave, char *file);
+static bool  start_program        (char *master, char *slave, char *file, bool detached);
 static bool  analyze_line         (char *cmd);
 
 /*==============================================================================
@@ -292,6 +294,29 @@ static bool is_exit_cmd(const char *cmd)
 
 //==============================================================================
 /**
+ * @brief  Find ampersand at end of string and replace it by null.
+ *
+ * @param  cmd  Command string. String modified when ampersand is found.
+ *
+ * @return True when ampersand found, otherwise false.
+ */
+//==============================================================================
+static bool is_detached_cmd(char *cmd)
+{
+        size_t len  = strlen(cmd);
+        char  *back = &cmd[len - 1];
+        while (len-- && isspace(cast(int, *back)) && --back);
+
+        if (*back == '&') {
+                *back = '\0';
+                return true;
+        } else {
+                return false;
+        }
+}
+
+//==============================================================================
+/**
  * @brief Finds arguments after command
  *
  * @param cmd           command line begin
@@ -426,12 +451,15 @@ static void print_fail_message(char *cmd)
 /**
  * @brief Function start defined program group
  *
- * @param cmd           command line
+ * @param master        master program name
+ * @param slave         slave program name
+ * @param file          output file
+ * @param detached      detached operation
  *
  * @return true if command executed, false if error
  */
 //==============================================================================
-static bool start_program(char *master, char *slave, char *file)
+static bool start_program(char *master, char *slave, char *file, bool detached)
 {
         errno              = 0;
         FILE    *pipe      = NULL;
@@ -559,11 +587,11 @@ static bool start_program(char *master, char *slave, char *file)
                 process_wait(pidmaster, NULL, MAX_DELAY_MS);
 
         } else if (master) {
-                global->pidmaster_attr.f_stdin    = stdin;
-                global->pidmaster_attr.f_stdout   = stdout;
-                global->pidmaster_attr.f_stderr   = stderr;
+                global->pidmaster_attr.f_stdin    = detached ? NULL : stdin;
+                global->pidmaster_attr.f_stdout   = detached ? NULL : stdout;
+                global->pidmaster_attr.f_stderr   = detached ? NULL : stderr;
                 global->pidmaster_attr.cwd        = global->cwd;
-                global->pidmaster_attr.detached   = false;
+                global->pidmaster_attr.detached   = detached;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
                 pidmaster = process_create(master, &global->pidmaster_attr);
                 if (pidmaster == 0) {
@@ -571,7 +599,9 @@ static bool start_program(char *master, char *slave, char *file)
                         goto free_resources;
                 }
 
-                process_wait(pidmaster, NULL, MAX_DELAY_MS);
+                if (not detached) {
+                        process_wait(pidmaster, NULL, MAX_DELAY_MS);
+                }
 
         } else {
                 status = false;
@@ -605,8 +635,10 @@ free_resources:
 //==============================================================================
 static bool analyze_line(char *cmd)
 {
-        int pipe_number = 0;
-        int out_number  = 0;
+        int  pipe_number = 0;
+        int  out_number  = 0;
+        bool detached    = is_detached_cmd(cmd);
+
 
         for (size_t i = 0; i < strlen(cmd); i++) {
                 if (cmd[i] == '|')
@@ -634,7 +666,7 @@ static bool analyze_line(char *cmd)
                         char *file = strchr(slave, '>');
                         *file++ = '\0';
 
-                        return start_program(master, slave, file);
+                        return start_program(master, slave, file, detached);
                 }
         }
 
@@ -648,7 +680,7 @@ static bool analyze_line(char *cmd)
                         char *file = strchr(master, '>');
                         *file++ = '\0';
 
-                        return start_program(master, NULL, file);
+                        return start_program(master, NULL, file, detached);
                 }
         }
 
@@ -662,12 +694,12 @@ static bool analyze_line(char *cmd)
                         char *slave = strchr(master, '|');
                         *slave++ = '\0';
 
-                        return start_program(master, slave, NULL);
+                        return start_program(master, slave, NULL, detached);
                 }
         }
 
         if (strlen(cmd)) {
-                return start_program(cmd, NULL, NULL);
+                return start_program(cmd, NULL, NULL, detached);
         } else {
                 return false;
         }
