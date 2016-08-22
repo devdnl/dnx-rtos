@@ -280,7 +280,7 @@ exit:
  * @return program status
  */
 //==============================================================================
-int_main(telnetd, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(telnetd, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;
