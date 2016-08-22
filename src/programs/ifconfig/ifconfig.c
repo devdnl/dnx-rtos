@@ -221,7 +221,10 @@ static void INET_status(void)
                        NET_INET_IPv4_d(ifstat.mask),
 
                        (uint)ifstat.rx_packets, cast(uint, ifstat.rx_bytes), rx_unit,
-                       (uint)ifstat.tx_packets, cast(uint, ifstat.tx_bytes), tx_unit);
+                       (uint)ifstat.tx_packets, cast(uint, ifstat.tx_bytes), tx_unit
+               );
+        } else {
+                perror("INET");
         }
 }
 
