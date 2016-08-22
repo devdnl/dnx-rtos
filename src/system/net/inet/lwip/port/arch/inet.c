@@ -370,35 +370,38 @@ static int DHCP_start_client()
 {
         int status = ENONET;
 
-        if (  inet
-           && !netif_is_up(&inet->netif)
-           && is_init_done()
-           && sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC ) {
+        if (inet) {
+                status = EADDRINUSE;
 
-                clear_rx_tx_counters();
-                netif_set_down(&inet->netif);
-                netif_set_addr(&inet->netif,
-                               const_cast(ip_addr_t*, &ip_addr_any),
-                               const_cast(ip_addr_t*, &ip_addr_any),
-                               const_cast(ip_addr_t*, &ip_addr_any) );
+                if (!netif_is_up(&inet->netif)
+                   && is_init_done()
+                   && sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC ) {
 
-                if (dhcp_start(&inet->netif) == ERR_OK) {
-                        netif_set_up(&inet->netif);
+                        clear_rx_tx_counters();
+                        netif_set_down(&inet->netif);
+                        netif_set_addr(&inet->netif,
+                                       const_cast(ip_addr_t*, &ip_addr_any),
+                                       const_cast(ip_addr_t*, &ip_addr_any),
+                                       const_cast(ip_addr_t*, &ip_addr_any) );
 
-                        u32_t timer = sys_get_time_ms();
-                        while (not sys_time_is_expired(timer, DHCP_TIMEOUT)) {
+                        if (dhcp_start(&inet->netif) == ERR_OK) {
+                                netif_set_up(&inet->netif);
 
-                                if (inet->netif.dhcp->state == DHCP_BOUND) {
-                                        inet->configured = true;
-                                        status = ESUCC;
-                                        break;
-                                } else {
-                                        sys_msleep(100);
+                                u32_t timer = sys_get_time_ms();
+                                while (not sys_time_is_expired(timer, DHCP_TIMEOUT)) {
+
+                                        if (inet->netif.dhcp->state == DHCP_BOUND) {
+                                                inet->configured = true;
+                                                status = ESUCC;
+                                                break;
+                                        } else {
+                                                sys_msleep(100);
+                                        }
                                 }
                         }
-                }
 
-                sys_mutex_unlock(inet->access);
+                        sys_mutex_unlock(inet->access);
+                }
         }
 
         return status;
@@ -590,7 +593,7 @@ int INET_ifdown(void)
 //==============================================================================
 int INET_ifstatus(NET_INET_status_t *status)
 {
-        int err = EINVAL;
+        int err = ENONET;
 
         if (inet) {
                 memcpy(status->hw_addr, inet->netif.hwaddr, sizeof(status->hw_addr));
