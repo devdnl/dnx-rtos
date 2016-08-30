@@ -496,14 +496,16 @@ API_FS_RENAME(ramfs, void *fs_handle, const char *old_name, const char *new_name
                 if (result == ESUCC) {
                         char *basename = strrchr(new_name, '/') + 1;
 
-                        char *new_name;
-                        result = sys_zalloc(strsize(basename), cast(void**, &new_name));
+                        char *newname;
+                        result = sys_zalloc(strsize(basename), cast(void**, &newname));
                         if (result == ESUCC) {
+                                strcpy(newname, basename);
+
                                 if (target->name) {
                                         sys_free(cast(void**, target->name));
                                 }
 
-                                target->name = new_name;
+                                target->name = newname;
                         }
                 }
 

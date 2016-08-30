@@ -661,6 +661,9 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
         struct fatfs *hdl = fs_handle;
 
         FILEINFO file_info;
+        file_info.lfname = NULL;
+        file_info.lfsize = 0;
+
         int result = faterr_2_errno(libfat_stat(&hdl->fatfs, path, &file_info));
         if (result == ESUCC) {
                 stat->st_dev   = 0;
