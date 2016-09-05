@@ -1023,7 +1023,7 @@ int INET_gethostbyname(const char *name, NET_INET_sockaddr_t *sock_addr)
 //==============================================================================
 int INET_socket_set_recv_timeout(INET_socket_t *inet_sock, uint32_t timeout)
 {
-        netconn_set_recvtimeout(inet_sock->netconn,timeout);
+        netconn_set_recvtimeout(inet_sock->netconn, timeout);
         return ESUCC;
 }
 
@@ -1037,7 +1037,35 @@ int INET_socket_set_recv_timeout(INET_socket_t *inet_sock, uint32_t timeout)
 //==============================================================================
 int INET_socket_set_send_timeout(INET_socket_t *inet_sock, uint32_t timeout)
 {
-        netconn_set_sendtimeout(inet_sock->netconn,timeout);
+        netconn_set_sendtimeout(inet_sock->netconn, timeout);
+        return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief  Function get receive timeout.
+ * @param  inet_sock    socket
+ * @param  timeout      timeout value in milliseconds
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+int INET_socket_get_recv_timeout(INET_socket_t *inet_sock, uint32_t *timeout)
+{
+        *timeout = netconn_get_recvtimeout(inet_sock->netconn);
+        return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief  Function get send timeout.
+ * @param  inet_sock    socket
+ * @param  timeout      timeout value in milliseconds
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+int INET_socket_get_send_timeout(INET_socket_t *inet_sock, uint32_t *timeout)
+{
+        *timeout = netconn_get_sendtimeout(inet_sock->netconn);
         return ESUCC;
 }
 

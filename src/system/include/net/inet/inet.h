@@ -82,6 +82,8 @@ extern int   INET_socket_sendto(INET_socket_t*, const void*, size_t, NET_flags_t
 extern int   INET_gethostbyname(const char*, NET_INET_sockaddr_t*);
 extern int   INET_socket_set_recv_timeout(INET_socket_t*, uint32_t);
 extern int   INET_socket_set_send_timeout(INET_socket_t*, uint32_t);
+extern int   INET_socket_get_recv_timeout(INET_socket_t*, uint32_t*);
+extern int   INET_socket_get_send_timeout(INET_socket_t*, uint32_t*);
 extern int   INET_socket_getaddress(INET_socket_t*, NET_INET_sockaddr_t*);
 extern u16_t INET_hton_u16(u16_t);
 extern u32_t INET_hton_u32(u32_t);

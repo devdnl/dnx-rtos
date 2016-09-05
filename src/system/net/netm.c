@@ -479,6 +479,48 @@ int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 
 //==============================================================================
 /**
+ * @brief Function get socket receive timeout.
+ * @param socket        socket
+ * @param timeout       timeout value
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+int _net_socket_get_recv_timeout(SOCKET *socket, uint32_t *timeout)
+{
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_get_recv_timeout),
+        };
+
+        if (is_socket_valid(socket) && timeout) {
+                return call_proxy_function(socket->family, socket->ctx, timeout);
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function get socket send timeout.
+ * @param socket        socket
+ * @param timeout       timeout value
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+int _net_socket_get_send_timeout(SOCKET *socket, uint32_t *timeout)
+{
+        PROXY_TABLE = {
+                PROXY_ADD_FAMILY(INET, INET_socket_get_send_timeout),
+        };
+
+        if (is_socket_valid(socket) && timeout) {
+                return call_proxy_function(socket->family, socket->ctx, timeout);
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
  * @brief Function connect socket to selected address.
  * @param socket        socket used for connection
  * @param addr          address where socket is connecting
