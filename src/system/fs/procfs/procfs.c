@@ -32,7 +32,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PLL_FILE_PATH                   "/dev/pll"
+#define CLK_FILE_PATH                   "/dev/pll"
 
 #define DIR_ROOT                        "/"
 #define DIR_PID_NAME                    "pid"
@@ -320,7 +320,7 @@ API_FS_READ(procfs,
         if (file && file->content < FILE_CONTENT_COUNT) {
 
                 char *content;
-                int result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
+                result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
                         size_t data_size = get_file_content(file, content, FILE_BUFFER);
                         size_t seek      = min(*fpos, SIZE_MAX);
@@ -406,7 +406,7 @@ API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                 stat->st_type  = FILE_TYPE_REGULAR;
 
                 char *content;
-                int result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
+                result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
                         stat->st_size = get_file_content(file, content, FILE_BUFFER);
                         sys_free(cast(void**, &content));
@@ -600,17 +600,17 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group
 //==============================================================================
 API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        UNUSED_ARG2(fs_handle, path);
+        void  *extra = NULL;
+        fd_t   fd;
+        fpos_t fpos = 0;
 
-        stat->st_dev   = 0;
-        stat->st_gid   = 0;
-        stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
-        stat->st_mtime = 0;
-        stat->st_size  = 0;
-        stat->st_uid   = 0;
-        stat->st_type  = FILE_TYPE_REGULAR;
+        int err = _procfs_open(fs_handle, &extra, &fd, &fpos, path, O_RDONLY);
+        if (!err) {
+                err = _procfs_fstat(fs_handle, extra, fd, stat);
+                _procfs_close(fs_handle, extra, fd, true);
+        }
 
-        return ESUCC;
+        return err;
 }
 
 //==============================================================================
@@ -914,7 +914,7 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                                     _CPUCTL_VENDOR_NAME);
 
                 FILE *pll;
-                int result = sys_fopen(PLL_FILE_PATH, "r+", &pll);
+                int result = sys_fopen(CLK_FILE_PATH, "r+", &pll);
                 if (result == ESUCC) {
                         PLL_clk_info_t clkinf;
                         clkinf.iterator = 0;
@@ -932,7 +932,7 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                         sys_fclose(pll);
                 } else {
                         len += sys_snprintf(buff + len, size - len,
-                                             "<No '"PLL_FILE_PATH"' file to show clock frequencies>\n");
+                                            "Warning: no '"CLK_FILE_PATH"' file to read clocks\n");
                 }
                 break;
 
