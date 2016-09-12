@@ -49,7 +49,7 @@ typedef struct node {
         uid_t            uid;                   /* user ID of owner          */
         gid_t            gid;                   /* group ID of owner         */
         fpos_t           size;                  /* file size                 */
-        u32_t            mtime;                 /* time of last modification */
+        time_t           mtime;                 /* time of last modification */
         void            *data;                  /* file type specified data  */
 } node_t;
 
@@ -931,6 +931,8 @@ API_FS_WRITE(ramfs,
                 struct opened_file_info *opened_file = extra;
                 if (opened_file && opened_file->child) {
                         node_t *target = opened_file->child;
+
+                        sys_gettime(&target->mtime);
 
                         if (target->type == FILE_TYPE_DRV) {
                                 sys_mutex_unlock(hdl->resource_mtx);
