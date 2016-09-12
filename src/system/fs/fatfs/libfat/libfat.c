@@ -2566,12 +2566,17 @@ FRESULT libfat_open(FATFS *fs, FATFILE *fp, const TCHAR *path, uint8_t mode)
                 if (!dir) {
                         /* Current dir itself */
                         res = FR_INVALID_NAME;
-                }
+                } else {
+                        FILEINFO fno;
+                        fno.lfname = NULL;
+                        fno.lfsize = 0;
+                        get_fileinfo(&dj, &fno);
+                        fp->fdate = fno.fdate;
+                        fp->ftime = fno.ftime;
 #if _LIBFAT_FS_LOCK
-                else {
                         res = chk_lock(&dj, (mode & ~LIBFAT_FA_READ) ? 1 : 0);
-                }
 #endif
+                }
         }
 
         /* Create or Open a file */

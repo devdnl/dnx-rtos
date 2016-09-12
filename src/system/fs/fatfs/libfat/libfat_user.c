@@ -165,11 +165,12 @@ uint32_t _libfat_get_fattime(void)
         struct tm tm;
         sys_gmtime_r(&t, &tm);
 
-        uint32_t fattime = ((tm.tm_sec  / 2) & 0x1F)
-                         | ((tm.tm_min  & 0x3F) << 5)
-                         | ((tm.tm_hour & 0x1F) << 11)
-                         | (((tm.tm_mon  + 1 ) & 0x1F) << 16)
-                         | (((tm.tm_year - 80) & 0x7F) << 25);
+        uint32_t fattime = (tm.tm_sec >> 1)
+                         | (tm.tm_min << 5)
+                         | (tm.tm_hour << 11)
+                         | (tm.tm_mday << 16)
+                         | ((tm.tm_mon + 1) << 21)
+                         | ((tm.tm_year - 80) << 25);
 
         return fattime;
 }

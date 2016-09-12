@@ -56,9 +56,10 @@ struct fatfs {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int fatfs_closedir(void *fs_handle, DIR *dir);
-static int fatfs_readdir (void *fs_handle, DIR *dir, dirent_t **dirent);
-static int faterr_2_errno(FRESULT fresult);
+static int    fatfs_closedir(void *fs_handle, DIR *dir);
+static int    fatfs_readdir (void *fs_handle, DIR *dir, dirent_t **dirent);
+static int    faterr_2_errno(FRESULT fresult);
+static time_t time_fat2unix(uint32_t fattime);
 
 /*==============================================================================
   Local object definitions
@@ -378,10 +379,11 @@ API_FS_FSTAT(fatfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
         UNUSED_ARG1(fd);
 
         FATFILE *fat_file  = extra;
+
         stat->st_dev   = 0;
         stat->st_gid   = 0;
         stat->st_mode  = 0777;
-        stat->st_mtime = 0;
+        stat->st_mtime = time_fat2unix((fat_file->fdate << 16) | fat_file->ftime);
         stat->st_size  = fat_file->fsize;
         stat->st_uid   = 0;
         stat->st_type  = FILE_TYPE_REGULAR;
@@ -669,7 +671,7 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
                 stat->st_dev   = 0;
                 stat->st_gid   = 0;
                 stat->st_mode  = 0777;
-                stat->st_mtime = file_info.ftime;
+                stat->st_mtime = time_fat2unix((file_info.fdate << 16) | file_info.ftime);
                 stat->st_size  = file_info.fsize;
                 stat->st_uid   = 0;
                 stat->st_type  = FILE_TYPE_REGULAR;
@@ -776,6 +778,26 @@ static int faterr_2_errno(FRESULT fresult)
         };
 
         return (fresult >= ARRAY_SIZE(fat2errno) ? ENOTSUP : fat2errno[fresult]);
+}
+
+//==============================================================================
+/**
+ * @brief  ?
+ * @param  ?
+ * @return ?
+ */
+//==============================================================================
+static time_t time_fat2unix(uint32_t fattime)
+{
+        struct tm tm;
+        tm.tm_sec  = (fattime & 0x1F) << 1;
+        tm.tm_min  = (fattime >> 5) & 0x3F;
+        tm.tm_hour = (fattime >> 11) & 0x1F;
+        tm.tm_mday = (fattime >> 16) & 0x1F;
+        tm.tm_mon  = ((fattime >> 21) & 0x0F) - 1;
+        tm.tm_year = ((fattime >> 25) & 0x7F) + 80;
+
+        return sys_mktime(&tm);
 }
 
 /*==============================================================================

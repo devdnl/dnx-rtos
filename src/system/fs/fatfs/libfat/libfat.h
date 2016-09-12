@@ -151,6 +151,8 @@ typedef struct {
         uint8_t         pad1;
         uint32_t        fptr;                   /* File read/write pointer (0ed on file open) */
         uint32_t        fsize;                  /* File size */
+        uint16_t        fdate;                  /* Last modified date */
+        uint16_t        ftime;                  /* Last modified time */
         uint32_t        sclust;                 /* File data start cluster (0:no data cluster, always 0 when fsize is 0) */
         uint32_t        clust;                  /* Current cluster of fpter */
         uint32_t        dsect;                  /* Current data sector of fpter */
