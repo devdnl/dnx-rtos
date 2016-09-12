@@ -30,6 +30,7 @@
 #include "config.h"
 #include "kernel/time.h"
 #include "kernel/errno.h"
+#include "kernel/sysfunc.h"
 #include "fs/vfs.h"
 
 /*==============================================================================
@@ -84,15 +85,25 @@
 //==============================================================================
 int _gettime(time_t *timer)
 {
+        static uint32_t time_ref  = 0;
+        static time_t   timecache = 0;
+
         int result = EINVAL;
 
         if (timer) {
-                FILE *rtc;
-                result = _vfs_fopen(__OS_RTC_FILE_PATH__, "r", &rtc);
-                if (result == ESUCC) {
-                        size_t rdcnt;
-                        result = _vfs_fread(timer, sizeof(time_t), &rdcnt, rtc);
-                        _vfs_fclose(rtc, false);
+                if ((time_ref == 0) || sys_time_is_expired(time_ref, 500)) {
+                        FILE *rtc;
+                        result = _vfs_fopen(__OS_RTC_FILE_PATH__, "r", &rtc);
+                        if (result == ESUCC) {
+                                size_t rdcnt;
+                                result = _vfs_fread(timer, sizeof(time_t), &rdcnt, rtc);
+                                timecache = *timer;
+                                _vfs_fclose(rtc, false);
+
+                                time_ref = sys_time_get_reference();
+                        }
+                } else {
+                        *timer = timecache;
                 }
         }
 
