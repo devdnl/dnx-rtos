@@ -73,7 +73,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Main function
  */
 //==============================================================================
-int_main(top, STACK_DEPTH_CUSTOM(140), int argc, char *argv[])
+int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
