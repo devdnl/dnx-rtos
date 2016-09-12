@@ -224,19 +224,19 @@ static int lwIP_status_to_errno(err_t err)
         switch (err) {
         case ERR_OK        : return ESUCC;
         case ERR_MEM       : return ENOMEM;
-        case ERR_BUF       : return EIO;
+        case ERR_BUF       : return ENOMEM;
         case ERR_TIMEOUT   : return ETIME;
         case ERR_RTE       : return EFAULT;
-        case ERR_INPROGRESS: return EBUSY;
+        case ERR_INPROGRESS: return EALREADY;
         case ERR_VAL       : return EINVAL;
         case ERR_ARG       : return EINVAL;
         case ERR_USE       : return EADDRINUSE;
-        case ERR_ISCONN    : return EADDRINUSE;
-        case ERR_WOULDBLOCK: return EFAULT;
-        case ERR_ABRT      : return EFAULT;
-        case ERR_RST       : return EFAULT;
-        case ERR_CLSD      : return EFAULT;
-        case ERR_CONN      : return EFAULT;
+        case ERR_ISCONN    : return EISCONN;
+        case ERR_WOULDBLOCK: return EAGAIN;
+        case ERR_ABRT      : return ECONNABORTED;
+        case ERR_RST       : return ECONNRESET;
+        case ERR_CLSD      : return ECONNABORTED;
+        case ERR_CONN      : return ENONET;
         case ERR_IF        : return EFAULT;
         default            : return EFAULT;
         }
@@ -650,13 +650,20 @@ int INET_socket_create(NET_protocol_t prot, INET_socket_t *inet_sock)
 
         if (prot == NET_PROTOCOL__TCP || prot == NET_PROTOCOL__UDP) {
 
+                _errno = 0;
+
                 inet_sock->netconn = netconn_new(prot == NET_PROTOCOL__TCP
                                                        ? NETCONN_TCP
                                                        : NETCONN_UDP);
+
                 if (inet_sock->netconn) {
                         err = ESUCC;
                 } else {
-                        err = ENOMEM;
+                        if (_errno == ENOMEM) {
+                                err = _errno;
+                        } else {
+                                err = ENONET;
+                        }
                 }
         }
 

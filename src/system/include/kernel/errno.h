@@ -84,8 +84,13 @@ extern "C" {
 #define ECANCELED       35      //!< Operation Canceled
 #define ENOTSUP         36      //!< Not supported
 #define ENOSYS          37      //!< Function not implemented
+#define ECONNABORTED    38      //!< Connection aborted (POSIX.1)
+#define ECONNREFUSED    39      //!< Connection refused (POSIX.1)
+#define ECONNRESET      40      //!< Connection reset (POSIX.1)
+#define EISCONN         41      //!< Socket is connected (POSIX.1)
+#define EALREADY        42      //!< Connection already in progress
 #ifndef DOXYGEN
-#define _ENUMBER        38      //!< total supported errors
+#define _ENUMBER        43      //!< total supported errors
 #endif
 
 /*==============================================================================
