@@ -194,7 +194,7 @@ struct stat {
         u32_t   st_uid;         //!< User ID of owner
         u32_t   st_gid;         //!< Group ID of owner
         u32_t   st_atime;       //!< Time of last access
-        u32_t   st_mtime;       //!< Time of last modification
+        time_t  st_mtime;       //!< Time of last modification
         tfile_t st_type;        //!< Type of file
 };
 
