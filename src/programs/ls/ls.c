@@ -76,16 +76,16 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        char *path = malloc(100);
+        char *path = malloc(PATH_LEN);
         if (!path) {
                 perror(NULL);
                 return EXIT_FAILURE;
         }
 
-        if (argc == 1 || (argc == 2 && strcmp(argv[1], ".") == 0)) {
+        if (argc == 1 || (argc >= 2 && strcmp(argv[1], ".") == 0)) {
                 getcwd(path, PATH_LEN);
         } else {
-                strcpy(path, argv[1]);
+                strncpy(path, argv[1], PATH_LEN);
         }
 
         DIR *dir = opendir(path);
