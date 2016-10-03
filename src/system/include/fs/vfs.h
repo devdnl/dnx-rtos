@@ -130,12 +130,12 @@ extern "C" {
 /** directory type */
 struct vfs_dir {
         res_header_t    header;
-        int           (*f_readdir)(void *fshdl, struct vfs_dir *dir, dirent_t **dirent);
-        int           (*f_closedir)(void *fshdl, struct vfs_dir *dir);
-        void           *f_dd;           //!< Directory descriptor (FS object)
-        void           *f_handle;       //!< File System handle
-        size_t          f_items;        //!< number of items
-        size_t          f_seek;         //!< seek
+        int           (*d_readdir)(void *fshdl, struct vfs_dir *dir, dirent_t **dirent);
+        int           (*d_closedir)(void *fshdl, struct vfs_dir *dir);
+        void           *d_dd;           //!< Directory descriptor (FS object)
+        void           *d_handle;       //!< File System handle
+        size_t          d_items;        //!< number of items
+        size_t          d_seek;         //!< seek
         dirent_t        dirent;         //!< directory entry data
 };
 
@@ -159,13 +159,13 @@ struct vfs_fattr {
 typedef struct vfs_FS_itf {
         int (*fs_init   )(void **fshdl, const char *path);
         int (*fs_release)(void *fshdl);
-        int (*fs_open   )(void *fshdl, void **extra_data, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags);
-        int (*fs_close  )(void *fshdl, void  *extra_data, fd_t fd, bool force);
-        int (*fs_write  )(void *fshdl, void  *extra_data, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, size_t *wrcnt, struct vfs_fattr attr);
-        int (*fs_read   )(void *fshdl, void  *extra_data, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt, struct vfs_fattr attr);
-        int (*fs_ioctl  )(void *fshdl, void  *extra_data, fd_t fd, int iroq, void *arg);
-        int (*fs_fstat  )(void *fshdl, void  *extra_data, fd_t fd, struct stat *stat);
-        int (*fs_flush  )(void *fshdl, void  *extra_data, fd_t fd);
+        int (*fs_open   )(void *fshdl, void **fhdl, fpos_t *fpos, const char *path, u32_t flags);
+        int (*fs_close  )(void *fshdl, void  *fhdl, bool force);
+        int (*fs_write  )(void *fshdl, void  *fhdl, const u8_t *src, size_t count, fpos_t *fpos, size_t *wrcnt, struct vfs_fattr attr);
+        int (*fs_read   )(void *fshdl, void  *fhdl, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt, struct vfs_fattr attr);
+        int (*fs_ioctl  )(void *fshdl, void  *fhdl, int iroq, void *arg);
+        int (*fs_fstat  )(void *fshdl, void  *fhdl, struct stat *stat);
+        int (*fs_flush  )(void *fshdl, void  *fhdl);
         int (*fs_mknod  )(void *fshdl, const char *path, const dev_t dev);
         int (*fs_sync   )(void *fshdl);
         int (*fs_opendir)(void *fshdl, const char *path, DIR *dir);
@@ -212,8 +212,7 @@ struct vfs_file {
         res_header_t        header;
         void               *FS_hdl;
         const vfs_FS_itf_t *FS_if;
-        void               *f_extra_data;
-        fd_t                fd;
+        void               *fhdl;
         fpos_t              f_lseek;
         vfs_file_flags_t    f_flag;
 };
@@ -234,6 +233,8 @@ extern int  _vfs_mkfifo     (const char*, mode_t);
 extern int  _vfs_opendir    (const char*, DIR**);
 extern int  _vfs_closedir   (DIR*);
 extern int  _vfs_readdir    (DIR*, dirent_t**);
+extern int  _vfs_seekdir    (DIR*, u32_t);
+extern int  _vfs_telldir    (DIR*, u32_t*);
 extern int  _vfs_remove     (const char*);
 extern int  _vfs_rename     (const char*, const char*);
 extern int  _vfs_chmod      (const char*, mode_t);

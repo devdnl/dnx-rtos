@@ -205,7 +205,7 @@ int _vfs_mount(const char *src_path, const char *mount_point, const struct vfs_F
                                 if (result == ESUCC) {
                                         base_fs->children_cnt++;
 
-                                        result = dir.f_closedir(dir.f_handle, &dir);
+                                        result = dir.d_closedir(dir.d_handle, &dir);
                                         if (result != ESUCC) {
                                                 goto finish;
                                         }
@@ -467,7 +467,7 @@ int _vfs_opendir(const char *path, DIR **dir)
                         result = get_path_base_FS(cwd_path, &external_path, &fs);
 
                         if (result == ESUCC) {
-                                (*dir)->f_handle = fs->handle;
+                                (*dir)->d_handle = fs->handle;
 
                                 int priority = increase_task_priority();
                                 result = fs->interface->fs_opendir(fs->handle, external_path, *dir);
@@ -500,8 +500,8 @@ int _vfs_closedir(DIR *dir)
 {
         int result = EINVAL;
 
-        if (is_dir_valid(dir) && dir->f_closedir) {
-                result = dir->f_closedir(dir->f_handle, dir);
+        if (is_dir_valid(dir) && dir->d_closedir) {
+                result = dir->d_closedir(dir->d_handle, dir);
                 if (result == ESUCC) {
                         dir->header.type = RES_TYPE_UNKNOWN;
                         _kfree(_MM_KRN, cast(void**, &dir));
@@ -525,13 +525,53 @@ int _vfs_readdir(DIR *dir, dirent_t **dirent)
 {
         int result = EINVAL;
 
-        if (is_dir_valid(dir) && dirent && dir->f_readdir) {
+        if (is_dir_valid(dir) && dirent && dir->d_readdir) {
                 int priority = increase_task_priority();
-                result = dir->f_readdir(dir->f_handle, dir, dirent);
+                result = dir->d_readdir(dir->d_handle, dir, dirent);
                 restore_priority(priority);
         }
 
         return result;
+}
+
+//==============================================================================
+/**
+ * @brief Function set position of read index.
+ *
+ * @param dir           directory object
+ * @param seek          file position
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _vfs_seekdir(DIR *dir, u32_t seek)
+{
+        if (is_dir_valid(dir)) {
+                dir->d_seek = seek;
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function get position of read index.
+ *
+ * @param dir           directory object
+ * @param seek          file position pointer
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _vfs_telldir(DIR *dir, u32_t *seek)
+{
+        if (is_dir_valid(dir) && seek) {
+                *seek = dir->d_seek;
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
 }
 
 #if __OS_ENABLE_REMOVE__ == _YES_
@@ -858,8 +898,7 @@ int _vfs_fopen(const char *path, const char *mode, FILE **file)
                         int priority = increase_task_priority();
 
                         result = fs->interface->fs_open(fs->handle,
-                                                        &file_obj->f_extra_data,
-                                                        &file_obj->fd,
+                                                        &file_obj->fhdl,
                                                         &file_obj->f_lseek,
                                                         external_path,
                                                         o_flags);
@@ -904,9 +943,7 @@ int _vfs_fclose(FILE *file, bool force)
         int result = EINVAL;
 
         if (is_file_valid(file) && file->FS_if->fs_close) {
-                result = file->FS_if->fs_close(file->FS_hdl,
-                                               file->f_extra_data,
-                                               file->fd, force);
+                result = file->FS_if->fs_close(file->FS_hdl, file->fhdl, force);
                 if (result == ESUCC) {
                         file->header.type = RES_TYPE_UNKNOWN;
                         file->FS_hdl      = NULL;
@@ -943,8 +980,7 @@ int _vfs_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *file)
                         }
 
                         result = file->FS_if->fs_write(file->FS_hdl,
-                                                       file->f_extra_data,
-                                                       file->fd,
+                                                       file->fhdl,
                                                        ptr,
                                                        size,
                                                        &file->f_lseek,
@@ -987,8 +1023,7 @@ int _vfs_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
         if (ptr && size && rdcnt && is_file_valid(file)) {
                 if (file->f_flag.rd) {
                         result = file->FS_if->fs_read(file->FS_hdl,
-                                                      file->f_extra_data,
-                                                      file->fd,
+                                                      file->fhdl,
                                                       ptr,
                                                       size,
                                                       &file->f_lseek,
@@ -1118,8 +1153,8 @@ int _vfs_vfioctl(FILE *file, int rq, va_list arg)
                 }
 
                 return file->FS_if->fs_ioctl(file->FS_hdl,
-                                             file->f_extra_data,
-                                             file->fd, rq, va_arg(arg, void*));
+                                             file->fhdl,
+                                             rq, va_arg(arg, void*));
         } else {
                 return EINVAL;
         }
@@ -1142,10 +1177,7 @@ int _vfs_fstat(FILE *file, struct stat *stat)
         if (is_file_valid(file) && stat) {
                 int priority = increase_task_priority();
 
-                result = file->FS_if->fs_fstat(file->FS_hdl,
-                                               file->f_extra_data,
-                                               file->fd,
-                                               stat);
+                result = file->FS_if->fs_fstat(file->FS_hdl, file->fhdl, stat);
 
                 restore_priority(priority);
         }
@@ -1169,9 +1201,7 @@ int _vfs_fflush(FILE *file)
         if (is_file_valid(file)) {
                 int priority = increase_task_priority();
 
-                result = file->FS_if->fs_flush(file->FS_hdl,
-                                               file->f_extra_data,
-                                               file->fd);
+                result = file->FS_if->fs_flush(file->FS_hdl, file->fhdl);
 
                 restore_priority(priority);
         }

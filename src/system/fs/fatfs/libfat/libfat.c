@@ -372,9 +372,15 @@
 #       define INIT_BUF(dobj)           {(dobj).fn = sfn; (dobj).lfn = lbuf;}
 #       define FREE_BUF()
 #elif _LIBFAT_USE_LFN == 2
-#       define DEF_NAMEBUF              uint8_t sfn[12]; wchar_t *lfn
-#       define INIT_BUF(dobj)           {lfn = _libfat_malloc((_LIBFAT_MAX_LFN + 1) * 2); if (!lfn) {LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE);} (dobj).lfn = lfn; (dobj).fn = sfn;}
-#       define FREE_BUF()               _libfat_free(lfn)
+#       if _LIBFAT_LFN_UNICODE == 0
+#               define DEF_NAMEBUF      uint8_t sfn[12]; wchar_t *lfn
+#               define INIT_BUF(dobj)   {lfn = _libfat_malloc(_LIBFAT_MAX_LFN + 1); if (!lfn) {LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE);} (dobj).lfn = lfn; (dobj).fn = sfn;}
+#               define FREE_BUF()       _libfat_free(lfn)
+#	else
+#               define DEF_NAMEBUF      uint8_t sfn[12]; wchar_t *lfn
+#               define INIT_BUF(dobj)   {lfn = _libfat_malloc((_LIBFAT_MAX_LFN + 1) * 2); if (!lfn) {LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE);} (dobj).lfn = lfn; (dobj).fn = sfn;}
+#               define FREE_BUF()       _libfat_free(lfn)
+#       endif
 #else
 #       error Wrong LFN configuration.
 #endif
@@ -2551,7 +2557,11 @@ FRESULT libfat_open(FATFS *fs, FATFILE *fp, const TCHAR *path, uint8_t mode)
 
         fp->fs = fs;
 
-        mode &= LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS | LIBFAT_FA_OPEN_ALWAYS | LIBFAT_FA_CREATE_NEW;
+        mode &= LIBFAT_FA_READ
+              | LIBFAT_FA_WRITE
+              | LIBFAT_FA_CREATE_ALWAYS
+              | LIBFAT_FA_OPEN_ALWAYS
+              | LIBFAT_FA_CREATE_NEW;
 
         ENTER_FF(fs);
         dj.fs = fs;
@@ -3864,8 +3874,8 @@ FRESULT libfat_utime(FATFS *fs, const TCHAR *path, const FILEINFO *fno)
                         STORE_UINT16(dir+DIR_WrtDate, fno->fdate);
                         dj.fs->wflag = 1;
                         res = sync_fs(dj.fs);
-                        }
                 }
+        }
 
         LEAVE_FF(dj.fs, res);
 }

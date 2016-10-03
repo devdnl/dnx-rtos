@@ -124,8 +124,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
- * @param extra         [<b>void **</b>]        file extra data (user defined)
- * @param fd            [<b>fd_t *</b>]         file descriptor (user defined)
+ * @param fhdl          [<b>void **</b>]        file handle (user defined)
  * @param fpos          [<b>fpos_t *</b>]       file position indicator
  * @param path          [<b>const char *</b>]   file path
  * @param flags         [<b>u32_t</b>]          file flags (O_*)
@@ -149,8 +148,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
- * @param extra         [<b>void *</b>]         file extra data
- * @param fd            [<b>fd_t</b>]           file descriptor
+ * @param fhdl          [<b>void *</b>]         file handle (user defined)
  * @param force         [<b>bool</b>]           force file close (system request)
  * @return One of @ref errno value.
  */
@@ -170,8 +168,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
- * @param extra         [<b>void *</b>]         file extra data
- * @param fd            [<b>fd_t</b>]           file descriptor
+ * @param fhdl          [<b>void *</b>]         file handle (user defined)
  * @param src           [<b>const u8_t *</b>]   source buffer
  * @param count         [<b>size_t</b>]         bytes to write
  * @param fpos          [<b>fpos_t *</b>]       file position indicator (can be modified)
@@ -197,8 +194,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
- * @param extra         [<b>void *</b>]         file extra data
- * @param fd            [<b>fd_t</b>]           file descriptor
+ * @param fhdl          [<b>void *</b>]         file handle (user defined)
  * @param dst           [<b>u8_t *</b>]         destination buffer
  * @param count         [<b>size_t</b>]         bytes to read
  * @param fpos          [<b>fpos_t *</b>]       file position indicator (can be modified)
@@ -224,8 +220,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
- * @param extra         [<b>void *</b>]         file extra data
- * @param fd            [<b>fd_t</b>]           file descriptor
+ * @param fhdl          [<b>void *</b>]         file handle (user defined)
  * @param request       [<b>int</b>]            ioctl request
  * @param arg           [<b>void *</b>]         ioctl argument
  * @return One of @ref errno value.
@@ -248,8 +243,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
- * @param extra         [<b>void *</b>]         file extra data
- * @param fd            [<b>fd_t</b>]           file descriptor
+ * @param fhdl          [<b>void *</b>]         file handle (user defined)
  *
  * @return One of @ref errno value.
  *
@@ -443,8 +437,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
- * @param extra         [<b>void *</b>]         file extra data
- * @param fd            [<b>fd_t</b>]           file descriptor
+ * @param fhdl          [<b>void *</b>]         file handle (user defined)
  * @param stat          [<b>struct stat *</b>]  file information
  * @return One of @ref errno value.
  *
@@ -466,7 +459,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @param fsname        file system name
  * @param fs_handle     [<b>void *</b>]         file system memory handler
- * @param extra         [<b>void *</b>]         file extra data
+ * @param fhdl          [<b>void *</b>]         file handle (user defined)
  * @param path          [<b>const char *</b>]   file path
  * @param stat          [<b>struct stat *</b>]  file information
  * @return One of @ref errno value.

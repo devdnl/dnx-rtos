@@ -93,8 +93,7 @@ API_FS_RELEASE(<!fs_name!>, void *fs_handle)
  * @brief Open file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[out]          *extra                  file extra data
- * @param[out]          *fd                     file descriptor
+ * @param[out]          *fhdl                   file handle
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
  * @param[in]            flags                  file open flags (O_...)
@@ -102,7 +101,7 @@ API_FS_RELEASE(<!fs_name!>, void *fs_handle)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPEN(<!fs_name!>, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
+API_FS_OPEN(<!fs_name!>, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path, u32_t flags)
 {
         return ENOENT;
 }
@@ -112,14 +111,13 @@ API_FS_OPEN(<!fs_name!>, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, 
  * @brief Close file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           force                  force close
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CLOSE(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, bool force)
+API_FS_CLOSE(<!fs_name!>, void *fs_handle, void *fhdl, bool force)
 {
         return EINVAL;
 }
@@ -129,8 +127,7 @@ API_FS_CLOSE(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, bool force)
  * @brief Write data to the file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
@@ -142,8 +139,7 @@ API_FS_CLOSE(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, bool force)
 //==============================================================================
 API_FS_WRITE(<!fs_name!>,
              void            *fs_handle,
-             void            *extra,
-             fd_t             fd,
+             void            *fhdl,
              const u8_t      *src,
              size_t           count,
              fpos_t          *fpos,
@@ -158,8 +154,7 @@ API_FS_WRITE(<!fs_name!>,
  * @brief Read data from file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
@@ -171,8 +166,7 @@ API_FS_WRITE(<!fs_name!>,
 //==============================================================================
 API_FS_READ(<!fs_name!>,
             void            *fs_handle,
-            void            *extra,
-            fd_t             fd,
+            void            *fhdl,
             u8_t            *dst,
             size_t           count,
             fpos_t          *fpos,
@@ -187,15 +181,14 @@ API_FS_READ(<!fs_name!>,
  * @brief IO operations on files
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_IOCTL(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
+API_FS_IOCTL(<!fs_name!>, void *fs_handle, void *fhdl, int request, void *arg)
 {
         return ESUCC;
 }
@@ -205,13 +198,12 @@ API_FS_IOCTL(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, int request, vo
  * @brief Flush file data
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FLUSH(<!fs_name!>, void *fs_handle, void *extra, fd_t fd)
+API_FS_FLUSH(<!fs_name!>, void *fs_handle, void *fhdl)
 {
         return EINVAL;
 }
@@ -221,14 +213,13 @@ API_FS_FLUSH(<!fs_name!>, void *fs_handle, void *extra, fd_t fd)
  * @brief Return file status
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *stat                   file status
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FSTAT(<!fs_name!>, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
+API_FS_FSTAT(<!fs_name!>, void *fs_handle, void *fhdl, struct stat *stat)
 {
         return EINVAL;
 }

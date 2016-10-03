@@ -269,6 +269,161 @@ static inline struct dirent *readdir(DIR *dir)
 #endif
 }
 
+//==============================================================================
+/**
+ * Set the position of a directory stream.
+ *
+ * @param dir   directory object
+ * @param seek  pointer position
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return The function shall not return a value.
+ *
+ * @b Example
+ * @code
+        #include <stdio.h>
+        #include <dirent.h>
+        #include <errno.h>
+
+        // ...
+
+        errno = 0;
+
+        DIR *dir = opendir("/foo/bar");
+        if (dir) {
+
+                seekdir(dir, 2);
+
+                dirent_t *dirent = readdir(dir);
+                while (dirent->name != NULL) {
+                        // ...
+                }
+
+                closedir(dir);
+        } else {
+                perror("/foo/bar");
+        }
+
+        // ...
+   @endcode
+ *
+ * @see telldir(), rewinddir()
+ */
+//==============================================================================
+static inline void seekdir(DIR *dir, u32_t seek)
+{
+#if __OS_ENABLE_DIRBROWSE__ == _YES_
+        _errno = _builtinfunc(vfs_seekdir, dir, seek);
+#else
+        UNUSED_ARG2(dir, seek);
+#endif
+}
+
+//==============================================================================
+/**
+ * Return current location of a named directory stream.
+ *
+ * @param dir   directory object
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return Upon successful completion, the function shall return the current
+ *         location of the specified directory stream.
+ *
+ * @b Example
+ * @code
+        #include <stdio.h>
+        #include <dirent.h>
+        #include <errno.h>
+
+        // ...
+
+        errno = 0;
+
+        DIR *dir = opendir("/foo/bar");
+        if (dir) {
+
+                u32_t pos = telldir(dir);
+
+                dirent_t *dirent = readdir(dir);
+                while (dirent->name != NULL) {
+                        // ...
+                }
+
+                closedir(dir);
+        } else {
+                perror("/foo/bar");
+        }
+
+        // ...
+   @endcode
+ *
+ * @see seekdir(), rewinddir()
+ */
+//==============================================================================
+static inline u32_t telldir(DIR *dir)
+{
+#if __OS_ENABLE_DIRBROWSE__ == _YES_
+        u32_t seek = 0;
+        _errno = _builtinfunc(vfs_telldir, dir, &seek);
+        return seek;
+#else
+        UNUSED_ARG1(dir);
+        return 0;
+#endif
+}
+
+//==============================================================================
+/**
+ * Reset the position of a directory stream to the beginning of a directory.
+ *
+ * @param dir   directory object
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return The function function shall not return a value.
+ *
+ * @b Example
+ * @code
+        #include <stdio.h>
+        #include <dirent.h>
+        #include <errno.h>
+
+        // ...
+
+        errno = 0;
+
+        DIR *dir = opendir("/foo/bar");
+        if (dir) {
+
+                rewinddir(dir);
+
+                dirent_t *dirent = readdir(dir);
+                while (dirent->name != NULL) {
+                        // ...
+                }
+
+                closedir(dir);
+        } else {
+                perror("/foo/bar");
+        }
+
+        // ...
+   @endcode
+ *
+ * @see seekdir(), telldir()
+ */
+//==============================================================================
+static inline void _vfs_rewinddir(DIR *dir)
+{
+#if __OS_ENABLE_DIRBROWSE__ == _YES_
+        seekdir(dir, 0);
+#else
+        UNUSED_ARG1(dir);
+#endif
+}
+
 #ifdef __cplusplus
 }
 #endif

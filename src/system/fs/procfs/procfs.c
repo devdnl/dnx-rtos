@@ -169,8 +169,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
  * @brief Open file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[out]          *extra                  file extra data
- * @param[out]          *fd                     file descriptor
+ * @param[out]          *fhdl                   file handle
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
  * @param[in]            flags                  file open flags
@@ -178,10 +177,8 @@ API_FS_RELEASE(procfs, void *fs_handle)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
+API_FS_OPEN(procfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG1(fd);
-
         struct procfs *fsctx = fs_handle;
 
         int result = EROFS;
@@ -198,7 +195,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
 
                                 process_stat_t stat;
                                 if (sys_process_get_stat_pid(pid, &stat) == ESUCC) {
-                                        return add_file_to_list(fsctx, pid, FILE_CONTENT_PID, extra);
+                                        return add_file_to_list(fsctx, pid, FILE_CONTENT_PID, fhdl);
                                 } else {
                                         result = ENOENT;
                                 }
@@ -211,12 +208,12 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
 
                         for (int i = 0; i < sys_get_programs_table_size(); i++) {
                                 if (strcmp(path, sys_get_programs_table()[i].name) == 0) {
-                                        return add_file_to_list(fsctx, 0, FILE_CONTENT_BIN, extra);
+                                        return add_file_to_list(fsctx, 0, FILE_CONTENT_BIN, fhdl);
                                 }
                         }
 
                 } else if (strcmp(path, PATH_ROOT_CPUINFO) == 0) {
-                        return add_file_to_list(fsctx, 0, FILE_CONTENT_CPUINFO, extra);
+                        return add_file_to_list(fsctx, 0, FILE_CONTENT_CPUINFO, fhdl);
 
                 } else {
                         result = ENOENT;
@@ -231,22 +228,21 @@ API_FS_OPEN(procfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const
  * @brief Close file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file fhdl data
  * @param[in ]           force                  force close
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
+API_FS_CLOSE(procfs, void *fs_handle, void *fhdl, bool force)
 {
-        UNUSED_ARG2(fd, force);
+        UNUSED_ARG1(force);
 
         struct procfs *fsctx = fs_handle;
 
         int result = sys_mutex_lock(fsctx->resource_mtx, 1000);
         if (result == ESUCC) {
-                int pos = sys_llist_find_begin(fsctx->file_list, extra);
+                int pos = sys_llist_find_begin(fsctx->file_list, fhdl);
                 result  = sys_llist_erase(fsctx->file_list, pos) ? ESUCC : ENOENT;
 
                 sys_mutex_unlock(fsctx->resource_mtx);
@@ -260,8 +256,7 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @brief Write data to the file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
@@ -273,15 +268,14 @@ API_FS_CLOSE(procfs, void *fs_handle, void *extra, fd_t fd, bool force)
 //==============================================================================
 API_FS_WRITE(procfs,
              void            *fs_handle,
-             void            *extra,
-             fd_t             fd,
+             void            *fhdl,
              const u8_t      *src,
              size_t           count,
              fpos_t          *fpos,
              size_t          *wrcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG8(fs_handle, extra, fd, src, count, wrcnt, fpos, fattr);
+        UNUSED_ARG7(fs_handle, fhdl, src, count, wrcnt, fpos, fattr);
 
         return EROFS;
 }
@@ -291,8 +285,7 @@ API_FS_WRITE(procfs,
  * @brief Read data from file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file fhdl data
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
@@ -304,17 +297,16 @@ API_FS_WRITE(procfs,
 //==============================================================================
 API_FS_READ(procfs,
             void            *fs_handle,
-            void            *extra,
-            fd_t             fd,
+            void            *fhdl,
             u8_t            *dst,
             size_t           count,
             fpos_t          *fpos,
             size_t          *rdcnt,
             struct vfs_fattr fattr)
 {
-        UNUSED_ARG3(fs_handle, fd, fattr);
+        UNUSED_ARG2(fs_handle, fattr);
 
-        struct file_info *file   = extra;
+        struct file_info *file   = fhdl;
         int               result = ENOENT;
 
         if (file && file->content < FILE_CONTENT_COUNT) {
@@ -344,17 +336,16 @@ API_FS_READ(procfs,
  * @brief IO operations on files
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
+API_FS_IOCTL(procfs, void *fs_handle, void *fhdl, int request, void *arg)
 {
-        UNUSED_ARG5(fs_handle, extra, fd, request, arg);
+        UNUSED_ARG4(fs_handle, fhdl, request, arg);
 
         return ENOTSUP;
 }
@@ -364,15 +355,14 @@ API_FS_IOCTL(procfs, void *fs_handle, void *extra, fd_t fd, int request, void *a
  * @brief Flush file data
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
+API_FS_FLUSH(procfs, void *fs_handle, void *fhdl)
 {
-        UNUSED_ARG3(fs_handle, extra, fd);
+        UNUSED_ARG2(fs_handle, fhdl);
 
         return ESUCC;
 }
@@ -382,18 +372,17 @@ API_FS_FLUSH(procfs, void *fs_handle, void *extra, fd_t fd)
  * @brief Return file status
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *stat                   file status
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FSTAT(procfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
+API_FS_FSTAT(procfs, void *fs_handle, void *fhdl, struct stat *stat)
 {
-        UNUSED_ARG2(fs_handle, fd);
+        UNUSED_ARG1(fs_handle);
 
-        struct file_info *file   = extra;
+        struct file_info *file   = fhdl;
         int               result = ENOENT;
 
         if (file && file->content < FILE_CONTENT_COUNT) {
@@ -485,30 +474,30 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 {
         UNUSED_ARG1(fs_handle);
 
-        dir->f_seek = 0;
-        dir->f_dd   = NULL;
+        dir->d_seek = 0;
+        dir->d_dd   = NULL;
 
         int result = ENOENT;
 
         if (strcmp(path, PATH_ROOT) == 0) {
-                dir->f_dd       = NULL;
-                dir->f_items    = 3;
-                dir->f_readdir  = procfs_readdir_root;
-                dir->f_closedir = procfs_closedir_generic;
+                dir->d_dd       = NULL;
+                dir->d_items    = 3;
+                dir->d_readdir  = procfs_readdir_root;
+                dir->d_closedir = procfs_closedir_generic;
                 result          = ESUCC;
 
         } else if (strcmp(path, PATH_ROOT_PID) == 0) {
-                dir->f_dd       = NULL;
-                dir->f_items    = sys_process_get_count();
-                dir->f_readdir  = procfs_readdir_pid;
-                dir->f_closedir = procfs_closedir_generic;
+                dir->d_dd       = NULL;
+                dir->d_items    = sys_process_get_count();
+                dir->d_readdir  = procfs_readdir_pid;
+                dir->d_closedir = procfs_closedir_generic;
                 result          = ESUCC;
 
         } else if (strcmp(path, PATH_ROOT_BIN) == 0) {
-                dir->f_dd       = NULL;
-                dir->f_items    = sys_get_programs_table_size();
-                dir->f_readdir  = procfs_readdir_bin;
-                dir->f_closedir = procfs_closedir_generic;
+                dir->d_dd       = NULL;
+                dir->d_items    = sys_get_programs_table_size();
+                dir->d_readdir  = procfs_readdir_bin;
+                dir->d_closedir = procfs_closedir_generic;
                 result          = ESUCC;
         }
 
@@ -600,14 +589,13 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group
 //==============================================================================
 API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        void  *extra = NULL;
-        fd_t   fd;
+        void  *fhdl = NULL;
         fpos_t fpos = 0;
 
-        int err = _procfs_open(fs_handle, &extra, &fd, &fpos, path, O_RDONLY);
+        int err = _procfs_open(fs_handle, &fhdl, &fpos, path, O_RDONLY);
         if (!err) {
-                err = _procfs_fstat(fs_handle, extra, fd, stat);
-                _procfs_close(fs_handle, extra, fd, true);
+                err = _procfs_fstat(fs_handle, fhdl, stat);
+                _procfs_close(fs_handle, fhdl, true);
         }
 
         return err;
@@ -668,8 +656,8 @@ static int procfs_closedir_generic(void *fs_handle, DIR *dir)
 {
         UNUSED_ARG1(fs_handle);
 
-        if (dir->f_dd) {
-                return sys_free(&dir->f_dd);
+        if (dir->d_dd) {
+                return sys_free(&dir->d_dd);
         } else {
                 return ESUCC;
         }
@@ -695,7 +683,7 @@ static int procfs_readdir_root(void *fs_handle, DIR *dir, dirent_t **dirent)
         *dirent         = &dir->dirent;
         dir->dirent.dev = 0;
 
-        switch (dir->f_seek++) {
+        switch (dir->d_seek++) {
         case 0:
                 dir->dirent.name     = DIR_BIN_NAME;
                 dir->dirent.filetype = FILE_TYPE_DIR;
@@ -748,24 +736,24 @@ static int procfs_readdir_pid(void *fs_handle, DIR *dir, dirent_t **dirent)
         UNUSED_ARG1(fs_handle);
 
         process_stat_t stat;
-        int result = sys_process_get_stat_seek(dir->f_seek++, &stat);
+        int result = sys_process_get_stat_seek(dir->d_seek++, &stat);
         if (result == ESUCC) {
                 char *content;
                 result  = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (result == ESUCC) {
 
-                        if (dir->f_dd) {
-                                sys_free(&dir->f_dd);
+                        if (dir->d_dd) {
+                                sys_free(&dir->d_dd);
                         }
 
-                        result = sys_zalloc(PID_STR_LEN, &dir->f_dd);
+                        result = sys_zalloc(PID_STR_LEN, &dir->d_dd);
                         if (result == ESUCC) {
                                 /*
                                  * Note: freed in next cycle or dir close
                                  */
-                                sys_snprintf(dir->f_dd, PID_STR_LEN, "%u", stat.pid);
+                                sys_snprintf(dir->d_dd, PID_STR_LEN, "%u", stat.pid);
 
-                                dir->dirent.name      = dir->f_dd;
+                                dir->dirent.name      = dir->d_dd;
                                 dir->dirent.filetype  = FILE_TYPE_REGULAR;
                                 dir->dirent.dev       = 0;
 
@@ -797,12 +785,12 @@ static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
 {
         UNUSED_ARG1(fs_handle);
 
-        if (dir->f_seek < (size_t)sys_get_programs_table_size()) {
+        if (dir->d_seek < (size_t)sys_get_programs_table_size()) {
                 dir->dirent.filetype = FILE_TYPE_PROGRAM;
-                dir->dirent.name     = const_cast(char*, sys_get_programs_table()[dir->f_seek].name);
+                dir->dirent.name     = const_cast(char*, sys_get_programs_table()[dir->d_seek].name);
                 dir->dirent.size     = 0;
                 *dirent              = &dir->dirent;
-                dir->f_seek++;
+                dir->d_seek++;
 
                 return ESUCC;
         } else {

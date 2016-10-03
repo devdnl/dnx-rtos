@@ -176,8 +176,7 @@ API_FS_RELEASE(devfs, void *fs_handle)
  * @brief Open file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[out]          *extra                  file extra data
- * @param[out]          *fd                     file descriptor
+ * @param[out]          *fhdl                   file extra data
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
  * @param[in]            flags                  file open flags
@@ -185,10 +184,8 @@ API_FS_RELEASE(devfs, void *fs_handle)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
+API_FS_OPEN(devfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG1(fd);
-
         struct devfs *devfs  = fs_handle;
 
         int status = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
@@ -207,8 +204,8 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                         }
 
                         if (open == ESUCC) {
-                                *extra = node;
-                                *fpos  = 0;
+                                *fhdl = node;
+                                *fpos = 0;
                                 devfs->number_of_opened_files++;
                                 node->opended++;
                         }
@@ -225,19 +222,16 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
  * @brief Close file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           force                  force close
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
+API_FS_CLOSE(devfs, void *fs_handle, void *fhdl, bool force)
 {
-        UNUSED_ARG1(fd);
-
         struct devfs   *devfs  = fs_handle;
-        struct devnode *node   = extra;
+        struct devnode *node   = fhdl;
 
         int status;
         if (node->type == FILE_TYPE_DRV) {
@@ -266,8 +260,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @brief Write data to the file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
@@ -279,7 +272,7 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
 //==============================================================================
 API_FS_WRITE(devfs,
              void            *fs_handle,
-             void            *extra,
+             void            *fhdl,
              fd_t             fd,
              const u8_t      *src,
              size_t           count,
@@ -290,7 +283,7 @@ API_FS_WRITE(devfs,
         UNUSED_ARG1(fs_handle);
         UNUSED_ARG1(fd);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
         if (node->type == FILE_TYPE_DRV) {
                 return sys_driver_write(node->IF.drv, src, count, fpos, wrcnt, fattr);
@@ -306,8 +299,7 @@ API_FS_WRITE(devfs,
  * @brief Read data from file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
@@ -319,8 +311,7 @@ API_FS_WRITE(devfs,
 //==============================================================================
 API_FS_READ(devfs,
             void            *fs_handle,
-            void            *extra,
-            fd_t             fd,
+            void            *fhdl,
             u8_t            *dst,
             size_t           count,
             fpos_t          *fpos,
@@ -328,9 +319,8 @@ API_FS_READ(devfs,
             struct vfs_fattr fattr)
 {
         UNUSED_ARG1(fs_handle);
-        UNUSED_ARG1(fd);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
         if (node->type == FILE_TYPE_DRV) {
                 return sys_driver_read(node->IF.drv, dst, count, fpos, rdcnt, fattr);
@@ -346,20 +336,18 @@ API_FS_READ(devfs,
  * @brief IO operations on files
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
+API_FS_IOCTL(devfs, void *fs_handle, void *fhdl, int request, void *arg)
 {
         UNUSED_ARG1(fs_handle);
-        UNUSED_ARG1(fd);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
         if (node->type == FILE_TYPE_DRV) {
                 return sys_driver_ioctl(node->IF.drv, request, arg);
@@ -377,18 +365,16 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
  * @brief Flush file data
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
+API_FS_FLUSH(devfs, void *fs_handle, void *fhdl)
 {
         UNUSED_ARG1(fs_handle);
-        UNUSED_ARG1(fd);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
         if (node->type == FILE_TYPE_DRV) {
                 return sys_driver_flush(node->IF.drv);
@@ -402,18 +388,17 @@ API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
  * @brief Return file status
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *stat                   file status
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
+API_FS_FSTAT(devfs, void *fs_handle, void *fhdl, struct stat *stat)
 {
-        UNUSED_ARG2(fs_handle, fd);
+        UNUSED_ARG1(fs_handle);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
         int result = EINVAL;
 
@@ -578,12 +563,12 @@ API_FS_OPENDIR(devfs, void *fs_handle, const char *path, DIR *dir)
         struct devfs *devfs = fs_handle;
 
         if (strcmp(path, "/") == 0) {
-                dir->f_closedir = closedir;
-                dir->f_readdir  = readdir;
-                dir->f_dd       = NULL;
-                dir->f_handle   = fs_handle;
-                dir->f_items    = devfs->number_of_used_nodes;
-                dir->f_seek     = 0;
+                dir->d_closedir = closedir;
+                dir->d_readdir  = readdir;
+                dir->d_dd       = NULL;
+                dir->d_handle   = fs_handle;
+                dir->d_items    = devfs->number_of_used_nodes;
+                dir->d_seek     = 0;
 
                 return ESUCC;
         } else {
@@ -628,7 +613,7 @@ static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
         if (result == ESUCC) {
 
                 struct devnode *node;
-                result = chain_get_n_node(devfs->root_chain, dir->f_seek, &node);
+                result = chain_get_n_node(devfs->root_chain, dir->d_seek, &node);
                 if (result == ESUCC) {
 
                         if (node->type == FILE_TYPE_DRV) {
@@ -657,7 +642,7 @@ static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
                         }
 
                         dir->dirent.name = node->path;
-                        dir->f_seek++;
+                        dir->d_seek++;
 
                         *dirent = &dir->dirent;
                 }
@@ -835,7 +820,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
                 struct devnode *node;
                 status = chain_get_node_by_path(devfs->root_chain, path, &node);
                 if (status == ESUCC) {
-                        status = _devfs_fstat(devfs, node, 0, stat);
+                        status = _devfs_fstat(devfs, node, stat);
                 }
 
                 sys_mutex_unlock(devfs->mutex);

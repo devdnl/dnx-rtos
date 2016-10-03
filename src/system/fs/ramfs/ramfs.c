@@ -44,11 +44,10 @@
 typedef struct node {
         char            *name;                  /* file name                 */
         tfile_t          type;                  /* file type                 */
-        fd_t             fd;                    /* file descriptor           */
         mode_t           mode;                  /* protection                */
         uid_t            uid;                   /* user ID of owner          */
         gid_t            gid;                   /* group ID of owner         */
-        fpos_t           size;                  /* file size                 */
+        size_t           size;                  /* file size                 */
         time_t           mtime;                 /* time of last modification */
         void            *data;                  /* file type specified data  */
 } node_t;
@@ -319,11 +318,11 @@ API_FS_OPENDIR(ramfs, void *fs_handle, const char *path, DIR *dir)
                 result = get_node(path, &hdl->root_dir, 0, NULL, &parent);
                 if (result == ESUCC) {
                         if (parent->type == FILE_TYPE_DIR) {
-                                dir->f_items    = sys_llist_size(parent->data);
-                                dir->f_readdir  = ramfs_readdir;
-                                dir->f_closedir = ramfs_closedir;
-                                dir->f_seek     = 0;
-                                dir->f_dd       = parent;
+                                dir->d_items    = sys_llist_size(parent->data);
+                                dir->d_readdir  = ramfs_readdir;
+                                dir->d_closedir = ramfs_closedir;
+                                dir->d_seek     = 0;
+                                dir->d_dd       = parent;
                         } else {
                                 result = ENOTDIR;
                         }
@@ -369,8 +368,8 @@ static int ramfs_readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
         int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
-                node_t *parent = dir->f_dd;
-                node_t *child  = sys_llist_at(parent->data, dir->f_seek++);
+                node_t *parent = dir->d_dd;
+                node_t *child  = sys_llist_at(parent->data, dir->d_seek++);
 
                 if (child) {
                         dir->dirent.filetype = child->type;
@@ -622,7 +621,7 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
                                         return result;
 
                                 } else {
-                                        stat->st_dev = target->fd;
+                                        stat->st_dev = 0;
                                 }
                         } else {
                                 result = EINVAL;
@@ -640,17 +639,14 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
  * @brief Return file status
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *stat                   file status
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FSTAT(ramfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
+API_FS_FSTAT(ramfs, void *fs_handle, void *extra, struct stat *stat)
 {
-        UNUSED_ARG1(fd);
-
         struct RAMFS *hdl = fs_handle;
 
         int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
@@ -680,7 +676,7 @@ API_FS_FSTAT(ramfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
                                 return result;
 
                         } else {
-                                stat->st_dev = opened_file->child->fd;
+                                stat->st_dev = 0;
                                 result       = ESUCC;
                         }
                 } else {
@@ -723,8 +719,7 @@ API_FS_STATFS(ramfs, void *fs_handle, struct statfs *statfs)
  * @brief Open file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[out]          *extra                  file extra data
- * @param[out]          *fd                     file descriptor
+ * @param[out]          *fhdl                   file handle
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
  * @param[in]            flags                  file open flags
@@ -732,10 +727,8 @@ API_FS_STATFS(ramfs, void *fs_handle, struct statfs *statfs)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, u32_t flags)
+API_FS_OPEN(ramfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG1(fd);
-
         struct RAMFS *hdl = fs_handle;
 
         int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
@@ -814,7 +807,7 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
                 }
 
                 // load pointer to file descriptor
-                *extra = sys_llist_back(hdl->opended_files);
+                *fhdl = sys_llist_back(hdl->opended_files);
 
                 finish:
                 sys_mutex_unlock(hdl->resource_mtx);
@@ -828,23 +821,20 @@ API_FS_OPEN(ramfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
  * @brief Close file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           force                  force close
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CLOSE(ramfs, void *fs_handle, void *extra, fd_t fd, bool force)
+API_FS_CLOSE(ramfs, void *fs_handle, void *fhdl, bool force)
 {
-        UNUSED_ARG1(fd);
-
         struct RAMFS *hdl = fs_handle;
 
         int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
-                struct opened_file_info *opened_file = extra;
+                struct opened_file_info *opened_file = fhdl;
                 int pos = sys_llist_find_begin(hdl->opended_files, opened_file);
 
                 if (opened_file && opened_file->child && pos >= 0) {
@@ -898,8 +888,7 @@ API_FS_CLOSE(ramfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @brief Write data to the file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
@@ -911,16 +900,13 @@ API_FS_CLOSE(ramfs, void *fs_handle, void *extra, fd_t fd, bool force)
 //==============================================================================
 API_FS_WRITE(ramfs,
              void            *fs_handle,
-             void            *extra,
-             fd_t             fd,
+             void            *fhdl,
              const u8_t      *src,
              size_t           count,
              fpos_t          *fpos,
              size_t          *wrcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG1(fd);
-
         struct RAMFS *hdl = fs_handle;
 
         int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
@@ -928,7 +914,7 @@ API_FS_WRITE(ramfs,
 
                 result = ENOENT;
 
-                struct opened_file_info *opened_file = extra;
+                struct opened_file_info *opened_file = fhdl;
                 if (opened_file && opened_file->child) {
                         node_t *target = opened_file->child;
 
@@ -1000,8 +986,7 @@ API_FS_WRITE(ramfs,
  * @brief Read data from file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
@@ -1013,16 +998,13 @@ API_FS_WRITE(ramfs,
 //==============================================================================
 API_FS_READ(ramfs,
             void            *fs_handle,
-            void            *extra,
-            fd_t             fd,
+            void            *fhdl,
             u8_t            *dst,
             size_t           count,
             fpos_t          *fpos,
             size_t          *rdcnt,
             struct vfs_fattr fattr)
 {
-        UNUSED_ARG1(fd);
-
         struct RAMFS *hdl = fs_handle;
 
         int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
@@ -1030,7 +1012,7 @@ API_FS_READ(ramfs,
 
                 result = ENOENT;
 
-                struct opened_file_info *opened_file = extra;
+                struct opened_file_info *opened_file = fhdl;
                 if (opened_file && opened_file->child) {
                         node_t *target = opened_file->child;
 
@@ -1090,18 +1072,15 @@ API_FS_READ(ramfs,
  * @brief IO operations on files
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_IOCTL(ramfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
+API_FS_IOCTL(ramfs, void *fs_handle, void *fhdl, int request, void *arg)
 {
-        UNUSED_ARG1(fd);
-
         struct RAMFS *hdl = fs_handle;
 
         int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
@@ -1109,7 +1088,7 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
 
                 result = ENOENT;
 
-                struct opened_file_info *opened_file = extra;
+                struct opened_file_info *opened_file = fhdl;
                 if (opened_file && opened_file->child) {
                         if (opened_file->child->type == FILE_TYPE_DRV) {
                                 sys_mutex_unlock(hdl->resource_mtx);
@@ -1144,22 +1123,19 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
  * @brief Flush file data
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FLUSH(ramfs, void *fs_handle, void *extra, fd_t fd)
+API_FS_FLUSH(ramfs, void *fs_handle, void *fhdl)
 {
-        UNUSED_ARG1(fd);
-
         struct RAMFS *hdl = fs_handle;
 
         int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (result == ESUCC) {
 
-                struct opened_file_info *opened_file = extra;
+                struct opened_file_info *opened_file = fhdl;
                 if (opened_file && opened_file->child) {
                         if (opened_file->child->type == FILE_TYPE_DRV) {
                                 sys_mutex_unlock(hdl->resource_mtx);
