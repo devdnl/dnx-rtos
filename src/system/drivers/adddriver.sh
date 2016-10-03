@@ -49,7 +49,7 @@ function create_makefile()
         content="$content-include "'$(SYS_DRV_LOC)'"/$module/Makefile\n"
     done
 
-    echo -e $content > "$Makefile_path"
+    echo -e $content
 }
 
 #-------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ function create_driver_registration_file()
     content=$content$modtable
     content=$content'const size_t _drvreg_number_of_modules = ARRAY_SIZE(_drvreg_module_table);'
 
-    echo -e $content > "$driver_registration_file_path"
+    echo -e $content
 }
 
 #-------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ function create_ioctl_groups_file()
     for module in $module_list; do enum=$enum"\t_IO_GROUP_${module^^},\n"; done
     enum=$enum"};"
 
-    echo -e $enum > "$ioctl_groups_file_path"
+    echo -e $enum
     
     # prevents compilation of all related objects at every build
     /bin/touch --reference=./Makefile "$ioctl_groups_file_path"
@@ -125,7 +125,7 @@ function create_ioctl_requests_file()
         content="$content#include \""$module"_ioctl.h\"\n"
     done
 
-    echo -ne $content > "$ioctl_requests_file_path"
+    echo -ne $content
     
     # prevents compilation of all related objects at every build
     /bin/touch --reference=./Makefile "$ioctl_requests_file_path"
@@ -146,10 +146,10 @@ function main()
     ioctl_requests_file_path="$2/$ioctl_requests_file_name"
     module_list=$(get_list "$1")
 
-    create_makefile
-    create_driver_registration_file $1
-    create_ioctl_groups_file
-    create_ioctl_requests_file $1
+    create_makefile > "$Makefile_path"
+    create_driver_registration_file $1 > "$driver_registration_file_path"
+    create_ioctl_groups_file > "$ioctl_groups_file_path"
+    create_ioctl_requests_file $1 > "$ioctl_requests_file_path"
 }
 
 main "$1" "$2"

@@ -42,12 +42,12 @@ function get_program_list()
 #-------------------------------------------------------------------------------
 function create_makefile()
 {
-    echo '# Makefile for GNU make - file generated at build process' > "$Makefile_path"
-    echo '' >> "$Makefile_path"
+    echo '# Makefile for GNU make - file generated at build process'
+    echo ''
 
-    echo 'CSRC_PROGRAMS += program_registration.c' >> "$Makefile_path"
+    echo 'CSRC_PROGRAMS += program_registration.c'
     for prog in $program_list; do
-        echo '-include $(APP_PRG_LOC)/'"$prog"'/Makefile' >> "$Makefile_path"
+        echo '-include $(APP_PRG_LOC)/'"$prog"'/Makefile'
     done
 }
 
@@ -58,27 +58,27 @@ function create_makefile()
 #-------------------------------------------------------------------------------
 function create_program_registration_file()
 {
-    echo '// file generated automatically at build process' > "$program_registration_path"
-    echo '' >> "$program_registration_path"
-    echo '#include <dnx/misc.h>' >> "$program_registration_path"
-    echo '#include "kernel/kwrapper.h"' >> "$program_registration_path"
-    echo '#include "kernel/process.h"' >> "$program_registration_path"
-    echo '' >> "$program_registration_path"
+    echo '// file generated automatically at build process'
+    echo ''
+    echo '#include <dnx/misc.h>'
+    echo '#include "kernel/kwrapper.h"'
+    echo '#include "kernel/process.h"'
+    echo ''
 
     for prog in $program_list; do
-        echo "_IMPORT_PROGRAM($prog);" >> "$program_registration_path"
+        echo "_IMPORT_PROGRAM($prog);"
     done
 
-    echo '' >> "$program_registration_path"
-    echo 'const struct _prog_data _prog_table[] = {' >> "$program_registration_path"
+    echo ''
+    echo 'const struct _prog_data _prog_table[] = {'
     for prog in $program_list; do
-        echo "        _PROGRAM_CONFIG($prog)," >> "$program_registration_path"
+        echo "        _PROGRAM_CONFIG($prog),"
     done
-    echo '};' >> "$program_registration_path"
+    echo '};'
 
-    echo '' >> "$program_registration_path"
-    echo 'const int _prog_table_size = ARRAY_SIZE(_prog_table);' >> "$program_registration_path"
-    echo '' >> "$program_registration_path"
+    echo ''
+    echo 'const int _prog_table_size = ARRAY_SIZE(_prog_table);'
+    echo ''
 }
 
 #-------------------------------------------------------------------------------
@@ -94,8 +94,8 @@ function main()
     program_registration_path="$1/$program_registration_file_name"
     program_list=$(get_program_list "$1")
 
-    create_makefile
-    create_program_registration_file
+    create_makefile > "$Makefile_path"
+    create_program_registration_file > "$program_registration_path"
 }
 
 main "$1"
