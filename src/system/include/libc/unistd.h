@@ -334,8 +334,9 @@ static inline int chdir(const char *cwd)
         syscall(SYSCALL_SETCWD, &result, cwd);
         return result;
 #else
-        UNUSED_ARG1(size);
-        return buf;
+        UNUSED_ARG1(cwd);
+        _errno = ENOTSUP;
+        return -1;
 #endif
 }
 
