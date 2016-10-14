@@ -88,15 +88,15 @@ int _gettime(time_t *timer)
         static uint32_t time_ref  = 0;
         static time_t   timecache = 0;
 
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (timer) {
                 if ((time_ref == 0) || sys_time_is_expired(time_ref, 500)) {
                         FILE *rtc;
-                        result = _vfs_fopen(__OS_RTC_FILE_PATH__, "r", &rtc);
-                        if (result == ESUCC) {
+                        err = _vfs_fopen(__OS_RTC_FILE_PATH__, "r", &rtc);
+                        if (err == ESUCC) {
                                 size_t rdcnt;
-                                result = _vfs_fread(timer, sizeof(time_t), &rdcnt, rtc);
+                                err = _vfs_fread(timer, sizeof(time_t), &rdcnt, rtc);
                                 timecache = *timer;
                                 _vfs_fclose(rtc, false);
 
@@ -104,10 +104,11 @@ int _gettime(time_t *timer)
                         }
                 } else {
                         *timer = timecache;
+                        err    = ESUCC;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
