@@ -325,8 +325,8 @@ API_MOD_WRITE(I2C,
               const u8_t       *src,
               size_t            count,
               fpos_t           *fpos,
-              struct vfs_fattr  fattr,
-              size_t           *wrcnt)
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
         UNUSED_ARG1(fattr);
 
