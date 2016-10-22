@@ -86,7 +86,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
         set_flash_latency(_PLL_CFG__FLASH_LATENCY);
         enable_prefetch_buffer();
 
-        int status;
+        int status = ESUCC;
 
         if (_PLL_CFG__LSI_ON) {
                 RCC_LSICmd(_PLL_CFG__LSI_ON);
@@ -158,9 +158,9 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 
         RCC_PLLConfig(_PLL_CFG__PLL_SRC, _PLL_CFG__PLL_MUL);
         RCC_PLLCmd(_PLL_CFG__PLL_ON);
-        status = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
-        if (status != ESUCC)
-                return status;
+        if (_PLL_CFG__PLL_ON) {
+                status = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
+        }
 
         RCC_ADCCLKConfig(_PLL_CFG__ADC_PRE);
         RCC_PCLK2Config(_PLL_CFG__APB2_PRE);
@@ -172,7 +172,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
 
         sys_update_system_clocks();
 
-        return ESUCC;
+        return status;
 }
 
 //==============================================================================
