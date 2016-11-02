@@ -5,7 +5,7 @@
 
 @brief   This file support processes
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@
 #include "kernel/printk.h"
 #include "lib/llist.h"
 #include "lib/cast.h"
+#include "dnx/misc.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -46,7 +47,7 @@
 #define USERSPACE
 #define KERNELSPACE
 #define foreach_resource(_v, _l)        for (res_header_t *_v = _l; _v; _v = _v->next)
-#define foreach_process(_v)             for (_process_t *_v = process_list; _v; _v = cast(_process_t*, _v->header.next))
+#define foreach_process(_v, _l)         for (_process_t *_v = _l; _v; _v = cast(_process_t*, _v->header.next))
 
 #define catcherrno(_x)                  for (int _ = 0; _ < 1; _++) for (int *__ = &_x; __; __ = 0)
 #define try(_x)                         if ((*__ = (_x)) != 0) break
@@ -56,53 +57,57 @@
 #define ATOMIC for (int __ = 0; __ == 0;)\
         for (_kernel_scheduler_lock(); __ == 0; _kernel_scheduler_unlock(), __++)
 
+#if __OS_TASK_MAX_THREADS__ > 12
+#error Maximum number of threads is 12
+#endif
+
+#if __OS_ENABLE_SYS_ASSERT__ > 0
+#define PROCESS_ASSERT(assert)          while (not (assert))
+#else
+#define PROCESS_ASSERT(assert)
+#endif
+
+#define is_proc_valid(proc)             (proc && proc->header.type == RES_TYPE_PROCESS)
+#define is_tid_in_range(tid)            ((tid >= 0) && (tid < __OS_TASK_MAX_THREADS__))
+
+#define FLAG_DETACHED                   (1 << 0)
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 typedef struct _prog_data pdata_t;
 
 struct _process {
-        res_header_t     header;                /* resource header                      */
-        task_t          *task;                  /* pointer to task handle               */
-        FILE            *f_stdin;               /* stdin file                           */
-        FILE            *f_stdout;              /* stdout file                          */
-        FILE            *f_stderr;              /* stderr file                          */
-        void            *globals;               /* address to global variables          */
-        res_header_t    *res_list;              /* list of used resources               */
-        const char      *cwd;                   /* current working path                 */
-        const pdata_t   *pdata;                 /* program data                         */
-        sem_t           *exit_sem;              /* process exit semaphore               */
-        sem_t           *syscall_sem;           /* syscall semaphore                    */
-        void            *syscall_obj;           /* syscall object                       */
-        char            **argv;                 /* program arguments                    */
-        pid_t            pid;                   /* process ID                           */
-        int              errnov;                /* program error number                 */
-        u32_t            timecnt;               /* counter used to calculate CPU load   */
-        u16_t            CPU_load;              /* CPU load (10 = 1%)                   */
-        u8_t             argc;                  /* number of arguments                  */
-        i8_t             status;                /* program status (return value)        */
-        bool             detached:1;            /* independent process (no parent)      */
+        res_header_t     header;                        //!< resource header
+        task_t          *task[__OS_TASK_MAX_THREADS__]; //!< process tasks
+        flag_t          *event;                         //!< events for exit indicator and syscall finish
+        FILE            *f_stdin;                       //!< stdin file
+        FILE            *f_stdout;                      //!< stdout file
+        FILE            *f_stderr;                      //!< stderr file
+        void            *globals;                       //!< address to global variables
+        res_header_t    *res_list;                      //!< list of used resources
+        const char      *cwd;                           //!< current working path
+        const pdata_t   *pdata;                         //!< program data
+        char            **argv;                         //!< program arguments
+        u8_t             argc;                          //!< number of arguments
+        pid_t            pid;                           //!< process ID
+        int              errnov;                        //!< program error number
+        u32_t            timecnt;                       //!< counter used to calculate CPU load
+        u16_t            CPU_load;                      //!< CPU load (10 = 1%)
+        i8_t             status;                        //!< program status (return value)
+        u8_t             flag;                          //!< control flags
 };
 
-struct _thread {
-        res_header_t     header;                /* resource header                      */
-        task_t          *task;                  /* pointer to task handle               */
-        _process_t      *process;               /* process ID (thread owner)            */
-        void            *arg;                   /* thread function argument             */
-        sem_t           *exit_sem;              /* thread exit semaphore (join func.)   */
-        sem_t           *syscall_sem;           /* syscall semaphore                    */
-        void            *syscall_obj;           /* syscall is pending                   */
-        size_t           stack_depth;           /* stack size                           */
-        tid_t            tid;                   /* thread ID                            */
-        bool             detached:1;            /* independent thread (no join)         */
-};
+typedef struct {
+        thread_func_t   func;
+        void           *arg;
+} thread_args_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
 static void process_code(void *mainfn);
-static void thread_code(void *thrfunc);
-static int  process_thread_destroy(_thread_t *thread);
+static void thread_code(void *args);
 static void process_destroy_all_resources(_process_t *proc);
 static int  resource_destroy(res_header_t *resource);
 static int  argtab_create(const char *str, u8_t *argc, char **argv[]);
@@ -111,15 +116,18 @@ static int  find_program(const char *name, const struct _prog_data **prog);
 static int  allocate_process_globals(_process_t *proc, const struct _prog_data *usrprog);
 static int  process_apply_attributes(_process_t *proc, const process_attr_t *attr);
 static void process_get_stat(_process_t *proc, process_stat_t *stat);
+static void process_move_list(_process_t *proc, _process_t **list_from, _process_t **list_to);
+static int  get_pid(pid_t *pid);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 static pid_t          PID_cnt;
-static tid_t          TID_cnt;
-static _process_t    *process_list;
+static _process_t    *active_process_list;
+static _process_t    *destroy_process_list;
+static _process_t    *zombie_process_list;
 static _process_t    *active_process;
-static _thread_t     *active_thread;
+static tid_t          active_thread;
 static u32_t          CPU_total_time_last;
 static avg_CPU_load_t avg_CPU_load_calc;
 static avg_CPU_load_t avg_CPU_load_result;
@@ -169,10 +177,10 @@ extern u32_t                   _uptime_counter_sec;
 //==============================================================================
 KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid_t *pid)
 {
-        int         result = EINVAL;
-        _process_t *proc   = NULL;
+        int         err  = EINVAL;
+        _process_t *proc = NULL;
 
-        catcherrno(result) {
+        catcherrno(err) {
                 try(!cmd || cmd[0] == '\0' ? EINVAL : ESUCC);
                 try(_kzalloc(_MM_KRN, sizeof(_process_t), cast(void**, &proc)));
 
@@ -186,152 +194,215 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 
                 try(process_apply_attributes(proc, attr));
 
+                try(get_pid(&proc->pid));
+
                 if (proc->pdata->main != _syscall_kworker_process) {
-                        try(_semaphore_create(1, 0, &proc->syscall_sem));
+                        try (_flag_create(&proc->event));
                 }
 
-                proc->pid = ++PID_cnt;
-
                 ATOMIC {
-                        catcherrno(result) {
+                        catcherrno(err) {
                                 try(_task_create(process_code,
                                                  proc->pdata->name,
                                                  *proc->pdata->stack_depth,
                                                  proc->pdata->main,
                                                  proc,
-                                                 &proc->task));
-                        } onsuccess(result) {
+                                                 &proc->task[0]));
+                        } onsuccess(err) {
                                 if (attr) {
-                                        _task_set_priority(proc->task, attr->priority);
+                                        _task_set_priority(proc->task[0], attr->priority);
                                 }
 
                                 if (pid) {
                                         *pid = proc->pid;
                                 }
 
-                                if (process_list == NULL) {
-                                        process_list = proc;
+                                if (active_process_list == NULL) {
+                                        active_process_list = proc;
                                 } else {
-                                        proc->header.next = cast(res_header_t*, process_list);
-                                        process_list      = proc;
+                                        proc->header.next = cast(res_header_t*, active_process_list);
+                                        active_process_list      = proc;
                                 }
                         }
                 }
 
-        } onfailure(result) {
+        } onfailure(err) {
                 if (proc) {
                         process_destroy_all_resources(proc);
                         _kfree(_MM_KRN, cast(void**, &proc));
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
 /**
- * @brief  Free all process's resources and remove from process list
- *
- * @param  pid          process ID
- * @param  status       process exit status (can be NULL)
- *
- * @return One of errno value
+ * Function clean up killed processes. If process has parent then is moved to
+ * the zombie list. Only parent can remove zombie process.
  */
 //==============================================================================
-KERNELSPACE int _process_destroy(pid_t pid, int *status)
+KERNELSPACE void _process_clean_up_killed_processes(void)
 {
-        int result = ESRCH;
+        ATOMIC {
+                while (destroy_process_list) {
+                        _process_t *proc = destroy_process_list;
 
-        _process_t *prev = NULL;
-        foreach_process(process) {
-                if (process->pid == pid) {
-                        ATOMIC {
-                                if (process_list == process) {
-                                        process_list = cast(_process_t*, process->header.next);
-                                } else {
-                                        prev->header.next = process->header.next;
-                                }
+                        process_destroy_all_resources(proc);
+
+                        if (not (proc->flag & FLAG_DETACHED)) {
+                                process_move_list(proc,
+                                                  &destroy_process_list,
+                                                  &zombie_process_list);
+                        } else {
+                                _flag_destroy(proc->event);
+                                _kfree(_MM_KRN, cast(void*, &proc));
                         }
-
-                        if (status) {
-                                *status = process->status;
-                        }
-
-                        process->detached = true;
-                        process_destroy_all_resources(process);
-
-                        process->header.next = NULL;
-                        process->header.type = RES_TYPE_UNKNOWN;
-                        _kfree(_MM_KRN, cast(void**, &process));
-
-                        result = ESUCC;
-                        break;
                 }
-
-                prev = process;
         }
-
-        return result;
 }
 
 //==============================================================================
 /**
- * @brief  Clear all process resources, set exit code and close task. Process is
- *         not removed from process list (zombie state).
+ * Kill selected process. Kill moves process to the process destroy list. There
+ * are releases resources used by process.
+ *
+ * @param  pid          process ID
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_kill(pid_t pid)
+{
+        int err = ESRCH;
+
+        ATOMIC {
+                foreach_process(process, active_process_list) {
+                        if (process->pid == pid) {
+                                process_move_list(process,
+                                                  &active_process_list,
+                                                  &destroy_process_list);
+
+                                process->flag |= FLAG_DETACHED;
+
+                                err = ESUCC;
+                                break;
+                        }
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * Function remove zombie process.
+ *
+ * @param  proc         zombie process object
+ * @param  status       program status
+ */
+//==============================================================================
+KERNELSPACE void _process_remove_zombie(_process_t *proc, int *status)
+{
+        PROCESS_ASSERT(is_proc_valid(proc));
+
+        ATOMIC {
+                _process_t *prev = NULL;
+                foreach_process(p, zombie_process_list) {
+                        if (p == proc) {
+
+                                if (prev) {
+                                        prev->header.next = proc->header.next;
+                                } else {
+                                        zombie_process_list = cast(_process_t *,
+                                                                   proc->header.next);
+                                }
+
+                                if (status) {
+                                        *status = proc->status;
+                                }
+
+                                _flag_destroy(proc->event);
+                                _kfree(_MM_KRN, cast(void*, &proc));
+
+                                break;
+                        } else {
+                                prev = p;
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * Function exit from process execution. Is called when main() function execute
+ * return function or if user call exit() function.
  *
  * @param  proc         process container
  * @param  status       status (exit code)
- *
- * @return One of errno value
  */
 //==============================================================================
-KERNELSPACE int _process_exit(_process_t *proc, int status)
+KERNELSPACE void _process_exit(_process_t *proc, int status)
 {
-        int result = EINVAL;
-
-        if (proc && proc->header.type == RES_TYPE_PROCESS) {
+        if (is_proc_valid(proc)) {
                 proc->status = status;
-                process_destroy_all_resources(proc);
-                result = ESUCC;
-        }
 
-        return result;
+                ATOMIC {
+                        if (proc->event) {
+                                _flag_set(proc->event, _PROCESS_EXIT_FLAG(0));
+                        }
+
+                        for (int i = 1; i < __OS_TASK_MAX_THREADS__; i++) {
+                                if (proc->task[i]) {
+                                        _task_destroy(proc->task[i]);
+                                        proc->task[i] = NULL;
+                                }
+                        }
+
+                        process_move_list(proc, &active_process_list, &destroy_process_list);
+
+                        proc->task[0] = NULL;
+                }
+
+                _task_exit();
+        } else {
+                PROCESS_ASSERT(is_proc_valid(proc));
+        }
 }
 
 //==============================================================================
 /**
- * @brief  It works almost the same as _process_exit() but set exit code to -1 and
- *         print on process's terminal suitable message.
+ * @brief  The function works almost the same as _process_exit(), but set exit
+ *         code to -1 and print on process's terminal suitable message.
  *
  * @param  proc         process container
- *
- * @return One of errno value
  */
 //==============================================================================
-KERNELSPACE int _process_abort(_process_t *proc)
+KERNELSPACE void _process_abort(_process_t *proc)
 {
-        if (proc && proc->header.type == RES_TYPE_PROCESS) {
+        if (is_proc_valid(proc)) {
                 static const char *aborted = "Aborted\n";
                 size_t wrcnt;
                 _vfs_fwrite(aborted, strlen(aborted), &wrcnt, proc->f_stderr);
+                _process_exit(proc, -1);
+        } else {
+                PROCESS_ASSERT(is_proc_valid(proc));
         }
-
-        return _process_exit(proc, -1);
 }
 
 //==============================================================================
 /**
- * @brief  Function get CWD path for selected task
+ * @brief  Function get CWD path of selected process.
  *
  * @param  proc         process container
  *
- * @return CWD path (always valid)
+ * @return CWD path (always valid).
  */
 //==============================================================================
 KERNELSPACE const char *_process_get_CWD(_process_t *proc)
 {
-        if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                return proc->cwd;
+        if (is_proc_valid(proc)) {
+                return proc->cwd ? proc->cwd : "";
         } else {
                 return "";
         }
@@ -339,18 +410,19 @@ KERNELSPACE const char *_process_get_CWD(_process_t *proc)
 
 //==============================================================================
 /**
- * @brief  Function get CWD path for selected task
+ * @brief  Function set CWD path of selected process. If NULL passed then
+ *         CWD is set to empty string ("").
  *
  * @param  proc         process container
  * @param  CWD          current working directory path (can be NULL)
  *
- * @return One of errno value
+ * @return One of errno value.
  */
 //==============================================================================
 KERNELSPACE int _process_set_CWD(_process_t *proc, const char *CWD)
 {
-        if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                proc->cwd = CWD;
+        if (is_proc_valid(proc)) {
+                proc->cwd = CWD ? CWD : "";
                 return ESUCC;
         } else {
                 return EINVAL;
@@ -359,7 +431,342 @@ KERNELSPACE int _process_set_CWD(_process_t *proc, const char *CWD)
 
 //==============================================================================
 /**
- * @brief  Function register selected resource in selected task/process
+ * @brief  Function return collected statistics of process.
+ *
+ * @param  seek     process seek (start from 0)
+ * @param  stat     process statistics
+ *
+ * @return One of errno value (ESUCC, EINVAL, ENOENT).
+ */
+//==============================================================================
+KERNELSPACE int _process_get_stat_seek(size_t seek, process_stat_t *stat)
+{
+        int err = EINVAL;
+
+        if (stat) {
+                err = ENOENT;
+
+                ATOMIC {
+                        _process_t *proc = NULL;
+
+                        foreach_process(p, active_process_list) {
+                                if (seek == 0) {
+                                        proc = p;
+                                        goto finish;
+                                }
+
+                                seek--;
+                        }
+
+                        foreach_process(p, destroy_process_list) {
+                                if (seek == 0) {
+                                        proc = p;
+                                        goto finish;
+                                }
+
+                                seek--;
+                        }
+
+                        foreach_process(p, zombie_process_list) {
+                                if (seek == 0) {
+                                        proc = p;
+                                        goto finish;
+                                }
+
+                                seek--;
+                        }
+
+                        finish:
+                        if (proc) {
+                                process_get_stat(proc, stat);
+                                err = ESUCC;
+                        }
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return collected process statistics.
+ *
+ * @param  pid      PID
+ * @param  stat     process statistics
+ *
+ * @return One of errno value (ESUCC, EINVAL, ENOENT).
+ */
+//==============================================================================
+KERNELSPACE int _process_get_stat_pid(pid_t pid, process_stat_t *stat)
+{
+        int err = EINVAL;
+
+        if (pid) {
+                err = ENOENT;
+
+                ATOMIC {
+                        _process_t *proc = NULL;
+
+                        foreach_process(p, active_process_list) {
+                                if (p->pid == pid) {
+                                        proc = p;
+                                        goto finish;
+                                }
+                        }
+
+                        foreach_process(p, destroy_process_list) {
+                                if (p->pid == pid) {
+                                        proc = p;
+                                        goto finish;
+                                }
+                        }
+
+                        foreach_process(p, zombie_process_list) {
+                                if (p->pid == pid) {
+                                        proc = p;
+                                        goto finish;
+                                }
+                        }
+
+                        finish:
+                        if (proc) {
+                                process_get_stat(proc, stat);
+                                err = ESUCC;
+                        }
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return stderr file of selected process.
+ *
+ * @param  proc         process container
+ *
+ * @return File pointer. Can be NULL if process does not exists or file not set.
+ */
+//==============================================================================
+KERNELSPACE FILE *_process_get_stderr(_process_t *proc)
+{
+        if (is_proc_valid(proc)) {
+                return proc->f_stderr;
+        } else {
+                return NULL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function return name of selected process.
+ *
+ * @param  proc         process container
+ *
+ * @return On success process name is returned, otherwise NULL.
+ */
+//==============================================================================
+KERNELSPACE const char *_process_get_name(_process_t *proc)
+{
+        if (is_proc_valid(proc)) {
+                return proc->pdata->name;
+        } else {
+                return NULL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function return number of all processes (even zombies).
+ *
+ * @return Number of processes.
+ */
+//==============================================================================
+KERNELSPACE size_t _process_get_count(void)
+{
+        size_t count = 0;
+
+        ATOMIC {
+                foreach_process(proc, active_process_list) {
+                        count++;
+                }
+
+                foreach_process(p, destroy_process_list) {
+                        count++;
+                }
+
+                foreach_process(p, zombie_process_list) {
+                        count++;
+                }
+        }
+
+        return count;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return active process.
+ *
+ * @return Object of active process or NULL if unknown process (e.g. idle task).
+ */
+//==============================================================================
+KERNELSPACE _process_t *_process_get_active(void)
+{
+        return active_process;
+}
+
+//==============================================================================
+/**
+ * @brief Function return PID of selected process.
+ *
+ * @param proc         process container
+ * @param pid          process PID
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_get_pid(_process_t *proc, pid_t *pid)
+{
+        int err = EINVAL;
+
+        if (is_proc_valid(proc) && pid) {
+                *pid = proc->pid;
+                err  = ESUCC;
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return event flags object.
+ *
+ * @param  proc         process container
+ * @param  flag         pointer to flag set
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_get_event_flags(_process_t *proc, flag_t **flag)
+{
+        int err = EINVAL;
+
+        if (is_proc_valid(proc) && flag) {
+                ATOMIC {
+                        *flag = proc->event;
+                        err   = ESUCC;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return priority of selected process.
+ *
+ * @param  pid      process ID
+ * @param  prio     priority
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
+{
+        int err = EINVAL;
+
+        if (pid && prio) {
+                ATOMIC {
+                        if (active_process->pid == pid) {
+                                *prio = _task_get_priority(active_process->task[0]);
+                                err   = ESUCC;
+
+                        } else {
+                                foreach_process(proc, active_process_list) {
+                                        if (proc->pid == pid) {
+                                                *prio  = _task_get_priority(proc->task[0]);
+                                                err = ESUCC;
+                                                break;
+                                        }
+                                }
+                        }
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * Function return container of selected process by PID.
+ *
+ * @param  pid          process ID
+ * @param  process      process container
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+KERNELSPACE int _process_get_container(pid_t pid, _process_t **process)
+{
+        int err = EINVAL;
+
+        if (pid && process) {
+                ATOMIC {
+                        if (active_process->pid == pid) {
+                                *process = active_process;
+                                err = ESUCC;
+                        }
+
+                        if (err) {
+                                foreach_process(proc, active_process_list) {
+                                        if (proc->pid == pid) {
+                                                *process = proc;
+                                                err = ESUCC;
+                                                break;
+                                        }
+                                }
+                        }
+
+                        if (err) {
+                                foreach_process(proc, destroy_process_list) {
+                                        if (proc->pid == pid) {
+                                                *process = proc;
+                                                err = ESUCC;
+                                                break;
+                                        }
+                                }
+                        }
+
+                        if (err) {
+                                foreach_process(proc, zombie_process_list) {
+                                        if (proc->pid == pid) {
+                                                *process = proc;
+                                                err = ESUCC;
+                                                break;
+                                        }
+                                }
+                        }
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return container of active thread
+ *
+ * @return Thread ID.
+ */
+//==============================================================================
+KERNELSPACE tid_t _process_get_active_thread(void)
+{
+        return active_thread;
+}
+
+//==============================================================================
+/**
+ * @brief  Function register selected resource in selected process.
  *
  * @param  proc         process container
  * @param  resource     resource to register
@@ -369,7 +776,7 @@ KERNELSPACE int _process_set_CWD(_process_t *proc, const char *CWD)
 //==============================================================================
 KERNELSPACE int _process_register_resource(_process_t *proc, res_header_t *resource)
 {
-        if (proc && proc->header.type == RES_TYPE_PROCESS) {
+        if (is_proc_valid(proc)) {
                 ATOMIC {
                         if (proc->res_list == NULL) {
                                 proc->res_list = resource;
@@ -387,7 +794,7 @@ KERNELSPACE int _process_register_resource(_process_t *proc, res_header_t *resou
 
 //==============================================================================
 /**
- * @brief  Function release selected resource of selected type (type is confirmation)
+ * @brief  Function release selected resource of selected type (type is confirmation).
  *
  * @param  proc         process container
  * @param  resource     resource address to release
@@ -398,10 +805,10 @@ KERNELSPACE int _process_register_resource(_process_t *proc, res_header_t *resou
 //==============================================================================
 KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resource, res_type_t type)
 {
-        int result = ESRCH;
+        int err = ESRCH;
 
-        if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                result = ENOENT;
+        if (is_proc_valid(proc)) {
+                err = ENOENT;
                 res_header_t *obj_to_destroy = NULL;
 
                 ATOMIC {
@@ -419,7 +826,7 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
 
                                                 obj_to_destroy = curr;
                                         } else {
-                                                result = EFAULT;
+                                                err = EFAULT;
                                         }
 
                                         break;
@@ -428,6 +835,7 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
                                         prev = curr;
 
                                         if (--max_deep == 0) {
+                                                PROCESS_ASSERT(max_deep > 0);
                                                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
                                         }
                                 }
@@ -435,480 +843,25 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
                 }
 
                 if (obj_to_destroy) {
-                        result = resource_destroy(obj_to_destroy);
-                        if (result != ESUCC) {
+                        err = resource_destroy(obj_to_destroy);
+                        if (err != ESUCC) {
                                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
                         }
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
 /**
- * @brief  Function return collected process statistics
- *
- * @param  seek     process seek (start from 0)
- * @param  stat     process statistics
- *
- * @return One of errno value (ESUCC, EINVAL, ENOENT).
- */
-//==============================================================================
-KERNELSPACE int _process_get_stat_seek(size_t seek, process_stat_t *stat)
-{
-        int result = EINVAL;
-
-        if (stat) {
-                result = ENOENT;
-
-                ATOMIC {
-                        foreach_process(proc) {
-                                if (seek == 0) {
-                                        process_get_stat(proc, stat);
-                                        result = ESUCC;
-                                        break;
-                                }
-
-                                seek--;
-                        }
-                }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function return collected process statistics
- *
- * @param  pid      PID
- * @param  stat     process statistics
- *
- * @return One of errno value (ESUCC, EINVAL, ENOENT).
- */
-//==============================================================================
-KERNELSPACE int _process_get_stat_pid(pid_t pid, process_stat_t *stat)
-{
-        int result = EINVAL;
-
-        if (pid) {
-                result = ENOENT;
-
-                ATOMIC {
-                        foreach_process(proc) {
-                                if (proc->pid == pid) {
-                                        process_get_stat(proc, stat);
-                                        result = ESUCC;
-                                        break;
-                                }
-                        }
-                }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function return stderr file of selected task/process
- *
- * @param  proc         process container
- *
- * @return On success file pointer is returned, otherwise NULL.
- */
-//==============================================================================
-KERNELSPACE FILE *_process_get_stderr(_process_t *proc)
-{
-        if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                return proc->f_stderr;
-        } else {
-                return NULL;
-        }
-}
-
-//==============================================================================
-/**
- * @brief  Function return name of selected task/process
- *
- * @param  proc         process container (it can be NULL - active process)
- *
- * @return On success process name is returned, otherwise NULL.
- */
-//==============================================================================
-KERNELSPACE const char *_process_get_name(_process_t *proc)
-{
-        if (proc == NULL) {
-                proc = active_process;
-        }
-
-        if (proc && proc->header.type == RES_TYPE_PROCESS) {
-                return proc->pdata->name;
-        } else {
-                return NULL;
-        }
-}
-
-//==============================================================================
-/**
- * @brief  Function return number of processes
- *
- * @param  None
- *
- * @return Number of processes
- */
-//==============================================================================
-KERNELSPACE size_t _process_get_count(void)
-{
-        size_t count = 0;
-
-        ATOMIC {
-                foreach_process(proc) {
-                        count++;
-                }
-        }
-
-        return count;
-}
-
-//==============================================================================
-/**
- * @brief  Function return active process
- *
- * @return Object of active process or NULL if unknown process (e.g. idle task)
- */
-//==============================================================================
-KERNELSPACE _process_t *_process_get_active(void)
-{
-        return active_process;
-}
-
-//==============================================================================
-/**
- * @brief  Function return top process
- *
- * @return Object of active process or NULL if unknown process (e.g. idle task)
- */
-//==============================================================================
-KERNELSPACE _process_t *_process_get_top(void)
-{
-        return process_list;
-}
-
-//==============================================================================
-/**
- * @brief  Function return PID of selected task/process
- *
- * @param[in]  proc         process container
- * @param[out] pid          process PID
- *
- * @return One of errno value.
- */
-//==============================================================================
-KERNELSPACE int _process_get_pid(_process_t *proc, pid_t *pid)
-{
-        int result = EINVAL;
-
-        if (proc && proc->header.type == RES_TYPE_PROCESS && pid) {
-                *pid   = proc->pid;
-                result = ESUCC;
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function return task connected to process
- *
- * @param[in]  proc         process container
- * @param[out] pid          process PID
- *
- * @return One of errno value.
- */
-//==============================================================================
-KERNELSPACE int _process_get_task(_process_t *proc, task_t **task)
-{
-        int result = EINVAL;
-
-        if (proc && proc->header.type == RES_TYPE_PROCESS && task) {
-                *task  = proc->task;
-                result = ESUCC;
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function return exit semaphore handle
- *
- * @param  proc         process container
- * @param  sem          pointer to semaphore pointer
- *
- * @return One of errno value
- */
-//==============================================================================
-KERNELSPACE int _process_get_exit_sem(pid_t pid, sem_t **sem)
-{
-        int result = EINVAL;
-
-        if (pid && sem) {
-                ATOMIC {
-                        foreach_process(proc) {
-                                if (proc->pid == pid) {
-                                        *sem   = proc->exit_sem;
-                                        result = ESUCC;
-                                        break;
-                                }
-                        }
-                }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function return priority of selected process
- *
- * @param  pid      process ID
- * @param  prio     priority
- *
- * @return One of errno value
- */
-//==============================================================================
-KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
-{
-        int result = EINVAL;
-
-        if (pid && prio) {
-                ATOMIC {
-                        foreach_process(proc) {
-                                if (proc->pid == pid) {
-                                        *prio  = _task_get_priority(proc->task);
-                                        result = ESUCC;
-                                        break;
-                                }
-                        }
-                }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function return process container of selected task
- *
- * @param  taskhdl      task
- * @param  master       true: main process, false: thread (can be NULL)
- *
- * @return On success process container pointer is returned, otherwise NULL.
- */
-//==============================================================================
-KERNELSPACE _process_t *_process_get_container_by_task(task_t *taskhdl, bool *master)
-{
-        _process_t *process = _task_get_tag(taskhdl);
-
-        if (process) {
-                if (process->header.type == RES_TYPE_THREAD) {
-                        process = cast(_thread_t*, process)->process;
-
-                        if (master) {
-                                *master = false;
-                        }
-                } else {
-                        if (master) {
-                                *master = true;
-                        }
-                }
-        }
-
-        return process;
-}
-
-//==============================================================================
-/**
- * @brief  Function return process/thread ID (address translated to ID).
- *
- * @param  taskhdl      task handle
- *
- * @return Process/thread ID.
- */
-//==============================================================================
-KERNELSPACE u32_t _process_get_id(task_t *taskhdl)
-{
-        u32_t id;
-
-        ATOMIC {
-                id = cast(u32_t, _task_get_tag(taskhdl));
-        }
-
-        return id;
-}
-
-//==============================================================================
-/**
- * @brief  Function return syscall semaphore handle of selected task
- *
- * @param  taskhdl      task handle (NULL for current task)
- *
- * @return On success semaphore handle, otherwise NULL
- */
-//==============================================================================
-KERNELSPACE sem_t *_process_get_syscall_sem_by_task(task_t *taskhdl)
-{
-        sem_t *sem = NULL;
-
-        ATOMIC {
-                res_header_t *res = _task_get_tag(taskhdl);
-
-                if (res->type == RES_TYPE_PROCESS) {
-                        sem = cast(_process_t*, res)->syscall_sem;
-
-                } else if (res->type == RES_TYPE_THREAD) {
-                        sem = cast(_thread_t*, res)->syscall_sem;
-                }
-        }
-
-        return sem;
-}
-
-//==============================================================================
-/**
- * @brief  Function set syscall semaphore of selected task
- *
- * @param  taskhdl      task handle (NULL for current task)
- *
- * @return One of errno value.
- */
-//==============================================================================
-KERNELSPACE int _process_set_syscall_sem_by_task(task_t *taskhdl, sem_t *sem)
-{
-        int result = EINVAL;
-
-        ATOMIC {
-                res_header_t *res = _task_get_tag(taskhdl);
-
-                if (res->type == RES_TYPE_PROCESS) {
-                        cast(_process_t*, res)->syscall_sem = sem;
-                        result = ESUCC;
-
-                } else if (res->type == RES_TYPE_THREAD) {
-                        cast(_thread_t*, res)->syscall_sem = sem;
-                        result = ESUCC;
-                }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function set syscall in progress flag
- *
- * @param  taskhdl      task
- * @param  state        flag state
- *
- * @return One of errno value.
- */
-//==============================================================================
-KERNELSPACE int _process_set_syscall_by_task(task_t *taskhdl, void *object)
-{
-        int result = EINVAL;
-
-        ATOMIC {
-                res_header_t *res = _task_get_tag(taskhdl);
-
-                if (res->type == RES_TYPE_PROCESS) {
-                        cast(_process_t*, res)->syscall_obj = object;
-                        result = ESUCC;
-
-                } else if (res->type == RES_TYPE_THREAD) {
-                        cast(_thread_t*, res)->syscall_obj = object;
-                        result = ESUCC;
-                }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function get syscall progress flag
- *
- * @param  taskhdl      task
- * @param  state        flag state
- *
- * @return One of errno value.
- */
-//==============================================================================
-KERNELSPACE int _process_get_syscall_by_task(task_t *taskhdl, void **object)
-{
-        int result = EINVAL;
-
-        if (object) {
-                ATOMIC {
-                        res_header_t *res = _task_get_tag(taskhdl);
-
-                        if (res->type == RES_TYPE_PROCESS) {
-                                *object = cast(_process_t*, res)->syscall_obj;
-                                result  = ESUCC;
-
-                        } else if (res->type == RES_TYPE_THREAD) {
-                                *object = cast(_thread_t*, res)->syscall_obj;
-                                result  = ESUCC;
-                        }
-                }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function get detached flag.
- *
- * @param  taskhdl      task
- * @param  state        flag state
- *
- * @return One of errno value.
- */
-//==============================================================================
-KERNELSPACE int _process_get_detached_flag(task_t *taskhdl, bool *state)
-{
-        int result = EINVAL;
-
-        if (state) {
-                ATOMIC {
-                        res_header_t *res = _task_get_tag(taskhdl);
-
-                        if (res->type == RES_TYPE_PROCESS) {
-                                *state = cast(_process_t*, res)->detached;
-                                result = ESUCC;
-
-                        } else if (res->type == RES_TYPE_THREAD) {
-                                *state = cast(_thread_t*, res)->detached;
-                                result = ESUCC;
-                        }
-                }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function create a new thread for selected process
+ * @brief  Function create a new thread for selected process.
  *
  * @param[in ]  proc         process container
  * @param[in ]  func         thread function
  * @param[in ]  attr         thread attributes
- * @param[in ]  sys          system thread
  * @param[in ]  arg          thread argument
  * @param[out]  tid          thread ID
- * @param[out]  task         kernel task
  *
  * @return One of errno value.
  */
@@ -916,249 +869,156 @@ KERNELSPACE int _process_get_detached_flag(task_t *taskhdl, bool *state)
 KERNELSPACE int _process_thread_create(_process_t          *proc,
                                        thread_func_t        func,
                                        const thread_attr_t *attr,
-                                       bool                 sys,
                                        void                *arg,
-                                       tid_t               *tid,
-                                       task_t              **task)
+                                       tid_t               *tid)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
-        if (proc && proc->header.type == RES_TYPE_PROCESS && func) {
-                _thread_t *thread;
-                result = _kzalloc(_MM_KRN, sizeof(_thread_t), cast(void*, &thread));
-                if (result == ESUCC) {
-                        thread->header.type = RES_TYPE_THREAD;
-                        thread->process     = proc;
-                        thread->arg         = arg;
+        if (!is_proc_valid(proc) || !func) {
+                return err;
+        }
 
-                        if (sys == false) {
-                                thread->detached = attr->detached;
-
-                                if (!attr->detached) {
-                                        result = _semaphore_create(1, 0, &thread->exit_sem);
-                                        if (result != ESUCC)
-                                                goto finish;
-                                }
-
-                                result = _semaphore_create(1, 0, &thread->syscall_sem);
-                                if (result != ESUCC)
-                                        goto finish;
+        ATOMIC {
+                tid_t id = 1;
+                for (; id < __OS_TASK_MAX_THREADS__; id++) {
+                        if (proc->task[id] == NULL) {
+                                break;
                         }
+                }
 
-                        ATOMIC {
-                                result = _task_create(thread_code,
-                                                      "th",
-                                                      (attr ? attr->stack_depth : STACK_DEPTH_LOW),
-                                                      func,
-                                                      thread,
-                                                      &thread->task);
-                                if (result == ESUCC) {
-                                        result = _process_register_resource(proc, cast(res_header_t*, thread));
-                                        if (result == ESUCC) {
+                if (id < __OS_TASK_MAX_THREADS__) {
 
-                                                thread->tid = ++TID_cnt;
+                        catcherrno(err) {
+                                thread_args_t *args = NULL;
 
-                                                if (attr) {
-                                                        _task_set_priority(thread->task, attr->priority);
-                                                        thread->stack_depth = attr->stack_depth;
-                                                }
+                                try(_kmalloc(_MM_KRN, sizeof(thread_args_t), cast(void*, &args)));
 
-                                                if (tid) {
-                                                        *tid = thread->tid;
-                                                }
+                                args->func = func;
+                                args->arg  = arg;
 
-                                                if (task) {
-                                                        *task = thread->task;
-                                                }
+                                try (_task_create(thread_code, "",
+                                                  (attr ? attr->stack_depth : STACK_DEPTH_LOW),
+                                                  args, proc, &proc->task[id]));
+
+                                onsuccess(err) {
+
+                                        if (proc->event) {
+                                                _flag_clear(proc->event,
+                                                            _PROCESS_EXIT_FLAG(id) |
+                                                            _PROCESS_SYSCALL_FLAG(id));
                                         }
-                                }
-                        }
 
-                        finish:
-                        if (result != ESUCC) {
-                                process_thread_destroy(thread);
-                        }
-                }
-        }
+                                        if (attr) {
+                                                _task_set_priority(proc->task[id],
+                                                                   attr->priority);
+                                        }
 
-        return result;
-}
+                                        if (tid) {
+                                                *tid = id;
+                                        }
 
-//==============================================================================
-/**
- * @brief  Function gets thread container from selected process object
- *
- * @param  proc         process object
- * @param  tid          thread ID
- *
- * @return On success thread object pointer is returned, otherwise NULL
- */
-//==============================================================================
-KERNELSPACE _thread_t *_process_thread_get_container(_process_t *proc, tid_t tid)
-{
-        _thread_t *thread = NULL;
-
-        if (proc && proc->header.type == RES_TYPE_PROCESS && tid) {
-                foreach_resource(res, proc->res_list) {
-                        if (res->type == RES_TYPE_THREAD) {
-                                if (cast(_thread_t *, res)->tid == tid) {
-                                        thread = cast(_thread_t *, res);
-                                        break;
+                                } else {
+                                        _kfree(_MM_KRN, cast(void*, &args));
                                 }
                         }
                 }
         }
 
-        return thread;
+        return err;
 }
 
 //==============================================================================
 /**
- * @brief  Function return task handle of selected thread object
+ * @brief  Function kill selected thread.
  *
- * @param  thread       thread object
- * @param  task         task pointer
- *
- * @return One of errno value
- */
-//==============================================================================
-KERNELSPACE int _process_thread_get_task(_thread_t *thread, task_t **task)
-{
-        int result = EINVAL;
-
-        if (thread && task) {
-                *task  = thread->header.type == RES_TYPE_THREAD ? thread->task : NULL;
-                result = ESUCC;
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function return container of active thread
- *
- * @param  None
- *
- * @return Pointer to active thread or NULL if not exist (e.g. main thread)
- */
-//==============================================================================
-KERNELSPACE _thread_t *_process_thread_get_active(void)
-{
-        return active_thread;
-}
-
-//==============================================================================
-/**
- * @brief  Function return thread ID
- *
- * @param  thread       thread object
+ * @param  proc         process
  * @param  tid          thread ID
- *
- * @return One of errno value
- */
-//==============================================================================
-KERNELSPACE int _process_thread_get_tid(_thread_t *thread, tid_t *tid)
-{
-        int result = EINVAL;
-
-        if (thread && tid) {
-                *tid   = thread->header.type == RES_TYPE_THREAD ? thread->tid : 0;
-                result = ESUCC;
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function return thread container of selected task
- *
- * @param  taskhdl      task
- *
- * @return On success thread container pointer is returned, otherwise NULL.
- */
-//==============================================================================
-KERNELSPACE _thread_t *_process_thread_get_container_by_task(task_t *taskhdl)
-{
-        _thread_t *thread = _task_get_tag(taskhdl);
-
-        if (thread) {
-                if (thread->header.type != RES_TYPE_THREAD) {
-                        thread = NULL;
-                }
-        }
-
-        return thread;
-}
-
-//==============================================================================
-/**
- * @brief  Function signals thread exit (thread is prepared to destroy)
- *
- * @param  thread       thread object
- *
- * @return One of errno value
- */
-//==============================================================================
-KERNELSPACE int _process_thread_exit(_thread_t *thread)
-{
-        int result = EINVAL;
-
-        if (thread && thread->header.type == RES_TYPE_THREAD) {
-                if (thread->task) {
-                        _task_suspend(thread->task);
-                        _task_destroy(thread->task);
-                        thread->task = NULL;
-                }
-
-                if (thread->exit_sem) {
-                        result = _semaphore_signal(thread->exit_sem);
-                }
-        }
-
-        return result;
-}
-
-//==============================================================================
-/**
- * @brief  Function return exit semaphore that is used to synchronize parent
- *         thread (process) with child process.
- *
- * @param  proc         process object
- * @param  tid          thread ID
- * @param  sem          semaphore pointer
  *
  * @return One of errno value.
  */
 //==============================================================================
-KERNELSPACE int _process_thread_get_exit_sem(_process_t *proc, tid_t tid, sem_t **sem)
+KERNELSPACE int _process_thread_kill(_process_t *proc, tid_t tid)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
-        if (proc && proc->header.type == RES_TYPE_PROCESS && tid && sem) {
+        if (is_proc_valid(proc) && is_tid_in_range(tid)) {
                 ATOMIC {
-                        foreach_resource(res, proc->res_list) {
-                                _thread_t *thread = cast(_thread_t*, res);
-                                if (thread->header.type == RES_TYPE_THREAD && thread->tid == tid) {
-                                        *sem   = thread->exit_sem;
-                                        result = ESUCC;
-                                        break;
-                                }
+                        _task_destroy(proc->task[tid]);
+                        proc->task[tid] = NULL;
+
+                        if (proc->event) {
+                                _flag_set(proc->event, _PROCESS_EXIT_FLAG(tid));
                         }
+
+                        err = ESUCC;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
 /**
- * @brief  Function calculate CPU load of all processes in 1 second interval
+ * Function return task of selected thread (low level function).
  *
- * @param  None
+ * @param proc          process
+ * @param tid           thread ID
  *
- * @return None
+ * @return Task handle.
+ */
+//==============================================================================
+KERNELSPACE task_t *_process_thread_get_task(_process_t *proc, tid_t tid)
+{
+        task_t *task = NULL;
+
+        if (is_proc_valid(proc) && is_tid_in_range(tid)) {
+                ATOMIC {
+                        task = proc->task[tid];
+                }
+        }
+
+        return task;
+
+}
+
+//==============================================================================
+/**
+ * @brief  Function return process container and thread ID associated with task.
+ *
+ * @param taskhdl       task (NULL for this task)
+ * @param proc          process object
+ * @param tid           thread ID
+ *
+ * @return On success process container pointer is returned, otherwise NULL.
+ */
+//==============================================================================
+KERNELSPACE void _task_get_process_container(task_t *taskhdl, _process_t **proc, tid_t *tid)
+{
+        ATOMIC {
+
+                taskhdl = taskhdl ? taskhdl : _task_get_handle();
+                PROCESS_ASSERT(taskhdl);
+
+                _process_t *p = _task_get_tag(taskhdl);
+                if (proc) {
+                        *proc = p;
+                }
+
+                for (int i = 0; i < __OS_TASK_MAX_THREADS__; i++) {
+                        if (p->task[i] == taskhdl) {
+                                if (tid) {
+                                        *tid = i;
+                                }
+                                break;
+                        }
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function calculate general CPU load.
+ *        Calculate are average values for 1/60, 1, 5, and 15 minutes.
  */
 //==============================================================================
 KERNELSPACE void _calculate_CPU_load(void)
@@ -1166,10 +1026,12 @@ KERNELSPACE void _calculate_CPU_load(void)
         // calculates 1 second CPU load of all processes
         avg_CPU_load_calc.avg1sec = 0;
 
-        foreach_process(proc) {
-                proc->CPU_load          = proc->timecnt / (_CPU_total_time / 1000);
-                proc->timecnt           = 0;
-                avg_CPU_load_calc.avg1sec += proc->CPU_load;
+        ATOMIC {
+                foreach_process(proc, active_process_list) {
+                        proc->CPU_load = proc->timecnt / (_CPU_total_time / 1000);
+                        proc->timecnt  = 0;
+                        avg_CPU_load_calc.avg1sec += proc->CPU_load;
+                }
         }
 
         _CPU_total_time     = 0;
@@ -1201,11 +1063,11 @@ KERNELSPACE void _calculate_CPU_load(void)
 
 //==============================================================================
 /**
- * @brief  Function calculate CPU load of all processes in 1 second interval
+ * @brief Function return calculated average CPU load.
  *
- * @param  None
+ * @param avg   average measurements
  *
- * @return None
+ * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
 USERSPACE int _get_average_CPU_load(avg_CPU_load_t *avg)
@@ -1220,58 +1082,52 @@ USERSPACE int _get_average_CPU_load(avg_CPU_load_t *avg)
 
 //==============================================================================
 /**
- * @brief  This function start user process code [USERLAND]
+ * @brief  This function start user process code [USERLAND].
  *
  * @param  mainfn         process argument - process main function
- *
- * @return None
  */
 //==============================================================================
 USERSPACE static void process_code(void *mainfn)
 {
+        PROCESS_ASSERT(mainfn);
+
         process_func_t  funcmain = mainfn;
         _process_t     *proc     = _task_get_tag(_THIS_TASK);
 
         proc->status = funcmain(proc->argc, proc->argv);
 
-        if (proc->detached) {
-                syscall(SYSCALL_PROCESSDESTROY, NULL, &proc->pid, NULL);
-        } else {
-                syscall(SYSCALL_EXIT, NULL, &proc->status);
-        }
-
-        /* should never achieve this function */
-        _task_exit();
+        _process_exit(proc, proc->status);
 }
 
 //==============================================================================
 /**
- * @brief  This function start user thread code [USERLAND]
+ * @brief  This function start user thread code [USERLAND].
  *
- * @param  thrfunc        process argument - process main function
- *
- * @return None
+ * @param  arg          thread arguments - main function and argument value.
  */
 //==============================================================================
-USERSPACE static void thread_code(void *thrfunc)
+USERSPACE static void thread_code(void *arg)
 {
-        thread_func_t func   = thrfunc;
-        _thread_t    *thread = _task_get_tag(_THIS_TASK);
+        PROCESS_ASSERT(arg);
 
-        func(thread->arg);
+        thread_args_t args = *cast(thread_args_t*, arg);
+        _kfree(_MM_KRN, cast(void*, &arg));
 
-        if (thread->exit_sem) {
-                syscall(SYSCALL_THREADEXIT, NULL, &thread->tid);
+        PROCESS_ASSERT(args.func);
+        args.func(args.arg);
 
-        } else if (thread->detached) {
-                syscall(SYSCALL_THREADDESTROY, NULL, &thread->tid);
+        _process_t *proc;
+        tid_t       tid;
+        _task_get_process_container(_THIS_TASK, &proc, &tid);
+        PROCESS_ASSERT(is_proc_valid(proc));
+        PROCESS_ASSERT(is_tid_in_range(tid));
 
-        } else {
-                // system thread
-                thread->task = NULL;    // object release at the end of thread
-                _process_release_resource(thread->process,
-                                          cast(res_header_t*, thread),
-                                          RES_TYPE_THREAD);
+        ATOMIC {
+                if (proc->event) {
+                        _flag_set(proc->event, _PROCESS_EXIT_FLAG(tid));
+                }
+
+                proc->task[tid] = NULL;
         }
 
         _task_exit();
@@ -1279,76 +1135,53 @@ USERSPACE static void thread_code(void *thrfunc)
 
 //==============================================================================
 /**
- * @brief  Function destroy selected thread object
+ * Function move process from selected list to another.
  *
- * @param  thread       thread object
- *
- * @return One of errno value
+ * @param  proc         process to move
+ * @param  list_from    source list
+ * @param  list_to      destination list
  */
 //==============================================================================
-static int process_thread_destroy(_thread_t *thread)
+static void process_move_list(_process_t *proc, _process_t **list_from, _process_t **list_to)
 {
-        int result = EINVAL;
+        ATOMIC {
+                _process_t *prev = NULL;
+                foreach_process(p, *list_from) {
+                        if (p == proc) {
 
-        if (thread) {
-                if (thread->task) {
-                        _task_suspend(thread->task);
-                        _task_destroy(thread->task);
-                        thread->task = NULL;
+                                if (prev) {
+                                        prev->header.next = proc->header.next;
+                                } else {
+                                        *list_from = cast(_process_t*, proc->header.next);
+                                }
+
+                                proc->header.next = cast(struct res_header*, *list_to);
+
+                                *list_to = proc;
+
+                                break;
+                        } else {
+                                prev = p;
+                        }
                 }
-
-                if (thread->exit_sem) {
-                        _semaphore_destroy(thread->exit_sem);
-                        thread->exit_sem = NULL;
-                }
-
-                if (thread->syscall_sem) {
-                        _semaphore_destroy(thread->syscall_sem);
-                        thread->syscall_sem = NULL;
-                }
-
-                result = _kfree(_MM_KRN, cast(void*, &thread));
         }
-
-        return result;
 }
 
 //==============================================================================
 /**
- * @brief  Function destroy (release) all process resources
+ * @brief  Function destroy (release) all process resources. Function does not
+ *         destroy process object.
  *
  * @param  proc     selected process container
- *
- * @return None
  */
 //==============================================================================
 static void process_destroy_all_resources(_process_t *proc)
 {
-        // suspend all threads
-        foreach_resource(res, proc->res_list) {
-                if (res->type == RES_TYPE_THREAD) {
-                        _task_suspend(cast(_thread_t*, res)->task);
+        for (tid_t tid = 0; tid < __OS_TASK_MAX_THREADS__; tid++) {
+                if (proc->task[tid]) {
+                        _task_destroy(proc->task[tid]);
+                        proc->task[tid] = NULL;
                 }
-        }
-
-        if (proc->task) {
-                _task_destroy(proc->task);
-                proc->task = NULL;
-        }
-
-        if (proc->exit_sem) {
-                if (proc->detached) {
-                        _semaphore_destroy(proc->exit_sem);
-                        proc->exit_sem = NULL;
-                } else {
-                        _semaphore_signal(proc->exit_sem);
-                        proc->detached = true;
-                }
-        }
-
-        if (proc->syscall_sem) {
-                _semaphore_destroy(proc->syscall_sem);
-                proc->syscall_sem = NULL;
         }
 
         if (proc->argv) {
@@ -1359,8 +1192,12 @@ static void process_destroy_all_resources(_process_t *proc)
 
         // free all resources
         while (proc->res_list) {
-                if (_process_release_resource(proc, proc->res_list, proc->res_list->type) != ESUCC) {
-                        _printk("Unknown object: %p\n", proc->res_list);
+                res_header_t *resource = proc->res_list;
+                proc->res_list = resource->next;
+
+                int err = resource_destroy(resource);
+                if (err != ESUCC) {
+                        _printk("Unknown object: %p\n", resource);
                 }
         }
 
@@ -1374,12 +1211,10 @@ static void process_destroy_all_resources(_process_t *proc)
 
 //==============================================================================
 /**
- * @brief  Function gets process statistics
+ * @brief  Function gets process statistics.
  *
  * @param  proc         process
  * @param  stat         statistics container
- *
- * @return None
  */
 //==============================================================================
 static void process_get_stat(_process_t *proc, process_stat_t *stat)
@@ -1388,20 +1223,26 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
 
         stat->name            = proc->pdata->name;
         stat->pid             = proc->pid;
-        stat->stack_size      = proc->task ? *proc->pdata->stack_depth : 0;
-        stat->stack_max_usage = proc->task ? (stat->stack_size - _task_get_free_stack(proc->task)) : 0;
-        stat->threads_count   = proc->task ? 1 : 0;
-        stat->zombie          = proc->task == NULL;
-        stat->priority        = proc->task ? _task_get_priority(proc->task) : 0;
+        stat->stack_size      = proc->task[0] ? *proc->pdata->stack_depth : 0;
+        stat->stack_max_usage = proc->task[0] ? (stat->stack_size - _task_get_free_stack(proc->task[0])) : 0;
+        stat->priority        = proc->task[0] ? _task_get_priority(proc->task[0]) : 0;
         stat->CPU_load        = proc->CPU_load;
         stat->memory_usage   += sizeof(_process_t);
-        stat->memory_usage   += proc->task ? (*proc->pdata->stack_depth * sizeof(StackType_t)) : 0;
-        stat->memory_usage   += proc->exit_sem ? sizeof(sem_t) : 0;
-        stat->memory_usage   += proc->syscall_sem ? sizeof(sem_t) : 0;
+        stat->memory_usage   += proc->task[0] ? (*proc->pdata->stack_depth * sizeof(StackType_t)) : 0;
+        stat->memory_usage   += proc->event ? sizeof(flag_t) : 0;
+        stat->threads_count   = 0;
         stat->socket_count    = 0;
+        stat->threads_count   = 0;
 
         for (int i = 0; proc->argv && i < proc->argc; i++) {
                 stat->memory_usage += strnlen(proc->argv[i], 256);
+        }
+
+        for (tid_t tid = 0; tid < __OS_TASK_MAX_THREADS__; tid++) {
+                if (proc->task[tid]) {
+                        stat->threads_count++;
+                        stat->memory_usage += sizeof(task_t);
+                }
         }
 
         foreach_resource(res, proc->res_list) {
@@ -1426,16 +1267,10 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
                         stat->memory_usage += sizeof(queue_t);
                         break;
 
+                case RES_TYPE_FLAG:
                 case RES_TYPE_SEMAPHORE:
                         stat->semaphores_count++;
                         stat->memory_usage += sizeof(sem_t);
-                        break;
-
-                case RES_TYPE_THREAD:
-                        stat->threads_count++;
-                        stat->memory_usage += sizeof(_thread_t);
-                        stat->memory_usage += cast(_thread_t*, res)->syscall_sem ? sizeof(sem_t) : 0;
-                        stat->memory_usage += cast(_thread_t*, res)->stack_depth * sizeof(StackType_t);
                         break;
 
                 case RES_TYPE_MEMORY:
@@ -1453,7 +1288,7 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
 
 //==============================================================================
 /**
- * @brief  Function apply process attributes
+ * @brief  Function apply process attributes.
  *
  * @param  proc     process
  * @param  atrr     attributes
@@ -1463,10 +1298,7 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
 //==============================================================================
 static int process_apply_attributes(_process_t *proc, const process_attr_t *attr)
 {
-        int result = ESUCC;
-
-        // by default process is detached
-        proc->detached = true;
+        int err = ESUCC;
 
         if (attr) {
                 /*
@@ -1479,8 +1311,12 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                         proc->f_stdin = attr->f_stdin;
 
                 } else if (attr->p_stdin) {
-                        result = _vfs_fopen(attr->p_stdin, "a+", &proc->f_stdin);
-                        if (result == ESUCC) {
+                        struct vfs_path cpath;
+                        cpath.CWD  = attr->cwd;
+                        cpath.PATH = attr->p_stdin;
+
+                        err = _vfs_fopen(&cpath, "a+", &proc->f_stdin);
+                        if (err == ESUCC) {
                                 _process_register_resource(proc, cast(res_header_t*, proc->f_stdin));
                         } else {
                                 goto finish;
@@ -1502,8 +1338,12 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                                 proc->f_stdout = proc->f_stdin;
 
                         } else {
-                                result = _vfs_fopen(attr->p_stdout, "a", &proc->f_stdout);
-                                if (result == ESUCC) {
+                                struct vfs_path cpath;
+                                cpath.CWD  = attr->cwd;
+                                cpath.PATH = attr->p_stdout;
+
+                                err = _vfs_fopen(&cpath, "a", &proc->f_stdout);
+                                if (err == ESUCC) {
                                         _process_register_resource(proc, cast(res_header_t*, proc->f_stdout));
                                 } else {
                                         goto finish;
@@ -1530,8 +1370,12 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                                 proc->f_stderr = proc->f_stdout;
 
                         } else {
-                                result = _vfs_fopen(attr->p_stderr, "a", &proc->f_stderr);
-                                if (result == ESUCC) {
+                                struct vfs_path cpath;
+                                cpath.CWD  = attr->cwd;
+                                cpath.PATH = attr->p_stderr;
+
+                                err = _vfs_fopen(&cpath, "a", &proc->f_stderr);
+                                if (err == ESUCC) {
                                         _process_register_resource(proc, cast(res_header_t*, proc->f_stderr));
                                 } else {
                                         goto finish;
@@ -1540,19 +1384,9 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                 }
 
                 /*
-                 * Create exit semaphore object if parent exists
+                 * Set detached flag
                  */
-                if (attr->detached == false) {
-                        result = _semaphore_create(1, 0, &proc->exit_sem);
-                        if (result != ESUCC) {
-                                goto finish;
-                        }
-                }
-
-                /*
-                 * Apply no-parent attribute
-                 */
-                proc->detached = attr->detached;
+                proc->flag |= attr->detached ? FLAG_DETACHED : 0;
 
                 /*
                  * Apply Current Working Directory path
@@ -1561,16 +1395,68 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
         }
 
         finish:
-        return result;
+        return err;
 }
 
 //==============================================================================
 /**
- * @brief  Function destroy (release) selected resource
+ * @brief Function create PID number.
+ *
+ * @return On success PID number is returned, otherwise 0.
+ */
+//==============================================================================
+static int get_pid(pid_t *pid)
+{
+        int err = ESRCH;
+
+        ATOMIC {
+                int n = 1000;
+                while (pid && (n-- > 0)) {
+                        if (++PID_cnt >= 1000) {
+                                PID_cnt = 1;
+                        }
+
+                        bool found = false;
+
+                        foreach_process(proc, active_process_list) {
+                                found = proc->pid == PID_cnt;
+                                if (found) break;
+                        }
+
+                        if (found) continue;
+
+                        foreach_process(proc, active_process_list) {
+                                found = proc->pid == PID_cnt;
+                                if (found) break;
+                        }
+
+                        if (found) continue;
+
+                        foreach_process(proc, active_process_list) {
+                                found = proc->pid == PID_cnt;
+                                if (found) break;
+                        }
+
+                        if (found) {
+                                continue;
+                        } else {
+                                *pid = PID_cnt;
+                                err  = ESUCC;
+                                break;
+                        }
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function destroy (release) selected resource.
  *
  * @param  resource     resource to release
  *
- * @return One of errno value
+ * @return One of errno value.
  */
 //==============================================================================
 static int resource_destroy(res_header_t *resource)
@@ -1602,8 +1488,8 @@ static int resource_destroy(res_header_t *resource)
                 _semaphore_destroy(cast(sem_t*, res2free));
                 break;
 
-        case RES_TYPE_THREAD:
-                process_thread_destroy(cast(_thread_t*, res2free));
+        case RES_TYPE_FLAG:
+                _flag_destroy(cast(flag_t*, res2free));
                 break;
 
         case RES_TYPE_SOCKET:
@@ -1623,7 +1509,7 @@ static int resource_destroy(res_header_t *resource)
 
 //==============================================================================
 /**
- * @brief Function create new table with argument pointers
+ * @brief Function create new table with argument pointers.
  *
  * @param[in]  str              argument string
  * @param[out] argc             number of argument
@@ -1634,14 +1520,14 @@ static int resource_destroy(res_header_t *resource)
 //==============================================================================
 static int argtab_create(const char *str, u8_t *argc, char **argv[])
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (str && argc && argv) {
 
                 llist_t *largs;
-                result = _llist_create_krn(_MM_KRN, NULL, NULL, &largs);
+                err = _llist_create_krn(_MM_KRN, NULL, NULL, &largs);
 
-                if (result == ESUCC) {
+                if (err == ESUCC) {
                         // parse arguments
                         while (*str != '\0') {
                                 // skip spaces
@@ -1678,8 +1564,8 @@ static int argtab_create(const char *str, u8_t *argc, char **argv[])
 
                                 // add argument to list
                                 char *arg;
-                                result = _kmalloc(_MM_KRN, str_len + 1, cast(void**, &arg));
-                                if (result == ESUCC) {
+                                err = _kmalloc(_MM_KRN, str_len + 1, cast(void**, &arg));
+                                if (err == ESUCC) {
                                         strncpy(arg, start, str_len);
                                         arg[str_len] = '\0';
 
@@ -1699,8 +1585,8 @@ static int argtab_create(const char *str, u8_t *argc, char **argv[])
                         *argc = no_of_args;
 
                         char **arg = NULL;
-                        result = _kmalloc(_MM_KRN, (no_of_args + 1) * sizeof(char*), cast(void*, &arg));
-                        if (result == ESUCC) {
+                        err = _kmalloc(_MM_KRN, (no_of_args + 1) * sizeof(char*), cast(void*, &arg));
+                        if (err == ESUCC) {
                                 for (int i = 0; i < no_of_args; i++) {
                                         arg[i] = _llist_take_front(largs);
                                 }
@@ -1714,16 +1600,14 @@ static int argtab_create(const char *str, u8_t *argc, char **argv[])
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
 /**
- * @brief  Function remove argument table
+ * @brief  Function remove argument table.
  *
  * @param  argv          pointer to argument table (must be ended with NULL)
- *
- * @return None
  */
 //==============================================================================
 static void argtab_destroy(char **argv)
@@ -1741,10 +1625,10 @@ static void argtab_destroy(char **argv)
 
 //==============================================================================
 /**
- * @brief  Function find program by name and return program descriptor container
+ * @brief Function find program by name and return program descriptor container.
  *
- * @param[in]  name         program name
- * @param[out] prog         program container
+ * @param name         program name
+ * @param prog         program container
  *
  * @return One of errno value.
  */
@@ -1758,28 +1642,28 @@ static int find_program(const char *name, const struct _prog_data **prog)
                                                     .name         = "kworker",
                                                     .stack_depth  = &kworker_stack_depth};
 
-        int result = ENOENT;
+        int err = ENOENT;
 
         if (strncmp(name, "kworker", 32) == 0) {
                 *prog  = &kworker;
-                result = ESUCC;
+                err = ESUCC;
 
         } else {
                 for (int i = 0; i < _prog_table_size; i++) {
                         if (strncmp(_prog_table[i].name, name, 128) == 0) {
                                 *prog  = &_prog_table[i];
-                                result = ESUCC;
+                                err = ESUCC;
                                 break;
                         }
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
 /**
- * @brief  Function allocate global variable for selected process
+ * @brief  Function allocate global variables for selected process.
  *
  * @param  proc         process
  * @param  usrprog      program descriptor
@@ -1789,29 +1673,25 @@ static int find_program(const char *name, const struct _prog_data **prog)
 //==============================================================================
 static int allocate_process_globals(_process_t *proc, const struct _prog_data *usrprog)
 {
-        int result = ESUCC;
+        int err = ESUCC;
 
         if (*usrprog->globals_size > 0) {
                 res_header_t *mem;
-                result = _kzalloc(_MM_PROG, *usrprog->globals_size, cast(void*, &mem));
+                err = _kzalloc(_MM_PROG, *usrprog->globals_size, cast(void*, &mem));
 
-                if (result == ESUCC) {
+                if (err == ESUCC) {
                         proc->globals = &mem[1];
                         _process_register_resource(proc, mem);
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
 /**
  * @brief  Function copy task context to standard variables (stdin, stdout, stderr,
  *         global, errno). Function is called when this task is already switched.
- *
- * @param  None
- *
- * @return None
  */
 //==============================================================================
 KERNELSPACE void _task_switched_in(void)
@@ -1821,8 +1701,9 @@ KERNELSPACE void _task_switched_in(void)
         CPU_total_time_last = _CPU_total_time;
 #endif
 
-        active_process = _process_get_container_by_task(_THIS_TASK, NULL);
-        active_thread  = _process_thread_get_container_by_task(_THIS_TASK);
+        active_process = NULL;
+        active_thread  = -1;
+        _task_get_process_container(_THIS_TASK, &active_process, &active_thread);
 
         if (active_process) {
                 stdin  = active_process->f_stdin;
@@ -1844,10 +1725,6 @@ KERNELSPACE void _task_switched_in(void)
  * @brief  Function copy standard variables (stdin, stdout, stderr, global, errno)
  *         to task context. Function is called before this task context to be
  *         switched.
- *
- * @param  None
- *
- * @return None
  */
 //==============================================================================
 KERNELSPACE void _task_switched_out(void)

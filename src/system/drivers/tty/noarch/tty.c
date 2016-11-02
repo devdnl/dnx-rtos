@@ -66,8 +66,8 @@ struct module {
         FILE           *outfile;
         queue_t        *queue_cmd;
         tty_t          *tty[_TTY_NUMBER_OF_VT];
-        thread_t        service_out;
-        thread_t        service_in;
+        tid_t           service_out;
+        tid_t           service_in;
         int             current_tty;
 };
 
@@ -92,8 +92,8 @@ static struct module      *tty_module;
 static const int           SERVICE_IN_PRIORITY  = PRIORITY_NORMAL;
 static const int           SERVICE_OUT_PRIORITY = PRIORITY_NORMAL;
 static const uint          QUEUE_CMD_LEN        = _TTY_TERMINAL_ROWS;
-static const thread_attr_t SERVICE_IN_ATTR      = {.stack_depth = 110, .priority = PRIORITY_NORMAL};
-static const thread_attr_t SERVICE_OUT_ATTR     = {.stack_depth = 160, .priority = PRIORITY_NORMAL};
+static const thread_attr_t SERVICE_IN_ATTR      = {.stack_depth = 110, .priority = PRIORITY_NORMAL, .detached = true};
+static const thread_attr_t SERVICE_OUT_ATTR     = {.stack_depth = 160, .priority = PRIORITY_NORMAL, .detached = true};
 
 /*==============================================================================
   Function definitions
@@ -152,11 +152,11 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                         if (tty_module->outfile)
                                 sys_fclose(tty_module->outfile);
 
-                        if (sys_thread_is_valid(&tty_module->service_in))
-                                sys_thread_destroy(&tty_module->service_in);
+                        if (sys_thread_is_valid(tty_module->service_in))
+                                sys_thread_destroy(tty_module->service_in);
 
-                        if (sys_thread_is_valid(&tty_module->service_out))
-                                sys_thread_destroy(&tty_module->service_out);
+                        if (sys_thread_is_valid(tty_module->service_out))
+                                sys_thread_destroy(tty_module->service_out);
 
                         if (tty_module->queue_cmd)
                                 sys_queue_destroy(tty_module->queue_cmd);
@@ -254,8 +254,8 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 }
 
                 if (release_TTY) {
-                        sys_thread_destroy(&tty_module->service_in);
-                        sys_thread_destroy(&tty_module->service_out);
+                        sys_thread_destroy(tty_module->service_in);
+                        sys_thread_destroy(tty_module->service_out);
                         sys_fclose(tty_module->infile);
                         sys_fclose(tty_module->outfile);
                         sys_queue_destroy(tty_module->queue_cmd);

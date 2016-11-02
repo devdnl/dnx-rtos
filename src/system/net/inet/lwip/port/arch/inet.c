@@ -290,7 +290,8 @@ static int stack_init()
         if (inet) {
                 static const thread_attr_t attr = {
                         .priority    = PRIORITY_NORMAL,
-                        .stack_depth = STACK_DEPTH_LOW
+                        .stack_depth = STACK_DEPTH_LOW,
+                        .detached    = true
                 };
 
                 int ts = sys_thread_create(network_interface_thread, &attr, NULL, &inet->if_thread);
@@ -314,7 +315,7 @@ static int stack_init()
                                 sys_mutex_destroy(inet->access);
 
                         if (ts)
-                                sys_thread_destroy(&inet->if_thread);
+                                sys_thread_destroy(inet->if_thread);
 
                         _netfree(inet);
                         inet = NULL;

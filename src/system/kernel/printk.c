@@ -81,11 +81,15 @@ int _printk_enable(const char *filename)
 {
 #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         if (printk_file) {
-                _vfs_fclose(printk_file, false);
+                _vfs_fclose(printk_file, true);
                 printk_file = NULL;
         }
 
-        return _vfs_fopen(filename, "w+", &printk_file);
+        struct vfs_path cpath;
+        cpath.CWD  = NULL;
+        cpath.PATH = filename;
+
+        return _vfs_fopen(&cpath, "w+", &printk_file);
 #else
         UNUSED_ARG1(filename);
         return ENOTSUP;
@@ -105,9 +109,9 @@ int _printk_disable(void)
 {
 #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         if (printk_file) {
-                int result  = _vfs_fclose(printk_file, false);
+                int err  = _vfs_fclose(printk_file, false);
                 printk_file = NULL;
-                return result;
+                return err;
         } else {
                 return ESUCC;
         }

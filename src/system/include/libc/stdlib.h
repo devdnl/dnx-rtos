@@ -48,6 +48,7 @@ extern "C" {
 #include <lib/cast.h>
 #include <kernel/syscall.h>
 #include <kernel/kwrapper.h>
+#include <kernel/builtinfunc.h>
 #include <machine/ieeefp.h>
 #include <_ansi.h>
 
@@ -623,8 +624,8 @@ static inline void *realloc(void *ptr, size_t size)
 //==============================================================================
 static inline void abort(void)
 {
-        syscall(SYSCALL_ABORT, NULL);
-        for (;;); // no return function - this makes C++ compiler happy
+        extern void _process_abort(struct _process*);
+        _builtinfunc(process_abort, (struct _process*)_builtinfunc(task_get_tag, _THIS_TASK));
 }
 
 //==============================================================================
@@ -650,8 +651,9 @@ static inline void abort(void)
 //==============================================================================
 static inline void exit(int status)
 {
-        syscall(SYSCALL_EXIT, NULL, &status);
-        for (;;); // no return function - this makes compiler happy
+        extern void _process_exit(struct _process*, int);
+        _builtinfunc(process_exit, (struct _process*)_builtinfunc(task_get_tag, _THIS_TASK), status);
+        for (;;); // makes compiler happy
 }
 
 //==============================================================================
@@ -675,29 +677,7 @@ static inline void exit(int status)
    @endcode
  */
 //==============================================================================
-static inline int system(const char *command)
-{
-#if __OS_ENABLE_SYSTEMFUNC__ == _YES_
-        int    r      = -1;    // TEST system()
-        pid_t  pid    = 0;
-        sem_t *sem    = NULL;
-        syscall(SYSCALL_SYSTEM, &r, command, &pid, &sem);
-        if (sem && r == 0) {
-                if (_builtinfunc(semaphore_wait, sem, MAX_DELAY_MS) == 0) {
-                        int status = -1;
-                        syscall(SYSCALL_PROCESSDESTROY, &r, &pid, &status);
-                        if (r == 0) {
-                                 r = status;
-                        }
-                }
-        }
-
-        return r;
-#else
-        (void)command;
-        return -1;
-#endif
-}
+extern int system(const char *command);
 
 //==============================================================================
 /**

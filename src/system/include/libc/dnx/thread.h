@@ -279,13 +279,12 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 
 //==============================================================================
 /**
- * @brief Function kill selected process and return status.
+ * @brief Function kill selected process.
  *
- * The function process_kill() delete running or closed process.
- * Function return process exit code pointed by <i>status</i>.
+ * The function process_kill() delete running process. Process status is not
+ * read because is not set.
  *
  * @param pid                   process ID
- * @param status                child process exit status (it can be NULL)
  *
  * @exception | @ref EINVAL
  * @exception | @ref EAGAIN
@@ -311,11 +310,10 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
                 .parent    = true
         }
 
-        int   status = -1;
-        pid_t pid    = process_create("ls /", &attr);
+        pid_t pid = process_create("cat", &attr);
         if (pid) {
                 sleep(1); // child execute time
-                process_kill(pid, &status);
+                process_kill(pid);
         } else {
                 perror("Program not started");
 
@@ -329,10 +327,10 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
  * @see process_create()
  */
 //==============================================================================
-static inline int process_kill(pid_t pid, int *status)
+static inline int process_kill(pid_t pid)
 {
         int r = -1;
-        syscall(SYSCALL_PROCESSDESTROY, &r, &pid, status);
+        syscall(SYSCALL_PROCESSKILL, &r, &pid);
         return r;
 }
 
@@ -390,13 +388,13 @@ static inline int process_kill(pid_t pid, int *status)
 //==============================================================================
 static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
 {
-        int r      = -1;
-        sem_t *sem = NULL;
-        syscall(SYSCALL_PROCESSGETEXITSEM, &r, &pid, &sem);
-        if (sem && r == 0) {
-                _errno = _builtinfunc(semaphore_wait, sem, timeout);
+        int r        = -1;
+        flag_t *flag = NULL;
+        syscall(SYSCALL_PROCESSGETSYNCFLAG, &r, &pid, &flag);
+        if (flag && r == 0) {
+                _errno = _builtinfunc(flag_wait, flag, _PROCESS_EXIT_FLAG(0), timeout);
                 if (_errno == 0) {
-                        syscall(SYSCALL_PROCESSDESTROY, &r, &pid, status);
+                        syscall(SYSCALL_PROCESSCLEANZOMBIE, &r, &pid, status);
                 }
                 r = _errno ? -1 : 0;
         }
@@ -670,7 +668,7 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 static inline int thread_cancel(tid_t tid)
 {
         int r = -1;
-        while (syscall(SYSCALL_THREADDESTROY, &r, &tid), r == 8 /*EAGAIN*/);
+        syscall(SYSCALL_THREADKILL, &r, &tid);
         return r;
 }
 
@@ -734,14 +732,24 @@ static inline int thread_cancel(tid_t tid)
 //==============================================================================
 static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
 {
-        int r      = -1;
-        sem_t *sem = NULL;
+        int r = -1;
 
-        syscall(SYSCALL_THREADGETEXITSEM, &r, &tid, &sem);
+        if (tid >= 1 && tid <= __OS_TASK_MAX_THREADS__) {
 
-        if (sem && r == 0) {
-                _builtinfunc(semaphore_wait, sem, timeout_ms);
-                syscall(SYSCALL_THREADDESTROY, &r, &tid);
+                pid_t pid = 0;
+                syscall(SYSCALL_PROCESSGETPID, &pid);
+
+                flag_t *flag = NULL;
+                syscall(SYSCALL_PROCESSGETSYNCFLAG, &r, &pid, &flag);
+
+                if (flag && r == 0) {
+                        _errno = _builtinfunc(flag_wait, flag,
+                                              _PROCESS_EXIT_FLAG(tid),
+                                              timeout_ms);
+                        r = _errno ? -1 : 0;
+                }
+        } else {
+                _errno = 1;
         }
 
         return r;

@@ -108,14 +108,14 @@ typedef int gid_t;
  *
  * The type represent process number.
  */
-typedef u32_t pid_t;
+typedef u16_t pid_t;
 
 /**
  * @brief Thread ID.
  *
  * The type represent thread number.
  */
-typedef u32_t tid_t;
+typedef int tid_t;
 
 /**
  * @brief Device identifier.

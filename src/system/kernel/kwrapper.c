@@ -31,6 +31,7 @@
 #include "kernel/ktypes.h"
 #include "kernel/errno.h"
 #include "lib/cast.h"
+#include "event_groups.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -93,6 +94,18 @@ static bool is_mutex_valid(mutex_t *mtx)
 static bool is_queue_valid(queue_t *queue)
 {
         return queue && queue->header.type == RES_TYPE_QUEUE && queue->object;
+}
+
+//==============================================================================
+/**
+ * @brief Function check that flag is a valid object
+ * @param flag         flag object to examine
+ * @return If object is valid then true is returned, false otherwise.
+ */
+//==============================================================================
+static bool is_flag_valid(flag_t *flag)
+{
+        return flag && flag->header.type == RES_TYPE_FLAG && flag->object;
 }
 
 //==============================================================================
@@ -322,7 +335,7 @@ bool _task_resume_from_ISR(task_t *taskhdl)
 //==============================================================================
 char *_task_get_name(task_t *taskhdl)
 {
-        return pcTaskGetTaskName(taskhdl);
+        return pcTaskGetName(taskhdl);
 }
 
 //==============================================================================
@@ -463,7 +476,8 @@ int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
                 if (result == ESUCC) {
 
                         if (cnt_max == 1) {
-                                vSemaphoreCreateBinary((*sem)->object);
+
+                                (*sem)->object = xSemaphoreCreateBinaryStatic(&(*sem)->buffer);
                                 if ((*sem)->object) {
                                         if (cnt_init) {
                                                 xSemaphoreGive((*sem)->object);
@@ -472,7 +486,10 @@ int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
                                         }
                                 }
                         } else {
-                                (*sem)->object = xSemaphoreCreateCounting(cnt_max, cnt_init);
+                                (*sem)->object = xSemaphoreCreateCountingStatic(
+                                                        cnt_max,
+                                                        cnt_init,
+                                                        &(*sem)->buffer);
                         }
 
                         if ((*sem)->object) {
@@ -499,9 +516,9 @@ int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
 int _semaphore_destroy(sem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
-                vSemaphoreDelete(sem->object);
-                sem->object      = NULL;
                 sem->header.type = RES_TYPE_UNKNOWN;
+                vSemaphoreDelete(sem->object);
+                sem->object = NULL;
                 return _kfree(_MM_KRN, cast(void**, &sem));
         } else {
                 return EINVAL;
@@ -617,10 +634,10 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
                 result = _kzalloc(_MM_KRN, sizeof(mutex_t), cast(void**, mtx));
                 if (result == ESUCC) {
                         if (type == MUTEX_TYPE_RECURSIVE) {
-                                (*mtx)->object    = xSemaphoreCreateRecursiveMutex();
+                                (*mtx)->object    = xSemaphoreCreateRecursiveMutexStatic(&(*mtx)->buffer);
                                 (*mtx)->recursive = true;
                         } else {
-                                (*mtx)->object    = xSemaphoreCreateMutex();
+                                (*mtx)->object    = xSemaphoreCreateMutexStatic(&(*mtx)->buffer);
                                 (*mtx)->recursive = false;
                         }
 
@@ -648,9 +665,9 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
 int _mutex_destroy(mutex_t *mutex)
 {
         if (is_mutex_valid(mutex)) {
-                vSemaphoreDelete(mutex->object);
-                mutex->object      = NULL;
                 mutex->header.type = RES_TYPE_UNKNOWN;
+                vSemaphoreDelete(mutex->object);
+                mutex->object = NULL;
                 return _kfree(_MM_KRN, cast(void**, &mutex));
         } else {
                 return EINVAL;
@@ -708,6 +725,170 @@ int _mutex_unlock(mutex_t *mutex)
         }
 }
 
+
+//==============================================================================
+/**
+ * @brief Function create new flag (event).
+ *
+ * @param flag          created flag handle
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _flag_create(flag_t **flag)
+{
+        int result = EINVAL;
+
+        if (flag) {
+                result = _kzalloc(_MM_KRN, sizeof(flag_t), cast(void**, flag));
+                if (result == ESUCC) {
+                        (*flag)->object = xEventGroupCreateStatic(&(*flag)->buffer);
+
+                        if ((*flag)->object) {
+                                (*flag)->header.type = RES_TYPE_FLAG;
+                        } else {
+                                _kfree(_MM_KRN, cast(void**, flag));
+                                result = ENOMEM;
+                        }
+                }
+        }
+
+        return result;
+}
+
+//==============================================================================
+/**
+ * @brief Function destroy flag.
+ *
+ * @param flag          flag object
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _flag_destroy(flag_t *flag)
+{
+        if (is_flag_valid(flag)) {
+                flag->header.type = RES_TYPE_UNKNOWN;
+                vEventGroupDelete(flag->object);
+                flag->object = NULL;
+                return _kfree(_MM_KRN, cast(void**, &flag));
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function wait for selected flags.
+ *
+ * @param flag          flag object
+ * @param bits          bits to wait for (logical AND)
+ * @param blocktime_ms  timeout value
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _flag_wait(flag_t *flag, u32_t bits, const u32_t blocktime_ms)
+{
+        if (is_flag_valid(flag)) {
+                if (xEventGroupWaitBits(flag->object, bits, true, true, blocktime_ms)) {
+                        return ESUCC;
+                } else {
+                        return ETIME;
+                }
+
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function set selected bits.
+ *
+ * @param flag          flag object
+ * @param bits          bits to set (OR)
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _flag_set(flag_t *flag, u32_t bits)
+{
+        if (is_flag_valid(flag)) {
+                xEventGroupSetBits(flag->object, bits);
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function set selected bits from interrupt.
+ *
+ * @param flag          flag object
+ * @param bits          bits to set (OR)
+ * @param task_woken    task woken
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _flag_set_from_ISR(flag_t *flag, u32_t bits, bool *task_woken)
+{
+        if (is_flag_valid(flag)) {
+                BaseType_t woken = false;
+                xEventGroupSetBitsFromISR(flag->object, bits, &woken);
+
+                if (task_woken) {
+                        *task_woken = woken;
+                }
+
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function clear selected bits.
+ *
+ * @param flag          flag object
+ * @param bits          bits to clear (OR)
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _flag_clear(flag_t *flag, u32_t bits)
+{
+        if (is_flag_valid(flag)) {
+                xEventGroupClearBits(flag->object, bits);
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function clear selected bits from interrupt.
+ *
+ * @param flag          flag object
+ * @param bits          bits to clear (OR)
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _flag_clear_from_ISR(flag_t *flag, u32_t bits)
+{
+        if (is_flag_valid(flag)) {
+                xEventGroupClearBitsFromISR(flag->object, bits);
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
+}
+
 //==============================================================================
 /**
  * @brief Function create new queue
@@ -724,9 +905,12 @@ int _queue_create(const size_t length, const size_t item_size, queue_t **queue)
         int result = EINVAL;
 
         if (length && item_size && queue) {
-                result = _kzalloc(_MM_KRN, sizeof(queue_t), cast(void**, queue));
+                result = _kzalloc(_MM_KRN, sizeof(queue_t) + (length * item_size), cast(void**, queue));
                 if (result == ESUCC) {
-                        (*queue)->object = xQueueCreate(length, item_size);
+                        (*queue)->object = xQueueCreateStatic(length,
+                                                              item_size,
+                                                              cast(uint8_t*, &(*queue)[1]),
+                                                              &(*queue)->buffer);
                         if ((*queue)->object) {
                                 (*queue)->header.type = RES_TYPE_QUEUE;
                         } else {
@@ -751,9 +935,9 @@ int _queue_create(const size_t length, const size_t item_size, queue_t **queue)
 int _queue_destroy(queue_t *queue)
 {
         if (is_queue_valid(queue)) {
-                vQueueDelete(queue->object);
-                queue->object      = NULL;
                 queue->header.type = RES_TYPE_UNKNOWN;
+                vQueueDelete(queue->object);
+                queue->object = NULL;
                 _kfree(_MM_KRN, cast(void**, &queue));
                 return ESUCC;
         } else {

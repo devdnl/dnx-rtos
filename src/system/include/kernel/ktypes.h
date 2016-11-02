@@ -35,6 +35,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <sys/types.h>
+#include <FreeRTOS.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -51,14 +52,14 @@ extern "C" {
 typedef enum {
         RES_TYPE_UNKNOWN       = 0,
         RES_TYPE_PROCESS       = 0x958701BA,
-        RES_TYPE_THREAD        = 0x1EE62243,
         RES_TYPE_MUTEX         = 0x300C6B74,
         RES_TYPE_SEMAPHORE     = 0x4E59901B,
         RES_TYPE_QUEUE         = 0x83D50ADB,
         RES_TYPE_FILE          = 0x7D129250,
         RES_TYPE_DIR           = 0x19586E97,
         RES_TYPE_MEMORY        = 0x9E834645,
-        RES_TYPE_SOCKET        = 0x63ACC316
+        RES_TYPE_SOCKET        = 0x63ACC316,
+        RES_TYPE_FLAG          = 0x18FAEC0D
 } res_type_t;
 
 /** KERNELSPACE: object header (must be the first in object) */
@@ -75,22 +76,33 @@ typedef void (*task_func_t)(void*);
 
 /** KERNELSPACE/USERSPACE: semaphore type */
 typedef struct {
-        res_header_t  header;
-        void         *object;
+        res_header_t      header;
+        void             *object;
+        StaticSemaphore_t buffer;
 } sem_t;
 
 /** KERNELSPACE/USERSPACE: queue type */
 typedef struct {
         res_header_t  header;
         void         *object;
+        StaticQueue_t buffer;
+        uint8_t       storage[];
 } queue_t;
 
 /** KERNELSPACE/USERSPACE: mutex type */
 typedef struct {
-        res_header_t  header;
-        void         *object;
-        bool          recursive;
+        res_header_t      header;
+        void             *object;
+        StaticSemaphore_t buffer;
+        bool              recursive;
 } mutex_t;
+
+/** KERNELSPACE: flag type */
+typedef struct {
+        res_header_t       header;
+        void              *object;
+        StaticEventGroup_t buffer;
+} flag_t;
 
 /*==============================================================================
    Exported object declarations

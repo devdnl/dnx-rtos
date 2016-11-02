@@ -92,7 +92,7 @@ int_main(free, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
         if (strcmp(argv[1], "-d") == 0) {
                 printf("\nDetailed memory usage:\n");
                 printf("  Kernel     : %d\n", sysmem.kernel_memory_usage);
-                printf("  File System: %d\n", sysmem.filesystems_memory_usage);
+                printf("  Filesystems: %d\n", sysmem.filesystems_memory_usage);
                 printf("  Modules    : %d\n", sysmem.modules_memory_usage);
                 printf("  Network    : %d\n", sysmem.network_memory_usage);
                 printf("  Programs   : %d\n", sysmem.programs_memory_usage);

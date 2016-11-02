@@ -30,6 +30,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <kernel/process.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,7 +49,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_MALLOC,                 // | void*          | size_t *size              |                                     |                           |                           |                                           |
         SYSCALL_ZALLOC,                 // | void*          | size_t *size              |                                     |                           |                           |                                           |
         SYSCALL_FREE,                   // | void           | void *mem                 |                                     |                           |                           |                                           |
-        SYSCALL_PROCESSGETEXITSEM,      // | int            | pid_t *pid                | sem_t **sem                         |                           |                           |                                           |
+        SYSCALL_PROCESSGETSYNCFLAG,     // | int            | pid_t *pid                | flag_t **obj                        |                           |                           |                                           |
         SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat                |                           |                           |                                           |
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat                |                           |                           |                                           |
         SYSCALL_PROCESSGETPID,          // | pid_t          |                           |                                     |                           |                           |                                           |
@@ -58,8 +59,6 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SETCWD,                 // | int            | const char *cwd           |                                     |                           |                           |                                           |
     #endif
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr                 | void *arg                 |                           |                                           |
-        SYSCALL_THREADEXIT,             // | void           | tid_t *tid                |                                     |                           |                           |                                           |
-        SYSCALL_THREADGETEXITSEM,       // | int            | tid_t *tid                | sem_t **sem                         |                           |                           |                                           |
         SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init              |                           |                           |                                           |
         SYSCALL_SEMAPHOREDESTROY,       // | void           | sem_t *semaphore          |                                     |                           |                           |                                           |
         SYSCALL_MUTEXCREATE,            // | mutex_t*       | const enum mutex_type *tp |                                     |                           |                           |                                           |
@@ -68,11 +67,10 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_QUEUEDESTROY,           // | void           | queue_t *queue            |                                     |                           |                           |                                           |
 #define _SYSCALL_GROUP_0_OS_NON_BLOCKING  SYSCALL_QUEUEDESTROY // this group ends at this syscall ----------------------------+---------------------------+---------------------------+-------------------------------------------+
         SYSCALL_KERNELPANICDETECT,      // | bool           | bool *showmsg             |                                     |                           |                           |                                           |
-        SYSCALL_ABORT,                  // | void           |                           |                                     |                           |                           |                                           |
-        SYSCALL_EXIT,                   // | void           | int *status               |                                     |                           |                           |                                           |
-        SYSCALL_THREADDESTROY,          // | int            | tid_t *tid                |                                     |                           |                           |                                           |
+        SYSCALL_THREADKILL,             // | int            | tid_t *tid                |                                     |                           |                           |                                           |
         SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr                |                           |                           |                                           |
-        SYSCALL_PROCESSDESTROY,         // | int            | pid_t *pid                | int *status                         |                           |                           |                                           |
+        SYSCALL_PROCESSCLEANZOMBIE,     // | int            | pid_t *pid                | int *status                         |                           |                           |                                           |
+        SYSCALL_PROCESSKILL,            // | int            | pid_t *pid                |                                     |                           |                           |                                           |
         SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path                | const char *mount_point   |                           |                                           |
         SYSCALL_UMOUNT,                 // | int            | const char *mount_point   |                                     |                           |                           |                                           |
     #if __OS_ENABLE_MKNOD__ == _YES_
@@ -125,9 +123,6 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_GETTIME,                // | time_t         |                           |                                     |                           |                           |                                           |
         SYSCALL_SETTIME,                // | int            | time_t *time              |                                     |                           |                           |                                           |
     #endif
-    #if __OS_ENABLE_SYSTEMFUNC__ == _YES_
-        SYSCALL_SYSTEM,                 // | int            | const char *command       | pid_t *pid                          | sem_t **exit_sem          |                           |                                           |
-    #endif
         SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                | const char *node_path     |                                           |
         SYSCALL_DRIVERRELEASE,          // | int            | const char *mod_name      | int *major                          | int *minor                |                           |                                           |
         SYSCALL_SYSLOGENABLE,           // | int            | const char *pathname      |                                     |                           |                           |                                           |
@@ -161,6 +156,8 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern struct _process *_kworker_proc;
+extern pid_t _syscall_client_PID[];
 
 /*==============================================================================
   Exported functions

@@ -86,11 +86,10 @@ struct _module_entry {
 };
 
 /*
- * To lock device, system uses syscall semaphore pointer as process/thread
- * identification. Semaphore in this case is not used.
+ * To lock device, system uses PID of syscall's client.
  * Doxygen documentation in drivers/driver.h.
  */
-typedef u32_t dev_lock_t;
+typedef pid_t dev_lock_t;
 
 /*==============================================================================
   Exported objects

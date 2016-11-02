@@ -532,7 +532,7 @@ static bool start_program(char *master, char *slave, char *file, bool detached)
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
                 pidslave = process_create(slave, &global->pidslave_attr);
                 if (pidslave == 0) {
-                        process_kill(pidmaster, NULL);
+                        process_kill(pidmaster);
                         print_fail_message(slave);
                         goto free_resources;
                 }
@@ -562,7 +562,7 @@ static bool start_program(char *master, char *slave, char *file, bool detached)
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
                 pidslave = process_create(slave, &global->pidslave_attr);
                 if (pidslave == 0) {
-                        process_kill(pidmaster, NULL);
+                        process_kill(pidmaster);
                         print_fail_message(slave);
                         goto free_resources;
                 }
@@ -716,7 +716,17 @@ int_main(dsh, STACK_DEPTH_CUSTOM(120), int argc, char *argv[])
         global->input         = stdin;
         global->pipe_file     = "/run/dsh-";
 
-        if (argc == 2) {
+        if (argc >= 2) {
+                for (int i = 1; i < argc; i++) {
+                        if (isstreq(argv[i], "-e")) {
+                                if (!analyze_line(argv[i+1])) {
+                                        print_fail_message(argv[i+1]);
+                                }
+
+                                exit(0);
+                        }
+                }
+
                 global->input = fopen(argv[1], "r");
                 if (!global->input) {
                         perror(argv[1]);

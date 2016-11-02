@@ -95,6 +95,12 @@ this:SetToolTip("Context switch frequency has influence to system response for e
 --*/
 #define __OS_TASK_SCHED_FREQ__ 1000
 
+/*--
+this:AddWidget("Spinbox", 1, 12, "Maximum number of process threads")
+this:SetToolTip("Number of threads that can be started by process.")
+--*/
+#define __OS_TASK_MAX_THREADS__ 10
+
 
 /*--
 this:AddExtraWidget("Label", "LabelFeatures", "\nSystem features (advanced)", -1, "bold")
@@ -209,10 +215,10 @@ this:SetToolTip("This option enables getting statistics of file.")
 #define __OS_ENABLE_FSTAT__ _YES_
 
 /*--
-this:AddWidget("Checkbox", "system() function")
-this:SetToolTip("This option enables system() function.")
+this:AddWidget("Checkbox", "System assert")
+this:SetToolTip("This option enables assert system assert function. Use only for debug purposes!.")
 --*/
-#define __OS_ENABLE_SYSTEMFUNC__ _YES_
+#define __OS_ENABLE_SYS_ASSERT__ _YES_
 
 /*--
 this:AddExtraWidget("Void", "VoidOption")
@@ -277,6 +283,12 @@ this:AddWidget("Editline", true, "Initialization program")
 this:SetToolTip("This is the first program started after system startup.")
 --*/
 #define __OS_INIT_PROG__ "initd"
+
+/*--
+this:AddWidget("Editline", true, "system() shell program")
+this:SetToolTip("This is a program that execute command passed to system() function.")
+--*/
+#define __OS_SYSTEM_PROG__ "dsh -e"
 
 /* HEAP alignment depends on selected CPU */
 #define  _HEAP_ALIGN_ _CPU_HEAP_ALIGN_

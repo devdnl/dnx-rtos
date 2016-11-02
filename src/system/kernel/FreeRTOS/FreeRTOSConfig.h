@@ -99,6 +99,8 @@ extern void  vApplicationSwitchedOut(void);
 #define configUSE_NEWLIB_REENTRANT              0
 #define configENABLE_BACKWARD_COMPATIBILITY     0
 #define configUSE_APPLICATION_TASK_TAG          1
+#define configSUPPORT_STATIC_ALLOCATION         1
+#define configSUPPORT_DYNAMIC_ALLOCATION        1
 
 /* Hook function related definitions. */
 #define configUSE_IDLE_HOOK                     1
@@ -149,12 +151,6 @@ extern void  vApplicationSwitchedOut(void);
 #define INCLUDE_eTaskGetState                   0
 #define INCLUDE_xEventGroupSetBitFromISR        0
 #define INCLUDE_xTimerPendFunctionCall          0
-
-/* dynamic memory allocator (used in heap_3.c file to disable C native allocator) */
-static inline void *_kernelmalloc(size_t size)  {void *mem = NULL; _kmalloc(_MM_KRN, size, &mem); return mem;}
-static inline void  _kernelfree(void *mem)      {_kfree(_MM_KRN, &mem);}
-//#define malloc(size)                            _kernelmalloc(size)
-//#define free(mem)                               _kernelfree(mem)
 
 /* required functions by sysmoni */
 #if (__OS_MONITOR_CPU_LOAD__ > 0)

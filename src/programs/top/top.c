@@ -130,21 +130,21 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 printf("\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
-                        "  PID PR     MEM  STU %%STU  %%CPU TH RES CMD"
+                        "PID PR     MEM  STU %%STU   %%CPU TH RES CMD"
                         VT100_RESET_ATTRIBUTES "\n");
 
                 size_t seek = 0;
                 while (process_stat_seek(seek++, &global->pstat) == 0) {
-                        char cpu_load_str[6];
-                        if (global->pstat.zombie) {
-                                snprintf(cpu_load_str, 6, "zombi");
+                        char cpu_load_str[7];
+                        if (global->pstat.threads_count == 0) {
+                                snprintf(cpu_load_str, sizeof(cpu_load_str), "zombie");
                         } else {
-                                snprintf(cpu_load_str, 6, " %2d.%d",
+                                snprintf(cpu_load_str, 7, "  %2d.%d",
                                          global->pstat.CPU_load / 10,
                                          global->pstat.CPU_load % 10);
                         }
 
-                        printf("%5d %2d %7d %4d %4d %s %2d %3d %s\n",
+                        printf("%3d %2d %7d %4d %4d %s %2d %3d %s\n",
                                 global->pstat.pid,
                                 global->pstat.priority,
                                 global->pstat.memory_usage,
@@ -170,7 +170,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
 
                         ioctl(stdin, IOCTL_TTY__ECHO_OFF);
 
-                        if (process_kill(pid, NULL) != 0) {
+                        if (process_kill(pid) != 0) {
                                 perror(NULL);
                                 errno = 0;
                                 sleep(2);

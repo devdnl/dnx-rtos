@@ -5,7 +5,7 @@
 
 @brief   System call handling - kernel space
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@
 #include "drivers/drvctrl.h"
 #include "kernel/syscall.h"
 #include "kernel/kwrapper.h"
-#include "kernel/process.h"
 #include "kernel/printk.h"
 #include "kernel/kpanic.h"
 #include "kernel/errno.h"
@@ -49,25 +48,35 @@
 #define SYSCALL_QUEUE_LENGTH    8
 
 #define GETARG(type, var)       type var = va_arg(rq->args, type)
+#define LOADARG(type)           va_arg(rq->args, type)
 #define GETRETURN(type, var)    type var = rq->retptr
 #define GETTASKHDL()            rq->task
-#define GETPROCESS()            _process_get_container_by_task(rq->task_client, NULL)
+#define GETPROCESS()            (rq->client_proc)
 #define GETTHREAD(_tid)         _process_thread_get_container(GETPROCESS(), _tid)
 #define SETRETURN(type, var)    if (rq->retptr) {*((type*)rq->retptr) = (var);}
 #define SETERRNO(var)           rq->err = var
 #define GETERRNO()              rq->err
 #define UNUSED_RQ()             UNUSED_ARG1(rq)
 
+#if __OS_ENABLE_SYS_ASSERT__ > 0
+#define SYSCALL_ASSERT(assert)  while (!(assert))
+#else
+#define SYSCALL_ASSERT(assert)
+#endif
+
+#define is_proc_valid(proc)     (proc && proc->header.type == RES_TYPE_PROCESS)
+#define is_tid_in_range(tid)    ((tid >= 0) && (tid < __OS_TASK_MAX_THREADS__))
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
 typedef struct {
-        void      *retptr;
-        task_t    *task_client;
-        _thread_t *syscall_thread;
-        syscall_t  syscall_no;
-        va_list    args;
-        int        err;
+        void       *retptr;
+        _process_t *client_proc;
+        tid_t       client_thread;
+        syscall_t   syscall_no;
+        va_list     args;
+        int         err;
 } syscallrq_t;
 
 typedef void (*syscallfunc_t)(syscallrq_t*);
@@ -75,7 +84,6 @@ typedef void (*syscallfunc_t)(syscallrq_t*);
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static task_t *destroy_top_process(void);
 static void syscall_do(void *rq);
 static void syscall_mount(syscallrq_t *rq);
 static void syscall_umount(syscallrq_t *rq);
@@ -135,14 +143,10 @@ static void syscall_free(syscallrq_t *rq);
 static void syscall_syslogenable(syscallrq_t *rq);
 static void syscall_syslogdisable(syscallrq_t *rq);
 static void syscall_kernelpanicdetect(syscallrq_t *rq);
-static void syscall_abort(syscallrq_t *rq);
-static void syscall_exit(syscallrq_t *rq);
-#if __OS_ENABLE_SYSTEMFUNC__ == _YES_
-static void syscall_system(syscallrq_t *rq);
-#endif
 static void syscall_processcreate(syscallrq_t *rq);
-static void syscall_processdestroy(syscallrq_t *rq);
-static void syscall_processgetexitsem(syscallrq_t *rq);
+static void syscall_processkill(syscallrq_t *rq);
+static void syscall_processcleanzombie(syscallrq_t *rq);
+static void syscall_processgetsyncflag(syscallrq_t *rq);
 static void syscall_processstatseek(syscallrq_t *rq);
 static void syscall_processstatpid(syscallrq_t *rq);
 static void syscall_processgetpid(syscallrq_t *rq);
@@ -152,9 +156,7 @@ static void syscall_getcwd(syscallrq_t *rq);
 static void syscall_setcwd(syscallrq_t *rq);
 #endif
 static void syscall_threadcreate(syscallrq_t *rq);
-static void syscall_threaddestroy(syscallrq_t *rq);
-static void syscall_threadexit(syscallrq_t *rq);
-static void syscall_threadgetexitsem(syscallrq_t *rq);
+static void syscall_threadkill(syscallrq_t *rq);
 static void syscall_semaphorecreate(syscallrq_t *rq);
 static void syscall_semaphoredestroy(syscallrq_t *rq);
 static void syscall_mutexcreate(syscallrq_t *rq);
@@ -190,57 +192,57 @@ static queue_t *call_request;
 
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
-        [SYSCALL_MOUNT            ] = syscall_mount,
-        [SYSCALL_UMOUNT           ] = syscall_umount,
+        [SYSCALL_MOUNT ] = syscall_mount,
+        [SYSCALL_UMOUNT] = syscall_umount,
     #if __OS_ENABLE_STATFS__ == _YES_
-        [SYSCALL_GETMNTENTRY      ] = syscall_getmntentry,
+        [SYSCALL_GETMNTENTRY] = syscall_getmntentry,
     #endif
     #if __OS_ENABLE_MKNOD__ == _YES_
-        [SYSCALL_MKNOD            ] = syscall_mknod,
+        [SYSCALL_MKNOD] = syscall_mknod,
     #endif
     #if __OS_ENABLE_MKDIR__ == _YES_
-        [SYSCALL_MKDIR            ] = syscall_mkdir,
+        [SYSCALL_MKDIR] = syscall_mkdir,
     #endif
     #if __OS_ENABLE_MKFIFO__ == _YES_
-        [SYSCALL_MKFIFO           ] = syscall_mkfifo,
+        [SYSCALL_MKFIFO] = syscall_mkfifo,
     #endif
     #if __OS_ENABLE_DIRBROWSE__ == _YES_
-        [SYSCALL_OPENDIR          ] = syscall_opendir,
-        [SYSCALL_CLOSEDIR         ] = syscall_closedir,
-        [SYSCALL_READDIR          ] = syscall_readdir,
+        [SYSCALL_OPENDIR ] = syscall_opendir,
+        [SYSCALL_CLOSEDIR] = syscall_closedir,
+        [SYSCALL_READDIR ] = syscall_readdir,
     #endif
     #if __OS_ENABLE_REMOVE__ == _YES_
-        [SYSCALL_REMOVE           ] = syscall_remove,
+        [SYSCALL_REMOVE] = syscall_remove,
     #endif
     #if __OS_ENABLE_RENAME__ == _YES_
-        [SYSCALL_RENAME           ] = syscall_rename,
+        [SYSCALL_RENAME] = syscall_rename,
     #endif
     #if __OS_ENABLE_CHMOD__ == _YES_
-        [SYSCALL_CHMOD            ] = syscall_chmod,
+        [SYSCALL_CHMOD] = syscall_chmod,
     #endif
     #if __OS_ENABLE_CHOWN__ == _YES_
-        [SYSCALL_CHOWN            ] = syscall_chown,
+        [SYSCALL_CHOWN] = syscall_chown,
     #endif
     #if __OS_ENABLE_STATFS__ == _YES_
-        [SYSCALL_STATFS           ] = syscall_statfs,
+        [SYSCALL_STATFS] = syscall_statfs,
     #endif
     #if __OS_ENABLE_FSTAT__ == _YES_
-        [SYSCALL_STAT             ] = syscall_stat,
+        [SYSCALL_STAT] = syscall_stat,
     #endif
     #if __OS_ENABLE_FSTAT__ == _YES_
-        [SYSCALL_FSTAT            ] = syscall_fstat,
+        [SYSCALL_FSTAT] = syscall_fstat,
     #endif
-        [SYSCALL_FOPEN            ] = syscall_fopen,
-        [SYSCALL_FCLOSE           ] = syscall_fclose,
-        [SYSCALL_FWRITE           ] = syscall_fwrite,
-        [SYSCALL_FREAD            ] = syscall_fread,
-        [SYSCALL_FSEEK            ] = syscall_fseek,
-        [SYSCALL_IOCTL            ] = syscall_ioctl,
-        [SYSCALL_FFLUSH           ] = syscall_fflush,
-        [SYSCALL_SYNC             ] = syscall_sync,
+        [SYSCALL_FOPEN ] = syscall_fopen,
+        [SYSCALL_FCLOSE] = syscall_fclose,
+        [SYSCALL_FWRITE] = syscall_fwrite,
+        [SYSCALL_FREAD ] = syscall_fread,
+        [SYSCALL_FSEEK ] = syscall_fseek,
+        [SYSCALL_IOCTL ] = syscall_ioctl,
+        [SYSCALL_FFLUSH] = syscall_fflush,
+        [SYSCALL_SYNC  ] = syscall_sync,
     #if __OS_ENABLE_TIMEMAN__ == _YES_
-        [SYSCALL_GETTIME          ] = syscall_gettime,
-        [SYSCALL_SETTIME          ] = syscall_settime,
+        [SYSCALL_GETTIME] = syscall_gettime,
+        [SYSCALL_SETTIME] = syscall_settime,
     #endif
         [SYSCALL_DRIVERINIT       ] = syscall_driverinit,
         [SYSCALL_DRIVERRELEASE    ] = syscall_driverrelease,
@@ -250,32 +252,29 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SYSLOGENABLE     ] = syscall_syslogenable,
         [SYSCALL_SYSLOGDISABLE    ] = syscall_syslogdisable,
         [SYSCALL_KERNELPANICDETECT] = syscall_kernelpanicdetect,
-        [SYSCALL_ABORT            ] = syscall_abort,
-        [SYSCALL_EXIT             ] = syscall_exit,
     #if __OS_ENABLE_SYSTEMFUNC__ == _YES_
         [SYSCALL_SYSTEM           ] = syscall_system,
     #endif
-        [SYSCALL_PROCESSCREATE    ] = syscall_processcreate,
-        [SYSCALL_PROCESSDESTROY   ] = syscall_processdestroy,
-        [SYSCALL_PROCESSGETEXITSEM] = syscall_processgetexitsem,
-        [SYSCALL_PROCESSSTATSEEK  ] = syscall_processstatseek,
-        [SYSCALL_PROCESSSTATPID   ] = syscall_processstatpid,
-        [SYSCALL_PROCESSGETPID    ] = syscall_processgetpid,
-        [SYSCALL_PROCESSGETPRIO   ] = syscall_processgetprio,
+        [SYSCALL_PROCESSCREATE     ] = syscall_processcreate,
+        [SYSCALL_PROCESSKILL       ] = syscall_processkill,
+        [SYSCALL_PROCESSCLEANZOMBIE] = syscall_processcleanzombie,
+        [SYSCALL_PROCESSGETSYNCFLAG] = syscall_processgetsyncflag,
+        [SYSCALL_PROCESSSTATSEEK   ] = syscall_processstatseek,
+        [SYSCALL_PROCESSSTATPID    ] = syscall_processstatpid,
+        [SYSCALL_PROCESSGETPID     ] = syscall_processgetpid,
+        [SYSCALL_PROCESSGETPRIO    ] = syscall_processgetprio,
     #if __OS_ENABLE_GETCWD__ == _YES_
-        [SYSCALL_GETCWD           ] = syscall_getcwd,
-        [SYSCALL_SETCWD           ] = syscall_setcwd,
+        [SYSCALL_GETCWD] = syscall_getcwd,
+        [SYSCALL_SETCWD] = syscall_setcwd,
     #endif
-        [SYSCALL_THREADCREATE     ] = syscall_threadcreate,
-        [SYSCALL_THREADDESTROY    ] = syscall_threaddestroy,
-        [SYSCALL_THREADEXIT       ] = syscall_threadexit,
-        [SYSCALL_THREADGETEXITSEM ] = syscall_threadgetexitsem,
-        [SYSCALL_SEMAPHORECREATE  ] = syscall_semaphorecreate,
-        [SYSCALL_SEMAPHOREDESTROY ] = syscall_semaphoredestroy,
-        [SYSCALL_MUTEXCREATE      ] = syscall_mutexcreate,
-        [SYSCALL_MUTEXDESTROY     ] = syscall_mutexdestroy,
-        [SYSCALL_QUEUECREATE      ] = syscall_queuecreate,
-        [SYSCALL_QUEUEDESTROY     ] = syscall_queuedestroy,
+        [SYSCALL_THREADCREATE    ] = syscall_threadcreate,
+        [SYSCALL_THREADKILL      ] = syscall_threadkill,
+        [SYSCALL_SEMAPHORECREATE ] = syscall_semaphorecreate,
+        [SYSCALL_SEMAPHOREDESTROY] = syscall_semaphoredestroy,
+        [SYSCALL_MUTEXCREATE     ] = syscall_mutexcreate,
+        [SYSCALL_MUTEXDESTROY    ] = syscall_mutexdestroy,
+        [SYSCALL_QUEUECREATE     ] = syscall_queuecreate,
+        [SYSCALL_QUEUEDESTROY    ] = syscall_queuedestroy,
 #if __ENABLE_NETWORK__ == _YES_
         [SYSCALL_NETIFUP          ] = syscall_netifup,
         [SYSCALL_NETIFDOWN        ] = syscall_netifdown,
@@ -302,6 +301,8 @@ static const syscallfunc_t syscalltab[] = {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+_process_t *_kworker_proc;
+pid_t       _syscall_client_PID[__OS_TASK_MAX_THREADS__];
 
 /*==============================================================================
   External objects
@@ -341,13 +342,22 @@ void _syscall_init()
 void syscall(syscall_t syscall, void *retptr, ...)
 {
         if (syscall < _SYSCALL_COUNT) {
-                sem_t *syscall_sem = _builtinfunc(process_get_syscall_sem_by_task, _THIS_TASK);
-                if (syscall_sem) {
+                _process_t *proc; tid_t tid;
+                _task_get_process_container(_THIS_TASK, &proc, &tid);
+
+                SYSCALL_ASSERT(proc);
+                SYSCALL_ASSERT(tid >= 0);
+
+                flag_t *event_flags = NULL;
+                _errno = _process_get_event_flags(proc, &event_flags);
+                SYSCALL_ASSERT(event_flags);
+
+                if (!_errno && event_flags) {
 
                         syscallrq_t syscallrq = {
                                 .syscall_no     = syscall,
-                                .syscall_thread = NULL,
-                                .task_client    = _builtinfunc(task_get_handle),
+                                .client_proc    = proc,
+                                .client_thread  = tid,
                                 .retptr         = retptr,
                                 .err            = ESUCC
                         };
@@ -361,20 +371,15 @@ void syscall(syscall_t syscall, void *retptr, ...)
                                                  &syscallrq_ptr,
                                                  MAX_DELAY_MS) ==  ESUCC) {
 
-                                        _builtinfunc(process_set_syscall_by_task,
-                                                     syscallrq.task_client,
-                                                     syscallrq_ptr);
-
-                                        if (_builtinfunc(semaphore_wait,
-                                                         syscall_sem,
+                                        if (_builtinfunc(flag_wait,
+                                                         event_flags,
+                                                         _PROCESS_SYSCALL_FLAG(tid),
                                                          MAX_DELAY_MS) == ESUCC) {
 
                                                 if (syscallrq.err) {
                                                         _errno = syscallrq.err;
                                                 }
                                         }
-                                        _builtinfunc(process_set_syscall_by_task,
-                                                     syscallrq.task_client, NULL);
                                 }
                         }
                         va_end(syscallrq.args);
@@ -400,17 +405,25 @@ int _syscall_kworker_process(int argc, char *argv[])
 
         static const thread_attr_t fs_blocking_thread_attr = {
                 .stack_depth = STACK_DEPTH_CUSTOM(__OS_FILE_SYSTEM_STACK_DEPTH__),
-                .priority    = PRIORITY_NORMAL
+                .priority    = PRIORITY_NORMAL,
+                .detached    = true
         };
 
         static const thread_attr_t net_blocking_thread_attr = {
                 .stack_depth = STACK_DEPTH_CUSTOM(__OS_NETWORK_STACK_DEPTH__),
-                .priority    = PRIORITY_NORMAL
+                .priority    = PRIORITY_NORMAL,
+                .detached    = true
         };
+
+        _task_get_process_container(_THIS_TASK, &_kworker_proc, NULL);
+        SYSCALL_ASSERT(_kworker_proc);
 
         for (;;) {
                 syscallrq_t *rq;
                 if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
+
+                        _process_clean_up_killed_processes();
+
                         if (rq->syscall_no <= _SYSCALL_GROUP_0_OS_NON_BLOCKING) {
                                 syscall_do(rq);
                         } else {
@@ -428,29 +441,20 @@ int _syscall_kworker_process(int argc, char *argv[])
                                 _kernel_release_resources();
 
                                 /* create new syscall task */
-                                _process_t *proc = _process_get_container_by_task(_THIS_TASK, NULL);
-                                switch (_process_thread_create(proc,
+                                switch (_process_thread_create(_kworker_proc,
                                                                syscall_do,
                                                                thread_attr,
-                                                               true,
-                                                               rq,
-                                                               NULL,
-                                                               NULL) ) {
+                                                               rq, NULL) ) {
                                 case ESUCC:
                                         _task_yield();
                                         break;
 
                                 // destroy top process to get free memory
-                                case ENOMEM: {
-                                        task_t *task = destroy_top_process();
-                                        if (task == rq->task_client) {
-                                                break;
-                                        } else {
-                                                // go through
-                                        }
-                                }
+                                case ENOMEM:
+                                        _process_clean_up_killed_processes();
+                                        _kernel_release_resources();
+                                        // go through
 
-                                // all other errors
                                 default:
                                         _queue_send(call_request, &rq, MAX_DELAY_MS);
                                         _sleep_ms(5);
@@ -465,58 +469,6 @@ int _syscall_kworker_process(int argc, char *argv[])
 
 //==============================================================================
 /**
- * @brief  Function destroy top process to get free memory.
- * @return Client task handle.
- */
-//==============================================================================
-static task_t *destroy_top_process(void)
-{
-        _process_t  *proc    = _process_get_top();
-        syscallrq_t *syscall = NULL;
-        task_t      *task    = NULL;
-
-        _process_get_task(proc, &task);
-        _process_get_syscall_by_task(task, cast(void*, &syscall));
-
-        // release syscall thread of current process if is pending
-        if (syscall && syscall->syscall_thread) {
-
-                _process_t *kworker = _process_get_active();
-                task_t     *syscall_task = NULL;
-
-                _process_thread_get_task(syscall->syscall_thread, &syscall_task);
-                _task_suspend(syscall_task);
-
-                _process_release_resource(kworker,
-                                          cast(res_header_t*, syscall->syscall_thread),
-                                          RES_TYPE_THREAD);
-
-                syscall->syscall_thread = NULL;
-        }
-
-        // inform parent process that current is closed
-        pid_t  pid      = 0;
-        sem_t *exit_sem = NULL;
-        _process_get_pid(proc, &pid);
-        _process_get_exit_sem(pid, &exit_sem);
-        _semaphore_signal(exit_sem);
-
-        // print error message
-        FILE *stderr = _process_get_stderr(proc);
-        const char *msg = "*** Error: out of memory ***\n";
-        size_t wrcnt;
-        _vfs_fwrite(msg, strlen(msg), &wrcnt, stderr);
-
-        _sleep_ms(20);
-
-        // destroy process
-        _process_destroy(pid, NULL);
-
-        return task;
-}
-
-//==============================================================================
-/**
  * @brief  Function inform syscall owner about finished request.
  *
  * @param  rq           request information
@@ -524,26 +476,24 @@ static task_t *destroy_top_process(void)
 //==============================================================================
 static void syscall_do(void *rq)
 {
-        syscallrq_t *sysrq  = rq;
-        _process_t  *client = _process_get_container_by_task(sysrq->task_client, NULL);
-        _process_t  *server = _process_get_container_by_task(_THIS_TASK, NULL);
-        sem_t       *sem    = _process_get_syscall_sem_by_task(sysrq->task_client);
+        syscallrq_t *sysrq = rq;
 
-        if (_process_set_CWD(server, _process_get_CWD(client)) != ESUCC) {
+        tid_t tid = _process_get_active_thread();
+        SYSCALL_ASSERT(is_tid_in_range(tid));
+
+        flag_t *flags = NULL;
+        if (_process_get_event_flags(sysrq->client_proc, &flags) != ESUCC) {
                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
         }
+        SYSCALL_ASSERT(flags);
 
-        if (_process_set_syscall_sem_by_task(_THIS_TASK, sem) != ESUCC) {
-                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
-        }
-
-        sysrq->syscall_thread = _process_thread_get_container_by_task(_task_get_handle());
-
+        _process_get_pid(sysrq->client_proc, &_syscall_client_PID[tid]);
         syscalltab[sysrq->syscall_no](sysrq);
+        _syscall_client_PID[tid] = 0;
 
-        _process_set_syscall_sem_by_task(_THIS_TASK, NULL);
-
-        _semaphore_signal(sem);
+        if (_flag_set(flags, _PROCESS_SYSCALL_FLAG(sysrq->client_thread)) != ESUCC) {
+                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+        }
 }
 
 //==============================================================================
@@ -556,9 +506,16 @@ static void syscall_do(void *rq)
 static void syscall_mount(syscallrq_t *rq)
 {
         GETARG(const char *, FS_name);
-        GETARG(const char *, src_path);
-        GETARG(const char *, mount_point);
-        SETERRNO(_mount(FS_name, src_path, mount_point));
+
+        struct vfs_path src_path;
+        src_path.CWD  = _process_get_CWD(GETPROCESS());
+        src_path.PATH = LOADARG(const char *);
+
+        struct vfs_path mount_point;
+        mount_point.CWD  = src_path.CWD;
+        mount_point.PATH = LOADARG(const char *);
+
+        SETERRNO(_mount(FS_name, &src_path, &mount_point));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -571,8 +528,11 @@ static void syscall_mount(syscallrq_t *rq)
 //==============================================================================
 static void syscall_umount(syscallrq_t *rq)
 {
-        GETARG(const char *, mount_point);
-        SETERRNO(_umount(mount_point));
+        struct vfs_path mount_point;
+        mount_point.CWD  = _process_get_CWD(GETPROCESS());
+        mount_point.PATH = LOADARG(const char *);
+
+        SETERRNO(_umount(&mount_point));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -611,11 +571,14 @@ static void syscall_getmntentry(syscallrq_t *rq)
 //==============================================================================
 static void syscall_mknod(syscallrq_t *rq)
 {
-        GETARG(const char *, pathname);
+        struct vfs_path pathname;
+        pathname.CWD  = _process_get_CWD(GETPROCESS());
+        pathname.PATH = LOADARG(const char *);
         GETARG(const char *, mod_name);
         GETARG(int *, major);
         GETARG(int *, minor);
-        SETERRNO(_vfs_mknod(pathname, _dev_t__create(_module_get_ID(mod_name), *major, *minor)));
+
+        SETERRNO(_vfs_mknod(&pathname, _dev_t__create(_module_get_ID(mod_name), *major, *minor)));
         SETRETURN(int, GETERRNO() ? 0 : -1);
 }
 #endif
@@ -630,9 +593,12 @@ static void syscall_mknod(syscallrq_t *rq)
 //==============================================================================
 static void syscall_mkdir(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
+        struct vfs_path path;
+        path.CWD  = _process_get_CWD(GETPROCESS());
+        path.PATH = LOADARG(const char *);
         GETARG(mode_t *, mode);
-        SETERRNO(_vfs_mkdir(path, *mode));
+
+        SETERRNO(_vfs_mkdir(&path, *mode));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 #endif
@@ -647,9 +613,12 @@ static void syscall_mkdir(syscallrq_t *rq)
 //==============================================================================
 static void syscall_mkfifo(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
+        struct vfs_path path;
+        path.CWD  = _process_get_CWD(GETPROCESS());
+        path.PATH = LOADARG(const char *);
         GETARG(mode_t *, mode);
-        SETERRNO(_vfs_mkfifo(path, *mode));
+
+        SETERRNO(_vfs_mkfifo(&path, *mode));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 #endif
@@ -664,10 +633,12 @@ static void syscall_mkfifo(syscallrq_t *rq)
 //==============================================================================
 static void syscall_opendir(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
+        struct vfs_path path;
+        path.CWD  = _process_get_CWD(GETPROCESS());
+        path.PATH = LOADARG(const char *);
 
         DIR *dir = NULL;
-        int  err = _vfs_opendir(path, &dir);
+        int  err = _vfs_opendir(&path, &dir);
         if (err == ESUCC) {
                 err = _process_register_resource(GETPROCESS(), cast(res_header_t*, dir));
                 if (err != ESUCC) {
@@ -696,7 +667,10 @@ static void syscall_closedir(syscallrq_t *rq)
                 const char *msg = "*** Error: object is not a dir! ***\n";
                 size_t wrcnt;
                 _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-                syscall_abort(rq);
+
+                pid_t pid = 0;
+                _process_get_pid(GETPROCESS(), &pid);
+                _process_kill(pid);
         }
 
         SETERRNO(err);
@@ -730,8 +704,11 @@ static void syscall_readdir(syscallrq_t *rq)
 //==============================================================================
 static void syscall_remove(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
-        SETERRNO(_vfs_remove(path));
+        struct vfs_path path;
+        path.CWD  = _process_get_CWD(GETPROCESS());
+        path.PATH = LOADARG(const char *);
+
+        SETERRNO(_vfs_remove(&path));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 #endif
@@ -746,9 +723,15 @@ static void syscall_remove(syscallrq_t *rq)
 //==============================================================================
 static void syscall_rename(syscallrq_t *rq)
 {
-        GETARG(const char *, oldname);
-        GETARG(const char *, newname);
-        SETERRNO(_vfs_rename(oldname, newname));
+        struct vfs_path oldname;
+        oldname.CWD  = _process_get_CWD(GETPROCESS());
+        oldname.PATH = LOADARG(const char *);
+
+        struct vfs_path newname;
+        newname.CWD  = _process_get_CWD(GETPROCESS());
+        newname.PATH = LOADARG(const char *);
+
+        SETERRNO(_vfs_rename(&oldname, &newname));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 #endif
@@ -763,9 +746,12 @@ static void syscall_rename(syscallrq_t *rq)
 //==============================================================================
 static void syscall_chmod(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
+        struct vfs_path path;
+        path.CWD  = _process_get_CWD(GETPROCESS());
+        path.PATH = LOADARG(const char *);
         GETARG(mode_t *, mode);
-        SETERRNO(_vfs_chmod(path, *mode));
+
+        SETERRNO(_vfs_chmod(&path, *mode));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 #endif
@@ -780,10 +766,13 @@ static void syscall_chmod(syscallrq_t *rq)
 //==============================================================================
 static void syscall_chown(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
+        struct vfs_path path;
+        path.CWD  = _process_get_CWD(GETPROCESS());
+        path.PATH = LOADARG(const char *);
         GETARG(uid_t *, owner);
         GETARG(gid_t *, group);
-        SETERRNO(_vfs_chown(path, *owner, *group));
+
+        SETERRNO(_vfs_chown(&path, *owner, *group));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 #endif
@@ -798,9 +787,12 @@ static void syscall_chown(syscallrq_t *rq)
 //==============================================================================
 static void syscall_stat(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
+        struct vfs_path path;
+        path.CWD  = _process_get_CWD(GETPROCESS());
+        path.PATH = LOADARG(const char *);
         GETARG(struct stat *, buf);
-        SETERRNO(_vfs_stat(path, buf));
+
+        SETERRNO(_vfs_stat(&path, buf));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -830,9 +822,12 @@ static void syscall_fstat(syscallrq_t *rq)
 //==============================================================================
 static void syscall_statfs(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
+        struct vfs_path path;
+        path.CWD  = _process_get_CWD(GETPROCESS());
+        path.PATH = LOADARG(const char *);
         GETARG(struct statfs *, buf);
-        SETERRNO(_vfs_statfs(path, buf));
+
+        SETERRNO(_vfs_statfs(&path, buf));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 #endif
@@ -846,11 +841,13 @@ static void syscall_statfs(syscallrq_t *rq)
 //==============================================================================
 static void syscall_fopen(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
+        struct vfs_path path;
+        path.CWD  = _process_get_CWD(GETPROCESS());
+        path.PATH = LOADARG(const char *);
         GETARG(const char *, mode);
 
         FILE *file = NULL;
-        int   err  = _vfs_fopen(path, mode, &file);
+        int   err  = _vfs_fopen(&path, mode, &file);
         if (err == ESUCC) {
                 err = _process_register_resource(GETPROCESS(), cast(res_header_t*, file));
                 if (err != ESUCC) {
@@ -879,7 +876,10 @@ static void syscall_fclose(syscallrq_t *rq)
                 const char *msg = "*** Error: object is not a file! ***\n";
                 size_t wrcnt;
                 _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-                syscall_abort(rq);
+
+                pid_t pid = 0;
+                _process_get_pid(GETPROCESS(), &pid);
+                _process_kill(pid);
         }
 
         SETERRNO(err);
@@ -1112,7 +1112,10 @@ static void syscall_free(syscallrq_t *rq)
                 const char *msg = "*** Error: double free or corruption ***\n";
                 size_t wrcnt;
                 _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-                syscall_abort(rq);
+
+                pid_t pid = 0;
+                _process_get_pid(GETPROCESS(), &pid);
+                _process_kill(pid);
         }
 
         SETERRNO(err);
@@ -1160,55 +1163,6 @@ static void syscall_kernelpanicdetect(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall abort current process (caller) and set exit code as -1.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_abort(syscallrq_t *rq)
-{
-        UNUSED_RQ();
-        SETERRNO(_process_abort(GETPROCESS()));
-}
-
-//==============================================================================
-/**
- * @brief  This syscall close current process (caller).
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_exit(syscallrq_t *rq)
-{
-        GETARG(int *, status);
-        SETERRNO(_process_exit(GETPROCESS(), *status));
-}
-
-#if __OS_ENABLE_SYSTEMFUNC__ == _YES_
-//==============================================================================
-/**
- * @brief  This syscall start shell application to run command line.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_system(syscallrq_t *rq)
-{
-        UNUSED_ARG1(rq);
-
-//        GETARG(const char *, cmd);
-//        GETARG(pid_t *, pid);
-//        GETARG(sem_t **, exit_sem);
-
-        //TODO system() syscall
-
-        SETERRNO(ENOTSUP);
-        SETRETURN(int, -1);
-}
-#endif
-
-//==============================================================================
-/**
  * @brief  This syscall create new process.
  *
  * @param  rq                   syscall request
@@ -1230,11 +1184,32 @@ static void syscall_processcreate(syscallrq_t *rq)
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_processdestroy(syscallrq_t *rq)
+static void syscall_processcleanzombie(syscallrq_t *rq)
 {
         GETARG(pid_t *, pid);
         GETARG(int *, status);
-        SETERRNO(_process_destroy(*pid, status));
+
+        _process_t *proc = NULL;
+        int err = _process_get_container(*pid, &proc);
+        if (!err) {
+                _process_remove_zombie(proc, status);
+        }
+
+        SETERRNO(err);
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy existing process.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_processkill(syscallrq_t *rq)
+{
+        GETARG(pid_t *, pid);
+        SETERRNO(_process_kill(*pid));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1246,11 +1221,18 @@ static void syscall_processdestroy(syscallrq_t *rq)
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_processgetexitsem(syscallrq_t *rq)
+static void syscall_processgetsyncflag(syscallrq_t *rq)
 {
         GETARG(pid_t *, pid);
-        GETARG(sem_t **, sem);
-        SETERRNO(_process_get_exit_sem(*pid, sem));
+        GETARG(flag_t **, flag);
+
+        _process_t *proc = NULL;
+        int err = _process_get_container(*pid, &proc);
+        if (!err) {
+                err = _process_get_event_flags(proc, flag);
+        }
+
+        SETERRNO(err);
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1364,7 +1346,7 @@ static void syscall_threadcreate(syscallrq_t *rq)
         GETARG(void *, arg);
 
         tid_t tid = 0;
-        SETERRNO(_process_thread_create(GETPROCESS(), func, attr, false, arg, &tid, NULL));
+        SETERRNO(_process_thread_create(GETPROCESS(), func, attr, arg, &tid));
         SETRETURN(tid_t, tid);
 }
 
@@ -1375,61 +1357,10 @@ static void syscall_threadcreate(syscallrq_t *rq)
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_threaddestroy(syscallrq_t *rq)
+static void syscall_threadkill(syscallrq_t *rq)
 {
         GETARG(tid_t *, tid);
-
-        task_t *task = NULL;
-        if (_process_thread_get_task(GETTHREAD(*tid), &task) == ESUCC) {
-                syscallrq_t *syscall  = NULL;
-                bool         detached = false;
-
-                if (  (  (_process_get_detached_flag(task, &detached) == ESUCC)
-                      && (detached == true)  )
-                   ||
-                      (  (_process_get_syscall_by_task(task, cast(void*, &syscall)) == ESUCC)
-                      && (syscall == NULL)  )  ) {
-
-                        SETERRNO(_process_release_resource(GETPROCESS(),
-                                                           cast(res_header_t*, GETTHREAD(*tid)),
-                                                           RES_TYPE_THREAD));
-
-                        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
-
-                } else {
-                        SETRETURN(int, EAGAIN);
-                }
-        } else {
-                SETERRNO(ESRCH);
-                SETRETURN(int, -1);
-        }
-}
-
-//==============================================================================
-/**
- * @brief  This syscall destroy thread.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_threadexit(syscallrq_t *rq)
-{
-        GETARG(tid_t *, tid);
-        SETERRNO(_process_thread_exit(GETTHREAD(*tid)));
-}
-
-//==============================================================================
-/**
- * @brief  This syscall join thread with parent (parent wait until thread finish).
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_threadgetexitsem(syscallrq_t *rq)
-{
-        GETARG(tid_t *, tid);
-        GETARG(sem_t **, sem);
-        SETERRNO(_process_thread_get_exit_sem(GETPROCESS(), *tid, sem));
+        SETERRNO(_process_thread_kill(rq->client_proc, *tid));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1475,7 +1406,10 @@ static void syscall_semaphoredestroy(syscallrq_t *rq)
                 const char *msg = "*** Error: object is not a semaphore! ***\n";
                 size_t wrcnt;
                 _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-                syscall_abort(rq);
+
+                pid_t pid = 0;
+                _process_get_pid(GETPROCESS(), &pid);
+                _process_kill(pid);
         }
 
         SETERRNO(err);
@@ -1522,7 +1456,10 @@ static void syscall_mutexdestroy(syscallrq_t *rq)
                 const char *msg = "*** Error: object is not a mutex! ***\n";
                 size_t wrcnt;
                 _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-                syscall_abort(rq);
+
+                pid_t pid = 0;
+                _process_get_pid(GETPROCESS(), &pid);
+                _process_kill(pid);
         }
 
         SETERRNO(err);
@@ -1570,7 +1507,10 @@ static void syscall_queuedestroy(syscallrq_t *rq)
                 const char *msg = "*** Error: object is not a queue! ***\n";
                 size_t wrcnt;
                 _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-                syscall_abort(rq);
+
+                pid_t pid = 0;
+                _process_get_pid(GETPROCESS(), &pid);
+                _process_kill(pid);
         }
 
         SETERRNO(err);
@@ -1666,7 +1606,10 @@ static void syscall_netsocketdestroy(syscallrq_t *rq)
                 const char *msg = "*** Error: object is not a socket! ***\n";
                 size_t wrcnt;
                 _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-                syscall_abort(rq);
+
+                pid_t pid = 0;
+                _process_get_pid(GETPROCESS(), &pid);
+                _process_kill(pid);
         }
 
         SETERRNO(err);

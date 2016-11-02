@@ -46,7 +46,7 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef thread_t         sys_thread_t;
+typedef tid_t            sys_thread_t;
 typedef int              sys_prot_t;
 typedef mutex_t         *sys_mutex_t;
 typedef sem_t           *sys_sem_t;

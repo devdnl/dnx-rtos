@@ -93,7 +93,12 @@ int _gettime(time_t *timer)
         if (timer) {
                 if ((time_ref == 0) || sys_time_is_expired(time_ref, 500)) {
                         FILE *rtc;
-                        err = _vfs_fopen(__OS_RTC_FILE_PATH__, "r", &rtc);
+
+                        struct vfs_path cpath;
+                        cpath.CWD  = NULL;
+                        cpath.PATH = __OS_RTC_FILE_PATH__;
+
+                        err = _vfs_fopen(&cpath, "r", &rtc);
                         if (err == ESUCC) {
                                 size_t rdcnt;
                                 err = _vfs_fread(timer, sizeof(time_t), &rdcnt, rtc);
@@ -130,7 +135,12 @@ int _settime(time_t *timer)
 
         if (timer) {
                 FILE *rtc;
-                result = _vfs_fopen(__OS_RTC_FILE_PATH__, "w", &rtc);
+
+                struct vfs_path cpath;
+                cpath.CWD  = NULL;
+                cpath.PATH = __OS_RTC_FILE_PATH__;
+
+                result = _vfs_fopen(&cpath, "w", &rtc);
                 if (result == ESUCC) {
                         size_t wrcnt;
                         result = _vfs_fwrite(timer, sizeof(time_t), &wrcnt, rtc);

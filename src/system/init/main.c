@@ -85,7 +85,7 @@ int main(void)
         _heap_init();
         _mm_init();
         _kernel_panic_init();
-        _task_create(dnxinit, "", 2*__OS_TASK_MIN_STACK_DEPTH__, NULL, NULL, NULL);
+        _task_create(dnxinit, "", (1024 / sizeof(StackType_t)), NULL, NULL, NULL);
         _kernel_start();
         return -1;
 }

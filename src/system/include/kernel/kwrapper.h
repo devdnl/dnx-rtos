@@ -120,6 +120,14 @@ extern int      _mutex_destroy                     (mutex_t*);
 extern int      _mutex_lock                        (mutex_t*, const u32_t);
 extern int      _mutex_unlock                      (mutex_t*);
 
+extern int      _flag_create                       (flag_t**);
+extern int      _flag_destroy                      (flag_t*);
+extern int      _flag_wait                         (flag_t*, u32_t, const u32_t);
+extern int      _flag_set                          (flag_t*, u32_t);
+extern int      _flag_set_from_ISR                 (flag_t*, u32_t, bool*);
+extern int      _flag_clear                        (flag_t*, u32_t);
+extern int      _flag_clear_from_ISR               (flag_t*, u32_t);
+
 extern int      _queue_create                      (const uint, const uint, queue_t**);
 extern int      _queue_destroy                     (queue_t*);
 extern int      _queue_reset                       (queue_t*);

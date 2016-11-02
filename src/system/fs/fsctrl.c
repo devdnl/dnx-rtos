@@ -74,11 +74,11 @@ extern const uint             _FS_table_size;
  * @return One of errno values
  */
 //==============================================================================
-int _mount(const char *FS_name, const char *src_path, const char *mount_point)
+int _mount(const char *FS_name, const struct vfs_path *src_path, const struct vfs_path *mount_point)
 {
         int result = EINVAL;
 
-        if (FS_name && mount_point && src_path) {
+        if (FS_name && mount_point && mount_point->PATH && src_path && src_path->PATH) {
                 for (uint i = 0; i < _FS_table_size; i++) {
                         if (strcmp(_FS_table[i].FS_name, FS_name) == 0) {
                                 result = _vfs_mount(src_path, mount_point,
@@ -100,7 +100,7 @@ int _mount(const char *FS_name, const char *src_path, const char *mount_point)
  * @return One of errno values
  */
 //==============================================================================
-int _umount(const char *mount_point)
+int _umount(const struct vfs_path *mount_point)
 {
         if (mount_point) {
                 return _vfs_umount(mount_point);

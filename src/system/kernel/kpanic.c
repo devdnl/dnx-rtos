@@ -150,19 +150,12 @@ void _kernel_panic_report(enum _kernel_panic_desc_cause suggested_cause)
 {
         _ISR_disable();
 
-        _process_t *proc   = _process_get_active();
-        _thread_t  *thread = _process_thread_get_active();
+        _process_t *proc = _process_get_active();
 
         if (proc) {
-                pid_t pid = 0;
-                _process_get_pid(proc, &pid);
-
-                tid_t tid = 0;
-                _process_thread_get_tid(thread, &tid);
-
                 kernel_panic_descriptor->name = _process_get_name(proc);
-                kernel_panic_descriptor->pid  = pid;
-                kernel_panic_descriptor->tid  = tid;
+                kernel_panic_descriptor->tid  = _process_get_active_thread();
+                _process_get_pid(proc, &kernel_panic_descriptor->pid);
         }
 
         if (suggested_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack(_THIS_TASK) == 0) {

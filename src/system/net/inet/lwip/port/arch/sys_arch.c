@@ -94,14 +94,14 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
 
         thread_attr_t attr = {
             .priority    = prio,
-            .stack_depth = stacksize
+            .stack_depth = stacksize,
+            .detached    = true
         };
 
         sys_thread_t thr;
 
         if (sys_thread_create(thread, &attr, arg, &thr) != ESUCC) {
-                thr.task = NULL;
-                thr.tid  = 0;
+                thr = -1;
         }
 
         return thr;

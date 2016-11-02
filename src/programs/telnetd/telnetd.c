@@ -241,7 +241,7 @@ exit:
                 fclose(fout);
 
         if (proc) {
-                process_kill(proc, NULL);
+                process_kill(proc);
         }
 
         if (pipe_in_name) {

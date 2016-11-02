@@ -34,6 +34,7 @@
 #include "drivers/drvctrl.h"
 #include "kernel/printk.h"
 #include "kernel/process.h"
+#include "kernel/syscall.h"
 #include "lib/vt100.h"
 #include "lib/llist.h"
 #include "fs/vfs.h"
@@ -272,35 +273,39 @@ static inline int driver__release(u16_t modno, void *mem)
 //==============================================================================
 int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_path, dev_t *id)
 {
-        int result;
+        int err;
 
         // allocate modules memory handles
         if (drvmem == NULL) {
-                result = _kzalloc(_MM_KRN, _drvreg_number_of_modules * sizeof(drvmem_t*),
+                err = _kzalloc(_MM_KRN, _drvreg_number_of_modules * sizeof(drvmem_t*),
                                   cast(void *,&drvmem));
 
-                if (result != ESUCC) {
-                        return result;
+                if (err != ESUCC) {
+                        return err;
                 }
         }
 
         // initialize selected module
         int       modno = _module_get_ID(module);
         drvmem_t *drv   = NULL;
-        result          = driver__register(modno, major, minor, &drv);
-        if (result == ESUCC) {
+        err             = driver__register(modno, major, minor, &drv);
+        if (err == ESUCC) {
 
                 _printk(DRV_INITIALIZING_FMT, module, major, minor);
 
-                result = driver__initialize(modno, major, minor, &drv->mem);
-                if (result == ESUCC) {
+                err = driver__initialize(modno, major, minor, &drv->mem);
+                if (err == ESUCC) {
                         if (id) {
                                 *id = drv->devid;
                         }
 
                         if (node_path) {
-                                int result = _vfs_mknod(node_path, drv->devid);
-                                if (result == ESUCC) {
+                                struct vfs_path cpath;
+                                cpath.CWD  = NULL;
+                                cpath.PATH = node_path;
+
+                                err = _vfs_mknod(&cpath, drv->devid);
+                                if (err == ESUCC) {
                                         _printk(DRV_NODE_CREATED_FMT, node_path);
 
                                 } else {
@@ -314,16 +319,16 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
 
                 } else {
                         driver__remove(drv->devid);
-                        _printk(DRV_ERROR_FMT, result);
+                        _printk(DRV_ERROR_FMT, err);
                 }
         } else {
-                switch (result) {
+                switch (err) {
                 case EADDRINUSE: _printk(DRV_ALREADY_INIT_FMT, module, major, minor); break;
                 default        : _printk(MOD_NOT_EXIST_FMT, module); break;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -617,24 +622,25 @@ ssize_t _module_get_number_of_instances(size_t n)
 //==============================================================================
 int _device_lock(dev_lock_t *dev_lock)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (dev_lock) {
                 _kernel_scheduler_lock();
                 {
                         if (*dev_lock == 0) {
-                                *dev_lock = _process_get_id(_THIS_TASK);
+                                *dev_lock = _syscall_client_PID[_process_get_active_thread()];
+
                                 if (*dev_lock) {
-                                        result = ESUCC;
+                                        err = ESUCC;
                                 }
                         } else {
-                                result = EBUSY;
+                                err = EBUSY;
                         }
                 }
                 _kernel_scheduler_unlock();
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -651,22 +657,22 @@ int _device_lock(dev_lock_t *dev_lock)
 //==============================================================================
 int _device_unlock(dev_lock_t *dev_lock, bool force)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (dev_lock) {
                 _kernel_scheduler_lock();
                 {
-                        if (force || *dev_lock == _process_get_id(_THIS_TASK)) {
+                        if (force || *dev_lock == _syscall_client_PID[_process_get_active_thread()]) {
                                 *dev_lock = 0;
-                                result    = ESUCC;
+                                err = ESUCC;
                         } else {
-                                result = EBUSY;
+                                err = EBUSY;
                         }
                 }
                 _kernel_scheduler_unlock();
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -682,21 +688,21 @@ int _device_unlock(dev_lock_t *dev_lock, bool force)
 //==============================================================================
 int _device_get_access(dev_lock_t *dev_lock)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (dev_lock) {
                 _kernel_scheduler_lock();
                 {
-                        if (*dev_lock == _process_get_id(_THIS_TASK)) {
-                                result = ESUCC;
+                        if (*dev_lock == _syscall_client_PID[_process_get_active_thread()]) {
+                                err = ESUCC;
                         } else {
-                                result = EBUSY;
+                                err = EBUSY;
                         }
                 }
                 _kernel_scheduler_unlock();
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -712,13 +718,13 @@ int _device_get_access(dev_lock_t *dev_lock)
 //==============================================================================
 bool _device_is_locked(dev_lock_t *dev_lock)
 {
-        bool result = false;
+        bool err = false;
 
         if (dev_lock) {
-                result = *dev_lock != 0;
+                err = *dev_lock != 0;
         }
 
-        return result;
+        return err;
 }
 
 /*==============================================================================

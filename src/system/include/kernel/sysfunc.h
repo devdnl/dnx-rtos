@@ -54,6 +54,7 @@
 #include "kernel/kwrapper.h"
 #include "kernel/time.h"
 #include "kernel/process.h"
+#include "kernel/syscall.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
 #include "portable/cpuctl.h"
@@ -203,16 +204,6 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/**
- * @brief Thread type.
- *
- * The type represent thread object.
- */
-typedef struct {
-        tid_t   tid;    //!< Thread ID
-        task_t *task;   //!< Task handle
-} thread_t;
-
 #ifdef DOXYGEN /* Type defined in lib/llist.h */
 /**
  * @brief Linked list type.
@@ -1363,7 +1354,11 @@ static inline int sys_llist_functor_cmp_strings(const void *a, const void *b)
 //==============================================================================
 static inline int sys_mknod(const char *path, dev_t dev)
 {
-        return _vfs_mknod(path, dev);
+        struct vfs_path cpath;
+        cpath.CWD  = NULL;
+        cpath.PATH = path;
+
+        return _vfs_mknod(&cpath, dev);
 }
 
 //==============================================================================
@@ -1394,7 +1389,11 @@ static inline int sys_mknod(const char *path, dev_t dev)
 static inline int sys_mkdir(const char *pathname, mode_t mode)
 {
 #if __OS_ENABLE_MKDIR__ == _YES_
-        return _vfs_mkdir(pathname, mode);
+        struct vfs_path path;
+        path.CWD  = NULL;
+        path.PATH = pathname;
+
+        return _vfs_mkdir(&path, mode);
 #else
         UNUSED_ARG2(pathname, mode);
         return ENOTSUP;
@@ -1432,7 +1431,11 @@ static inline int sys_mkdir(const char *pathname, mode_t mode)
 static inline int sys_mkfifo(const char *pathname, mode_t mode)
 {
 #if __OS_ENABLE_MKFIFO__ == _YES_
-        return _vfs_mkfifo(pathname, mode);
+        struct vfs_path cpath;
+        cpath.CWD  = NULL;
+        cpath.PATH = pathname;
+
+        return _vfs_mkfifo(&cpath, mode);
 #else
         UNUSED_ARG2(pathname, mode);
         return ENOTSUP;
@@ -1602,7 +1605,10 @@ static inline int sys_readdir(DIR *dir, dirent_t **dirent)
 static inline int sys_remove(const char *path)
 {
 #if __OS_ENABLE_REMOVE__ == _YES_
-        return _vfs_remove(path);
+        struct vfs_path cpath;
+        cpath.CWD  = NULL;
+        cpath.PATH = path;
+        return _vfs_remove(&cpath);
 #else
         UNUSED_ARG1(path);
         return ENOTSUP;
@@ -1637,7 +1643,15 @@ static inline int sys_remove(const char *path)
 static inline int sys_rename(const char *old_name, const char *new_name)
 {
 #if __OS_ENABLE_RENAME__ == _YES_
-        return _vfs_rename(old_name, new_name);
+        struct vfs_path cpath_old;
+        cpath_old.CWD  = NULL;
+        cpath_old.PATH = old_name;
+
+        struct vfs_path cpath_new;
+        cpath_new.CWD  = NULL;
+        cpath_new.PATH = new_name;
+
+        return _vfs_rename(&cpath_old, &cpath_new);
 #else
         UNUSED_ARG2(old_name, new_name);
         return ENOTSUP;
@@ -1671,7 +1685,10 @@ static inline int sys_rename(const char *old_name, const char *new_name)
 static inline int sys_chmod(const char *path, mode_t mode)
 {
 #if __OS_ENABLE_CHMOD__ == _YES_
-        return _vfs_chmod(path, mode);
+        struct vfs_path cpath;
+        cpath.CWD  = NULL;
+        cpath.PATH = path;
+        return _vfs_chmod(&cpath, mode);
 #else
         UNUSED_ARG2(path, mode);
         return ENOTSUP;
@@ -1705,7 +1722,10 @@ static inline int sys_chmod(const char *path, mode_t mode)
 static inline int sys_chown(const char *path, uid_t owner, gid_t group)
 {
 #if __OS_ENABLE_CHOWN__ == _YES_
-        return _vfs_chown(path, owner, group);
+        struct vfs_path cpath;
+        cpath.CWD  = NULL;
+        cpath.PATH = path;
+        return _vfs_chown(&cpath, owner, group);
 #else
         UNUSED_ARG3(path, owner, group);
         return ENOTSUP;
@@ -1745,7 +1765,10 @@ static inline int sys_chown(const char *path, uid_t owner, gid_t group)
 static inline int sys_stat(const char *path, struct stat *buf)
 {
 #if __OS_ENABLE_FSTAT__ == _YES_
-        return _vfs_stat(path, buf);
+        struct vfs_path cpath;
+        cpath.CWD  = NULL;
+        cpath.PATH = path;
+        return _vfs_stat(&cpath, buf);
 #else
         UNUSED_ARG2(path, buf);
         return ENOTSUP;
@@ -1784,7 +1807,10 @@ static inline int sys_stat(const char *path, struct stat *buf)
 static inline int sys_statfs(const char *path, struct statfs *statfs)
 {
 #if __OS_ENABLE_STATFS__ == _YES_
-        return _vfs_statfs(path, statfs);
+        struct vfs_path cpath;
+        cpath.CWD  = NULL;
+        cpath.PATH = path;
+        return _vfs_statfs(&cpath, statfs);
 #else
         UNUSED_ARG2(path, statfs);
         return ENOTSUP;
@@ -4078,12 +4104,12 @@ static inline size_t sys_process_get_count(void)
  * @param func             thread code
  * @param attr             thread attributes
  * @param arg              thread argument
- * @param thread           pointer to thread handle
+ * @param tid              thread ID
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-extern int sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg, thread_t *thread);
+extern int sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg, tid_t *tid);
 
 //==============================================================================
 /**
@@ -4094,12 +4120,12 @@ extern int sys_thread_create(thread_func_t func, const thread_attr_t *attr, void
  *
  * @note Function can be used only by file system or driver code.
  *
- * @param thread        thread handle
+ * @param tid        thread ID
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-extern int sys_thread_destroy(thread_t *thread);
+extern int sys_thread_destroy(tid_t tid);
 
 //==============================================================================
 /**
@@ -4107,14 +4133,14 @@ extern int sys_thread_destroy(thread_t *thread);
  *
  * @note Function can be used only by file system or driver code.
  *
- * @param  thread       thread to examine
+ * @param  tid       thread ID
  *
  * @return If thread object is valid the @b true is returned otherwise @b false.
  */
 //==============================================================================
-static inline bool sys_thread_is_valid(thread_t *thread)
+static inline bool sys_thread_is_valid(tid_t tid)
 {
-        return thread && thread->tid && thread->task;
+        return ((tid >= 1) && (tid < __OS_TASK_MAX_THREADS__));
 }
 
 //==============================================================================
@@ -4123,13 +4149,16 @@ static inline bool sys_thread_is_valid(thread_t *thread)
  *
  * @note Function can be used only by file system or driver code.
  *
- * @param thread        thread to suspend
+ * @param  tid       thread ID
  */
 //==============================================================================
-static inline void sys_thread_suspend(thread_t *thread)
+static inline void sys_thread_suspend(tid_t tid)
 {
-        if (sys_thread_is_valid(thread)) {
-                _task_suspend(thread->task);
+        if (sys_thread_is_valid(tid)) {
+                task_t *task = _process_thread_get_task(_kworker_proc, tid);
+                if (task) {
+                        _task_suspend(task);
+                }
         }
 }
 
@@ -4151,13 +4180,16 @@ static inline void sys_thread_suspend_now()
  *
  * @note Function can be used only by file system or driver code.
  *
- * @param thread        thread to resume
+ * @param  tid       thread ID
  */
 //==============================================================================
-static inline void sys_thread_resume(thread_t *thread)
+static inline void sys_thread_resume(tid_t tid)
 {
-        if (sys_thread_is_valid(thread)) {
-                _task_resume(thread->task);
+        if (sys_thread_is_valid(tid)) {
+                task_t *task = _process_thread_get_task(_kworker_proc, tid);
+                if (task) {
+                        _task_resume(task);
+                }
         }
 }
 
@@ -4167,21 +4199,26 @@ static inline void sys_thread_resume(thread_t *thread)
  *
  * @note Function can be used only by file system or driver code.
  *
- * @param thread        thread to resume
+ * @param tid           thread ID
  * @param task_woken    true if higher priority task woke, otherwise false (can be @ref NULL)
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_thread_resume_from_ISR(thread_t *thread, bool *task_woken)
+static inline int sys_thread_resume_from_ISR(tid_t tid, bool *task_woken)
 {
-        if (sys_thread_is_valid(thread)) {
-                bool woken = _task_resume_from_ISR(thread->task);
-                if (task_woken) {
-                        *task_woken = woken;
+        if (sys_thread_is_valid(tid)) {
+                task_t *task = _process_thread_get_task(_kworker_proc, tid);
+                if (task) {
+                        bool woken = _task_resume_from_ISR(task);
+                        if (task_woken) {
+                                *task_woken = woken;
+                        }
+
+                        return ESUCC;
                 }
 
-                return ESUCC;
+                return EINVAL;
         } else {
                 return ESRCH;
         }
@@ -4201,16 +4238,19 @@ static inline void sys_thread_yield()
 
 //==============================================================================
 /**
- * @brief  Function return thread object information.
+ * @brief Function return thread object information.
  *
  * @note Function can be used only by file system or driver code.
  *
- * @param thread   thread information
+ * @param tid           thread ID
  *
  * @return One of @ref errno value.
  */
 //==============================================================================
-extern int sys_thread_self(thread_t *thread);
+static inline void sys_thread_self(tid_t *tid)
+{
+        _task_get_process_container(_THIS_TASK, NULL, tid);
+}
 
 //==============================================================================
 /**

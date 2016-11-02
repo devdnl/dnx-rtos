@@ -55,8 +55,8 @@ struct _FS_entry {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int _mount (const char*, const char*, const char*);
-extern int _umount(const char*);
+extern int _mount (const char*, const struct vfs_path*, const struct vfs_path*);
+extern int _umount(const struct vfs_path*);
 
 #ifdef __cplusplus
 }
