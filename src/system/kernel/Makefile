@@ -7,6 +7,7 @@ CSRC_CORE   += kernel/khooks.c
 CSRC_CORE   += kernel/kwrapper.c
 CSRC_CORE   += kernel/kpanic.c
 CSRC_CORE   += kernel/printk.c
+CSRC_CORE   += kernel/shm.c
 CSRC_CORE   += kernel/FreeRTOS/Source/croutine.c
 CSRC_CORE   += kernel/FreeRTOS/Source/event_groups.c
 CSRC_CORE   += kernel/FreeRTOS/Source/list.c

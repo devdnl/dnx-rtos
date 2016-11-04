@@ -52,9 +52,6 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-#if (__OS_MONITOR_CPU_LOAD__ > 0)
-static const u32_t timer_frequency = 1000000;
-#endif
 
 /*==============================================================================
   Function definitions
@@ -129,23 +126,6 @@ void _cpuctl_shutdown_system(void)
 #if (__OS_MONITOR_CPU_LOAD__ > 0)
 void _cpuctl_init_CPU_load_counter(void)
 {
-        /* enable clock */
-        RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
-
-        /* reset timer */
-        RCC->APB1RSTR |=  RCC_APB1RSTR_TIM2RST;
-        RCC->APB1RSTR &= ~RCC_APB1RSTR_TIM2RST;
-
-        /* configure timer */
-        RCC_ClocksTypeDef freq;
-        RCC_GetClocksFreq(&freq);
-        if (RCC->CFGR & RCC_CFGR_PPRE1_2) {
-                freq.PCLK1_Frequency *= 2;
-        }
-
-        TIM2->PSC = (freq.PCLK1_Frequency/timer_frequency) - 1;
-        TIM2->ARR = 0xFFFF;
-        TIM2->CR1 = TIM_CR1_CEN;
 }
 #endif
 
@@ -163,9 +143,20 @@ void _cpuctl_init_CPU_load_counter(void)
 #if (__OS_MONITOR_CPU_LOAD__ > 0)
 u32_t _cpuctl_get_CPU_load_counter_delta(void)
 {
-        u32_t diff = TIM2->CNT;
-        TIM2->CNT  = 0;
-        return diff;
+        static uint32_t last;
+        bool  ovf = SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk;
+        u32_t now = SysTick->VAL;
+
+        u32_t delta;
+        if (ovf) {
+                delta = ((SysTick->LOAD + 1) - now) + last;
+        } else {
+                delta = last - now;
+        }
+
+        last = now;
+        
+        return delta;
 }
 #endif
 

@@ -38,6 +38,7 @@
 #include "kernel/kpanic.h"
 #include "kernel/errno.h"
 #include "kernel/time.h"
+#include "kernel/shm.h"
 #include "lib/cast.h"
 #include "lib/unarg.h"
 #include "net/netm.h"
@@ -184,6 +185,13 @@ static void syscall_netsendto(syscallrq_t *rq);
 static void syscall_netrecvfrom(syscallrq_t *rq);
 static void syscall_netgetaddress(syscallrq_t *rq);
 #endif
+#if __OS_ENABLE_SHARED_MEMORY__ == _YES_
+static void syscall_shmcreate(syscallrq_t *rq);
+static void syscall_shmattach(syscallrq_t *rq);
+static void syscall_shmdetach(syscallrq_t *rq);
+static void syscall_shmdestroy(syscallrq_t *rq);
+#endif
+
 
 /*==============================================================================
   Local objects
@@ -194,6 +202,12 @@ static queue_t *call_request;
 static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MOUNT ] = syscall_mount,
         [SYSCALL_UMOUNT] = syscall_umount,
+    #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
+        [SYSCALL_SHMCREATE ] = syscall_shmcreate,
+        [SYSCALL_SHMATTACH ] = syscall_shmattach,
+        [SYSCALL_SHMDETACH ] = syscall_shmdetach,
+        [SYSCALL_SHMDESTROY] = syscall_shmdestroy,
+    #endif
     #if __OS_ENABLE_STATFS__ == _YES_
         [SYSCALL_GETMNTENTRY] = syscall_getmntentry,
     #endif
@@ -319,11 +333,23 @@ pid_t       _syscall_client_PID[__OS_TASK_MAX_THREADS__];
 //==============================================================================
 void _syscall_init()
 {
+        static const process_attr_t attr = {
+                .f_stdin  = NULL,
+                .f_stdout = NULL,
+                .f_stderr = NULL,
+                .p_stdin  = NULL,
+                .p_stdout = NULL,
+                .p_stderr = NULL,
+                .cwd      = "",
+                .priority = PRIORITY_NORMAL,
+                .detached = true
+        };
+
         int result = ESUCC;
 
         result |= _queue_create(SYSCALL_QUEUE_LENGTH, sizeof(syscallrq_t*), &call_request);
-        result |= _process_create("kworker", NULL, NULL);
-        result |= _process_create(__OS_INIT_PROG__, NULL, NULL);
+        result |= _process_create("kworker", &attr, NULL);
+        result |= _process_create(__OS_INIT_PROG__, &attr, NULL);
 
         if (result != ESUCC) {
                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
@@ -1861,6 +1887,67 @@ static void syscall_netgetaddress(syscallrq_t *rq)
         GETARG(NET_generic_sockaddr_t *, sockaddr);
 
         SETERRNO(_net_socket_getaddress(socket, sockaddr));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+#endif
+
+#if __OS_ENABLE_SHARED_MEMORY__ == _YES_
+//==============================================================================
+/**
+ * @brief  This syscall creates shared memory region.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_shmcreate(syscallrq_t *rq)
+{
+        GETARG(const char *, key);
+        GETARG(const size_t *, size);
+        SETERRNO(_shm_create(key, *size));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall return shared memory region.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_shmattach(syscallrq_t *rq)
+{
+        GETARG(const char *, key);
+        GETARG(void **, mem);
+        GETARG(size_t *, size);
+        SETERRNO(_shm_at(key, mem, size));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy shared memory region.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_shmdetach(syscallrq_t *rq)
+{
+        GETARG(const char *, key);
+        SETERRNO(_shm_detach(key));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy shared memory region.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_shmdestroy(syscallrq_t *rq)
+{
+        GETARG(const char *, key);
+        SETERRNO(_shm_destroy(key));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 #endif

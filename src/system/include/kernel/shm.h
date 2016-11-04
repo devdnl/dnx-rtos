@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ktypes.h
+File     shm.h
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   This file contains kernel types
+Brief    Shared memory management.
 
-@note    Copyright (C) 2012, 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,100 +24,57 @@
 
 *//*==========================================================================*/
 
-#ifndef _KTYPES_H_
-#define _KTYPES_H_
+/**
+@defgroup SHM_H_ SHM_H_
+
+Shared memory management.
+*/
+/**@{*/
+
+#ifndef _SHM_H_
+#define _SHM_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include <sys/types.h>
-#include <stdbool.h>
-#include <FreeRTOS.h>
-
-/*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
-==============================================================================*/
-/** KERNELSPACE: resource type */
-typedef enum {
-        RES_TYPE_UNKNOWN       = 0,
-        RES_TYPE_PROCESS       = 0x958701BA,
-        RES_TYPE_MUTEX         = 0x300C6B74,
-        RES_TYPE_SEMAPHORE     = 0x4E59901B,
-        RES_TYPE_QUEUE         = 0x83D50ADB,
-        RES_TYPE_FILE          = 0x7D129250,
-        RES_TYPE_DIR           = 0x19586E97,
-        RES_TYPE_MEMORY        = 0x9E834645,
-        RES_TYPE_SOCKET        = 0x63ACC316,
-        RES_TYPE_FLAG          = 0x18FAEC0D
-} res_type_t;
-
-/** KERNELSPACE: object header (must be the first in object) */
-typedef struct res_header {
-        struct res_header *next;
-        res_type_t         type;
-} res_header_t;
-
-/** KERNELSPACE: task type */
-typedef void task_t;
-
-/** KERNELSPACE: task function type */
-typedef void (*task_func_t)(void*);
-
-/** KERNELSPACE/USERSPACE: semaphore type */
-typedef struct {
-        res_header_t      header;
-        void             *object;
-        StaticSemaphore_t buffer;
-} sem_t;
-
-/** KERNELSPACE/USERSPACE: queue type */
-typedef struct {
-        res_header_t  header;
-        void         *object;
-        StaticQueue_t buffer;
-        uint8_t       storage[];
-} queue_t;
-
-/** KERNELSPACE/USERSPACE: mutex type */
-typedef struct {
-        res_header_t      header;
-        void             *object;
-        StaticSemaphore_t buffer;
-        bool              recursive;
-} mutex_t;
-
-/** KERNELSPACE: flag type */
-typedef struct {
-        res_header_t       header;
-        void              *object;
-        StaticEventGroup_t buffer;
-} flag_t;
-
-/*==============================================================================
-   Exported object declarations
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
+==============================================================================*/
+extern int _shm_create(const char *key, size_t size);
+extern int _shm_destroy(const char *key);
+extern int _shm_at(const char *key, void **mem, size_t *size);
+extern int _shm_detach(const char *key);
+
+/*==============================================================================
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _KTYPES_H_ */
+#endif /* _SHM_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

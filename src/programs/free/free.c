@@ -96,6 +96,7 @@ int_main(free, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
                 printf("  Modules    : %d\n", sysmem.modules_memory_usage);
                 printf("  Network    : %d\n", sysmem.network_memory_usage);
                 printf("  Programs   : %d\n", sysmem.programs_memory_usage);
+                printf("  Shared     : %d\n", sysmem.shared_memory_usage);
                 printf("  Static     : %d\n\n", sysmem.static_memory_usage);
 
                 printf("Detailed modules memory usage:\n");

@@ -255,7 +255,9 @@ KERNELSPACE void _process_clean_up_killed_processes(void)
                                                   &destroy_process_list,
                                                   &zombie_process_list);
                         } else {
+                                destroy_process_list = cast(_process_t *, proc->header.next);
                                 _flag_destroy(proc->event);
+                                proc->event = NULL;
                                 _kfree(_MM_KRN, cast(void*, &proc));
                         }
                 }
@@ -277,13 +279,22 @@ KERNELSPACE int _process_kill(pid_t pid)
         int err = ESRCH;
 
         ATOMIC {
-                foreach_process(process, active_process_list) {
-                        if (process->pid == pid) {
-                                process_move_list(process,
+                foreach_process(proc, active_process_list) {
+                        if (proc->pid == pid) {
+                                if (proc->event) {
+                                        _flag_set(proc->event, _PROCESS_EXIT_FLAG(0));
+                                }
+
+                                for (int i = 0; i < __OS_TASK_MAX_THREADS__; i++) {
+                                        if (proc->task[i]) {
+                                                _task_destroy(proc->task[i]);
+                                                proc->task[i] = NULL;
+                                        }
+                                }
+
+                                process_move_list(proc,
                                                   &active_process_list,
                                                   &destroy_process_list);
-
-                                process->flag |= FLAG_DETACHED;
 
                                 err = ESUCC;
                                 break;

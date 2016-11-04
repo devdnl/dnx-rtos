@@ -122,7 +122,8 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         global->mem.kernel_memory_usage,
                         global->mem.filesystems_memory_usage);
 
-                printf("%d network, %d modules, %d programs\n",
+                printf("%d shared, %d network, %d modules, %d programs\n",
+                        global->mem.shared_memory_usage,
                         global->mem.network_memory_usage,
                         global->mem.modules_memory_usage,
                         global->mem.programs_memory_usage);
@@ -168,13 +169,13 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         int pid = 0;
                         scanf("%d", &pid);
 
-                        ioctl(stdin, IOCTL_TTY__ECHO_OFF);
-
                         if (process_kill(pid) != 0) {
                                 perror(NULL);
                                 errno = 0;
                                 sleep(2);
                         }
+
+                        ioctl(stdin, IOCTL_TTY__ECHO_OFF);
 
                 } else if (key == 'q') {
                         break;

@@ -49,6 +49,12 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_MALLOC,                 // | void*          | size_t *size              |                                     |                           |                           |                                           |
         SYSCALL_ZALLOC,                 // | void*          | size_t *size              |                                     |                           |                           |                                           |
         SYSCALL_FREE,                   // | void           | void *mem                 |                                     |                           |                           |                                           |
+    #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
+        SYSCALL_SHMCREATE,              // | int            | const char *key           | size_t *size                        |                           |                           |                                           |
+        SYSCALL_SHMATTACH,              // | int            | const char *key           | void **mem                          | size_t *size              |                           |                                           |
+        SYSCALL_SHMDETACH,              // | int            | const char *key           |                                     |                           |                           |                                           |
+        SYSCALL_SHMDESTROY,             // | int            | const char *key           |                                     |                           |                           |                                           |
+    #endif
         SYSCALL_PROCESSGETSYNCFLAG,     // | int            | pid_t *pid                | flag_t **obj                        |                           |                           |                                           |
         SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat                |                           |                           |                                           |
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat                |                           |                           |                                           |

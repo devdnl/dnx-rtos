@@ -221,7 +221,13 @@ this:SetToolTip("This option enables assert system assert function. Use only for
 #define __OS_ENABLE_SYS_ASSERT__ _YES_
 
 /*--
-this:AddExtraWidget("Void", "VoidOption")
+this:AddWidget("Checkbox", "Shared memory feature")
+this:SetToolTip("This option enables shared memory subsystem.")
+--*/
+#define __OS_ENABLE_SHARED_MEMORY__ _YES_
+
+/*--
+--this:AddExtraWidget("Void", "VoidOption")
 this:AddWidget("Spinbox", 0, 16777216, "Network memory limit [Bytes]")
 this:SetToolTip("This option enables memory limit for network subsystem. Use 0 for no limit.")
 --*/

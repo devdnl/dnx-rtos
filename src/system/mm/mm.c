@@ -193,6 +193,7 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
                                 break;
                         }
                         // go through
+                case _MM_SHM:
                 case _MM_KRN:
                 case _MM_FS:
                 case _MM_NET:
@@ -236,6 +237,7 @@ int _mm_get_mem_usage_details(_mm_mem_usage_t *mem_usage)
                 mem_usage->filesystems_memory_usage = memory_usage[_MM_FS];
                 mem_usage->network_memory_usage     = memory_usage[_MM_NET];
                 mem_usage->programs_memory_usage    = memory_usage[_MM_PROG];
+                mem_usage->shared_memory_usage      = memory_usage[_MM_SHM];
                 mem_usage->modules_memory_usage     = 0;
 
                 for (size_t i = 0; i < _drvreg_number_of_modules; i++) {
@@ -376,6 +378,7 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                         }
                         break;
 
+                case _MM_SHM:
                 case _MM_KRN:
                 case _MM_FS:
                         usage = &memory_usage[mpur];

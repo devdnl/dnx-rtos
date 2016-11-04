@@ -51,6 +51,7 @@ typedef struct {
         i32_t network_memory_usage;
         i32_t modules_memory_usage;
         i32_t programs_memory_usage;
+        i32_t shared_memory_usage;
 } _mm_mem_usage_t;
 
 enum _mm_mem {
@@ -58,6 +59,7 @@ enum _mm_mem {
         _MM_FS,         //!< allocate memory for file system purposes
         _MM_NET,        //!< allocate memory for network purposes
         _MM_PROG,       //!< allocate memory for program purposes
+        _MM_SHM,        //!< allocate memory for share purposes
         _MM_MOD,        //!< allocate memory for modules purposes
         _MM_COUNT
 };
