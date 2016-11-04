@@ -340,7 +340,7 @@ void _syscall_init()
                 .p_stdin  = NULL,
                 .p_stdout = NULL,
                 .p_stderr = NULL,
-                .cwd      = "",
+                .cwd      = "/",
                 .priority = PRIORITY_NORMAL,
                 .detached = true
         };
