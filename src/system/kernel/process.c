@@ -44,6 +44,10 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#if __OS_TASK_MAX_THREADS__ > 12
+#error Maximum number of threads is 12
+#endif
+
 #define USERSPACE
 #define KERNELSPACE
 #define foreach_resource(_v, _l)        for (res_header_t *_v = _l; _v; _v = _v->next)
@@ -56,10 +60,6 @@
 
 #define ATOMIC for (int __ = 0; __ == 0;)\
         for (_kernel_scheduler_lock(); __ == 0; _kernel_scheduler_unlock(), __++)
-
-#if __OS_TASK_MAX_THREADS__ > 12
-#error Maximum number of threads is 12
-#endif
 
 #if __OS_ENABLE_SYS_ASSERT__ > 0
 #define PROCESS_ASSERT(assert)          while (not (assert))

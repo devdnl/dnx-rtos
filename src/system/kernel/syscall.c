@@ -202,50 +202,50 @@ static queue_t *call_request;
 static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MOUNT ] = syscall_mount,
         [SYSCALL_UMOUNT] = syscall_umount,
-    #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
+        #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
         [SYSCALL_SHMCREATE ] = syscall_shmcreate,
         [SYSCALL_SHMATTACH ] = syscall_shmattach,
         [SYSCALL_SHMDETACH ] = syscall_shmdetach,
         [SYSCALL_SHMDESTROY] = syscall_shmdestroy,
-    #endif
-    #if __OS_ENABLE_STATFS__ == _YES_
+        #endif
+        #if __OS_ENABLE_STATFS__ == _YES_
         [SYSCALL_GETMNTENTRY] = syscall_getmntentry,
-    #endif
-    #if __OS_ENABLE_MKNOD__ == _YES_
+        #endif
+        #if __OS_ENABLE_MKNOD__ == _YES_
         [SYSCALL_MKNOD] = syscall_mknod,
-    #endif
-    #if __OS_ENABLE_MKDIR__ == _YES_
+        #endif
+        #if __OS_ENABLE_MKDIR__ == _YES_
         [SYSCALL_MKDIR] = syscall_mkdir,
-    #endif
-    #if __OS_ENABLE_MKFIFO__ == _YES_
+        #endif
+        #if __OS_ENABLE_MKFIFO__ == _YES_
         [SYSCALL_MKFIFO] = syscall_mkfifo,
-    #endif
-    #if __OS_ENABLE_DIRBROWSE__ == _YES_
+        #endif
+        #if __OS_ENABLE_DIRBROWSE__ == _YES_
         [SYSCALL_OPENDIR ] = syscall_opendir,
         [SYSCALL_CLOSEDIR] = syscall_closedir,
         [SYSCALL_READDIR ] = syscall_readdir,
-    #endif
-    #if __OS_ENABLE_REMOVE__ == _YES_
+        #endif
+        #if __OS_ENABLE_REMOVE__ == _YES_
         [SYSCALL_REMOVE] = syscall_remove,
-    #endif
-    #if __OS_ENABLE_RENAME__ == _YES_
+        #endif
+        #if __OS_ENABLE_RENAME__ == _YES_
         [SYSCALL_RENAME] = syscall_rename,
-    #endif
-    #if __OS_ENABLE_CHMOD__ == _YES_
+        #endif
+        #if __OS_ENABLE_CHMOD__ == _YES_
         [SYSCALL_CHMOD] = syscall_chmod,
-    #endif
-    #if __OS_ENABLE_CHOWN__ == _YES_
+        #endif
+        #if __OS_ENABLE_CHOWN__ == _YES_
         [SYSCALL_CHOWN] = syscall_chown,
-    #endif
-    #if __OS_ENABLE_STATFS__ == _YES_
+        #endif
+        #if __OS_ENABLE_STATFS__ == _YES_
         [SYSCALL_STATFS] = syscall_statfs,
-    #endif
-    #if __OS_ENABLE_FSTAT__ == _YES_
+        #endif
+        #if __OS_ENABLE_FSTAT__ == _YES_
         [SYSCALL_STAT] = syscall_stat,
-    #endif
-    #if __OS_ENABLE_FSTAT__ == _YES_
+        #endif
+        #if __OS_ENABLE_FSTAT__ == _YES_
         [SYSCALL_FSTAT] = syscall_fstat,
-    #endif
+        #endif
         [SYSCALL_FOPEN ] = syscall_fopen,
         [SYSCALL_FCLOSE] = syscall_fclose,
         [SYSCALL_FWRITE] = syscall_fwrite,
@@ -254,10 +254,10 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_IOCTL ] = syscall_ioctl,
         [SYSCALL_FFLUSH] = syscall_fflush,
         [SYSCALL_SYNC  ] = syscall_sync,
-    #if __OS_ENABLE_TIMEMAN__ == _YES_
+        #if __OS_ENABLE_TIMEMAN__ == _YES_
         [SYSCALL_GETTIME] = syscall_gettime,
         [SYSCALL_SETTIME] = syscall_settime,
-    #endif
+        #endif
         [SYSCALL_DRIVERINIT       ] = syscall_driverinit,
         [SYSCALL_DRIVERRELEASE    ] = syscall_driverrelease,
         [SYSCALL_MALLOC           ] = syscall_malloc,
@@ -266,9 +266,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SYSLOGENABLE     ] = syscall_syslogenable,
         [SYSCALL_SYSLOGDISABLE    ] = syscall_syslogdisable,
         [SYSCALL_KERNELPANICDETECT] = syscall_kernelpanicdetect,
-    #if __OS_ENABLE_SYSTEMFUNC__ == _YES_
+        #if __OS_ENABLE_SYSTEMFUNC__ == _YES_
         [SYSCALL_SYSTEM           ] = syscall_system,
-    #endif
+        #endif
         [SYSCALL_PROCESSCREATE     ] = syscall_processcreate,
         [SYSCALL_PROCESSKILL       ] = syscall_processkill,
         [SYSCALL_PROCESSCLEANZOMBIE] = syscall_processcleanzombie,
@@ -277,10 +277,10 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_PROCESSSTATPID    ] = syscall_processstatpid,
         [SYSCALL_PROCESSGETPID     ] = syscall_processgetpid,
         [SYSCALL_PROCESSGETPRIO    ] = syscall_processgetprio,
-    #if __OS_ENABLE_GETCWD__ == _YES_
+        #if __OS_ENABLE_GETCWD__ == _YES_
         [SYSCALL_GETCWD] = syscall_getcwd,
         [SYSCALL_SETCWD] = syscall_setcwd,
-    #endif
+        #endif
         [SYSCALL_THREADCREATE    ] = syscall_threadcreate,
         [SYSCALL_THREADKILL      ] = syscall_threadkill,
         [SYSCALL_SEMAPHORECREATE ] = syscall_semaphorecreate,
@@ -289,7 +289,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MUTEXDESTROY    ] = syscall_mutexdestroy,
         [SYSCALL_QUEUECREATE     ] = syscall_queuecreate,
         [SYSCALL_QUEUEDESTROY    ] = syscall_queuedestroy,
-#if __ENABLE_NETWORK__ == _YES_
+        #if __ENABLE_NETWORK__ == _YES_
         [SYSCALL_NETIFUP          ] = syscall_netifup,
         [SYSCALL_NETIFDOWN        ] = syscall_netifdown,
         [SYSCALL_NETIFSTATUS      ] = syscall_netifstatus,
@@ -309,7 +309,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETSENDTO        ] = syscall_netsendto,
         [SYSCALL_NETRECVFROM      ] = syscall_netrecvfrom,
         [SYSCALL_NETGETADDRESS    ] = syscall_netgetaddress,
-#endif
+        #endif
 };
 
 /*==============================================================================
@@ -392,15 +392,13 @@ void syscall(syscall_t syscall, void *retptr, ...)
                         {
                                 syscallrq_t *syscallrq_ptr = &syscallrq;
 
-                                if (_builtinfunc(queue_send,
-                                                 call_request,
-                                                 &syscallrq_ptr,
-                                                 MAX_DELAY_MS) ==  ESUCC) {
+                                if (_queue_send(call_request,
+                                                &syscallrq_ptr,
+                                                MAX_DELAY_MS) ==  ESUCC) {
 
-                                        if (_builtinfunc(flag_wait,
-                                                         event_flags,
-                                                         _PROCESS_SYSCALL_FLAG(tid),
-                                                         MAX_DELAY_MS) == ESUCC) {
+                                        if (_flag_wait(event_flags,
+                                                       _PROCESS_SYSCALL_FLAG(tid),
+                                                       MAX_DELAY_MS) == ESUCC) {
 
                                                 if (syscallrq.err) {
                                                         _errno = syscallrq.err;
