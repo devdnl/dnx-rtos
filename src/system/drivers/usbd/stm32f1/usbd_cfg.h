@@ -49,6 +49,11 @@ extern "C" {
 #define _USBD_CONFIG__PULLUP_PIN_IDX    __USBD_PULLUP_PIN_INDEX__
 
 /**
+ * Pull-up pin active state
+ */
+#define _USBD_CONFIG_PULLUP_NEGATIVE    __USBD_PULLUP_NEGATIVE__
+
+/**
  * Interrupt priority
  */
 #define _USBD_IRQ_PRIORITY              __USBD_IRQ_PRIORITY__

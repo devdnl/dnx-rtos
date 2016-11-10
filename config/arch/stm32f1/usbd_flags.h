@@ -35,7 +35,7 @@
 #define _USBD_FLAGS_H_
 
 /*--
-this:SetLayout("TitledGridBack", 3, "Home > Microcontroller > USBD",
+this:SetLayout("TitledGridBack", 4, "Home > Microcontroller > USBD",
                function() this:LoadFile("arch/arch_flags.h") end)
 ++*/
 
@@ -57,19 +57,27 @@ end
 #define __USBD_PULLUP_PIN_INDEX__ 0
 
 /*--
+this:AddWidget("Checkbox", "Active low")
+this:SetToolTip("Pull-up pin activated by low level state.")
+--*/
+#define __USBD_PULLUP_NEGATIVE__ _YES_
+
+/*--
 this:AddWidget("Combobox", "Endpoint 0 size")
 this:AddItem("8",  "8")
 this:AddItem("16", "16")
 this:AddItem("32", "32")
 this:AddItem("64", "64")
-this:AddExtraWidget("Void", "VoidEP0SZ")
+this:AddExtraWidget("Void", "VoidEP0SZ1")
+this:AddExtraWidget("Void", "VoidEP0SZ2")
 --*/
 #define __USBD_ENDPOINT0_SIZE__ 8
 
 /*--
 this:AddWidget("Combobox", "IRQ priority")
 uC.AddPriorityItems(this)
-this:AddExtraWidget("Void", "VoidPrio")
+this:AddExtraWidget("Void", "VoidPrio1")
+this:AddExtraWidget("Void", "VoidPrio2")
 --*/
 #define __USBD_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
 

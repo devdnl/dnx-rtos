@@ -358,6 +358,22 @@ KERNELSPACE void _process_exit(_process_t *proc, int status)
         if (is_proc_valid(proc)) {
                 proc->status = status;
 
+                va_list none;
+                if (proc->f_stdin) {
+                        _vfs_vfioctl(proc->f_stdin, IOCTL_VFS__DEFAULT_RD_MODE, none);
+                        _vfs_vfioctl(proc->f_stdin, IOCTL_VFS__DEFAULT_WR_MODE, none);
+                }
+
+                if (proc->f_stdout) {
+                        _vfs_vfioctl(proc->f_stdout, IOCTL_VFS__DEFAULT_RD_MODE, none);
+                        _vfs_vfioctl(proc->f_stdout, IOCTL_VFS__DEFAULT_WR_MODE, none);
+                }
+
+                if (proc->f_stderr) {
+                        _vfs_vfioctl(proc->f_stderr, IOCTL_VFS__DEFAULT_RD_MODE, none);
+                        _vfs_vfioctl(proc->f_stderr, IOCTL_VFS__DEFAULT_WR_MODE, none);
+                }
+
                 ATOMIC {
                         if (proc->event) {
                                 _flag_set(proc->event, _PROCESS_EXIT_FLAG(0));
