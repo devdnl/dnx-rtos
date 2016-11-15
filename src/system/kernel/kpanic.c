@@ -32,6 +32,7 @@
 #include "kernel/printk.h"
 #include "kernel/kwrapper.h"
 #include "kernel/process.h"
+#include "kernel/sysfunc.h"
 #include "lib/vt100.h"
 #include "lib/cast.h"
 #include "mm/mm.h"
@@ -93,12 +94,14 @@ int _kernel_panic_init()
 //==============================================================================
 /**
  * @brief  Function check if the kernel panic occurred in the last session
- * @param  show_msg     true: show error message
+ *
+ * @param  path         file path to write panic message
+ *
  * @return If kernel panic occured in the last session then true is returned,
  *         otherwise false.
  */
 //==============================================================================
-bool _kernel_panic_detect(bool show_msg)
+bool _kernel_panic_detect(FILE *file)
 {
 #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         static const char *cause[] = {
@@ -114,7 +117,7 @@ bool _kernel_panic_detect(bool show_msg)
                         && kernel_panic_descriptor->valid2 == _KERNEL_PANIC_DESC_VALID2 );
 
         if (occurred) {
-                if (show_msg) {
+                if (file) {
                         if (kernel_panic_descriptor->cause > _KERNEL_PANIC_DESC_CAUSE_UNKNOWN) {
                                 kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_UNKNOWN;
                         }
@@ -124,12 +127,11 @@ bool _kernel_panic_detect(bool show_msg)
                         }
 
                       #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
-                        _printk(VT100_FONT_COLOR_RED"*** KERNEL PANIC ***"VT100_RESET_ATTRIBUTES"\n");
-                        _printk("Cause: %s\n", cause[kernel_panic_descriptor->cause]);
-                        _printk("PID  : %d (%s)\n", kernel_panic_descriptor->pid, kernel_panic_descriptor->name);
-                        _printk("TID  : %d\n", kernel_panic_descriptor->tid);
+                        sys_fprintf(file, VT100_FONT_COLOR_RED"*** KERNEL PANIC ***"VT100_RESET_ATTRIBUTES"\n");
+                        sys_fprintf(file, "Cause: %s\n", cause[kernel_panic_descriptor->cause]);
+                        sys_fprintf(file, "PID  : %d (%s)\n", kernel_panic_descriptor->pid, kernel_panic_descriptor->name);
+                        sys_fprintf(file, "TID  : %d\n", kernel_panic_descriptor->tid);
                       #endif
-                        _sleep(3);
                 }
 
                 kernel_panic_descriptor->valid1 = 0;

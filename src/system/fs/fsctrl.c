@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include "fs/fsctrl.h"
 #include "fs/vfs.h"
+#include "kernel/sysfunc.h"
 
 /*==============================================================================
   Local macros
@@ -76,19 +77,32 @@ extern const uint             _FS_table_size;
 //==============================================================================
 int _mount(const char *FS_name, const struct vfs_path *src_path, const struct vfs_path *mount_point)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (FS_name && mount_point && mount_point->PATH && src_path && src_path->PATH) {
+                err = ENOENT;
+
                 for (uint i = 0; i < _FS_table_size; i++) {
                         if (strcmp(_FS_table[i].FS_name, FS_name) == 0) {
-                                result = _vfs_mount(src_path, mount_point,
-                                                    &_FS_table[i].FS_if);
+                                err = _vfs_mount(src_path, mount_point,
+                                                 &_FS_table[i].FS_if);
+
+                                if (!err) {
+                                        printk("Filesystem '%s' mounted in %s", FS_name, mount_point->PATH);
+                                } else {
+                                        printk("Filesystem '%s' mount error (%d)", FS_name, err);
+                                }
+
                                 break;
                         }
                 }
+
+                if (err == ENOENT) {
+                        printk("Filesystem '%s' does not exist", FS_name);
+                }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

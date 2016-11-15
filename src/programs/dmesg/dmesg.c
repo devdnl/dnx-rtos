@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    mian.c
+File     dmesg.c
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+Brief    System log reader
 
-@note    Copyright (C) 2012, 2013  Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -27,21 +27,19 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "portable/cpuctl.h"
-#include "mm/heap.h"
-#include "fs/vfs.h"
-#include "lib/unarg.h"
-#include "kernel/syscall.h"
-#include "kernel/kpanic.h"
-#include "kernel/kwrapper.h"
-#include "kernel/sysfunc.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <dnx/misc.h>
+#include <dnx/os.h>
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Local object types
 ==============================================================================*/
 
 /*==============================================================================
@@ -49,51 +47,65 @@
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Local objects
+==============================================================================*/
+GLOBAL_VARIABLES_SECTION {
+};
+
+/*==============================================================================
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object definitions
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
 //==============================================================================
 /**
- * @brief  Task used to initialize dnx RTOS system. This task decrease stack
- *         usage in startup phase. Task after system initialization is deleted.
+ * Main program function.
+ *
+ * Note: Please adjust stack size according to programs needs.
+ *
+ * @param argc      argument count
+ * @param argv      arguments
  */
 //==============================================================================
-void dnxinit(void *arg)
+int_main(dmesg, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        UNUSED_ARG1(arg);
+        bool clear = false;
 
-        _vfs_init();
-        _syscall_init();
+        for (int i = 1; i < argc; i++) {
+            if (isstreq(argv[i], "-h") || isstreq(argv[i], "--help")) {
+                    printf("Usage: %s [options]\n\n", argv[0]);
+                    puts("Options:");
+                    puts("  -c, --clear     log clear");
+                    puts("  -h, --help      this help");
+                    return EXIT_FAILURE;
+            }
 
-        printk("Welcome to dnx RTOS!");
+            if (isstreq(argv[i], "-c") || isstreq(argv[i], "--help")) {
+                    clear = true;
+            }
+        }
 
-        _task_exit();
-}
+        if (clear) {
+                syslog_clear();
 
-//==============================================================================
-/**
- * @brief Main function
- */
-//==============================================================================
-int main(void)
-{
-        _cpuctl_init();
-        _heap_init();
-        _mm_init();
-        _kernel_panic_init();
-        _task_create(dnxinit, "", (1024 / sizeof(StackType_t)), NULL, NULL, NULL);
-        _kernel_start();
-        return -1;
+        } else {
+                char  str[128];
+                u32_t ts = 0;
+                while (syslog_read(str, sizeof(str), &ts)) {
+                        printf("[%5d.%03d] %s\n", ts / 1000, ts % 1000, str);
+                }
+        }
+
+        return EXIT_SUCCESS;
 }
 
 /*==============================================================================
   End of file
 ==============================================================================*/
+

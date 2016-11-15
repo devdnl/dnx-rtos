@@ -912,9 +912,7 @@ static bool handle_DMA_IRQ(u8_t major)
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_USE_DMA == 0)
 void SPI1_IRQHandler(void)
 {
-        if (handle_SPI_IRQ(_SPI1)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(handle_SPI_IRQ(_SPI1));
 }
 #endif
 
@@ -926,9 +924,7 @@ void SPI1_IRQHandler(void)
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_USE_DMA == 0)
 void SPI2_IRQHandler(void)
 {
-        if (handle_SPI_IRQ(_SPI2)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(handle_SPI_IRQ(_SPI2));
 }
 #endif
 
@@ -940,9 +936,7 @@ void SPI2_IRQHandler(void)
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_USE_DMA == 0)
 void SPI3_IRQHandler(void)
 {
-        if (handle_SPI_IRQ(_SPI3)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(handle_SPI_IRQ(_SPI3));
 }
 #endif
 
@@ -954,9 +948,7 @@ void SPI3_IRQHandler(void)
 #if defined(RCC_APB2ENR_SPI1EN) && (_SPI1_USE_DMA > 0)
 void DMA1_Channel2_IRQHandler(void)
 {
-        if (handle_DMA_IRQ(_SPI1)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(handle_DMA_IRQ(_SPI1));
 }
 #endif
 
@@ -968,9 +960,7 @@ void DMA1_Channel2_IRQHandler(void)
 #if defined(RCC_APB1ENR_SPI2EN) && (_SPI2_USE_DMA > 0)
 void DMA1_Channel4_IRQHandler(void)
 {
-        if (handle_DMA_IRQ(_SPI2)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(handle_DMA_IRQ(_SPI2));
 }
 #endif
 
@@ -982,9 +972,7 @@ void DMA1_Channel4_IRQHandler(void)
 #if defined(RCC_APB1ENR_SPI3EN) && (_SPI3_USE_DMA > 0)
 void DMA2_Channel1_IRQHandler(void)
 {
-        if (handle_DMA_IRQ(_SPI3)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(handle_DMA_IRQ(_SPI3));
 }
 #endif
 

@@ -476,9 +476,7 @@ static bool IRQ_handler(u8_t major)
 //==============================================================================
 void EXTI0_IRQHandler(void)
 {
-        if (IRQ_handler(0)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(0));
 }
 
 //==============================================================================
@@ -488,9 +486,7 @@ void EXTI0_IRQHandler(void)
 //==============================================================================
 void EXTI1_IRQHandler(void)
 {
-        if (IRQ_handler(1)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(1));
 }
 
 //==============================================================================
@@ -500,9 +496,7 @@ void EXTI1_IRQHandler(void)
 //==============================================================================
 void EXTI2_IRQHandler(void)
 {
-        if (IRQ_handler(2)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(2));
 }
 
 //==============================================================================
@@ -512,9 +506,7 @@ void EXTI2_IRQHandler(void)
 //==============================================================================
 void EXTI3_IRQHandler(void)
 {
-        if (IRQ_handler(3)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(3));
 }
 
 //==============================================================================
@@ -524,9 +516,7 @@ void EXTI3_IRQHandler(void)
 //==============================================================================
 void EXTI4_IRQHandler(void)
 {
-        if (IRQ_handler(4)) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(4));
 }
 
 //==============================================================================
@@ -542,9 +532,7 @@ void EXTI9_5_IRQHandler(void)
                 woken |= IRQ_handler(i);
         }
 
-        if (woken) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(woken);
 }
 
 //==============================================================================
@@ -560,9 +548,7 @@ void EXTI15_10_IRQHandler(void)
                 woken |= IRQ_handler(i);
         }
 
-        if (woken) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(woken);
 }
 
 /*==============================================================================

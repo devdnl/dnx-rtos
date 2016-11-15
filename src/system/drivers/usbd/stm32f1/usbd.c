@@ -1449,9 +1449,7 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
                 USB->ISTR = ~USB_ISTR_ESOF;
         }
 
-        if (rx_woken || tx_woken || setup_woken) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(rx_woken || tx_woken || setup_woken);
 }
 
 /*==============================================================================

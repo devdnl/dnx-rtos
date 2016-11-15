@@ -37,6 +37,7 @@
 #include "kernel/kwrapper.h"
 #include "kernel/kpanic.h"
 #include "kernel/printk.h"
+#include "kernel/sysfunc.h"
 #include "lib/llist.h"
 #include "lib/cast.h"
 #include "dnx/misc.h"
@@ -1224,7 +1225,7 @@ static void process_destroy_all_resources(_process_t *proc)
 
                 int err = resource_destroy(resource);
                 if (err != ESUCC) {
-                        _printk("Unknown object: %p\n", resource);
+                        printk("PROCESS: PID %d: unknown object %p\n", proc->pid, resource);
                 }
         }
 

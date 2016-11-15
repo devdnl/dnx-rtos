@@ -31,6 +31,7 @@
   Include files
 ==============================================================================*/
 #include <stdbool.h>
+#include "fs/vfs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,7 +60,7 @@ enum _kernel_panic_desc_cause {
   Exported functions
 ==============================================================================*/
 extern int  _kernel_panic_init();
-extern bool _kernel_panic_detect(bool);
+extern bool _kernel_panic_detect(FILE*);
 extern void _kernel_panic_report(enum _kernel_panic_desc_cause);
 
 /*==============================================================================

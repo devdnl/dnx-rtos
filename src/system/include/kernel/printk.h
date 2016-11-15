@@ -30,6 +30,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,9 +51,15 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-int  _printk_enable(const char*);
-int  _printk_disable(void);
-void _printk(const char*, ...);
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
+size_t _printk_read(char *str, size_t len, u32_t *timestamp_ms);
+void   _printk_clear(void);
+void   _printk(const char*, ...);
+#else
+#define _printk(...)
+#define _printk_read(str, len, timestamp_ms)
+#define _printk_clear()
+#endif
 
 /*==============================================================================
   Exported inline functions

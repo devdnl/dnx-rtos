@@ -113,12 +113,6 @@ this:SetToolTip("If this option is selected then system is halted in the idle ta
 #define __OS_SLEEP_ON_IDLE__ _NO_
 
 /*--
-this:AddWidget("Checkbox", "System log function")
-this:SetToolTip("If this function is selected then system messages can be send to the terminal or file.")
---*/
-#define __OS_SYSTEM_MSG_ENABLE__ _YES_
-
-/*--
 this:AddWidget("Checkbox", "Color terminal")
 this:SetToolTip("If this function is selected then terminal output can be colorized by using VT100 commands.")
 --*/
@@ -216,15 +210,21 @@ this:SetToolTip("This option enables getting statistics of file.")
 
 /*--
 this:AddWidget("Checkbox", "System assert")
-this:SetToolTip("This option enables assert system assert function. Use only for debug purposes!.")
+this:SetToolTip("This option enables assert system assert function. Use only for debug purposes!")
 --*/
 #define __OS_ENABLE_SYS_ASSERT__ _YES_
 
 /*--
-this:AddWidget("Checkbox", "Shared memory feature")
-this:SetToolTip("This option enables shared memory subsystem.")
+this:AddWidget("Checkbox", "IPC Shared memory")
+this:SetToolTip("This option enables IPC shared memory.")
 --*/
-#define __OS_ENABLE_SHARED_MEMORY__ _YES_
+#define __OS_ENABLE_SHARED_MEMORY__ _NO_
+
+/*--
+this:AddWidget("Checkbox", "System log function")
+this:SetToolTip("If this function is selected then system messages can be send to the terminal or file.")
+--*/
+#define __OS_SYSTEM_MSG_ENABLE__ _YES_
 
 /*--
 --this:AddExtraWidget("Void", "VoidOption")
@@ -255,6 +255,21 @@ this:AddWidget("Spinbox", 4, 1024, "Memory allocation size [bytes]")
 this:SetToolTip("The allocation block size is a minimal memory block that can be allocated by the Dynamic Memory Management (e.g. malloc function).")
 --*/
 #define __HEAP_BLOCK_SIZE__ 4
+
+/*--
+--this:AddExtraWidget("Void", "VoidOption")
+this:AddWidget("Spinbox", 1, 250, "System log columns")
+this:SetToolTip("This option determine how many characters in row can be stored. " ..
+                "Option is active when system log function is enabled.")
+--*/
+#define __OS_SYSTEM_MSG_COLS__ 64
+
+/*--
+this:AddWidget("Spinbox", 1, 250, "System log rows")
+this:SetToolTip("This option determine how many rows is stored in buffer. " ..
+                "Option is active when system log function is enabled.")
+--*/
+#define __OS_SYSTEM_MSG_ROWS__ 4
 
 /*--
 this:AddWidget("Combobox", "Length of errno messages")

@@ -404,13 +404,9 @@ void _task_yield(void)
  * @return None
  */
 //==============================================================================
-void _task_yield_from_ISR(void)
+void _task_yield_from_ISR(bool yield)
 {
-#ifdef portYIELD_FROM_ISR
-        portYIELD_FROM_ISR(true);
-#else
-        taskYIELD();
-#endif
+        portYIELD_FROM_ISR(yield);
 }
 
 //==============================================================================
@@ -824,33 +820,6 @@ int _flag_set(flag_t *flag, u32_t bits)
 
 //==============================================================================
 /**
- * @brief Function set selected bits from interrupt.
- *
- * @param flag          flag object
- * @param bits          bits to set (OR)
- * @param task_woken    task woken
- *
- * @return One of errno values.
- */
-//==============================================================================
-int _flag_set_from_ISR(flag_t *flag, u32_t bits, bool *task_woken)
-{
-        if (is_flag_valid(flag)) {
-                BaseType_t woken = false;
-                xEventGroupSetBitsFromISR(flag->object, bits, &woken);
-
-                if (task_woken) {
-                        *task_woken = woken;
-                }
-
-                return ESUCC;
-        } else {
-                return EINVAL;
-        }
-}
-
-//==============================================================================
-/**
  * @brief Function clear selected bits.
  *
  * @param flag          flag object
@@ -871,21 +840,37 @@ int _flag_clear(flag_t *flag, u32_t bits)
 
 //==============================================================================
 /**
- * @brief Function clear selected bits from interrupt.
+ * @brief Function get bits.
  *
  * @param flag          flag object
- * @param bits          bits to clear (OR)
  *
- * @return One of errno values.
+ * @return Flags.
  */
 //==============================================================================
-int _flag_clear_from_ISR(flag_t *flag, u32_t bits)
+u32_t _flag_get(flag_t *flag)
 {
         if (is_flag_valid(flag)) {
-                xEventGroupClearBitsFromISR(flag->object, bits);
-                return ESUCC;
+                return (u32_t)xEventGroupGetBits(flag->object);
         } else {
-                return EINVAL;
+                return 0;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function get bits from interrupt.
+ *
+ * @param flag          flag object
+ *
+ * @return Flags.
+ */
+//==============================================================================
+u32_t _flag_get_from_ISR(flag_t *flag)
+{
+        if (is_flag_valid(flag)) {
+                return (u32_t)xEventGroupGetBitsFromISR(flag->object);
+        } else {
+                return 0;
         }
 }
 

@@ -173,6 +173,45 @@ int sys_semaphore_destroy(sem_t *sem)
 
 //==============================================================================
 /**
+ * @brief Function creates flags. Flag is similar to semaphore except single
+ *        object contains more than one synchronization point.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param flag            created flag handle
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+int sys_flag_create(flag_t **flag)
+{
+        int r = _flag_create(flag);
+        if (r == ESUCC) {
+                _process_register_resource(_kworker_proc, cast(res_header_t*, *flag));
+        }
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief Function deletes flag.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param flag      flag object
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+int sys_flag_destroy(flag_t *flag)
+{
+        return _process_release_resource(_kworker_proc,
+                                         cast(res_header_t *, flag),
+                                         RES_TYPE_FLAG);
+}
+
+//==============================================================================
+/**
  * @brief Function create new mutex
  *
  * @param[in]  type     mutex type

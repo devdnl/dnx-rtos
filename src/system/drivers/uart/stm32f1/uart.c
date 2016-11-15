@@ -762,9 +762,7 @@ static void IRQ_handle(u8_t major)
 
 
         /* yield thread if data send or received */
-        if (yield) {
-                sys_thread_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(yield);
 }
 
 //==============================================================================

@@ -147,7 +147,7 @@ extern void  vApplicationSwitchedOut(void);
 #define INCLUDE_uxTaskGetStackHighWaterMark     1
 #define INCLUDE_xTaskGetIdleTaskHandle          1
 #define INCLUDE_xTimerGetTimerDaemonTaskHandle  0
-#define INCLUDE_pcTaskGetTaskName               1
+#define INCLUDE_pcTaskGetTaskName               0
 #define INCLUDE_eTaskGetState                   0
 #define INCLUDE_xEventGroupSetBitFromISR        0
 #define INCLUDE_xTimerPendFunctionCall          0

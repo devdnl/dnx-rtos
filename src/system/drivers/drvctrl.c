@@ -35,6 +35,7 @@
 #include "kernel/printk.h"
 #include "kernel/process.h"
 #include "kernel/syscall.h"
+#include "kernel/sysfunc.h"
 #include "lib/vt100.h"
 #include "lib/llist.h"
 #include "fs/vfs.h"
@@ -44,6 +45,9 @@
   Local macros
 ==============================================================================*/
 #undef errno
+
+#define DRIVER_NAME             "Driver %s%d-%d"
+#define DRIVER_NAME_ARGS        module, major, minor
 
 /*==============================================================================
   Local object types
@@ -61,24 +65,6 @@ typedef struct drvmem {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
-static const char *DRV_ALREADY_INIT_FMT = VT100_FONT_COLOR_RED"Driver '%s%d-%d' is already initialized!"VT100_RESET_ATTRIBUTES"\n";
-static const char *DRV_INITIALIZING_FMT = "Initializing %s%d-%d... ";
-static const char *DRV_ERROR_FMT        = VT100_FONT_COLOR_RED"error (%d)"VT100_RESET_ATTRIBUTES"\n";
-static const char *DRV_NODE_CREATED_FMT = "%s node created\n";
-static const char *DRV_NODE_FAIL_FMT    = VT100_FONT_COLOR_RED"%s node create fail"VT100_RESET_ATTRIBUTES"\n";
-static const char *DRV_INITIALIZED_FMT  = "initialized\n";
-static const char *MOD_NOT_EXIST_FMT    = VT100_FONT_COLOR_RED"Module '%s' does not exist!"VT100_RESET_ATTRIBUTES"\n";
-#else
-static const char *DRV_ALREADY_INIT_FMT = "";
-static const char *DRV_INITIALIZING_FMT = "";
-static const char *DRV_ERROR_FMT        = "";
-static const char *DRV_NODE_CREATED_FMT = "";
-static const char *DRV_NODE_FAIL_FMT    = "";
-static const char *DRV_INITIALIZED_FMT  = "";
-static const char *MOD_NOT_EXIST_FMT    = "";
-#endif
-
 static drvmem_t **drvmem;
 
 /*==============================================================================
@@ -291,8 +277,6 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
         err             = driver__register(modno, major, minor, &drv);
         if (err == ESUCC) {
 
-                _printk(DRV_INITIALIZING_FMT, module, major, minor);
-
                 err = driver__initialize(modno, major, minor, &drv->mem);
                 if (err == ESUCC) {
                         if (id) {
@@ -306,25 +290,25 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
 
                                 err = _vfs_mknod(&cpath, drv->devid);
                                 if (err == ESUCC) {
-                                        _printk(DRV_NODE_CREATED_FMT, node_path);
+                                        printk(DRIVER_NAME" initialized as %s", DRIVER_NAME_ARGS, node_path);
 
                                 } else {
                                         driver__release(modno, drv->mem);
                                         driver__remove(drv->devid);
-                                        _printk(DRV_NODE_FAIL_FMT, node_path);
+                                        printk(DRIVER_NAME" node create fail (%d)", DRIVER_NAME_ARGS, err);
                                 }
                         } else {
-                                _printk(DRV_INITIALIZED_FMT);
+                                printk(DRIVER_NAME" initialized", DRIVER_NAME_ARGS);
                         }
 
                 } else {
                         driver__remove(drv->devid);
-                        _printk(DRV_ERROR_FMT, err);
+                        printk(DRIVER_NAME" initialization error (%d)", DRIVER_NAME_ARGS, err);
                 }
         } else {
                 switch (err) {
-                case EADDRINUSE: _printk(DRV_ALREADY_INIT_FMT, module, major, minor); break;
-                default        : _printk(MOD_NOT_EXIST_FMT, module); break;
+                case EADDRINUSE: printk(DRIVER_NAME" already initialized", DRIVER_NAME_ARGS); break;
+                default        : printk(DRIVER_NAME" module does not exist", DRIVER_NAME_ARGS); break;
                 }
         }
 

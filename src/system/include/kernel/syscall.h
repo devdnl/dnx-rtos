@@ -64,6 +64,9 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_GETCWD,                 // | char*          | char *buf                 | size_t *size                        |                           |                           |                                           |
         SYSCALL_SETCWD,                 // | int            | const char *cwd           |                                     |                           |                           |                                           |
     #endif
+    #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
+        SYSCALL_SYSLOGREAD,             // | size_t         | char *str                 | size_t *len                         | u32_t *timestamp          |                           |                                           |
+    #endif
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr                 | void *arg                 |                           |                                           |
         SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init              |                           |                           |                                           |
         SYSCALL_SEMAPHOREDESTROY,       // | void           | sem_t *semaphore          |                                     |                           |                           |                                           |
@@ -71,8 +74,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_MUTEXDESTROY,           // | void           | mutex_t *mutex            |                                     |                           |                           |                                           |
         SYSCALL_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size             |                           |                           |                                           |
         SYSCALL_QUEUEDESTROY,           // | void           | queue_t *queue            |                                     |                           |                           |                                           |
-#define _SYSCALL_GROUP_0_OS_NON_BLOCKING  SYSCALL_QUEUEDESTROY // this group ends at this syscall ----------------------------+---------------------------+---------------------------+-------------------------------------------+
-        SYSCALL_KERNELPANICDETECT,      // | bool           | bool *showmsg             |                                     |                           |                           |                                           |
+#define _SYSCALL_GROUP_0_OS_NON_BLOCKING  SYSCALL_QUEUEDESTROY // this group ends at ^this^ syscall ----------------------------+---------------------------+---------------------------+-------------------------------------------+
         SYSCALL_THREADKILL,             // | int            | tid_t *tid                |                                     |                           |                           |                                           |
         SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr                |                           |                           |                                           |
         SYSCALL_PROCESSCLEANZOMBIE,     // | int            | pid_t *pid                | int *status                         |                           |                           |                                           |
@@ -131,9 +133,8 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
     #endif
         SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                | const char *node_path     |                                           |
         SYSCALL_DRIVERRELEASE,          // | int            | const char *mod_name      | int *major                          | int *minor                |                           |                                           |
-        SYSCALL_SYSLOGENABLE,           // | int            | const char *pathname      |                                     |                           |                           |                                           |
-        SYSCALL_SYSLOGDISABLE,          // | int            |                           |                                     |                           |                           |                                           |
-#define _SYSCALL_GROUP_1_FS_BLOCKING      SYSCALL_SYSLOGDISABLE // this group ends at this syscall ----------------------------------+---------------------------+---------------------------+-------------------------------------------+
+        SYSCALL_KERNELPANICDETECT,      // | bool           | FILE *file                |                                     |                           |                           |                                           |
+#define _SYSCALL_GROUP_1_FS_BLOCKING      SYSCALL_KERNELPANICDETECT // this group ends at ^this^ syscall ----------------------------------+---------------------------+---------------------------+-------------------------------------------+
     #if __ENABLE_NETWORK__ == _YES_
         SYSCALL_NETIFUP,                // | int            | NET_family_t *family      | const NET_generic_config_t *config  |                           |                           |                                           |
         SYSCALL_NETIFDOWN,              // | int            | NET_family_t *family      |                                     |                           |                           |                                           |

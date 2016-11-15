@@ -141,8 +141,9 @@ static void syscall_driverrelease(syscallrq_t *rq);
 static void syscall_malloc(syscallrq_t *rq);
 static void syscall_zalloc(syscallrq_t *rq);
 static void syscall_free(syscallrq_t *rq);
-static void syscall_syslogenable(syscallrq_t *rq);
-static void syscall_syslogdisable(syscallrq_t *rq);
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
+static void syscall_syslogread(syscallrq_t *rq);
+#endif
 static void syscall_kernelpanicdetect(syscallrq_t *rq);
 static void syscall_processcreate(syscallrq_t *rq);
 static void syscall_processkill(syscallrq_t *rq);
@@ -263,8 +264,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MALLOC           ] = syscall_malloc,
         [SYSCALL_ZALLOC           ] = syscall_zalloc,
         [SYSCALL_FREE             ] = syscall_free,
-        [SYSCALL_SYSLOGENABLE     ] = syscall_syslogenable,
-        [SYSCALL_SYSLOGDISABLE    ] = syscall_syslogdisable,
+        #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
+        [SYSCALL_SYSLOGREAD       ] = syscall_syslogread,
+        #endif
         [SYSCALL_KERNELPANICDETECT] = syscall_kernelpanicdetect,
         #if __OS_ENABLE_SYSTEMFUNC__ == _YES_
         [SYSCALL_SYSTEM           ] = syscall_system,
@@ -1145,6 +1147,7 @@ static void syscall_free(syscallrq_t *rq)
         SETERRNO(err);
 }
 
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 //==============================================================================
 /**
  * @brief  This syscall enable system log functionality in selected file.
@@ -1152,25 +1155,14 @@ static void syscall_free(syscallrq_t *rq)
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_syslogenable(syscallrq_t *rq)
+static void syscall_syslogread(syscallrq_t *rq)
 {
-        GETARG(const char *, path);
-        SETERRNO(_printk_enable(path));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        GETARG(char  *, str);
+        GETARG(size_t*, len);
+        GETARG(u32_t *, timestamp);
+        SETRETURN(size_t, _printk_read(str, *len, timestamp));
 }
-
-//==============================================================================
-/**
- * @brief  This syscall disable system log functionality.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_syslogdisable(syscallrq_t *rq)
-{
-        SETERRNO(_printk_disable());
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
-}
+#endif
 
 //==============================================================================
 /**
@@ -1181,8 +1173,8 @@ static void syscall_syslogdisable(syscallrq_t *rq)
 //==============================================================================
 static void syscall_kernelpanicdetect(syscallrq_t *rq)
 {
-        GETARG(bool *, showmsg);
-        SETRETURN(bool, _kernel_panic_detect(*showmsg));
+        GETARG(FILE*, file);
+        SETRETURN(bool, _kernel_panic_detect(file));
 }
 
 //==============================================================================

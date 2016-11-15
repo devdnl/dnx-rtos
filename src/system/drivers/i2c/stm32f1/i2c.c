@@ -1102,8 +1102,10 @@ static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
 //==============================================================================
 static void IRQ_EV_handler(u8_t major)
 {
+        bool woken = false;
+
         if (I2C1->SR1 & I2C[major]->SR1_mask) {
-                sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
+                sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
                 CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
                 I2C[major]->unexp_event_cnt = 0;
         } else {
@@ -1114,12 +1116,12 @@ static void IRQ_EV_handler(u8_t major)
                  */
                 if (++I2C[major]->unexp_event_cnt >= 10) {
                         I2C[major]->error = EIO;
-                        sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
+                        sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
                         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
                 }
         }
 
-        sys_thread_yield_from_ISR();
+        sys_thread_yield_from_ISR(woken);
 }
 
 //==============================================================================
@@ -1148,9 +1150,10 @@ static void IRQ_ER_handler(u8_t major)
         // clear error flags
         i2c->SR1 = 0;
 
-        sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
+        bool woken = false;
+        sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
-        sys_thread_yield_from_ISR();
+        sys_thread_yield_from_ISR(woken);
 }
 
 //==============================================================================
@@ -1168,9 +1171,10 @@ static void IRQ_DMA_handler(const int DMA_ch_no, u8_t major)
                 I2C[major]->error = EIO;
         }
 
-        sys_semaphore_signal_from_ISR(I2C[major]->event, NULL);
+        bool woken = false;
+        sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
         clear_DMA_IRQ_flags(major);
-        sys_thread_yield_from_ISR();
+        sys_thread_yield_from_ISR(woken);
 }
 #endif
 

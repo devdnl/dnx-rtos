@@ -47,6 +47,7 @@ extern "C" {
 #include <kernel/syscall.h>
 #include <kernel/khooks.h>
 #include <kernel/process.h>
+#include <kernel/printk.h>
 #include <mm/mm.h>
 #include <drivers/drvctrl.h>
 
@@ -920,18 +921,16 @@ static inline void system_shutdown(void)
 
 //==============================================================================
 /**
- * @brief Function enables system log.
+ * @brief Function raed system log.
  *
- * The function syslog_enable() enable system logging function. Log
- * messages will be wrote to the file pointed by <i>path</i>. If file exists and
- * is correctly opened then \b 0 is returned, otherwise \b -1 and appropriate errno
- * value is set.
+ * The function syslog_read() read system log messages. Read message is
+ * deleted from system ring buffer.
  *
- * @param  path         log file path
+ * @param  str          message string
+ * @param  len          maximum string size
+ * @param  timestamp    message timestamp (in milliseconds). Can be NULL.
  *
- * @exception | Any
- *
- * @return On success \b 0 is returned, otherwise \b -1.
+ * @return String size. 0 if system log is empty.
  *
  * @b Example
  * @code
@@ -939,30 +938,33 @@ static inline void system_shutdown(void)
 
         // ...
 
-        // log stream write to tty3 device
-        syslog_enable("/dev/tty3");
+        char msg[128];
+        while (syslog_read(msg, sizeof(msg), NULL) {
+                puts(msg);
+        }
 
         // ...
 
    @endcode
  */
 //==============================================================================
-static inline int syslog_enable(const char *path)
+static inline size_t syslog_read(char *str, size_t len, u32_t *timestamp)
 {
-        int r = -1;
-        syscall(SYSCALL_SYSLOGENABLE, &r, path);
-        return r;
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
+        size_t n = 0;
+        syscall(SYSCALL_SYSLOGREAD, &n, str, &len, timestamp);
+        return n;
+#else
+        UNUSED_ARG3(str, len, timestamp);
+        return 0;
+#endif
 }
 
 //==============================================================================
 /**
- * @brief Function disables system log functionality.
+ * @brief Function clear system log.
  *
- * The function syslog_disable() disables system logging functionality.
- *
- * @exception | Any
- *
- * @return On success \b 0 is returned, otherwise \b -1 and appropriate errno value is set.
+ * The function syslog_clear() clears system log messages.
  *
  * @b Example
  * @code
@@ -970,18 +972,16 @@ static inline int syslog_enable(const char *path)
 
         // ...
 
-        syslog_disable();
+        syslog_clear();
 
         // ...
 
    @endcode
  */
 //==============================================================================
-static inline int syslog_disable()
+static inline void syslog_clear(void)
 {
-        int r = -1;
-        syscall(SYSCALL_SYSLOGDISABLE, &r);
-        return r;
+        _builtinfunc(printk_clear);
 }
 
 //==============================================================================
@@ -989,10 +989,10 @@ static inline int syslog_disable()
  * @brief Function is used to detect occurred kernel panic.
  *
  * The function detect_kernel_panic() detect if in the last session
- * the Kernel Panic occurred. Kernel Panic message is show if <i>showmsg</i> is
- * set to <b>true</b>.
+ * the Kernel Panic occurred. Kernel Panic message is redirected to the selected
+ * file.
  *
- * @param  showmsg      show message if kernel panic occurred
+ * @param  file         write kernel panic message into selected file
  *
  * @return If kernel panic occurred then \b true is returned, otherwise \b false.
  *
@@ -1002,17 +1002,17 @@ static inline int syslog_disable()
 
         // ...
 
-        detect_kernel_panic(true);
+        detect_kernel_panic(stderr);
 
         // ...
 
    @endcode
  */
 //==============================================================================
-static inline bool detect_kernel_panic(bool showmsg)
+static inline bool detect_kernel_panic(FILE *file)
 {
         bool r = false;
-        syscall(SYSCALL_KERNELPANICDETECT, &r, &showmsg);
+        syscall(SYSCALL_KERNELPANICDETECT, &r, file);
         return r;
 }
 

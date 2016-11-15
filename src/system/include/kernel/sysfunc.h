@@ -2471,11 +2471,12 @@ static inline void sys_sync()
 
 //==============================================================================
 /**
- * @brief Function send kernel message on terminal
+ * @brief Function put message to kernel log.
+ *
+ * @note Function can be used only by file system or driver code.
  *
  * The function produce output according to a <i>format</i> as described below.
- * The function write output to <b>kernel message terminal</b>, configured
- * by syslog_enable() function (user space).<p>
+ * The function write output to <b>kernel log buffer</b>.
  *
  * <b>%</b> - The flag starts interpreting of formatting. After character can be type a
  * numbers which determine e.g. buffer length, number of digits, etc. When
@@ -2543,9 +2544,9 @@ static inline void sys_sync()
  */
 //==============================================================================
 #ifndef DOXYGEN
-#define sys_printk(...) _printk(__VA_ARGS__)
+#define printk(...) _printk(__VA_ARGS__)
 #else
-static inline void sys_printk(const char *format, ...);
+static inline void printk(const char *format, ...);
 #endif
 
 //==============================================================================
@@ -2621,7 +2622,7 @@ static inline void sys_printk(const char *format, ...);
         // ...
    @endcode
  *
- * @see sys_printk(), sys_snprintf(), sys_vfprintf(), sys_fprintf()
+ * @see sys_snprintf(), sys_vfprintf(), sys_fprintf()
  */
 //==============================================================================
 static inline int sys_vsnprintf(char *buf, size_t size, const char *format, va_list args)
@@ -2699,7 +2700,7 @@ static inline int sys_vsnprintf(char *buf, size_t size, const char *format, va_l
         // ...
    @endcode
  *
- * @see sys_printk(), sys_vsnprintf(), sys_vfprintf(), sys_fprintf()
+ * @see sys_vsnprintf(), sys_vfprintf(), sys_fprintf()
  */
 //==============================================================================
 static inline int sys_snprintf(char *bfr, size_t size, const char *format, ...)
@@ -2783,7 +2784,7 @@ static inline int sys_snprintf(char *bfr, size_t size, const char *format, ...)
         // ...
    @endcode
  *
- * @see sys_printk(), sys_vsnprintf(), sys_snprintf(), sys_fprintf()
+ * @see sys_vsnprintf(), sys_snprintf(), sys_fprintf()
  */
 //==============================================================================
 static inline int sys_vfprintf(FILE *file, const char *format, va_list args)
@@ -2861,7 +2862,7 @@ static inline int sys_vfprintf(FILE *file, const char *format, va_list args)
         // ...
    @endcode
  *
- * @see sys_printk(), sys_vsnprintf(), sys_snprintf(), sys_vfprintf()
+ * @see sys_vsnprintf(), sys_snprintf(), sys_vfprintf()
  */
 //==============================================================================
 static inline int sys_fprintf(FILE *file, const char *format, ...)
@@ -3304,9 +3305,7 @@ static inline int sys_semaphore_signal(sem_t *sem)
                         // ...
                 }
 
-                if (woken) {
-                        sys_thread_yield_from_ISR();
-                }
+                sys_thread_yield_from_ISR(woken);
         }
 
         // ...
@@ -3369,7 +3368,7 @@ static inline int sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
  * @see sys_semaphore_wait_from_ISR()
  */
 //==============================================================================
-static inline bool sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
+static inline int sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 {
         return _semaphore_signal_from_ISR(sem, task_woken);
 }
@@ -3447,6 +3446,277 @@ static inline bool sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
  */
 //==============================================================================
 extern int sys_mutex_create(enum mutex_type type, mutex_t **mtx);
+
+//==============================================================================
+/**
+ * @brief Function creates flags. Flag is similar to semaphore except single
+ *        object contains more than one synchronization point.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param flag            created flag handle
+ *
+ * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        flag_t *flag = NULL;
+        if (sys_flag_create(&flag) == ESUCC) {
+
+                // ...
+
+                sys_flag_destroy(flag);
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_flag_destroy()
+ */
+//==============================================================================
+extern int sys_flag_create(flag_t **flag);
+
+//==============================================================================
+/**
+ * @brief Function deletes flag.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param flag      flag object
+ *
+ * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        flag_t *flag = NULL;
+        if (sys_flag_create(&flag) == ESUCC) {
+
+                // ...
+
+                sys_flag_destroy(flag);
+        }
+
+        // ...
+   @endcode
+ *
+ * @see sys_flag_create()
+ */
+//==============================================================================
+extern int sys_flag_destroy(flag_t *flag);
+
+//==============================================================================
+/**
+ * @brief Function wait for selected flags.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param flag          flag object
+ * @param bits          bits to wait for (logical AND)
+ * @param blocktime_ms  timeout in milliseconds
+ *
+ * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        flag_t *flag = NULL;
+        if (sys_flag_create(&flag) == ESUCC) {
+
+                // ...
+
+                sys_flag_wait(flag, (1<<0), 100);
+
+                // ...
+
+                sys_flag_destroy(flag);
+        }
+
+        // ...
+
+        ISR()
+        {
+                sys_flag_set_from_ISR(flag, (1<<0));
+        }
+   @endcode
+ *
+ * @see sys_flag_set(), sys_flag_clear()
+ */
+//==============================================================================
+static inline int sys_flag_wait(flag_t *flag, u32_t bits, const u32_t blocktime_ms)
+{
+        return _flag_wait(flag, bits, blocktime_ms);
+}
+
+//==============================================================================
+/**
+ * @brief Function set selected flags.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param flag          flag object
+ * @param bits          bits to set
+ *
+ * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        flag_t *flag = NULL;
+        if (sys_flag_create(&flag) == ESUCC) {
+
+                // ...
+
+                sys_flag_wait(flag, (1<<0), 100);
+
+                // ...
+
+                sys_flag_destroy(flag);
+        }
+
+        // ...
+
+        ISR()
+        {
+                sys_flag_set_from_ISR(flag, (1<<0));
+        }
+   @endcode
+ *
+ * @see sys_flag_clear()
+ */
+//==============================================================================
+static inline int sys_flag_set(flag_t *flag, u32_t bits)
+{
+        return _flag_set(flag, bits);
+}
+
+//==============================================================================
+/**
+ * @brief Function clear selected flags.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param flag          flag object
+ * @param bits          bits to clear
+ *
+ * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        flag_t *flag = NULL;
+        if (sys_flag_create(&flag) == ESUCC) {
+
+                // ...
+
+                sys_flag_wait(flag, (1<<0), 100);
+
+                // ...
+
+                sys_flag_destroy(flag);
+        }
+
+        // ...
+
+        ISR()
+        {
+                sys_flag_set_from_ISR(flag, (1<<0));
+        }
+   @endcode
+ *
+ * @see sys_flag_set()
+ */
+//==============================================================================
+static inline int sys_flag_clear(flag_t *flag, u32_t bits)
+{
+        return _flag_clear(flag, bits);
+}
+
+//==============================================================================
+/**
+ * @brief Function get flags.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param flag          flag object
+ *
+ * @b Example
+ * @code
+        // ...
+
+        flag_t *flag = NULL;
+        if (sys_flag_create(&flag) == ESUCC) {
+
+                // ...
+
+                sys_flag_wait(flag, (1<<0), 100);
+
+                // ...
+
+                sys_flag_destroy(flag);
+        }
+
+        // ...
+
+        ISR()
+        {
+                sys_flag_set_from_ISR(flag, (1<<0));
+        }
+   @endcode
+ *
+ * @see sys_flag_get_from_ISR()
+ */
+//==============================================================================
+static inline u32_t sys_flag_get(flag_t *flag)
+{
+        return _flag_get(flag);
+}
+
+//==============================================================================
+/**
+ * @brief Function get flags from interrupt.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param flag          flag object
+ *
+ * @b Example
+ * @code
+        // ...
+
+        flag_t *flag = NULL;
+        if (sys_flag_create(&flag) == ESUCC) {
+
+                // ...
+
+                sys_flag_wait(flag, (1<<0), 100);
+
+                // ...
+
+                sys_flag_destroy(flag);
+        }
+
+        // ...
+
+        ISR()
+        {
+                sys_flag_set_from_ISR(flag, (1<<0));
+        }
+   @endcode
+ *
+ * @see sys_flag_get()
+ */
+//==============================================================================
+static inline u32_t sys_flag_get_from_ISR(flag_t *flag)
+{
+        return _flag_get_from_ISR(flag);
+}
 
 //==============================================================================
 /**
@@ -4257,11 +4527,13 @@ static inline void sys_thread_self(tid_t *tid)
  * @brief Function yield thread from ISR.
  *
  * @note Function can be used only by file system or driver code.
+ *
+ * @param yield         thread yield
  */
 //==============================================================================
-static inline void sys_thread_yield_from_ISR()
+static inline void sys_thread_yield_from_ISR(bool yield)
 {
-        _task_yield_from_ISR();
+        _task_yield_from_ISR(yield);
 }
 
 //==============================================================================
