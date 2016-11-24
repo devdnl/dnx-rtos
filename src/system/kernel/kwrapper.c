@@ -172,7 +172,9 @@ void _kernel_scheduler_lock(void)
 //==============================================================================
 void _kernel_scheduler_unlock(void)
 {
-        xTaskResumeAll();
+        if (xTaskResumeAll() == pdTRUE) {
+                taskYIELD();
+        }
 }
 
 //==============================================================================

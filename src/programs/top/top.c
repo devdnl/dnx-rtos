@@ -122,10 +122,13 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         global->mem.kernel_memory_usage,
                         global->mem.filesystems_memory_usage);
 
-                printf("%d shared, %d network, %d modules, %d programs\n",
+                printf("%d shared, %d cached, %d modules\n",
                         global->mem.shared_memory_usage,
+                        global->mem.cached_memory_usage,
+                        global->mem.modules_memory_usage);
+
+                printf("%d network, %d programs\n",
                         global->mem.network_memory_usage,
-                        global->mem.modules_memory_usage,
                         global->mem.programs_memory_usage);
 
                 printf("\n");

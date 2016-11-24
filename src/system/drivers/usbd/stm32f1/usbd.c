@@ -139,7 +139,7 @@ typedef struct {
         u8_t                    major;
         bool                    activated;
         bool                    reset;
-        int                     error_cnt;
+        uint16_t                error_cnt;
 } USB_mem_t;
 
 /*==============================================================================
@@ -761,7 +761,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
 
         case IOCTL_USBD__SET_ADDRESS:
                 if (usb_mem->activated) {
-                        USB->DADDR = USB_DADDR_EF | ((int)arg & USB_DADDR_ADD);
+                        USB->DADDR = USB_DADDR_EF | (*cast(uint16_t*, arg) & USB_DADDR_ADD);
                         err = ESUCC;
                 } else {
                         err = ECANCELED;
@@ -778,7 +778,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
 
         case IOCTL_USBD__SET_EP_STALL:
                 if (usb_mem->activated) {
-                        int ep = (int)arg;
+                        uint16_t ep = *cast(uint16_t*, arg);
 
                         if ((ep & 0x7) < NUMBER_OF_ENDPOINTS) {
                                 if (ep & USB_ENDP_IN) {
@@ -798,7 +798,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
 
         case IOCTL_USBD__SET_EP_VALID:
                 if (usb_mem->activated) {
-                        int ep = (int)arg;
+                        uint16_t ep = *cast(uint16_t*, arg);
 
                         if ((ep & 0x7) < NUMBER_OF_ENDPOINTS) {
                                 if (ep & USB_ENDP_IN) {
@@ -876,7 +876,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
         case IOCTL_USBD__GET_ERROR_COUNTER:
                 if (arg) {
                         sys_critical_section_begin();
-                        *cast(int*, arg) = usb_mem->error_cnt;
+                        *cast(uint16_t*, arg) = usb_mem->error_cnt;
                         usb_mem->error_cnt = 0;
                         sys_critical_section_end();
                         err = ESUCC;

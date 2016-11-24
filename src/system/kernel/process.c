@@ -69,7 +69,7 @@
 #endif
 
 #define is_proc_valid(proc)             (proc && proc->header.type == RES_TYPE_PROCESS)
-#define is_tid_in_range(tid)            ((tid >= 0) && (tid < __OS_TASK_MAX_THREADS__))
+#define is_tid_in_range(tid)            (tid < __OS_TASK_MAX_THREADS__)
 
 #define FLAG_DETACHED                   (1 << 0)
 

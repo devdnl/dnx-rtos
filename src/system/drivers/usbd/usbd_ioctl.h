@@ -147,11 +147,11 @@ extern "C" {
 //==============================================================================
 /**
  * @brief The request sets the address of the device (received from host in the SETUP packet).
- * @param [WR] int address
+ * @param [WR] uint16_t address
  * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
-#define IOCTL_USBD__SET_ADDRESS                 _IOW(USBD, 0x03, int)
+#define IOCTL_USBD__SET_ADDRESS                 _IOW(USBD, 0x03, uint16_t*)
 
 //==============================================================================
 /**
@@ -164,22 +164,22 @@ extern "C" {
 //==============================================================================
 /**
  * @brief The request sets a STALL status in the selected endpoint.
- * @param [WR] The endpoint number determined by the 'int' type. The IN/OUT endpoint
+ * @param [WR] The endpoint number determined by the 'uint16_t' type. The IN/OUT endpoint
  *        is recognized by most significant bit as is defined by the USB standard
  * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
-#define IOCTL_USBD__SET_EP_STALL                _IOW(USBD, 0x05, int)
+#define IOCTL_USBD__SET_EP_STALL                _IOW(USBD, 0x05,  uint16_t*)
 
 //==============================================================================
 /**
  * @brief The request sets a VALID (ACK) status in the selected endpoint.
- * @param [WR] The endpoint number determined by the 'int' type. The IN/OUT endpoint
+ * @param [WR] The endpoint number determined by the 'uint16_t' type. The IN/OUT endpoint
  *        is recognized by most significant bit as is defined by the USB standard.
  * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
-#define IOCTL_USBD__SET_EP_VALID                _IOW(USBD, 0x06, int)
+#define IOCTL_USBD__SET_EP_VALID                _IOW(USBD, 0x06,  uint16_t*)
 
 //==============================================================================
 /**
@@ -212,11 +212,11 @@ extern "C" {
 //==============================================================================
 /**
  * @brief The request gets the error counter. The counter is cleared after read operation.
- * @param [RD] The pointer to integer of 'int' type
+ * @param [RD] The pointer to integer of 'uint16_t' type
  * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
-#define IOCTL_USBD__GET_ERROR_COUNTER           _IOR(USBD, 0x0A, int*)
+#define IOCTL_USBD__GET_ERROR_COUNTER           _IOR(USBD, 0x0A, uint16_t*)
 
 /*==============================================================================
   Exported object types

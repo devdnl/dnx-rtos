@@ -344,8 +344,10 @@ static void ep1_handler(void *arg)
                         printf("global->msc.CBW.bCBWCBLength: %d (max %d)\n", global->msc.CBW.bCBWCBLength, USB_MASS_STORAGE_REQUEST_CBWCB_LENGTH);
                         printf("read: %d\n (max %d)\n", cast(int, n), cast(int, sizeof(usb_msc_bot_cbw_t)));
 
-                        ioctl(ep1, IOCTL_USBD__SET_EP_STALL, USB_ENDP_IN  | USB_EP_NUM__ENDP1);
-                        ioctl(ep1, IOCTL_USBD__SET_EP_STALL, USB_ENDP_OUT | USB_EP_NUM__ENDP1);
+                        static const u16_t EP1IN  = USB_ENDP_IN  | USB_EP_NUM__ENDP1;
+                        static const u16_t EP1OUT = USB_ENDP_OUT | USB_EP_NUM__ENDP1;
+                        ioctl(ep1, IOCTL_USBD__SET_EP_STALL, &EP1IN);
+                        ioctl(ep1, IOCTL_USBD__SET_EP_STALL, &EP1OUT);
 
                         global->configured = false;
                         while (!global->configured) {
@@ -594,7 +596,7 @@ int_main(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
                                         case SET_ADDRESS:
                                                 printf(tostring(SET_ADDRESS)" (%d):", setup.packet.wValue);
                                                 if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == 0) {
-                                                        ioctl(ep0, IOCTL_USBD__SET_ADDRESS, setup.packet.wValue);
+                                                        ioctl(ep0, IOCTL_USBD__SET_ADDRESS, &setup.packet.wValue);
                                                         puts(" OK");
                                                 } else {
                                                         puts(" ERROR");
@@ -625,7 +627,7 @@ int_main(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
                                                 switch (setup.packet.wValue) {
                                                 case ENDPOINT_HALT:
                                                         printf(tostring(ENDPOINT_HALT)" (0x%x):", setup.packet.wIndex);
-                                                        ioctl(ep0, IOCTL_USBD__SET_EP_VALID, setup.packet.wIndex);
+                                                        ioctl(ep0, IOCTL_USBD__SET_EP_VALID, &setup.packet.wIndex);
                                                         operation = 0;
                                                         break;
                                                 }

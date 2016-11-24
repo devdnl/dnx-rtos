@@ -227,7 +227,13 @@ this:SetToolTip("If this function is selected then system messages can be send t
 #define __OS_SYSTEM_MSG_ENABLE__ _YES_
 
 /*--
---this:AddExtraWidget("Void", "VoidOption")
+this:AddWidget("Checkbox", "Filesystem cache")
+this:SetToolTip("If this option is selected then some file system are using cache to speed up IO operations.")
+--*/
+#define __OS_SYSTEM_FS_CACHE_ENABLE__ _YES_
+
+/*--
+this:AddExtraWidget("Void", "VoidOption")
 this:AddWidget("Spinbox", 0, 16777216, "Network memory limit [Bytes]")
 this:SetToolTip("This option enables memory limit for network subsystem. Use 0 for no limit.")
 --*/

@@ -42,6 +42,7 @@
 #include "lib/cast.h"
 #include "lib/unarg.h"
 #include "net/netm.h"
+#include "mm/cache.h"
 
 /*==============================================================================
   Local macros
@@ -66,7 +67,7 @@
 #endif
 
 #define is_proc_valid(proc)     (proc && proc->header.type == RES_TYPE_PROCESS)
-#define is_tid_in_range(tid)    ((tid >= 0) && (tid < __OS_TASK_MAX_THREADS__))
+#define is_tid_in_range(tid)    (tid < __OS_TASK_MAX_THREADS__)
 
 /*==============================================================================
   Local object types
@@ -374,7 +375,7 @@ void syscall(syscall_t syscall, void *retptr, ...)
                 _task_get_process_container(_THIS_TASK, &proc, &tid);
 
                 SYSCALL_ASSERT(proc);
-                SYSCALL_ASSERT(tid >= 0);
+                SYSCALL_ASSERT(is_tid_in_range(tid));
 
                 flag_t *event_flags = NULL;
                 _errno = _process_get_event_flags(proc, &event_flags);
@@ -495,7 +496,7 @@ int _syscall_kworker_process(int argc, char *argv[])
 
 //==============================================================================
 /**
- * @brief  Function inform syscall owner about finished request.
+ * @brief  Function is called in thread and realize requested syscall.
  *
  * @param  rq           request information
  */
@@ -519,6 +520,14 @@ static void syscall_do(void *rq)
 
         if (_flag_set(flags, _PROCESS_SYSCALL_FLAG(sysrq->client_thread)) != ESUCC) {
                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+        }
+
+        // If there is lack of memory and FS sync is required then thread
+        // synchronize all file systems to reduce cache size.
+        if (  sysrq->syscall_no <= _SYSCALL_GROUP_1_FS_BLOCKING
+           && sys_cache_is_sync_needed()) {
+
+                _vfs_sync();
         }
 }
 

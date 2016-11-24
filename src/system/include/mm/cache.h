@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    mm.h
+File     cache.h
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   Memory management (memory distribution)
+Brief    Cache management.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,13 +24,22 @@
 
 *//*==========================================================================*/
 
-#ifndef _MM_H_
-#define _MM_H_
+/**
+@defgroup CACHE_H_ CACHE_H_
+
+Detailed Doxygen description.
+*/
+/**@{*/
+
+#ifndef _CACHE_H_
+#define _CACHE_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "sys/types.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,32 +48,23 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _mm_align(_size)         (((_size) + _HEAP_ALIGN_ - 1) & ~(_HEAP_ALIGN_-1))
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef struct {
-        i32_t static_memory_usage;
-        i32_t kernel_memory_usage;
-        i32_t filesystems_memory_usage;
-        i32_t network_memory_usage;
-        i32_t modules_memory_usage;
-        i32_t programs_memory_usage;
-        i32_t shared_memory_usage;
-        i32_t cached_memory_usage;
-} _mm_mem_usage_t;
+struct sys_cache;
 
-enum _mm_mem {
-        _MM_KRN,        //!< allocate memory for kernel purposes
-        _MM_FS,         //!< allocate memory for file system purposes
-        _MM_NET,        //!< allocate memory for network purposes
-        _MM_PROG,       //!< allocate memory for program purposes
-        _MM_SHM,        //!< allocate memory for share purposes
-        _MM_CACHE,      //!< allocate memory for cache purposes
-        _MM_MOD,        //!< allocate memory for modules purposes
-        _MM_COUNT
-};
+typedef int (*sys_cache_unlink_fn_t)(struct sys_cache*);
+
+typedef struct sys_cache {
+        void                 *next;
+        void                 *prev;
+        void                 *object;
+        sys_cache_unlink_fn_t unlink;
+        bool                  dirty;
+        size_t                size;
+        uint8_t               buffer[];
+} sys_cache_t;
 
 /*==============================================================================
   Exported objects
@@ -73,16 +73,10 @@ enum _mm_mem {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int    _mm_init(void);
-extern int    _kzalloc(enum _mm_mem, const size_t, void**, ...);
-extern int    _kmalloc(enum _mm_mem, const size_t, void**, ...);
-extern int    _kfree(enum _mm_mem, void**, ...);
-extern int    _mm_get_mem_usage_details(_mm_mem_usage_t*);
-extern int    _mm_get_module_mem_usage(uint module, i32_t *usage);
-extern size_t _mm_get_block_size(void*);
-extern size_t _mm_get_mem_free();
-extern size_t _mm_get_mem_usage();
-extern size_t _mm_get_mem_size();
+extern int  sys_cache_alloc(size_t, void*, sys_cache_unlink_fn_t, sys_cache_t**);
+extern int  sys_cache_free(sys_cache_t*);
+extern void sys_cache_reduce(size_t);
+extern bool sys_cache_is_sync_needed(void);
 
 /*==============================================================================
   Exported inline functions
@@ -92,7 +86,9 @@ extern size_t _mm_get_mem_size();
 }
 #endif
 
-#endif /* _MM_H_ */
+#endif /* _CACHE_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

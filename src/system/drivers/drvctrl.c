@@ -93,26 +93,26 @@ extern const size_t               _drvreg_number_of_modules;
 //==============================================================================
 static int driver__get_module_no_and_mem(dev_t id, u16_t *modno, void **mem)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (modno && mem) {
-                result = ENODEV;
+                err = ENODEV;
 
                 *modno = _dev_t__extract_modno(id);
 
                 _kernel_scheduler_lock();
                 {
-                        for (drvmem_t *drv = drvmem[*modno]; drv && result == ENODEV; drv = drv->next) {
+                        for (drvmem_t *drv = drvmem[*modno]; drv && err == ENODEV; drv = drv->next) {
                                 if (drv->devid == id) {
                                         *mem   = drv->mem;
-                                        result = ESUCC;
+                                        err = ESUCC;
                                 }
                         }
                 }
                 _kernel_scheduler_unlock();
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -129,27 +129,27 @@ static int driver__get_module_no_and_mem(dev_t id, u16_t *modno, void **mem)
 //==============================================================================
 static int driver__register(u16_t modno, u8_t major, u8_t minor, drvmem_t **drv)
 {
-        int result = ENODEV;
+        int err = ENODEV;
 
         if (modno < _drvreg_number_of_modules && drv) {
 
-                result = ESUCC;
+                err = ESUCC;
 
                 _kernel_scheduler_lock();
                 {
                         // find that module is not already initialized
-                        for (drvmem_t *drv = drvmem[modno]; drv && result == ESUCC; drv = drv->next) {
+                        for (drvmem_t *drv = drvmem[modno]; drv && err == ESUCC; drv = drv->next) {
                                 if (  _dev_t__extract_major(drv->devid) == major
                                    && _dev_t__extract_minor(drv->devid) == minor) {
 
-                                        result = EADDRINUSE;
+                                        err = EADDRINUSE;
                                 }
                         }
 
                         // create new driver chain
-                        if (result == ESUCC) {
-                                result = _kzalloc(_MM_KRN, sizeof(drvmem_t), cast(void *, drv));
-                                if (result == ESUCC) {
+                        if (err == ESUCC) {
+                                err = _kzalloc(_MM_KRN, sizeof(drvmem_t), cast(void *, drv));
+                                if (err == ESUCC) {
                                         (*drv)->devid = _dev_t__create(modno, major, minor);
                                         (*drv)->mem   = NULL;
                                         (*drv)->next  = NULL;
@@ -167,7 +167,7 @@ static int driver__register(u16_t modno, u8_t major, u8_t minor, drvmem_t **drv)
                 _kernel_scheduler_unlock();
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -329,15 +329,22 @@ int _driver_release(dev_t id)
         u16_t modno;
         void *mem;
 
-        int result = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (result == ESUCC) {
-                result = driver__release(modno, mem);
-                if (result == ESUCC) {
+        int err = driver__get_module_no_and_mem(id, &modno, &mem);
+        if (err == ESUCC) {
+                u8_t        major  = _dev_t__extract_major(id);
+                u8_t        minor  = _dev_t__extract_minor(id);
+                const char *module = _module_get_name(modno);
+
+                err = driver__release(modno, mem);
+                if (err == ESUCC) {
                         driver__remove(id);
+                        printk(DRIVER_NAME" released", DRIVER_NAME_ARGS);
+                } else {
+                        printk(DRIVER_NAME" release fail (%d)", DRIVER_NAME_ARGS, err);
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -355,12 +362,12 @@ int _driver_open(dev_t id, u32_t flags)
         u16_t modno;
         void *mem;
 
-        int result = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (result == ESUCC) {
-                result = _drvreg_module_table[modno].IF.drv_open(mem, vfs_filter_flags_for_device(flags));
+        int err = driver__get_module_no_and_mem(id, &modno, &mem);
+        if (err == ESUCC) {
+                err = _drvreg_module_table[modno].IF.drv_open(mem, vfs_filter_flags_for_device(flags));
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -378,12 +385,12 @@ int _driver_close(dev_t id, bool force)
         u16_t modno;
         void *mem;
 
-        int result = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (result == ESUCC) {
-                result = _drvreg_module_table[modno].IF.drv_close(mem, force);
+        int err = driver__get_module_no_and_mem(id, &modno, &mem);
+        if (err == ESUCC) {
+                err = _drvreg_module_table[modno].IF.drv_close(mem, force);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -405,12 +412,12 @@ int _driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, size_t 
         u16_t modno;
         void *mem;
 
-        int result = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (result == ESUCC) {
-                result = _drvreg_module_table[modno].IF.drv_write(mem, src, count, fpos, wrcnt, fattr);
+        int err = driver__get_module_no_and_mem(id, &modno, &mem);
+        if (err == ESUCC) {
+                err = _drvreg_module_table[modno].IF.drv_write(mem, src, count, fpos, wrcnt, fattr);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -432,12 +439,12 @@ int _driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt,
         u16_t modno;
         void *mem;
 
-        int result = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (result == ESUCC) {
-                result = _drvreg_module_table[modno].IF.drv_read(mem, dst, count, fpos, rdcnt, fattr);
+        int err = driver__get_module_no_and_mem(id, &modno, &mem);
+        if (err == ESUCC) {
+                err = _drvreg_module_table[modno].IF.drv_read(mem, dst, count, fpos, rdcnt, fattr);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -456,12 +463,12 @@ int _driver_ioctl(dev_t id, int request, void *arg)
         u16_t modno;
         void *mem;
 
-        int result = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (result == ESUCC) {
-                result = _drvreg_module_table[modno].IF.drv_ioctl(mem, request, arg);
+        int err = driver__get_module_no_and_mem(id, &modno, &mem);
+        if (err == ESUCC) {
+                err = _drvreg_module_table[modno].IF.drv_ioctl(mem, request, arg);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -480,12 +487,12 @@ int _driver_flush(dev_t id)
         u16_t modno;
         void *mem;
 
-        int result = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (result == ESUCC) {
-                result = _drvreg_module_table[modno].IF.drv_flush(mem);
+        int err = driver__get_module_no_and_mem(id, &modno, &mem);
+        if (err == ESUCC) {
+                err = _drvreg_module_table[modno].IF.drv_flush(mem);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -503,14 +510,14 @@ int _driver_stat(dev_t id, struct vfs_dev_stat *stat)
         u16_t modno;
         void *mem;
 
-        int result = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (result == ESUCC) {
+        int err = driver__get_module_no_and_mem(id, &modno, &mem);
+        if (err == ESUCC) {
                 stat->st_major = _dev_t__extract_major(id);
                 stat->st_minor = _dev_t__extract_minor(id);
-                result = _drvreg_module_table[modno].IF.drv_stat(mem, stat);
+                err = _drvreg_module_table[modno].IF.drv_stat(mem, stat);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

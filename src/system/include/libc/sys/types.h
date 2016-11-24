@@ -95,13 +95,13 @@ typedef uint fd_t;
  * @brief File mode.
  * @see S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRO, S_IWGRO, S_IXGRO, S_IROTH, S_IWOTH, S_IXOTH
  */
-typedef int mode_t;
+typedef u16_t mode_t;
 
 /** @brief User ID. */
-typedef int uid_t;
+typedef u16_t uid_t;
 
 /** @brief Group ID. */
-typedef int gid_t;
+typedef u16_t gid_t;
 
 /**
  * @brief Process ID.
@@ -115,7 +115,7 @@ typedef u16_t pid_t;
  *
  * The type represent thread number.
  */
-typedef int tid_t;
+typedef u8_t tid_t;
 
 /**
  * @brief Device identifier.
@@ -189,11 +189,11 @@ typedef struct dirent {
 /** @brief File information. */
 struct stat {
         u64_t   st_size;        //!< Total size, in bytes
-        u32_t   st_dev;         //!< ID of device containing file
-        u32_t   st_mode;        //!< Protection
-        u32_t   st_uid;         //!< User ID of owner
-        u32_t   st_gid;         //!< Group ID of owner
-        u32_t   st_atime;       //!< Time of last access
+        dev_t   st_dev;         //!< ID of device containing file
+        mode_t  st_mode;        //!< Protection
+        uid_t   st_uid;         //!< User ID of owner
+        gid_t   st_gid;         //!< Group ID of owner
+        time_t  st_atime;       //!< Time of last access
         time_t  st_mtime;       //!< Time of last modification
         tfile_t st_type;        //!< Type of file
 };

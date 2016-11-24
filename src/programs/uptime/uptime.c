@@ -71,7 +71,14 @@ int_main(uptime, STACK_DEPTH_LOW, int argc, char *argv[])
         u32_t uhrs   = (uptime / 3600) % 24;
         u32_t umins  = (uptime / 60) % 60;
 
-        printf("up %ud %2u:%02u\n", udays, uhrs, umins);
+        avg_CPU_load_t avg;
+        get_average_CPU_load(&avg);
+
+        printf("up %ud %u:%02u, average load: %d.%d, %d.%d, %d.%d\n",
+               udays, uhrs, umins,
+               avg.avg1min  / 10, avg.avg1min  % 10,
+               avg.avg5min  / 10, avg.avg5min  % 10,
+               avg.avg15min / 10, avg.avg15min % 10);
 
         return EXIT_SUCCESS;
 }

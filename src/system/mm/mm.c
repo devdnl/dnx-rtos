@@ -33,10 +33,12 @@
 #include "config.h"
 #include "mm/mm.h"
 #include "mm/heap.h"
+#include "mm/cache.h"
 #include "lib/cast.h"
 #include "kernel/errno.h"
 #include "kernel/ktypes.h"
 #include "kernel/kwrapper.h"
+#include "kernel/sysfunc.h"
 
 /*==============================================================================
   Local macros
@@ -162,7 +164,7 @@ int _kmalloc(enum _mm_mem mpur, const size_t size, void **mem, ...)
 //==============================================================================
 int _kfree(enum _mm_mem mpur, void **mem, ...)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (mpur < _MM_COUNT && mem && *mem) {
                 va_list vaarg;
@@ -177,7 +179,7 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
                         size_t modid = cast(size_t, arg);
                         if (modid < _drvreg_number_of_modules) {
                                 usage  = &module_memory_usage[modid];
-                                result = ESUCC;
+                                err = ESUCC;
                         }
                         break;
                 }
@@ -185,39 +187,41 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
                 case _MM_PROG:
                         if ((*cast(res_header_t**, mem))->type == RES_TYPE_MEMORY) {
                                 usage  = arg;
-                                result = ESUCC;
+                                err = ESUCC;
                                 (*cast(res_header_t**, mem))->next = NULL;
                                 (*cast(res_header_t**, mem))->type = RES_TYPE_UNKNOWN;
                         } else {
-                                result = EFAULT;
+                                err = EFAULT;
                                 break;
                         }
                         // go through
+
+                case _MM_CACHE:
                 case _MM_SHM:
                 case _MM_KRN:
                 case _MM_FS:
                 case _MM_NET:
                         usage  = &memory_usage[mpur];
-                        result = ESUCC;
+                        err = ESUCC;
                         break;
 
                 default:
                         break;
                 }
 
-                if (result == ESUCC) {
+                if (err == ESUCC) {
                         size_t blksize = 0;
                         _heap_free(*mem, &blksize);
 
-                        _critical_section_begin();
+                        _kernel_scheduler_lock();
                         *usage -= blksize;
-                        _critical_section_end();
+                        _kernel_scheduler_unlock();
 
                         *mem = NULL;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -238,6 +242,7 @@ int _mm_get_mem_usage_details(_mm_mem_usage_t *mem_usage)
                 mem_usage->network_memory_usage     = memory_usage[_MM_NET];
                 mem_usage->programs_memory_usage    = memory_usage[_MM_PROG];
                 mem_usage->shared_memory_usage      = memory_usage[_MM_SHM];
+                mem_usage->cached_memory_usage      = memory_usage[_MM_CACHE];
                 mem_usage->modules_memory_usage     = 0;
 
                 for (size_t i = 0; i < _drvreg_number_of_modules; i++) {
@@ -349,7 +354,7 @@ size_t _mm_get_mem_size()
 //==============================================================================
 static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *arg)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (mpur < _MM_COUNT && size && mem) {
                 i32_t *usage = NULL;
@@ -372,12 +377,13 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                         if (__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ == 0) {
                                 usage = &memory_usage[mpur];
                         } else if (memory_usage[_MM_NET] >= __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__) {
-                                result = ENOMEM;
+                                err = ENOMEM;
                         } else {
                                 usage = &memory_usage[mpur];
                         }
                         break;
 
+                case _MM_CACHE:
                 case _MM_SHM:
                 case _MM_KRN:
                 case _MM_FS:
@@ -391,33 +397,45 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                 if (usage) {
                         size = MEM_ALIGN_SIZE(size);
 
-                        size_t allocated = 0;
-                        void *blk = _heap_alloc(size, &allocated);
+                        for (int i = 0; i <= 1; i++) {
+                                size_t allocated = 0;
+                                void *blk = _heap_alloc(size, &allocated);
 
-                        if (blk) {
-                                _kernel_scheduler_lock();
-                                *usage += allocated;
-                                _kernel_scheduler_unlock();
+                                if (blk) {
+                                        _kernel_scheduler_lock();
+                                        *usage += allocated;
+                                        _kernel_scheduler_unlock();
 
-                                if (clear) {
-                                        memset(blk, 0, size);
+                                        if (clear) {
+                                                memset(blk, 0, size);
+                                        }
+
+                                        if (mpur == _MM_PROG) {
+                                                 cast(res_header_t*, blk)->next = NULL;
+                                                 cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
+                                        }
+
+                                        *mem = blk;
+
+                                        err = ESUCC;
+                                        break;
+                                } else {
+                                        err = ENOMEM;
+
+                                        if ((i == 0) && (mpur != _MM_CACHE)) {
+
+                                                sys_cache_reduce(size);
+                                        }
                                 }
-
-                                if (mpur == _MM_PROG) {
-                                         cast(res_header_t*, blk)->next = NULL;
-                                         cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
-                                }
-
-                                *mem = blk;
-
-                                result = ESUCC;
-                        } else {
-                                result = ENOMEM;
                         }
+                }
+
+                if (err == ENOMEM) {
+                        printk("Not enough free memory (%dB)", size);
                 }
         }
 
-        return result;
+        return err;
 }
 
 /*==============================================================================

@@ -357,7 +357,7 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
                                         case SET_ADDRESS:
                                                 printf(tostring(SET_ADDRESS)" (%d):", setup.packet.wValue);
                                                 if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == 0) {
-                                                        ioctl(ep0, IOCTL_USBD__SET_ADDRESS, setup.packet.wValue);
+                                                        ioctl(ep0, IOCTL_USBD__SET_ADDRESS, &setup.packet.wValue);
                                                         puts(" OK");
                                                 } else {
                                                         puts(" ERROR");

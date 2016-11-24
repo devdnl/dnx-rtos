@@ -66,13 +66,13 @@ extern const uint             _FS_table_size;
 
 //==============================================================================
 /**
- * @brief Function mount file system
+ * @brief Function mount file system.
  *
- * @param *FS_name       file system name
- * @param *src_path      path to file with source data
- * @param *mount_point   mount point of file system
+ * @param *FS_name       file system name.
+ * @param *src_path      path to file with source data.
+ * @param *mount_point   mount point of file system.
  *
- * @return One of errno values
+ * @return One of errno values.
  */
 //==============================================================================
 int _mount(const char *FS_name, const struct vfs_path *src_path, const struct vfs_path *mount_point)
@@ -107,17 +107,26 @@ int _mount(const char *FS_name, const struct vfs_path *src_path, const struct vf
 
 //==============================================================================
 /**
- * @brief Function unmount file system
+ * @brief Function unmount file system.
  *
- * @param *mount_point   path to file system
+ * @param *mount_point   path to file system.
  *
- * @return One of errno values
+ * @return One of errno values.
  */
 //==============================================================================
 int _umount(const struct vfs_path *mount_point)
 {
         if (mount_point) {
-                return _vfs_umount(mount_point);
+                int err = _vfs_umount(mount_point);
+
+                if (err) {
+                        printk("Filesystem at '%s' unmount fail (%d)", mount_point->PATH, err);
+                } else {
+                        printk("Filesystem at '%s' unmounted", mount_point->PATH);
+                }
+
+                return err;
+
         } else {
                 return EINVAL;
         }
