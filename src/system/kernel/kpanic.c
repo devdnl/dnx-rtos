@@ -158,6 +158,17 @@ void _kernel_panic_report(enum _kernel_panic_desc_cause suggested_cause)
                 kernel_panic_descriptor->name = _process_get_name(proc);
                 kernel_panic_descriptor->tid  = _process_get_active_thread();
                 _process_get_pid(proc, &kernel_panic_descriptor->pid);
+
+        } else {
+                if (_task_get_handle() == _kernel_get_idle_task_handle()) {
+                        kernel_panic_descriptor->name = "IDLE";
+                        kernel_panic_descriptor->pid  = 0;
+                        kernel_panic_descriptor->tid  = 0;
+                } else {
+                        kernel_panic_descriptor->name = NULL;
+                        kernel_panic_descriptor->pid  = -1;
+                        kernel_panic_descriptor->tid  = -1;
+                }
         }
 
         if (suggested_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack(_THIS_TASK) == 0) {

@@ -48,8 +48,6 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int  closedir(void *fs_handle, DIR *dir);
-static int  readdir(void *fs_handle, DIR *dir, dirent_t **dirent);
 static void ext4_lock(void *obj);
 static void ext4_unlock(void *obj);
 static int  ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt);
@@ -85,40 +83,43 @@ static const struct ext4_os_if osif = {
  *
  * @param[out]          **fs_handle             file system allocated memory
  * @param[in ]           *src_path              file source path
+ * @param[in ]           *opts                  file system options (can be NULL)
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
+API_FS_INIT(ext2fs, void **fs_handle, const char *src_path, const char *opts)
 {
-        int result = sys_zalloc(sizeof(ext2fs_t), fs_handle);
-        if (result == ESUCC) {
+        UNUSED_ARG1(opts);
+
+        int err = sys_zalloc(sizeof(ext2fs_t), fs_handle);
+        if (err == ESUCC) {
                 ext2fs_t *hdl = *fs_handle;
 
                 // open file system source file
-                result = sys_fopen(src_path, "r+", &hdl->srcfile);
-                if (result != ESUCC)
+                err = sys_fopen(src_path, "r+", &hdl->srcfile);
+                if (err != ESUCC)
                         goto finish;
 
                 // read number of file blocks
                 struct stat stat;
-                result = sys_fstat(hdl->srcfile, &stat);
-                if (result != ESUCC)
+                err = sys_fstat(hdl->srcfile, &stat);
+                if (err != ESUCC)
                         goto finish;
 
                 u64_t block_count = stat.st_size / BLOCK_SIZE;
 
-                result = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
-                if (result != ESUCC)
+                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
+                if (err != ESUCC)
                         goto finish;
 
-                result = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count, &hdl->fsctx);
-                if (result == ESUCC) {
+                err = ext4_mount(&osif, hdl, BLOCK_SIZE, block_count, &hdl->fsctx);
+                if (err == ESUCC) {
                         ext4_cache_write_back(hdl->fsctx, true);
                 }
 
                 finish:
-                if (result != ESUCC) {
+                if (err != ESUCC) {
                         if (hdl->srcfile)
                                 sys_fclose(hdl->srcfile);
 
@@ -130,7 +131,7 @@ API_FS_INIT(ext2fs, void **fs_handle, const char *src_path)
 
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -176,10 +177,10 @@ API_FS_OPEN(ext2fs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
         ext2fs_t *hdl = fs_handle;
 
         ext4_file *file;
-        int result = sys_malloc(sizeof(ext4_file), cast(void**, &file));
-        if (result == ESUCC) {
-                result = ext4_fopen(hdl->fsctx, file, path, flags);
-                if (result == ESUCC) {
+        int err = sys_malloc(sizeof(ext4_file), cast(void**, &file));
+        if (err == ESUCC) {
+                err = ext4_fopen(hdl->fsctx, file, path, flags);
+                if (err == ESUCC) {
                         *fpos  = ext4_ftell(hdl->fsctx, file);
                         *fhdl = file;
                         increase_openfiles(hdl);
@@ -188,7 +189,7 @@ API_FS_OPEN(ext2fs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -208,13 +209,13 @@ API_FS_CLOSE(ext2fs, void *fs_handle, void *fhdl, bool force)
 
         ext2fs_t *hdl = fs_handle;
 
-        int status = ext4_fclose(hdl->fsctx, fhdl);
-        if (status == ESUCC) {
+        int err = ext4_fclose(hdl->fsctx, fhdl);
+        if (err == ESUCC) {
                 sys_free(&fhdl);
                 decrease_openfiles(hdl);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -245,16 +246,16 @@ API_FS_WRITE(ext2fs,
 
         ext2fs_t *hdl = fs_handle;
 
-        int status = ext4_fseek(hdl->fsctx, fhdl, *fpos, SEEK_SET);
-        if (status == ESUCC) {
+        int err = ext4_fseek(hdl->fsctx, fhdl, *fpos, SEEK_SET);
+        if (err == ESUCC) {
                 uint32_t wrc = 0;
-                status = ext4_fwrite(hdl->fsctx, fhdl, src, count, &wrc);
-                if (status == ESUCC) {
+                err = ext4_fwrite(hdl->fsctx, fhdl, src, count, &wrc);
+                if (err == ESUCC) {
                         *wrcnt = wrc;
                 }
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -285,16 +286,16 @@ API_FS_READ(ext2fs,
 
         ext2fs_t *hdl = fs_handle;
 
-        int status = ext4_fseek(hdl->fsctx, fhdl, *fpos, SEEK_SET);
-        if (status == ESUCC) {
+        int err = ext4_fseek(hdl->fsctx, fhdl, *fpos, SEEK_SET);
+        if (err == ESUCC) {
                 u32_t rdc = 0;
-                status = ext4_fread(hdl->fsctx, fhdl, dst, count, &rdc);
-                if (status == ESUCC) {
+                err = ext4_fread(hdl->fsctx, fhdl, dst, count, &rdc);
+                if (err == ESUCC) {
                         *rdcnt = rdc;
                 }
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -353,8 +354,8 @@ API_FS_FSTAT(ext2fs, void *fs_handle, void *fhdl, struct stat *stat)
         ext2fs_t *hdl = fs_handle;
 
         struct ext4_filestat filestat;
-        int status = ext4_fstat(hdl->fsctx, fhdl, &filestat);
-        if (status == ESUCC) {
+        int err = ext4_fstat(hdl->fsctx, fhdl, &filestat);
+        if (err == ESUCC) {
                 stat->st_dev   = filestat.st_dev;
                 stat->st_gid   = filestat.st_gid;
                 stat->st_uid   = filestat.st_uid;
@@ -363,7 +364,7 @@ API_FS_FSTAT(ext2fs, void *fs_handle, void *fhdl, struct stat *stat)
                 stat->st_size  = filestat.st_size;
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -381,12 +382,12 @@ API_FS_MKDIR(ext2fs, void *fs_handle, const char *path, mode_t mode)
 {
         ext2fs_t *hdl = fs_handle;
 
-        int status = ext4_dir_mk(hdl->fsctx, path);
-        if (status == ESUCC) {
+        int err = ext4_dir_mk(hdl->fsctx, path);
+        if (err == ESUCC) {
                 ext4_chmod(hdl->fsctx, path, mode);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -445,16 +446,13 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
         ext2fs_t *hdl = fs_handle;
 
         ext4_dir *ext4dir;
-        int result = sys_malloc(sizeof(ext4_dir), cast(void**, &ext4dir));
-        if (result == ESUCC) {
-                result = ext4_dir_open(hdl->fsctx, ext4dir, path);
-                if (result == ESUCC) {
-                        dir->d_handle   = hdl;
-                        dir->d_closedir = closedir;
-                        dir->d_readdir  = readdir;
-                        dir->d_dd       = ext4dir;
-                        dir->d_seek     = 0;
-                        dir->d_items    = 0;
+        int err = sys_malloc(sizeof(ext4_dir), cast(void**, &ext4dir));
+        if (err == ESUCC) {
+                err = ext4_dir_open(hdl->fsctx, ext4dir, path);
+                if (err == ESUCC) {
+                        dir->d_hdl   = ext4dir;
+                        dir->d_seek  = 0;
+                        dir->d_items = 0;
 
                         increase_openfiles(hdl);
 
@@ -463,7 +461,7 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -476,17 +474,17 @@ API_FS_OPENDIR(ext2fs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int closedir(void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(ext2fs, void *fs_handle, DIR *dir)
 {
         ext2fs_t *hdl = fs_handle;
 
-        int result = ext4_dir_close(hdl->fsctx, dir->d_dd);
-        if (result == ESUCC) {
-                sys_free(cast(void**, dir->d_dd));
+        int err = ext4_dir_close(hdl->fsctx, dir->d_hdl);
+        if (err == ESUCC) {
+                sys_free(cast(void**, dir->d_hdl));
                 decrease_openfiles(hdl);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -494,13 +492,12 @@ static int closedir(void *fs_handle, DIR *dir)
  * @brief Read directory
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *dir                    directory object
- * @param[out]          **dirent                directory entry
+ * @param[in,out]       *dir                    directory object
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
+API_FS_READDIR(ext2fs, void *fs_handle, DIR *dir)
 {
         static const uint8_t vfsft[] = {
                 [EXT4_DIRENTRY_UNKNOWN ] = FILE_TYPE_UNKNOWN,
@@ -515,7 +512,7 @@ static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
 
         ext2fs_t *hdl = fs_handle;
 
-        ext4_direntry *ext4_dirent = ext4_dir_entry_get(hdl->fsctx, dir->d_dd, dir->d_seek++);
+        ext4_direntry *ext4_dirent = ext4_dir_entry_get(hdl->fsctx, dir->d_hdl, dir->d_seek++);
         if (ext4_dirent) {
                 int nlen = ext4_dirent->name_length == 255 ? 254 : ext4_dirent->name_length;
                 ext4_dirent->name[nlen] = '\0';
@@ -524,8 +521,6 @@ static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
                 dir->dirent.filetype = vfsft[ext4_dirent->inode_type];
                 dir->dirent.name     = cast(char*, ext4_dirent->name);
                 dir->dirent.size     = ext4_dirent->size;
-
-                *dirent = &dir->dirent;
 
                 return ESUCC;
         } else {
@@ -548,13 +543,13 @@ API_FS_REMOVE(ext2fs, void *fs_handle, const char *path)
         ext2fs_t *hdl = fs_handle;
 
         // try remove file
-        int status = ext4_fremove(hdl->fsctx, path);
-        if (status != ESUCC) {
+        int err = ext4_fremove(hdl->fsctx, path);
+        if (err != ESUCC) {
                 // try remove dir
-                status = ext4_dir_rm(hdl->fsctx, path);
+                err = ext4_dir_rm(hdl->fsctx, path);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -639,8 +634,8 @@ API_FS_STAT(ext2fs, void *fs_handle, const char *path, struct stat *stat)
         ext2fs_t *hdl = fs_handle;
 
         struct ext4_filestat filestat;
-        int status = ext4_stat(hdl->fsctx, path, &filestat);
-        if (status == ESUCC) {
+        int err = ext4_stat(hdl->fsctx, path, &filestat);
+        if (err == ESUCC) {
                 stat->st_dev   = filestat.st_dev;
                 stat->st_gid   = filestat.st_gid;
                 stat->st_uid   = filestat.st_uid;
@@ -649,7 +644,7 @@ API_FS_STAT(ext2fs, void *fs_handle, const char *path, struct stat *stat)
                 stat->st_size  = filestat.st_size;
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -667,18 +662,18 @@ API_FS_STATFS(ext2fs, void *fs_handle, struct statfs *statfs)
         ext2fs_t *hdl = fs_handle;
 
         struct ext4_fs_stats stat;
-        int status = ext4_statfs(hdl->fsctx, &stat);
-        if (status == ESUCC) {
+        int err = ext4_statfs(hdl->fsctx, &stat);
+        if (err == ESUCC) {
                 statfs->f_bfree  = stat.free_blocks_count;
                 statfs->f_blocks = stat.blocks_count;
                 statfs->f_bsize  = stat.block_size;
                 statfs->f_ffree  = stat.free_inodes_count;
                 statfs->f_files  = stat.inodes_count;
-                statfs->f_type   = 2;
+                statfs->f_type   = SYS_FS_TYPE__SOLID;
                 statfs->f_fsname = "ext2fs";
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -694,12 +689,12 @@ API_FS_SYNC(ext2fs, void *fs_handle)
 {
         ext2fs_t *hdl = fs_handle;
 
-        int status = ext4_cache_write_back(hdl->fsctx, false);
-        if (status == ESUCC) {
-                status = ext4_cache_write_back(hdl->fsctx, true);
+        int err = ext4_cache_write_back(hdl->fsctx, false);
+        if (err == ESUCC) {
+                err = ext4_cache_write_back(hdl->fsctx, true);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -748,13 +743,13 @@ static int ext4_bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, ui
 {
         ext2fs_t *hdl = bdev->usr_ctx;
 
-        int result = sys_fseek(hdl->srcfile, blk_id * cast(u64_t, BLOCK_SIZE), SEEK_SET);
-        if (result == ESUCC) {
+        int err = sys_fseek(hdl->srcfile, blk_id * cast(u64_t, BLOCK_SIZE), SEEK_SET);
+        if (err == ESUCC) {
                 size_t rdcnt;
-                result = sys_fread(buf, BLOCK_SIZE * blk_cnt, &rdcnt, hdl->srcfile);
+                err = sys_fread(buf, BLOCK_SIZE * blk_cnt, &rdcnt, hdl->srcfile);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -773,13 +768,13 @@ static int ext4_bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk
 {
         ext2fs_t *hdl = bdev->usr_ctx;
 
-        int result = sys_fseek(hdl->srcfile, blk_id * cast(u64_t, BLOCK_SIZE), SEEK_SET);
-        if (result == ESUCC) {
+        int err = sys_fseek(hdl->srcfile, blk_id * cast(u64_t, BLOCK_SIZE), SEEK_SET);
+        if (err == ESUCC) {
                 size_t wrcnt;
-                result = sys_fwrite(buf, BLOCK_SIZE * blk_cnt, &wrcnt, hdl->srcfile);
+                err = sys_fwrite(buf, BLOCK_SIZE * blk_cnt, &wrcnt, hdl->srcfile);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

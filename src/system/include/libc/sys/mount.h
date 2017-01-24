@@ -75,9 +75,13 @@ extern "C" {
  * system not requires to use source file (e.g. procfs, ramfs, devfs) then
  * <i>src_path</i> shall be an empty string (<i>""</i>).
  *
+ * Additional options can be passed to file system by using <i>options</i>
+ * argument. It can be NULL or empty if no options given.
+ *
  * @param FS_name       file system name
  * @param src_path      file system source file (e.g. /dev/sda1)
  * @param mount_point   file system mount directory
+ * @param options       fiel system options (can be NULL)
  *
  * @exception | ...
  *
@@ -91,7 +95,7 @@ extern "C" {
         mkdir("/sdcard", 0666);
 
         errno = 0;
-        if (mount("fatfs", "/dev/sda1", "/sdcard") == 0) {
+        if (mount("fatfs", "/dev/sda1", "/sdcard", NULL) == 0) {
                 // file system mounted ...
 
         } else {
@@ -106,10 +110,11 @@ extern "C" {
  * @see umount()
  */
 //==============================================================================
-static inline int mount(const char *FS_name, const char *src_path, const char *mount_point)
+static inline int mount(const char *FS_name, const char *src_path,
+                        const char *mount_point, const char *options)
 {
         int r = -1;
-        syscall(SYSCALL_MOUNT, &r, FS_name, src_path, mount_point);
+        syscall(SYSCALL_MOUNT, &r, FS_name, src_path, mount_point, options);
         return r;
 }
 

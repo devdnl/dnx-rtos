@@ -38,16 +38,22 @@
 #include "kernel/kpanic.h"
 #include "kernel/errno.h"
 #include "kernel/time.h"
-#include "kernel/shm.h"
 #include "lib/cast.h"
 #include "lib/unarg.h"
 #include "net/netm.h"
+#include "mm/shm.h"
 #include "mm/cache.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
 #define SYSCALL_QUEUE_LENGTH    8
+
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+#define SYNC_PERIOD_MS          (1000 * __OS_SYSTEM_CACHE_SYNC_PERIOD__)
+#else
+#define SYNC_PERIOD_MS          MAX_DELAY_MS
+#endif
 
 #define GETARG(type, var)       type var = va_arg(rq->args, type)
 #define LOADARG(type)           va_arg(rq->args, type)
@@ -200,6 +206,10 @@ static void syscall_shmdestroy(syscallrq_t *rq);
 ==============================================================================*/
 static queue_t *call_request;
 
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+static u32_t sync_period_ref;
+#endif
+
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MOUNT ] = syscall_mount,
@@ -334,7 +344,7 @@ pid_t       _syscall_client_PID[__OS_TASK_MAX_THREADS__];
  * @brief  Initialize system calls.
  */
 //==============================================================================
-void _syscall_init()
+int _syscall_init()
 {
         static const process_attr_t attr = {
                 .f_stdin  = NULL,
@@ -348,15 +358,13 @@ void _syscall_init()
                 .detached = true
         };
 
-        int result = ESUCC;
+        int err = ESUCC;
 
-        result |= _queue_create(SYSCALL_QUEUE_LENGTH, sizeof(syscallrq_t*), &call_request);
-        result |= _process_create("kworker", &attr, NULL);
-        result |= _process_create(__OS_INIT_PROG__, &attr, NULL);
+        err |= _queue_create(SYSCALL_QUEUE_LENGTH, sizeof(syscallrq_t*), &call_request);
+        err |= _process_create("kworker", &attr, NULL);
+        err |= _process_create(__OS_INIT_PROG__, &attr, NULL);
 
-        if (result != ESUCC) {
-                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
-        }
+        return err;
 }
 
 //==============================================================================
@@ -447,7 +455,7 @@ int _syscall_kworker_process(int argc, char *argv[])
 
         for (;;) {
                 syscallrq_t *rq;
-                if (_queue_receive(call_request, &rq, MAX_DELAY_MS) == ESUCC) {
+                if (_queue_receive(call_request, &rq, SYNC_PERIOD_MS) == ESUCC) {
 
                         _process_clean_up_killed_processes();
 
@@ -480,6 +488,8 @@ int _syscall_kworker_process(int argc, char *argv[])
                                 case ENOMEM:
                                         _process_clean_up_killed_processes();
                                         _kernel_release_resources();
+                                        _vfs_sync();
+                                        _cache_sync();
                                         // go through
 
                                 default:
@@ -489,6 +499,13 @@ int _syscall_kworker_process(int argc, char *argv[])
                                 }
                         }
                 }
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+                if ( (_kernel_get_time_ms() - sync_period_ref) >= SYNC_PERIOD_MS) {
+
+                        _cache_sync();
+                        sync_period_ref = _kernel_get_time_ms();
+                }
+#endif
         }
 
         return -1;
@@ -524,10 +541,11 @@ static void syscall_do(void *rq)
 
         // If there is lack of memory and FS sync is required then thread
         // synchronize all file systems to reduce cache size.
-        if (  sysrq->syscall_no <= _SYSCALL_GROUP_1_FS_BLOCKING
-           && sys_cache_is_sync_needed()) {
+        if (  _cache_is_sync_needed()
+           && sysrq->syscall_no <= _SYSCALL_GROUP_1_FS_BLOCKING) {
 
                 _vfs_sync();
+                _cache_sync();
         }
 }
 
@@ -550,7 +568,9 @@ static void syscall_mount(syscallrq_t *rq)
         mount_point.CWD  = src_path.CWD;
         mount_point.PATH = LOADARG(const char *);
 
-        SETERRNO(_mount(FS_name, &src_path, &mount_point));
+        GETARG(const char *, opts);
+
+        SETERRNO(_mount(FS_name, &src_path, &mount_point, opts));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1017,6 +1037,7 @@ static void syscall_sync(syscallrq_t *rq)
 {
         UNUSED_RQ();
         _vfs_sync();
+        _cache_sync();
 }
 
 #if __OS_ENABLE_TIMEMAN__ == _YES_
@@ -1064,7 +1085,7 @@ static void syscall_driverinit(syscallrq_t *rq)
         GETARG(const char *, node_path);
         dev_t drvid = -1;
         SETERRNO(_driver_init(mod_name, *major, *minor,  node_path, &drvid));
-        SETRETURN(dev_t, drvid);
+        SETRETURN(dev_t, GETERRNO() == ESUCC ? drvid : -1);
 }
 
 //==============================================================================
@@ -1918,7 +1939,13 @@ static void syscall_shmattach(syscallrq_t *rq)
         GETARG(const char *, key);
         GETARG(void **, mem);
         GETARG(size_t *, size);
-        SETERRNO(_shm_at(key, mem, size));
+
+        pid_t pid = 0;
+        SETERRNO(_process_get_pid(GETPROCESS(), &pid));
+        if (GETERRNO() == ESUCC) {
+                SETERRNO(_shm_attach(key, mem, size, pid));
+        }
+
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1932,7 +1959,13 @@ static void syscall_shmattach(syscallrq_t *rq)
 static void syscall_shmdetach(syscallrq_t *rq)
 {
         GETARG(const char *, key);
-        SETERRNO(_shm_detach(key));
+
+        pid_t pid = 0;
+        SETERRNO(_process_get_pid(GETPROCESS(), &pid));
+        if (GETERRNO() == ESUCC) {
+                SETERRNO(_shm_detach(key, pid));
+        }
+
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

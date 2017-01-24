@@ -34,11 +34,13 @@
 #include "mm/mm.h"
 #include "mm/heap.h"
 #include "mm/cache.h"
+#include "mm/shm.h"
 #include "lib/cast.h"
 #include "kernel/errno.h"
 #include "kernel/ktypes.h"
 #include "kernel/kwrapper.h"
 #include "kernel/sysfunc.h"
+#include "kernel/kpanic.h"
 
 /*==============================================================================
   Local macros
@@ -102,9 +104,10 @@ extern void      *__ram_size;
 //==============================================================================
 int _mm_init(void)
 {
-        return _kzalloc(_MM_KRN,
-                        _drvreg_number_of_modules * sizeof(i32_t),
-                        cast(void*, &module_memory_usage));
+        int err =  _kzalloc(_MM_KRN,
+                            _drvreg_number_of_modules * sizeof(i32_t),
+                            cast(void*, &module_memory_usage));
+        return err;
 }
 
 //==============================================================================
@@ -394,44 +397,46 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                         break;
                 }
 
-                if (usage) {
-                        size = MEM_ALIGN_SIZE(size);
+                if (!usage) {
+                        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                }
 
-                        for (int i = 0; i <= 1; i++) {
-                                size_t allocated = 0;
-                                void *blk = _heap_alloc(size, &allocated);
+                size = MEM_ALIGN_SIZE(size);
 
-                                if (blk) {
-                                        _kernel_scheduler_lock();
-                                        *usage += allocated;
-                                        _kernel_scheduler_unlock();
+                for (int i = 0; i <= 1; i++) {
+                        size_t allocated = 0;
+                        void *blk = _heap_alloc(size, &allocated);
 
-                                        if (clear) {
-                                                memset(blk, 0, size);
-                                        }
+                        if (blk) {
+                                _kernel_scheduler_lock();
+                                *usage += allocated;
+                                _kernel_scheduler_unlock();
 
-                                        if (mpur == _MM_PROG) {
-                                                 cast(res_header_t*, blk)->next = NULL;
-                                                 cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
-                                        }
+                                if (clear) {
+                                        memset(blk, 0, size);
+                                }
 
-                                        *mem = blk;
+                                if (mpur == _MM_PROG) {
+                                         cast(res_header_t*, blk)->next = NULL;
+                                         cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
+                                }
 
-                                        err = ESUCC;
+                                *mem = blk;
+
+                                err = ESUCC;
+                                break;
+                        } else {
+                                err = ENOMEM;
+
+                                if (mpur == _MM_CACHE) {
                                         break;
+
                                 } else {
-                                        err = ENOMEM;
-
-                                        if ((i == 0) && (mpur != _MM_CACHE)) {
-
-                                                sys_cache_reduce(size);
+                                        if (i == 0) {
+                                                _cache_reduce(size);
                                         }
                                 }
                         }
-                }
-
-                if (err == ENOMEM) {
-                        printk("Not enough free memory (%dB)", size);
                 }
         }
 

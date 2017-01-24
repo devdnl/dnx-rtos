@@ -78,11 +78,11 @@
 //==============================================================================
 DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        int result = sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (result == ESUCC) {
+        int err = sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (err == ESUCC) {
                 size_t rdcnt = 0;
-                result = sys_fread(buff, _LIBFAT_MAX_SS * count, &rdcnt, srcfile);
-                if (result == ESUCC && rdcnt == _LIBFAT_MAX_SS * count) {
+                err = sys_fread(buff, _LIBFAT_MAX_SS * count, &rdcnt, srcfile);
+                if (err == ESUCC && rdcnt == _LIBFAT_MAX_SS * count) {
                         return RES_OK;
                 }
         }
@@ -105,11 +105,11 @@ DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t
 //==============================================================================
 DRESULT _libfat_disk_write(FILE *srcfile, const uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        int result = sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (result == ESUCC) {
+        int err = sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
+        if (err == ESUCC) {
                 size_t wrcnt = 0;
-                result = sys_fwrite(buff, _LIBFAT_MAX_SS * count, &wrcnt, srcfile);
-                if (result == ESUCC && wrcnt == _LIBFAT_MAX_SS * count) {
+                err = sys_fwrite(buff, _LIBFAT_MAX_SS * count, &wrcnt, srcfile);
+                if (err == ESUCC && wrcnt == _LIBFAT_MAX_SS * count) {
                         return RES_OK;
                 }
         }
@@ -160,7 +160,7 @@ DRESULT _libfat_disk_ioctl(FILE *srcfile, uint8_t cmd, void *buff)
 uint32_t _libfat_get_fattime(void)
 {
         time_t t;
-        sys_gettime(&t);
+        sys_get_time(&t);
 
         struct tm tm;
         sys_gmtime_r(&t, &tm);

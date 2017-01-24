@@ -5,7 +5,7 @@ Author   Daniel Zorychta
 
 Brief    Cache management.
 
-	 Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
+	 Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -40,26 +40,28 @@ Brief    Cache management.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define ATOMIC for (int __ = 0; __ == 0;)\
-        for (_kernel_scheduler_lock(); __ == 0; _kernel_scheduler_unlock(), __++)
-
-#define container_of(ptr, type, member) (type *)( (void *)(ptr) - offsetof(type,member) )
+#define cache_buf(cache)        cache[1]
+#define MTX_TIMEOUT             MAX_DELAY_MS
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef struct mem_cache {
-        struct mem_cache *next;         //!< should be the first
-        struct mem_cache *prev;
-        bool              insync;
-        sys_cache_t       cache;        //!< should be the last
-} mem_cache_t;
+typedef struct cache {
+        struct cache       *next;               //!< next cache object
+        struct cache       *prev;               //!< previous cache object
+        dev_t               dev;                //!< device ID (final medium)
+        i32_t               temp;               //!< cache temperature
+        u32_t               pos;                //!< file position (block number)
+        size_t              size;               //!< block size
+        bool                dirty;              //!< cache is dirty
+        u8_t                buf[];              //!< block data
+} cache_t;
 
 typedef struct {
-        mem_cache_t *list_head;         //!< the smallest cache
-        mem_cache_t *list_tail;         //!< the highest cache
-        bool         sync_needed;       //!< FS synchronization needed to free dirty caches
-} cache_t;
+        cache_t            *list_head;          //!< the smallest cache
+        mutex_t            *list_mtx;           //!< protection mutex
+        bool                sync_needed;        //!< FS synchronization needed to free dirty caches
+} cache_man_t;
 
 /*==============================================================================
   Local function prototypes
@@ -69,7 +71,7 @@ typedef struct {
   Local objects
 ==============================================================================*/
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-static cache_t CACHE;
+static cache_man_t cman;
 #endif
 
 /*==============================================================================
@@ -86,222 +88,319 @@ static cache_t CACHE;
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
 //==============================================================================
 /**
- * Function add new cache to list.
+ * @brief Function allocate new cache object and add to list.
  *
- * @param  memcache     cache object (system object).
- */
-//==============================================================================
-static void link_cache(mem_cache_t *memcache)
-{
-        if (CACHE.list_head == NULL) {
-                CACHE.list_head = memcache;
-                CACHE.list_tail = memcache;
-        } else {
-                mem_cache_t *mc = CACHE.list_head;
-                while (mc) {
-                        mem_cache_t *next = mc->next;
-
-                        if (memcache->cache.size <= mc->cache.size) {
-                                memcache->next = mc;
-                                memcache->prev = mc->prev;
-
-                                if (mc->prev) {
-                                        mc->prev->next = memcache;
-                                } else {
-                                        CACHE.list_head = memcache;
-                                }
-
-                                mc->prev = memcache;
-
-                                break;
-                        }
-
-                        if (next == NULL) {
-                                mc->next        = memcache;
-                                memcache->prev  = mc;
-                                CACHE.list_tail = memcache;
-                                break;
-                        }
-
-                        mc = next;
-                }
-        }
-}
-#endif
-
-//==============================================================================
-/**
- * Function allocate new cache object.
- *
- * @param  size         cache size
- * @param  object       user's object
- * @param  unlink       cache unlink function (user function called when cache is freeing)
- * @param  cache        pointer to cache pointer
+ * @param  dev          device
+ * @param  blkpos       block position
+ * @param  blksz        block size
+ * @param  cache        pointer to cache object
  *
  * @return One of errno value.
  */
 //==============================================================================
-int sys_cache_alloc(size_t size, void *object, sys_cache_unlink_fn_t unlink, sys_cache_t **cache)
+static int cache_alloc(dev_t dev, u32_t blkpos, size_t blksz, cache_t **cache)
 {
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-        int err = EINVAL;
+        size_t free = _mm_get_mem_free();
+        if (free < __OS_SYSTEM_CACHE_MIN_FREE__) {
+                return ENOMEM;
+        }
 
-        if (size && unlink && cache) {
-                mem_cache_t *memcache;
-                err = _kzalloc(_MM_CACHE, sizeof(mem_cache_t) + size, cast(void*, &memcache));
-                if (!err) {
-                        ATOMIC {
-                                memcache->cache.object = object;
-                                memcache->cache.unlink = unlink;
-                                memcache->cache.size   = size;
+        int err = _kzalloc(_MM_CACHE, sizeof(cache_t) + blksz, cast(void*, cache));
+        if (!err) {
+                (*cache)->dev  = dev;
+                (*cache)->pos  = blkpos;
+                (*cache)->size = blksz;
+                (*cache)->next = cman.list_head;
 
-                                link_cache(memcache);
-
-                                printk("CACHE: created (%dB)", size); // TEST
-
-                                *cache = &memcache->cache;
-                        }
+                if ((*cache)->next) {
+                        (*cache)->next->prev = *cache;
                 }
+
+                cman.list_head = *cache;
+
+                printk("CACHE: created (%d B)", blksz);
         }
 
         return err;
-#else
-        UNUSED_ARG4(size, object, unlink, cache);
-        return ENOTSUP;
-#endif
 }
 
 //==============================================================================
 /**
- * Function free selected cache.
+ * @brief Function free selected cache and remove from list.
  *
  * @param  cache        cache object to free.
  *
  * @return One of errno value.
  */
 //==============================================================================
-int sys_cache_free(sys_cache_t *cache)
+static int cache_free(cache_t *cache)
 {
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
         int err = EINVAL;
 
         if (cache) {
-                mem_cache_t *memcache = container_of(cache, mem_cache_t, cache);
+                printk("CACHE: freed (%d B)", cache->size);
 
-                printk("CACHE: freed (%dB)", cache->size); // TEST
+                if (cache == cman.list_head) {
+                        cman.list_head = cache->next;
 
-                ATOMIC {
-                        if (memcache == CACHE.list_head) {
-                                CACHE.list_head = memcache->next;
+                        if (cman.list_head) {
+                                cman.list_head->prev = NULL;
                         }
 
-                        if (memcache == CACHE.list_tail) {
-                                CACHE.list_tail = memcache->prev;
+                } else {
+                        if (cache->next) {
+                                cache->next->prev = cache->prev;
                         }
 
-                        if (memcache->prev) {
-                                memcache->prev->next = memcache->next;
+                        if (cache->prev) {
+                                cache->prev->next = cache->next;
                         }
-
-                        if (memcache->next) {
-                                memcache->next->prev = memcache->prev;
-                        }
-
-                        memset(memcache, 0, sizeof(mem_cache_t));
                 }
 
-                err = _kfree(_MM_CACHE, cast(void*, &memcache));
+                memset(cache, 0, sizeof(cache_t));
+
+                err = _kfree(_MM_CACHE, cast(void*, &cache));
                 if (err) {
                         _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
                 }
         }
 
         return err;
+}
+
+//==============================================================================
+/**
+ * @brief Function search cache of selected parameters in list.
+ *        Only files that are linked directly to drivers are supported. Regular
+ *        files are not supported because can be buffered by parent file system.
+ *
+ * @param  dev          device
+ * @param  blkpos       block position
+ * @param  blksz        block size
+ * @param  cache        cache result
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int cache_find(dev_t dev, u32_t blkpos, size_t blksz, cache_t **cache)
+{
+        int err = ENOENT;
+
+        cache_t *c = cman.list_head;
+        while (c) {
+                cache_t *next = c->next;
+
+                if (  c->dev  == dev
+                   && c->size == blksz
+                   && c->pos  == blkpos) {
+
+                        *cache = c;
+                        err    = ESUCC;
+                        break;
+                }
+
+                c = next;
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Function analyze caches and find the lowest temperature of cache and
+ *        calculate how many this caches is. Function calculate count of dirty
+ *        caches and total number of caches.
+ *
+ * @param  tmin         minimal temperature
+ * @param  tmincnt      number of caches of minimal temperature
+ * @param  dirty        number of dirty caches
+ * @param  count        number of all caches
+ */
+//==============================================================================
+static void get_cache_stats(i32_t *tmin, size_t *tmincnt, size_t *dirty, size_t *count)
+{
+        *tmin    = INT32_MAX;
+        *tmincnt = 0;
+        *dirty   = 0;
+        *count   = 0;
+
+        cache_t *cache = cman.list_head;
+        while (cache) {
+                if (!cache->dirty) {
+                        if (cache->temp < *tmin) {
+                                *tmin    = cache->temp;
+                                *tmincnt = 1;
+
+                        } else if (cache->temp == *tmin) {
+                                *tmincnt += 1;
+                        }
+                } else {
+                        *dirty += 1;
+                }
+
+                *count += 1;
+                cache   = cache->next;
+        }
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief Function initialize cache subsystem.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _cache_init(void)
+{
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+        return _mutex_create(MUTEX_TYPE_NORMAL, &cman.list_mtx);
 #else
-        UNUSED_ARG1(cache);
-        return ENOTSUP;
+        return ESUCC;
 #endif
 }
 
 //==============================================================================
 /**
- * Function reduce number of allocated caches if more free memory is needed.
+ * @brief Function synchronize all dirty caches. Function must be called from
+ *        system thread that is prepared for file system handling.
+ */
+//==============================================================================
+void _cache_sync(void)
+{
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+        int err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
+        if (!err) {
+                u16_t sync_cnt = 0;
+
+                cache_t *cache = cman.list_head;
+
+                while (cache) {
+                        cache_t *next = cache->next;
+
+                        if (cache->dirty) {
+
+                                fpos_t fpos  = cast(fpos_t, cache->pos) * cache->size;
+                                size_t wrcnt = 0;
+                                struct vfs_fattr fattr = {false, false};
+
+                                if (_driver_write(cache->dev,
+                                                  cast(const u8_t*, &cache_buf(cache)),
+                                                  cache->size, &fpos, &wrcnt,
+                                                  fattr) != ESUCC) {
+
+                                        printk("CACHE: file sync error");
+                                }
+
+                                cache->dirty = false;
+                                sync_cnt++;
+                        }
+
+                        cache->temp--;
+
+                        cache = next;
+                }
+
+                cman.sync_needed = false;
+
+                _mutex_unlock(cman.list_mtx);
+
+                if (sync_cnt) {
+                        printk("CACHE: synchronized %d blocks", sync_cnt);
+                }
+        }
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function drop all clear caches.
+ */
+//==============================================================================
+void _cache_drop(void)
+{
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+        int err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
+        if (!err) {
+                u16_t dropped = 0;
+
+                cache_t *cache = cman.list_head;
+
+                while (cache) {
+                        cache_t *next = cache->next;
+
+                        if (!cache->dirty) {
+                                cache_free(cache);
+                                dropped++;
+                        }
+
+                        cache = next;
+                }
+
+                _mutex_unlock(cman.list_mtx);
+
+                printk("CACHE: dropped %d blocks", dropped);
+        }
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief Function reduce number of allocated caches if more free memory is needed.
  *
  * @param  size         size to reduce
  */
 //==============================================================================
-void sys_cache_reduce(size_t size)
+void _cache_reduce(size_t size)
 {
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
         i32_t to_reduce = size;
-        bool  dirty     = false;
 
-        // This algorithm try to find the cache that is equal or bigger than required
-        // space by memory management. Freed are only not dirty caches.
-        ATOMIC {
-                mem_cache_t *memcache = CACHE.list_head;
-                while (memcache) {
-                        mem_cache_t *next = memcache->next;
+        int err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
+        if (!err) {
 
-                        if (memcache->cache.size >= size && !memcache->cache.dirty) {
-                                int err = memcache->cache.unlink(&memcache->cache);
-                                if (!err) {
-                                        to_reduce -= memcache->cache.size + sizeof(mem_cache_t);
-                                        sys_cache_free(&memcache->cache);
+                if (cman.list_head && to_reduce > 0) {
 
-                                        if (to_reduce <= 0) {
-                                                printk("CACHE: reduced (%dB)", size - to_reduce); // TEST
-                                                break;
+                        // Algorithm find caches that have the lowest
+                        // temperature that means there are used very rare.
+                        i32_t  tmin;
+                        size_t tmincnt, dirty, count;
+                        get_cache_stats(&tmin, &tmincnt, &dirty, &count);
+
+                        while (to_reduce > 0 && dirty < count) {
+
+                                cache_t *cache = cman.list_head;
+                                while (cache && tmincnt > 0) {
+                                        cache_t *next = cache->next;
+
+                                        if (!cache->dirty && cache->temp == tmin) {
+                                                to_reduce -= cache->size + sizeof(cache_t);
+                                                cache_free(cache);
+                                                tmincnt--;
+
+                                                if (to_reduce <= 0) {
+                                                        break;
+                                                }
                                         }
+
+                                        cache = next;
                                 }
-                        } else {
-                                dirty |= memcache->cache.dirty;
+
+                                if (to_reduce > 0) {
+                                        get_cache_stats(&tmin, &tmincnt, &dirty, &count);
+                                }
                         }
 
-                        memcache = next;
-                }
-        }
+                        // There is still not enough space so system try to
+                        // synchronize all caches.
+                        cman.sync_needed = (to_reduce > 0 && dirty > 0);
 
-        // Function return if required space is reached. Starting next algorithm is
-        // not needed.
-        if (to_reduce <= 0) {
-                CACHE.sync_needed = false;
-                return;
-        }
-
-        // This algorithm try to free all the biggest caches to meet memory space
-        // requirement. Freed are only not dirty caches.
-        ATOMIC {
-                mem_cache_t *memcache = CACHE.list_tail;
-                while (memcache) {
-                        mem_cache_t *prev = memcache->prev;
-
-                        if (!memcache->cache.dirty) {
-                                int err = memcache->cache.unlink(&memcache->cache);
-                                if (!err) {
-                                        to_reduce -= memcache->cache.size + sizeof(mem_cache_t);
-                                        sys_cache_free(&memcache->cache);
-
-                                        if (to_reduce <= 0) {
-                                                printk("CACHE: reduced (%dB)", size - to_reduce); // TEST
-                                                break;
-                                        }
-                                }
-                        } else {
-                                dirty |= memcache->cache.dirty;
+                        if (cman.sync_needed) {
+                                printk("CACHE: sync needed", to_reduce);
                         }
-
-                        memcache = prev;
                 }
-        }
 
-        // There is still not enough space so system try to synchronize
-        // all file systems.
-        CACHE.sync_needed = (to_reduce > 0 && dirty);
-
-
-        if (CACHE.sync_needed) { // TEST
-                printk("CACHE: sync needed", to_reduce); // TEST
+                _mutex_unlock(cman.list_mtx);
         }
 #else
         UNUSED_ARG1(size);
@@ -310,18 +409,174 @@ void sys_cache_reduce(size_t size)
 
 //==============================================================================
 /**
- * Function return synchronization required flag.
+ * @brief Function return synchronization required flag.
  *
  * @return Synchronization flag.
  */
 //==============================================================================
-bool sys_cache_is_sync_needed(void)
+bool _cache_is_sync_needed(void)
 {
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-        return CACHE.sync_needed;
+        return cman.sync_needed;
 #else
         return false;
 #endif
+}
+
+//==============================================================================
+/**
+ * @brief Function write block to selected file. If cache exist then block is
+ *        write to the cache. If cache does not exist then new one is created.
+ *        Only files that are linked with drivers are cached, other files are
+ *        written directly.
+ *
+ * @param  file         file to write
+ * @param  blkpos       block position
+ * @param  blksz        block size
+ * @param  buf          buffer to write from (block)
+ * @param  sync         synchronous write (if cache already does not exist)
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, bool sync)
+{
+        if (!file || !blksz || !buf) {
+                return EINVAL;
+        }
+
+        struct stat stat;
+        int err = _vfs_fstat(file, &stat);
+        if (!err) {
+                if (stat.st_type == FILE_TYPE_DRV) {
+
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+                        err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
+                        if (!err) {
+                                cache_t *cache;
+
+                                if (cache_find(stat.st_dev, blkpos, blksz, &cache) != ESUCC) {
+
+                                        if (sync || cache_alloc(stat.st_dev,
+                                                                blkpos, blksz,
+                                                                &cache) != ESUCC) {
+                                                cache = NULL;
+                                        }
+                                }
+
+                                if (cache) {
+                                        memcpy(&cache_buf(cache), buf, blksz);
+                                        cache->dirty = true;
+                                        cache->temp++;
+
+                                } else {
+#endif
+                                        fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
+                                        size_t wrcnt = 0;
+                                        struct vfs_fattr fattr = {false, false};
+
+                                        err = _driver_write(stat.st_dev, buf,
+                                                            blksz, &fpos, &wrcnt,
+                                                            fattr);
+
+                                        if (!err && wrcnt != blksz) {
+                                                err = EIO;
+                                        }
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+                                }
+
+                                _mutex_unlock(cman.list_mtx);
+                        }
+#endif
+                } else {
+                        err = _vfs_fseek(file, cast(i64_t, blkpos) * blksz, VFS_SEEK_SET);
+                        if (!err) {
+                                size_t wrcnt = 0;
+                                err = _vfs_fwrite(buf, blksz, &wrcnt, file);
+
+                                if (!err && wrcnt != blksz) {
+                                        err = EIO;
+                                }
+                        }
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Function read block from selected file. If cache exist then cache
+ *        data is used. If cache does not exist then file is read and new cache
+ *        is created. Function does not cache blocks from files that are not
+ *        directly connected do drivers.
+ *
+ * @param  file         file to read
+ * @param  blkpos       block position
+ * @param  blksz        block size
+ * @param  buf          buffer to read (block)
+ * @param  sync         synchronous read (if cache already does not exist)
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf, bool sync)
+{
+        if (!file || !blksz || !buf) {
+                return EINVAL;
+        }
+
+        struct stat stat;
+        int err = _vfs_fstat(file, &stat);
+        if (!err) {
+                if (stat.st_type == FILE_TYPE_DRV) {
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+                        err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
+                        if (!err) {
+                                cache_t *cache;
+
+                                if (cache_find(stat.st_dev, blkpos, blksz, &cache) == ESUCC) {
+                                        memcpy(buf, &cache_buf(cache), blksz);
+                                        cache->temp++;
+
+                                } else {
+#endif
+                                        fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
+                                        size_t rdcnt = 0;
+                                        struct vfs_fattr fattr = {false, false};
+
+                                        err = _driver_read(stat.st_dev, buf,
+                                                           blksz, &fpos,
+                                                           &rdcnt, fattr);
+
+                                        if (!err && rdcnt != blksz) {
+                                                err = EIO;
+                                        }
+
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+                                        if (!err && !sync) {
+                                                if (cache_alloc(stat.st_dev, blkpos, blksz, &cache) == ESUCC) {
+                                                        memcpy(&cache_buf(cache), buf, blksz);
+                                                }
+                                        }
+                                }
+                                _mutex_unlock(cman.list_mtx);
+                        }
+#endif
+                } else {
+                        err = _vfs_fseek(file, cast(i64_t, blkpos) * blksz, VFS_SEEK_SET);
+                        if (!err) {
+                                size_t rdcnt = 0;
+                                err = _vfs_fread(buf, blksz, &rdcnt, file);
+
+                                if (!err && rdcnt != blksz) {
+                                        err = EIO;
+                                }
+                        }
+                }
+        }
+
+        return err;
 }
 
 /*==============================================================================

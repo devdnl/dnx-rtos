@@ -95,7 +95,7 @@ static int driver__get_module_no_and_mem(dev_t id, u16_t *modno, void **mem)
 {
         int err = EINVAL;
 
-        if (modno && mem) {
+        if (modno && mem && id != -1) {
                 err = ENODEV;
 
                 *modno = _dev_t__extract_modno(id);
@@ -138,7 +138,7 @@ static int driver__register(u16_t modno, u8_t major, u8_t minor, drvmem_t **drv)
                 _kernel_scheduler_lock();
                 {
                         // find that module is not already initialized
-                        for (drvmem_t *drv = drvmem[modno]; drv && err == ESUCC; drv = drv->next) {
+                        for (drvmem_t *drv = drvmem[modno]; drv && !err; drv = drv->next) {
                                 if (  _dev_t__extract_major(drv->devid) == major
                                    && _dev_t__extract_minor(drv->devid) == minor) {
 
@@ -147,9 +147,9 @@ static int driver__register(u16_t modno, u8_t major, u8_t minor, drvmem_t **drv)
                         }
 
                         // create new driver chain
-                        if (err == ESUCC) {
+                        if (!err) {
                                 err = _kzalloc(_MM_KRN, sizeof(drvmem_t), cast(void *, drv));
-                                if (err == ESUCC) {
+                                if (!err) {
                                         (*drv)->devid = _dev_t__create(modno, major, minor);
                                         (*drv)->mem   = NULL;
                                         (*drv)->next  = NULL;
@@ -266,7 +266,7 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
                 err = _kzalloc(_MM_KRN, _drvreg_number_of_modules * sizeof(drvmem_t*),
                                   cast(void *,&drvmem));
 
-                if (err != ESUCC) {
+                if (err) {
                         return err;
                 }
         }
@@ -275,10 +275,10 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
         int       modno = _module_get_ID(module);
         drvmem_t *drv   = NULL;
         err             = driver__register(modno, major, minor, &drv);
-        if (err == ESUCC) {
+        if (!err) {
 
                 err = driver__initialize(modno, major, minor, &drv->mem);
-                if (err == ESUCC) {
+                if (!err) {
                         if (id) {
                                 *id = drv->devid;
                         }
@@ -289,7 +289,7 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
                                 cpath.PATH = node_path;
 
                                 err = _vfs_mknod(&cpath, drv->devid);
-                                if (err == ESUCC) {
+                                if (!err) {
                                         printk(DRIVER_NAME" initialized as %s", DRIVER_NAME_ARGS, node_path);
 
                                 } else {
@@ -330,13 +330,15 @@ int _driver_release(dev_t id)
         void *mem;
 
         int err = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (err == ESUCC) {
+        if (!err) {
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
                 u8_t        major  = _dev_t__extract_major(id);
                 u8_t        minor  = _dev_t__extract_minor(id);
                 const char *module = _module_get_name(modno);
+#endif
 
                 err = driver__release(modno, mem);
-                if (err == ESUCC) {
+                if (!err) {
                         driver__remove(id);
                         printk(DRIVER_NAME" released", DRIVER_NAME_ARGS);
                 } else {
@@ -363,7 +365,7 @@ int _driver_open(dev_t id, u32_t flags)
         void *mem;
 
         int err = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (err == ESUCC) {
+        if (!err) {
                 err = _drvreg_module_table[modno].IF.drv_open(mem, vfs_filter_flags_for_device(flags));
         }
 
@@ -386,7 +388,7 @@ int _driver_close(dev_t id, bool force)
         void *mem;
 
         int err = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (err == ESUCC) {
+        if (!err) {
                 err = _drvreg_module_table[modno].IF.drv_close(mem, force);
         }
 
@@ -413,7 +415,7 @@ int _driver_write(dev_t id, const u8_t *src, size_t count, fpos_t *fpos, size_t 
         void *mem;
 
         int err = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (err == ESUCC) {
+        if (!err) {
                 err = _drvreg_module_table[modno].IF.drv_write(mem, src, count, fpos, wrcnt, fattr);
         }
 
@@ -440,7 +442,7 @@ int _driver_read(dev_t id, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt,
         void *mem;
 
         int err = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (err == ESUCC) {
+        if (!err) {
                 err = _drvreg_module_table[modno].IF.drv_read(mem, dst, count, fpos, rdcnt, fattr);
         }
 
@@ -464,7 +466,7 @@ int _driver_ioctl(dev_t id, int request, void *arg)
         void *mem;
 
         int err = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (err == ESUCC) {
+        if (!err) {
                 err = _drvreg_module_table[modno].IF.drv_ioctl(mem, request, arg);
         }
 
@@ -488,7 +490,7 @@ int _driver_flush(dev_t id)
         void *mem;
 
         int err = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (err == ESUCC) {
+        if (!err) {
                 err = _drvreg_module_table[modno].IF.drv_flush(mem);
         }
 
@@ -511,7 +513,7 @@ int _driver_stat(dev_t id, struct vfs_dev_stat *stat)
         void *mem;
 
         int err = driver__get_module_no_and_mem(id, &modno, &mem);
-        if (err == ESUCC) {
+        if (!err) {
                 stat->st_major = _dev_t__extract_major(id);
                 stat->st_minor = _dev_t__extract_minor(id);
                 err = _drvreg_module_table[modno].IF.drv_stat(mem, stat);
@@ -575,27 +577,27 @@ int _module_get_ID(const char *module_name)
 
 //==============================================================================
 /**
- * @brief Function return driver status
+ * @brief Function return number of module instances.
  *
  * @param n             module number
  *
- * @return Number of instances or -1 on error
+ * @return Number of instances or -1 on error.
  */
 //==============================================================================
 ssize_t _module_get_number_of_instances(size_t n)
 {
-        int result = -1;
+        int instances = -1;
 
         if (n < _drvreg_number_of_modules) {
                 _kernel_scheduler_lock();
                 {
-                        result = 0;
-                        for (drvmem_t *drv = drvmem[n]; drv; result++, drv = drv->next);
+                        instances = 0;
+                        for (drvmem_t *drv = drvmem[n]; drv; instances++, drv = drv->next);
                 }
                 _kernel_scheduler_unlock();
         }
 
-        return result;
+        return instances;
 }
 
 //==============================================================================

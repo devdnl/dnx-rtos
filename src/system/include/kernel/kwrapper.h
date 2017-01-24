@@ -91,6 +91,7 @@ extern int      _kernel_get_number_of_tasks        (void);
 extern void     _kernel_scheduler_lock             (void);
 extern void     _kernel_scheduler_unlock           (void);
 extern void     _kernel_release_resources          (void);
+extern task_t  *_kernel_get_idle_task_handle       (void);
 
 extern int      _task_create                       (task_func_t, const char*, const size_t, void*, void*, task_t**);
 extern void     _task_destroy                      (task_t*);
@@ -112,6 +113,7 @@ extern int      _semaphore_create                  (const uint, const uint, sem_
 extern int      _semaphore_destroy                 (sem_t*);
 extern int      _semaphore_wait                    (sem_t*, const u32_t);
 extern int      _semaphore_signal                  (sem_t*);
+extern int      _semaphore_get_value               (sem_t *sem, size_t *value);
 extern int      _semaphore_wait_from_ISR           (sem_t*, bool*);
 extern int      _semaphore_signal_from_ISR         (sem_t*, bool*);
 

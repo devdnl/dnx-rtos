@@ -92,14 +92,14 @@ static inline bool is_valid(ttyedit_t *this)
 //==============================================================================
 int ttyedit_create(FILE *out_file, ttyedit_t **edit)
 {
-        int result = sys_zalloc(sizeof(ttyedit_t), cast(void**, edit));
-        if (result == ESUCC) {
+        int err = sys_zalloc(sizeof(ttyedit_t), cast(void**, edit));
+        if (err == ESUCC) {
                 (*edit)->self         = *edit;
                 (*edit)->out_file     = out_file;
                 (*edit)->echo_enabled = true;
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

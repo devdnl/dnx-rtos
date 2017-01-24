@@ -37,6 +37,7 @@
 
 #include "../filesystems/fatfs_flags.h"
 #include "../filesystems/ext2fs_flags.h"
+#include "../filesystems/eefs_flags.h"
 
 #/*--
 # this:SetLayout("TitledGridBack", 2, "Home > File Systems",
@@ -131,9 +132,22 @@ __ENABLE_FATFS__=_YES_
 # this:AddExtraWidget("Hyperlink", "EXT2FS_CONFIGURE", "Configure")
 # this:SetEvent("clicked", "EXT2FS_CONFIGURE", function() this:LoadFile("filesystems/ext2fs_flags.h") end)
 #--*/
-#define __ENABLE_EXT2FS__ _NO_
+#define __ENABLE_EXT2FS__ _YES_
 #/*
-__ENABLE_EXT2FS__=_NO_
+__ENABLE_EXT2FS__=_YES_
+#*/
+
+#/*--
+# this:AddWidget("Checkbox", "Enable eefs")
+# this:SetToolTip("The eefs is small file system that support very small EEPROM memories.\n"..
+#                 "Typical size of EEPROM memory connected to I2C bus is 1-64 KiB thus\n"..
+#                 "requires very small file system.")
+# this:AddExtraWidget("Hyperlink", "EEFS_CONFIGURE", "Configure")
+# this:SetEvent("clicked", "EEFS_CONFIGURE", function() this:LoadFile("filesystems/eefs_flags.h") end)
+#--*/
+#define __ENABLE_EEFS__ _YES_
+#/*
+__ENABLE_EEFS__=_YES_
 #*/
 
 #endif /* _FILE_SYSTEMS_FLAGS_H_ */

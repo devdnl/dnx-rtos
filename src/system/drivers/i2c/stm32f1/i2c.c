@@ -191,38 +191,38 @@ static I2C_mem_t *I2C[_I2C_NUMBER_OF_PERIPHERALS];
 //==============================================================================
 API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 {
-        int result = ENODEV;
+        int err = ENODEV;
 
         if (major >= _I2C_NUMBER_OF_PERIPHERALS) {
-                return result;
+                return err;
         }
 
         /* creates basic module structures */
         if (I2C[major] == NULL) {
-                result = sys_zalloc(sizeof(I2C_mem_t), cast(void**, &I2C[major]));
-                if (result != ESUCC) {
+                err = sys_zalloc(sizeof(I2C_mem_t), cast(void**, &I2C[major]));
+                if (err != ESUCC) {
                         goto finish;
                 }
 
-                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &I2C[major]->lock);
-                if (result != ESUCC) {
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &I2C[major]->lock);
+                if (err != ESUCC) {
                         goto finish;
                 }
 
-                result = sys_semaphore_create(1, 0, &I2C[major]->event);
-                if (result != ESUCC) {
+                err = sys_semaphore_create(1, 0, &I2C[major]->event);
+                if (err != ESUCC) {
                         goto finish;
                 }
 
-                result = enable_I2C(major);
-                if (result != ESUCC) {
+                err = enable_I2C(major);
+                if (err != ESUCC) {
                         goto finish;
                 }
         }
 
         /* creates device structure */
-        result = sys_zalloc(sizeof(I2C_dev_t), device_handle);
-        if (result == ESUCC) {
+        err = sys_zalloc(sizeof(I2C_dev_t), device_handle);
+        if (err == ESUCC) {
                 I2C_dev_t *hdl = *device_handle;
                 hdl->config    = I2C_DEFAULT_CFG;
                 hdl->major     = major;
@@ -234,11 +234,11 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         }
 
         finish:
-        if (result != ESUCC) {
+        if (err != ESUCC) {
                 release_resources(major);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -252,22 +252,16 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(I2C, void *device_handle)
 {
-        I2C_dev_t *hdl    = device_handle;
-        int        result = EBUSY;
+        I2C_dev_t *hdl = device_handle;
 
-        sys_critical_section_begin();
-        {
-                if (sys_device_is_unlocked(&hdl->lock)) {
-
-                        I2C[hdl->major]->dev_cnt--;
-                        release_resources(hdl->major);
-                        sys_free(device_handle);
-                        result = ESUCC;
-                }
+        int err = sys_device_lock(&hdl->lock);
+        if (!err) {
+                I2C[hdl->major]->dev_cnt--;
+                release_resources(hdl->major);
+                sys_free(device_handle);
         }
-        sys_critical_section_end();
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -355,6 +349,7 @@ API_MOD_WRITE(I2C,
                 }
 
                 *wrcnt = transmit(hdl, src, count);
+                err    = I2C[hdl->major]->error;
 
                 error:
                 sys_mutex_unlock(I2C[hdl->major]->lock);
@@ -423,6 +418,7 @@ API_MOD_READ(I2C,
                 }
 
                 *rdcnt = receive(hdl, dst, count);
+                err    = I2C[hdl->major]->error;
 
                 error:
                 sys_mutex_unlock(I2C[hdl->major]->lock);

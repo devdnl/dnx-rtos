@@ -84,12 +84,12 @@ API_MOD_INIT(CRC, void **device_handle, u8_t major, u8_t minor)
                 return EADDRINUSE;
         }
 
-        int result = sys_zalloc(sizeof(CRCM), device_handle);
-        if (result == ESUCC) {
+        int err = sys_zalloc(sizeof(CRCM), device_handle);
+        if (err == ESUCC) {
                 SET_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -105,21 +105,13 @@ API_MOD_RELEASE(CRC, void *device_handle)
 {
         CRCM *hdl = device_handle;
 
-        int status;
-
-        sys_critical_section_begin();
-        {
-                if (sys_device_is_unlocked(&hdl->file_lock)) {
-                        CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
-                        sys_free(cast(void**, &hdl));
-                        status = ESUCC;
-                } else {
-                        status = EBUSY;
-                }
+        int err = sys_device_lock(&hdl->file_lock);
+        if (!err) {
+                CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
+                sys_free(cast(void**, &hdl));
         }
-        sys_critical_section_end();
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -155,13 +147,13 @@ API_MOD_CLOSE(CRC, void *device_handle, bool force)
 {
         CRCM *hdl = device_handle;
 
-        int result = sys_device_get_access(&hdl->file_lock);
+        int err = sys_device_get_access(&hdl->file_lock);
 
-        if (result == ESUCC) {
-                result = sys_device_unlock(&hdl->file_lock, force);
+        if (err == ESUCC) {
+                err = sys_device_unlock(&hdl->file_lock, force);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -190,8 +182,8 @@ API_MOD_WRITE(CRC,
 
         CRCM *hdl = device_handle;
 
-        int result = sys_device_get_access(&hdl->file_lock);
-        if (result == ESUCC) {
+        int err = sys_device_get_access(&hdl->file_lock);
+        if (err == ESUCC) {
                 reset_CRC();
 
                 size_t len = count / sizeof(u32_t);
@@ -204,7 +196,7 @@ API_MOD_WRITE(CRC,
                 *wrcnt = len * sizeof(u32_t);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -233,8 +225,8 @@ API_MOD_READ(CRC,
 
         CRCM *hdl = device_handle;
 
-        int result = sys_device_get_access(&hdl->file_lock);
-        if (result == ESUCC) {
+        int err = sys_device_get_access(&hdl->file_lock);
+        if (err == ESUCC) {
 
                 u8_t crc[4] = {CRCP->DR, CRCP->DR >> 8, CRCP->DR >> 16, CRCP->DR >> 24};
 
@@ -252,7 +244,7 @@ API_MOD_READ(CRC,
                 *rdcnt = n;
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -272,15 +264,15 @@ API_MOD_IOCTL(CRC, void *device_handle, int request, void *arg)
 
         CRCM *hdl = device_handle;
 
-        int result = sys_device_get_access(&hdl->file_lock);
-        if (result == ESUCC) {
+        int err = sys_device_get_access(&hdl->file_lock);
+        if (err == ESUCC) {
                 switch (request) {
                 case IOCTL_CRC__SET_INITIAL_VALUE:
-                        result = ENOTSUP;
+                        err = ENOTSUP;
                         break;
 
                 case IOCTL_CRC__SET_POLYNOMIAL:
-                        result = ENOTSUP;
+                        err = ENOTSUP;
                         break;
 
                 default:
@@ -288,7 +280,7 @@ API_MOD_IOCTL(CRC, void *device_handle, int request, void *arg)
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

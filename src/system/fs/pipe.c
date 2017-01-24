@@ -54,8 +54,8 @@ struct pipe {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static const uint pipe_read_timeout  = MAX_DELAY_MS;
-static const uint pipe_write_timeout = MAX_DELAY_MS;
+static const u32_t PIPE_READ_TIMEOUT  = MAX_DELAY_MS;
+static const u32_t PIPE_WRITE_TIMEOUT = MAX_DELAY_MS;
 
 /*==============================================================================
   Exported objects
@@ -92,14 +92,14 @@ static bool is_valid(pipe_t *this)
 //==============================================================================
 int _pipe_create(pipe_t **pipe)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (pipe) {
-                result = _kmalloc(_MM_KRN, sizeof(pipe_t), cast(void**, pipe));
-                if (result == ESUCC) {
+                err = _kmalloc(_MM_KRN, sizeof(pipe_t), cast(void**, pipe));
+                if (err == ESUCC) {
 
-                        result = _queue_create(__OS_PIPE_LENGTH__, sizeof(u8_t), &(*pipe)->queue);
-                        if (result == ESUCC) {
+                        err = _queue_create(__OS_PIPE_LENGTH__, sizeof(u8_t), &(*pipe)->queue);
+                        if (err == ESUCC) {
                                 (*pipe)->self   = *pipe;
                                 (*pipe)->closed = false;
                         } else {
@@ -108,7 +108,7 @@ int _pipe_create(pipe_t **pipe)
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -176,11 +176,12 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
 
                         if (pipe->closed && noitm <= 0) {
                                 u8_t null = '\0';
-                                _queue_send(pipe->queue, &null, pipe_write_timeout);
+                                _queue_send(pipe->queue, &null, PIPE_WRITE_TIMEOUT);
                                 break;
                         }
 
-                        if (_queue_receive(pipe->queue, &buf[n], non_blocking || n ? 10 : pipe_read_timeout) != ESUCC) {
+                        u32_t tout = non_blocking || n ? 10 : PIPE_READ_TIMEOUT;
+                        if (_queue_receive(pipe->queue, &buf[n], tout) != ESUCC) {
                                 break;
                         }
                 }
@@ -219,7 +220,8 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
                                 break;
                         }
 
-                        if (_queue_send(pipe->queue, &buf[n], non_blocking ? 0 : pipe_write_timeout) != ESUCC) {
+                        u32_t tout = non_blocking || n ? 10 : PIPE_WRITE_TIMEOUT;
+                        if (_queue_send(pipe->queue, &buf[n], tout) != ESUCC) {
                                 break;
                         }
                 }
@@ -246,7 +248,7 @@ int _pipe_close(pipe_t *pipe)
                 pipe->closed = true;
 
                 const u8_t nul = '\0';
-                return _queue_send(pipe->queue, &nul, pipe_write_timeout);
+                return _queue_send(pipe->queue, &nul, PIPE_WRITE_TIMEOUT);
         } else {
                 return EINVAL;
         }

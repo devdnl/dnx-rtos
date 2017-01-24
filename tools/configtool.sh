@@ -2,4 +2,4 @@
 
 cd $(dirname $0)
 
-./configtool/configtool ../../config/config.h PLUGINS-DIR=../configtool-plugins/
+./configtool/configtool $1 ../../config/config.h PLUGINS-DIR=../configtool-plugins/

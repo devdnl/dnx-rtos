@@ -98,26 +98,24 @@ int_main(modinit, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
         }
 
+        char *modname = NULL;
         int status;
         if (release) {
                 int major = atoi(argv[3]);
                 int minor = atoi(argv[4]);
-                status = driver_release(argv[2], major, minor) ? -1 : 0;
+                modname   = argv[2];
+                status    = driver_release(modname, major, minor);
         } else {
                 int major = atoi(argv[2]);
                 int minor = atoi(argv[3]);
-
-                if (argc == 4) {
-                        status = driver_init(argv[1], major, minor, NULL);
-                } else {
-                        status = driver_init(argv[1], major, minor, argv[4]);
-                }
+                modname   = argv[1];
+                status    = driver_init(modname, major, minor, argv[4]);
         }
 
         if (status >= 0) {
-                puts("Success.");
+                printf("Module '%s' initialized.\n", modname);
         } else {
-                perror("Error");
+                perror(modname);
         }
 
         return EXIT_SUCCESS;

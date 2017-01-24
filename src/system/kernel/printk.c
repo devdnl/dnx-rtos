@@ -37,6 +37,8 @@
 #include "lib/vsnprintf.h"
 #include "libc/errno.h"
 
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
+
 /*==============================================================================
   Local macros
 ==============================================================================*/
@@ -62,9 +64,7 @@ typedef struct {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 static printk_log_t log_buf;
-#endif
 
 /*==============================================================================
   Exported objects
@@ -86,7 +86,6 @@ static printk_log_t log_buf;
  * @param ...                 format arguments
  */
 //==============================================================================
-#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 void _printk(const char *format, ...)
 {
         _kernel_scheduler_lock();
@@ -114,7 +113,6 @@ void _printk(const char *format, ...)
         }
         _kernel_scheduler_unlock();
 }
-#endif
 
 //==============================================================================
 /**
@@ -127,7 +125,6 @@ void _printk(const char *format, ...)
  * @return Number of bytes copied to the buffer. 0 if message is empty.
  */
 //==============================================================================
-#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 size_t _printk_read(char *str, size_t len, u32_t *timestamp_ms)
 {
         size_t n = 0;
@@ -157,14 +154,12 @@ size_t _printk_read(char *str, size_t len, u32_t *timestamp_ms)
 
         return n;
 }
-#endif
 
 //==============================================================================
 /**
  * Function clear system circular buffer.
  */
 //==============================================================================
-#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 void _printk_clear(void)
 {
         _kernel_scheduler_lock();
@@ -173,6 +168,7 @@ void _printk_clear(void)
         }
         _kernel_scheduler_unlock();
 }
+
 #endif
 
 /*==============================================================================

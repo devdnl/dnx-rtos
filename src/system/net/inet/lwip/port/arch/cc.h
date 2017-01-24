@@ -50,7 +50,7 @@ typedef u32_t   mem_ptr_t;
 #endif
 
 #define LWIP_DEBUG
-#define LWIP_PLATFORM_DIAG(message)     printk message
+#define LWIP_PLATFORM_DIAG(message)     _printk message
 #define U16_F                           "u"
 #define U32_F                           "u"
 #define S16_F                           "i"

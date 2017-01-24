@@ -30,6 +30,7 @@ Brief    System log reader
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <stdbool.h>
 #include <dnx/misc.h>
 #include <dnx/os.h>
@@ -76,6 +77,7 @@ GLOBAL_VARIABLES_SECTION {
 int_main(dmesg, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         bool clear = false;
+        bool loop  = false;
 
         for (int i = 1; i < argc; i++) {
             if (isstreq(argv[i], "-h") || isstreq(argv[i], "--help")) {
@@ -83,11 +85,16 @@ int_main(dmesg, STACK_DEPTH_LOW, int argc, char *argv[])
                     puts("Options:");
                     puts("  -c, --clear     log clear");
                     puts("  -h, --help      this help");
+                    puts("  -l,             loop");
                     return EXIT_FAILURE;
             }
 
             if (isstreq(argv[i], "-c") || isstreq(argv[i], "--help")) {
                     clear = true;
+            }
+
+            if (isstreq(argv[i], "-l")) {
+                    loop = true;
             }
         }
 
@@ -95,11 +102,19 @@ int_main(dmesg, STACK_DEPTH_LOW, int argc, char *argv[])
                 syslog_clear();
 
         } else {
-                char  str[128];
-                u32_t ts = 0;
-                while (syslog_read(str, sizeof(str), &ts)) {
-                        printf("[%5d.%03d] %s\n", ts / 1000, ts % 1000, str);
-                }
+                do {
+                        char  str[128];
+                        u32_t ts = 0;
+                        u8_t  l  = __OS_SYSTEM_MSG_ROWS__;
+
+                        while (l-- && syslog_read(str, sizeof(str), &ts)) {
+                                printf("[%5d.%03d] %s\n", ts / 1000, ts % 1000, str);
+                        }
+
+                        if (loop) {
+                                msleep(100);
+                        }
+                } while (loop);
         }
 
         return EXIT_SUCCESS;

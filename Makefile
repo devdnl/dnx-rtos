@@ -55,6 +55,7 @@ CFLAGS   = -c \
            -Wparentheses \
            -Werror=implicit-function-declaration \
            -include ./config/config.h \
+           -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            $(CPUCONFIG_CFLAGS)
 
 CXXFLAGS = -c \
@@ -71,6 +72,7 @@ CXXFLAGS = -c \
            -Wparentheses \
            -Werror=implicit-function-declaration \
            -include ./config/config.h \
+           -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            $(CPUCONFIG_CXXFLAGS)
 
 LFLAGS   = -g \

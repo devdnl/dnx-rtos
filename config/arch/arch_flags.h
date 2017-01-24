@@ -131,6 +131,7 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "noarch/tty_flags.h"
 #include "noarch/sdspi_flags.h"
 #include "noarch/dht11_flags.h"
+#include "noarch/i2cee_flags.h"
 
 #if (__CPU_ARCH__ == stm32f1)
 #include "stm32f1/rtc_flags.h"
@@ -320,7 +321,20 @@ __ENABLE_I2C__=_YES_
 #--*/
 #define __ENABLE_IRQ__ _YES_
 #/*
-__ENABLE_IRQ__=_YES_
+__ENABLE_IRQ__=_NO_
+#*/
+
+#/*--
+# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].PWM ~= nil then
+#     this:PutWidgets("PWM")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_PWM__", "_NO_")
+# end
+#--*/
+#define __ENABLE_PWM__ _NO_
+#/*
+__ENABLE_PWM__=_NO_
 #*/
 
 #// NO ARCH MODULES ------------------------------------------------------------
@@ -329,7 +343,16 @@ __ENABLE_IRQ__=_YES_
 #--*/
 #define __ENABLE_LOOP__ _YES_
 #/*
-__ENABLE_LOOP__=_YES_
+__ENABLE_LOOP__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("I2CEE")
+# this:SetToolTip("I2C EEPROM driver for 24Cxx devices.")
+#--*/
+#define __ENABLE_I2CEE__ _YES_
+#/*
+__ENABLE_I2CEE__=_YES_
 #*/
 
 #/*--

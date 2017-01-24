@@ -64,6 +64,17 @@ extern "C" {
 #undef sys_malloc
 #undef sys_free
 
+/**
+ * File system types.
+ */
+enum {
+        SYS_FS_TYPE__RAM,       //!< RAM file system
+        SYS_FS_TYPE__SOLID,     //!< Solid file system storage
+        SYS_FS_TYPE__DEV,       //!< Special file system for device files
+        SYS_FS_TYPE__SYS,       //!< Special file system for system purposes
+        SYS_FS_TYPE__NET,       //!< Network file system
+};
+
 #ifdef __cplusplus
 inline void* operator new     (size_t size) {void *mem = NULL; _kmalloc(_MM_FS, size, &mem); return mem;}\
 inline void* operator new[]   (size_t size) {void *mem = NULL; _kmalloc(_MM_FS, size, &mem); return mem;}\
@@ -87,9 +98,11 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  * @param fsname        file system name
  * @param fs_handle     [<b>void **</b>]        file system memory handler
  * @param src_path      [<b>const char *</b>]   source file path
+ * @param opts          [<b>const char *</b>]   options
+ *
  * @return One of @ref errno value.
  */
-#define API_FS_INIT(fsname, fs_handle, src_path)
+#define API_FS_INIT(fsname, fs_handle, src_path, opts)
 #else
 #define API_FS_INIT(fsname, ...)        _FS_EXTERN_C int _##fsname##_init(__VA_ARGS__)
 #endif
@@ -340,6 +353,48 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
 #define API_FS_OPENDIR(fsname, fs_handle, path, dir)
 #else
 #define API_FS_OPENDIR(fsname, ...)     _FS_EXTERN_C int _##fsname##_opendir(__VA_ARGS__)
+#endif
+
+#ifdef DOXYGEN
+/**
+ * @brief Macro creates unique name of close directory function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * close selected directory.
+ *
+ * @note Macro can be used only by file system code.
+ *
+ * @param fsname        file system name
+ * @param fs_handle     [<b>void *</b>]         file system memory handler
+ * @param dir           [<b>DIR *</b>]          directory object (already created)
+ * @return One of @ref errno value.
+ *
+ * @see DIR
+ */
+#define API_FS_CLOSEDIR(fsname, fs_handle, dir)
+#else
+#define API_FS_CLOSEDIR(fsname, ...)     _FS_EXTERN_C int _##fsname##_closedir(__VA_ARGS__)
+#endif
+
+#ifdef DOXYGEN
+/**
+ * @brief Macro creates unique name of read directory function.
+ *
+ * Function created by this macro is called by system when file system has to
+ * read selected directory.
+ *
+ * @note Macro can be used only by file system code.
+ *
+ * @param fsname        file system name
+ * @param fs_handle     [<b>void *</b>]         file system memory handler
+ * @param dir           [<b>DIR *</b>]          directory object (already created)
+ * @return One of @ref errno value.
+ *
+ * @see DIR
+ */
+#define API_FS_READDIR(fsname, fs_handle, dir)
+#else
+#define API_FS_READDIR(fsname, ...)     _FS_EXTERN_C int _##fsname##_readdir(__VA_ARGS__)
 #endif
 
 #ifdef DOXYGEN

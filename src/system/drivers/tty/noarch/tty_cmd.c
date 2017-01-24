@@ -91,12 +91,12 @@ static inline bool is_valid(ttycmd_t *this)
 //==============================================================================
 int ttycmd_create(ttycmd_t **ttycmd)
 {
-        int result = sys_zalloc(sizeof(ttycmd_t), cast(void**, ttycmd));
-        if (result == ESUCC) {
+        int err = sys_zalloc(sizeof(ttycmd_t), cast(void**, ttycmd));
+        if (err == ESUCC) {
                 (*ttycmd)->self = *ttycmd;
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

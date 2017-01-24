@@ -64,13 +64,7 @@ this:SetToolTip("This value determines the size of stack that is used by network
 #define __OS_NETWORK_STACK_DEPTH__ 140
 
 /*--
-this:AddWidget("Spinbox", 48, 8192, "Size of system stack (syscall) [levels]")
-this:SetToolTip("This value determines the size of stack that is used by syscalls.")
---*/
-#define __OS_SYSCALL_STACK_DEPTH__ 256
-
-/*--
-this:AddWidget("Spinbox", 48, 8192, "Size of interrupt stack [levels]")
+this:AddWidget("Spinbox", 16, 8192, "Size of interrupt stack [levels]")
 this:SetToolTip("This value determines the size of stack that is used by interrupts. The value is a part of entire stack size.")
 --*/
 #define __OS_IRQ_STACK_DEPTH__ 16
@@ -85,7 +79,7 @@ this:AddWidget("Spinbox", 3, 255, "Number of task priorities")
 this:SetToolTip("This value determines total number of task priorities. By using this value task priorities are calculated. "..
                 "If this value is set to e.g. 7, then system priorities are in range from -3 to 3.")
 --*/
-#define __OS_TASK_MAX_PRIORITIES__ 7
+#define __OS_TASK_MAX_PRIORITIES__ 3
 
 /*--
 this:AddWidget("Spinbox", 10, 1000, "Context switch frequency [Hz]")
@@ -99,7 +93,7 @@ this:SetToolTip("Context switch frequency has influence to system response for e
 this:AddWidget("Spinbox", 1, 12, "Maximum number of process threads")
 this:SetToolTip("Number of threads that can be started by process.")
 --*/
-#define __OS_TASK_MAX_THREADS__ 10
+#define __OS_TASK_MAX_THREADS__ 5
 
 
 /*--
@@ -218,7 +212,7 @@ this:SetToolTip("This option enables assert system assert function. Use only for
 this:AddWidget("Checkbox", "IPC Shared memory")
 this:SetToolTip("This option enables IPC shared memory.")
 --*/
-#define __OS_ENABLE_SHARED_MEMORY__ _NO_
+#define __OS_ENABLE_SHARED_MEMORY__ _YES_
 
 /*--
 this:AddWidget("Checkbox", "System log function")
@@ -234,14 +228,7 @@ this:SetToolTip("If this option is selected then some file system are using cach
 
 /*--
 this:AddExtraWidget("Void", "VoidOption")
-this:AddWidget("Spinbox", 0, 16777216, "Network memory limit [Bytes]")
-this:SetToolTip("This option enables memory limit for network subsystem. Use 0 for no limit.")
---*/
-#define __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ 0
-
-
-/*--
-this:AddExtraWidget("Label", "LabelSizes", "\nBlock and buffer sizes", -1, "bold")
+this:AddExtraWidget("Label", "LabelSizes", "\nMemory parameters", -1, "bold")
 this:AddExtraWidget("Void", "VoidSizes")
 ++*/
 /*--
@@ -275,7 +262,26 @@ this:AddWidget("Spinbox", 1, 250, "System log rows")
 this:SetToolTip("This option determine how many rows is stored in buffer. " ..
                 "Option is active when system log function is enabled.")
 --*/
-#define __OS_SYSTEM_MSG_ROWS__ 4
+#define __OS_SYSTEM_MSG_ROWS__ 24
+
+/*--
+this:AddWidget("Spinbox", 0, 65536, "Cache subsystem gap [bytes]")
+this:SetToolTip("This option determine how many free memory in bytes should be " ..
+                "reserved for normal operations that are not used by cache subsystem.")
+--*/
+#define __OS_SYSTEM_CACHE_MIN_FREE__ 1024
+
+/*--
+this:AddWidget("Spinbox", 10, 600, "Cache synchronization interval [s]")
+this:SetToolTip("This option determine period of cache synchronization with storage.")
+--*/
+#define __OS_SYSTEM_CACHE_SYNC_PERIOD__ 30
+
+/*--
+this:AddWidget("Spinbox", 0, 16777216, "Network memory limit [bytes]")
+this:SetToolTip("This option enables memory limit for network subsystem. Use 0 for no limit.")
+--*/
+#define __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__ 0
 
 /*--
 this:AddWidget("Combobox", "Length of errno messages")

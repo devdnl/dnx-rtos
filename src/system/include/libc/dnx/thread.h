@@ -1058,6 +1058,43 @@ static inline bool semaphore_signal(sem_t *sem)
 
 //==============================================================================
 /**
+ * @brief Function get counter value of semaphore.
+ *
+ * The function get value of semaphore pointed by <i>sem</i>. The counter value
+ * is modified by semaphore_wait() and semaphore_signal() family functions.
+ *
+ * @param sem           semaphore object pointer
+ * @param value         counter value
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return On success return counter value, on error -1 is returned.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        int value = semaphore_get_value(sem, &value);
+        if (value > 0) {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see semaphore_signal(), semaphore_wait()
+ */
+//==============================================================================
+static inline int semaphore_get_value(sem_t *sem)
+{
+        size_t value = 0;
+        _errno = _semaphore_get_value(sem, &value);
+        return _errno ? -1 : (int)value;
+}
+
+//==============================================================================
+/**
  * @brief Function creates new mutex object.
  *
  * The function mutex_new() creates new mutex of type <i>type</i>.

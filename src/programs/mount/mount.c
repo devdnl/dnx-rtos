@@ -63,12 +63,12 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(mount, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        if (argc != 4) {
-                printf("Usage: %s [file system name] [source path|-] [mount point]\n", argv[0]);
+        if (argc < 4) {
+                printf("Usage: %s <source|-> <file system name> <mount point> [options]\n", argv[0]);
                 return EXIT_FAILURE;
         }
 
-        if (mount(argv[1], argv[2], argv[3]) != 0) {
+        if (mount(argv[2], argv[1], argv[3], argv[4]) != 0) {
                 perror("Mount error");
         }
 

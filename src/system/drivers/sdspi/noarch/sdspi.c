@@ -200,45 +200,45 @@ static const card_cfg_t card_cfg[SDSPI_NUMBER_OF_CARDS] = {
 //==============================================================================
 API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 {
-        int result = ENODEV;
+        int err = ENODEV;
 
         if (major >= _NUMBER_OF_SDSPI_CARDS || minor > _SDSPI_PARTITION_4) {
-                return result;
+                return err;
         }
 
         if (SDSPI == NULL) {
-                result = sys_zalloc(sizeof(sdctrl_t), cast(void**, &SDSPI));
-                if (result != ESUCC) {
-                        return result;
+                err = sys_zalloc(sizeof(sdctrl_t), cast(void**, &SDSPI));
+                if (err != ESUCC) {
+                        return err;
                 }
         }
 
         if (SDSPI->card[major] == NULL) {
-                result = sys_zalloc(sizeof(struct card), cast(void**, &SDSPI->card[major]));
-                if (result == ESUCC) {
+                err = sys_zalloc(sizeof(struct card), cast(void**, &SDSPI->card[major]));
+                if (err == ESUCC) {
                         struct card *hdl = SDSPI->card[major];
 
-                        result = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->protect_mtx);
-                        if (result != ESUCC)
+                        err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->protect_mtx);
+                        if (err != ESUCC)
                                 goto finish;
 
-                        result = sys_fopen(card_cfg[major].filepath, "r+", &hdl->SPI_file);
-                        if (result != ESUCC)
+                        err = sys_fopen(card_cfg[major].filepath, "r+", &hdl->SPI_file);
+                        if (err != ESUCC)
                                 goto finish;
 
                         SPI_config_t cfg;
-                        result = sys_ioctl(hdl->SPI_file, IOCTL_SPI__GET_CONFIGURATION, &cfg);
-                        if (result == ESUCC) {
+                        err = sys_ioctl(hdl->SPI_file, IOCTL_SPI__GET_CONFIGURATION, &cfg);
+                        if (err == ESUCC) {
 
                                 cfg.flush_byte = 0xFF;
                                 cfg.mode       = SPI_MODE__0;
                                 cfg.msb_first  = true;
 
-                                result = sys_ioctl(hdl->SPI_file, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+                                err = sys_ioctl(hdl->SPI_file, IOCTL_SPI__SET_CONFIGURATION, &cfg);
                         }
 
                         finish:
-                        if (result != ESUCC) {
+                        if (err != ESUCC) {
                                 if (hdl->protect_mtx)
                                         sys_mutex_destroy(hdl->protect_mtx);
 
@@ -251,8 +251,8 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
         }
 
         if (SDSPI->card[major]) {
-                result = sys_zalloc(sizeof(sdpart_t), device_handle);
-                if (result == ESUCC) {
+                err = sys_zalloc(sizeof(sdpart_t), device_handle);
+                if (err == ESUCC) {
                         SDSPI->card[major]->part[minor]               = *device_handle;
                         SDSPI->card[major]->part[minor]->first_sector = 0;
                         SDSPI->card[major]->part[minor]->size         = 0;
@@ -261,7 +261,7 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -286,8 +286,6 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
 
                 sys_sleep_ms(10);
         }
-
-        sys_critical_section_begin();
 
         // release allocated memory by partition
         part->first_sector = 0;
@@ -323,8 +321,6 @@ API_MOD_RELEASE(SDSPI, void *device_handle)
                 sys_free(cast(void**, &SDSPI));
         }
 
-        sys_critical_section_end();
-
         return ESUCC;
 }
 
@@ -347,6 +343,7 @@ API_MOD_OPEN(SDSPI, void *device_handle, u32_t flags)
         if (part->used == true) {
                 return EBUSY;
         } else {
+                part->used = true;
                 return ESUCC;
         }
 }
@@ -397,21 +394,21 @@ API_MOD_WRITE(SDSPI,
         UNUSED_ARG1(fattr);
 
         sdpart_t *part = device_handle;
-        int       status;
+        int       err;
 
         if (part->size > 0) {
                 if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
                         u64_t lseek = *fpos + (cast(u64_t, part->first_sector) * sector_size);
-                        status = card_write(part, src, count, lseek, wrcnt);
+                        err = card_write(part, src, count, lseek, wrcnt);
                         sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
-                        status = EBUSY;
+                        err = EBUSY;
                 }
         } else {
-                status = ENOMEDIUM;
+                err = ENOMEDIUM;
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -439,21 +436,21 @@ API_MOD_READ(SDSPI,
         UNUSED_ARG1(fattr);
 
         sdpart_t *part = device_handle;
-        int       status;
+        int       err;
 
         if (part->size > 0) {
                 if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MAX_DELAY_MS) == ESUCC) {
                         u64_t lseek = *fpos + (cast(u64_t, part->first_sector) * sector_size);
-                        status = card_read(part, dst, count, lseek, rdcnt);
+                        err = card_read(part, dst, count, lseek, rdcnt);
                         sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
-                        status = EBUSY;
+                        err = EBUSY;
                 }
         } else {
-                status = ENOMEDIUM;
+                err = ENOMEDIUM;
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -473,28 +470,28 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 
         sdpart_t *part = device_handle;
 
-        int status = EBADRQC;
+        int err = EBADRQC;
 
         switch (request) {
         case IOCTL_SDSPI__INITIALIZE_CARD:
                 if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME) == ESUCC) {
-                        status = card_initialize(part);
+                        err = card_initialize(part);
                         sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
-                        status = EBUSY;
+                        err = EBUSY;
                 }
                 break;
 
         case IOCTL_SDSPI__READ_MBR:
                 if (sys_mutex_lock(SDSPI->card[part->major]->protect_mtx, MTX_BLOCK_TIME) == ESUCC) {
                         if (SDSPI->card[part->major]->initialized) {
-                                status = MBR_detect_partitions(part);
+                                err = MBR_detect_partitions(part);
                         } else {
-                                status = ENOMEDIUM;
+                                err = ENOMEDIUM;
                         }
                         sys_mutex_unlock(SDSPI->card[part->major]->protect_mtx);
                 } else {
-                        status = EBUSY;
+                        err = EBUSY;
                 }
                 break;
 
@@ -502,7 +499,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
                 return EBADRQC;
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -838,8 +835,8 @@ static ssize_t card_read_entire_sectors(sdpart_t *hdl, u8_t *dst, size_t nsector
 static ssize_t card_read_partial_sectors(sdpart_t *hdl, u8_t *dst, size_t size, u64_t lseek)
 {
         u8_t *buffer;
-        int result = sys_malloc(sector_size, cast(void**, &buffer));
-        if (result != ESUCC)
+        int err = sys_malloc(sector_size, cast(void**, &buffer));
+        if (err != ESUCC)
                 return -1;
 
         u32_t recv_data = 0;
@@ -954,8 +951,8 @@ static ssize_t card_write_entire_sectors(sdpart_t *hdl, const u8_t *src, size_t 
 static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t size, u64_t lseek)
 {
         u8_t *buffer = NULL;
-        int result = sys_malloc(sector_size, cast(void**, &buffer));
-        if (result != ESUCC)
+        int err = sys_malloc(sector_size, cast(void**, &buffer));
+        if (err != ESUCC)
                 return -1;
 
         u32_t transmit_data = 0;
@@ -1023,7 +1020,7 @@ static ssize_t card_write_partial_sectors(sdpart_t *hdl, const u8_t *src, size_t
 //==============================================================================
 static int card_initialize(sdpart_t *hdl)
 {
-        int status = EIO;
+        int err = EIO;
 
         SPI_deselect_card(hdl);
         for (int n = 0; n < 50; n++) {
@@ -1058,9 +1055,9 @@ static int card_initialize(sdpart_t *hdl)
                                         SDSPI->card[hdl->major]->type.type   = CT_SD2;
                                         SDSPI->card[hdl->major]->type.block  = (OCR[0] & 0x40) ? true : false;
                                         SDSPI->card[hdl->major]->initialized = true;
-                                        status = ESUCC;
+                                        err = ESUCC;
                                 } else {
-                                        status = ETIME;
+                                        err = ETIME;
                                 }
                         }
                 } else { /* SDSC or MMC */
@@ -1086,14 +1083,14 @@ static int card_initialize(sdpart_t *hdl)
 
                                 SDSPI->card[hdl->major]->type.type   = CT_UNKNOWN;
                                 SDSPI->card[hdl->major]->type.block  = false;
-                                status = ETIME;
+                                err = ETIME;
                         } else {
                                 SDSPI->card[hdl->major]->initialized = true;
-                                status = ESUCC;
+                                err = ESUCC;
                         }
                 }
         } else {
-                status = ENOMEDIUM;
+                err = ENOMEDIUM;
         }
 
         /* clear size info */
@@ -1138,7 +1135,7 @@ static int card_initialize(sdpart_t *hdl)
 
         SPI_deselect_card(hdl);
 
-        return status;
+        return err;
 }
 
 //==============================================================================

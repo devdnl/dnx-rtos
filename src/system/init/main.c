@@ -29,12 +29,16 @@
 ==============================================================================*/
 #include "portable/cpuctl.h"
 #include "mm/heap.h"
+#include "mm/cache.h"
+#include "mm/mm.h"
+#include "mm/shm.h"
 #include "fs/vfs.h"
 #include "lib/unarg.h"
 #include "kernel/syscall.h"
 #include "kernel/kpanic.h"
 #include "kernel/kwrapper.h"
 #include "kernel/sysfunc.h"
+#include "kernel/khooks.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -70,8 +74,8 @@ void dnxinit(void *arg)
 {
         UNUSED_ARG1(arg);
 
-        _vfs_init();
-        _syscall_init();
+        _assert(ESUCC == _vfs_init());
+        _assert(ESUCC == _syscall_init());
 
         printk("Welcome to dnx RTOS!");
 
@@ -87,9 +91,17 @@ int main(void)
 {
         _cpuctl_init();
         _heap_init();
-        _mm_init();
-        _kernel_panic_init();
-        _task_create(dnxinit, "", (1024 / sizeof(StackType_t)), NULL, NULL, NULL);
+        _assert(ESUCC == _mm_init());
+
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+        _assert(ESUCC == _cache_init());
+#endif
+#if __OS_ENABLE_SHARED_MEMORY__ > 0
+        _assert(ESUCC == _shm_init());
+#endif
+
+        _assert(ESUCC == _kernel_panic_init());
+        _assert(ESUCC == _task_create(dnxinit, "", (1024 / sizeof(StackType_t)), NULL, NULL, NULL));
         _kernel_start();
         return -1;
 }

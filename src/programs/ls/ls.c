@@ -5,7 +5,7 @@
 
 @brief   List files in specified directory
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -33,13 +33,16 @@
 #include <string.h>
 #include <errno.h>
 #include <dirent.h>
+#include <time.h>
 #include <dnx/vt100.h>
 #include <dnx/os.h>
+#include <dnx/misc.h>
+#include <sys/stat.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define PATH_LEN                        100
+#define CWD_MAX_LEN                     128
 
 #define KiB                             (u32_t)(1024)
 #define MiB                             (u32_t)(1024*1024)
@@ -60,6 +63,7 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
+        char cwd[CWD_MAX_LEN];
 };
 
 /*==============================================================================
@@ -76,85 +80,126 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        char *path = malloc(PATH_LEN);
-        if (!path) {
-                perror(NULL);
-                return EXIT_FAILURE;
+        getcwd(global->cwd, CWD_MAX_LEN - 1);
+
+        if (argc == 2) {
+                char *path = argv[1];
+
+                if (path[0] == '/') {
+                        strcpy(global->cwd, path);
+
+                } else {
+                        if (LAST_CHARACTER(global->cwd) != '/') {
+                                strcat(global->cwd, "/");
+                        }
+
+                        if (strncmp(path, "./", 2) == 0) {
+                                path += 2;
+                        }
+
+                        strcat(global->cwd, path);
+                }
+
+                chdir(global->cwd);
         }
 
-        if (argc == 1 || (argc >= 2 && strcmp(argv[1], ".") == 0)) {
-                getcwd(path, PATH_LEN);
-        } else {
-                strncpy(path, argv[1], PATH_LEN);
-        }
-
-        DIR *dir = opendir(path);
+        DIR *dir = opendir(""); // path determined by CWD
         if (dir) {
                 errno = 0;
+
+                u16_t count = 0;
+
                 dirent_t *dirent = readdir(dir);
-                while (dirent) {
+                while (!errno && dirent) {
 
-                        const char *type;
+                        struct stat st;
+                        if (stat(dirent->name, &st) == 0) {
 
-                        switch (dirent->filetype) {
-                        case FILE_TYPE_DIR:     type = VT100_FONT_COLOR_LIGHT_BLUE"d";  break;
-                        case FILE_TYPE_DRV:     type = VT100_FONT_COLOR_MAGENTA"c";     break;
-                        case FILE_TYPE_LINK:    type = VT100_FONT_COLOR_CYAN"l";        break;
-                        case FILE_TYPE_REGULAR: type = VT100_FONT_COLOR_GREEN" ";       break;
-                        case FILE_TYPE_PROGRAM: type = VT100_FONT_BOLD"x";              break;
-                        case FILE_TYPE_PIPE:    type = VT100_FONT_COLOR_BROWN"p";       break;
-                        default: type = "?";
-                        }
+                                const char *type;
+                                switch (st.st_type) {
+                                case FILE_TYPE_DIR:     type = VT100_FONT_COLOR_LIGHT_BLUE"d"; break;
+                                case FILE_TYPE_DRV:     type = VT100_FONT_COLOR_MAGENTA"c";    break;
+                                case FILE_TYPE_LINK:    type = VT100_FONT_COLOR_CYAN"l";       break;
+                                case FILE_TYPE_REGULAR: type = VT100_FONT_COLOR_GREEN"-";      break;
+                                case FILE_TYPE_PROGRAM: type = VT100_FONT_BOLD"*";             break;
+                                case FILE_TYPE_PIPE:    type = VT100_FONT_COLOR_BROWN"p";      break;
+                                default:                type = "?";                            break;
+                                }
 
-                        u32_t size;
-                        const char *unit;
-                        if (dirent->size >= (u64_t)(10*GiB)) {
-                                size = CONVERT_TO_GiB(dirent->size);
-                                unit = "GiB";
-                        } else if (dirent->size >= 10*MiB) {
-                                size = CONVERT_TO_MiB(dirent->size);
-                                unit = "MiB";
-                        } else if (dirent->size >= 10*KiB) {
-                                size = CONVERT_TO_KiB(dirent->size);
-                                unit = "KiB";
-                        } else {
-                                size = dirent->size;
-                                unit = "B";
-                        }
+                                char mode[10];
+                                mode[0] = st.st_mode & S_IRUSR ? 'r' : '-';
+                                mode[1] = st.st_mode & S_IWUSR ? 'w' : '-';
+                                mode[2] = st.st_mode & S_IXUSR ? 'x' : '-';
+                                mode[3] = st.st_mode & S_IRGRP ? 'r' : '-';
+                                mode[4] = st.st_mode & S_IWGRP ? 'w' : '-';
+                                mode[5] = st.st_mode & S_IXGRP ? 'x' : '-';
+                                mode[6] = st.st_mode & S_IROTH ? 'r' : '-';
+                                mode[7] = st.st_mode & S_IWOTH ? 'w' : '-';
+                                mode[8] = st.st_mode & S_IXOTH ? 'x' : '-';
+                                mode[9] = '\0';
 
-                        if (dirent->filetype == FILE_TYPE_DRV) {
-                                printf("%s %u%s"
-                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(11)"%2i,%3i,%3i"
-                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(22)"%s"
+                                u32_t       size;
+                                const char *unit;
+                                if (dirent->size >= (u64_t)(10*GiB)) {
+                                        size = CONVERT_TO_GiB(dirent->size);
+                                        unit = "GiB";
+                                } else if (dirent->size >= 10*MiB) {
+                                        size = CONVERT_TO_MiB(dirent->size);
+                                        unit = "MiB";
+                                } else if (dirent->size >= 10*KiB) {
+                                        size = CONVERT_TO_KiB(dirent->size);
+                                        unit = "KiB";
+                                } else {
+                                        size = dirent->size;
+                                        unit = "B";
+                                }
+
+                                int mod_id    = get_module_ID2(st.st_dev);
+                                int mod_major = get_module_major(st.st_dev);
+                                int mod_minor = get_module_minor(st.st_dev);
+
+                                char mod[12];
+                                memset(mod, 0, sizeof(mod));
+
+                                if (st.st_type == FILE_TYPE_DRV) {
+                                        snprintf(mod, sizeof(mod), "%d,%d,%d",
+                                                 mod_id, mod_major, mod_minor);
+                                }
+
+                                struct tm tm;
+                                localtime_r(&st.st_mtime, &tm);
+
+                                char time[24];
+                                strftime(time, sizeof(time), "%d-%m-%Y %H:%M", &tm);
+
+                                printf("%s%s %9u %s"
+                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(25)"%s"
+                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(32)"%s"
+                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(49)"%s"
                                        VT100_RESET_ATTRIBUTES"\n",
-                                       type, size, unit,
-                                       get_module_ID2(dirent->dev),
-                                       get_module_major(dirent->dev),
-                                       get_module_minor(dirent->dev),
-                                       dirent->name);
+                                       type, mode, size, unit, mod, time, dirent->name);
+
+                                count++;
                         } else {
-                                printf("%s %u%s"
-                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(22)"%s"
-                                       VT100_RESET_ATTRIBUTES"\n",
-                                       type, size, unit, dirent->name);
+                                errno = EFAULT;
+                                break;
                         }
 
-                        errno  = 0;
                         dirent = readdir(dir);
                 }
 
-                if (errno != ENOENT && errno != ESUCC) {
-                        perror(argv[0]);
+                if (!(errno == ESUCC || errno == ENOENT)) {
+                        perror("Read dir");
                 }
+
+                printf("total %d\n", count);
 
                 closedir(dir);
         } else {
-                perror(path);
+                perror(global->cwd);
         }
 
-        free(path);
-
-        return EXIT_SUCCESS;
+        return errno ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 /*==============================================================================

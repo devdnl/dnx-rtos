@@ -29,6 +29,8 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -62,15 +64,26 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(echo, STACK_DEPTH_LOW, int argc, char *argv[])
 {
+        int err = 0;
+
         for (int i = 1; i < argc; i++) {
                 if (i == argc - 1) {
                         printf("%s", argv[i]);
                 } else {
                         printf("%s ", argv[i]);
                 }
+
+                if (ferror(stdout)) {
+                        err = errno;
+                        break;
+                }
         }
 
         putchar('\n');
+
+        if (err) {
+                fprintf(stderr, "echo: %s\n", strerror(err));
+        }
 
         return EXIT_SUCCESS;
 }

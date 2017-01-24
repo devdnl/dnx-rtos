@@ -108,15 +108,11 @@ API_MOD_INIT(DHT11, void **device_handle, u8_t major, u8_t minor)
 API_MOD_RELEASE(DHT11, void *device_handle)
 {
         DHT11_t *hdl = device_handle;
-        int      err = EBUSY;
 
-        sys_context_switch_lock();
-        {
-                if (sys_device_is_unlocked(&hdl->lock)) {
-                        err = sys_free(device_handle);
-                }
+        int err = sys_device_lock(&hdl->lock);
+        if (!err) {
+                sys_free(device_handle);
         }
-        sys_context_switch_unlock();
 
         return err;
 }
@@ -215,7 +211,7 @@ API_MOD_READ(DHT11,
         // set start bit and calculate timeout value
         set_pin_low(hdl);
         sys_thread_yield();
-        u32_t start   = sys_get_time_ms();
+        u32_t start   = sys_get_uptime_ms();
         i32_t timeout = 0;
         while (not sys_time_is_expired(start, 2)) {
                 timeout++;

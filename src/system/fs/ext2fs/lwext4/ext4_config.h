@@ -76,7 +76,7 @@ static inline void _ext2_free(void *mem) {sys_free(&mem);}
 
 /**@brief   Current time in UNIX epoch (if not used set to 0) */
 #ifndef ext4_now
-#define ext4_now                                sys_time(NULL)
+#define ext4_now                                0
 #endif
 
 /**@brief   Current UID (if not used set to 0) */

@@ -114,38 +114,38 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
 {
         UNUSED_ARG1(minor);
 
-        int result = ENODEV;
+        int err = ENODEV;
 
         if (major >= _TTY_NUMBER_OF_VT || minor != 0) {
-                return result;
+                return err;
         }
 
         /* initialize module base */
         if (!tty_module) {
-                result = sys_zalloc(sizeof(struct module), cast(void**, &tty_module));
-                if (result != ESUCC)
-                        return result;
+                err = sys_zalloc(sizeof(struct module), cast(void**, &tty_module));
+                if (err != ESUCC)
+                        return err;
 
-                result = sys_fopen(_TTY_IN_FILE, "r", &tty_module->infile);
-                if (result != ESUCC)
+                err = sys_fopen(_TTY_IN_FILE, "r", &tty_module->infile);
+                if (err != ESUCC)
                         goto module_alloc_finish;
 
-                result = sys_fopen(_TTY_OUT_FILE, "w", &tty_module->outfile);
-                if (result != ESUCC)
+                err = sys_fopen(_TTY_OUT_FILE, "w", &tty_module->outfile);
+                if (err != ESUCC)
                         goto module_alloc_finish;
 
-                result = sys_thread_create(service_in, &SERVICE_IN_ATTR, NULL, &tty_module->service_in);
-                if (result != ESUCC)
+                err = sys_thread_create(service_in, &SERVICE_IN_ATTR, NULL, &tty_module->service_in);
+                if (err != ESUCC)
                         goto module_alloc_finish;
 
-                result = sys_thread_create(service_out, &SERVICE_OUT_ATTR, NULL, &tty_module->service_out);
-                if (result != ESUCC)
+                err = sys_thread_create(service_out, &SERVICE_OUT_ATTR, NULL, &tty_module->service_out);
+                if (err != ESUCC)
                         goto module_alloc_finish;
 
-                result = sys_queue_create(QUEUE_CMD_LEN, sizeof(tty_cmd_t), &tty_module->queue_cmd);
+                err = sys_queue_create(QUEUE_CMD_LEN, sizeof(tty_cmd_t), &tty_module->queue_cmd);
 
                 module_alloc_finish:
-                if (result != ESUCC) {
+                if (err != ESUCC) {
                         if (tty_module->infile)
                                 sys_fclose(tty_module->infile);
 
@@ -165,42 +165,42 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                                 sys_free(cast(void**, &tty_module));
                 }
         } else {
-                result = ESUCC;
+                err = ESUCC;
         }
 
         /* initialize selected TTY */
-        if (result == ESUCC) {
-                result = sys_zalloc(sizeof(tty_t), device_handle);
-                if (result != ESUCC)
-                        return result;
+        if (err == ESUCC) {
+                err = sys_zalloc(sizeof(tty_t), device_handle);
+                if (err != ESUCC)
+                        return err;
 
                 tty_t *tty = *device_handle;
 
-                result = sys_queue_create(_TTY_STREAM_SIZE, sizeof(char), &tty->queue_out);
-                if (result != ESUCC)
+                err = sys_queue_create(_TTY_STREAM_SIZE, sizeof(char), &tty->queue_out);
+                if (err != ESUCC)
                         goto tty_alloc_finish;
 
-                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &tty->secure_mtx);
-                if (result != ESUCC)
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &tty->secure_mtx);
+                if (err != ESUCC)
                         goto tty_alloc_finish;
 
-                result = ttybfr_create(&tty->screen);
-                if (result != ESUCC)
+                err = ttybfr_create(&tty->screen);
+                if (err != ESUCC)
                         goto tty_alloc_finish;
 
-                result = ttyedit_create(tty_module->outfile, &tty->editline);
-                if (result != ESUCC)
+                err = ttyedit_create(tty_module->outfile, &tty->editline);
+                if (err != ESUCC)
                         goto tty_alloc_finish;
 
-                result = ttycmd_create(&tty->vtcmd);
-                if (result != ESUCC)
+                err = ttycmd_create(&tty->vtcmd);
+                if (err != ESUCC)
                         goto tty_alloc_finish;
 
                 tty->major             = major;
                 tty_module->tty[major] = tty;
 
                 tty_alloc_finish:
-                if (result != ESUCC) {
+                if (err != ESUCC) {
                         if (tty->vtcmd)
                                 ttycmd_destroy(tty->vtcmd);
 
@@ -221,7 +221,7 @@ API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -237,8 +237,8 @@ API_MOD_RELEASE(TTY, void *device_handle)
 {
         tty_t *tty = device_handle;
 
-        if (sys_mutex_trylock(tty->secure_mtx) == ESUCC) {
-                sys_critical_section_begin();
+        int err = sys_mutex_trylock(tty->secure_mtx);
+        if (!err) {
                 sys_mutex_destroy(tty->secure_mtx);
                 sys_queue_destroy(tty->queue_out);
                 ttybfr_destroy(tty->screen);
@@ -261,12 +261,9 @@ API_MOD_RELEASE(TTY, void *device_handle)
                         sys_queue_destroy(tty_module->queue_cmd);
                         sys_free(cast(void**, &tty_module));
                 }
-
-                sys_critical_section_end();
-                return ESUCC;
-        } else {
-                return EBUSY;
         }
+
+        return err;
 }
 
 //==============================================================================
@@ -329,8 +326,8 @@ API_MOD_WRITE(TTY,
 
         tty_t *tty = device_handle;
 
-        int result = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+        if (err == ESUCC) {
                 ttybfr_put(tty->screen, cast(const char *, src), count);
                 sys_mutex_unlock(tty->secure_mtx);
                 send_cmd(CMD_LINE_ADDED, tty->major);
@@ -338,7 +335,7 @@ API_MOD_WRITE(TTY,
                 *wrcnt = count;
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -409,35 +406,35 @@ API_MOD_READ(TTY,
 //==============================================================================
 API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 {
-        tty_t *tty    = device_handle;
-        int    status = EINVAL;
+        tty_t *tty = device_handle;
+        int    err = EINVAL;
 
         switch (request) {
         case IOCTL_TTY__GET_CURRENT_TTY:
                 if (arg) {
                         *cast(int*, arg) = tty_module->current_tty;
-                        status = ESUCC;
+                        err = ESUCC;
                 }
                 break;
 
         case IOCTL_TTY__GET_COL:
                 if (arg) {
                         *cast(int*, arg) = _TTY_TERMINAL_COLUMNS;
-                        status = ESUCC;
+                        err = ESUCC;
                 }
                 break;
 
         case IOCTL_TTY__GET_ROW:
                 if (arg) {
                         *cast(int*, arg) = _TTY_TERMINAL_ROWS;
-                        status = ESUCC;
+                        err = ESUCC;
                 }
                 break;
 
         case IOCTL_TTY__SET_EDITLINE:
                 if (arg) {
-                        status = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
-                        if (status == ESUCC) {
+                        err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+                        if (err == ESUCC) {
                                 ttyedit_set_value(tty->editline, arg, tty_module->current_tty == tty->major);
                                 sys_mutex_unlock(tty->secure_mtx);
                         }
@@ -446,22 +443,22 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__SWITCH_TTY_TO:
                 send_cmd(CMD_SWITCH_TTY, *cast(int*, arg));
-                status = ESUCC;
+                err = ESUCC;
                 break;
 
         case IOCTL_TTY__CLEAR_SCR:
                 send_cmd(CMD_CLEAR_TTY, tty->major);
-                status = ESUCC;
+                err = ESUCC;
                 break;
 
         case IOCTL_TTY__ECHO_ON:
                 ttyedit_enable_echo(tty->editline);
-                status = ESUCC;
+                err = ESUCC;
                 break;
 
         case IOCTL_TTY__ECHO_OFF:
                 ttyedit_disable_echo(tty->editline);
-                status = ESUCC;
+                err = ESUCC;
                 break;
 
         case IOCTL_TTY__GET_NUMBER_OF_TTYS:
@@ -472,15 +469,15 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
 
         case IOCTL_TTY__REFRESH_LAST_LINE:
                 send_cmd(CMD_REFRESH_LAST_LINE, tty->major);
-                status = ESUCC;
+                err = ESUCC;
                 break;
 
         default:
-                status = EBADRQC;
+                err = EBADRQC;
                 break;
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -496,14 +493,14 @@ API_MOD_FLUSH(TTY, void *device_handle)
 {
         tty_t *tty = device_handle;
 
-        int result = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+        if (err == ESUCC) {
                 ttybfr_flush(tty->screen);
                 send_cmd(CMD_REFRESH_LAST_LINE, tty->major);
                 sys_mutex_unlock(tty->secure_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

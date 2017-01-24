@@ -363,6 +363,38 @@ extern "C" {
 
 //==============================================================================
 /**
+ * @brief Macro check if string is NULL or empty.
+ *
+ * The macro isstrempty() check if string is a NULL pointer (then detected also
+ * as empty) or is empty ("").
+ *
+ * @param _str          string to check
+ *
+ * @return Return \b true if string is NULL or is empty, otherwise \b false.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        #include <dnx/misc.h>
+
+        const char *str1 = "str1";
+
+        if (isstrempty(str1)) {
+             puts("String is empty!");
+        } else {
+             puts(str1);
+        }
+
+        // ...
+
+   @endcode
+ */
+//==============================================================================
+#define isstrempty(_str) (((_str) == NULL) || ((_str)[0] == '\0'))
+
+//==============================================================================
+/**
  * @brief Macro compares two strings with limited size.
  *
  * The macro isstreqn() compares string <i>_stra</i> and <i>_strb</i> and
@@ -507,6 +539,21 @@ extern "C" {
 #ifndef __cplusplus
 #define not !
 #endif
+
+//==============================================================================
+/**
+ * @brief Macro tells compiler that selected structure is packed.
+ */
+//==============================================================================
+#define PACKED __attribute__((packed))
+
+//==============================================================================
+/**
+ * @brief Macro returns division rounded up.
+ * @note  Macro should be used only for positive values.
+ */
+//==============================================================================
+#define CEILING(x,y) (((x) + (y) - 1) / (y))
 
 /*==============================================================================
   Exported object types

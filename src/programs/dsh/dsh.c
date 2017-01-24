@@ -514,7 +514,7 @@ static bool start_program(char *master, char *slave, char *file, bool detached)
         if (master && slave && file) {
                 global->pidmaster_attr.f_stdin    = stdin;
                 global->pidmaster_attr.f_stdout   = pipe;
-                global->pidmaster_attr.f_stderr   = pipe;
+                global->pidmaster_attr.f_stderr   = stderr;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -526,7 +526,7 @@ static bool start_program(char *master, char *slave, char *file, bool detached)
 
                 global->pidslave_attr.f_stdin    = pipe;
                 global->pidslave_attr.f_stdout   = fout;
-                global->pidslave_attr.f_stderr   = fout;
+                global->pidslave_attr.f_stderr   = stderr;
                 global->pidslave_attr.cwd        = global->cwd;
                 global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
@@ -544,7 +544,7 @@ static bool start_program(char *master, char *slave, char *file, bool detached)
         } else if (master && slave) {
                 global->pidmaster_attr.f_stdin    = stdin;
                 global->pidmaster_attr.f_stdout   = pipe;
-                global->pidmaster_attr.f_stderr   = pipe;
+                global->pidmaster_attr.f_stderr   = stderr;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -574,7 +574,7 @@ static bool start_program(char *master, char *slave, char *file, bool detached)
         } else if (master && file) {
                 global->pidmaster_attr.f_stdin    = stdin;
                 global->pidmaster_attr.f_stdout   = fout;
-                global->pidmaster_attr.f_stderr   = fout;
+                global->pidmaster_attr.f_stderr   = stderr;
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;

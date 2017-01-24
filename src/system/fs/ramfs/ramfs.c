@@ -42,29 +42,30 @@
 ==============================================================================*/
 /** node structure */
 typedef struct node {
-        char            *name;                  /* file name                 */
-        tfile_t          type;                  /* file type                 */
-        mode_t           mode;                  /* protection                */
-        uid_t            uid;                   /* user ID of owner          */
-        gid_t            gid;                   /* group ID of owner         */
-        size_t           size;                  /* file size                 */
-        time_t           mtime;                 /* time of last modification */
-        void            *data;                  /* file type specified data  */
+        char            *name;                  //!< file name
+        tfile_t          type;                  //!< file type
+        mode_t           mode;                  //!< protection
+        uid_t            uid;                   //!< user ID of owner
+        gid_t            gid;                   //!< group ID of owner
+        size_t           size;                  //!< file size
+        time_t           mtime;                 //!< time of last modification
+        time_t           ctime;                 //!< time of creation
+        void            *data;                  //!< file type specified data
 } node_t;
 
 /** info of opened file */
 struct opened_file_info {
-        node_t          *child;                 /* opened node                */
-        node_t          *parent;                /* base of opened node        */
-        bool             remove_at_close;       /* file to remove after close */
+        node_t          *child;                 //!< opened node
+        node_t          *parent;                //!< base of opened node
+        bool             remove_at_close;       //!< file to remove after close
 };
 
 /** main memory structure */
 struct RAMFS {
-        node_t           root_dir;              /* root dir '/'             */
-        mutex_t         *resource_mtx;          /* lock mutex               */
-        llist_t         *opended_files;         /* list with opened files   */
-        size_t           file_count;            /* number of files          */
+        node_t           root_dir;              //!< root dir '/'
+        mutex_t         *resource_mtx;          //!< lock mutex
+        llist_t         *opended_files;         //!< list with opened files
+        size_t           file_count;            //!< number of files
 };
 
 /*==============================================================================
@@ -74,8 +75,6 @@ static int  new_node                    (struct RAMFS *hdl, node_t *parent, char
 static int  delete_node                 (struct RAMFS *hdl, node_t *base, node_t *target, u32_t position);
 static int  get_node                    (const char *path, node_t *startnode, i32_t deep, i32_t *item, node_t **node);
 static uint get_path_deep               (const char *path);
-static int  ramfs_readdir               (void *fs_handle, DIR *dir, dirent_t **dirent);
-static int  ramfs_closedir              (void *fs_handle, DIR *dir);
 static int  add_node_to_open_files_list (struct RAMFS *lfs, node_t *parent, node_t *child);
 
 /*==============================================================================
@@ -91,28 +90,29 @@ static int  add_node_to_open_files_list (struct RAMFS *lfs, node_t *parent, node
  *
  * @param[out]          **fs_handle             file system allocated memory
  * @param[in ]           *src_path              file source path
+ * @param[in ]           *opts                  file system options (can be NULL)
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_INIT(ramfs, void **fs_handle, const char *src_path)
+API_FS_INIT(ramfs, void **fs_handle, const char *src_path, const char *opts)
 {
-        UNUSED_ARG1(src_path);
+        UNUSED_ARG2(src_path, opts);
 
-        int result = sys_zalloc(sizeof(struct RAMFS), fs_handle);
-        if (result == ESUCC) {
+        int err = sys_zalloc(sizeof(struct RAMFS), fs_handle);
+        if (err == ESUCC) {
                 struct RAMFS *hdl = *fs_handle;
 
-                result = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->resource_mtx);
-                if (result != ESUCC)
+                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->resource_mtx);
+                if (err != ESUCC)
                         goto finish;
 
-                result = sys_llist_create(NULL, NULL, cast(llist_t**, &hdl->root_dir.data));
-                if (result != ESUCC)
+                err = sys_llist_create(NULL, NULL, cast(llist_t**, &hdl->root_dir.data));
+                if (err != ESUCC)
                         goto finish;
 
-                result = sys_llist_create(sys_llist_functor_cmp_pointers, NULL, &hdl->opended_files);
-                if (result != ESUCC)
+                err = sys_llist_create(sys_llist_functor_cmp_pointers, NULL, &hdl->opended_files);
+                if (err != ESUCC)
                         goto finish;
 
                 hdl->root_dir.name = "/";
@@ -120,7 +120,7 @@ API_FS_INIT(ramfs, void **fs_handle, const char *src_path)
                 hdl->root_dir.type = FILE_TYPE_DIR;
 
                 finish:
-                if (result != ESUCC) {
+                if (err != ESUCC) {
                         if (hdl->resource_mtx)
                                 sys_mutex_destroy(hdl->resource_mtx);
 
@@ -134,7 +134,7 @@ API_FS_INIT(ramfs, void **fs_handle, const char *src_path)
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -173,24 +173,24 @@ API_FS_MKNOD(ramfs, void *fs_handle, const char *path, const dev_t dev)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 // parent node must exist
                 node_t *parent;
-                result = get_node(path, &hdl->root_dir, -1, NULL, &parent);
-                if (result == ESUCC) {
+                err = get_node(path, &hdl->root_dir, -1, NULL, &parent);
+                if (err == ESUCC) {
                         // create new node
                         char *basename = strrchr(path, '/') + 1;
 
                         char *child_name;
-                        result = sys_zalloc(strsize(basename), cast(void**, &child_name));
-                        if (result == ESUCC) {
+                        err = sys_zalloc(strsize(basename), cast(void**, &child_name));
+                        if (err == ESUCC) {
                                 strcpy(child_name, basename);
 
                                 node_t *child;
-                                result = new_node(hdl, parent, child_name, FILE_TYPE_DRV, NULL, &child);
-                                if (result == ESUCC) {
+                                err = new_node(hdl, parent, child_name, FILE_TYPE_DRV, NULL, &child);
+                                if (err == ESUCC) {
                                         child->data = cast(void*, dev);
                                 } else {
                                         sys_free(cast(void**, &child_name));
@@ -201,7 +201,7 @@ API_FS_MKNOD(ramfs, void *fs_handle, const char *path, const dev_t dev)
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -219,24 +219,24 @@ API_FS_MKDIR(ramfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 // parent node must exist
                 node_t *parent;
-                result = get_node(path, &hdl->root_dir, -1, NULL, &parent);
-                if (result == ESUCC) {
+                err = get_node(path, &hdl->root_dir, -1, NULL, &parent);
+                if (err == ESUCC) {
                         // create new node
                         char *basename = strrchr(path, '/') + 1;
 
                         char *child_name;
-                        result = sys_zalloc(strsize(basename), cast(void**, &child_name));
-                        if (result == ESUCC) {
+                        err = sys_zalloc(strsize(basename), cast(void**, &child_name));
+                        if (err == ESUCC) {
                                 strcpy(child_name, basename);
 
                                 node_t *child;
-                                result = new_node(hdl, parent, child_name, FILE_TYPE_DIR, NULL, &child);
-                                if (result == ESUCC) {
+                                err = new_node(hdl, parent, child_name, FILE_TYPE_DIR, NULL, &child);
+                                if (err == ESUCC) {
                                         child->mode = mode;
                                 } else {
                                         sys_free(cast(void**, &child_name));
@@ -247,7 +247,7 @@ API_FS_MKDIR(ramfs, void *fs_handle, const char *path, mode_t mode)
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -265,24 +265,24 @@ API_FS_MKFIFO(ramfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 // parent node must exist
                 node_t *parent;
-                result = get_node(path, &hdl->root_dir, -1, NULL, &parent);
-                if (result == ESUCC) {
+                err = get_node(path, &hdl->root_dir, -1, NULL, &parent);
+                if (err == ESUCC) {
                         // create new node
                         char *basename = strrchr(path, '/') + 1;
 
                         char *child_name;
-                        result = sys_zalloc(strsize(basename), cast(void**, &child_name));
-                        if (result == ESUCC) {
+                        err = sys_zalloc(strsize(basename), cast(void**, &child_name));
+                        if (err == ESUCC) {
                                 strcpy(child_name, basename);
 
                                 node_t *child;
-                                result = new_node(hdl, parent, child_name, FILE_TYPE_PIPE, NULL, &child);
-                                if (result == ESUCC) {
+                                err = new_node(hdl, parent, child_name, FILE_TYPE_PIPE, NULL, &child);
+                                if (err == ESUCC) {
                                         child->mode = mode;
                                 } else {
                                         sys_free(cast(void**, &child_name));
@@ -293,7 +293,7 @@ API_FS_MKFIFO(ramfs, void *fs_handle, const char *path, mode_t mode)
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -311,27 +311,25 @@ API_FS_OPENDIR(ramfs, void *fs_handle, const char *path, DIR *dir)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 node_t *parent;
-                result = get_node(path, &hdl->root_dir, 0, NULL, &parent);
-                if (result == ESUCC) {
+                err = get_node(path, &hdl->root_dir, 0, NULL, &parent);
+                if (err == ESUCC) {
                         if (parent->type == FILE_TYPE_DIR) {
                                 dir->d_items    = sys_llist_size(parent->data);
-                                dir->d_readdir  = ramfs_readdir;
-                                dir->d_closedir = ramfs_closedir;
                                 dir->d_seek     = 0;
-                                dir->d_dd       = parent;
+                                dir->d_hdl      = parent;
                         } else {
-                                result = ENOTDIR;
+                                err = ENOTDIR;
                         }
                 }
 
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -344,7 +342,7 @@ API_FS_OPENDIR(ramfs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int ramfs_closedir(void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(ramfs, void *fs_handle, DIR *dir)
 {
         UNUSED_ARG2(fs_handle, dir);
         return ESUCC;
@@ -361,45 +359,44 @@ static int ramfs_closedir(void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int ramfs_readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
+API_FS_READDIR(ramfs, void *fs_handle, DIR *dir)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
-                node_t *parent = dir->d_dd;
+                node_t *parent = dir->d_hdl;
                 node_t *child  = sys_llist_at(parent->data, dir->d_seek++);
 
                 if (child) {
                         dir->dirent.filetype = child->type;
                         dir->dirent.name     = child->name;
                         dir->dirent.size     = child->size;
-                        *dirent              = &dir->dirent;
 
                         if (child->type == FILE_TYPE_DRV) {
                                 sys_mutex_unlock(hdl->resource_mtx);
 
                                 struct vfs_dev_stat dev_stat;
-                                result = sys_driver_stat((dev_t)child->data, &dev_stat);
-                                if (result == ESUCC) {
+                                err = sys_driver_stat((dev_t)child->data, &dev_stat);
+                                if (err == ESUCC) {
                                         dir->dirent.size = dev_stat.st_size;
                                 }
 
                                 dir->dirent.dev = (dev_t)child->data;
 
-                                return result;
+                                return err;
                         } else {
-                                result = ESUCC;
+                                err = ESUCC;
                         }
                 } else {
-                        result = ENOENT;
+                        err = ENOENT;
                 }
 
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -416,29 +413,29 @@ API_FS_REMOVE(ramfs, void *fs_handle, const char *path)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 node_t *parent;
-                result = get_node(path, &hdl->root_dir, -1, NULL, &parent);
-                if (result != ESUCC){
+                err = get_node(path, &hdl->root_dir, -1, NULL, &parent);
+                if (err != ESUCC){
                         goto finish;
                 }
 
                 i32_t item; node_t *child;
-                result = get_node(path, &hdl->root_dir, 0, &item, &child);
-                if (result != ESUCC) {
+                err = get_node(path, &hdl->root_dir, 0, &item, &child);
+                if (err != ESUCC) {
                         goto finish;
                 }
 
                 if (child == &hdl->root_dir) {
-                        result = EPERM;
+                        err = EPERM;
                         goto finish;
                 }
 
                 /* if path is ending on slash, the object must be DIR */
                 if (strlch(path) == '/' && child->type != FILE_TYPE_DIR) {
-                        result = ENOTDIR;
+                        err = ENOTDIR;
                         goto finish;
                 }
 
@@ -456,16 +453,16 @@ API_FS_REMOVE(ramfs, void *fs_handle, const char *path)
 
                 /* remove node if possible */
                 if (remove_file == true) {
-                        result = delete_node(hdl, parent, child, item);
+                        err = delete_node(hdl, parent, child, item);
                 } else {
-                        result = ESUCC;
+                        err = ESUCC;
                 }
 
                 finish:
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -487,17 +484,17 @@ API_FS_RENAME(ramfs, void *fs_handle, const char *old_name, const char *new_name
                 return EISDIR;
         }
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 node_t *target;
-                result = get_node(old_name, &hdl->root_dir, 0, NULL, &target);
-                if (result == ESUCC) {
+                err = get_node(old_name, &hdl->root_dir, 0, NULL, &target);
+                if (err == ESUCC) {
                         char *basename = strrchr(new_name, '/') + 1;
 
                         char *newname;
-                        result = sys_zalloc(strsize(basename), cast(void**, &newname));
-                        if (result == ESUCC) {
+                        err = sys_zalloc(strsize(basename), cast(void**, &newname));
+                        if (err == ESUCC) {
                                 strcpy(newname, basename);
 
                                 if (target->name) {
@@ -511,7 +508,7 @@ API_FS_RENAME(ramfs, void *fs_handle, const char *old_name, const char *new_name
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -529,19 +526,19 @@ API_FS_CHMOD(ramfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 node_t *target;
-                result = get_node(path, &hdl->root_dir, 0, NULL, &target);
-                if (result == ESUCC) {
+                err = get_node(path, &hdl->root_dir, 0, NULL, &target);
+                if (err == ESUCC) {
                         target->mode = mode;
                 }
 
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -560,12 +557,12 @@ API_FS_CHOWN(ramfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 node_t *target;
-                result = get_node(path, &hdl->root_dir, 0, NULL, &target);
-                if (result == ESUCC) {
+                err = get_node(path, &hdl->root_dir, 0, NULL, &target);
+                if (err == ESUCC) {
                         target->uid = owner;
                         target->gid = group;
                 }
@@ -573,7 +570,7 @@ API_FS_CHOWN(ramfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -591,18 +588,19 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 node_t *target;
-                result = get_node(path, &hdl->root_dir, 0, NULL, &target);
-                if (result == ESUCC) {
+                err = get_node(path, &hdl->root_dir, 0, NULL, &target);
+                if (err == ESUCC) {
                         if ( (strlch(path) == '/' && target->type == FILE_TYPE_DIR)
                            || strlch(path) != '/') {
 
                                 stat->st_gid   = target->gid;
                                 stat->st_mode  = target->mode;
                                 stat->st_mtime = target->mtime;
+                                stat->st_ctime = target->ctime;
                                 stat->st_size  = target->size;
                                 stat->st_uid   = target->uid;
                                 stat->st_type  = target->type;
@@ -611,27 +609,27 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
                                         sys_mutex_unlock(hdl->resource_mtx);
 
                                         struct vfs_dev_stat dev_stat;
-                                        result = sys_driver_stat(cast(dev_t, target->data),
+                                        err = sys_driver_stat(cast(dev_t, target->data),
                                                                   &dev_stat);
-                                        if (result == ESUCC) {
+                                        if (err == ESUCC) {
                                                 stat->st_size = dev_stat.st_size;
-                                                stat->st_dev  = dev_stat.st_major;
+                                                stat->st_dev  = cast(dev_t, target->data);
                                         }
 
-                                        return result;
+                                        return err;
 
                                 } else {
                                         stat->st_dev = 0;
                                 }
                         } else {
-                                result = EINVAL;
+                                err = EINVAL;
                         }
                 }
 
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -649,8 +647,8 @@ API_FS_FSTAT(ramfs, void *fs_handle, void *extra, struct stat *stat)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 struct opened_file_info *opened_file = extra;
                 if (opened_file && opened_file->child) {
@@ -658,6 +656,7 @@ API_FS_FSTAT(ramfs, void *fs_handle, void *extra, struct stat *stat)
                         stat->st_gid   = opened_file->child->gid;
                         stat->st_mode  = opened_file->child->mode;
                         stat->st_mtime = opened_file->child->mtime;
+                        stat->st_ctime = opened_file->child->ctime;
                         stat->st_size  = opened_file->child->size;
                         stat->st_uid   = opened_file->child->uid;
                         stat->st_type  = opened_file->child->type;
@@ -666,27 +665,27 @@ API_FS_FSTAT(ramfs, void *fs_handle, void *extra, struct stat *stat)
                                 sys_mutex_unlock(hdl->resource_mtx);
 
                                 struct vfs_dev_stat dev_stat;
-                                result = sys_driver_stat(cast(dev_t, opened_file->child->data),
+                                err = sys_driver_stat(cast(dev_t, opened_file->child->data),
                                                           &dev_stat);
-                                if (result == ESUCC) {
+                                if (err == ESUCC) {
                                         stat->st_size = dev_stat.st_size;
-                                        stat->st_dev  = dev_stat.st_major;
+                                        stat->st_dev  = cast(dev_t, opened_file->child->data);
                                 }
 
-                                return result;
+                                return err;
 
                         } else {
                                 stat->st_dev = 0;
-                                result       = ESUCC;
+                                err          = ESUCC;
                         }
                 } else {
-                        result = ENOENT;
+                        err = ENOENT;
                 }
 
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -708,7 +707,7 @@ API_FS_STATFS(ramfs, void *fs_handle, struct statfs *statfs)
         statfs->f_bsize  = 1;
         statfs->f_ffree  = cast(u32_t, sys_get_free_mem() / sizeof(node_t));
         statfs->f_files  = hdl->file_count;
-        statfs->f_type   = 0x01;
+        statfs->f_type   = SYS_FS_TYPE__RAM;
         statfs->f_fsname = "ramfs";
 
         return ESUCC;
@@ -731,20 +730,20 @@ API_FS_OPEN(ramfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 // open file parent
                 node_t *parent;
-                result = get_node(path, &hdl->root_dir, -1, NULL, &parent);
-                if (result != ESUCC) {
+                err = get_node(path, &hdl->root_dir, -1, NULL, &parent);
+                if (err != ESUCC) {
                         goto finish;
                 }
 
                 // try to open selected file, if not exist then try create if O_CREAT flag is set
                 i32_t item; node_t *child;
-                result = get_node(path, &hdl->root_dir, 0, &item, &child);
-                if (result == ENOENT) {
+                err = get_node(path, &hdl->root_dir, 0, &item, &child);
+                if (err == ENOENT) {
                         // check that file should be created
                         if (!(flags & O_CREAT)) {
                                 goto finish;
@@ -753,28 +752,28 @@ API_FS_OPEN(ramfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
                         char *basename = strrchr(path, '/') + 1;
 
                         char *file_name;
-                        result = sys_zalloc(strsize(basename), cast(void**, &file_name));
-                        if (result != ESUCC) {
+                        err = sys_zalloc(strsize(basename), cast(void**, &file_name));
+                        if (err != ESUCC) {
                                 goto finish;
                         }
 
                         strcpy(file_name, basename);
 
-                        result = new_node(hdl, parent, file_name, FILE_TYPE_REGULAR, &item, &child);
-                        if (result != ESUCC) {
+                        err = new_node(hdl, parent, file_name, FILE_TYPE_REGULAR, &item, &child);
+                        if (err != ESUCC) {
                                 sys_free(cast(void**, &file_name));
                                 goto finish;
                         }
                 } else {
                         if (child->type == FILE_TYPE_DIR) {
-                                result = EISDIR;
+                                err = EISDIR;
                                 goto finish;
                         }
                 }
 
                 /* add file to list of open files */
-                result = add_node_to_open_files_list(hdl, parent, child);
-                if (result != ESUCC) {
+                err = add_node_to_open_files_list(hdl, parent, child);
+                if (err != ESUCC) {
                         goto finish;
                 }
 
@@ -797,8 +796,8 @@ API_FS_OPEN(ramfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
                         }
 
                 } else if (child->type == FILE_TYPE_DRV) {
-                        result = sys_driver_open((dev_t)child->data, flags);
-                        if (result == ESUCC) {
+                        err = sys_driver_open((dev_t)child->data, flags);
+                        if (err == ESUCC) {
                                 *fpos = 0;
                         } else {
                                 sys_llist_pop_back(hdl->opended_files);
@@ -813,7 +812,7 @@ API_FS_OPEN(ramfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -831,8 +830,8 @@ API_FS_CLOSE(ramfs, void *fs_handle, void *fhdl, bool force)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 struct opened_file_info *opened_file = fhdl;
                 int pos = sys_llist_find_begin(hdl->opended_files, opened_file);
@@ -842,10 +841,10 @@ API_FS_CLOSE(ramfs, void *fs_handle, void *fhdl, bool force)
 
                         /* close device if file is driver type */
                         if (target->type == FILE_TYPE_DRV) {
-                                result = sys_driver_close((dev_t)target->data, force);
+                                err = sys_driver_close((dev_t)target->data, force);
 
                         } else if (target->type == FILE_TYPE_PIPE) {
-                                result = sys_pipe_close(target->data);
+                                err = sys_pipe_close(target->data);
 
                         } else {
                                 /* file to remove, check if other task does not opens this file */
@@ -859,28 +858,28 @@ API_FS_CLOSE(ramfs, void *fs_handle, void *fhdl, bool force)
                                         }
 
                                         if (remove) {
-                                                result = delete_node(hdl,
+                                                err = delete_node(hdl,
                                                                      opened_file->parent,
                                                                      opened_file->child,
                                                                      pos);
                                         }
                                 } else {
-                                        result = ESUCC;
+                                        err = ESUCC;
                                 }
                         }
 
                         /* remove file from list */
-                        if (result == ESUCC) {
+                        if (err == ESUCC) {
                                 sys_llist_erase(hdl->opended_files, pos);
                         }
                 } else {
-                        result = ENOENT;
+                        err = ENOENT;
                 }
 
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -909,16 +908,16 @@ API_FS_WRITE(ramfs,
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
-                result = ENOENT;
+                err = ENOENT;
 
                 struct opened_file_info *opened_file = fhdl;
                 if (opened_file && opened_file->child) {
                         node_t *target = opened_file->child;
 
-                        sys_gettime(&target->mtime);
+                        sys_get_time(&target->mtime);
 
                         if (target->type == FILE_TYPE_DRV) {
                                 sys_mutex_unlock(hdl->resource_mtx);
@@ -927,16 +926,16 @@ API_FS_WRITE(ramfs,
                         } else if (target->type == FILE_TYPE_PIPE) {
                                sys_mutex_unlock(hdl->resource_mtx);
 
-                               result = sys_pipe_write(target->data, src, count, wrcnt, fattr.non_blocking_wr);
-                               if (result == ESUCC) {
+                               err = sys_pipe_write(target->data, src, count, wrcnt, fattr.non_blocking_wr);
+                               if (err == ESUCC) {
                                        if (*wrcnt > 0) {
                                                size_t size = 0;
-                                               result = sys_pipe_get_length(target->data, &size);
+                                               err = sys_pipe_get_length(target->data, &size);
                                                target->size = size;
                                        }
                                }
 
-                               return result;
+                               return err;
 
                        } else if (target->type == FILE_TYPE_REGULAR) {
                                size_t write_size  = count;
@@ -949,9 +948,9 @@ API_FS_WRITE(ramfs,
 
                                if ((seek + write_size) > file_length || target->data == NULL) {
                                        char *new_data;
-                                       result = sys_malloc(file_length + write_size,
+                                       err = sys_malloc(file_length + write_size,
                                                             cast(void**, &new_data));
-                                       if (result == ESUCC) {
+                                       if (err == ESUCC) {
                                                if (target->data) {
                                                        memcpy(new_data, target->data, file_length);
                                                        sys_free(cast(void**, &target->data));
@@ -964,13 +963,13 @@ API_FS_WRITE(ramfs,
 
                                                *wrcnt = count;
                                        } else {
-                                               result = ENOSPC;
+                                               err = ENOSPC;
                                        }
 
                                } else {
                                        memcpy(cast(u8_t*, target->data) + seek, src, write_size);
                                        *wrcnt = count;
-                                       result = ESUCC;
+                                       err = ESUCC;
                                }
                         }
                 }
@@ -978,7 +977,7 @@ API_FS_WRITE(ramfs,
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -1007,10 +1006,10 @@ API_FS_READ(ramfs,
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
-                result = ENOENT;
+                err = ENOENT;
 
                 struct opened_file_info *opened_file = fhdl;
                 if (opened_file && opened_file->child) {
@@ -1023,16 +1022,16 @@ API_FS_READ(ramfs,
                         } else if (target->type == FILE_TYPE_PIPE) {
                                 sys_mutex_unlock(hdl->resource_mtx);
 
-                                result = sys_pipe_read(target->data, dst, count, rdcnt, fattr.non_blocking_rd);
-                                if (result == ESUCC) {
+                                err = sys_pipe_read(target->data, dst, count, rdcnt, fattr.non_blocking_rd);
+                                if (err == ESUCC) {
                                         if (*rdcnt > 0) {
                                                 size_t size;
-                                                result = sys_pipe_get_length(target->data, &size);
+                                                err = sys_pipe_get_length(target->data, &size);
                                                 target->size = size;
                                         }
                                 }
 
-                                return result;
+                                return err;
 
                         } else if (target->type == FILE_TYPE_REGULAR) {
                                 size_t file_length = target->size;
@@ -1054,9 +1053,9 @@ API_FS_READ(ramfs,
                                                 *rdcnt = 0;
                                         }
 
-                                        result = ESUCC;
+                                        err = ESUCC;
                                 } else {
-                                        result = EIO;
+                                        err = EIO;
                                 }
                         }
                 }
@@ -1064,7 +1063,7 @@ API_FS_READ(ramfs,
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -1083,10 +1082,10 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *fhdl, int request, void *arg)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
-                result = ENOENT;
+                err = ENOENT;
 
                 struct opened_file_info *opened_file = fhdl;
                 if (opened_file && opened_file->child) {
@@ -1106,7 +1105,7 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *fhdl, int request, void *arg)
                                         return sys_pipe_clear(opened_file->child->data) ? ESUCC : EIO;
 
                                 default:
-                                        result = EBADRQC;
+                                        err = EBADRQC;
                                         break;
                                 }
                         }
@@ -1115,7 +1114,7 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *fhdl, int request, void *arg)
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -1132,8 +1131,8 @@ API_FS_FLUSH(ramfs, void *fs_handle, void *fhdl)
 {
         struct RAMFS *hdl = fs_handle;
 
-        int result = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+        if (err == ESUCC) {
 
                 struct opened_file_info *opened_file = fhdl;
                 if (opened_file && opened_file->child) {
@@ -1141,16 +1140,16 @@ API_FS_FLUSH(ramfs, void *fs_handle, void *fhdl)
                                 sys_mutex_unlock(hdl->resource_mtx);
                                 return sys_driver_flush((dev_t)opened_file->child->data);
                         } else {
-                                result = ESUCC;
+                                err = ESUCC;
                         }
                 } else {
-                        result = ENOENT;
+                        err = ENOENT;
                 }
 
                 sys_mutex_unlock(hdl->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -1268,7 +1267,7 @@ static int get_node(const char *path, node_t *startnode, i32_t deep, i32_t *item
 
         node_t *current_node = startnode;
         int     dir_deep     = get_path_deep(path);
-        int     result       = ENOENT;
+        int     err          = ENOENT;
 
         /* go to selected node -----------------------------------------------*/
         while (dir_deep + deep > 0) {
@@ -1321,10 +1320,10 @@ static int get_node(const char *path, node_t *startnode, i32_t deep, i32_t *item
 
         if (current_node) {
                 *node  = current_node;
-                result = ESUCC;
+                err = ESUCC;
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -1364,25 +1363,30 @@ static int new_node(struct RAMFS *hdl,
         }
 
         node_t *node;
-        int result = sys_zalloc(sizeof(node_t), cast(void**, &node));
-        if (result == ESUCC) {
+        int err = sys_zalloc(sizeof(node_t), cast(void**, &node));
+        if (err == ESUCC) {
+
+                time_t tm = 0;
+                sys_get_time(&tm);
+
                 node->name  = filename;
                 node->data  = NULL;
                 node->gid   = 0;
-                node->mode  = 0;
-                node->mtime = 0;
+                node->uid   = 0;
+                node->mode  = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+                node->mtime = tm;
+                node->ctime = tm;
                 node->size  = 0;
                 node->type  = type;
-                node->uid   = 0;
 
                 if (type == FILE_TYPE_DIR) {
-                        result = sys_llist_create(NULL, NULL, cast(llist_t**, &node->data));
+                        err = sys_llist_create(NULL, NULL, cast(llist_t**, &node->data));
 
                 } else if (type == FILE_TYPE_PIPE) {
-                        result = sys_pipe_create(cast(pipe_t**, &node->data));
+                        err = sys_pipe_create(cast(pipe_t**, &node->data));
                 }
 
-                if (result == ESUCC) {
+                if (err == ESUCC) {
                         if (sys_llist_push_back(parent->data, node)) {
                                 if (item) {
                                         *item = sys_llist_size(parent->data) - 1;
@@ -1392,16 +1396,16 @@ static int new_node(struct RAMFS *hdl,
 
                                 hdl->file_count++;
                         } else {
-                                result = ENOMEM;
+                                err = ENOMEM;
                         }
                 }
 
-                if (result != ESUCC) {
+                if (err != ESUCC) {
                         sys_free(cast(void**, &node));
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -1420,9 +1424,9 @@ static int add_node_to_open_files_list(struct RAMFS *lfs,
                                        node_t          *child)
 {
         struct opened_file_info *opened_file_info;
-        int result = sys_zalloc(sizeof(struct opened_file_info),
+        int err = sys_zalloc(sizeof(struct opened_file_info),
                                  cast(void**, &opened_file_info));
-        if (result == ESUCC) {
+        if (err == ESUCC) {
                 opened_file_info->remove_at_close = false;
                 opened_file_info->child           = child;
                 opened_file_info->parent          = parent;
@@ -1438,11 +1442,11 @@ static int add_node_to_open_files_list(struct RAMFS *lfs,
                 /* add open file info to list */
                 if (!sys_llist_push_back(lfs->opended_files, opened_file_info)) {
                         sys_free(cast(void**, &opened_file_info));
-                        result = ENOMEM;
+                        err = ENOMEM;
                 }
         }
 
-        return result;
+        return err;
 }
 
 /*==============================================================================

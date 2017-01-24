@@ -39,6 +39,11 @@
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+#if __OS_ENABLE_SYS_ASSERT__ > 0
+#define _assert(x) _assert_hook(x)
+#else
+#define _assert(x) (void)(x)
+#endif
 
 /*==============================================================================
   Exported types, enums definitions
@@ -54,6 +59,10 @@
 extern void  vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName);
 extern void  vApplicationTickHook(void);
 extern u32_t _get_uptime_counter(void);
+
+#if __OS_ENABLE_SYS_ASSERT__ > 0
+extern void _assert_hook(bool assert);
+#endif
 
 #ifdef __cplusplus
    }

@@ -55,6 +55,7 @@
 #include "kernel/time.h"
 #include "kernel/process.h"
 #include "kernel/syscall.h"
+#include "mm/cache.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
 #include "portable/cpuctl.h"
@@ -2178,9 +2179,9 @@ static inline int sys_ioctl(FILE *file, int rq, ...)
 {
     va_list arg;
     va_start(arg, rq);
-    int result = _vfs_vfioctl(file, rq, arg);
+    int err = _vfs_vfioctl(file, rq, arg);
     va_end(arg);
-    return result;
+    return err;
 }
 
 //==============================================================================
@@ -3231,6 +3232,43 @@ static inline int sys_semaphore_wait(sem_t *sem, const u32_t timeout)
 
 //==============================================================================
 /**
+ * @brief Function get counter value of semaphore.
+ *
+ * The function get value of semaphore pointed by <i>sem</i>. The counter value
+ * is modified by sys_semaphore_wait() and sys_semaphore_signal() family functions.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param sem           semaphore object pointer
+ * @param value         counter value
+ *
+ * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        size_t value = 0;
+
+        int err = sys_semaphore_get_value(sem, &value);
+        if (!err && value > 0) {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see sys_semaphore_signal(), sys_semaphore_wait()
+ */
+//==============================================================================
+static inline int sys_semaphore_get_value(sem_t *sem, size_t *value)
+{
+        return _semaphore_get_value(sem, value);
+}
+
+//==============================================================================
+/**
  * @brief Function signal semaphore.
  *
  * The function signals semaphore pointed by <i>sem</i>.
@@ -4268,7 +4306,7 @@ static inline size_t sys_get_mem_size()
  * @see sys_get_tick_counter()
  */
 //==============================================================================
-static inline u32_t sys_get_time_ms()
+static inline u32_t sys_get_uptime_ms()
 {
         return _kernel_get_time_ms();
 }
@@ -4829,7 +4867,7 @@ static inline time_t sys_mktime(struct tm *timeptr)
  * @see sys_settime()
  */
 //==============================================================================
-static inline int sys_gettime(time_t *timer)
+static inline int sys_get_time(time_t *timer)
 {
         return _gettime(timer);
 }
@@ -4920,6 +4958,40 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
         return tm;
 #endif
 }
+
+//==============================================================================
+/**
+ * @brief Function write block by using cache subsystem.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  file         file
+ * @param  blkpos       block position (in block unit)
+ * @param  blksz        block size
+ * @param  buf          source buffer (of block size)
+ * @param  sync         synchronous write (if cache already does not exist)
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, bool sync);
+
+//==============================================================================
+/**
+ * @brief Function read block by using cache subsystem.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  file         file
+ * @param  blkpos       block position (in block unit)
+ * @param  blksz        block size
+ * @param  buf          destination buffer (of block size)
+ * @param  sync         synchronous read (if cache already does not exist)
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *dst, bool sync);
 
 #ifdef __cplusplus
 }

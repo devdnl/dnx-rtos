@@ -119,6 +119,7 @@ int _vsscanf(const char *str, const char *format, va_list args)
                                 }
                                 break;
 
+                        case 'u':
                         case 'd':
                         case 'i':
                                 value = 0;

@@ -107,20 +107,20 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 return ENODEV;
         }
 
-        int result = sys_zalloc(sizeof(struct ethmac), device_handle);
-        if (result == ESUCC) {
+        int err = sys_zalloc(sizeof(struct ethmac), device_handle);
+        if (err == ESUCC) {
                 struct ethmac *hdl = *device_handle;
 
-                result = sys_semaphore_create(1, 0, &hdl->rx_data_ready);
-                if (result != ESUCC)
+                err = sys_semaphore_create(1, 0, &hdl->rx_data_ready);
+                if (err != ESUCC)
                         goto finish;
 
-                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->rx_access);
-                if (result != ESUCC)
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->rx_access);
+                if (err != ESUCC)
                         goto finish;
 
-                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->tx_access);
-                if (result != ESUCC)
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->tx_access);
+                if (err != ESUCC)
                         goto finish;
 
                 // reset Ethernet
@@ -132,7 +132,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                       && !sys_time_is_expired(timeout, INIT_TIMEOUT));
 
                 if (sys_time_is_expired(timeout, INIT_TIMEOUT)) {
-                        result = ETIME;
+                        err = ETIME;
                         goto finish;
                 }
 
@@ -202,11 +202,11 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 
                         sys_sleep_ms(ETHMAC_PHY_CONFIG_DELAY);
                 } else {
-                        result = EIO;
+                        err = EIO;
                 }
 
                 finish:
-                if (result != ESUCC) {
+                if (err != ESUCC) {
                         if (hdl->rx_data_ready)
                                 sys_semaphore_destroy(hdl->rx_data_ready);
 
@@ -221,7 +221,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -235,12 +235,10 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(ETHMAC, void *device_handle)
 {
-        struct ethmac *hdl    = device_handle;
-        int            result = EBUSY;
+        struct ethmac *hdl = device_handle;
 
-        sys_critical_section_begin();
-
-        if (sys_device_is_unlocked(&hdl->dev_lock)) {
+        int err = sys_device_lock(&hdl->dev_lock);
+        if (!err) {
                 ETH_DeInit();
                 NVIC_DisableIRQ(ETH_IRQn);
                 CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
@@ -249,12 +247,9 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
                 sys_mutex_destroy(hdl->tx_access);
                 sys_free(device_handle);
                 ethmac = NULL;
-                result = ESUCC;
         }
 
-        sys_critical_section_end();
-
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -290,13 +285,13 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
 {
         struct ethmac *hdl = device_handle;
 
-        int result = sys_device_get_access(&hdl->dev_lock);
+        int err = sys_device_get_access(&hdl->dev_lock);
 
-        if (result == ESUCC) {
-                result = sys_device_unlock(&hdl->dev_lock, force);
+        if (err == ESUCC) {
+                err = sys_device_unlock(&hdl->dev_lock, force);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -330,13 +325,13 @@ API_MOD_WRITE(ETHMAC,
                 if (sys_mutex_lock(hdl->tx_access, fattr.non_blocking_wr ? 0 : MAX_DELAY_MS) == ESUCC) {
 
                         *wrcnt = 0;
-                        int status;
+                        int err;
 
                         while (count) {
                                 while (is_buffer_owned_by_DMA(DMATxDescToSet)) {
 
                                         if (fattr.non_blocking_wr) {
-                                                status = EAGAIN;
+                                                err = EAGAIN;
                                                 goto exit;
                                         }
 
@@ -353,12 +348,12 @@ API_MOD_WRITE(ETHMAC,
                                 count  -= packet_size;
                         }
 
-                        status = ESUCC;
+                        err = ESUCC;
 
                         exit:
                         sys_mutex_unlock(hdl->tx_access);
 
-                        return status;
+                        return err;
                 } else {
                         return EAGAIN;
                 }
@@ -445,7 +440,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 {
         struct ethmac *hdl = device_handle;
 
-        int status;
+        int err;
 
         switch (request) {
         case IOCTL_ETHMAC__WAIT_FOR_PACKET:
@@ -493,17 +488,17 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                         send_packet(pkt->total_size);
 
-                                        status = ESUCC;
+                                        err = ESUCC;
                                 } else {
-                                        status = EAGAIN;
+                                        err = EAGAIN;
                                 }
 
                                 sys_mutex_unlock(hdl->tx_access);
                         } else {
-                                status = EAGAIN;
+                                err = EAGAIN;
                         }
                 } else {
-                        status = EINVAL;
+                        err = EINVAL;
                 }
                 break;
 
@@ -540,17 +535,17 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                         make_Rx_buffer_available();
 
-                                        status = ESUCC;
+                                        err = ESUCC;
                                 } else {
-                                        status = EINVAL;
+                                        err = EINVAL;
                                 }
 
                                 sys_mutex_unlock(hdl->rx_access);
                         } else {
-                                status = EAGAIN;
+                                err = EAGAIN;
                         }
                 } else {
-                        status = EINVAL;
+                        err = EINVAL;
                 }
                 break;
 
@@ -581,7 +576,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                 return EBADRQC;
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================

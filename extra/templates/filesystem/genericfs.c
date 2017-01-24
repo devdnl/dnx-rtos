@@ -40,8 +40,6 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int closedir(void *fs_handle, DIR *dir);
-static int readdir (void *fs_handle, DIR *dir, dirent_t **dirent);
 
 /*==============================================================================
   Local objects
@@ -65,11 +63,12 @@ static int readdir (void *fs_handle, DIR *dir, dirent_t **dirent);
  *
  * @param[out]          **fs_handle             file system allocated memory
  * @param[in ]           *src_path              file source path
+ * @param[in ]           *opts                  file system options (can be NULL)
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_INIT(<!fs_name!>, void **fs_handle, const char *src_path)
+API_FS_INIT(<!fs_name!>, void **fs_handle, const char *src_path, const char *opts)
 {
         return EINVAL;
 }
@@ -226,6 +225,29 @@ API_FS_FSTAT(<!fs_name!>, void *fs_handle, void *fhdl, struct stat *stat)
 
 //==============================================================================
 /**
+ * @brief Return file/dir status
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   file path
+ * @param[out]          *stat                   file status
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_FS_STAT(<!fs_name!>, void *fs_handle, const char *path, struct stat *stat)
+{
+        stat->st_dev   = 0;
+        stat->st_gid   = 0;
+        stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
+        stat->st_mtime = 0;
+        stat->st_size  = 0;
+        stat->st_uid   = 0;
+
+        return ENOENT;
+}
+
+//==============================================================================
+/**
  * @brief Create directory
  *
  * @param[in ]          *fs_handle              file system allocated memory
@@ -286,10 +308,6 @@ API_FS_MKNOD(<!fs_name!>, void *fs_handle, const char *path, const dev_t dev)
 //==============================================================================
 API_FS_OPENDIR(<!fs_name!>, void *fs_handle, const char *path, DIR *dir)
 {
-        dir->f_closedir = closedir;
-        dir->f_readdir  = readdir;
-        // ...
-
         return ENOENT;
 }
 
@@ -303,7 +321,7 @@ API_FS_OPENDIR(<!fs_name!>, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int closedir(void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(<!fs_name!>, void *fs_handle, DIR *dir)
 {
         return EINVAL;
 }
@@ -313,19 +331,13 @@ static int closedir(void *fs_handle, DIR *dir)
  * @brief Read directory
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *dir                    directory object
- * @param[out]          **dirent                directory entry
+ * @param[in,out]       *dir                    directory object
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int readdir(void *fs_handle, DIR *dir, dirent_t **dirent)
+API_FS_READDIR(<!fs_name!>, void *fs_handle, DIR *dir)
 {
-        dir->dirent.name = "Example";
-        dir->dirent.size = 10;
-        dir->dirent.filetype = FILE_TYPE_REGULAR;
-        *dirent = &dir->dirent;
-
         return ESUCC;
 }
 
@@ -395,29 +407,6 @@ API_FS_CHOWN(<!fs_name!>, void *fs_handle, const char *path, uid_t owner, gid_t 
 
 //==============================================================================
 /**
- * @brief Return file/dir status
- *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *path                   file path
- * @param[out]          *stat                   file status
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_FS_STAT(<!fs_name!>, void *fs_handle, const char *path, struct stat *stat)
-{
-        stat->st_dev   = 0;
-        stat->st_gid   = 0;
-        stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
-        stat->st_mtime = 0;
-        stat->st_size  = 0;
-        stat->st_uid   = 0;
-
-        return ENOENT;
-}
-
-//==============================================================================
-/**
  * @brief Return file system status
  *
  * @param[in ]          *fs_handle              file system allocated memory
@@ -432,7 +421,7 @@ API_FS_STATFS(<!fs_name!>, void *fs_handle, struct statfs *statfs)
         statfs->f_blocks = 0;
         statfs->f_ffree  = 0;
         statfs->f_files  = 0;
-        statfs->f_type   = 1;
+        statfs->f_type   = SYS_FS_TYPE__SOLID;
         statfs->f_fsname = "<!fs_name!>";
 
         return EINVAL;

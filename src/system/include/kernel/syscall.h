@@ -79,7 +79,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr                |                           |                           |                                           |
         SYSCALL_PROCESSCLEANZOMBIE,     // | int            | pid_t *pid                | int *status                         |                           |                           |                                           |
         SYSCALL_PROCESSKILL,            // | int            | pid_t *pid                |                                     |                           |                           |                                           |
-        SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path                | const char *mount_point   |                           |                                           |
+        SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path                | const char *mount_point   | const char *options       |                                           |
         SYSCALL_UMOUNT,                 // | int            | const char *mount_point   |                                     |                           |                           |                                           |
     #if __OS_ENABLE_MKNOD__ == _YES_
         SYSCALL_MKNOD,                  // | int            | const char *pathname      | const char *mod_name                | int *major                | int *minor                |                                           |
@@ -170,7 +170,7 @@ extern pid_t _syscall_client_PID[];
   Exported functions
 ==============================================================================*/
 extern void syscall(syscall_t syscall, void *retptr, ...);
-extern void _syscall_init();
+extern int  _syscall_init();
 extern int  _syscall_kworker_process(int, char**);
 
 /*==============================================================================

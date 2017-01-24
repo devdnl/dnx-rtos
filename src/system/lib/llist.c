@@ -118,7 +118,7 @@ int _llist_create_usr(llist_malloc_t      malloc,
                       llist_obj_dtor_t    obj_dtor,
                       llist_t             **list)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (malloc && free && list) {
                 *list = malloc(sizeof(llist_t));
@@ -134,13 +134,13 @@ int _llist_create_usr(llist_malloc_t      malloc,
                         (*list)->count       = 0;
                         (*list)->self        = *list;
 
-                        result = ESUCC;
+                        err = ESUCC;
                 } else {
-                        result = ENOMEM;
+                        err = ENOMEM;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -160,11 +160,11 @@ int _llist_create_krn(enum _mm_mem        mem,
                       llist_obj_dtor_t    obj_dtor,
                       llist_t             **list)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (list && mem != _MM_MOD && mem < _MM_COUNT) {
-                result = _kzalloc(mem, sizeof(llist_t), cast(void*, list));
-                if (result == ESUCC) {
+                err = _kzalloc(mem, sizeof(llist_t), cast(void*, list));
+                if (!err) {
                         (*list)->malloc      = krnmalloc;
                         (*list)->free        = krnfree;
                         (*list)->allocctx    = cast(void*, mem);
@@ -176,11 +176,11 @@ int _llist_create_krn(enum _mm_mem        mem,
                         (*list)->count       = 0;
                         (*list)->self        = *list;
 
-                        result = ESUCC;
+                        err = ESUCC;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -200,11 +200,11 @@ int _llist_create_mod(size_t              modid,
                       llist_obj_dtor_t    obj_dtor,
                       llist_t             **list)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (list) {
-                result = _kzalloc(_MM_MOD, sizeof(llist_t), cast(void*, list), modid);
-                if (result == ESUCC) {
+                err = _kzalloc(_MM_MOD, sizeof(llist_t), cast(void*, list), modid);
+                if (!err) {
                         (*list)->malloc      = modmalloc;
                         (*list)->free        = modfree;
                         (*list)->allocctx    = cast(void*, modid);
@@ -216,11 +216,11 @@ int _llist_create_mod(size_t              modid,
                         (*list)->count       = 0;
                         (*list)->self        = *list;
 
-                        result = ESUCC;
+                        err = ESUCC;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

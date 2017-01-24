@@ -87,7 +87,9 @@ int vfprintf(FILE *file, const char *format, va_list arg)
                 if (str) {
                         n = vsnprintf(str, size, format, arg);
                         fwrite(str, sizeof(char), n, file);
+                        int err = _errno;
                         free(str);
+                        _errno = err;
                 }
         }
 #else

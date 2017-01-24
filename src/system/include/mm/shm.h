@@ -39,6 +39,8 @@ Shared memory management.
 ==============================================================================*/
 #include <stdint.h>
 #include <stddef.h>
+#include <sys/types.h>
+#include <config.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,10 +61,14 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+#if __OS_ENABLE_SHARED_MEMORY__ > 0
+extern int _shm_init(void);
 extern int _shm_create(const char *key, size_t size);
 extern int _shm_destroy(const char *key);
-extern int _shm_at(const char *key, void **mem, size_t *size);
-extern int _shm_detach(const char *key);
+extern int _shm_attach(const char *key, void **mem, size_t *size, pid_t pid);
+extern int _shm_detach(const char *key, pid_t pid);
+extern int _shm_detach_anywhere(pid_t pid);
+#endif
 
 /*==============================================================================
   Exported inline functions

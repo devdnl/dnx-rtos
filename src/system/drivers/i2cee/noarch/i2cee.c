@@ -1,0 +1,335 @@
+/*=========================================================================*//**
+@file    i2cee.c
+
+@author  Daniel Zorychta
+
+@brief   I2C EEPROM driver.
+
+@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
+
+         This program is free software; you can redistribute it and/or modify
+         it under the terms of the GNU General Public License as published by
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
+
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+         GNU General Public License for more details.
+
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+*//*==========================================================================*/
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "drivers/driver.h"
+#include "noarch/i2cee_cfg.h"
+#include "../i2cee_ioctl.h"
+
+/*==============================================================================
+  Local macros
+==============================================================================*/
+#define MUTEX_TIMEOUT   1000
+
+/*==============================================================================
+  Local object types
+==============================================================================*/
+typedef struct {
+        FILE    *i2c_dev;
+        mutex_t *mtx;
+        u32_t    memory_size;
+        u16_t    page_size;
+        u16_t    page_prog_time_ms;
+} I2CEE_t;
+
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local objects
+==============================================================================*/
+MODULE_NAME(I2CEE);
+
+/*==============================================================================
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  External objects
+==============================================================================*/
+
+/*==============================================================================
+  Function definitions
+==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief Initialize device
+ *
+ * @param[out]          **device_handle        device allocated memory
+ * @param[in ]            major                major device number
+ * @param[in ]            minor                minor device number
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_MOD_INIT(I2CEE, void **device_handle, u8_t major, u8_t minor)
+{
+        UNUSED_ARG2(major, minor);
+
+        int err = sys_zalloc(sizeof(I2CEE_t), device_handle);
+        if (!err) {
+                I2CEE_t *hdl = *device_handle;
+
+                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
+                if (err) {
+                        sys_free(device_handle);
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Release device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_MOD_RELEASE(I2CEE, void *device_handle)
+{
+        I2CEE_t *hdl = device_handle;
+
+        int err = sys_mutex_lock(hdl->mtx, 0);
+        if (!err) {
+                mutex_t *mtx = hdl->mtx;
+                hdl->mtx = 0;
+                sys_mutex_unlock(mtx);
+                sys_mutex_destroy(mtx);
+
+                if (hdl->i2c_dev) {
+                        sys_fclose(hdl->i2c_dev);
+                }
+
+                memset(hdl, 0, sizeof(I2CEE_t));
+                sys_free(&device_handle);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Open device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_MOD_OPEN(I2CEE, void *device_handle, u32_t flags)
+{
+        UNUSED_ARG2(device_handle, flags);
+        return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief Close device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           force                  device force close (true)
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_MOD_CLOSE(I2CEE, void *device_handle, bool force)
+{
+        UNUSED_ARG2(device_handle, force);
+        return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief Write data to device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]          *src                    data source
+ * @param[in ]           count                  number of bytes to write
+ * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
+ * @param[in ]           fattr                  file attributes
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_MOD_WRITE(I2CEE,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
+{
+        UNUSED_ARG1(fattr);
+
+        I2CEE_t *hdl = device_handle;
+
+        int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
+        if (!err) {
+
+                u32_t addr = *fpos;
+                err = sys_fseek(hdl->i2c_dev, addr, VFS_SEEK_SET);
+
+                while (!err && count) {
+                        size_t pbleft = (((addr / hdl->page_size) + 1) * hdl->page_size) - addr;
+                        size_t wrsz   = min(count, pbleft);
+                        size_t wrb    = 0;
+
+                        err = sys_fwrite(src, wrsz, &wrb, hdl->i2c_dev);
+                        if (!err) {
+                                sys_sleep_ms(hdl->page_prog_time_ms);
+                                addr   += wrsz;
+                                src    += wrsz;
+                                count  -= wrsz;
+                                *wrcnt += wrb;
+                        }
+                }
+
+                sys_mutex_unlock(hdl->mtx);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Read data from device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *dst                    data destination
+ * @param[in ]           count                  number of bytes to read
+ * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
+ * @param[in ]           fattr                  file attributes
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_MOD_READ(I2CEE,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
+{
+        UNUSED_ARG1(fattr);
+
+        I2CEE_t *hdl = device_handle;
+
+        int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
+        if (!err) {
+
+                err = sys_fseek(hdl->i2c_dev, *fpos, VFS_SEEK_SET);
+                if (!err) {
+                        err = sys_fread(dst, count, rdcnt, hdl->i2c_dev);
+                }
+
+                sys_mutex_unlock(hdl->mtx);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief IO control
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[in ]           request                request
+ * @param[in ][out]     *arg                    request's argument
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_MOD_IOCTL(I2CEE, void *device_handle, int request, void *arg)
+{
+        I2CEE_t *hdl = device_handle;
+
+        int err = EBADRQC;
+
+        if (request == IOCTL_I2CEE__CONFIGURE) {
+
+                err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
+                if (!err) {
+                        I2CEE_config_t *cfg = arg;
+
+                        if (hdl->i2c_dev) {
+                                err = sys_fclose(hdl->i2c_dev);
+                        }
+
+                        if (!err) {
+                                err = sys_fopen(cfg->i2c_path, "r+", &hdl->i2c_dev);
+                                if (!err) {
+                                        hdl->memory_size       = cfg->memory_size;
+                                        hdl->page_size         = cfg->page_size;
+                                        hdl->page_prog_time_ms = cfg->page_prog_time_ms;
+                                }
+                        }
+
+                        sys_mutex_unlock(hdl->mtx);
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Flush device
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_MOD_FLUSH(I2CEE, void *device_handle)
+{
+        I2CEE_t *hdl = device_handle;
+
+        return sys_fflush(hdl->i2c_dev);
+}
+
+//==============================================================================
+/**
+ * @brief Device information
+ *
+ * @param[in ]          *device_handle          device allocated memory
+ * @param[out]          *device_stat            device status
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_MOD_STAT(I2CEE, void *device_handle, struct vfs_dev_stat *device_stat)
+{
+        I2CEE_t *hdl = device_handle;
+
+        device_stat->st_size = hdl->memory_size;
+
+        return ESUCC;
+}
+
+/*==============================================================================
+  End of file
+==============================================================================*/

@@ -75,7 +75,10 @@ extern const uint             _FS_table_size;
  * @return One of errno values.
  */
 //==============================================================================
-int _mount(const char *FS_name, const struct vfs_path *src_path, const struct vfs_path *mount_point)
+int _mount(const char            *FS_name,
+           const struct vfs_path *src_path,
+           const struct vfs_path *mount_point,
+           const char            *opts)
 {
         int err = EINVAL;
 
@@ -85,12 +88,14 @@ int _mount(const char *FS_name, const struct vfs_path *src_path, const struct vf
                 for (uint i = 0; i < _FS_table_size; i++) {
                         if (strcmp(_FS_table[i].FS_name, FS_name) == 0) {
                                 err = _vfs_mount(src_path, mount_point,
-                                                 &_FS_table[i].FS_if);
+                                                 &_FS_table[i].FS_if, opts);
 
                                 if (!err) {
-                                        printk("Filesystem '%s' mounted in %s", FS_name, mount_point->PATH);
+                                        printk("Filesystem '%s' mounted in %s",
+                                               FS_name, mount_point->PATH);
                                 } else {
-                                        printk("Filesystem '%s' mount error (%d)", FS_name, err);
+                                        printk("Filesystem '%s' mount error (%d)",
+                                               FS_name, err);
                                 }
 
                                 break;

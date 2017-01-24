@@ -223,12 +223,12 @@ static void put_new_line_buffer(ttybfr_t *this)
 //==============================================================================
 int ttybfr_create(ttybfr_t **bfr)
 {
-        int result = sys_zalloc(sizeof(ttybfr_t), cast(void**, bfr));
-        if (result == ESUCC) {
+        int err = sys_zalloc(sizeof(ttybfr_t), cast(void**, bfr));
+        if (err == ESUCC) {
                 (*bfr)->self = *bfr;
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

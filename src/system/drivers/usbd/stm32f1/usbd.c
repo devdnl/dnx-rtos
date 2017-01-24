@@ -923,6 +923,8 @@ API_MOD_STAT(USBD, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         USB_ep_t *hdl = device_handle;
 
+        device_stat->st_size = 0;
+
         if (usb_mem->ep_config) {
                 size_t size = 0;
                 if (usb_mem->ep_config->ep[hdl->minor].OUT_enabled)
@@ -931,14 +933,10 @@ API_MOD_STAT(USBD, void *device_handle, struct vfs_dev_stat *device_stat)
                 if (usb_mem->ep_config->ep[hdl->minor].IN_enabled)
                         size = usb_mem->ep_config->ep[hdl->minor].IN_buffer_size;
 
-                device_stat->st_size  = size;
-                device_stat->st_major = _USBD_MAJOR_NUMBER;
-                device_stat->st_minor = hdl->minor;
-
-                return ESUCC;
-        } else {
-                return EINVAL;
+                device_stat->st_size = size;
         }
+
+        return ESUCC;
 }
 
 //==============================================================================

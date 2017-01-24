@@ -179,10 +179,10 @@ typedef enum tfile {
 #ifndef DOXYGEN // Doxygen documentation inserted in dirent.h file
 /** @brief Directory entry. */
 typedef struct dirent {
-        char   *name;           //!< File name
-        u64_t   size;           //!< File size in bytes
-        tfile_t filetype;       //!< File type
-        dev_t   dev;            //!< Device address (if file type is driver)
+        const char *name;           //!< File name
+        u64_t       size;           //!< File size in bytes
+        tfile_t     filetype;       //!< File type
+        dev_t       dev;            //!< Device address (if file type is driver)
 } dirent_t;
 #endif
 
@@ -193,7 +193,7 @@ struct stat {
         mode_t  st_mode;        //!< Protection
         uid_t   st_uid;         //!< User ID of owner
         gid_t   st_gid;         //!< Group ID of owner
-        time_t  st_atime;       //!< Time of last access
+        time_t  st_ctime;       //!< Time of creation
         time_t  st_mtime;       //!< Time of last modification
         tfile_t st_type;        //!< Type of file
 };

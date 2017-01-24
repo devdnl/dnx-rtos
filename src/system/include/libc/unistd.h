@@ -435,6 +435,44 @@ static inline void sync(void)
         syscall(SYSCALL_SYNC, NULL);
 }
 
+//==============================================================================
+/**
+ * @brief Function return group ID of current user.
+ *
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        gid_t gid = getgid();
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline gid_t getgid(void)
+{
+        return 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function return user ID.
+ *
+ * @b Example
+ * @code
+        #include <unistd.h>
+
+        // ...
+        uid_t uid = getuid();
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline uid_t getuid(void)
+{
+        return 0;
+}
+
 #ifdef __cplusplus
 }
 #endif

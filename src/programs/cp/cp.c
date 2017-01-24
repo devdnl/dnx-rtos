@@ -38,7 +38,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define BUFFER_MAX_SIZE                 16384
+#define BUFFER_MAX_SIZE                 8192
 #define INFO_REFRESH_TIME_MS            (CLOCKS_PER_SEC * 1)
 #define PATH_MAX_SIZE                   128
 
@@ -104,68 +104,19 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 }
         }
 
-        fseek(src_file, 0, SEEK_END);
-        u64_t lfile_size = ftell(src_file);
-        fseek(src_file, 0, SEEK_SET);
-
-        clock_t start_time = clock();
-        clock_t info_timer = clock() + INFO_REFRESH_TIME_MS;
-        u64_t lcopy_size = 0;
-        int   n;
-
+        int n;
         while ((n = fread(buffer, sizeof(char), buffer_size, src_file)) > 0) {
                 if (ferror(src_file)) {
                         perror(argv[1]);
                         break;
                 }
 
-                if ((clock() - info_timer) >= INFO_REFRESH_TIME_MS) {
-                        info_timer = clock();
-
-                        u32_t file_size = lfile_size / 1024;
-                        u32_t copy_size = lcopy_size / 1024;
-
-                        printf("\r%d.%2d%% copied...",
-                               ((copy_size*100)/file_size),
-                               ((copy_size*10000)/file_size) % 100);
-
-                        fflush(stdout);
-                }
-
                 fwrite(buffer, sizeof(char), n, dst_file);
                 if (ferror(dst_file)) {
-                        puts("");
                         perror(argv[2]);
                         break;
                 }
-
-                lcopy_size += n;
         }
-
-        clock_t stop_time = clock() - start_time;
-        u32_t   copy_size = lcopy_size;
-        struct stat stat;
-        stat.st_size = 0;
-        fstat(src_file, &stat);
-
-        if (ferror(src_file) && stat.st_size > 0) {
-                perror(argv[1]);
-                goto exit_error;
-        }
-
-        const char *pre = "";
-        if (lcopy_size >= 1024) {
-                copy_size = lcopy_size / 1024;
-                pre = "Ki";
-        }
-
-        printf("\rCopied %d%sB in %d.%03d seconds (%d.%03d KiB/s)\n",
-               copy_size,
-               pre,
-               (u32_t)stop_time / CLOCKS_PER_SEC,
-               (u32_t)stop_time % CLOCKS_PER_SEC,
-               (((u32_t)lcopy_size / (u32_t)stop_time) * CLOCKS_PER_SEC) / 1024,
-               (((u32_t)lcopy_size / (u32_t)stop_time) * CLOCKS_PER_SEC) % 1024);
 
         fclose(src_file);
         fclose(dst_file);

@@ -67,6 +67,7 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
+#include <stdbool.h>
 #include "config.h"             /* general configuration  */
 #include "portable/cpuctl.h"    /* CPU vector definitions */
 #include "mm/mm.h"              /* memory management      */
@@ -152,10 +153,12 @@ extern void  vApplicationSwitchedOut(void);
 #define INCLUDE_xEventGroupSetBitFromISR        0
 #define INCLUDE_xTimerPendFunctionCall          0
 
-/* required functions by sysmoni */
-#if (__OS_MONITOR_CPU_LOAD__ > 0)
-#define traceTASK_SWITCHED_OUT()                vApplicationSwitchedOut()
-#define traceTASK_SWITCHED_IN()                 vApplicationSwitchedIn()
+#define traceTASK_SWITCHED_OUT()                _task_switched_out(pxCurrentTCB, pxCurrentTCB->pxTaskTag)
+#define traceTASK_SWITCHED_IN()                 _task_switched_in(pxCurrentTCB, pxCurrentTCB->pxTaskTag)
+
+#if __OS_ENABLE_SYS_ASSERT__ > 0
+extern void _assert_hook(bool assert);
+#define configASSERT(x)                         _assert_hook(x)
 #endif
 
 #endif /* FREERTOS_CONFIG_H */

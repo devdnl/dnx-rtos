@@ -96,15 +96,15 @@ extern "C" {
 #endif
 
 /* modes */
-#define S_IRUSR                                 (4 << 0)
-#define S_IWUSR                                 (2 << 0)
-#define S_IXUSR                                 (1 << 0)
-#define S_IRGRO                                 (4 << 3)
-#define S_IWGRO                                 (2 << 3)
-#define S_IXGRO                                 (1 << 3)
-#define S_IROTH                                 (4 << 6)
-#define S_IWOTH                                 (2 << 6)
-#define S_IXOTH                                 (1 << 6)
+#define S_IRUSR                                 0400
+#define S_IWUSR                                 0200
+#define S_IXUSR                                 0100
+#define S_IRGRP                                 040
+#define S_IWGRP                                 020
+#define S_IXGRP                                 010
+#define S_IROTH                                 04
+#define S_IWOTH                                 02
+#define S_IXOTH                                 01
 
 /* stream definitions */
 #define EOF                                     (-1)
@@ -127,20 +127,8 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/** directory type */
-struct vfs_dir {
-        res_header_t    header;
-        int           (*d_readdir)(void *fshdl, struct vfs_dir *dir, dirent_t **dirent);
-        int           (*d_closedir)(void *fshdl, struct vfs_dir *dir);
-        void           *d_dd;           //!< Directory descriptor (FS object)
-        void           *d_handle;       //!< File System handle
-        size_t          d_items;        //!< number of items
-        size_t          d_seek;         //!< seek
-        dirent_t        dirent;         //!< directory entry data
-};
-
-typedef struct vfs_dir DIR;
-#define __DIR_TYPE_DEFINED__
+struct vfs_dir;
+struct vfs_file;
 
 /** device info. Doxygen documentation in drivers/driver.h */
 struct vfs_dev_stat {
@@ -157,18 +145,22 @@ struct vfs_fattr {
 
 /** file system interface */
 typedef struct vfs_FS_itf {
-        int (*fs_init   )(void **fshdl, const char *path);
-        int (*fs_release)(void *fshdl);
-        int (*fs_open   )(void *fshdl, void **fhdl, fpos_t *fpos, const char *path, u32_t flags);
-        int (*fs_close  )(void *fshdl, void  *fhdl, bool force);
-        int (*fs_write  )(void *fshdl, void  *fhdl, const u8_t *src, size_t count, fpos_t *fpos, size_t *wrcnt, struct vfs_fattr attr);
-        int (*fs_read   )(void *fshdl, void  *fhdl, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt, struct vfs_fattr attr);
-        int (*fs_ioctl  )(void *fshdl, void  *fhdl, int iroq, void *arg);
-        int (*fs_fstat  )(void *fshdl, void  *fhdl, struct stat *stat);
-        int (*fs_flush  )(void *fshdl, void  *fhdl);
-        int (*fs_mknod  )(void *fshdl, const char *path, const dev_t dev);
-        int (*fs_sync   )(void *fshdl);
-        int (*fs_opendir)(void *fshdl, const char *path, DIR *dir);
+        int (*fs_init    )(void **fshdl, const char *path, const char *opts);
+        int (*fs_release )(void *fshdl);
+        int (*fs_open    )(void *fshdl, void **fhdl, fpos_t *fpos, const char *path, u32_t flags);
+        int (*fs_close   )(void *fshdl, void  *fhdl, bool force);
+        int (*fs_write   )(void *fshdl, void  *fhdl, const u8_t *src, size_t count, fpos_t *fpos, size_t *wrcnt, struct vfs_fattr attr);
+        int (*fs_read    )(void *fshdl, void  *fhdl, u8_t *dst, size_t count, fpos_t *fpos, size_t *rdcnt, struct vfs_fattr attr);
+        int (*fs_ioctl   )(void *fshdl, void  *fhdl, int iroq, void *arg);
+        int (*fs_fstat   )(void *fshdl, void  *fhdl, struct stat *stat);
+        int (*fs_flush   )(void *fshdl, void  *fhdl);
+        int (*fs_mknod   )(void *fshdl, const char *path, const dev_t dev);
+        int (*fs_sync    )(void *fshdl);
+    #if __OS_ENABLE_DIRBROWSE__ == _YES_
+        int (*fs_opendir )(void *fshdl, const char *path, struct vfs_dir *dir);
+        int (*fs_closedir)(void *fshdl, struct vfs_dir *dir);
+        int (*fs_readdir )(void *fshdl, struct vfs_dir *dir);
+    #endif
     #if __OS_ENABLE_FSTAT__ == _YES_
         int (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
     #endif
@@ -212,13 +204,27 @@ struct vfs_file {
         res_header_t        header;
         void               *FS_hdl;
         const vfs_FS_itf_t *FS_if;
-        void               *fhdl;
+        void               *f_hdl;
         fpos_t              f_lseek;
         vfs_file_flags_t    f_flag;
 };
 
 typedef struct vfs_file FILE;
 #define __FILE_TYPE_DEFINED__
+
+/** directory type */
+struct vfs_dir {
+        res_header_t        header;
+        void               *FS_hdl;
+        const vfs_FS_itf_t *FS_if;
+        void               *d_hdl;          //!< Directory descriptor
+        size_t              d_items;        //!< number of items
+        size_t              d_seek;         //!< seek
+        dirent_t            dirent;         //!< directory entry data
+};
+
+typedef struct vfs_dir DIR;
+#define __DIR_TYPE_DEFINED__
 
 /** Path with CWD */
 struct vfs_path {
@@ -230,7 +236,7 @@ struct vfs_path {
   Exported API functions
 ==============================================================================*/
 extern int  _vfs_init       (void);
-extern int  _vfs_mount      (const struct vfs_path*, const struct vfs_path*, const struct vfs_FS_itf*);
+extern int  _vfs_mount      (const struct vfs_path*, const struct vfs_path*, const struct vfs_FS_itf*, const char*);
 extern int  _vfs_umount     (const struct vfs_path*);
 extern int  _vfs_getmntentry(int, struct mntent*);
 extern int  _vfs_mknod      (const struct vfs_path*, dev_t);

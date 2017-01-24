@@ -844,9 +844,9 @@ static inline void clearerr(FILE *file)
 //==============================================================================
 static inline int ferror(FILE *file)
 {
-        int err = 0;
-        _errno = _builtinfunc(vfs_ferror, file, &err);
-        return _errno | err;
+        int iserr = 0;
+        int err   = _builtinfunc(vfs_ferror, file, &iserr);
+        return (iserr || err) ? 1 : 0;
 }
 
 //==============================================================================

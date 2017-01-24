@@ -250,7 +250,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 puts("Bye!");
 
         } else {
-                result = mount("ramfs", "", "/");
+                result = mount("ramfs", "", "/", "");
 
                 result = mkdir("/dev", 0777);
                 mkdir("/tmp", 0777);
@@ -270,8 +270,13 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                 driver_init("PLL", 0, 0, "/dev/pll");
                 driver_init("UART", 1, 0, "/dev/ttyS0");
                 driver_init("TTY", 0, 0, "/dev/tty0");
-                result = syslog_enable("/dev/tty0");
-                detect_kernel_panic(true);
+
+                stdout = fopen("/dev/tty0", "r+");
+                stderr = stdout;
+                if (detect_kernel_panic(stdout)) {
+                        sleep(3);
+                }
+
                 driver_init("TTY", 1, 0, "/dev/tty1");
                 driver_init("TTY", 2, 0, "/dev/tty2");
                 driver_init("TTY", 3, 0, "/dev/tty3");
@@ -312,7 +317,7 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
                         fclose(f);
                 }
 
-                mount("fatfs", "/dev/sda1", "/mnt");
+                mount("fatfs", "/dev/sda1", "/mnt", "");
 
 
 //                driver_release("SPI", 2, 0);
@@ -321,10 +326,12 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
 //                driver_release("SPI", 2, 3);
 
 
+                char  str[80];
+                u32_t ts = 0;
+                while (syslog_read(str, sizeof(str), &ts)) {
+                        printf("[%5d.%03d] %s\n", ts / 1000, ts % 1000, str);
+                }
 
-
-                stdout = fopen("/dev/tty0", "r+");
-                stderr = stdout;
 
 
                 puts("Starting DHCP client...\n");
@@ -373,8 +380,6 @@ int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
 
 
                 sleep(1);
-
-                syslog_enable("/dev/tty3");
 
                 static const process_attr_t attr0 = {
                        .cwd = "/mnt",

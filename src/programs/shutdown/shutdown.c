@@ -62,7 +62,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Program main function
  */
 //==============================================================================
-int_main(shutdown, STACK_DEPTH_MINIMAL, int argc, char *argv[])
+int_main(shutdown, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

@@ -75,7 +75,7 @@ __ENABLE_TCPIP_STACK__=_YES_
 #--*/
 #define __ENABLE_DNX_STACK__ _YES_
 #/*
-__ENABLE_DNX_STACK__=_YES
+__ENABLE_DNX_STACK__=_YES_
 #*/
 
 

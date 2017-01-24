@@ -31,6 +31,7 @@
 #include "kernel/khooks.h"
 #include "kernel/kpanic.h"
 #include "kernel/process.h"
+#include "dnx/misc.h"
 #include "lib/unarg.h"
 #include "portable/cpuctl.h"
 
@@ -126,7 +127,7 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
         function then they must be declared static - otherwise they will be allocated on
         the stack and so not exists after this function exits. */
         static StaticTask_t xIdleTaskTCB;
-        static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+        static StackType_t  uxIdleTaskStack[configMINIMAL_STACK_SIZE + __OS_IRQ_STACK_DEPTH__];
 
         /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
         state will be stored. */
@@ -138,27 +139,7 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
         /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
         Note that, as the array is necessarily of type StackType_t,
         configMINIMAL_STACK_SIZE is specified in words, not bytes. */
-        *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
-}
-
-//==============================================================================
-/**
- * @brief Hook when task is switched in
- */
-//==============================================================================
-void vApplicationSwitchedIn(void)
-{
-        _task_switched_in();
-}
-
-//==============================================================================
-/**
- * @brief Hook when task is switched out
- */
-//==============================================================================
-void vApplicationSwitchedOut(void)
-{
-        _task_switched_out();
+        *pulIdleTaskStackSize = ARRAY_SIZE(uxIdleTaskStack);
 }
 
 //==============================================================================
@@ -172,6 +153,22 @@ u32_t _get_uptime_counter(void)
 {
         return _uptime_counter_sec;
 }
+
+#if __OS_ENABLE_SYS_ASSERT__ > 0
+//==============================================================================
+/**
+ * @brief  Function is called when assertion is not meet.
+ *
+ * @param  assert       if true then no action
+ */
+//==============================================================================
+void _assert_hook(bool assert)
+{
+        if (!assert) {
+                __asm("nop");
+        }
+}
+#endif
 
 /*==============================================================================
   End of file

@@ -34,15 +34,10 @@
 ==============================================================================*/
 #define CLK_FILE_PATH                   "/dev/pll"
 
-#define DIR_ROOT                        "/"
-#define DIR_PID_NAME                    "pid"
-#define DIR_BIN_NAME                    "bin"
-#define FILE_CPUINFO_NAME               "cpuinfo"
-
-#define PATH_ROOT                       DIR_ROOT
-#define PATH_ROOT_PID                   (DIR_ROOT DIR_PID_NAME "/")
-#define PATH_ROOT_BIN                   (DIR_ROOT DIR_BIN_NAME "/")
-#define PATH_ROOT_CPUINFO               (DIR_ROOT FILE_CPUINFO_NAME)
+#define PATH_ROOT                       "/"
+#define PATH_ROOT_BIN                   "/bin"
+#define PATH_ROOT_PID                   "/pid"
+#define PATH_ROOT_CPUINFO               "/cpuinfo"
 
 #define FILE_BUFFER                     384
 #define PID_STR_LEN                     12
@@ -51,30 +46,36 @@
   Local types, enums definitions
 ==============================================================================*/
 struct procfs {
-      llist_t *file_list;
-      mutex_t *resource_mtx;
+        llist_t *file_list;
+        mutex_t *resource_mtx;
+};
+
+enum path_content {
+        FILE_CONTENT_ROOT,
+        FILE_CONTENT_BIN,
+        FILE_CONTENT_PID,
+        FILE_CONTENT_CPUINFO,
+        _FILE_CONTENT_COUNT
 };
 
 struct file_info {
-      pid_t pid;
+        enum path_content content;
+        int16_t           arg;
+};
 
-      enum file_content {
-              FILE_CONTENT_PID,
-              FILE_CONTENT_CPUINFO,
-              FILE_CONTENT_BIN,
-              FILE_CONTENT_COUNT
-      } content;
+struct dir_info {
+        const char *dir_name;
+        char        name[32];
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int    procfs_closedir_generic(void *fs_handle, DIR *dir);
-static int    procfs_readdir_root    (void *fs_handle, DIR *dir, dirent_t **dirent);
-static int    procfs_readdir_pid     (void *fs_handle, DIR *dir, dirent_t **dirent);
-static int    procfs_readdir_bin     (void *fs_handle, DIR *dir, dirent_t **dirent);
-static int    add_file_to_list       (struct procfs *fsctx, pid_t pid, enum file_content content, void **object);
-static size_t get_file_content       (struct file_info *file_info, char *buff, size_t size);
+static int    procfs_readdir_root(struct procfs *hdl, DIR *dir);
+static int    procfs_readdir_pid (struct procfs *hdl, DIR *dir);
+static int    procfs_readdir_bin (struct procfs *hdl, DIR *dir);
+static int    add_file_to_list   (struct procfs *hdl, int16_t arg, enum path_content content, void **object);
+static size_t get_file_content   (struct file_info *file_info, char *buff, size_t size);
 
 /*==============================================================================
   Local object definitions
@@ -94,28 +95,29 @@ static size_t get_file_content       (struct file_info *file_info, char *buff, s
  *
  * @param[out]          **fs_handle             file system allocated memory
  * @param[in ]           *src_path              file source path
+ * @param[in ]           *opts                  file system options (can be NULL)
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_INIT(procfs, void **fs_handle, const char *src_path)
+API_FS_INIT(procfs, void **fs_handle, const char *src_path, const char opts)
 {
-        UNUSED_ARG1(src_path);
+        UNUSED_ARG2(src_path, opts);
 
-        int result = sys_zalloc(sizeof(struct procfs), fs_handle);
-        if (result == ESUCC) {
+        int err = sys_zalloc(sizeof(struct procfs), fs_handle);
+        if (err == ESUCC) {
                 struct procfs *procfs = *fs_handle;
 
-                result = sys_llist_create(sys_llist_functor_cmp_pointers, NULL, &procfs->file_list);
-                if (result != ESUCC)
+                err = sys_llist_create(sys_llist_functor_cmp_pointers, NULL, &procfs->file_list);
+                if (err != ESUCC)
                         goto finish;
 
-                result = sys_mutex_create(MUTEX_TYPE_NORMAL, &procfs->resource_mtx);
-                if (result != ESUCC)
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &procfs->resource_mtx);
+                if (err != ESUCC)
                         goto finish;
 
                 finish:
-                if (result != ESUCC) {
+                if (err != ESUCC) {
                         if (procfs->file_list)
                                 sys_llist_destroy(procfs->file_list);
 
@@ -126,7 +128,7 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path)
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -142,26 +144,22 @@ API_FS_RELEASE(procfs, void *fs_handle)
 {
         struct procfs *procfs = fs_handle;
 
-        if (sys_mutex_lock(procfs->resource_mtx, 100) == ESUCC) {
+        int err = sys_mutex_lock(procfs->resource_mtx, 100);
+        if (!err) {
                 if (sys_llist_size(procfs->file_list) != 0) {
                         sys_mutex_unlock(procfs->resource_mtx);
-                        return EBUSY;
-                }
-
-                sys_critical_section_begin();
-                {
-                        sys_mutex_unlock(procfs->resource_mtx);
-                        sys_mutex_destroy(procfs->resource_mtx);
+                        err = EBUSY;
+                } else {
                         sys_llist_destroy(procfs->file_list);
+                        mutex_t *mtx = procfs->resource_mtx;
+                        memset(procfs, 0, sizeof(struct procfs));
+                        sys_mutex_unlock(mtx);
+                        sys_mutex_destroy(mtx);
                         sys_free(&fs_handle);
                 }
-                sys_critical_section_end();
-
-                return ESUCC;
-
-        } else {
-                return EBUSY;
         }
+
+        return err;
 }
 
 //==============================================================================
@@ -181,46 +179,56 @@ API_FS_OPEN(procfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
 {
         struct procfs *fsctx = fs_handle;
 
-        int result = EROFS;
-
-        if (flags == O_RDONLY) {
-                *fpos = 0;
-
-                if (strncmp(path, PATH_ROOT_PID, strlen(PATH_ROOT_PID)) == 0) {
-                        if (LAST_CHARACTER(path) != '/') {
-                                path += strlen(PATH_ROOT_PID);
-
-                                i32_t pid = 0;
-                                sys_strtoi(path, 10, &pid);
-
-                                process_stat_t stat;
-                                if (sys_process_get_stat_pid(pid, &stat) == ESUCC) {
-                                        return add_file_to_list(fsctx, pid, FILE_CONTENT_PID, fhdl);
-                                } else {
-                                        result = ENOENT;
-                                }
-                        } else {
-                                result = ENOENT;
-                        }
-
-                } else if (strncmp(path, PATH_ROOT_BIN, strlen(PATH_ROOT_BIN)) == 0) {
-                        path += strlen(PATH_ROOT_BIN);
-
-                        for (int i = 0; i < sys_get_programs_table_size(); i++) {
-                                if (strcmp(path, sys_get_programs_table()[i].name) == 0) {
-                                        return add_file_to_list(fsctx, 0, FILE_CONTENT_BIN, fhdl);
-                                }
-                        }
-
-                } else if (strcmp(path, PATH_ROOT_CPUINFO) == 0) {
-                        return add_file_to_list(fsctx, 0, FILE_CONTENT_CPUINFO, fhdl);
-
-                } else {
-                        result = ENOENT;
-                }
+        if (flags != O_RDONLY) {
+                return EROFS;
         }
 
-        return result;
+        int err = ENOENT;
+
+        *fpos = 0;
+
+        // "/pid" path
+        if (isstreq(path, PATH_ROOT_PID)) {
+                return add_file_to_list(fsctx, -1, FILE_CONTENT_PID, fhdl);
+
+        // "/pid/<pid>" path
+        } else if (isstreqn(path, PATH_ROOT_PID"/", strlen(PATH_ROOT_PID) + 1)) {
+                path += strlen(PATH_ROOT_PID) + 1;
+
+                i32_t pid = 0;
+                sys_strtoi(path, 10, &pid);
+
+                process_stat_t stat;
+                if (sys_process_get_stat_pid(pid, &stat) == ESUCC) {
+                        return add_file_to_list(fsctx, pid, FILE_CONTENT_PID, fhdl);
+                } else {
+                        err = ENOENT;
+                }
+
+        // "/bin" path
+        } else if (isstreq(path, PATH_ROOT_BIN)) {
+                return add_file_to_list(fsctx, -1, FILE_CONTENT_BIN, fhdl);
+
+        // "/bin/<prog>" path
+        } else if (isstreqn(path, PATH_ROOT_BIN"/", strlen(PATH_ROOT_BIN) + 1)) {
+                path += strlen(PATH_ROOT_BIN) + 1;
+
+                int n = sys_get_programs_table_size();
+                for (int i = 0; i < n; i++) {
+                        if (isstreq(path, sys_get_programs_table()[i].name)) {
+                                return add_file_to_list(fsctx, i, FILE_CONTENT_BIN, fhdl);
+                        }
+                }
+
+        // "/cpuinfo" path
+        } else if (isstreq(path, PATH_ROOT_CPUINFO)) {
+                return add_file_to_list(fsctx, 0, FILE_CONTENT_CPUINFO, fhdl);
+
+        } else {
+                err = ENOENT;
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -240,15 +248,15 @@ API_FS_CLOSE(procfs, void *fs_handle, void *fhdl, bool force)
 
         struct procfs *fsctx = fs_handle;
 
-        int result = sys_mutex_lock(fsctx->resource_mtx, 1000);
-        if (result == ESUCC) {
+        int err = sys_mutex_lock(fsctx->resource_mtx, MAX_DELAY_MS);
+        if (!err) {
                 int pos = sys_llist_find_begin(fsctx->file_list, fhdl);
-                result  = sys_llist_erase(fsctx->file_list, pos) ? ESUCC : ENOENT;
+                err = sys_llist_erase(fsctx->file_list, pos) ? ESUCC : ENOENT;
 
                 sys_mutex_unlock(fsctx->resource_mtx);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -306,14 +314,14 @@ API_FS_READ(procfs,
 {
         UNUSED_ARG2(fs_handle, fattr);
 
-        struct file_info *file   = fhdl;
-        int               result = ENOENT;
+        struct file_info *file = fhdl;
+        int               err  = ENOENT;
 
-        if (file && file->content < FILE_CONTENT_COUNT) {
+        if (file && file->content < _FILE_CONTENT_COUNT) {
 
                 char *content;
-                result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
-                if (result == ESUCC) {
+                err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
+                if (!err) {
                         size_t data_size = get_file_content(file, content, FILE_BUFFER);
                         size_t seek      = min(*fpos, SIZE_MAX);
                         if (seek > data_size) {
@@ -328,7 +336,7 @@ API_FS_READ(procfs,
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -382,27 +390,74 @@ API_FS_FSTAT(procfs, void *fs_handle, void *fhdl, struct stat *stat)
 {
         UNUSED_ARG1(fs_handle);
 
-        struct file_info *file   = fhdl;
-        int               result = ENOENT;
+        struct file_info *file = fhdl;
 
-        if (file && file->content < FILE_CONTENT_COUNT) {
-                stat->st_dev   = 0;
-                stat->st_mode  = S_IRUSR | S_IRGRO | S_IROTH;
-                stat->st_mtime = 0;
-                stat->st_size  = 0;
-                stat->st_gid   = 0;
-                stat->st_uid   = 0;
-                stat->st_type  = FILE_TYPE_REGULAR;
+        stat->st_dev   = 0;
+        stat->st_mode  = S_IRUSR | S_IRGRP | S_IROTH;
+        stat->st_mtime = COMPILE_EPOCH_TIME;
+        stat->st_ctime = COMPILE_EPOCH_TIME;
+        stat->st_size  = 0;
+        stat->st_gid   = 0;
+        stat->st_uid   = 0;
 
-                char *content;
-                result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
-                if (result == ESUCC) {
-                        stat->st_size = get_file_content(file, content, FILE_BUFFER);
-                        sys_free(cast(void**, &content));
+        char *content;
+        int err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
+        if (!err) {
+
+                if (file->content < _FILE_CONTENT_COUNT) {
+
+                        if (file->arg >= 0) {
+                                stat->st_size = get_file_content(file, content, FILE_BUFFER);
+                                stat->st_type = FILE_TYPE_REGULAR;
+
+                                if (  (file->content == FILE_CONTENT_PID)
+                                   || (file->content == FILE_CONTENT_CPUINFO) ) {
+
+                                        time_t t = 0;
+                                        sys_get_time(&t);
+
+                                        stat->st_mtime = t;
+                                        stat->st_ctime = t;
+                                }
+
+                                if (file->content == FILE_CONTENT_BIN) {
+                                        stat->st_type  = FILE_TYPE_PROGRAM;
+                                        stat->st_mode |= S_IXUSR;
+                                }
+                        } else {
+                                stat->st_type = FILE_TYPE_DIR;
+                        }
                 }
+
+                sys_free(cast(void**, &content));
         }
 
-        return result;
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Return file/dir status
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   file path
+ * @param[out]          *stat                   file status
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
+{
+        void  *fhdl = NULL;
+        fpos_t fpos = 0;
+
+        int err = _procfs_open(fs_handle, &fhdl, &fpos, path, O_RDONLY);
+        if (!err) {
+                err = _procfs_fstat(fs_handle, fhdl, stat);
+                _procfs_close(fs_handle, fhdl, true);
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -475,33 +530,81 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
         UNUSED_ARG1(fs_handle);
 
         dir->d_seek = 0;
-        dir->d_dd   = NULL;
 
-        int result = ENOENT;
+        int err = sys_zalloc(sizeof(struct dir_info), &dir->d_hdl);
+        if (!err) {
+                struct dir_info *dirinfo = dir->d_hdl;
 
-        if (strcmp(path, PATH_ROOT) == 0) {
-                dir->d_dd       = NULL;
-                dir->d_items    = 3;
-                dir->d_readdir  = procfs_readdir_root;
-                dir->d_closedir = procfs_closedir_generic;
-                result          = ESUCC;
+                if (isstreq(path, PATH_ROOT)) {
+                        dirinfo->dir_name = PATH_ROOT;
+                        dir->d_items      = 3;
 
-        } else if (strcmp(path, PATH_ROOT_PID) == 0) {
-                dir->d_dd       = NULL;
-                dir->d_items    = sys_process_get_count();
-                dir->d_readdir  = procfs_readdir_pid;
-                dir->d_closedir = procfs_closedir_generic;
-                result          = ESUCC;
+                } else if (isstreq(path, PATH_ROOT_PID"/")) {
+                        dirinfo->dir_name = PATH_ROOT_PID;
+                        dir->d_items      = sys_process_get_count();
 
-        } else if (strcmp(path, PATH_ROOT_BIN) == 0) {
-                dir->d_dd       = NULL;
-                dir->d_items    = sys_get_programs_table_size();
-                dir->d_readdir  = procfs_readdir_bin;
-                dir->d_closedir = procfs_closedir_generic;
-                result          = ESUCC;
+                } else if (isstreq(path, PATH_ROOT_BIN"/")) {
+                        dirinfo->dir_name = PATH_ROOT_BIN;
+                        dir->d_items      = sys_get_programs_table_size();
+
+                } else {
+                        sys_free(&dir->d_hdl);
+                        err = ENOENT;
+                }
         }
 
-        return result;
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Close directory
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *dir                    directory object
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_FS_CLOSEDIR(procfs, void *fs_handle, DIR *dir)
+{
+        UNUSED_ARG1(fs_handle);
+
+        if (dir->d_hdl) {
+                return sys_free(&dir->d_hdl);
+        } else {
+                return ESUCC;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Read directory
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in,out]       *dir                    directory object
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_FS_READDIR(procfs, void *fs_handle, DIR *dir)
+{
+        int err = EFAULT;
+
+        struct dir_info *dirinfo = dir->d_hdl;
+        if (dirinfo) {
+                if (isstreq(dirinfo->dir_name, PATH_ROOT)) {
+                        err = procfs_readdir_root(fs_handle, dir);
+
+                } else if (isstreq(dirinfo->dir_name, PATH_ROOT_PID)) {
+                        err = procfs_readdir_pid(fs_handle, dir);
+
+                } else if (isstreq(dirinfo->dir_name, PATH_ROOT_BIN)) {
+                        err = procfs_readdir_bin(fs_handle, dir);
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -578,31 +681,6 @@ API_FS_CHOWN(procfs, void *fs_handle, const char *path, uid_t owner, gid_t group
 
 //==============================================================================
 /**
- * @brief Return file/dir status
- *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *path                   file path
- * @param[out]          *stat                   file status
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_FS_STAT(procfs, void *fs_handle, const char *path, struct stat *stat)
-{
-        void  *fhdl = NULL;
-        fpos_t fpos = 0;
-
-        int err = _procfs_open(fs_handle, &fhdl, &fpos, path, O_RDONLY);
-        if (!err) {
-                err = _procfs_fstat(fs_handle, fhdl, stat);
-                _procfs_close(fs_handle, fhdl, true);
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
  * @brief Return file system status
  *
  * @param[in ]          *fs_handle              file system allocated memory
@@ -619,7 +697,7 @@ API_FS_STATFS(procfs, void *fs_handle, struct statfs *statfs)
         statfs->f_blocks = 0;
         statfs->f_ffree  = 0;
         statfs->f_files  = 0;
-        statfs->f_type   = 1;
+        statfs->f_type   = SYS_FS_TYPE__SYS;
         statfs->f_fsname = "procfs";
 
         return ESUCC;
@@ -643,153 +721,115 @@ API_FS_SYNC(procfs, void *fs_handle)
 
 //==============================================================================
 /**
- * @brief Function close opened dir (is used when dd contains data which cannot
- *        be freed)
- *
- * @param[in]  *fs_handle    file system data
- * @param[out] *dir          directory object
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-static int procfs_closedir_generic(void *fs_handle, DIR *dir)
-{
-        UNUSED_ARG1(fs_handle);
-
-        if (dir->d_dd) {
-                return sys_free(&dir->d_dd);
-        } else {
-                return ESUCC;
-        }
-}
-
-//==============================================================================
-/**
  * @brief Read directory
  *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *dir                    directory object
- * @param[out]          **dirent                directory entry
+ * @param[in ]          *hdl                    file system allocated memory
+ * @param[in,out]       *dir                    directory object
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int procfs_readdir_root(void *fs_handle, DIR *dir, dirent_t **dirent)
+static int procfs_readdir_root(struct procfs *hdl, DIR *dir)
 {
-        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(hdl);
 
-        int result;
+        int err = ESUCC;
 
-        *dirent         = &dir->dirent;
-        dir->dirent.dev = 0;
+        dir->dirent.dev  = 0;
+        dir->dirent.size = 0;
 
         switch (dir->d_seek++) {
         case 0:
-                dir->dirent.name     = DIR_BIN_NAME;
+                dir->dirent.name     = "bin";
                 dir->dirent.filetype = FILE_TYPE_DIR;
-                dir->dirent.size     = 0;
-                result               = ESUCC;
                 break;
 
         case 1:
-                dir->dirent.name     = DIR_PID_NAME;
+                dir->dirent.name     = "pid";
                 dir->dirent.filetype = FILE_TYPE_DIR;
-                dir->dirent.size     = 0;
-                result               = ESUCC;
                 break;
 
         case 2: {
                 char *content;
-                result = sys_zalloc(FILE_BUFFER, cast(void**, &content));
-                if (result == ESUCC) {
-                        struct file_info file = {.content = FILE_CONTENT_CPUINFO};
-                        dir->dirent.name      = FILE_CPUINFO_NAME;
+                err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
+                if (!err) {
+                        struct file_info file = {.content = FILE_CONTENT_CPUINFO, .arg = 0};
+                        dir->dirent.name      = "cpuinfo";
                         dir->dirent.filetype  = FILE_TYPE_REGULAR;
                         dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
-                        result                = sys_free(cast(void**, &content));
+
+                        sys_free(cast(void**, &content));
                 }
                 break;
         }
 
         default:
-                *dirent = NULL;
-                result  = ENOENT;
+                err = ENOENT;
                 break;
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
 /**
  * @brief Read directory
  *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *dir                    directory object
- * @param[out]          **dirent                directory entry
+ * @param[in ]          *hdl                    file system allocated memory
+ * @param[in,out]       *dir                    directory object
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int procfs_readdir_pid(void *fs_handle, DIR *dir, dirent_t **dirent)
+static int procfs_readdir_pid(struct procfs *hdl, DIR *dir)
 {
-        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(hdl);
 
         process_stat_t stat;
-        int result = sys_process_get_stat_seek(dir->d_seek++, &stat);
-        if (result == ESUCC) {
+        int err = sys_process_get_stat_seek(dir->d_seek++, &stat);
+        if (err == ESUCC) {
+
                 char *content;
-                result  = sys_zalloc(FILE_BUFFER, cast(void**, &content));
-                if (result == ESUCC) {
+                err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
+                if (!err) {
 
-                        if (dir->d_dd) {
-                                sys_free(&dir->d_dd);
-                        }
+                        struct dir_info *dirinfo = dir->d_hdl;
 
-                        result = sys_zalloc(PID_STR_LEN, &dir->d_dd);
-                        if (result == ESUCC) {
-                                /*
-                                 * Note: freed in next cycle or dir close
-                                 */
-                                sys_snprintf(dir->d_dd, PID_STR_LEN, "%u", stat.pid);
+                        sys_snprintf(dirinfo->name, sizeof(dirinfo->name),
+                                     "%u", stat.pid);
 
-                                dir->dirent.name      = dir->d_dd;
-                                dir->dirent.filetype  = FILE_TYPE_REGULAR;
-                                dir->dirent.dev       = 0;
+                        dir->dirent.name      = dirinfo->name;
+                        dir->dirent.filetype  = FILE_TYPE_REGULAR;
+                        dir->dirent.dev       = 0;
 
-                                struct file_info file = {.pid = stat.pid, .content = FILE_CONTENT_PID};
-                                dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
+                        struct file_info file = {.arg = stat.pid, .content = FILE_CONTENT_PID};
+                        dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
 
-                                *dirent               = &dir->dirent;
-                        }
-
-                        result = sys_free(cast(void**, &content));
+                        err = sys_free(cast(void**, &content));
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
 /**
  * @brief Read directory
  *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *dir                    directory object
- * @param[out]          **dirent                directory entry
+ * @param[in ]          *hdl                    file system allocated memory
+ * @param[in,out]       *dir                    directory object
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
+static int procfs_readdir_bin(struct procfs *hdl, DIR *dir)
 {
-        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(hdl);
 
         if (dir->d_seek < (size_t)sys_get_programs_table_size()) {
                 dir->dirent.filetype = FILE_TYPE_PROGRAM;
-                dir->dirent.name     = const_cast(char*, sys_get_programs_table()[dir->d_seek].name);
+                dir->dirent.name     = sys_get_programs_table()[dir->d_seek].name;
                 dir->dirent.size     = 0;
-                *dirent              = &dir->dirent;
                 dir->d_seek++;
 
                 return ESUCC;
@@ -802,37 +842,37 @@ static int procfs_readdir_bin(void *fs_handle, DIR *dir, dirent_t **dirent)
 /**
  * @brief Add file info to list
  *
- * @param fsctx                 FS context
- * @param pid                   pid number
+ * @param hdl                   FS context
+ * @param arg                   additional argument
  * @param content               file content to write in file info
  * @param object                file object (result)
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int add_file_to_list(struct procfs *fsctx, pid_t pid, enum file_content content, void **object)
+static int add_file_to_list(struct procfs *hdl, int16_t arg,
+                            enum path_content content, void **object)
 {
         struct file_info *file;
-        int result = sys_zalloc(sizeof(struct file_info), cast(void**, &file));
-        if (result == ESUCC) {
-                file->pid     = pid;
+        int err = sys_zalloc(sizeof(struct file_info), cast(void**, &file));
+        if (!err) {
                 file->content = content;
+                file->arg     = arg;
 
-                result = sys_mutex_lock(fsctx->resource_mtx, 1000);
-                if (result == ESUCC) {
-                        if (sys_llist_push_back(fsctx->file_list, file)) {
+                err = sys_mutex_lock(hdl->resource_mtx, MAX_DELAY_MS);
+                if (!err) {
+                        if (sys_llist_push_back(hdl->file_list, file)) {
                                 *object = file;
-                                result  = ESUCC;
                         } else {
                                 sys_free(cast(void**, &file));
-                                result = ENOMEM;
+                                err = ENOMEM;
                         }
 
-                        sys_mutex_unlock(fsctx->resource_mtx);
+                        sys_mutex_unlock(hdl->resource_mtx);
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -852,43 +892,39 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
         process_stat_t stat;
 
         switch (file->content) {
-        case FILE_CONTENT_BIN:
-                /* none */
-                break;
-
         case FILE_CONTENT_PID:
-                if (sys_process_get_stat_pid(file->pid, &stat) == ESUCC) {
+                if (sys_process_get_stat_pid(file->arg, &stat) == ESUCC) {
                         len = sys_snprintf(buff, size,
-                                            "Name: %s\n"
-                                            "PID: %d\n"
-                                            "Memory usage: %d bytes\n"
-                                            "Memory Block Count: %d\n"
-                                            "Open Files: %d\n"
-                                            "Open Dirs: %d\n"
-                                            "Open Mutexes: %d\n"
-                                            "Open Semaphores: %d\n"
-                                            "Open Queues: %d\n"
-                                            "Open Sockets: %d\n"
-                                            "Threads: %d\n"
-                                            "CPU Load: %d.%d%%\n"
-                                            "Stack Size: %d\n"
-                                            "Stack Usage: %d\n"
-                                            "Priority: %d\n",
-                                            stat.name,
-                                            stat.pid,
-                                            stat.memory_usage,
-                                            stat.memory_block_count,
-                                            stat.files_count,
-                                            stat.dir_count,
-                                            stat.mutexes_count,
-                                            stat.semaphores_count,
-                                            stat.queue_count,
-                                            stat.socket_count,
-                                            stat.threads_count,
-                                            stat.CPU_load / 10, stat.CPU_load % 10,
-                                            stat.stack_size,
-                                            stat.stack_max_usage,
-                                            stat.priority);
+                                           "Name: %s\n"
+                                           "PID: %d\n"
+                                           "Memory usage: %d bytes\n"
+                                           "Memory Block Count: %d\n"
+                                           "Open Files: %d\n"
+                                           "Open Dirs: %d\n"
+                                           "Open Mutexes: %d\n"
+                                           "Open Semaphores: %d\n"
+                                           "Open Queues: %d\n"
+                                           "Open Sockets: %d\n"
+                                           "Threads: %d\n"
+                                           "CPU Load: %d.%d%%\n"
+                                           "Stack Size: %d\n"
+                                           "Stack Usage: %d\n"
+                                           "Priority: %d\n",
+                                           stat.name,
+                                           stat.pid,
+                                           stat.memory_usage,
+                                           stat.memory_block_count,
+                                           stat.files_count,
+                                           stat.dir_count,
+                                           stat.mutexes_count,
+                                           stat.semaphores_count,
+                                           stat.queue_count,
+                                           stat.socket_count,
+                                           stat.threads_count,
+                                           stat.CPU_load / 10, stat.CPU_load % 10,
+                                           stat.stack_size,
+                                           stat.stack_max_usage,
+                                           stat.priority);
                 }
                 break;
 
@@ -900,8 +936,8 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                                     _CPUCTL_VENDOR_NAME);
 
                 FILE *pll;
-                int result = sys_fopen(CLK_FILE_PATH, "r+", &pll);
-                if (result == ESUCC) {
+                if (sys_fopen(CLK_FILE_PATH, "r+", &pll) == ESUCC) {
+
                         PLL_clk_info_t clkinf;
                         clkinf.iterator = 0;
 

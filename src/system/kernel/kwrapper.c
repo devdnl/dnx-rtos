@@ -40,7 +40,6 @@
 #define _CEILING(x,y)   (((x) + (y) - 1) / (y))
 #define MS2TICK(ms)     (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
 
-
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -188,8 +187,20 @@ void _kernel_release_resources(void)
          * Force context switch to Idle task to delete finished tasks. Task
          * priority is restored in the vApplicationIdleHook().
          */
-        vTaskPrioritySet(xTaskGetIdleTaskHandle(), configMAX_PRIORITIES);
+        vTaskPrioritySet(xTaskGetIdleTaskHandle(), configMAX_PRIORITIES - 1);
         taskYIELD();
+}
+
+//==============================================================================
+/**
+ * @brief  Function return handle of idle task.
+ *
+ * @return Idle task handle.
+ */
+//==============================================================================
+task_t *_kernel_get_idle_task_handle(void)
+{
+        return xTaskGetIdleTaskHandle();
 }
 
 //==============================================================================
@@ -211,40 +222,47 @@ void _kernel_release_resources(void)
 //==============================================================================
 int _task_create(task_func_t func, const char *name, const size_t stack_depth, void *argv, void *tag, task_t **task)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (func && name && stack_depth) {
-                int scheduler_status = xTaskGetSchedulerState();
-                uint child_priority  = PRIORITY(0);
+                int         scheduler_status = xTaskGetSchedulerState();
+                UBaseType_t parent_priority  = PRIORITY(0);
 
                 if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
-                        child_priority = uxTaskPriorityGet(_THIS_TASK);
+                        parent_priority = uxTaskPriorityGet(_THIS_TASK);
+
+                        // set this task priority to highest possible to prevent
+                        // against context switch to new task
+                        vTaskPrioritySet(_THIS_TASK, configMAX_PRIORITIES - 1);
                 }
 
-                taskENTER_CRITICAL();
+                UBaseType_t child_priority = parent_priority == (configMAX_PRIORITIES - 1) ?
+                                             parent_priority - 1 : parent_priority;
 
                 task_t *tsk = NULL;
-                if (xTaskCreate(func, name, stack_depth, argv, child_priority, &tsk) == pdPASS) {
-
-//                        if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
-//                                vTaskSuspend(tsk);
-//                        }
+                if (xTaskCreate(func, name, stack_depth, argv,
+                                child_priority, &tsk) == pdPASS) {
 
                         vTaskSetApplicationTaskTag(tsk, (void *)tag);
 
-                        if (task) {
-                                *task = tsk;
-                        }
+                        if (task) *task = tsk;
 
-                        result = ESUCC;
+                        err = ESUCC;
                 } else {
-                        result = ENOMEM;
+                        err = ENOMEM;
                 }
 
-                taskEXIT_CRITICAL();
+                if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
+                        // restore this task priority
+                        vTaskPrioritySet(_THIS_TASK, parent_priority);
+                }
+
+                if (!err && child_priority != parent_priority) {
+                        vTaskPrioritySet(tsk, parent_priority);
+                }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -467,11 +485,11 @@ void *_task_get_tag(task_t *taskhdl)
 //==============================================================================
 int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (cnt_max > 0 && sem) {
-                result = _kzalloc(_MM_KRN, sizeof(sem_t), cast(void**, sem));
-                if (result == ESUCC) {
+                err = _kzalloc(_MM_KRN, sizeof(sem_t), cast(void**, sem));
+                if (err == ESUCC) {
 
                         if (cnt_max == 1) {
 
@@ -494,12 +512,12 @@ int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
                                 (*sem)->header.type = RES_TYPE_SEMAPHORE;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, sem));
-                                result = ENOMEM;
+                                err = ENOMEM;
                         }
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -557,6 +575,26 @@ int _semaphore_signal(sem_t *sem)
         if (is_semaphore_valid(sem)) {
                 bool r = xSemaphoreGive(sem->object);
                 return r ? ESUCC : EBUSY;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function get semaphore count
+ *
+ * @param[in]  *sem     semaphore object
+ * @param[out] *value   semaphore value (counter)
+ *
+ * @return One of errno values.
+ */
+//==============================================================================
+int _semaphore_get_value(sem_t *sem, size_t *value)
+{
+        if (is_semaphore_valid(sem) && value) {
+                *value = (size_t)uxSemaphoreGetCount(sem->object);
+                return ESUCC;
         } else {
                 return EINVAL;
         }
@@ -626,11 +664,11 @@ int _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 //==============================================================================
 int _mutex_create(enum mutex_type type, mutex_t **mtx)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (type <= MUTEX_TYPE_NORMAL && mtx) {
-                result = _kzalloc(_MM_KRN, sizeof(mutex_t), cast(void**, mtx));
-                if (result == ESUCC) {
+                err = _kzalloc(_MM_KRN, sizeof(mutex_t), cast(void**, mtx));
+                if (err == ESUCC) {
                         if (type == MUTEX_TYPE_RECURSIVE) {
                                 (*mtx)->object    = xSemaphoreCreateRecursiveMutexStatic(&(*mtx)->buffer);
                                 (*mtx)->recursive = true;
@@ -643,12 +681,12 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
                                 (*mtx)->header.type = RES_TYPE_MUTEX;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, mtx));
-                                result = ENOMEM;
+                                err = ENOMEM;
                         }
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -735,23 +773,23 @@ int _mutex_unlock(mutex_t *mutex)
 //==============================================================================
 int _flag_create(flag_t **flag)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (flag) {
-                result = _kzalloc(_MM_KRN, sizeof(flag_t), cast(void**, flag));
-                if (result == ESUCC) {
+                err = _kzalloc(_MM_KRN, sizeof(flag_t), cast(void**, flag));
+                if (err == ESUCC) {
                         (*flag)->object = xEventGroupCreateStatic(&(*flag)->buffer);
 
                         if ((*flag)->object) {
                                 (*flag)->header.type = RES_TYPE_FLAG;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, flag));
-                                result = ENOMEM;
+                                err = ENOMEM;
                         }
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -889,11 +927,11 @@ u32_t _flag_get_from_ISR(flag_t *flag)
 //==============================================================================
 int _queue_create(const size_t length, const size_t item_size, queue_t **queue)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (length && item_size && queue) {
-                result = _kzalloc(_MM_KRN, sizeof(queue_t) + (length * item_size), cast(void**, queue));
-                if (result == ESUCC) {
+                err = _kzalloc(_MM_KRN, sizeof(queue_t) + (length * item_size), cast(void**, queue));
+                if (err == ESUCC) {
                         (*queue)->object = xQueueCreateStatic(length,
                                                               item_size,
                                                               cast(uint8_t*, &(*queue)[1]),
@@ -902,12 +940,12 @@ int _queue_create(const size_t length, const size_t item_size, queue_t **queue)
                                 (*queue)->header.type = RES_TYPE_QUEUE;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, &queue));
-                                result = ENOMEM;
+                                err = ENOMEM;
                         }
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

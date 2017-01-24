@@ -110,7 +110,7 @@ static void clear_rx_tx_counters()
 //==============================================================================
 static bool is_init_done()
 {
-        u32_t timer = sys_get_time_ms();
+        u32_t timer = sys_get_uptime_ms();
         while (not inet->ready && not sys_time_is_expired(timer, INIT_TIMEOUT)) {
                 sys_sleep_ms(1);
         }
@@ -388,7 +388,7 @@ static int DHCP_start_client()
                         if (dhcp_start(&inet->netif) == ERR_OK) {
                                 netif_set_up(&inet->netif);
 
-                                u32_t timer = sys_get_time_ms();
+                                u32_t timer = sys_get_uptime_ms();
                                 while (not sys_time_is_expired(timer, DHCP_TIMEOUT)) {
 
                                         if (inet->netif.dhcp->state == DHCP_BOUND) {
@@ -449,7 +449,7 @@ static int DHCP_renew_connection()
 
                 if (dhcp_renew(&inet->netif) == ERR_OK) {
 
-                        u32_t timeout = sys_get_time_ms();
+                        u32_t timeout = sys_get_uptime_ms();
                         while (not sys_time_is_expired(timeout, DHCP_TIMEOUT)) {
 
                                 if (inet->netif.dhcp->state == DHCP_BOUND) {

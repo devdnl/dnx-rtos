@@ -204,38 +204,38 @@ static struct SPI *SPI[_NUMBER_OF_SPI_PERIPHERALS];
 //==============================================================================
 API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 {
-        int result = ENXIO;
+        int err = ENXIO;
 
         if (major >= _NUMBER_OF_SPI_PERIPHERALS) {
-                return result;
+                return err;
         }
 
         /* initialize SPI peripheral */
         if (SPI[major] == NULL) {
-                result = sys_zalloc(sizeof(struct SPI), cast(void**, &SPI[major]));
-                if (result != ESUCC) {
+                err = sys_zalloc(sizeof(struct SPI), cast(void**, &SPI[major]));
+                if (err != ESUCC) {
                         goto finish;
                 }
 
-                result = sys_semaphore_create(1, 0, &SPI[major]->wait_irq_sem);
-                if (result != ESUCC) {
+                err = sys_semaphore_create(1, 0, &SPI[major]->wait_irq_sem);
+                if (err != ESUCC) {
                         goto finish;
                 }
 
-                result = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &SPI[major]->periph_protect_mtx);
-                if (result != ESUCC) {
+                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &SPI[major]->periph_protect_mtx);
+                if (err != ESUCC) {
                         goto finish;
                 }
 
-                result = turn_on_SPI(major);
-                if (result != ESUCC) {
+                err = turn_on_SPI(major);
+                if (err != ESUCC) {
                         goto finish;
                 }
         }
 
         /* create SPI slave instance */
-        result = sys_zalloc(sizeof(struct SPI_slave), device_handle);
-        if (result == ESUCC) {
+        err = sys_zalloc(sizeof(struct SPI_slave), device_handle);
+        if (err == ESUCC) {
                 struct SPI_slave *hdl = *device_handle;
                 hdl->config           = SPI_DEFAULT_CFG;
                 hdl->major            = major;
@@ -247,11 +247,11 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
         }
 
         finish:
-        if (result != ESUCC) {
+        if (err != ESUCC) {
                 release_resources(major);
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -265,22 +265,16 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(SPI, void *device_handle)
 {
-        struct SPI_slave *hdl    = device_handle;
-        int               result = EBUSY;
+        struct SPI_slave *hdl = device_handle;
 
-        sys_critical_section_begin();
-        {
-                if (sys_device_is_unlocked(&hdl->lock)) {
-
-                        SPI[hdl->major]->slave_count--;
-                        release_resources(hdl->major);
-                        sys_free(device_handle);
-                        result = ESUCC;
-                }
+        int err = sys_device_lock(&hdl->lock);
+        if (!err) {
+                SPI[hdl->major]->slave_count--;
+                release_resources(hdl->major);
+                sys_free(device_handle);
         }
-        sys_critical_section_end();
 
-        return result;
+        return err;
 }
 
 //==============================================================================
@@ -349,23 +343,23 @@ API_MOD_WRITE(SPI,
 
         struct SPI_slave *hdl = device_handle;
 
-        int status = sys_mutex_lock(SPI[hdl->major]->periph_protect_mtx, MUTEX_TIMOUT);
-        if (status == ESUCC) {
+        int err = sys_mutex_lock(SPI[hdl->major]->periph_protect_mtx, MUTEX_TIMOUT);
+        if (err == ESUCC) {
                 if (SPI[hdl->major]->RAW == false) {
                         deselect_slave(hdl);
                         apply_SPI_config(hdl);
                         select_slave(hdl);
                 }
 
-                status = transceive(hdl, src, NULL, count);
-                if (status == ESUCC) {
+                err = transceive(hdl, src, NULL, count);
+                if (err == ESUCC) {
                         *wrcnt = count;
                 }
 
                 sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -394,23 +388,23 @@ API_MOD_READ(SPI,
 
         struct SPI_slave *hdl = device_handle;
 
-        int status = sys_mutex_lock(SPI[hdl->major]->periph_protect_mtx, MUTEX_TIMOUT);
-        if (status == ESUCC) {
+        int err = sys_mutex_lock(SPI[hdl->major]->periph_protect_mtx, MUTEX_TIMOUT);
+        if (err == ESUCC) {
                 if (SPI[hdl->major]->RAW == false) {
                         deselect_slave(hdl);
                         apply_SPI_config(hdl);
                         select_slave(hdl);
                 }
 
-                status = transceive(hdl, NULL, dst, count);
-                if (status == ESUCC) {
+                err = transceive(hdl, NULL, dst, count);
+                if (err == ESUCC) {
                         *rdcnt = count;
                 }
 
                 sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -430,25 +424,25 @@ API_MOD_READ(SPI,
 //==============================================================================
 API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 {
-        struct SPI_slave *hdl    = device_handle;
-        int               status = EIO;
+        struct SPI_slave *hdl = device_handle;
+        int               err = EIO;
 
         switch (request) {
         case IOCTL_SPI__SET_CONFIGURATION:
                 if (arg) {
                         hdl->config = *cast(SPI_config_t*, arg);
-                        status = ESUCC;
+                        err = ESUCC;
                 } else {
-                        status = EINVAL;
+                        err = EINVAL;
                 }
                 break;
 
         case IOCTL_SPI__GET_CONFIGURATION:
                 if (arg) {
                         *cast(SPI_config_t*, arg) = hdl->config;
-                        status = ESUCC;
+                        err = ESUCC;
                 } else {
-                        status = EINVAL;
+                        err = EINVAL;
                 }
                 break;
 
@@ -458,9 +452,9 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         apply_SPI_config(hdl);
                         deselect_slave(hdl);
                         select_slave(hdl);
-                        status = ESUCC;
+                        err = ESUCC;
                 } else {
-                        status = EBUSY;
+                        err = EBUSY;
                 }
                 break;
 
@@ -471,9 +465,9 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         SPI[hdl->major]->RAW = false;
                         sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx); // DESELECT unlock
                         sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx); // SELECT unlock
-                        status = ESUCC;
+                        err = ESUCC;
                 } else {
-                        status = EBUSY;
+                        err = EBUSY;
                 }
                 break;
 
@@ -488,15 +482,15 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                                                 select_slave(hdl);
                                         }
 
-                                        status = transceive(hdl, tr->tx_buffer, tr->rx_buffer, tr->count);
+                                        err = transceive(hdl, tr->tx_buffer, tr->rx_buffer, tr->count);
 
                                         sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
                                 }
                         } else {
-                                status = EINVAL;
+                                err = EINVAL;
                         }
                 } else {
-                        status = EINVAL;
+                        err = EINVAL;
                 }
                 break;
 
@@ -509,22 +503,22 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                                 apply_SPI_config(hdl);
 
                                 if (transceive(hdl, byte, NULL, 1)) {
-                                        status = ESUCC;
+                                        err = ESUCC;
                                 }
 
                                 sys_mutex_unlock(SPI[hdl->major]->periph_protect_mtx);
                         }
                 } else {
-                        status = EINVAL;
+                        err = EINVAL;
                 }
                 break;
 
         default:
-                status = EBADRQC;
+                err = EBADRQC;
                 break;
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -555,11 +549,9 @@ API_MOD_FLUSH(SPI, void *device_handle)
 //==============================================================================
 API_MOD_STAT(SPI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        struct SPI_slave *hdl = device_handle;
+        UNUSED_ARG1(device_handle);
 
-        device_stat->st_major = hdl->major;
-        device_stat->st_minor = hdl->minor;
-        device_stat->st_size  = 0;
+        device_stat->st_size = 0;
 
         return ESUCC;
 }

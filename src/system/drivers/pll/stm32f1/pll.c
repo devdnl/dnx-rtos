@@ -309,7 +309,7 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
 {
         UNUSED_ARG1(device_handle);
 
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (arg) {
                 if (request == IOCTL_PLL__GET_CLK_INFO) {
@@ -370,13 +370,13 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
 
                         clkinf->iterator++;
 
-                        result = ESUCC;
+                        err = ESUCC;
                 } else {
-                        result = EBADRQC;
+                        err = EBADRQC;
                 }
         }
 
-        return result;
+        return err;
 }
 
 //==============================================================================

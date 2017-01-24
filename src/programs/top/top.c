@@ -44,6 +44,7 @@
 ==============================================================================*/
 #define KEY_READ_INTERVAL_SEC   (CLOCKS_PER_SEC * 0.01)
 #define REFRESH_INTERVAL_SEC    (CLOCKS_PER_SEC * 1)
+#define MSG_LINE_POS            VT100_CURSOR_HOME VT100_CURSOR_DOWN(5) VT100_ERASE_LINE_FROM_CUR
 
 /*==============================================================================
   Local types, enums definitions
@@ -163,7 +164,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
 
                 if (key == 'k') {
-                        printf(VT100_CURSOR_HOME VT100_CURSOR_DOWN(4));
+                        printf(MSG_LINE_POS);
                         printf("Kill PID: ");
                         fflush(stdout);
 
@@ -173,7 +174,9 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         scanf("%d", &pid);
 
                         if (process_kill(pid) != 0) {
-                                perror(NULL);
+                                int e = errno;
+                                printf(MSG_LINE_POS);
+                                puts(strerror(e));
                                 errno = 0;
                                 sleep(2);
                         }

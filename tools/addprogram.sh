@@ -92,8 +92,8 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(${PROGNAME,,}, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 {
-    puts("Hello world!");
-    return EXIT_SUCCESS;
+        puts("Hello world!");
+        return EXIT_SUCCESS;
 }
 
 /*==============================================================================

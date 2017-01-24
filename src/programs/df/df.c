@@ -103,13 +103,15 @@ int_main(df, STACK_DEPTH_LOW, int argc, char *argv[])
                         unit   = "B";
                 }
 
+                u32_t percent = ((dtotal - dfree) * 1000) / dtotal;
+
                 printf("%s"  VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(16)
                        "%u%s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(26)
                        "%u%s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(36)
-                       "%u%%"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(43)
+                       "%u.%u%%"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(43)
                        "%s\n",
                        mnt.mnt_fsname, dtotal, unit, dfree, unit,
-                       ((dtotal - dfree) * 100)/dtotal, mnt.mnt_dir);
+                       percent / 10, percent % 10, mnt.mnt_dir);
         }
 
         return EXIT_SUCCESS;
