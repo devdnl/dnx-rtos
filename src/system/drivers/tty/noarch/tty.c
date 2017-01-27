@@ -93,7 +93,7 @@ static const int           SERVICE_IN_PRIORITY  = PRIORITY_NORMAL;
 static const int           SERVICE_OUT_PRIORITY = PRIORITY_NORMAL;
 static const uint          QUEUE_CMD_LEN        = _TTY_TERMINAL_ROWS;
 static const thread_attr_t SERVICE_IN_ATTR      = {.stack_depth = 110, .priority = PRIORITY_NORMAL, .detached = true};
-static const thread_attr_t SERVICE_OUT_ATTR     = {.stack_depth = 160, .priority = PRIORITY_NORMAL, .detached = true};
+static const thread_attr_t SERVICE_OUT_ATTR     = {.stack_depth = 180, .priority = PRIORITY_NORMAL, .detached = true};
 
 /*==============================================================================
   Function definitions
@@ -533,13 +533,30 @@ static void service_in(void *arg)
 {
         UNUSED_ARG1(arg);
 
+        bool last_CR = false;
+
         sys_thread_set_priority(SERVICE_IN_PRIORITY);
 
         for (;;) {
                 char c = '\0'; size_t rdcnt;
                 if (sys_fread(&c, 1, &rdcnt, tty_module->infile) == ESUCC) {
                         sys_thread_set_priority(PRIORITY_HIGHEST);
+
+                        if (c == '\r') {
+                                last_CR = true;
+                                continue;
+                        }
+
+                        if (last_CR) {
+                                if (c != '\n') {
+                                        send_cmd(CMD_INPUT, '\n');
+                                }
+
+                                last_CR = false;
+                        }
+
                         send_cmd(CMD_INPUT, c);
+
                         sys_thread_set_priority(SERVICE_IN_PRIORITY);
                 }
         }
