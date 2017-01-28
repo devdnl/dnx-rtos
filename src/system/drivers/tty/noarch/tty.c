@@ -540,23 +540,17 @@ static void service_in(void *arg)
         for (;;) {
                 char c = '\0'; size_t rdcnt;
                 if (sys_fread(&c, 1, &rdcnt, tty_module->infile) == ESUCC) {
+                        /*
+                         * Standard TTY protocol is to sent a CR from the keyboard
+                         * when the user has finished typing and for the computer
+                         * to echo LF when it's ready for the next line.
+                         */
+                        if (last_CR && c == '\n') continue;
+
+                        last_CR = (c == '\r');
+
                         sys_thread_set_priority(PRIORITY_HIGHEST);
-
-                        if (c == '\r') {
-                                last_CR = true;
-                                continue;
-                        }
-
-                        if (last_CR) {
-                                if (c != '\n') {
-                                        send_cmd(CMD_INPUT, '\n');
-                                }
-
-                                last_CR = false;
-                        }
-
                         send_cmd(CMD_INPUT, c);
-
                         sys_thread_set_priority(SERVICE_IN_PRIORITY);
                 }
         }

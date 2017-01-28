@@ -31,6 +31,7 @@
 #include "kernel/khooks.h"
 #include "kernel/kpanic.h"
 #include "kernel/process.h"
+#include "kernel/printk.h"
 #include "dnx/misc.h"
 #include "lib/unarg.h"
 #include "portable/cpuctl.h"
@@ -165,7 +166,7 @@ u32_t _get_uptime_counter(void)
 void _assert_hook(bool assert)
 {
         if (!assert) {
-                __asm("nop");
+                _printk("System assert occurred!");
         }
 }
 #endif

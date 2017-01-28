@@ -117,6 +117,10 @@ bool _kernel_panic_detect(FILE *file)
                         && kernel_panic_descriptor->valid2 == _KERNEL_PANIC_DESC_VALID2 );
 
         if (occurred) {
+                printk("KERNEL PANIC in %s: %d:%d:%s", kernel_panic_descriptor->name,
+                       kernel_panic_descriptor->pid, kernel_panic_descriptor->tid,
+                       cause[kernel_panic_descriptor->cause]);
+
                 if (file) {
                         if (kernel_panic_descriptor->cause > _KERNEL_PANIC_DESC_CAUSE_UNKNOWN) {
                                 kernel_panic_descriptor->cause = _KERNEL_PANIC_DESC_CAUSE_UNKNOWN;

@@ -37,7 +37,7 @@
   Local symbolic constants/macros
 ==============================================================================*/
 #define RELEASE_TIMEOUT                         100
-#define TX_WAIT_TIMEOUT                         MAX_DELAY_MS
+#define TX_WAIT_TIMEOUT                         2000
 #define RX_WAIT_TIMEOUT                         MAX_DELAY_MS
 #define MTX_BLOCK_TIMEOUT                       MAX_DELAY_MS
 
@@ -367,7 +367,12 @@ API_MOD_WRITE(UART,
                 SET_BIT(UART[hdl->major].UART->CR1, USART_CR1_TXEIE);
 
                 err = sys_semaphore_wait(hdl->data_write_sem, TX_WAIT_TIMEOUT);
-                if (err == ESUCC) {
+                if (err) {
+                        CLEAR_BIT(UART[hdl->major].UART->CR1, USART_CR1_TXEIE | USART_CR1_TCIE);
+                        hdl->Tx_buffer.data_size = 0;
+                        hdl->Tx_buffer.src_ptr   = NULL;
+
+                } else {
                         *wrcnt = count - hdl->Tx_buffer.data_size;
                 }
 
