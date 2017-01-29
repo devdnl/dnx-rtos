@@ -441,6 +441,10 @@ bool _cache_is_sync_needed(void)
 //==============================================================================
 int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, bool sync)
 {
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ == 0
+        UNUSED_ARG1(sync);
+#endif
+
         if (!file || !blksz || !buf) {
                 return EINVAL;
         }
@@ -522,6 +526,10 @@ int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, boo
 //==============================================================================
 int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf, bool sync)
 {
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ == 0
+        UNUSED_ARG1(sync);
+#endif
+
         if (!file || !blksz || !buf) {
                 return EINVAL;
         }
