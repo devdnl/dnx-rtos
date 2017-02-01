@@ -136,15 +136,9 @@ extern "C" {
 //==============================================================================
 static inline DIR *opendir(const char *name)
 {
-#if __OS_ENABLE_DIRBROWSE__ == _YES_
         DIR *dir = NULL;
         syscall(SYSCALL_OPENDIR, &dir, name);
         return dir;
-#else
-        UNUSED_ARG1(name);
-        _errno = ENOTSUP;
-        return NULL;
-#endif
 }
 
 //==============================================================================
@@ -196,15 +190,9 @@ static inline DIR *opendir(const char *name)
 //==============================================================================
 static inline int closedir(DIR *dir)
 {
-#if __OS_ENABLE_DIRBROWSE__ == _YES_
         int r = -1;
         syscall(SYSCALL_CLOSEDIR, &r, dir);
         return r;
-#else
-        UNUSED_ARG1(dir);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -258,15 +246,9 @@ static inline int closedir(DIR *dir)
 //==============================================================================
 static inline struct dirent *readdir(DIR *dir)
 {
-#if __OS_ENABLE_DIRBROWSE__ == _YES_
         struct dirent *dirent = NULL;
         syscall(SYSCALL_READDIR, &dirent, dir);
         return dirent;
-#else
-        UNUSED_ARG1(dir);
-        _errno = ENOTSUP;
-        return NULL;
-#endif
 }
 
 //==============================================================================
@@ -313,11 +295,7 @@ static inline struct dirent *readdir(DIR *dir)
 //==============================================================================
 static inline void seekdir(DIR *dir, u32_t seek)
 {
-#if __OS_ENABLE_DIRBROWSE__ == _YES_
         _errno = _builtinfunc(vfs_seekdir, dir, seek);
-#else
-        UNUSED_ARG2(dir, seek);
-#endif
 }
 
 //==============================================================================
@@ -364,14 +342,9 @@ static inline void seekdir(DIR *dir, u32_t seek)
 //==============================================================================
 static inline u32_t telldir(DIR *dir)
 {
-#if __OS_ENABLE_DIRBROWSE__ == _YES_
         u32_t seek = 0;
         _errno = _builtinfunc(vfs_telldir, dir, &seek);
         return seek;
-#else
-        UNUSED_ARG1(dir);
-        return 0;
-#endif
 }
 
 //==============================================================================
@@ -417,11 +390,7 @@ static inline u32_t telldir(DIR *dir)
 //==============================================================================
 static inline void _vfs_rewinddir(DIR *dir)
 {
-#if __OS_ENABLE_DIRBROWSE__ == _YES_
         seekdir(dir, 0);
-#else
-        UNUSED_ARG1(dir);
-#endif
 }
 
 #ifdef __cplusplus

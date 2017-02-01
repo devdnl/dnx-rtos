@@ -321,7 +321,7 @@ __ENABLE_I2C__=_YES_
 #--*/
 #define __ENABLE_IRQ__ _YES_
 #/*
-__ENABLE_IRQ__=_NO_
+__ENABLE_IRQ__=_YES_
 #*/
 
 #/*--
@@ -343,7 +343,7 @@ __ENABLE_PWM__=_NO_
 #--*/
 #define __ENABLE_LOOP__ _YES_
 #/*
-__ENABLE_LOOP__=_NO_
+__ENABLE_LOOP__=_YES_
 #*/
 
 #/*--

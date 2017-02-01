@@ -119,12 +119,6 @@ this:SetToolTip("This function enables CPU load measurement.")
 #define __OS_MONITOR_CPU_LOAD__ _YES_
 
 /*--
-this:AddWidget("Checkbox", "Directory browse functions")
-this:SetToolTip("This option enables opendir(), readdir(), and closedir() functions.")
---*/
-#define __OS_ENABLE_DIRBROWSE__ _YES_
-
-/*--
 this:AddWidget("Checkbox", "Time management functions")
 this:SetToolTip("This function enables time management (RTC).")
 --*/
@@ -226,8 +220,9 @@ this:SetToolTip("If this option is selected then some file system are using cach
 --*/
 #define __OS_SYSTEM_FS_CACHE_ENABLE__ _YES_
 
+
 /*--
-this:AddExtraWidget("Void", "VoidOption")
+--this:AddExtraWidget("Void", "VoidOption")
 this:AddExtraWidget("Label", "LabelSizes", "\nMemory parameters", -1, "bold")
 this:AddExtraWidget("Void", "VoidSizes")
 ++*/

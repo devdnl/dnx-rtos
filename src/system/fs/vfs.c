@@ -136,6 +136,9 @@ int _vfs_mount(const struct vfs_path   *src_path,
            || !fsif->fs_flush
            || !fsif->fs_mknod
            || !fsif->fs_sync
+           || !fsif->fs_opendir
+           || !fsif->fs_closedir
+           || !fsif->fs_readdir
     #if __OS_ENABLE_FSTAT__ == _YES_
            || !fsif->fs_stat
     #endif
@@ -144,11 +147,6 @@ int _vfs_mount(const struct vfs_path   *src_path,
     #endif
     #if __OS_ENABLE_MKFIFO__ == _YES_
            || !fsif->fs_mkfifo
-    #endif
-    #if __OS_ENABLE_DIRBROWSE__ == _YES_
-           || !fsif->fs_opendir
-           || !fsif->fs_closedir
-           || !fsif->fs_readdir
     #endif
     #if __OS_ENABLE_REMOVE__ == _YES_
            || !fsif->fs_remove

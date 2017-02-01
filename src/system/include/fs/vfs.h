@@ -156,11 +156,9 @@ typedef struct vfs_FS_itf {
         int (*fs_flush   )(void *fshdl, void  *fhdl);
         int (*fs_mknod   )(void *fshdl, const char *path, const dev_t dev);
         int (*fs_sync    )(void *fshdl);
-    #if __OS_ENABLE_DIRBROWSE__ == _YES_
         int (*fs_opendir )(void *fshdl, const char *path, struct vfs_dir *dir);
         int (*fs_closedir)(void *fshdl, struct vfs_dir *dir);
         int (*fs_readdir )(void *fshdl, struct vfs_dir *dir);
-    #endif
     #if __OS_ENABLE_FSTAT__ == _YES_
         int (*fs_stat   )(void *fshdl, const char *path, struct stat *stat);
     #endif

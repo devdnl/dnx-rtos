@@ -4838,7 +4838,12 @@ static inline void sys_update_system_clocks()
 //==============================================================================
 static inline time_t sys_mktime(struct tm *timeptr)
 {
+#if __OS_ENABLE_TIMEMAN__ == _YES_
         return _mktime(timeptr);
+#else
+        UNUSED_ARG1(timeptr);
+        return _kernel_get_time_ms() / 1000;
+#endif
 }
 
 //==============================================================================
@@ -4869,7 +4874,12 @@ static inline time_t sys_mktime(struct tm *timeptr)
 //==============================================================================
 static inline int sys_get_time(time_t *timer)
 {
+#if __OS_ENABLE_TIMEMAN__ == _YES_
         return _gettime(timer);
+#else
+        UNUSED_ARG1(timer);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -4923,6 +4933,7 @@ static inline struct tm *sys_gmtime_r(const time_t *timer, struct tm *tm)
         return _gmtime_r(timer, tm);
 #else
         UNUSED_ARG1(timer);
+        memset(tm, 0, sizeof(struct tm));
         return tm;
 #endif
 }

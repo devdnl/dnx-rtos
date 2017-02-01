@@ -93,11 +93,9 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
     #if __OS_ENABLE_MKDIR__ == _YES_
         SYSCALL_MKDIR,                  // | int            | const char *pathname      | mode_t *mode                        |                           |                           |                                           |
     #endif
-    #if __OS_ENABLE_DIRBROWSE__ == _YES_
         SYSCALL_OPENDIR,                // | DIR*           | const char *pathname      |                                     |                           |                           |                                           |
         SYSCALL_CLOSEDIR,               // | int            | DIR *dir                  |                                     |                           |                           |                                           |
         SYSCALL_READDIR,                // | dirent_t*      | DIR *dir                  |                                     |                           |                           |                                           |
-    #endif
     #if __OS_ENABLE_REMOVE__ == _YES_
         SYSCALL_REMOVE,                 // | int            | const char *path          |                                     |                           |                           |                                           |
     #endif

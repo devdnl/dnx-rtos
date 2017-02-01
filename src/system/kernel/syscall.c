@@ -107,11 +107,9 @@ static void syscall_mkdir(syscallrq_t *rq);
 #if __OS_ENABLE_MKFIFO__ == _YES_
 static void syscall_mkfifo(syscallrq_t *rq);
 #endif
-#if __OS_ENABLE_DIRBROWSE__ == _YES_
 static void syscall_opendir(syscallrq_t *rq);
 static void syscall_closedir(syscallrq_t *rq);
 static void syscall_readdir(syscallrq_t *rq);
-#endif
 #if __OS_ENABLE_REMOVE__ == _YES_
 static void syscall_remove(syscallrq_t *rq);
 #endif
@@ -232,11 +230,9 @@ static const syscallfunc_t syscalltab[] = {
         #if __OS_ENABLE_MKFIFO__ == _YES_
         [SYSCALL_MKFIFO] = syscall_mkfifo,
         #endif
-        #if __OS_ENABLE_DIRBROWSE__ == _YES_
         [SYSCALL_OPENDIR ] = syscall_opendir,
         [SYSCALL_CLOSEDIR] = syscall_closedir,
         [SYSCALL_READDIR ] = syscall_readdir,
-        #endif
         #if __OS_ENABLE_REMOVE__ == _YES_
         [SYSCALL_REMOVE] = syscall_remove,
         #endif
@@ -678,7 +674,6 @@ static void syscall_mkfifo(syscallrq_t *rq)
 }
 #endif
 
-#if __OS_ENABLE_DIRBROWSE__ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall open selected directory.
@@ -747,7 +742,6 @@ static void syscall_readdir(syscallrq_t *rq)
         SETERRNO(_vfs_readdir(dir, &dirent));
         SETRETURN(dirent_t*, dirent);
 }
-#endif
 
 #if __OS_ENABLE_REMOVE__ == _YES_
 //==============================================================================

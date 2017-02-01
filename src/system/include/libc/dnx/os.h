@@ -955,7 +955,9 @@ static inline size_t syslog_read(char *str, size_t len, u32_t *timestamp)
         syscall(SYSCALL_SYSLOGREAD, &n, str, &len, timestamp);
         return n;
 #else
-        UNUSED_ARG3(str, len, timestamp);
+        (void)str;
+        (void)len;
+        (void)timestamp;
         return 0;
 #endif
 }
