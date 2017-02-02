@@ -220,7 +220,7 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
                                 break;
                         }
 
-                        u32_t tout = non_blocking || n ? 10 : PIPE_WRITE_TIMEOUT;
+                        u32_t tout = non_blocking ? 10 : PIPE_WRITE_TIMEOUT;
                         if (_queue_send(pipe->queue, &buf[n], tout) != ESUCC) {
                                 break;
                         }

@@ -112,14 +112,14 @@ this:AddWidget("Spinbox", 0, 255, "Address")
 #define __ETHMAC_PHY_ADDRESS__ 1
 
 /*--
-this:AddWidget("Spinbox", 100, 500, "Reset delay [ms]")
+this:AddWidget("Spinbox", 100, 2000, "Reset delay [ms]")
 --*/
 #define __ETHMAC_PHY_RESET_DELAY__ 250
 
 /*--
-this:AddWidget("Spinbox", 100, 500, "Setup delay [ms]")
+this:AddWidget("Spinbox", 100, 2000, "Setup delay [ms]")
 --*/
-#define __ETHMAC_PHY_CONFIG_DELAY__ 250
+#define __ETHMAC_PHY_CONFIG_DELAY__ 500
 
 #endif /* _ETHMAC_FLAGS_H_ */
 /*==============================================================================

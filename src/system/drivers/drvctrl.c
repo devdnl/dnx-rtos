@@ -623,9 +623,11 @@ int _device_lock(dev_lock_t *dev_lock)
                         if (*dev_lock == 0) {
                                 *dev_lock = _syscall_client_PID[_process_get_active_thread()];
 
-                                if (*dev_lock) {
-                                        err = ESUCC;
+                                if (*dev_lock == 0) {
+                                        _process_get_pid(_kworker_proc, dev_lock);
                                 }
+
+                                err = ESUCC;
                         } else {
                                 err = EBUSY;
                         }
@@ -655,7 +657,13 @@ int _device_unlock(dev_lock_t *dev_lock, bool force)
         if (dev_lock) {
                 _kernel_scheduler_lock();
                 {
-                        if (force || *dev_lock == _syscall_client_PID[_process_get_active_thread()]) {
+                        pid_t kworker_pid = 0;
+                        _process_get_pid(_kworker_proc, &kworker_pid);
+
+                        if (   force    == true
+                           || *dev_lock == _syscall_client_PID[_process_get_active_thread()]
+                           || *dev_lock == kworker_pid) {
+
                                 *dev_lock = 0;
                                 err = ESUCC;
                         } else {
@@ -686,7 +694,12 @@ int _device_get_access(dev_lock_t *dev_lock)
         if (dev_lock) {
                 _kernel_scheduler_lock();
                 {
-                        if (*dev_lock == _syscall_client_PID[_process_get_active_thread()]) {
+                        pid_t kworker_pid = 0;
+                        _process_get_pid(_kworker_proc, &kworker_pid);
+
+                        if (  *dev_lock == _syscall_client_PID[_process_get_active_thread()]
+                           || *dev_lock == kworker_pid) {
+
                                 err = ESUCC;
                         } else {
                                 err = EBUSY;

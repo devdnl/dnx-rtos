@@ -38,6 +38,7 @@
 #include "kernel/kpanic.h"
 #include "kernel/errno.h"
 #include "kernel/time.h"
+#include "kernel/khooks.h"
 #include "lib/cast.h"
 #include "lib/unarg.h"
 #include "net/netm.h"
@@ -65,12 +66,6 @@
 #define SETERRNO(var)           rq->err = var
 #define GETERRNO()              rq->err
 #define UNUSED_RQ()             UNUSED_ARG1(rq)
-
-#if __OS_ENABLE_SYS_ASSERT__ > 0
-#define SYSCALL_ASSERT(assert)  while (!(assert))
-#else
-#define SYSCALL_ASSERT(assert)
-#endif
 
 #define is_proc_valid(proc)     (proc && proc->header.type == RES_TYPE_PROCESS)
 #define is_tid_in_range(tid)    (tid < __OS_TASK_MAX_THREADS__)
@@ -378,12 +373,12 @@ void syscall(syscall_t syscall, void *retptr, ...)
                 _process_t *proc; tid_t tid;
                 _task_get_process_container(_THIS_TASK, &proc, &tid);
 
-                SYSCALL_ASSERT(proc);
-                SYSCALL_ASSERT(is_tid_in_range(tid));
+                _assert(proc);
+                _assert(is_tid_in_range(tid));
 
                 flag_t *event_flags = NULL;
                 _errno = _process_get_event_flags(proc, &event_flags);
-                SYSCALL_ASSERT(event_flags);
+                _assert(event_flags);
 
                 if (!_errno && event_flags) {
 
@@ -447,7 +442,7 @@ int _syscall_kworker_process(int argc, char *argv[])
         };
 
         _task_get_process_container(_THIS_TASK, &_kworker_proc, NULL);
-        SYSCALL_ASSERT(_kworker_proc);
+        _assert(_kworker_proc);
 
         for (;;) {
                 syscallrq_t *rq;
@@ -519,15 +514,16 @@ static void syscall_do(void *rq)
         syscallrq_t *sysrq = rq;
 
         tid_t tid = _process_get_active_thread();
-        SYSCALL_ASSERT(is_tid_in_range(tid));
+        _assert(is_tid_in_range(tid));
 
         flag_t *flags = NULL;
         if (_process_get_event_flags(sysrq->client_proc, &flags) != ESUCC) {
                 _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
         }
-        SYSCALL_ASSERT(flags);
+        _assert(flags);
 
         _process_get_pid(sysrq->client_proc, &_syscall_client_PID[tid]);
+        _assert(_syscall_client_PID[tid] > 0);
         syscalltab[sysrq->syscall_no](sysrq);
         _syscall_client_PID[tid] = 0;
 

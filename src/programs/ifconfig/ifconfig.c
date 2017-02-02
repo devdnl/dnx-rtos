@@ -113,7 +113,7 @@ static void print_help_msg(const char *prog_name)
 //==============================================================================
 static void INET_up(const char *options)
 {
-        if (isstreq(options, "dhcp")) {
+        if (isstreq(options, "dhcp") || isstreq(options, "DHCP")) {
                 static const NET_INET_config_t DHCP = {
                         .mode    = NET_INET_MODE__DHCP_START,
                         .address = NET_INET_IPv4_ANY,

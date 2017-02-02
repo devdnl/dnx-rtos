@@ -162,7 +162,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
   Exported objects
 ==============================================================================*/
 extern struct _process *_kworker_proc;
-extern pid_t _syscall_client_PID[];
+extern pid_t _syscall_client_PID[__OS_TASK_MAX_THREADS__];
 
 /*==============================================================================
   Exported functions
