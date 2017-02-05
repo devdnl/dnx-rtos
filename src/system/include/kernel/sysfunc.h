@@ -4448,7 +4448,7 @@ extern int sys_thread_destroy(tid_t tid);
 //==============================================================================
 static inline bool sys_thread_is_valid(tid_t tid)
 {
-        return ((tid >= 1) && (tid < __OS_TASK_MAX_THREADS__));
+        return ((tid >= 1) && (tid < __OS_TASK_MAX_SYSTEM_THREADS__));
 }
 
 //==============================================================================

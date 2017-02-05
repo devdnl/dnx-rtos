@@ -734,7 +734,7 @@ static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
 {
         int r = -1;
 
-        if (tid >= 1 && tid <= __OS_TASK_MAX_THREADS__) {
+        if (tid >= 1 && tid <= __OS_TASK_MAX_USER_THREADS__) {
 
                 pid_t pid = 0;
                 syscall(SYSCALL_PROCESSGETPID, &pid);

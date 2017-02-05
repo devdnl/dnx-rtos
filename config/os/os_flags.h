@@ -90,10 +90,16 @@ this:SetToolTip("Context switch frequency has influence to system response for e
 #define __OS_TASK_SCHED_FREQ__ 1000
 
 /*--
-this:AddWidget("Spinbox", 1, 12, "Maximum number of process threads")
-this:SetToolTip("Number of threads that can be started by process.")
+this:AddWidget("Spinbox", 1, 32, "Maximum number of user process threads")
+this:SetToolTip("Number of threads that can be started by user process.")
 --*/
-#define __OS_TASK_MAX_THREADS__ 5
+#define __OS_TASK_MAX_USER_THREADS__ 4
+
+/*--
+this:AddWidget("Spinbox", 2, 32, "Maximum number of system process threads")
+this:SetToolTip("Number of threads that can be started by system process.")
+--*/
+#define __OS_TASK_MAX_SYSTEM_THREADS__ 12
 
 
 /*--
@@ -236,7 +242,7 @@ this:SetToolTip("This value determines a size of buffer used in the particular s
 this:AddWidget("Spinbox", 8, 1024, "Length of pipe buffer [bytes]")
 this:SetToolTip("This value determines a size of buffer used in the each pipe (FIFO file).")
 --*/
-#define __OS_PIPE_LENGTH__ 128
+#define __OS_PIPE_LENGTH__ 8
 
 /*--
 this:AddWidget("Spinbox", 4, 1024, "Memory allocation size [bytes]")

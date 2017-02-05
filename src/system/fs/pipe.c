@@ -171,10 +171,10 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
                 size_t n = 0;
                 for (; n < count; n++) {
 
-                        size_t noitm = -1;
+                        size_t noitm = 0;
                         _queue_get_number_of_items(pipe->queue, &noitm);
 
-                        if (pipe->closed && noitm <= 0) {
+                        if (pipe->closed && noitm == 0) {
                                 u8_t null = '\0';
                                 _queue_send(pipe->queue, &null, PIPE_WRITE_TIMEOUT);
                                 break;
@@ -213,10 +213,10 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
                 size_t n = 0;
                 for (; n < count; n++) {
 
-                        size_t noitm = -1;
+                        size_t noitm = 0;
                         _queue_get_number_of_items(pipe->queue, &noitm);
 
-                        if (pipe->closed && noitm <= 0) {
+                        if (pipe->closed && noitm == 0) {
                                 break;
                         }
 

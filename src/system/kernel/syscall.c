@@ -48,27 +48,27 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define SYSCALL_QUEUE_LENGTH    8
+#define SYSCALL_QUEUE_LENGTH            8
 
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-#define SYNC_PERIOD_MS          (1000 * __OS_SYSTEM_CACHE_SYNC_PERIOD__)
+#define SYNC_PERIOD_MS                  (1000 * __OS_SYSTEM_CACHE_SYNC_PERIOD__)
 #else
-#define SYNC_PERIOD_MS          MAX_DELAY_MS
+#define SYNC_PERIOD_MS                  MAX_DELAY_MS
 #endif
 
-#define GETARG(type, var)       type var = va_arg(rq->args, type)
-#define LOADARG(type)           va_arg(rq->args, type)
-#define GETRETURN(type, var)    type var = rq->retptr
-#define GETTASKHDL()            rq->task
-#define GETPROCESS()            (rq->client_proc)
-#define GETTHREAD(_tid)         _process_thread_get_container(GETPROCESS(), _tid)
-#define SETRETURN(type, var)    if (rq->retptr) {*((type*)rq->retptr) = (var);}
-#define SETERRNO(var)           rq->err = var
-#define GETERRNO()              rq->err
-#define UNUSED_RQ()             UNUSED_ARG1(rq)
+#define GETARG(type, var)               type var = va_arg(rq->args, type)
+#define LOADARG(type)                   va_arg(rq->args, type)
+#define GETRETURN(type, var)            type var = rq->retptr
+#define GETTASKHDL()                    rq->task
+#define GETPROCESS()                    (rq->client_proc)
+#define GETTHREAD(_tid)                 _process_thread_get_container(GETPROCESS(), _tid)
+#define SETRETURN(type, var)            if (rq->retptr) {*((type*)rq->retptr) = (var);}
+#define SETERRNO(var)                   rq->err = var
+#define GETERRNO()                      rq->err
+#define UNUSED_RQ()                     UNUSED_ARG1(rq)
 
-#define is_proc_valid(proc)     (proc && proc->header.type == RES_TYPE_PROCESS)
-#define is_tid_in_range(tid)    (tid < __OS_TASK_MAX_THREADS__)
+#define is_proc_valid(proc)             (proc && proc->header.type == RES_TYPE_PROCESS)
+#define is_tid_in_range(proc, tid)      (tid < _process_get_max_threads(proc))
 
 /*==============================================================================
   Local object types
@@ -320,7 +320,7 @@ static const syscallfunc_t syscalltab[] = {
   Exported objects
 ==============================================================================*/
 _process_t *_kworker_proc;
-pid_t       _syscall_client_PID[__OS_TASK_MAX_THREADS__];
+pid_t       _syscall_client_PID[__OS_TASK_MAX_SYSTEM_THREADS__];
 
 /*==============================================================================
   External objects
@@ -374,7 +374,7 @@ void syscall(syscall_t syscall, void *retptr, ...)
                 _task_get_process_container(_THIS_TASK, &proc, &tid);
 
                 _assert(proc);
-                _assert(is_tid_in_range(tid));
+                _assert(is_tid_in_range(proc, tid));
 
                 flag_t *event_flags = NULL;
                 _errno = _process_get_event_flags(proc, &event_flags);
@@ -514,7 +514,7 @@ static void syscall_do(void *rq)
         syscallrq_t *sysrq = rq;
 
         tid_t tid = _process_get_active_thread();
-        _assert(is_tid_in_range(tid));
+        _assert(is_tid_in_range(_process_get_active(), tid));
 
         flag_t *flags = NULL;
         if (_process_get_event_flags(sysrq->client_proc, &flags) != ESUCC) {
