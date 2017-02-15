@@ -1,3 +1,18 @@
+dnx RTOS 2.0.0
+==============
+New Features, Improvements:
+- Added processes
+- Simplified system structure
+- Improved system stability
+- Implemented seperated system stack and process
+- Improved network layer
+- Added new drivers
+- Added new file systems
+- Any program can used as boot daemon
+
+Fixed Bugs:
+- Fixed USB device driver
+
 dnx RTOS 1.6.1
 ==============
 New Features, Improvements:
@@ -26,7 +41,7 @@ New Features, Improvements:
 - Renamed programs
 
 Fixed Bugs:
-- Fixed kill message of "top" program (missing fflush()) 
+- Fixed kill message of "top" program (missing fflush())
 - Fixed _program_new() function (invalid initialized object)
 - Fixed realloc() function (old implementation works out of standard)
 - TTY: fixed REFRESH_LAST_LINE and flush() requests

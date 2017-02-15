@@ -145,7 +145,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see Flags: O_RDONLY, O_WRONLY, O_RDWR, O_CREAT, O_EXCL, O_TRUNC, O_APPEND
  */
-#define API_FS_OPEN(fsname, fs_handle, extra, fd, fpos, path, flags)
+#define API_FS_OPEN(fsname, fs_handle, fhdl, fpos, path, flags)
 #else
 #define API_FS_OPEN(fsname, ...)        _FS_EXTERN_C int _##fsname##_open(__VA_ARGS__)
 #endif
@@ -165,7 +165,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  * @param force         [<b>bool</b>]           force file close (system request)
  * @return One of @ref errno value.
  */
-#define API_FS_CLOSE(fsname, fs_handle, extra, fd, force)
+#define API_FS_CLOSE(fsname, fs_handle, fhdl, force)
 #else
 #define API_FS_CLOSE(fsname, ...)       _FS_EXTERN_C int _##fsname##_close(__VA_ARGS__)
 #endif
@@ -191,7 +191,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see struct vfs_fattr
  */
-#define API_FS_WRITE(fsname, fs_handle, extra, fd, src, count, fpos, wrcnt, fattr)
+#define API_FS_WRITE(fsname, fs_handle, fhdl, src, count, fpos, wrcnt, fattr)
 #else
 #define API_FS_WRITE(fsname, ...)       _FS_EXTERN_C int _##fsname##_write(__VA_ARGS__)
 #endif
@@ -217,7 +217,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see struct vfs_fattr
  */
-#define API_FS_READ(fsname, fs_handle, extra, fd, dst, count, fpos, rdcnt, fattr)
+#define API_FS_READ(fsname, fs_handle, fhdl, dst, count, fpos, rdcnt, fattr)
 #else
 #define API_FS_READ(fsname, ...)        _FS_EXTERN_C int _##fsname##_read(__VA_ARGS__)
 #endif
@@ -240,7 +240,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see ioctl()
  */
-#define API_FS_IOCTL(fsname, fs_handle, extra, fd, request, arg)
+#define API_FS_IOCTL(fsname, fs_handle, fhdl, request, arg)
 #else
 #define API_FS_IOCTL(fsname, ...)       _FS_EXTERN_C int _##fsname##_ioctl(__VA_ARGS__)
 #endif
@@ -262,7 +262,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see sync()
  */
-#define API_FS_FLUSH(fsname, fs_handle, extra, fd)
+#define API_FS_FLUSH(fsname, fs_handle, fhdl)
 #else
 #define API_FS_FLUSH(fsname, ...)       _FS_EXTERN_C int _##fsname##_flush(__VA_ARGS__)
 #endif
@@ -498,7 +498,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see struct stat
  */
-#define API_FS_FSTAT(fsname, fs_handle, extra, fd, stat)
+#define API_FS_FSTAT(fsname, fs_handle, fhdl, stat)
 #else
 #define API_FS_FSTAT(fsname, ...)       _FS_EXTERN_C int _##fsname##_fstat(__VA_ARGS__)
 #endif
@@ -521,7 +521,7 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  *
  * @see struct stat
  */
-#define API_FS_STAT(fsname, fs_handle, extra, path, stat)
+#define API_FS_STAT(fsname, fs_handle, fhdl, path, stat)
 #else
 #define API_FS_STAT(fsname, ...)        _FS_EXTERN_C int _##fsname##_stat(__VA_ARGS__)
 #endif

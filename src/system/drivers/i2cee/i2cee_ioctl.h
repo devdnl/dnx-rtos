@@ -25,7 +25,7 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-i2cee I2C EEPROM driver for 24Cxx devices.
+ * @defgroup drv-i2cee I2C EEPROM driver for 24Cxx devices
  *
  * \section drv-i2cee-desc Description
  * Driver handles 24Cxx devices.
@@ -68,7 +68,7 @@ extern "C" {
  * Type represent driver configuration.
  */
 typedef struct {
-        const char *i2c_path;           //!< I2C device file.
+        const char *i2c_path;           //!< I2C device file
         u32_t memory_size;              //!< Memory size in bytes.
         u16_t page_size;                //!< EEPROM page size.
         u16_t page_prog_time_ms;        //!< Time of programming single page in milliseconds.

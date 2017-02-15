@@ -3,9 +3,9 @@
 
 @author  Daniel Zorychta
 
-@brief   Initialization daemon
+@brief   Initialization daemon - example.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -40,8 +40,6 @@
 #include <dnx/net.h>
 #include <unistd.h>
 
-#include "stm32f1/gpio_cfg.h"
-
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -58,7 +56,7 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        const char *str;
+        char str[80];
 };
 
 /*==============================================================================
@@ -68,33 +66,316 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-static void thread2(void *arg)
+//==============================================================================
+/**
+ * @brief Function initializes basic file system.
+ */
+//==============================================================================
+static void create_base_file_system_structure(void)
 {
-        UNUSED_ARG1(arg);
+        /*
+         * 1. Mount base file system as root.
+         */
+        mount("ramfs", "", "/", "");
 
-        puts("I'm a thread in thread!");
-        puts("Thread exit;");
+        /*
+         * 2. Create basic folders. This folders can be used to store device
+         *    files or to mount next file systems e.g. SD Card etc.
+         */
+        mkdir("/dev", 0777);    // this folder store devices drivers
+        mkdir("/tmp", 0777);    // this folder store temporary files
+        mkdir("/run", 0777);    // this folder store runtime files
+        mkdir("/mnt", 0777);    // this folder store SD card content
+
+        /*
+         * NOTE: Number and naming of folders depends on user needs. There can
+         *       be mounted additional file systems that does not requires
+         *       drivers to work (e.g. procfs, devfs, etc). Remember that this
+         *       stage does not give access to drivers because drivers will be
+         *       initialized in the next runlevel.
+         */
 }
 
-static void thread(void *arg)
+//==============================================================================
+/**
+ * @brief Function initialize basic drivers needed by CPU configuration or board
+ *        specification.
+ */
+//==============================================================================
+static void initialize_basic_drivers(void)
 {
-//        puts("This text is from thread function!");
-//        printf("Thread arg: %d\n", (int)arg);
-//
-//
-//        tid_t tid = thread_create(thread2, NULL, NULL);
-//        thread_join(tid);
+        /*
+         * 1. Initialize GPIO drivers. Number of GPIO drivers depends on microcontroller
+         *    pinout. If microcontroller has only 2 GPIO ports then only those
+         *    two should be initialized.
+         */
+        driver_init("GPIO", 0, 0, "/dev/GPIOA");
+        driver_init("GPIO", 1, 0, "/dev/GPIOB");
+        driver_init("GPIO", 2, 0, "/dev/GPIOC");
+        driver_init("GPIO", 3, 0, "/dev/GPIOD");
+        driver_init("GPIO", 4, 0, "/dev/GPIOE");
 
-        int i = 0;
-        while (i++ < 10) {
-                for (int i = 0; i < 1000000; i++) {
-                        __asm("nop");
-                }
+        /*
+         * 2. Next part of drivers that can be initialized at this early stage.
+         */
+        driver_init("AFIO", 0, 0, NULL);                // CPU-specific configuration (STM32F1xx)
+        driver_init("PLL", 0, 0, "/dev/pll");           // clock configuration
+        driver_init("UART", 1, 0, "/dev/ttyS0");        // UART2 will be used as TTY I/O
+        driver_init("TTY", 0, 0, "/dev/tty0");          // first user terminal
+
+        /*
+         * NOTE: Drivers that are initialized in this stage can be reduced or
+         *       added because this depends on user needs. There are drivers
+         *       that cannot be initialized in this runlevel because are using
+         *       access to basic drivers e.g. SDSPI (SD Card over SPI).
+         *       The configuration of drivers can be done by using project
+         *       configuration -- Configtool. Some drivers need additional
+         *       runtime configuration. In this case see driver help.
+         */
+}
+
+//==============================================================================
+/**
+ * @brief Function creates output stream. Stream is created as soon as possible
+ *        to present user system messages.
+ */
+//==============================================================================
+static void create_output_stream(void)
+{
+        /*
+         * 1. Open standard output and standard error streams to see system
+         *    messages. Device that can be used as output stream was initialized
+         *    in the previous stage (tty0 connected to UART2).
+         */
+        stdout = fopen("/dev/tty0", "r+");
+        stderr = stdout;
+}
+
+//==============================================================================
+/**
+ * @brief Show kernel panic message.
+ */
+//==============================================================================
+static void show_kernel_panic_message(void)
+{
+        /*
+         * 1. Show kernel panic message if occurred in the last cycle.
+         *    Kernel panic message is redirected to the standard output.
+         *    Implementation hold kernel panic message by 3 seconds.
+         */
+        if (detect_kernel_panic(stdout)) {
+                sleep(3);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function initialize additional drivers.
+ */
+//==============================================================================
+static void initialize_additional_drivers(void)
+{
+        /*
+         * 1. Initialize next terminals that can be used to hold user application.
+         *    Number of terminals can be configured in the TTY module configuration
+         *    by using Configtool. Number of terminals depends on user needs.
+         *    In special cases TTY terminals does not need to be initialized.
+         */
+        driver_init("TTY", 1, 0, "/dev/tty1");
+        driver_init("TTY", 2, 0, "/dev/tty2");
+        driver_init("TTY", 3, 0, "/dev/tty3");
+
+        /*
+         * 2. If real time clock is needed then RTC driver should be initialized.
+         */
+        driver_init("RTC", 0, 0, "/dev/rtc");
+
+        /*
+         * 3. If needed the Ethernet driver is initialized.
+         */
+        driver_init("ETHMAC", 0, 0, "/dev/ethmac");
+}
+
+//==============================================================================
+/**
+ * @brief
+ */
+//==============================================================================
+static void mount_SD_card(void)
+{
+        /*
+         * 1. SD Card is connected to the microcontroller by using SPI interface.
+         *    In this case (stm32f1xx) SD card is connected to the SPI1. In this
+         *    case the SPI driver should be initialized.
+         *    The /dev/spi_sda is the SPI interface path that is used by SD card
+         *    driver as data source.
+         */
+        driver_init("SPI", 0, 0, "/dev/spi_sda");
+
+        /*
+         * 2. SPI interface should be configured to meet SD card requirements.
+         *    In this case SPI interface is opened and configured.
+         */
+        FILE *f = fopen("/dev/spi_sda", "r+");
+        if (f) {
+                static const SPI_config_t cfg = {
+                        .flush_byte  = 0xFF,
+                        .clk_divider = SPI_CLK_DIV__8,
+                        .mode        = SPI_MODE__0,
+                        .msb_first   = true,
+                        .CS_port_idx = IOCTL_GPIO_PORT_IDX__SD_CS,      // port name configured in GPIO driver
+                        .CS_pin_idx  = IOCTL_GPIO_PIN_IDX__SD_CS        // pin name configured in GPIO driver
+                };
+
+                // configuration setup
+                ioctl(f, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+                fclose(f);
         }
 
-//        global->str = "Text from thread!";
-//
-//        puts("Thread exit.");
+        /*
+         * 3. Initialization of SD card driver - SDSPI. This module handle SD card
+         *    by using SPI interface. The /dev/spi_sda file is used as data source.
+         *    This can be reconfigured by using Configtool in the SDSPI module
+         *    configuration.
+         */
+        driver_init("SDSPI", 0, 0, "/dev/sda");
+        driver_init("SDSPI", 0, 1, "/dev/sda1");
+
+        /*
+         * 4. SD Card initialization and MBR read. After this operation SD card
+         *    is ready to use and driver know how many partitions is on the card.
+         */
+        f = fopen("/dev/sda", "r+");
+        if (f) {
+                ioctl(f, IOCTL_STORAGE__INITIALIZE);
+                ioctl(f, IOCTL_STORAGE__READ_MBR);
+                fclose(f);
+        }
+
+        /*
+         * 5. Partition mount. The partition contains e.g. FAT32 file system.
+         *    The file system will be mounted in the /mnt folder created in the
+         *    previous stage.
+         */
+        mount("fatfs", "/dev/sda1", "/mnt", "");
+}
+
+//==============================================================================
+/**
+ * @brief Function print system log messages.
+ */
+//==============================================================================
+static void print_system_log_messages(void)
+{
+        /*
+         * 1. This function prints all system log messages that were stored
+         *    at system startup. It can be used in debug purposes. It can be
+         *    also disabled if not needed.
+         */
+        u32_t ts = 0;
+        while (syslog_read(global->str, sizeof(global->str), &ts)) {
+                printf("[%5d.%03d] %s\n", ts / 1000, ts % 1000, global->str);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function start DHCP client to get network address.
+ */
+//==============================================================================
+static void start_DHCP_client(void)
+{
+        /*
+         * 1. The DHCP configuration should be prepared to get network address.
+         *    The static IP configuration can be used as well.
+         */
+        puts("Starting DHCP client...\n");
+
+        static const NET_INET_config_t cfg_dhcp = {
+                .mode    = NET_INET_MODE__DHCP_START,
+                .address = NET_INET_IPv4_ANY,
+                .mask    = NET_INET_IPv4_ANY,
+                .gateway = NET_INET_IPv4_ANY
+        };
+
+        /*
+         * 2. Command that start DHCP client mode.
+         */
+        errno = 0;
+        if (ifup(NET_FAMILY__INET, &cfg_dhcp) != 0) {
+                perror("ifup");
+        }
+
+        // 1 second delay to network setup.
+        sleep(1);
+}
+
+//==============================================================================
+/**
+ * @brief Function start user programs.
+ */
+//==============================================================================
+static void start_user_programs(void)
+{
+        /*
+         * 1. Start the first terminal emulator that can be accessed by clicking F1
+         *    key. Terminal is connected to the tty0.
+         */
+        static const process_attr_t attr0 = {
+               .cwd        = "/",
+               .f_stderr   = NULL,
+               .f_stdin    = NULL,
+               .f_stdout   = NULL,
+               .detached   = true,
+               .p_stderr   = "/dev/tty0",
+               .p_stdin    = "/dev/tty0",
+               .p_stdout   = "/dev/tty0"
+        };
+
+        process_create("dsh", &attr0);
+
+
+        /*
+         * 2. Start second terminal emulator that can be accessed by clicking F2
+         *    key. Terminal is connected to the tty1.
+         */
+        static const process_attr_t attr1 = {
+               .cwd        = "/",
+               .f_stderr   = NULL,
+               .f_stdin    = NULL,
+               .f_stdout   = NULL,
+               .detached   = true,
+               .p_stderr   = "/dev/tty1",
+               .p_stdin    = "/dev/tty1",
+               .p_stdout   = "/dev/tty1"
+        };
+
+        process_create("dsh", &attr1);
+
+
+        /*
+         * 3. Start user application that can be accessed by clicking F3
+         *    key. Application is connected to the tty2.
+         */
+        static const process_attr_t attr2 = {
+               .cwd        = "/",
+               .f_stderr   = NULL,
+               .f_stdin    = NULL,
+               .f_stdout   = NULL,
+               .detached   = true,
+               .p_stderr   = "/dev/tty2",
+               .p_stdin    = "/dev/tty2",
+               .p_stdout   = "/dev/tty2"
+        };
+
+        process_create("user-program-name", &attr2);
+
+        /*
+         * NOTE: User should decide which application should be started. In most
+         *       cases only one terminal emulator is needed. In some cases,
+         *       terminal emulator does not need to be run. It depends on
+         *       user-specific project.
+         */
 }
 
 //==============================================================================
@@ -107,337 +388,48 @@ static void thread(void *arg)
  * @return program status
  */
 //==============================================================================
-int_main(initd, STACK_DEPTH_CUSTOM(240), int argc, char *argv[])
+int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
-        int result = 0;
+        /*
+         * NOTE: This procedure can be used as example. The order of functions
+         *       should be preserved, because this order allows all drivers to
+         *       be initialized correctly because of hierarchy.
+         */
 
-        if (argc == 2 && strcmp(argv[1], "--child") == 0) {
+        // 1. Mount base file system and create first folders.
+        create_base_file_system_structure();
 
-                process_stat_t stat;
-                if (process_stat(getpid(), &stat) == 0) {
-                        printf("Name: %s\n", stat.name);
-                        printf("PID: %d\n", stat.pid);
-                        printf("Files: %d\n", stat.files_count);
-                        printf("Dirs: %d\n", stat.dir_count);
-                        printf("Mutexes: %d\n", stat.mutexes_count);
-                        printf("Semaphores: %d\n", stat.semaphores_count);
-                        printf("Queues: %d\n", stat.queue_count);
-                        printf("Threads: %d\n", stat.threads_count);
-                        printf("Mem blocks: %d\n", stat.memory_block_count);
-                        printf("Memory usage: %d\n", stat.memory_usage);
-                        printf("Stack size: %d\n", stat.stack_size);
-                        printf("Stack max usage: %d\n", stat.stack_max_usage);
-                } else {
-                        perror(NULL);
-                }
+        // 2. Initialize basic drivers.
+        initialize_basic_drivers();
 
-                sleep(2);
-                puts("Hello! I'm child of initd parent!");
+        // 3. Create first output stream.
+        create_output_stream();
 
-                printf("I have PID: %d\n", getpid());
+        // 4. Show kernel panic message if occurred.
+        show_kernel_panic_message();
 
-                global->str = "Works!";
+        // 5. Initialize additional drivers
+        initialize_additional_drivers();
 
-                char *cwd = calloc(100, 1);
-                if (cwd) {
-                        if (/*strcpy(cwd, "Test")*/getcwd(cwd, 100) == cwd) {
-                                printf("CWD is: %s\n", cwd);
-                        } else {
-                                printf("CWD return error\n");
-                        }
+        // 6. Initialize and mount of SD Card (optional)
+        mount_SD_card();
 
-                        free(cwd);
-                }
+        // 7. Print system log messages
+        print_system_log_messages();
 
-                int i = 0;
-                while (true) {
-//                        GPIO_SET_PIN(PB14);
+        // 8. Start DHCP client (optional)
+        start_DHCP_client();
 
-//                        printf("=== Sec: %d\n", i++);
-//
-//                        int t = _kernel_get_number_of_tasks();
-//                        printf("Number of tasks %d\n", t);
+        // 9. Start user programs
+        start_user_programs();
 
-//                        disable_CPU_load_measurement();
-//                        process_stat_t stat;
-//                        if (process_stat(getpid(), &stat) == 0) {
-//                                printf("Name: %s\n", stat.name);
-//                                printf("PID: %d\n", stat.pid);
-//                                printf("Files: %d\n", stat.files_count);
-//                                printf("Dirs: %d\n", stat.dir_count);
-//                                printf("Mutexes: %d\n", stat.mutexes_count);
-//                                printf("Semaphores: %d\n", stat.semaphores_count);
-//                                printf("Queues: %d\n", stat.queue_count);
-//                                printf("Threads: %d\n", stat.threads_count);
-//                                printf("Mem blocks: %d\n", stat.memory_block_count);
-//                                printf("Memory usage: %d\n", stat.memory_usage);
-//                                printf("Stack size: %d\n", stat.stack_size);
-//                                printf("Stack max usage: %d\n", stat.stack_max_usage);
-//                                printf("CPU load cnt: %d\n", stat.cpu_load_cnt);
-//
-//                                u32_t tct = stat.cpu_load_total_cnt;
-//                                printf("CPU total cnt: %d\n", tct);
-//
-//                                printf("CPU load: %d.%02d%%\n",
-//                                       stat.cpu_load_cnt * 100 / tct,
-//                                       (stat.cpu_load_cnt * 1000 / tct) % 10
-//                                       );
-//                        } else {
-//                                perror(NULL);
-//                        }
-//                        enable_CPU_load_measurement();
+        // 10. If needed, the initd can continue work. It can be used as daemon.
+        // while (true) {...}
 
-
-//                          process_stat_t stat;
-//                          size_t         seek = 0;
-//                          while (process_stat_seek(seek++, &stat) == 0) {
-//                                  u32_t tct = stat.cpu_load_total_cnt;
-//                                  printf("%d %s: %d.%02d%% %s TH:%d\n",
-//                                         stat.pid,
-//                                         stat.name,
-//                                         stat.cpu_load_cnt * 100 / tct,
-//                                         (stat.cpu_load_cnt * 1000 / tct) % 10,
-//                                         stat.zombie ? "Z" : "R",
-//                                         stat.threads_count
-//                                        );
-//                          }
-//                          enable_CPU_load_measurement();
-
-
-//                        for (int i = 0; i < 10000000; i++) {
-//                                __asm("nop");
-//                        }
-
-//                        if (i == 3) {
-//                                int status = -1;
-//                                int err = process_destroy(2, &status);
-//
-//                                printf("Killed zombie: %d : %d\n", err, status);
-//                        }
-//
-//                        if (i == 4) {
-//                                perror("perror(): test");
-//                                fputs("stdout test\n", stdout);
-//                                fputs("stderr test\n", stderr);
-//                        }
-//
-//
-//                        if (i == 5 || i == 100 || i == 200) {
-//
-//                                tid_t tid1 = thread_create(thread, NULL, (void*)0);
-//                                tid_t tid2 = thread_create(thread, NULL, (void*)1);
-//
-//                                printf("Threads: tid1: %d; tid2: %d\n", tid1, tid2);
-//
-//                                thread_join(tid1);
-//                                puts("Thread 1 joined");
-//
-//                                thread_join(tid2);
-//                                puts("Thread 2 joined");
-//
-//                                puts(global->str);
-//                        }
-
-//                        GPIO_CLEAR_PIN(PB14);
-//                        sleep(1);
-                }
-
-        } if (argc == 2 && strcmp(argv[1], "--wait") == 0) {
-                puts("I'm process that wait 2 seconds");
-                sleep(2);
-                puts("Bye!");
-
-        } else {
-                result = mount("ramfs", "", "/", "");
-
-                result = mkdir("/dev", 0777);
-                mkdir("/tmp", 0777);
-                mkdir("/mnt", 0777);
-//                result = mkdir("/proc", 0777);
-
-//                result = mount("devfs", "", "/dev");
-//                result = mount("procfs", "", "/proc");
-
-                driver_init("GPIO", 0, 0, "/dev/GPIOA");
-                driver_init("GPIO", 1, 0, "/dev/GPIOB");
-                driver_init("GPIO", 2, 0, "/dev/GPIOC");
-                driver_init("GPIO", 3, 0, "/dev/GPIOD");
-                driver_init("GPIO", 4, 0, "/dev/GPIOE");
-
-                driver_init("AFIO", 0, 0, NULL);
-                driver_init("PLL", 0, 0, "/dev/pll");
-                driver_init("UART", 1, 0, "/dev/ttyS0");
-                driver_init("TTY", 0, 0, "/dev/tty0");
-
-                stdout = fopen("/dev/tty0", "r+");
-                stderr = stdout;
-                if (detect_kernel_panic(stdout)) {
-                        sleep(3);
-                }
-
-                driver_init("TTY", 1, 0, "/dev/tty1");
-                driver_init("TTY", 2, 0, "/dev/tty2");
-                driver_init("TTY", 3, 0, "/dev/tty3");
-                driver_init("CRC", 0, 0, "/dev/crc");
-
-                driver_init("SPI", 0, 0, "/dev/spi_sda");
-                driver_init("SPI", 2, 1, "/dev/SPI3-1");
-                driver_init("SPI", 2, 2, "/dev/SPI3-2");
-                driver_init("SPI", 2, 3, "/dev/SPI3-3");
-
-                FILE *f = fopen("/dev/spi_sda", "r+");
-                if (f) {
-                        static const SPI_config_t cfg = {
-                                .flush_byte  = 0xFF,
-                                .clk_divider = SPI_CLK_DIV__8,
-                                .mode        = SPI_MODE__0,
-                                .msb_first   = true,
-                                .CS_port_idx = IOCTL_GPIO_PORT_IDX__SD_CS,
-                                .CS_pin_idx  = IOCTL_GPIO_PIN_IDX__SD_CS
-                        };
-                        ioctl(f, IOCTL_SPI__SET_CONFIGURATION, &cfg);
-                        fclose(f);
-                }
-
-                driver_init("SDSPI", 0, 0, "/dev/sda");
-                driver_init("SDSPI", 0, 1, "/dev/sda1");
-
-                driver_init("LOOP", 0, 0, "/dev/l0");
-
-                driver_init("RTC", 0, 0, "/dev/rtc");
-
-                driver_init("ETHMAC", 0, 0, "/dev/ethmac");
-
-                f = fopen("/dev/sda", "r+");
-                if (f) {
-                        ioctl(f, IOCTL_STORAGE__INITIALIZE);
-                        ioctl(f, IOCTL_STORAGE__READ_MBR);
-                        fclose(f);
-                }
-
-                mount("fatfs", "/dev/sda1", "/mnt", "");
-
-
-//                driver_release("SPI", 2, 0);
-//                driver_release("SPI", 2, 1);
-//                driver_release("SPI", 2, 2);
-//                driver_release("SPI", 2, 3);
-
-
-                char  str[80];
-                u32_t ts = 0;
-                while (syslog_read(str, sizeof(str), &ts)) {
-                        printf("[%5d.%03d] %s\n", ts / 1000, ts % 1000, str);
-                }
-
-
-
-                puts("Starting DHCP client...\n");
-
-                static const NET_INET_config_t cfg_static = {
-                        .mode    = NET_INET_MODE__STATIC,
-                        .address = NET_INET_IPv4(192,168,0,150),
-                        .mask    = NET_INET_IPv4(255,255,255,0),
-                        .gateway = NET_INET_IPv4(192,168,0,1)
-                };
-
-                static const NET_INET_config_t cfg_dhcp = {
-                        .mode    = NET_INET_MODE__DHCP_START,
-                        .address = NET_INET_IPv4_ANY,
-                        .mask    = NET_INET_IPv4_ANY,
-                        .gateway = NET_INET_IPv4_ANY
-                };
-
-                errno = 0;
-                if (ifup(NET_FAMILY__INET, &cfg_dhcp) != 0) {
-                        perror("ifup");
-                }
-
-              /*  if (ifup(NET_FAMILY__INET, &cfg2, sizeof(NET_INET_cfg_t)) != 0) {
-                        perror("DHCP inform");
-                }*/
-
-
-                NET_INET_status_t status;
-                if (ifstatus(NET_FAMILY__INET, &status) != 0) {
-                        perror(NULL);
-                } else {
-                        printf("Status: %d\n", status.state);
-                        printf("Address: %d.%d.%d.%d\n", NET_INET_IPv4_a(status.address), NET_INET_IPv4_b(status.address), NET_INET_IPv4_c(status.address), NET_INET_IPv4_d(status.address));
-                        printf("Mask: %d.%d.%d.%d\n", NET_INET_IPv4_a(status.mask), NET_INET_IPv4_b(status.mask), NET_INET_IPv4_c(status.mask), NET_INET_IPv4_d(status.mask));
-                        printf("Gateway: %d.%d.%d.%d\n", NET_INET_IPv4_a(status.gateway), NET_INET_IPv4_b(status.gateway), NET_INET_IPv4_c(status.gateway), NET_INET_IPv4_d(status.gateway));
-                        printf("MAC0: %02X\n", status.hw_addr[0]);
-                        printf("MAC1: %02X\n", status.hw_addr[1]);
-                        printf("MAC2: %02X\n", status.hw_addr[2]);
-                        printf("MAC3: %02X\n", status.hw_addr[3]);
-                        printf("MAC4: %02X\n", status.hw_addr[4]);
-                        printf("MAC5: %02X\n", status.hw_addr[5]);
-                        printf("tx bytes: %d\n", status.tx_bytes);
-                        printf("rx bytes: %d\n", status.rx_bytes);
-                }
-
-
-                sleep(1);
-
-                static const process_attr_t attr0 = {
-                       .cwd = "/mnt",
-                       .f_stderr   = NULL,
-                       .f_stdin    = NULL,
-                       .f_stdout   = NULL,
-                       .detached   = true,
-                       .p_stderr   = "/dev/tty0",
-                       .p_stdin    = "/dev/tty0",
-                       .p_stdout   = "/dev/tty0"
-                };
-                process_create("dsh", &attr0);
-
-                static const process_attr_t attr1 = {
-                       .cwd = "/",
-                       .f_stderr   = NULL,
-                       .f_stdin    = NULL,
-                       .f_stdout   = NULL,
-                       .detached   = true,
-                       .p_stderr   = "/dev/tty1",
-                       .p_stdin    = "/dev/tty1",
-                       .p_stdout   = "/dev/tty1"
-                };
-                process_create("dsh", &attr1);
-/*
-                static const process_attr_t attr2 = {
-                       .cwd = "/",
-                       .f_stderr   = NULL,
-                       .f_stdin    = NULL,
-                       .f_stdout   = NULL,
-                       .detached   = true,
-                       .p_stderr   = "/dev/tty2",
-                       .p_stdin    = "/dev/tty2",
-                       .p_stdout   = "/dev/tty2"
-                };
-                process_create("dsh", &attr2);
-*/
-//                _netman_start_DHCP_client();
-
-//                FILE *f = fopen("/dev/tty0", "w");
-//                stdout = f;
-//
-//                for (;;) {
-//                        u32_t used = get_used_memory();
-//                        printf("Used memory: %d\n", (int)used);
-//
-//                        pid_t pid = process_create("top", &attr0);
-//                        if (pid) {
-//                                process_wait(pid, NULL, MAX_DELAY_MS);
-//                        }
-//
-//                        puts("Process closed");
-//
-//                        sleep(4);
-//                }
-        }
-
-        return result;
+        // 11. Or can be closed if not needed.
+        return EXIT_SUCCESS;
 }
 
 /*==============================================================================

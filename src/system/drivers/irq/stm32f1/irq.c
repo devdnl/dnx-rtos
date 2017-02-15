@@ -320,6 +320,8 @@ API_MOD_FLUSH(IRQ, void *device_handle)
 //==============================================================================
 API_MOD_STAT(IRQ, void *device_handle, struct vfs_dev_stat *device_stat)
 {
+        UNUSED_ARG1(device_handle);
+
         device_stat->st_size  = 0;
 
         return ESUCC;

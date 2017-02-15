@@ -49,6 +49,7 @@ Project contains several folders:
 \li \subpage drv-ethmac
 \li \subpage drv-gpio
 \li \subpage drv-i2c
+\li \subpage drv-i2cee
 \li \subpage drv-irq
 \li \subpage drv-loop
 \li \subpage drv-pll

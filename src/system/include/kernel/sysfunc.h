@@ -5002,7 +5002,7 @@ extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *b
  * @return One of errno value.
  */
 //==============================================================================
-extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *dst, bool sync);
+extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf, bool sync);
 
 #ifdef __cplusplus
 }

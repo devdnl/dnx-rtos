@@ -1064,7 +1064,6 @@ static inline bool semaphore_signal(sem_t *sem)
  * is modified by semaphore_wait() and semaphore_signal() family functions.
  *
  * @param sem           semaphore object pointer
- * @param value         counter value
  *
  * @exception | @ref EINVAL
  *
@@ -1074,7 +1073,7 @@ static inline bool semaphore_signal(sem_t *sem)
  * @code
         // ...
 
-        int value = semaphore_get_value(sem, &value);
+        int value = semaphore_get_value(sem);
         if (value > 0) {
                 // ...
         }
