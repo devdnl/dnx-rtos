@@ -81,7 +81,9 @@ include ./config/network/network_flags.h
 #             "__ENABLE_IRQ__",
 #             "__ENABLE_LOOP__",
 #             "__ENABLE_SDSPI__",
-#             "__ENABLE_TTY__"
+#             "__ENABLE_TTY__",
+#             "__ENABLE_DHT11__",
+#             "__ENABLE_I2CEE__"
 #         }
 #
 #         for i, flag in ipairs(MODULES) do
