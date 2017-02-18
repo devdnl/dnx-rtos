@@ -146,7 +146,7 @@ int_main(cat, STACK_DEPTH_LOW, int argc, char *argv[])
 
                                         if (printable_only) {
                                                 for (size_t i = 0; i < sizeof(global->buffer); i++) {
-                                                        char chr = global->buffer[i];
+                                                        int chr = global->buffer[i];
                                                         if (!(chr == '\n' || (chr >= ' ' && chr < 0x80))) {
                                                                 global->buffer[i] = '.';
                                                         }

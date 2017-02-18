@@ -259,9 +259,9 @@ static const usb_serial_state_notification_t serial_state = {
 };
 
 
-static const u8_t  GPIO_LED_WHITE = IOCTL_GPIO_PIN_IDX__NONE;
-static const u8_t  GPIO_LED_RED   = IOCTL_GPIO_PIN_IDX__NONE;
-static const u8_t  GPIO_LED_GREEN = IOCTL_GPIO_PIN_IDX__NONE;
+static const u8_t  GPIO_LED_WHITE = IOCTL_GPIO_PIN_IDX__NULL;
+static const u8_t  GPIO_LED_RED   = IOCTL_GPIO_PIN_IDX__NULL;
+static const u8_t  GPIO_LED_GREEN = IOCTL_GPIO_PIN_IDX__NULL;
 static const char *GPIO_PORT_PATH = "/dev/GPIOA";
 
 /*==============================================================================

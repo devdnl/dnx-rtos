@@ -169,6 +169,16 @@ typedef struct {
   Exported macros
 ==============================================================================*/
 /**
+ * @brief  Not existing pin number.
+ */
+#define IOCTL_GPIO_PIN_IDX__NULL                0xFF
+
+/**
+ * @brief  Not existing port number.
+ */
+#define IOCTL_GPIO_PORT_IDX__NULL               0xFF
+
+/**
  *  @brief  Set selected pin (set pin to Hi state).
  *  @param  [WR] @ref u8_t*                     pin index
  *  @return On success 0 is returned, otherwise -1 and @ref errno code is set

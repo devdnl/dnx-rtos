@@ -56,11 +56,14 @@ __PROJECT_NAME__=dnx
 #*/
 
 #/*--
-# this:AddWidget("Editline", false, "Toolchain name")
-# this:SetToolTip("Enter a name of first part of your toolchain's name, example:\n - Linaro, CodeSourcery: arm-none-eabi-")
+# this:AddWidget("Editline", false, "Toolchain prefix")
+# this:SetToolTip("Enter a name of first part of your toolchain's name, example:\n"..
+#                 " - Linaro, CodeSourcery: arm-none-eabi-\n"..
+#                 " - GCC: $(none)")
 #--*/
 #define __PROJECT_TOOLCHAIN__ arm-none-eabi-
 #/*
+none=
 __PROJECT_TOOLCHAIN__=arm-none-eabi-
 #*/
 

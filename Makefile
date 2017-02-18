@@ -77,8 +77,6 @@ CXXFLAGS = -c \
 
 LFLAGS   = -g \
            $(CPUCONFIG_LDFLAGS) \
-           -nostartfiles \
-           -T$(CPUCONFIG_LD) \
            -Wl,--gc-sections \
            -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
            -Wall \

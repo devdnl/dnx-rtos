@@ -20,4 +20,5 @@ HDRLOC_CORE += kernel
 
 ifeq ($(TARGET), stm32f1)
 CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c
+HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM3
 endif

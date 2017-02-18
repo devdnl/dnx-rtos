@@ -64,7 +64,12 @@ extern "C" {
 // Constants related with USB module (do not edit)
 //------------------------------------------------------------------------------
 #define _USBD_NUMBER_OF_ENDPOINTS               8
+
+#ifdef _USBD_ENDPOINT0_SIZE
 #define USBD_EP0_SIZE                           _USBD_ENDPOINT0_SIZE
+#else
+#define USBD_EP0_SIZE                           8
+#endif
 
 
 

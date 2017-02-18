@@ -483,7 +483,7 @@ void *_task_get_tag(task_t *taskhdl)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
+int _semaphore_create(size_t cnt_max, size_t cnt_init, sem_t **sem)
 {
         int err = EINVAL;
 
@@ -925,7 +925,7 @@ u32_t _flag_get_from_ISR(flag_t *flag)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_create(const size_t length, const size_t item_size, queue_t **queue)
+int _queue_create(size_t length, size_t item_size, queue_t **queue)
 {
         int err = EINVAL;
 

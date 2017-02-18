@@ -134,207 +134,205 @@ struct tm {
 /**
  * List of Time Zones (time converted to seconds relative to UTC)
  */
-enum timezone {
-        TIMEZONE_ACDT              = TIMEZONE_DIFF_UTC( 10,30),  //!< UTC+10:30 Australian Central Daylight Savings Time
-        TIMEZONE_ACST              = TIMEZONE_DIFF_UTC(  9,30),  //!< UTC+09:30 Australian Central Standard Time
-        TIMEZONE_ACT               = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    ASEAN Common Time
-        TIMEZONE_ADT               = TIMEZONE_DIFF_UTC(-03,00),  //!< UTC-03    Atlantic Daylight Time
-        TIMEZONE_AEDT              = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    Australian Eastern Daylight Savings Time
-        TIMEZONE_AEST              = TIMEZONE_DIFF_UTC( 10,00),  //!< UTC+10    Australian Eastern Standard Time
-        TIMEZONE_AFT               = TIMEZONE_DIFF_UTC(  4,30),  //!< UTC+04:30 Afghanistan Time
-        TIMEZONE_AKDT              = TIMEZONE_DIFF_UTC( -8,00),  //!< UTC-08    Alaska Daylight Time
-        TIMEZONE_AKST              = TIMEZONE_DIFF_UTC( -9,00),  //!< UTC-09    Alaska Standard Time
-        TIMEZONE_AMST_Amazon       = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Amazon Summer Time (Brazil)
-        TIMEZONE_AMST_Armenia      = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Armenia Summer Time
-        TIMEZONE_AMT_Amazon        = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Amazon Time (Brazil)
-        TIMEZONE_AMT_Armenia       = TIMEZONE_DIFF_UTC(  4,00),  //!< UTC+04    Armenia Time
-        TIMEZONE_ART               = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Argentina Time
-        TIMEZONE_AST_Arabia        = TIMEZONE_DIFF_UTC(  3,00),  //!< UTC+03    Arabia Standard Time
-        TIMEZONE_AST_Atlantic      = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Atlantic Standard Time
-        TIMEZONE_AWDT              = TIMEZONE_DIFF_UTC(  9,00),  //!< UTC+09    Australian Western Daylight Time
-        TIMEZONE_AWST              = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Australian Western Standard Time
-        TIMEZONE_AZOST             = TIMEZONE_DIFF_UTC( -1,00),  //!< UTC-01    Azores Standard Time
-        TIMEZONE_AZT               = TIMEZONE_DIFF_UTC(  4,00),  //!< UTC+04    Azerbaijan Time
-        TIMEZONE_BDT               = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Brunei Time
-        TIMEZONE_BIOT              = TIMEZONE_DIFF_UTC(  6,00),  //!< UTC+06    British Indian Ocean Time
-        TIMEZONE_BIT               = TIMEZONE_DIFF_UTC(-12,00),  //!< UTC-12    Baker Island Time
-        TIMEZONE_BOT               = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Bolivia Time
-        TIMEZONE_BRT               = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Brasilia Time
-        TIMEZONE_BST               = TIMEZONE_DIFF_UTC(  6,00),  //!< UTC+06    Bangladesh Standard Time
-        TIMEZONE_BTT               = TIMEZONE_DIFF_UTC(  6,00),  //!< UTC+06    Bhutan Time
-        TIMEZONE_CAT               = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    Central Africa Time
-        TIMEZONE_CCT               = TIMEZONE_DIFF_UTC(  6,30),  //!< UTC+06:30 Cocos Islands Time
-        TIMEZONE_CDT_North_America = TIMEZONE_DIFF_UTC( -5,00),  //!< UTC-05    Central Daylight Time (North America)
-        TIMEZONE_CDT_Cuba          = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Cuba Daylight Time
-        TIMEZONE_CEDT              = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    Central European Daylight Time
-        TIMEZONE_CEST              = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    Central European Summer Time (Cf. HAEC)
-        TIMEZONE_CET               = TIMEZONE_DIFF_UTC(  1,00),  //!< UTC+01    Central European Time
-        TIMEZONE_CHADT             = TIMEZONE_DIFF_UTC( 13,45),  //!< UTC+13:45 Chatham Daylight Time
-        TIMEZONE_CHAST             = TIMEZONE_DIFF_UTC( 12,45),  //!< UTC+12:45 Chatham Standard Time
-        TIMEZONE_CHOT              = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Choibalsan
-        TIMEZONE_ChST              = TIMEZONE_DIFF_UTC( 10,00),  //!< UTC+10    Chamorro Standard Time
-        TIMEZONE_CHUT              = TIMEZONE_DIFF_UTC( 10,00),  //!< UTC+10    Chuuk Time
-        TIMEZONE_CIST              = TIMEZONE_DIFF_UTC( -8,00),  //!< UTC-08    Clipperton Island Standard Time
-        TIMEZONE_CIT               = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Central Indonesia Time
-        TIMEZONE_CKT               = TIMEZONE_DIFF_UTC(-10,00),  //!< UTC-10    Cook Island Time
-        TIMEZONE_CLST              = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Chile Summer Time
-        TIMEZONE_CLT               = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Chile Standard Time
-        TIMEZONE_COST              = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Colombia Summer Time
-        TIMEZONE_COT               = TIMEZONE_DIFF_UTC( -5,00),  //!< UTC-05    Colombia Time
-        TIMEZONE_CST_North_America = TIMEZONE_DIFF_UTC( -6,00),  //!< UTC-06    Central Standard Time (North America)
-        TIMEZONE_CST_China         = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    China Standard Time
-        TIMEZONE_CST_Australia_Std = TIMEZONE_DIFF_UTC(  9,30),  //!< UTC+09:30 Central Standard Time (Australia)
-        TIMEZONE_CST_Australia_Sum = TIMEZONE_DIFF_UTC( 10,30),  //!< UTC+10:30 Central Summer Time (Australia)
-        TIMEZONE_CST_Cuba          = TIMEZONE_DIFF_UTC( -5,00),  //!< UTC-05    Cuba Standard Time
-        TIMEZONE_CT                = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    China time
-        TIMEZONE_CVT               = TIMEZONE_DIFF_UTC( -1,00),  //!< UTC-01    Cape Verde Time
-        TIMEZONE_CWST              = TIMEZONE_DIFF_UTC(  8,45),  //!< UTC+08:45 Central Western Standard Time (Australia)
-        TIMEZONE_CXT               = TIMEZONE_DIFF_UTC(  7,00),  //!< UTC+07    Christmas Island Time
-        TIMEZONE_DAVT              = TIMEZONE_DIFF_UTC(  7,00),  //!< UTC+07    Davis Time
-        TIMEZONE_DDUT              = TIMEZONE_DIFF_UTC( 10,00),  //!< UTC+10    Dumont d'Urville Time
-        TIMEZONE_DFT               = TIMEZONE_DIFF_UTC(  1,00),  //!< UTC+01    AIX specific equ. of Central European Time
-        TIMEZONE_EASST             = TIMEZONE_DIFF_UTC( -5,00),  //!< UTC-05    Easter Island Standard Summer Time
-        TIMEZONE_EAST              = TIMEZONE_DIFF_UTC( -6,00),  //!< UTC-06    Easter Island Standard Time
-        TIMEZONE_EAT               = TIMEZONE_DIFF_UTC(  3,00),  //!< UTC+03    East Africa Time
-        TIMEZONE_ECT_Caribbean     = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Eastern Caribbean Time (does not recognise DST)
-        TIMEZONE_ECT_Ecuador       = TIMEZONE_DIFF_UTC( -5,00),  //!< UTC-05    Ecuador Time
-        TIMEZONE_EDT               = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Eastern Daylight Time (North America)
-        TIMEZONE_EEDT              = TIMEZONE_DIFF_UTC(  3,00),  //!< UTC+03    Eastern European Daylight Time
-        TIMEZONE_EEST              = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+03    Eastern European Summer Time
-        TIMEZONE_EET               = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    Eastern European Time
-        TIMEZONE_EGST              = TIMEZONE_DIFF_UTC(  0,00),  //!< UTC+00    Eastern Greenland Summer Time
-        TIMEZONE_EGT               = TIMEZONE_DIFF_UTC( -1,00),  //!< UTC-01    Eastern Greenland Time
-        TIMEZONE_EIT               = TIMEZONE_DIFF_UTC(  9,00),  //!< UTC+09    Eastern Indonesian Time
-        TIMEZONE_EST_North_America = TIMEZONE_DIFF_UTC( -5,00),  //!< UTC-05    Eastern Standard Time (North America)
-        TIMEZONE_EST_Australia     = TIMEZONE_DIFF_UTC( 10,00),  //!< UTC+10    Eastern Standard Time (Australia)
-        TIMEZONE_FET               = TIMEZONE_DIFF_UTC(  3,00),  //!< UTC+03    Further-eastern European Time
-        TIMEZONE_FJT               = TIMEZONE_DIFF_UTC( 12,00),  //!< UTC+12    Fiji Time
-        TIMEZONE_FKST_Std          = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Falkland Islands Standard Time
-        TIMEZONE_FKST_Sum          = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Falkland Islands Summer Time
-        TIMEZONE_FKT               = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Falkland Islands Time
-        TIMEZONE_FNT               = TIMEZONE_DIFF_UTC( -2,00),  //!< UTC-02    Fernando de Noronha Time
-        TIMEZONE_GALT              = TIMEZONE_DIFF_UTC( -6,00),  //!< UTC-06    Galapagos Time
-        TIMEZONE_GAMT              = TIMEZONE_DIFF_UTC( -9,00),  //!< UTC-09    Gambier Islands
-        TIMEZONE_GET               = TIMEZONE_DIFF_UTC(  4,00),  //!< UTC+04    Georgia Standard Time
-        TIMEZONE_GFT               = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    French Guiana Time
-        TIMEZONE_GILT              = TIMEZONE_DIFF_UTC( 12,00),  //!< UTC+12    Gilbert Island Time
-        TIMEZONE_GIT               = TIMEZONE_DIFF_UTC( -9,00),  //!< UTC-09    Gambier Island Time
-        TIMEZONE_GMT               = TIMEZONE_DIFF_UTC(  0,00),  //!< UTC       Greenwich Mean Time
-        TIMEZONE_GST_South_Georgia = TIMEZONE_DIFF_UTC( -2,00),  //!< UTC-02    South Georgia and the South Sandwich Islands
-        TIMEZONE_GST_Gulf          = TIMEZONE_DIFF_UTC(  4,00),  //!< UTC+04    Gulf Standard Time
-        TIMEZONE_GYT               = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Guyana Time
-        TIMEZONE_HADT              = TIMEZONE_DIFF_UTC( -9,00),  //!< UTC-09    Hawaii-Aleutian Daylight Time
-        TIMEZONE_HAEC              = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    Heure Avancee d'Europe Centrale francised name for CEST
-        TIMEZONE_HAST              = TIMEZONE_DIFF_UTC(-10,00),  //!< UTC-10    Hawaii-Aleutian Standard Time
-        TIMEZONE_HKT               = TIMEZONE_DIFF_UTC( +8,00),  //!< UTC+08    Hong Kong Time
-        TIMEZONE_HMT               = TIMEZONE_DIFF_UTC( +5,00),  //!< UTC+05    Heard and McDonald Islands Time
-        TIMEZONE_HOVT              = TIMEZONE_DIFF_UTC( +7,00),  //!< UTC+07    Khovd Time
-        TIMEZONE_HST               = TIMEZONE_DIFF_UTC(-10,00),  //!< UTC-10    Hawaii Standard Time
-        TIMEZONE_ICT               = TIMEZONE_DIFF_UTC(  7,00),  //!< UTC+07    Indochina Time
-        TIMEZONE_IDT               = TIMEZONE_DIFF_UTC(  3,00),  //!< UTC+03    Israel Daylight Time
-        TIMEZONE_IOT               = TIMEZONE_DIFF_UTC(  3,00),  //!< UTC+03    Indian Ocean Time
-        TIMEZONE_IRDT              = TIMEZONE_DIFF_UTC(  4,30),  //!< UTC+04:30 Iran Daylight Time
-        TIMEZONE_IRKT              = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Irkutsk Time
-        TIMEZONE_IRST              = TIMEZONE_DIFF_UTC(  3,30),  //!< UTC+03:30 Iran Standard Time
-        TIMEZONE_IST_Indian        = TIMEZONE_DIFF_UTC(  5,30),  //!< UTC+05:30 Indian Standard Time
-        TIMEZONE_IST_Irish         = TIMEZONE_DIFF_UTC(  1,00),  //!< UTC+01    Irish Standard Time[5]
-        TIMEZONE_IST_Israel        = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    Israel Standard Time
-        TIMEZONE_JST               = TIMEZONE_DIFF_UTC(  9,00),  //!< UTC+09    Japan Standard Time
-        TIMEZONE_KGT               = TIMEZONE_DIFF_UTC(  6,00),  //!< UTC+06    Kyrgyzstan time
-        TIMEZONE_KOST              = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    Kosrae Time
-        TIMEZONE_KRAT              = TIMEZONE_DIFF_UTC(  7,00),  //!< UTC+07    Krasnoyarsk Time
-        TIMEZONE_KST               = TIMEZONE_DIFF_UTC(  9,00),  //!< UTC+09    Korea Standard Time
-        TIMEZONE_LHST_Std          = TIMEZONE_DIFF_UTC( 10,30),  //!< UTC+10:30 Lord Howe Standard Time
-        TIMEZONE_LHST_Sum          = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    Lord Howe Summer Time
-        TIMEZONE_LINT              = TIMEZONE_DIFF_UTC( 14,00),  //!< UTC+14    Line Islands Time
-        TIMEZONE_MAGT              = TIMEZONE_DIFF_UTC( 12,00),  //!< UTC+12    Magadan Time
-        TIMEZONE_MART              = TIMEZONE_DIFF_UTC( -9,30),  //!< UTC-09:30 Marquesas Islands Time
-        TIMEZONE_MAWT              = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Mawson Station Time
-        TIMEZONE_MDT               = TIMEZONE_DIFF_UTC( -6,00),  //!< UTC-06    Mountain Daylight Time (North America)
-        TIMEZONE_MET               = TIMEZONE_DIFF_UTC(  1,00),  //!< UTC+01    Middle European Time Same zone as CET
-        TIMEZONE_MEST              = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    Middle European Saving Time Same zone as CEST
-        TIMEZONE_MHT               = TIMEZONE_DIFF_UTC( 12,00),  //!< UTC+12    Marshall Islands
-        TIMEZONE_MIST              = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    Macquarie Island Station Time
-        TIMEZONE_MIT               = TIMEZONE_DIFF_UTC( -9,30),  //!< UTC-09:30 Marquesas Islands Time
-        TIMEZONE_MMT               = TIMEZONE_DIFF_UTC(  6,30),  //!< UTC+06:30 Myanmar Time
-        TIMEZONE_MSK               = TIMEZONE_DIFF_UTC(  3,00),  //!< UTC+03    Moscow Time
-        TIMEZONE_MST_Malaysia      = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Malaysia Standard Time
-        TIMEZONE_MST_Mountain      = TIMEZONE_DIFF_UTC(  7,00),  //!< UTC-07    Mountain Standard Time (North America)
-        TIMEZONE_MST               = TIMEZONE_DIFF_UTC(  6,30),  //!< UTC+06:30 Myanmar Standard Time
-        TIMEZONE_MUT               = TIMEZONE_DIFF_UTC(  4,00),  //!< UTC+04    Mauritius Time
-        TIMEZONE_MVT               = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Maldives Time
-        TIMEZONE_MYT               = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Malaysia Time
-        TIMEZONE_NCT               = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    New Caledonia Time
-        TIMEZONE_NDT               = TIMEZONE_DIFF_UTC( -2,30),  //!< UTC-02:30 Newfoundland Daylight Time
-        TIMEZONE_NFT               = TIMEZONE_DIFF_UTC( 11,30),  //!< UTC+11:30 Norfolk Time
-        TIMEZONE_NPT               = TIMEZONE_DIFF_UTC(  5,45),  //!< UTC+05:45 Nepal Time
-        TIMEZONE_NST               = TIMEZONE_DIFF_UTC( -3,30),  //!< UTC-03:30 Newfoundland Standard Time
-        TIMEZONE_NT                = TIMEZONE_DIFF_UTC( -3,30),  //!< UTC-03:30 Newfoundland Time
-        TIMEZONE_NUT               = TIMEZONE_DIFF_UTC(-11,00),  //!< UTC-11    Niue Time
-        TIMEZONE_NZDT              = TIMEZONE_DIFF_UTC( 13,00),  //!< UTC+13    New Zealand Daylight Time
-        TIMEZONE_NZST              = TIMEZONE_DIFF_UTC( 12,00),  //!< UTC+12    New Zealand Standard Time
-        TIMEZONE_OMST              = TIMEZONE_DIFF_UTC(  6,00),  //!< UTC+06    Omsk Time
-        TIMEZONE_ORAT              = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Oral Time
-        TIMEZONE_PDT               = TIMEZONE_DIFF_UTC( -7,00),  //!< UTC-07    Pacific Daylight Time (North America)
-        TIMEZONE_PET               = TIMEZONE_DIFF_UTC( -5,00),  //!< UTC-05    Peru Time
-        TIMEZONE_PETT              = TIMEZONE_DIFF_UTC( 12,00),  //!< UTC+12    Kamchatka Time
-        TIMEZONE_PGT               = TIMEZONE_DIFF_UTC( 10,00),  //!< UTC+10    Papua New Guinea Time
-        TIMEZONE_PHOT              = TIMEZONE_DIFF_UTC( 13,00),  //!< UTC+13    Phoenix Island Time
-        TIMEZONE_PKT               = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Pakistan Standard Time
-        TIMEZONE_PMDT              = TIMEZONE_DIFF_UTC( -2,00),  //!< UTC-02    Saint Pierre and Miquelon Daylight time
-        TIMEZONE_PMST              = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Saint Pierre and Miquelon Standard Time
-        TIMEZONE_PONT              = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    Pohnpei Standard Time
-        TIMEZONE_PST_Pacific       = TIMEZONE_DIFF_UTC( -8,00),  //!< UTC-08    Pacific Standard Time (North America)
-        TIMEZONE_PST_Philippine    = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Philippine Standard Time
-        TIMEZONE_PYST              = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Paraguay Summer Time (South America)
-        TIMEZONE_PYT               = TIMEZONE_DIFF_UTC( -4,00),  //!< UTC-04    Paraguay Time (South America)
-        TIMEZONE_RET               = TIMEZONE_DIFF_UTC(  4,00),  //!< UTC+04    Réunion Time
-        TIMEZONE_ROTT              = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Rothera Research Station Time
-        TIMEZONE_SAKT              = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    Sakhalin Island time
-        TIMEZONE_SAMT              = TIMEZONE_DIFF_UTC(  4,00),  //!< UTC+04    Samara Time
-        TIMEZONE_SAST              = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    South African Standard Time
-        TIMEZONE_SBT               = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    Solomon Islands Time
-        TIMEZONE_SCT               = TIMEZONE_DIFF_UTC(  4,00),  //!< UTC+04    Seychelles Time
-        TIMEZONE_SGT               = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Singapore Time
-        TIMEZONE_SLST              = TIMEZONE_DIFF_UTC(  5,30),  //!< UTC+05:30 Sri Lanka Time
-        TIMEZONE_SRET              = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    Srednekolymsk Time
-        TIMEZONE_SRT               = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Suriname Time
-        TIMEZONE_SST_Samoa         = TIMEZONE_DIFF_UTC(-11,00),  //!< UTC-11    Samoa Standard Time
-        TIMEZONE_SST_Singapore     = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Singapore Standard Time
-        TIMEZONE_SYOT              = TIMEZONE_DIFF_UTC(  3,00),  //!< UTC+03    Showa Station Time
-        TIMEZONE_TAHT              = TIMEZONE_DIFF_UTC(-10,00),  //!< UTC-10    Tahiti Time
-        TIMEZONE_THA               = TIMEZONE_DIFF_UTC(  7,00),  //!< UTC+07    Thailand Standard Time
-        TIMEZONE_TFT               = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Indian/Kerguelen
-        TIMEZONE_TJT               = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Tajikistan Time
-        TIMEZONE_TKT               = TIMEZONE_DIFF_UTC( 13,00),  //!< UTC+13    Tokelau Time
-        TIMEZONE_TLT               = TIMEZONE_DIFF_UTC(  9,00),  //!< UTC+09    Timor Leste Time
-        TIMEZONE_TMT               = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Turkmenistan Time
-        TIMEZONE_TOT               = TIMEZONE_DIFF_UTC( 13,00),  //!< UTC+13    Tonga Time
-        TIMEZONE_TVT               = TIMEZONE_DIFF_UTC( 12,00),  //!< UTC+12    Tuvalu Time
-        TIMEZONE_UCT               = TIMEZONE_DIFF_UTC(  0,00),  //!< UTC       Coordinated Universal Time
-        TIMEZONE_ULAT              = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Ulaanbaatar Time
-        TIMEZONE_USZ1              = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    Kaliningrad Time
-        TIMEZONE_UTC               = TIMEZONE_DIFF_UTC(  0,00),  //!< UTC       Coordinated Universal Time
-        TIMEZONE_UYST              = TIMEZONE_DIFF_UTC( -2,00),  //!< UTC-02    Uruguay Summer Time
-        TIMEZONE_UYT               = TIMEZONE_DIFF_UTC( -3,00),  //!< UTC-03    Uruguay Standard Time
-        TIMEZONE_UZT               = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Uzbekistan Time
-        TIMEZONE_VET               = TIMEZONE_DIFF_UTC( -4,30),  //!< UTC-04:30 Venezuelan Standard Time
-        TIMEZONE_VLAT              = TIMEZONE_DIFF_UTC( 10,00),  //!< UTC+10    Vladivostok Time
-        TIMEZONE_VOLT              = TIMEZONE_DIFF_UTC(  4,00),  //!< UTC+04    Volgograd Time
-        TIMEZONE_VOST              = TIMEZONE_DIFF_UTC(  6,00),  //!< UTC+06    Vostok Station Time
-        TIMEZONE_VUT               = TIMEZONE_DIFF_UTC( 11,00),  //!< UTC+11    Vanuatu Time
-        TIMEZONE_WAKT              = TIMEZONE_DIFF_UTC( 12,00),  //!< UTC+12    Wake Island Time
-        TIMEZONE_WAST              = TIMEZONE_DIFF_UTC(  2,00),  //!< UTC+02    West Africa Summer Time
-        TIMEZONE_WAT               = TIMEZONE_DIFF_UTC(  1,00),  //!< UTC+01    West Africa Time
-        TIMEZONE_WEDT              = TIMEZONE_DIFF_UTC(  1,00),  //!< UTC+01    Western European Daylight Time
-        TIMEZONE_WEST              = TIMEZONE_DIFF_UTC(  1,00),  //!< UTC+01    Western European Summer Time
-        TIMEZONE_WET               = TIMEZONE_DIFF_UTC(  0,00),  //!< UTC       Western European Time
-        TIMEZONE_WIT               = TIMEZONE_DIFF_UTC(  7,00),  //!< UTC+07    Western Indonesian Time
-        TIMEZONE_WST               = TIMEZONE_DIFF_UTC(  8,00),  //!< UTC+08    Western Standard Time
-        TIMEZONE_YAKT              = TIMEZONE_DIFF_UTC(  9,00),  //!< UTC+09    Yakutsk Time
-        TIMEZONE_YEKT              = TIMEZONE_DIFF_UTC(  5,00),  //!< UTC+05    Yekaterinburg Time
-        TIMEZONE_Z                 = TIMEZONE_DIFF_UTC(  0,00),  //!< UTC       Zulu Time (Coordinated Universal Time)
-};
+#define TIMEZONE_ACDT              TIMEZONE_DIFF_UTC( 10,30)   //!< UTC+10:30 Australian Central Daylight Savings Time
+#define TIMEZONE_ACST              TIMEZONE_DIFF_UTC(  9,30)   //!< UTC+09:30 Australian Central Standard Time
+#define TIMEZONE_ACT               TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    ASEAN Common Time
+#define TIMEZONE_ADT               TIMEZONE_DIFF_UTC(-03,00)   //!< UTC-03    Atlantic Daylight Time
+#define TIMEZONE_AEDT              TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    Australian Eastern Daylight Savings Time
+#define TIMEZONE_AEST              TIMEZONE_DIFF_UTC( 10,00)   //!< UTC+10    Australian Eastern Standard Time
+#define TIMEZONE_AFT               TIMEZONE_DIFF_UTC(  4,30)   //!< UTC+04:30 Afghanistan Time
+#define TIMEZONE_AKDT              TIMEZONE_DIFF_UTC( -8,00)   //!< UTC-08    Alaska Daylight Time
+#define TIMEZONE_AKST              TIMEZONE_DIFF_UTC( -9,00)   //!< UTC-09    Alaska Standard Time
+#define TIMEZONE_AMST_Amazon       TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Amazon Summer Time (Brazil)
+#define TIMEZONE_AMST_Armenia      TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Armenia Summer Time
+#define TIMEZONE_AMT_Amazon        TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Amazon Time (Brazil)
+#define TIMEZONE_AMT_Armenia       TIMEZONE_DIFF_UTC(  4,00)   //!< UTC+04    Armenia Time
+#define TIMEZONE_ART               TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Argentina Time
+#define TIMEZONE_AST_Arabia        TIMEZONE_DIFF_UTC(  3,00)   //!< UTC+03    Arabia Standard Time
+#define TIMEZONE_AST_Atlantic      TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Atlantic Standard Time
+#define TIMEZONE_AWDT              TIMEZONE_DIFF_UTC(  9,00)   //!< UTC+09    Australian Western Daylight Time
+#define TIMEZONE_AWST              TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Australian Western Standard Time
+#define TIMEZONE_AZOST             TIMEZONE_DIFF_UTC( -1,00)   //!< UTC-01    Azores Standard Time
+#define TIMEZONE_AZT               TIMEZONE_DIFF_UTC(  4,00)   //!< UTC+04    Azerbaijan Time
+#define TIMEZONE_BDT               TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Brunei Time
+#define TIMEZONE_BIOT              TIMEZONE_DIFF_UTC(  6,00)   //!< UTC+06    British Indian Ocean Time
+#define TIMEZONE_BIT               TIMEZONE_DIFF_UTC(-12,00)   //!< UTC-12    Baker Island Time
+#define TIMEZONE_BOT               TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Bolivia Time
+#define TIMEZONE_BRT               TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Brasilia Time
+#define TIMEZONE_BST               TIMEZONE_DIFF_UTC(  6,00)   //!< UTC+06    Bangladesh Standard Time
+#define TIMEZONE_BTT               TIMEZONE_DIFF_UTC(  6,00)   //!< UTC+06    Bhutan Time
+#define TIMEZONE_CAT               TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    Central Africa Time
+#define TIMEZONE_CCT               TIMEZONE_DIFF_UTC(  6,30)   //!< UTC+06:30 Cocos Islands Time
+#define TIMEZONE_CDT_North_America TIMEZONE_DIFF_UTC( -5,00)   //!< UTC-05    Central Daylight Time (North America)
+#define TIMEZONE_CDT_Cuba          TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Cuba Daylight Time
+#define TIMEZONE_CEDT              TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    Central European Daylight Time
+#define TIMEZONE_CEST              TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    Central European Summer Time (Cf. HAEC)
+#define TIMEZONE_CET               TIMEZONE_DIFF_UTC(  1,00)   //!< UTC+01    Central European Time
+#define TIMEZONE_CHADT             TIMEZONE_DIFF_UTC( 13,45)   //!< UTC+13:45 Chatham Daylight Time
+#define TIMEZONE_CHAST             TIMEZONE_DIFF_UTC( 12,45)   //!< UTC+12:45 Chatham Standard Time
+#define TIMEZONE_CHOT              TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Choibalsan
+#define TIMEZONE_ChST              TIMEZONE_DIFF_UTC( 10,00)   //!< UTC+10    Chamorro Standard Time
+#define TIMEZONE_CHUT              TIMEZONE_DIFF_UTC( 10,00)   //!< UTC+10    Chuuk Time
+#define TIMEZONE_CIST              TIMEZONE_DIFF_UTC( -8,00)   //!< UTC-08    Clipperton Island Standard Time
+#define TIMEZONE_CIT               TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Central Indonesia Time
+#define TIMEZONE_CKT               TIMEZONE_DIFF_UTC(-10,00)   //!< UTC-10    Cook Island Time
+#define TIMEZONE_CLST              TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Chile Summer Time
+#define TIMEZONE_CLT               TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Chile Standard Time
+#define TIMEZONE_COST              TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Colombia Summer Time
+#define TIMEZONE_COT               TIMEZONE_DIFF_UTC( -5,00)   //!< UTC-05    Colombia Time
+#define TIMEZONE_CST_North_America TIMEZONE_DIFF_UTC( -6,00)   //!< UTC-06    Central Standard Time (North America)
+#define TIMEZONE_CST_China         TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    China Standard Time
+#define TIMEZONE_CST_Australia_Std TIMEZONE_DIFF_UTC(  9,30)   //!< UTC+09:30 Central Standard Time (Australia)
+#define TIMEZONE_CST_Australia_Sum TIMEZONE_DIFF_UTC( 10,30)   //!< UTC+10:30 Central Summer Time (Australia)
+#define TIMEZONE_CST_Cuba          TIMEZONE_DIFF_UTC( -5,00)   //!< UTC-05    Cuba Standard Time
+#define TIMEZONE_CT                TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    China time
+#define TIMEZONE_CVT               TIMEZONE_DIFF_UTC( -1,00)   //!< UTC-01    Cape Verde Time
+#define TIMEZONE_CWST              TIMEZONE_DIFF_UTC(  8,45)   //!< UTC+08:45 Central Western Standard Time (Australia)
+#define TIMEZONE_CXT               TIMEZONE_DIFF_UTC(  7,00)   //!< UTC+07    Christmas Island Time
+#define TIMEZONE_DAVT              TIMEZONE_DIFF_UTC(  7,00)   //!< UTC+07    Davis Time
+#define TIMEZONE_DDUT              TIMEZONE_DIFF_UTC( 10,00)   //!< UTC+10    Dumont d'Urville Time
+#define TIMEZONE_DFT               TIMEZONE_DIFF_UTC(  1,00)   //!< UTC+01    AIX specific equ. of Central European Time
+#define TIMEZONE_EASST             TIMEZONE_DIFF_UTC( -5,00)   //!< UTC-05    Easter Island Standard Summer Time
+#define TIMEZONE_EAST              TIMEZONE_DIFF_UTC( -6,00)   //!< UTC-06    Easter Island Standard Time
+#define TIMEZONE_EAT               TIMEZONE_DIFF_UTC(  3,00)   //!< UTC+03    East Africa Time
+#define TIMEZONE_ECT_Caribbean     TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Eastern Caribbean Time (does not recognise DST)
+#define TIMEZONE_ECT_Ecuador       TIMEZONE_DIFF_UTC( -5,00)   //!< UTC-05    Ecuador Time
+#define TIMEZONE_EDT               TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Eastern Daylight Time (North America)
+#define TIMEZONE_EEDT              TIMEZONE_DIFF_UTC(  3,00)   //!< UTC+03    Eastern European Daylight Time
+#define TIMEZONE_EEST              TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+03    Eastern European Summer Time
+#define TIMEZONE_EET               TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    Eastern European Time
+#define TIMEZONE_EGST              TIMEZONE_DIFF_UTC(  0,00)   //!< UTC+00    Eastern Greenland Summer Time
+#define TIMEZONE_EGT               TIMEZONE_DIFF_UTC( -1,00)   //!< UTC-01    Eastern Greenland Time
+#define TIMEZONE_EIT               TIMEZONE_DIFF_UTC(  9,00)   //!< UTC+09    Eastern Indonesian Time
+#define TIMEZONE_EST_North_America TIMEZONE_DIFF_UTC( -5,00)   //!< UTC-05    Eastern Standard Time (North America)
+#define TIMEZONE_EST_Australia     TIMEZONE_DIFF_UTC( 10,00)   //!< UTC+10    Eastern Standard Time (Australia)
+#define TIMEZONE_FET               TIMEZONE_DIFF_UTC(  3,00)   //!< UTC+03    Further-eastern European Time
+#define TIMEZONE_FJT               TIMEZONE_DIFF_UTC( 12,00)   //!< UTC+12    Fiji Time
+#define TIMEZONE_FKST_Std          TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Falkland Islands Standard Time
+#define TIMEZONE_FKST_Sum          TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Falkland Islands Summer Time
+#define TIMEZONE_FKT               TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Falkland Islands Time
+#define TIMEZONE_FNT               TIMEZONE_DIFF_UTC( -2,00)   //!< UTC-02    Fernando de Noronha Time
+#define TIMEZONE_GALT              TIMEZONE_DIFF_UTC( -6,00)   //!< UTC-06    Galapagos Time
+#define TIMEZONE_GAMT              TIMEZONE_DIFF_UTC( -9,00)   //!< UTC-09    Gambier Islands
+#define TIMEZONE_GET               TIMEZONE_DIFF_UTC(  4,00)   //!< UTC+04    Georgia Standard Time
+#define TIMEZONE_GFT               TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    French Guiana Time
+#define TIMEZONE_GILT              TIMEZONE_DIFF_UTC( 12,00)   //!< UTC+12    Gilbert Island Time
+#define TIMEZONE_GIT               TIMEZONE_DIFF_UTC( -9,00)   //!< UTC-09    Gambier Island Time
+#define TIMEZONE_GMT               TIMEZONE_DIFF_UTC(  0,00)   //!< UTC       Greenwich Mean Time
+#define TIMEZONE_GST_South_Georgia TIMEZONE_DIFF_UTC( -2,00)   //!< UTC-02    South Georgia and the South Sandwich Islands
+#define TIMEZONE_GST_Gulf          TIMEZONE_DIFF_UTC(  4,00)   //!< UTC+04    Gulf Standard Time
+#define TIMEZONE_GYT               TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Guyana Time
+#define TIMEZONE_HADT              TIMEZONE_DIFF_UTC( -9,00)   //!< UTC-09    Hawaii-Aleutian Daylight Time
+#define TIMEZONE_HAEC              TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    Heure Avancee d'Europe Centrale francised name for CEST
+#define TIMEZONE_HAST              TIMEZONE_DIFF_UTC(-10,00)   //!< UTC-10    Hawaii-Aleutian Standard Time
+#define TIMEZONE_HKT               TIMEZONE_DIFF_UTC( +8,00)   //!< UTC+08    Hong Kong Time
+#define TIMEZONE_HMT               TIMEZONE_DIFF_UTC( +5,00)   //!< UTC+05    Heard and McDonald Islands Time
+#define TIMEZONE_HOVT              TIMEZONE_DIFF_UTC( +7,00)   //!< UTC+07    Khovd Time
+#define TIMEZONE_HST               TIMEZONE_DIFF_UTC(-10,00)   //!< UTC-10    Hawaii Standard Time
+#define TIMEZONE_ICT               TIMEZONE_DIFF_UTC(  7,00)   //!< UTC+07    Indochina Time
+#define TIMEZONE_IDT               TIMEZONE_DIFF_UTC(  3,00)   //!< UTC+03    Israel Daylight Time
+#define TIMEZONE_IOT               TIMEZONE_DIFF_UTC(  3,00)   //!< UTC+03    Indian Ocean Time
+#define TIMEZONE_IRDT              TIMEZONE_DIFF_UTC(  4,30)   //!< UTC+04:30 Iran Daylight Time
+#define TIMEZONE_IRKT              TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Irkutsk Time
+#define TIMEZONE_IRST              TIMEZONE_DIFF_UTC(  3,30)   //!< UTC+03:30 Iran Standard Time
+#define TIMEZONE_IST_Indian        TIMEZONE_DIFF_UTC(  5,30)   //!< UTC+05:30 Indian Standard Time
+#define TIMEZONE_IST_Irish         TIMEZONE_DIFF_UTC(  1,00)   //!< UTC+01    Irish Standard Time[5]
+#define TIMEZONE_IST_Israel        TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    Israel Standard Time
+#define TIMEZONE_JST               TIMEZONE_DIFF_UTC(  9,00)   //!< UTC+09    Japan Standard Time
+#define TIMEZONE_KGT               TIMEZONE_DIFF_UTC(  6,00)   //!< UTC+06    Kyrgyzstan time
+#define TIMEZONE_KOST              TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    Kosrae Time
+#define TIMEZONE_KRAT              TIMEZONE_DIFF_UTC(  7,00)   //!< UTC+07    Krasnoyarsk Time
+#define TIMEZONE_KST               TIMEZONE_DIFF_UTC(  9,00)   //!< UTC+09    Korea Standard Time
+#define TIMEZONE_LHST_Std          TIMEZONE_DIFF_UTC( 10,30)   //!< UTC+10:30 Lord Howe Standard Time
+#define TIMEZONE_LHST_Sum          TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    Lord Howe Summer Time
+#define TIMEZONE_LINT              TIMEZONE_DIFF_UTC( 14,00)   //!< UTC+14    Line Islands Time
+#define TIMEZONE_MAGT              TIMEZONE_DIFF_UTC( 12,00)   //!< UTC+12    Magadan Time
+#define TIMEZONE_MART              TIMEZONE_DIFF_UTC( -9,30)   //!< UTC-09:30 Marquesas Islands Time
+#define TIMEZONE_MAWT              TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Mawson Station Time
+#define TIMEZONE_MDT               TIMEZONE_DIFF_UTC( -6,00)   //!< UTC-06    Mountain Daylight Time (North America)
+#define TIMEZONE_MET               TIMEZONE_DIFF_UTC(  1,00)   //!< UTC+01    Middle European Time Same zone as CET
+#define TIMEZONE_MEST              TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    Middle European Saving Time Same zone as CEST
+#define TIMEZONE_MHT               TIMEZONE_DIFF_UTC( 12,00)   //!< UTC+12    Marshall Islands
+#define TIMEZONE_MIST              TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    Macquarie Island Station Time
+#define TIMEZONE_MIT               TIMEZONE_DIFF_UTC( -9,30)   //!< UTC-09:30 Marquesas Islands Time
+#define TIMEZONE_MMT               TIMEZONE_DIFF_UTC(  6,30)   //!< UTC+06:30 Myanmar Time
+#define TIMEZONE_MSK               TIMEZONE_DIFF_UTC(  3,00)   //!< UTC+03    Moscow Time
+#define TIMEZONE_MST_Malaysia      TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Malaysia Standard Time
+#define TIMEZONE_MST_Mountain      TIMEZONE_DIFF_UTC(  7,00)   //!< UTC-07    Mountain Standard Time (North America)
+#define TIMEZONE_MST               TIMEZONE_DIFF_UTC(  6,30)   //!< UTC+06:30 Myanmar Standard Time
+#define TIMEZONE_MUT               TIMEZONE_DIFF_UTC(  4,00)   //!< UTC+04    Mauritius Time
+#define TIMEZONE_MVT               TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Maldives Time
+#define TIMEZONE_MYT               TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Malaysia Time
+#define TIMEZONE_NCT               TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    New Caledonia Time
+#define TIMEZONE_NDT               TIMEZONE_DIFF_UTC( -2,30)   //!< UTC-02:30 Newfoundland Daylight Time
+#define TIMEZONE_NFT               TIMEZONE_DIFF_UTC( 11,30)   //!< UTC+11:30 Norfolk Time
+#define TIMEZONE_NPT               TIMEZONE_DIFF_UTC(  5,45)   //!< UTC+05:45 Nepal Time
+#define TIMEZONE_NST               TIMEZONE_DIFF_UTC( -3,30)   //!< UTC-03:30 Newfoundland Standard Time
+#define TIMEZONE_NT                TIMEZONE_DIFF_UTC( -3,30)   //!< UTC-03:30 Newfoundland Time
+#define TIMEZONE_NUT               TIMEZONE_DIFF_UTC(-11,00)   //!< UTC-11    Niue Time
+#define TIMEZONE_NZDT              TIMEZONE_DIFF_UTC( 13,00)   //!< UTC+13    New Zealand Daylight Time
+#define TIMEZONE_NZST              TIMEZONE_DIFF_UTC( 12,00)   //!< UTC+12    New Zealand Standard Time
+#define TIMEZONE_OMST              TIMEZONE_DIFF_UTC(  6,00)   //!< UTC+06    Omsk Time
+#define TIMEZONE_ORAT              TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Oral Time
+#define TIMEZONE_PDT               TIMEZONE_DIFF_UTC( -7,00)   //!< UTC-07    Pacific Daylight Time (North America)
+#define TIMEZONE_PET               TIMEZONE_DIFF_UTC( -5,00)   //!< UTC-05    Peru Time
+#define TIMEZONE_PETT              TIMEZONE_DIFF_UTC( 12,00)   //!< UTC+12    Kamchatka Time
+#define TIMEZONE_PGT               TIMEZONE_DIFF_UTC( 10,00)   //!< UTC+10    Papua New Guinea Time
+#define TIMEZONE_PHOT              TIMEZONE_DIFF_UTC( 13,00)   //!< UTC+13    Phoenix Island Time
+#define TIMEZONE_PKT               TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Pakistan Standard Time
+#define TIMEZONE_PMDT              TIMEZONE_DIFF_UTC( -2,00)   //!< UTC-02    Saint Pierre and Miquelon Daylight time
+#define TIMEZONE_PMST              TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Saint Pierre and Miquelon Standard Time
+#define TIMEZONE_PONT              TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    Pohnpei Standard Time
+#define TIMEZONE_PST_Pacific       TIMEZONE_DIFF_UTC( -8,00)   //!< UTC-08    Pacific Standard Time (North America)
+#define TIMEZONE_PST_Philippine    TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Philippine Standard Time
+#define TIMEZONE_PYST              TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Paraguay Summer Time (South America)
+#define TIMEZONE_PYT               TIMEZONE_DIFF_UTC( -4,00)   //!< UTC-04    Paraguay Time (South America)
+#define TIMEZONE_RET               TIMEZONE_DIFF_UTC(  4,00)   //!< UTC+04    Réunion Time
+#define TIMEZONE_ROTT              TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Rothera Research Station Time
+#define TIMEZONE_SAKT              TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    Sakhalin Island time
+#define TIMEZONE_SAMT              TIMEZONE_DIFF_UTC(  4,00)   //!< UTC+04    Samara Time
+#define TIMEZONE_SAST              TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    South African Standard Time
+#define TIMEZONE_SBT               TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    Solomon Islands Time
+#define TIMEZONE_SCT               TIMEZONE_DIFF_UTC(  4,00)   //!< UTC+04    Seychelles Time
+#define TIMEZONE_SGT               TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Singapore Time
+#define TIMEZONE_SLST              TIMEZONE_DIFF_UTC(  5,30)   //!< UTC+05:30 Sri Lanka Time
+#define TIMEZONE_SRET              TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    Srednekolymsk Time
+#define TIMEZONE_SRT               TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Suriname Time
+#define TIMEZONE_SST_Samoa         TIMEZONE_DIFF_UTC(-11,00)   //!< UTC-11    Samoa Standard Time
+#define TIMEZONE_SST_Singapore     TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Singapore Standard Time
+#define TIMEZONE_SYOT              TIMEZONE_DIFF_UTC(  3,00)   //!< UTC+03    Showa Station Time
+#define TIMEZONE_TAHT              TIMEZONE_DIFF_UTC(-10,00)   //!< UTC-10    Tahiti Time
+#define TIMEZONE_THA               TIMEZONE_DIFF_UTC(  7,00)   //!< UTC+07    Thailand Standard Time
+#define TIMEZONE_TFT               TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Indian/Kerguelen
+#define TIMEZONE_TJT               TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Tajikistan Time
+#define TIMEZONE_TKT               TIMEZONE_DIFF_UTC( 13,00)   //!< UTC+13    Tokelau Time
+#define TIMEZONE_TLT               TIMEZONE_DIFF_UTC(  9,00)   //!< UTC+09    Timor Leste Time
+#define TIMEZONE_TMT               TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Turkmenistan Time
+#define TIMEZONE_TOT               TIMEZONE_DIFF_UTC( 13,00)   //!< UTC+13    Tonga Time
+#define TIMEZONE_TVT               TIMEZONE_DIFF_UTC( 12,00)   //!< UTC+12    Tuvalu Time
+#define TIMEZONE_UCT               TIMEZONE_DIFF_UTC(  0,00)   //!< UTC       Coordinated Universal Time
+#define TIMEZONE_ULAT              TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Ulaanbaatar Time
+#define TIMEZONE_USZ1              TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    Kaliningrad Time
+#define TIMEZONE_UTC               TIMEZONE_DIFF_UTC(  0,00)   //!< UTC       Coordinated Universal Time
+#define TIMEZONE_UYST              TIMEZONE_DIFF_UTC( -2,00)   //!< UTC-02    Uruguay Summer Time
+#define TIMEZONE_UYT               TIMEZONE_DIFF_UTC( -3,00)   //!< UTC-03    Uruguay Standard Time
+#define TIMEZONE_UZT               TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Uzbekistan Time
+#define TIMEZONE_VET               TIMEZONE_DIFF_UTC( -4,30)   //!< UTC-04:30 Venezuelan Standard Time
+#define TIMEZONE_VLAT              TIMEZONE_DIFF_UTC( 10,00)   //!< UTC+10    Vladivostok Time
+#define TIMEZONE_VOLT              TIMEZONE_DIFF_UTC(  4,00)   //!< UTC+04    Volgograd Time
+#define TIMEZONE_VOST              TIMEZONE_DIFF_UTC(  6,00)   //!< UTC+06    Vostok Station Time
+#define TIMEZONE_VUT               TIMEZONE_DIFF_UTC( 11,00)   //!< UTC+11    Vanuatu Time
+#define TIMEZONE_WAKT              TIMEZONE_DIFF_UTC( 12,00)   //!< UTC+12    Wake Island Time
+#define TIMEZONE_WAST              TIMEZONE_DIFF_UTC(  2,00)   //!< UTC+02    West Africa Summer Time
+#define TIMEZONE_WAT               TIMEZONE_DIFF_UTC(  1,00)   //!< UTC+01    West Africa Time
+#define TIMEZONE_WEDT              TIMEZONE_DIFF_UTC(  1,00)   //!< UTC+01    Western European Daylight Time
+#define TIMEZONE_WEST              TIMEZONE_DIFF_UTC(  1,00)   //!< UTC+01    Western European Summer Time
+#define TIMEZONE_WET               TIMEZONE_DIFF_UTC(  0,00)   //!< UTC       Western European Time
+#define TIMEZONE_WIT               TIMEZONE_DIFF_UTC(  7,00)   //!< UTC+07    Western Indonesian Time
+#define TIMEZONE_WST               TIMEZONE_DIFF_UTC(  8,00)   //!< UTC+08    Western Standard Time
+#define TIMEZONE_YAKT              TIMEZONE_DIFF_UTC(  9,00)   //!< UTC+09    Yakutsk Time
+#define TIMEZONE_YEKT              TIMEZONE_DIFF_UTC(  5,00)   //!< UTC+05    Yekaterinburg Time
+#define TIMEZONE_Z                 TIMEZONE_DIFF_UTC(  0,00)   //!< UTC       Zulu Time (Coordinated Universal Time)
 
 /*==============================================================================
   Exported objects

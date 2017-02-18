@@ -134,8 +134,8 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "noarch/i2cee_flags.h"
 
 #if (__CPU_ARCH__ == stm32f1)
-#include "stm32f1/rtc_flags.h"
 #include "stm32f1/cpu_flags.h"
+#include "stm32f1/rtc_flags.h"
 #include "stm32f1/crc_flags.h"
 #include "stm32f1/gpio_flags.h"
 #include "stm32f1/afio_flags.h"
@@ -176,9 +176,9 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #     this:SetFlagValue("__ENABLE_GPIO__", "_NO_")
 # end
 #--*/
-#define __ENABLE_GPIO__ _YES_
+#define __ENABLE_GPIO__ _NO_
 #/*
-__ENABLE_GPIO__=_YES_
+__ENABLE_GPIO__=_NO_
 #*/
 
 #/*--
@@ -189,9 +189,9 @@ __ENABLE_GPIO__=_YES_
 #     this:SetFlagValue("__ENABLE_AFIO__", "_NO_")
 # end
 #--*/
-#define __ENABLE_AFIO__ _YES_
+#define __ENABLE_AFIO__ _NO_
 #/*
-__ENABLE_AFIO__=_YES_
+__ENABLE_AFIO__=_NO_
 #*/
 
 #/*--
@@ -202,9 +202,9 @@ __ENABLE_AFIO__=_YES_
 #     this:SetFlagValue("__ENABLE_PLL__", "_NO_")
 # end
 #--*/
-#define __ENABLE_PLL__ _YES_
+#define __ENABLE_PLL__ _NO_
 #/*
-__ENABLE_PLL__=_YES_
+__ENABLE_PLL__=_NO_
 #*/
 
 #/*--
@@ -215,9 +215,9 @@ __ENABLE_PLL__=_YES_
 #     this:SetFlagValue("__ENABLE_RTC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_RTC__ _YES_
+#define __ENABLE_RTC__ _NO_
 #/*
-__ENABLE_RTC__=_YES_
+__ENABLE_RTC__=_NO_
 #*/
 
 #/*--
@@ -228,9 +228,9 @@ __ENABLE_RTC__=_YES_
 #     this:SetFlagValue("__ENABLE_CRC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_CRC__ _YES_
+#define __ENABLE_CRC__ _NO_
 #/*
-__ENABLE_CRC__=_YES_
+__ENABLE_CRC__=_NO_
 #*/
 
 #/*--
@@ -241,9 +241,9 @@ __ENABLE_CRC__=_YES_
 #     this:SetFlagValue("__ENABLE_ETHMAC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_ETHMAC__ _YES_
+#define __ENABLE_ETHMAC__ _NO_
 #/*
-__ENABLE_ETHMAC__=_YES_
+__ENABLE_ETHMAC__=_NO_
 #*/
 
 #/*--
@@ -254,9 +254,9 @@ __ENABLE_ETHMAC__=_YES_
 #     this:SetFlagValue("__ENABLE_SPI__", "_NO_")
 # end
 #--*/
-#define __ENABLE_SPI__ _YES_
+#define __ENABLE_SPI__ _NO_
 #/*
-__ENABLE_SPI__=_YES_
+__ENABLE_SPI__=_NO_
 #*/
 
 #/*--
@@ -267,9 +267,9 @@ __ENABLE_SPI__=_YES_
 #     this:SetFlagValue("__ENABLE_UART__", "_NO_")
 # end
 #--*/
-#define __ENABLE_UART__ _YES_
+#define __ENABLE_UART__ _NO_
 #/*
-__ENABLE_UART__=_YES_
+__ENABLE_UART__=_NO_
 #*/
 
 #/*--
@@ -280,9 +280,9 @@ __ENABLE_UART__=_YES_
 #     this:SetFlagValue("__ENABLE_WDG__", "_NO_")
 # end
 #--*/
-#define __ENABLE_WDG__ _YES_
+#define __ENABLE_WDG__ _NO_
 #/*
-__ENABLE_WDG__=_YES_
+__ENABLE_WDG__=_NO_
 #*/
 
 #/*--
@@ -306,9 +306,9 @@ __ENABLE_USBD__=_NO_
 #     this:SetFlagValue("__ENABLE_I2C__", "_NO_")
 # end
 #--*/
-#define __ENABLE_I2C__ _YES_
+#define __ENABLE_I2C__ _NO_
 #/*
-__ENABLE_I2C__=_YES_
+__ENABLE_I2C__=_NO_
 #*/
 
 #/*--
@@ -319,9 +319,9 @@ __ENABLE_I2C__=_YES_
 #     this:SetFlagValue("__ENABLE_IRQ__", "_NO_")
 # end
 #--*/
-#define __ENABLE_IRQ__ _YES_
+#define __ENABLE_IRQ__ _NO_
 #/*
-__ENABLE_IRQ__=_YES_
+__ENABLE_IRQ__=_NO_
 #*/
 
 #/*--
@@ -341,43 +341,43 @@ __ENABLE_PWM__=_NO_
 #/*--
 # this:PutWidgets("LOOP")
 #--*/
-#define __ENABLE_LOOP__ _YES_
+#define __ENABLE_LOOP__ _NO_
 #/*
-__ENABLE_LOOP__=_YES_
+__ENABLE_LOOP__=_NO_
 #*/
 
 #/*--
 # this:PutWidgets("I2CEE")
 # this:SetToolTip("I2C EEPROM driver for 24Cxx devices.")
 #--*/
-#define __ENABLE_I2CEE__ _YES_
+#define __ENABLE_I2CEE__ _NO_
 #/*
-__ENABLE_I2CEE__=_YES_
+__ENABLE_I2CEE__=_NO_
 #*/
 
 #/*--
 # this:PutWidgets("SDSPI", "arch/noarch/sdspi_flags.h")
 #--*/
-#define __ENABLE_SDSPI__ _YES_
+#define __ENABLE_SDSPI__ _NO_
 #/*
-__ENABLE_SDSPI__=_YES_
+__ENABLE_SDSPI__=_NO_
 #*/
 
 #/*--
 # this:PutWidgets("TTY", "arch/noarch/tty_flags.h")
 #--*/
-#define __ENABLE_TTY__ _YES_
+#define __ENABLE_TTY__ _NO_
 #/*
-__ENABLE_TTY__=_YES_
+__ENABLE_TTY__=_NO_
 #*/
 
 #/*--
 # this:PutWidgets("DHT11")
 # this:SetToolTip("To use this module set devices pins to open drain.")
 #--*/
-#define __ENABLE_DHT11__ _YES_
+#define __ENABLE_DHT11__ _NO_
 #/*
-__ENABLE_DHT11__=_YES_
+__ENABLE_DHT11__=_NO_
 #*/
 
 #//-----------------------------------------------------------------------------

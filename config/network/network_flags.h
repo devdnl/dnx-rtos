@@ -48,9 +48,9 @@
 # this:AddWidget("Checkbox", "Enable network subsystem")
 # this:AddExtraWidget("Void", "VoidEnable")
 #--*/
-#define __ENABLE_NETWORK__ _YES_
+#define __ENABLE_NETWORK__ _NO_
 #/*
-__ENABLE_NETWORK__=_YES_
+__ENABLE_NETWORK__=_NO_
 #*/
 
 #/*--

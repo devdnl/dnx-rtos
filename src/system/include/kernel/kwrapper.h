@@ -109,7 +109,7 @@ extern task_t  *_task_get_handle                   (void);
 extern void     _task_set_tag                      (task_t*, void*);
 extern void    *_task_get_tag                      (task_t*);
 
-extern int      _semaphore_create                  (const uint, const uint, sem_t**);
+extern int      _semaphore_create                  (size_t, size_t, sem_t**);
 extern int      _semaphore_destroy                 (sem_t*);
 extern int      _semaphore_wait                    (sem_t*, const u32_t);
 extern int      _semaphore_signal                  (sem_t*);
@@ -130,7 +130,7 @@ extern int      _flag_clear                        (flag_t*, u32_t);
 extern u32_t    _flag_get                          (flag_t*);
 extern u32_t    _flag_get_from_ISR                 (flag_t*);
 
-extern int      _queue_create                      (const uint, const uint, queue_t**);
+extern int      _queue_create                      (size_t, size_t, queue_t**);
 extern int      _queue_destroy                     (queue_t*);
 extern int      _queue_reset                       (queue_t*);
 extern int      _queue_send                        (queue_t*, const void*, const u32_t);
