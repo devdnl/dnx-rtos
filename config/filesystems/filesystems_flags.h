@@ -1,5 +1,5 @@
 #/*=============================================================================
-# @file    fs.h
+# @file    filesystems_flags.h
 #
 # @author  Daniel Zorychta
 #
@@ -35,19 +35,9 @@
 #ifndef _FILE_SYSTEMS_FLAGS_H_
 #define _FILE_SYSTEMS_FLAGS_H_
 
-#include "../filesystems/fatfs_flags.h"
-#include "../filesystems/ext2fs_flags.h"
-#include "../filesystems/eefs_flags.h"
-
 #/*--
 # this:SetLayout("TitledGridBack", 2, "Home > File Systems",
 #                function() this:LoadFile("config.h") end)
-#++*/
-
-
-#/*--
-# this:AddExtraWidget("Label", "LabelRAM", "RAM file systems", -1, "bold")
-# this:AddExtraWidget("Void", "VoidRAM")
 #++*/
 
 #/*--
@@ -79,12 +69,6 @@ __ENABLE_RAMFS__=_YES_
 __ENABLE_DEVFS__=_YES_
 #*/
 
-
-#/*--
-# this:AddExtraWidget("Label", "LabelSpecial", "\nSpecial file systems", -1, "bold")
-# this:AddExtraWidget("Void", "VoidSpecial")
-#++*/
-
 #/*--
 # this:AddWidget("Checkbox", "Enable procfs")
 # this:SetToolTip("The procfs is a special file system, that provides special\n"..
@@ -102,12 +86,6 @@ __ENABLE_DEVFS__=_YES_
 __ENABLE_PROCFS__=_YES_
 #*/
 
-
-#/*--
-# this:AddExtraWidget("Label", "LabelStorage", "\nStorage file systems", -1, "bold")
-# this:AddExtraWidget("Void", "VoidStorage")
-#++*/
-
 #/*--
 # this:AddWidget("Checkbox", "Enable fatfs")
 # this:SetToolTip("If you want to use FAT12, FAT16, and FAT32 in your system\n"..
@@ -117,6 +95,7 @@ __ENABLE_PROCFS__=_YES_
 # this:AddExtraWidget("Hyperlink", "FATFS_CONFIGURE", "Configure")
 # this:SetEvent("clicked", "FATFS_CONFIGURE", function() this:LoadFile("filesystems/fatfs_flags.h") end)
 #--*/
+#include "../filesystems/fatfs_flags.h"
 #define __ENABLE_FATFS__ _YES_
 #/*
 __ENABLE_FATFS__=_YES_
@@ -132,6 +111,7 @@ __ENABLE_FATFS__=_YES_
 # this:AddExtraWidget("Hyperlink", "EXT2FS_CONFIGURE", "Configure")
 # this:SetEvent("clicked", "EXT2FS_CONFIGURE", function() this:LoadFile("filesystems/ext2fs_flags.h") end)
 #--*/
+#include "../filesystems/ext2fs_flags.h"
 #define __ENABLE_EXT2FS__ _YES_
 #/*
 __ENABLE_EXT2FS__=_YES_
@@ -145,6 +125,7 @@ __ENABLE_EXT2FS__=_YES_
 # this:AddExtraWidget("Hyperlink", "EEFS_CONFIGURE", "Configure")
 # this:SetEvent("clicked", "EEFS_CONFIGURE", function() this:LoadFile("filesystems/eefs_flags.h") end)
 #--*/
+#include "../filesystems/eefs_flags.h"
 #define __ENABLE_EEFS__ _YES_
 #/*
 __ENABLE_EEFS__=_YES_

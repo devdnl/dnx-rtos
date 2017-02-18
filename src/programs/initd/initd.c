@@ -428,7 +428,7 @@ int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
         // 10. If needed, the initd can continue work. It can be used as daemon.
         // while (true) {...}
 
-        // 11. Or can be closed if not needed.
+        // 11. Or can be closed if not needed anymore.
         return EXIT_SUCCESS;
 }
 
