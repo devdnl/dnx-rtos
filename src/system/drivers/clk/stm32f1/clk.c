@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    pll.c
+@file    clk.c
 
 @author  Daniel Zorychta
 
-@brief   File support PLL
+@brief   File support system clokc (PLL).
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -28,10 +28,10 @@
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f1/pll_cfg.h"
+#include "stm32f1/clk_cfg.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
-#include "../pll_ioctl.h"
+#include "../clk_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -75,100 +75,98 @@ static bool is_APB2_divided         (void);
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(major);
-        UNUSED_ARG1(minor);
+        UNUSED_ARG3(device_handle, major, minor);
 
         RCC_DeInit();
 
-        set_flash_latency(_PLL_CFG__FLASH_LATENCY);
+        set_flash_latency(_CLK_CFG__FLASH_LATENCY);
         enable_prefetch_buffer();
 
         int status = ESUCC;
 
-        if (_PLL_CFG__LSI_ON) {
-                RCC_LSICmd(_PLL_CFG__LSI_ON);
+        if (_CLK_CFG__LSI_ON) {
+                RCC_LSICmd(_CLK_CFG__LSI_ON);
                 status = wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS);
                 if (status != ESUCC)
                         return status;
         }
 
-        if (_PLL_CFG__LSE_ON) {
+        if (_CLK_CFG__LSE_ON) {
                 SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
                 SET_BIT(PWR->CR, PWR_CR_DBP);
 
                 if (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
 
-                        RCC_LSEConfig(_PLL_CFG__LSE_ON);
+                        RCC_LSEConfig(_CLK_CFG__LSE_ON);
 
-                        if (_PLL_CFG__LSE_ON != RCC_LSE_Bypass) {
+                        if (_CLK_CFG__LSE_ON != RCC_LSE_Bypass) {
                                 wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS);
                                 // this oscillator not causes an error because is not a main osc.
                         }
                 }
         }
 
-        if (_PLL_CFG__HSE_ON) {
-                RCC_HSEConfig(_PLL_CFG__HSE_ON);
+        if (_CLK_CFG__HSE_ON) {
+                RCC_HSEConfig(_CLK_CFG__HSE_ON);
                 status = wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS);
                 if (status != ESUCC)
                         return status;
         }
 
-        if (  (  (_PLL_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE        && _PLL_CFG__LSE_ON)
-              || (_PLL_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSI        && _PLL_CFG__LSI_ON)
-              || (_PLL_CFG__RTCCLK_SRC == RCC_RTCCLKSource_HSE_Div128 && _PLL_CFG__HSE_ON) )
+        if (  (  (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE        && _CLK_CFG__LSE_ON)
+              || (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSI        && _CLK_CFG__LSI_ON)
+              || (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_HSE_Div128 && _CLK_CFG__HSE_ON) )
            && (RCC->BDCR & RCC_BDCR_RTCEN) == 0
            && (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_0)) == RCC_BDCR_RTCSEL_NOCLOCK) {
 
                 SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
                 SET_BIT(PWR->CR, PWR_CR_DBP);
-                RCC_RTCCLKConfig(_PLL_CFG__RTCCLK_SRC);
+                RCC_RTCCLKConfig(_CLK_CFG__RTCCLK_SRC);
         }
 
 #ifdef STM32F10X_CL
-        RCC_PREDIV2Config(_PLL_CFG__PLL_PREDIV2_VAL);
+        RCC_PREDIV2Config(_CLK_CFG__PLL_PREDIV2_VAL);
 
-        if (_PLL_CFG__PLL2_ON) {
-                RCC_PLL2Config(_PLL_CFG__PLL2_MUL);
-                RCC_PLL2Cmd(_PLL_CFG__PLL2_ON);
+        if (_CLK_CFG__PLL2_ON) {
+                RCC_PLL2Config(_CLK_CFG__PLL2_MUL);
+                RCC_PLL2Cmd(_CLK_CFG__PLL2_ON);
                 status = wait_for_flag(RCC_FLAG_PLL2RDY, TIMEOUT_MS);
                 if (status != ESUCC)
                         return status;
         }
 
-        if (_PLL_CFG__PLL3_ON) {
-                RCC_PLL3Config(_PLL_CFG__PLL3_MUL);
-                RCC_PLL3Cmd(_PLL_CFG__PLL3_ON);
+        if (_CLK_CFG__PLL3_ON) {
+                RCC_PLL3Config(_CLK_CFG__PLL3_MUL);
+                RCC_PLL3Cmd(_CLK_CFG__PLL3_ON);
                 status = wait_for_flag(RCC_FLAG_PLL3RDY, TIMEOUT_MS);
                 if (status != ESUCC)
                         return status;
         }
 
-        RCC_I2S2CLKConfig(_PLL_CFG__I2S2_SRC);
-        RCC_I2S3CLKConfig(_PLL_CFG__I2S3_SRC);
+        RCC_I2S2CLKConfig(_CLK_CFG__I2S2_SRC);
+        RCC_I2S3CLKConfig(_CLK_CFG__I2S3_SRC);
 
-        RCC_PREDIV1Config(_PLL_CFG__PREDIV1_SRC, _PLL_CFG__PREDIV1_VAL);
-        RCC_OTGFSCLKConfig(_PLL_CFG__USB_DIV);
+        RCC_PREDIV1Config(_CLK_CFG__PREDIV1_SRC, _CLK_CFG__PREDIV1_VAL);
+        RCC_OTGFSCLKConfig(_CLK_CFG__USB_DIV);
 #else
-        RCC_USBCLKConfig(_PLL_CFG__USB_DIV);
+        RCC_USBCLKConfig(_CLK_CFG__USB_DIV);
 #endif
 
-        RCC_PLLConfig(_PLL_CFG__PLL_SRC, _PLL_CFG__PLL_MUL);
-        RCC_PLLCmd(_PLL_CFG__PLL_ON);
-        if (_PLL_CFG__PLL_ON) {
+        RCC_PLLConfig(_CLK_CFG__PLL_SRC, _CLK_CFG__PLL_MUL);
+        RCC_PLLCmd(_CLK_CFG__PLL_ON);
+        if (_CLK_CFG__PLL_ON) {
                 status = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
         }
 
-        RCC_ADCCLKConfig(_PLL_CFG__ADC_PRE);
-        RCC_PCLK2Config(_PLL_CFG__APB2_PRE);
-        RCC_PCLK1Config(_PLL_CFG__APB1_PRE);
-        RCC_HCLKConfig(_PLL_CFG__AHB_PRE);
+        RCC_ADCCLKConfig(_CLK_CFG__ADC_PRE);
+        RCC_PCLK2Config(_CLK_CFG__APB2_PRE);
+        RCC_PCLK1Config(_CLK_CFG__APB1_PRE);
+        RCC_HCLKConfig(_CLK_CFG__AHB_PRE);
 
-        RCC_SYSCLKConfig(_PLL_CFG__SYSCLK_SRC);
-        RCC_MCOConfig(_PLL_CFG__MCO_SRC);
+        RCC_SYSCLKConfig(_CLK_CFG__SYSCLK_SRC);
+        RCC_MCOConfig(_CLK_CFG__MCO_SRC);
 
         sys_update_system_clocks();
 
@@ -184,7 +182,7 @@ API_MOD_INIT(PLL, void **device_handle, u8_t major, u8_t minor)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_RELEASE(PLL, void *device_handle)
+API_MOD_RELEASE(CLK, void *device_handle)
 {
         UNUSED_ARG1(device_handle);
 
@@ -204,7 +202,7 @@ API_MOD_RELEASE(PLL, void *device_handle)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_OPEN(PLL, void *device_handle, u32_t flags)
+API_MOD_OPEN(CLK, void *device_handle, u32_t flags)
 {
         UNUSED_ARG1(device_handle);
         UNUSED_ARG1(flags);
@@ -222,7 +220,7 @@ API_MOD_OPEN(PLL, void *device_handle, u32_t flags)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_CLOSE(PLL, void *device_handle, bool force)
+API_MOD_CLOSE(CLK, void *device_handle, bool force)
 {
         UNUSED_ARG1(device_handle);
         UNUSED_ARG1(force);
@@ -244,7 +242,7 @@ API_MOD_CLOSE(PLL, void *device_handle, bool force)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(PLL,
+API_MOD_WRITE(CLK,
               void             *device_handle,
               const u8_t       *src,
               size_t            count,
@@ -276,7 +274,7 @@ API_MOD_WRITE(PLL,
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(PLL,
+API_MOD_READ(CLK,
              void            *device_handle,
              u8_t            *dst,
              size_t           count,
@@ -305,66 +303,66 @@ API_MOD_READ(PLL,
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
+API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
 {
         UNUSED_ARG1(device_handle);
 
         int err = EINVAL;
 
         if (arg) {
-                if (request == IOCTL_PLL__GET_CLK_INFO) {
+                if (request == IOCTL_CLK__GET_CLK_INFO) {
                         RCC_ClocksTypeDef freq;
                         RCC_GetClocksFreq(&freq);
 
-                        PLL_clk_info_t *clkinf = arg;
+                        CLK_info_t *clkinf = arg;
 
                         switch (clkinf->iterator) {
                         case 0:
-                                clkinf->clock_Hz   = freq.SYSCLK_Frequency;
-                                clkinf->clock_name = "SYSCLK";
+                                clkinf->freq_Hz = freq.SYSCLK_Frequency;
+                                clkinf->name = "SYSCLK";
                                 break;
 
                         case 1:
-                                clkinf->clock_Hz   = freq.HCLK_Frequency;
-                                clkinf->clock_name = "HCLK";
+                                clkinf->freq_Hz = freq.HCLK_Frequency;
+                                clkinf->name = "HCLK";
                                 break;
 
                         case 2:
-                                clkinf->clock_Hz   = freq.PCLK1_Frequency;
-                                clkinf->clock_name = "PCLK1";
+                                clkinf->freq_Hz = freq.PCLK1_Frequency;
+                                clkinf->name = "PCLK1";
                                 break;
 
                         case 3:
-                                clkinf->clock_Hz   = freq.PCLK2_Frequency;
-                                clkinf->clock_name = "PCLK2";
+                                clkinf->freq_Hz = freq.PCLK2_Frequency;
+                                clkinf->name = "PCLK2";
                                 break;
 
                         case 4:
-                                clkinf->clock_Hz   = freq.ADCCLK_Frequency;
-                                clkinf->clock_name = "ADCCLK";
+                                clkinf->freq_Hz = freq.ADCCLK_Frequency;
+                                clkinf->name = "ADCCLK";
                                 break;
 
                         case 5:
                                 if (is_APB1_divided()) {
-                                        clkinf->clock_Hz = freq.PCLK1_Frequency * 2;
+                                        clkinf->freq_Hz = freq.PCLK1_Frequency * 2;
                                 } else {
-                                        clkinf->clock_Hz = freq.PCLK1_Frequency;
+                                        clkinf->freq_Hz = freq.PCLK1_Frequency;
                                 }
-                                clkinf->clock_name = "PCLK1_TIM";
+                                clkinf->name = "PCLK1_TIM";
                                 break;
 
                         case 6:
                                 if (is_APB2_divided()) {
-                                        clkinf->clock_Hz = freq.PCLK2_Frequency * 2;
+                                        clkinf->freq_Hz = freq.PCLK2_Frequency * 2;
                                 } else {
-                                        clkinf->clock_Hz = freq.PCLK2_Frequency;
+                                        clkinf->freq_Hz = freq.PCLK2_Frequency;
                                 }
-                                clkinf->clock_name = "PCLK2_TIM";
+                                clkinf->name = "PCLK2_TIM";
                                 break;
 
                         default:
-                                clkinf->clock_Hz   = 0;
-                                clkinf->clock_name = NULL;
+                                clkinf->freq_Hz = 0;
+                                clkinf->name = NULL;
                                 break;
                         }
 
@@ -388,7 +386,7 @@ API_MOD_IOCTL(PLL, void *device_handle, int request, void *arg)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_FLUSH(PLL, void *device_handle)
+API_MOD_FLUSH(CLK, void *device_handle)
 {
         UNUSED_ARG1(device_handle);
 
@@ -405,7 +403,7 @@ API_MOD_FLUSH(PLL, void *device_handle)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_STAT(PLL, void *device_handle, struct vfs_dev_stat *device_stat)
+API_MOD_STAT(CLK, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         UNUSED_ARG1(device_handle);
 

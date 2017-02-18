@@ -32,7 +32,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define CLK_FILE_PATH                   "/dev/pll"
+#define CLK_FILE_PATH                   "/dev/clk"
 
 #define PATH_ROOT                       "/"
 #define PATH_ROOT_BIN                   "/bin"
@@ -938,17 +938,17 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                 FILE *pll;
                 if (sys_fopen(CLK_FILE_PATH, "r+", &pll) == ESUCC) {
 
-                        PLL_clk_info_t clkinf;
+                        CLK_info_t clkinf;
                         clkinf.iterator = 0;
 
-                        while (  sys_ioctl(pll, IOCTL_PLL__GET_CLK_INFO, &clkinf) == ESUCC
-                              && clkinf.clock_name) {
+                        while (  sys_ioctl(pll, IOCTL_CLK__GET_CLK_INFO, &clkinf) == ESUCC
+                              && clkinf.name) {
 
                                 len += sys_snprintf(buff + len,
                                                      size - len,
                                                      "%16s: %d Hz\n",
-                                                     clkinf.clock_name,
-                                                     cast(int, clkinf.clock_Hz));
+                                                     clkinf.name,
+                                                     cast(int, clkinf.freq_Hz));
                         }
 
                         sys_fclose(pll);

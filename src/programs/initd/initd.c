@@ -119,7 +119,7 @@ static void initialize_basic_drivers(void)
          * 2. Next part of drivers that can be initialized at this early stage.
          */
         driver_init("AFIO", 0, 0, NULL);                // CPU-specific configuration (STM32F1xx)
-        driver_init("PLL", 0, 0, "/dev/pll");           // clock configuration
+        driver_init("CLK", 0, 0, "/dev/clk");           // system clock configuration
         driver_init("UART", 1, 0, "/dev/ttyS0");        // UART2 will be used as TTY I/O
         driver_init("TTY", 0, 0, "/dev/tty0");          // first user terminal
 

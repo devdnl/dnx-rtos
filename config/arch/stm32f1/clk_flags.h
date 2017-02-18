@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    pll_flags.h
+@file    clk_flags.h
 
 @author  Daniel Zorychta
 
@@ -30,9 +30,8 @@
  *       (by using Configtool) when entire project configuration is exported.
  *       All other flag definitions and statements are ignored.
  */
-
-#ifndef _PLL_FLAGS_H_
-#define _PLL_FLAGS_H_
+#ifndef _CLK_FLAGS_H_
+#define _CLK_FLAGS_H_
 
 /*--
 this:SetLayout("TitledGridBack", 3, "Home > Microcontroller > PLL",
@@ -48,7 +47,7 @@ this:AddItem("Disable", "DISABLE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_LSI_ON", "")
 --*/
-#define __PLL_LSI_ON__ ENABLE
+#define __CLK_LSI_ON__ ENABLE
 
 /*--
 this:AddWidget("Combobox", "LSE oscillator")
@@ -58,7 +57,7 @@ this:AddItem("Baypass", "RCC_LSE_Bypass")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_LSE_ON", "")
 --*/
-#define __PLL_LSE_ON__ RCC_LSE_OFF
+#define __CLK_LSE_ON__ RCC_LSE_OFF
 
 /*--
 this:AddWidget("Combobox", "HSE oscillator")
@@ -68,7 +67,7 @@ this:AddItem("Baypass", "RCC_HSE_Bypass")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_HSE_ON", "")
 --*/
-#define __PLL_HSE_ON__ RCC_HSE_ON
+#define __CLK_HSE_ON__ RCC_HSE_ON
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -80,7 +79,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_PREDIV2_VAL", "")
 end
 --*/
-#define __PLL_PREDIV2_VAL__ RCC_PREDIV2_Div5
+#define __CLK_PREDIV2_VAL__ RCC_PREDIV2_Div5
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -91,7 +90,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_PLL2_ON", "")
 end
 --*/
-#define __PLL_PLL2_ON__ ENABLE
+#define __CLK_PLL2_ON__ ENABLE
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -103,7 +102,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_PLL2_MUL", "")
 end
 --*/
-#define __PLL_PLL2_MUL__ RCC_PLL2Mul_8
+#define __CLK_PLL2_MUL__ RCC_PLL2Mul_8
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -114,7 +113,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_PLL3_ON", "")
 end
 --*/
-#define __PLL_PLL3_ON__ ENABLE
+#define __CLK_PLL3_ON__ ENABLE
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -126,7 +125,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_PLL3_MUL", "")
 end
 --*/
-#define __PLL_PLL3_MUL__ RCC_PLL3Mul_10
+#define __CLK_PLL3_MUL__ RCC_PLL3Mul_10
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -137,7 +136,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_PREDIV1_SRC", "")
 end
 --*/
-#define __PLL_PREDIV1_SRC__ RCC_PREDIV1_Source_PLL2
+#define __CLK_PREDIV1_SRC__ RCC_PREDIV1_Source_PLL2
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -147,7 +146,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_PREDIV1_VAL", "")
 end
 --*/
-#define __PLL_PREDIV1_VAL__ RCC_PREDIV1_Div5
+#define __CLK_PREDIV1_VAL__ RCC_PREDIV1_Div5
 
 /*--
 this:AddWidget("Combobox", "PLL")
@@ -156,7 +155,7 @@ this:AddItem("Disable", "DISABLE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL_ON", "")
 --*/
-#define __PLL_PLL_ON__ ENABLE
+#define __CLK_PLL_ON__ ENABLE
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -167,7 +166,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_PLL_SRC_CL", "")
 end
 --*/
-#define __PLL_PLL_SRC_CL__ RCC_PLLSource_PREDIV1
+#define __CLK_PLL_SRC_CL__ RCC_PLLSource_PREDIV1
 
 /*--
 if not(uC.FAMILY == "STM32F10X_CL") then
@@ -179,7 +178,7 @@ if not(uC.FAMILY == "STM32F10X_CL") then
     this:AddExtraWidget("Label", "LABEL_PLL_SRC", "")
 end
 --*/
-#define __PLL_PLL_SRC__ RCC_PLLSource_HSE_Div1
+#define __CLK_PLL_SRC__ RCC_PLLSource_HSE_Div1
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -195,7 +194,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_PLL_MUL", "")
 end
 --*/
-#define __PLL_PLL_MUL_CL__ RCC_PLLMul_9
+#define __CLK_PLL_MUL_CL__ RCC_PLLMul_9
 
 /*--
 if not(uC.FAMILY == "STM32F10X_CL") then
@@ -205,7 +204,7 @@ if not(uC.FAMILY == "STM32F10X_CL") then
     this:AddExtraWidget("Label", "LABEL_PLL_MUL", "")
 end
 --*/
-#define __PLL_PLL_MUL__ RCC_PLLMul_9
+#define __CLK_PLL_MUL__ RCC_PLLMul_9
 
 /*--
 this:AddWidget("Combobox", "System clock source")
@@ -215,7 +214,7 @@ this:AddItem("PLL clock", "RCC_SYSCLKSource_PLLCLK")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_SYSCLK_SRC", "")
 --*/
-#define __PLL_SYS_CLK_SRC__ RCC_SYSCLKSource_PLLCLK
+#define __CLK_SYS_CLK_SRC__ RCC_SYSCLKSource_PLLCLK
 
 /*--
 this:AddWidget("Combobox", "RTC Clock source")
@@ -225,7 +224,7 @@ this:AddItem("HSE clock divided by 128", "RCC_RTCCLKSource_HSE_Div128")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_RTCCLK_SRC", "")
 --*/
-#define __PLL_RTC_CLK_SRC__ RCC_RTCCLKSource_LSI
+#define __CLK_RTC_CLK_SRC__ RCC_RTCCLKSource_LSI
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -243,7 +242,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_MCO_SRC", "")
 end
 --*/
-#define __PLL_MCO_SRC_CL__ RCC_MCO_PLL3CLK
+#define __CLK_MCO_SRC_CL__ RCC_MCO_PLL3CLK
 
 /*--
 if not(uC.FAMILY == "STM32F10X_CL") then
@@ -257,7 +256,7 @@ if not(uC.FAMILY == "STM32F10X_CL") then
     this:AddExtraWidget("Label", "LABEL_MCO_SRC", "")
 end
 --*/
-#define __PLL_MCO_SRC__ RCC_MCO_NoClock
+#define __CLK_MCO_SRC__ RCC_MCO_NoClock
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -268,7 +267,7 @@ if uC.FAMILY == "STM32F10X_CL" then
     this:AddExtraWidget("Label", "LABEL_USB_DIV", "")
 end
 --*/
-#define __PLL_USB_DIV_CL__ RCC_OTGFSCLKSource_PLLVCO_Div3
+#define __CLK_USB_DIV_CL__ RCC_OTGFSCLKSource_PLLVCO_Div3
 
 /*--
 if not(uC.FAMILY == "STM32F10X_CL") then
@@ -279,7 +278,7 @@ if not(uC.FAMILY == "STM32F10X_CL") then
     this:AddExtraWidget("Label", "LABEL_USB_DIV", "")
 end
 --*/
-#define __PLL_USB_DIV__ RCC_USBCLKSource_PLLCLK_1Div5
+#define __CLK_USB_DIV__ RCC_USBCLKSource_PLLCLK_1Div5
 
 /*--
 this:AddWidget("Combobox", "I2S2 clock source")
@@ -292,7 +291,7 @@ end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_I2S2_SRC", "")
 --*/
-#define __PLL_I2S2_SRC__ RCC_I2S2CLKSource_SYSCLK
+#define __CLK_I2S2_SRC__ RCC_I2S2CLKSource_SYSCLK
 
 /*--
 this:AddWidget("Combobox", "I2S3 clock source")
@@ -305,7 +304,7 @@ end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_I2S3_SRC", "")
 --*/
-#define __PLL_I2S3_SRC__ RCC_I2S3CLKSource_SYSCLK
+#define __CLK_I2S3_SRC__ RCC_I2S3CLKSource_SYSCLK
 
 /*--
 this:AddWidget("Combobox", "AHB prescaler")
@@ -321,7 +320,7 @@ this:AddItem("SYSCLK / 512",  "RCC_SYSCLK_Div512")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_AHB_PRE", "")
 --*/
-#define __PLL_AHB_PRE__ RCC_SYSCLK_Div1
+#define __CLK_AHB_PRE__ RCC_SYSCLK_Div1
 
 /*--
 this:AddWidget("Combobox", "APB1 prescaler")
@@ -333,7 +332,7 @@ this:AddItem("HCLK / 16",  "RCC_HCLK_Div16")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_APB1_PRE", "")
 --*/
-#define __PLL_APB1_PRE__ RCC_HCLK_Div2
+#define __CLK_APB1_PRE__ RCC_HCLK_Div2
 
 /*--
 this:AddWidget("Combobox", "APB2 prescaler")
@@ -345,7 +344,7 @@ this:AddItem("HCLK / 16",  "RCC_HCLK_Div16")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_APB2_PRE", "")
 --*/
-#define __PLL_APB2_PRE__ RCC_HCLK_Div1
+#define __CLK_APB2_PRE__ RCC_HCLK_Div1
 
 /*--
 this:AddWidget("Combobox", "ADC prescaler")
@@ -356,39 +355,39 @@ this:AddItem("PCLK2 / 8",  "RCC_PCLK2_Div8")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_ADC_PRE", "")
 --*/
-#define __PLL_ADC_PRE__ RCC_PCLK2_Div8
+#define __CLK_ADC_PRE__ RCC_PCLK2_Div8
 
 /*--
 -- Value calculated automatically
 this:AddWidget("Value")
 --*/
-#define __PLL_FLASH_LATENCY__ 2
+#define __CLK_FLASH_LATENCY__ 2
 
 /*--
 this.CalculateFreq = function(self)
-    local PLLON      = this:GetFlagValue("__PLL_PLL_ON__")
-    local PLLSRC     = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_PLL_SRC_CL__", "__PLL_PLL_SRC__"))
-    local PLLMUL     = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_PLL_MUL_CL__", "__PLL_PLL_MUL__"))
-    local PLL2ON     = this:GetFlagValue("__PLL_PLL2_ON__")
-    local PLL2MUL    = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_PLL2_MUL__", ""))
-    local PLL3ON     = this:GetFlagValue("__PLL_PLL3_ON__")
-    local PLL3MUL    = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_PLL3_MUL__", ""))
-    local PREDIV1SRC = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_PREDIV1_SRC__", ""))
-    local PREDIV1VAL = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_PREDIV1_VAL__", ""))
-    local PREDIV2VAL = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_PREDIV2_VAL__", ""))
-    local I2S2SRC    = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_I2S2_SRC__", ""))
-    local I2S3SRC    = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_I2S3_SRC__", ""))
-    local MCOSRC     = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_MCO_SRC_CL__", "__PLL_MCO_SRC__"))
-    local USBPRE     = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__PLL_USB_DIV_CL__", "__PLL_USB_DIV__"))
-    local HSEON      = iff(this:GetFlagValue("__PLL_HSE_ON__") == "RCC_HSE_OFF", 0, 1)
-    local LSEON      = iff(this:GetFlagValue("__PLL_LSE_ON__") == "RCC_LSE_OFF", 0, 1)
-    local LSION      = iff(this:GetFlagValue("__PLL_LSI_ON__") == "ENABLE", 1, 0)
-    local SYSCLKSRC  = this:GetFlagValue("__PLL_SYS_CLK_SRC__")
-    local RTCSRC     = this:GetFlagValue("__PLL_RTC_CLK_SRC__")
-    local AHBPRE     = this:GetFlagValue("__PLL_AHB_PRE__")
-    local APB1PRE    = this:GetFlagValue("__PLL_APB1_PRE__")
-    local APB2PRE    = this:GetFlagValue("__PLL_APB2_PRE__")
-    local ADCPRE     = this:GetFlagValue("__PLL_ADC_PRE__")
+    local PLLON      = this:GetFlagValue("__CLK_PLL_ON__")
+    local PLLSRC     = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_PLL_SRC_CL__", "__CLK_PLL_SRC__"))
+    local PLLMUL     = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_PLL_MUL_CL__", "__CLK_PLL_MUL__"))
+    local PLL2ON     = this:GetFlagValue("__CLK_PLL2_ON__")
+    local PLL2MUL    = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_PLL2_MUL__", ""))
+    local PLL3ON     = this:GetFlagValue("__CLK_PLL3_ON__")
+    local PLL3MUL    = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_PLL3_MUL__", ""))
+    local PREDIV1SRC = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_PREDIV1_SRC__", ""))
+    local PREDIV1VAL = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_PREDIV1_VAL__", ""))
+    local PREDIV2VAL = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_PREDIV2_VAL__", ""))
+    local I2S2SRC    = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_I2S2_SRC__", ""))
+    local I2S3SRC    = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_I2S3_SRC__", ""))
+    local MCOSRC     = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_MCO_SRC_CL__", "__CLK_MCO_SRC__"))
+    local USBPRE     = this:GetFlagValue(iff(uC.FAMILY == "STM32F10X_CL", "__CLK_USB_DIV_CL__", "__CLK_USB_DIV__"))
+    local HSEON      = iff(this:GetFlagValue("__CLK_HSE_ON__") == "RCC_HSE_OFF", 0, 1)
+    local LSEON      = iff(this:GetFlagValue("__CLK_LSE_ON__") == "RCC_LSE_OFF", 0, 1)
+    local LSION      = iff(this:GetFlagValue("__CLK_LSI_ON__") == "ENABLE", 1, 0)
+    local SYSCLKSRC  = this:GetFlagValue("__CLK_SYS_CLK_SRC__")
+    local RTCSRC     = this:GetFlagValue("__CLK_RTC_CLK_SRC__")
+    local AHBPRE     = this:GetFlagValue("__CLK_AHB_PRE__")
+    local APB1PRE    = this:GetFlagValue("__CLK_APB1_PRE__")
+    local APB2PRE    = this:GetFlagValue("__CLK_APB2_PRE__")
+    local ADCPRE     = this:GetFlagValue("__CLK_ADC_PRE__")
 
     local freq       = {}
     freq.HSE         = uC.OSCFREQ * HSEON
@@ -540,14 +539,14 @@ this.CalculateFreq = function(self)
     this:SetFlagValue("LABEL_APB1_PRE", PrintFrequency(freq.PCLK1).." (PCLK1)")
     this:SetFlagValue("LABEL_APB2_PRE", PrintFrequency(freq.PCLK2).." (PCLK2)")
     this:SetFlagValue("LABEL_ADC_PRE", PrintFrequency(freq.ADCCLK).." (ADCCLK)")
-    this:SetFlagValue("__PLL_FLASH_LATENCY__", tostring(freq.FLASHLAT))
+    this:SetFlagValue("__CLK_FLASH_LATENCY__", tostring(freq.FLASHLAT))
 end
 
 -- trigger frequency calculation after loading all flags
 this.CalculateFreq()
 ++*/
 
-#endif /* _PLL_FLAGS_H_ */
+#endif /* _CLK_FLAGS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

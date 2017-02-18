@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    pll_ioctl.h
+@file    clk_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   PLL ioctl request codes.
+@brief   CLK ioctl request codes.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -25,12 +25,12 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-pll PLL Driver
+ * @defgroup drv-clk System clock Driver
  *
- * \section drv-pll-desc Description
- * Driver handles PLL peripheral.
+ * \section drv-clk-desc Description
+ * Driver handles system clock peripheral (PLL).
  *
- * \section drv-pll-sup-arch Supported architectures
+ * \section drv-clk-sup-arch Supported architectures
  * \li STM32F10x
  *
  * @todo Details
@@ -39,8 +39,8 @@
  * @{
  */
 
-#ifndef _PLL_IOCTL_H_
-#define _PLL_IOCTL_H_
+#ifndef _CLK_IOCTL_H_
+#define _CLK_IOCTL_H_
 
 /*==============================================================================
   Include files
@@ -56,7 +56,7 @@ extern "C" {
 ==============================================================================*/
 /**
  *  @brief  Get frequency and name of selected clock [Hz].
- *  @param  [WR,RD] @ref PLL_clk_info_t * clock information.
+ *  @param  [WR,RD] @ref CLK_info_t * clock information.
  *  @return On success 0 is returned, otherwise -1.
  *
  *  @b Example
@@ -65,22 +65,22 @@ extern "C" {
 
     //...
 
-    PLL_clk_info_t info;
-    info.iterator = 0;
+    CLK_info_t clk;
+    clk.iterator = 0;
 
     int stat;
 
     do {
-            stat = ioctl(IOCTL_PLL__GET_CLK_INFO, &info);
+            stat = ioctl(IOCTL_CLK__GET_CLK_INFO, &clk);
 
-            printf("%s: %d Hz\n", info.clock_name, info.clock_Hz);
+            printf("%s: %d Hz\n", clk.name, clk.freq_Hz);
 
-    while (stat == 0 && info.clock_name);
+    while (stat == 0 && clk.name);
 
     //...
     @endcode
  */
-#define IOCTL_PLL__GET_CLK_INFO   _IOWR(PLL, 0x00, PLL_clk_info_t*)
+#define IOCTL_CLK__GET_CLK_INFO   _IOWR(CLK, 0x00, CLK_info_t*)
 
 /*==============================================================================
   Exported object types
@@ -90,9 +90,9 @@ extern "C" {
  */
 typedef struct {
         u8_t        iterator;           //!< [IN]  Clock iterator (starts from 0, auto incremented).
-        u32_t       clock_Hz;           //!< [OUT] Clock frequency in Hz.
-        const char *clock_name;         //!< [OUT] Clock name (NULL if clock does not exist, end of iteration).
-} PLL_clk_info_t;
+        u32_t       freq_Hz;            //!< [OUT] Clock frequency in Hz.
+        const char *name;               //!< [OUT] Clock name (NULL if clock does not exist, end of iteration).
+} CLK_info_t;
 
 /*==============================================================================
   Exported objects
@@ -110,7 +110,7 @@ typedef struct {
 }
 #endif
 
-#endif /* _PLL_IOCTL_H_ */
+#endif /* _CLK_IOCTL_H_ */
 /**@}*/
 /*==============================================================================
   End of file
