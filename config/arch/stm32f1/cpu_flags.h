@@ -108,9 +108,7 @@ __CPU_NAME__=STM32F107VCxx
 
 #/*--
 # this:AddWidget("Combobox", "Default IRQ priority")
-# this:AddItem("Priority 0 (the highest)", "0x0F")
-# for i = 1, 12 do this:AddItem("Priority "..i, "0x"..i.."F") end
-# this:AddItem("Priority 13 (the lowest)", "0xDF")
+# uC.AddPriorityItems(this, true)
 #--*/
 #define __CPU_IRQ_USER_PRIORITY__ 0xDF
 

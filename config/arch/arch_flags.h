@@ -64,20 +64,19 @@
 #
 # uC.ARCH    = this:GetFlagValue("__CPU_ARCH__", "project/project_flags.h")
 # uC.OSCFREQ = this:GetFlagValue("__CPU_OSC_FREQ__", "project/project_flags.h")
-# uC.NAME    = ""
-# uC.FAMILY  = ""
+# uC.NAME    = this:GetFlagValue("__CPU_NAME__", "arch/"..uC.ARCH.."/cpu_flags.h")
+# uC.FAMILY  = this:GetFlagValue("__CPU_FAMILY__", "arch/"..uC.ARCH.."/cpu_flags.h"):match("_(.*)_")
 # uC.PERIPH  = {}
 #
 # if uC.ARCH == "stm32f1" then
-#     uC.AddPriorityItems = function(this)
+#     uC.AddPriorityItems = function(this, no_default)
 #         this:AddItem("Priority 0 (the highest)", "0x0F")
 #         for i = 1, 12 do this:AddItem("Priority "..i, "0x"..i.."F") end
 #         this:AddItem("Priority 13 (the lowest)", "0xDF")
-#         this:AddItem("Default priority", "__CPU_IRQ_USER_PRIORITY__")
+#         if no_default ~= true then
+#             this:AddItem("Default priority", "__CPU_IRQ_USER_PRIORITY__")
+#         end
 #     end
-#
-#     uC.NAME   = this:GetFlagValue("__CPU_NAME__", "arch/stm32f1/cpu_flags.h")
-#     uC.FAMILY = this:GetFlagValue("__CPU_FAMILY__", "arch/stm32f1/cpu_flags.h"):match("_(.*)_")
 #
 #     uC.PERIPH["STM32F100C8xx"] = {GPIO = true, CLK = true, CRC = true, WDG = true, UART = true, SPI = true, AFIO = true, IRQ = true, I2C = true, RTC = true}
 #     uC.PERIPH["STM32F100RBxx"] = {GPIO = true, CLK = true, CRC = true, WDG = true, UART = true, SPI = true, AFIO = true, IRQ = true, I2C = true, RTC = true}
@@ -154,10 +153,8 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #++*/
 #/*--
 # this:AddExtraWidget("Label", "LabeluCName", uC.NAME)
-# if uC.ARCH == "stm32f1" then
-#     this:AddExtraWidget("Hyperlink", "HL_CPU", "Configure")
-#     this:SetEvent("clicked", "HL_CPU", function() this:LoadFile("arch/stm32f1/cpu_flags.h") end)
-# end
+# this:AddExtraWidget("Hyperlink", "HL_CPU", "Configure")
+# this:SetEvent("clicked", "HL_CPU", function() this:LoadFile("arch/"..uC.ARCH.."/cpu_flags.h") end)
 #++*/
 
 
@@ -169,8 +166,8 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 
 #// MODULE LIST BEGIN
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].GPIO ~= nil then
-#     this:PutWidgets("GPIO", "arch/stm32f1/gpio_flags.h")
+# if uC.PERIPH[uC.NAME].GPIO ~= nil then
+#     this:PutWidgets("GPIO", "arch/"..uC.ARCH.."/gpio_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_GPIO__", "_NO_")
@@ -182,8 +179,8 @@ __ENABLE_GPIO__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].AFIO ~= nil then
-#     this:PutWidgets("AFIO", "arch/stm32f1/afio_flags.h")
+# if uC.PERIPH[uC.NAME].AFIO ~= nil then
+#     this:PutWidgets("AFIO", "arch/"..uC.ARCH.."/afio_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_AFIO__", "_NO_")
@@ -195,8 +192,8 @@ __ENABLE_AFIO__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].CLK ~= nil then
-#     this:PutWidgets("CLK", "arch/stm32f1/clk_flags.h")
+# if uC.PERIPH[uC.NAME].CLK ~= nil then
+#     this:PutWidgets("CLK", "arch/"..uC.ARCH.."/clk_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_CLK__", "_NO_")
@@ -208,7 +205,7 @@ __ENABLE_CLK__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].RTC ~= nil then
+# if uC.PERIPH[uC.NAME].RTC ~= nil then
 #     this:PutWidgets("RTC")
 # else
 #     this:AddWidget("Value")
@@ -221,7 +218,7 @@ __ENABLE_RTC__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].RTC ~= nil then
+# if uC.PERIPH[uC.NAME].RTC ~= nil then
 #     this:PutWidgets("CRC")
 # else
 #     this:AddWidget("Value")
@@ -234,8 +231,8 @@ __ENABLE_CRC__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].ETHMAC ~= nil then
-#     this:PutWidgets("ETHMAC", "arch/stm32f1/ethmac_flags.h")
+# if uC.PERIPH[uC.NAME].ETHMAC ~= nil then
+#     this:PutWidgets("ETHMAC", "arch/"..uC.ARCH.."/ethmac_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_ETHMAC__", "_NO_")
@@ -247,8 +244,8 @@ __ENABLE_ETHMAC__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].SPI ~= nil then
-#     this:PutWidgets("SPI", "arch/stm32f1/spi_flags.h")
+# if uC.PERIPH[uC.NAME].SPI ~= nil then
+#     this:PutWidgets("SPI", "arch/"..uC.ARCH.."/spi_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_SPI__", "_NO_")
@@ -260,8 +257,8 @@ __ENABLE_SPI__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].UART ~= nil then
-#     this:PutWidgets("UART", "arch/stm32f1/uart_flags.h")
+# if uC.PERIPH[uC.NAME].UART ~= nil then
+#     this:PutWidgets("UART", "arch/"..uC.ARCH.."/uart_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_UART__", "_NO_")
@@ -273,8 +270,8 @@ __ENABLE_UART__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].WDG ~= nil then
-#     this:PutWidgets("WDG", "arch/stm32f1/wdg_flags.h")
+# if uC.PERIPH[uC.NAME].WDG ~= nil then
+#     this:PutWidgets("WDG", "arch/"..uC.ARCH.."/wdg_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_WDG__", "_NO_")
@@ -286,8 +283,8 @@ __ENABLE_WDG__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].USBD ~= nil then
-#     this:PutWidgets("USBD", "arch/stm32f1/usbd_flags.h")
+# if uC.PERIPH[uC.NAME].USBD ~= nil then
+#     this:PutWidgets("USBD", "arch/"..uC.ARCH.."/usbd_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_USBD__", "_NO_")
@@ -299,8 +296,8 @@ __ENABLE_USBD__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].I2C ~= nil then
-#     this:PutWidgets("I2C", "arch/stm32f1/i2c_flags.h")
+# if uC.PERIPH[uC.NAME].I2C ~= nil then
+#     this:PutWidgets("I2C", "arch/"..uC.ARCH.."/i2c_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_I2C__", "_NO_")
@@ -312,8 +309,8 @@ __ENABLE_I2C__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].IRQ ~= nil then
-#     this:PutWidgets("IRQ", "arch/stm32f1/irq_flags.h")
+# if uC.PERIPH[uC.NAME].IRQ ~= nil then
+#     this:PutWidgets("IRQ", "arch/"..uC.ARCH.."/irq_flags.h")
 # else
 #     this:AddWidget("Value")
 #     this:SetFlagValue("__ENABLE_IRQ__", "_NO_")
@@ -325,7 +322,7 @@ __ENABLE_IRQ__=_NO_
 #*/
 
 #/*--
-# if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].PWM ~= nil then
+# if uC.PERIPH[uC.NAME].PWM ~= nil then
 #     this:PutWidgets("PWM")
 # else
 #     this:AddWidget("Value")

@@ -577,8 +577,8 @@ EOF
     else
         cat << EOF >> arch_flags.h
 #/*--
-# if uC.ARCH == "$ARCH" and uC.PERIPH[uC.NAME].${DRVNAME^^} ~= nil then
-#     this:PutWidgets("${DRVNAME^^}", "arch/$ARCH/${DRVNAME}_flags.h")
+# if uC.PERIPH[uC.NAME].${DRVNAME^^} ~= nil then
+#     this:PutWidgets("${DRVNAME^^}", "arch/"..uC.ARCH.."/${DRVNAME}_flags.h")
 #     this:SetToolTip("$BRIEF")
 # else
 #     this:AddWidget("Value")

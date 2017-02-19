@@ -66,28 +66,11 @@ include ./config/network/network_flags.h
 # -- this flags must exists in the arch/arch_flags.h file
 # this:SetEvent("ConfigImport",
 #     function()
-#         local MODULES = {
-#             "__ENABLE_GPIO__",
-#             "__ENABLE_AFIO__",
-#             "__ENABLE_PLL__",
-#             "__ENABLE_RTC__",
-#             "__ENABLE_CRC__",
-#             "__ENABLE_ETHMAC__",
-#             "__ENABLE_SPI__",
-#             "__ENABLE_UART__",
-#             "__ENABLE_WDG__",
-#             "__ENABLE_USBD__",
-#             "__ENABLE_I2C__",
-#             "__ENABLE_IRQ__",
-#             "__ENABLE_LOOP__",
-#             "__ENABLE_SDSPI__",
-#             "__ENABLE_TTY__",
-#             "__ENABLE_DHT11__",
-#             "__ENABLE_I2CEE__"
-#         }
 #
-#         for i, flag in ipairs(MODULES) do
-#             this:SetFlagValue(flag, "_NO_", "arch/arch_flags.h")
+#         modules = this:GetFlagsList("arch/arch_flags.h", "__ENABLE_.*__")
+#
+#         for f, v in pairs(modules) do
+#             this:SetFlagValue(f, "_NO_", "arch/arch_flags.h")
 #         end
 #     end)
 #++*/
