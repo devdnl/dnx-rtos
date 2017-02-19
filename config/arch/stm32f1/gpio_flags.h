@@ -272,7 +272,7 @@ if this:PinExist("A", 1) then
     this:AddProposals(PA1, "A", 1)
 end
 --*/
-#define __GPIO_PA_PIN_1_NAME__ ETH_RMII_REF_CLK
+#define __GPIO_PA_PIN_1_NAME__ PA1_NC
 
 /*--
 if this:PinExist("A", 1) then
@@ -280,7 +280,7 @@ if this:PinExist("A", 1) then
     this:AddPinMode("A", 1)
 end
 --*/
-#define __GPIO_PA_PIN_1_MODE__ _GPIO_IN_FLOAT
+#define __GPIO_PA_PIN_1_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 1) then
@@ -288,7 +288,7 @@ if this:PinExist("A", 1) then
     this:AddPinState("A", 1)
 end
 --*/
-#define __GPIO_PA_PIN_1_STATE__ _FLOAT
+#define __GPIO_PA_PIN_1_STATE__ _LOW
 
 /*--
 if this:PinExist("A", 2) then
@@ -313,7 +313,7 @@ if this:PinExist("A", 2) then
     this:AddProposals(PA2, "A", 2)
 end
 --*/
-#define __GPIO_PA_PIN_2_NAME__ ETH_RMII_MDIO
+#define __GPIO_PA_PIN_2_NAME__ PA2_NC
 
 /*--
 if this:PinExist("A", 2) then
@@ -321,7 +321,7 @@ if this:PinExist("A", 2) then
     this:AddPinMode("A", 2)
 end
 --*/
-#define __GPIO_PA_PIN_2_MODE__ _GPIO_ALT_OUT_PUSH_PULL_50MHZ
+#define __GPIO_PA_PIN_2_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 2) then
@@ -369,7 +369,7 @@ if this:PinExist("A", 3) then
     this:AddPinState("A", 3)
 end
 --*/
-#define __GPIO_PA_PIN_3_STATE__ _FLOAT
+#define __GPIO_PA_PIN_3_STATE__ _LOW
 
 /*--
 if this:PinExist("A", 4) then
@@ -388,7 +388,7 @@ if this:PinExist("A", 4) then
     this:AddProposals(PA4, "A", 4)
 end
 --*/
-#define __GPIO_PA_PIN_4_NAME__ SD_CS
+#define __GPIO_PA_PIN_4_NAME__ PA4_NC
 
 /*--
 if this:PinExist("A", 4) then
@@ -396,7 +396,7 @@ if this:PinExist("A", 4) then
     this:AddPinMode("A", 4)
 end
 --*/
-#define __GPIO_PA_PIN_4_MODE__ _GPIO_OUT_PUSH_PULL_50MHZ
+#define __GPIO_PA_PIN_4_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 4) then
@@ -404,7 +404,7 @@ if this:PinExist("A", 4) then
     this:AddPinState("A", 4)
 end
 --*/
-#define __GPIO_PA_PIN_4_STATE__ _HIGH
+#define __GPIO_PA_PIN_4_STATE__ _LOW
 
 /*--
 if this:PinExist("A", 5) then
@@ -419,7 +419,7 @@ if this:PinExist("A", 5) then
     this:AddProposals(PA5, "A", 5)
 end
 --*/
-#define __GPIO_PA_PIN_5_NAME__ SPI1_SCK
+#define __GPIO_PA_PIN_5_NAME__ PA5_NC
 
 /*--
 if this:PinExist("A", 5) then
@@ -427,7 +427,7 @@ if this:PinExist("A", 5) then
     this:AddPinMode("A", 5)
 end
 --*/
-#define __GPIO_PA_PIN_5_MODE__ _GPIO_ALT_OUT_PUSH_PULL_50MHZ
+#define __GPIO_PA_PIN_5_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 5) then
@@ -459,7 +459,7 @@ if this:PinExist("A", 6) then
     this:AddProposals(PA6, "A", 6)
 end
 --*/
-#define __GPIO_PA_PIN_6_NAME__ SPI1_MISO
+#define __GPIO_PA_PIN_6_NAME__ PA6_NC
 
 /*--
 if this:PinExist("A", 6) then
@@ -467,7 +467,7 @@ if this:PinExist("A", 6) then
     this:AddPinMode("A", 6)
 end
 --*/
-#define __GPIO_PA_PIN_6_MODE__ _GPIO_IN_PULLED
+#define __GPIO_PA_PIN_6_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 6) then
@@ -475,7 +475,7 @@ if this:PinExist("A", 6) then
     this:AddPinState("A", 6)
 end
 --*/
-#define __GPIO_PA_PIN_6_STATE__ _HIGH
+#define __GPIO_PA_PIN_6_STATE__ _LOW
 
 /*--
 if this:PinExist("A", 7) then
@@ -501,7 +501,7 @@ if this:PinExist("A", 7) then
     this:AddProposals(PA7, "A", 7)
 end
 --*/
-#define __GPIO_PA_PIN_7_NAME__ SPI1_MOSI
+#define __GPIO_PA_PIN_7_NAME__ PA7_NC
 
 /*--
 if this:PinExist("A", 7) then
@@ -509,7 +509,7 @@ if this:PinExist("A", 7) then
     this:AddPinMode("A", 7)
 end
 --*/
-#define __GPIO_PA_PIN_7_MODE__ _GPIO_ALT_OUT_PUSH_PULL_50MHZ
+#define __GPIO_PA_PIN_7_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 7) then
@@ -533,7 +533,7 @@ if this:PinExist("A", 8) then
     this:AddProposals(PA8, "A", 8)
 end
 --*/
-#define __GPIO_PA_PIN_8_NAME__ MCO
+#define __GPIO_PA_PIN_8_NAME__ PA8_NC
 
 /*--
 if this:PinExist("A", 8) then
@@ -541,7 +541,7 @@ if this:PinExist("A", 8) then
     this:AddPinMode("A", 8)
 end
 --*/
-#define __GPIO_PA_PIN_8_MODE__ _GPIO_ALT_OUT_PUSH_PULL_50MHZ
+#define __GPIO_PA_PIN_8_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 8) then
@@ -565,7 +565,7 @@ if this:PinExist("A", 9) then
     this:AddProposals(PA9, "A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_NAME__ OTG_FS_VBUS
+#define __GPIO_PA_PIN_9_NAME__ USART1_TX
 
 /*--
 if this:PinExist("A", 9) then
@@ -573,7 +573,7 @@ if this:PinExist("A", 9) then
     this:AddPinMode("A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_MODE__ _GPIO_IN_FLOAT
+#define __GPIO_PA_PIN_9_MODE__ _GPIO_ALT_OUT_PUSH_PULL_10MHZ
 
 /*--
 if this:PinExist("A", 9) then
@@ -581,7 +581,7 @@ if this:PinExist("A", 9) then
     this:AddPinState("A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_STATE__ _FLOAT
+#define __GPIO_PA_PIN_9_STATE__ _HIGH
 
 /*--
 if this:PinExist("A", 10) then
@@ -597,7 +597,7 @@ if this:PinExist("A", 10) then
     this:AddProposals(PA10, "A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_NAME__ PA10
+#define __GPIO_PA_PIN_10_NAME__ USART1_RX
 
 /*--
 if this:PinExist("A", 10) then
@@ -605,7 +605,7 @@ if this:PinExist("A", 10) then
     this:AddPinMode("A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_MODE__ _GPIO_ANALOG
+#define __GPIO_PA_PIN_10_MODE__ _GPIO_IN_PULLED
 
 /*--
 if this:PinExist("A", 10) then
@@ -613,7 +613,7 @@ if this:PinExist("A", 10) then
     this:AddPinState("A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_STATE__ _FLOAT
+#define __GPIO_PA_PIN_10_STATE__ _HIGH
 
 /*--
 if this:PinExist("A", 11) then
@@ -631,7 +631,7 @@ if this:PinExist("A", 11) then
     this:AddProposals(PA11, "A", 11)
 end
 --*/
-#define __GPIO_PA_PIN_11_NAME__ OTG_FS_DM
+#define __GPIO_PA_PIN_11_NAME__ PA11_NC
 
 /*--
 if this:PinExist("A", 11) then
@@ -639,7 +639,7 @@ if this:PinExist("A", 11) then
     this:AddPinMode("A", 11)
 end
 --*/
-#define __GPIO_PA_PIN_11_MODE__ _GPIO_IN_FLOAT
+#define __GPIO_PA_PIN_11_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 11) then
@@ -647,7 +647,7 @@ if this:PinExist("A", 11) then
     this:AddPinState("A", 11)
 end
 --*/
-#define __GPIO_PA_PIN_11_STATE__ _FLOAT
+#define __GPIO_PA_PIN_11_STATE__ _LOW
 
 /*--
 if this:PinExist("A", 12) then
@@ -664,7 +664,7 @@ if this:PinExist("A", 12) then
     this:AddProposals(PA12, "A", 12)
 end
 --*/
-#define __GPIO_PA_PIN_12_NAME__ OTG_FS_DP
+#define __GPIO_PA_PIN_12_NAME__ PA12_NC
 
 /*--
 if this:PinExist("A", 12) then
@@ -672,7 +672,7 @@ if this:PinExist("A", 12) then
     this:AddPinMode("A", 12)
 end
 --*/
-#define __GPIO_PA_PIN_12_MODE__ _GPIO_IN_FLOAT
+#define __GPIO_PA_PIN_12_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 12) then
@@ -680,7 +680,7 @@ if this:PinExist("A", 12) then
     this:AddPinState("A", 12)
 end
 --*/
-#define __GPIO_PA_PIN_12_STATE__ _FLOAT
+#define __GPIO_PA_PIN_12_STATE__ _LOW
 
 /*--
 if this:PinExist("A", 13) then
@@ -807,7 +807,7 @@ if this:PinExist("B", 0) then
     this:AddPinState("B", 0)
 end
 --*/
-#define __GPIO_PB_PIN_0_STATE__ _FLOAT
+#define __GPIO_PB_PIN_0_STATE__ _LOW
 
 /*--
 if this:PinExist("B", 1) then
@@ -843,7 +843,7 @@ if this:PinExist("B", 1) then
     this:AddPinState("B", 1)
 end
 --*/
-#define __GPIO_PB_PIN_1_STATE__ _FLOAT
+#define __GPIO_PB_PIN_1_STATE__ _LOW
 
 /*--
 if this:PinExist("B", 2) then
@@ -960,7 +960,7 @@ if this:PinExist("B", 5) then
     this:AddProposals(PB5, "B", 5)
 end
 --*/
-#define __GPIO_PB_PIN_5_NAME__ PB5
+#define __GPIO_PB_PIN_5_NAME__ PB5_NC
 
 /*--
 if this:PinExist("B", 5) then
@@ -976,7 +976,7 @@ if this:PinExist("B", 5) then
     this:AddPinState("B", 5)
 end
 --*/
-#define __GPIO_PB_PIN_5_STATE__ _FLOAT
+#define __GPIO_PB_PIN_5_STATE__ _LOW
 
 /*--
 if this:PinExist("B", 6) then
@@ -993,7 +993,7 @@ if this:PinExist("B", 6) then
     this:AddProposals(PB6, "B", 6)
 end
 --*/
-#define __GPIO_PB_PIN_6_NAME__ PB6
+#define __GPIO_PB_PIN_6_NAME__ PB6_NC
 
 /*--
 if this:PinExist("B", 6) then
@@ -1001,7 +1001,7 @@ if this:PinExist("B", 6) then
     this:AddPinMode("B", 6)
 end
 --*/
-#define __GPIO_PB_PIN_6_MODE__ _GPIO_OUT_PUSH_PULL_2MHZ
+#define __GPIO_PB_PIN_6_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("B", 6) then
@@ -1026,7 +1026,7 @@ if this:PinExist("B", 7) then
     this:AddProposals(PB7, "B", 7)
 end
 --*/
-#define __GPIO_PB_PIN_7_NAME__ PB7
+#define __GPIO_PB_PIN_7_NAME__ PB7_NC
 
 /*--
 if this:PinExist("B", 7) then
@@ -1034,7 +1034,7 @@ if this:PinExist("B", 7) then
     this:AddPinMode("B", 7)
 end
 --*/
-#define __GPIO_PB_PIN_7_MODE__ _GPIO_OUT_PUSH_PULL_2MHZ
+#define __GPIO_PB_PIN_7_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("B", 7) then
@@ -1065,7 +1065,7 @@ if this:PinExist("B", 8) then
     this:AddProposals(PB8, "B", 8)
 end
 --*/
-#define __GPIO_PB_PIN_8_NAME__ PB8
+#define __GPIO_PB_PIN_8_NAME__ PB8_NC
 
 /*--
 if this:PinExist("B", 8) then
@@ -1081,7 +1081,7 @@ if this:PinExist("B", 8) then
     this:AddPinState("B", 8)
 end
 --*/
-#define __GPIO_PB_PIN_8_STATE__ _FLOAT
+#define __GPIO_PB_PIN_8_STATE__ _LOW
 
 /*--
 if this:PinExist("B", 9) then
@@ -1102,7 +1102,7 @@ if this:PinExist("B", 9) then
     this:AddProposals(PB9, "B", 9)
 end
 --*/
-#define __GPIO_PB_PIN_9_NAME__ PB9
+#define __GPIO_PB_PIN_9_NAME__ PB9_NC
 
 /*--
 if this:PinExist("B", 9) then
@@ -1118,7 +1118,7 @@ if this:PinExist("B", 9) then
     this:AddPinState("B", 9)
 end
 --*/
-#define __GPIO_PB_PIN_9_STATE__ _FLOAT
+#define __GPIO_PB_PIN_9_STATE__ _LOW
 
 /*--
 if this:PinExist("B", 10) then
@@ -1151,7 +1151,7 @@ if this:PinExist("B", 10) then
     this:AddPinState("B", 10)
 end
 --*/
-#define __GPIO_PB_PIN_10_STATE__ _FLOAT
+#define __GPIO_PB_PIN_10_STATE__ _LOW
 
 /*--
 if this:PinExist("B", 11) then
@@ -1168,7 +1168,7 @@ if this:PinExist("B", 11) then
     this:AddProposals(PB11, "B", 11)
 end
 --*/
-#define __GPIO_PB_PIN_11_NAME__ ETH_RMII_TX_EN
+#define __GPIO_PB_PIN_11_NAME__ PB11_NC
 
 /*--
 if this:PinExist("B", 11) then
@@ -1176,7 +1176,7 @@ if this:PinExist("B", 11) then
     this:AddPinMode("B", 11)
 end
 --*/
-#define __GPIO_PB_PIN_11_MODE__ _GPIO_ALT_OUT_PUSH_PULL_50MHZ
+#define __GPIO_PB_PIN_11_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("B", 11) then
@@ -1206,7 +1206,7 @@ if this:PinExist("B", 12) then
     this:AddProposals(PB12, "B", 12)
 end
 --*/
-#define __GPIO_PB_PIN_12_NAME__ ETH_RMII_TXD0
+#define __GPIO_PB_PIN_12_NAME__ PB12_NC
 
 /*--
 if this:PinExist("B", 12) then
@@ -1214,7 +1214,7 @@ if this:PinExist("B", 12) then
     this:AddPinMode("B", 12)
 end
 --*/
-#define __GPIO_PB_PIN_12_MODE__ _GPIO_ALT_OUT_PUSH_PULL_50MHZ
+#define __GPIO_PB_PIN_12_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("B", 12) then
@@ -1243,7 +1243,7 @@ if this:PinExist("B", 13) then
     this:AddProposals(PB13, "B", 13)
 end
 --*/
-#define __GPIO_PB_PIN_13_NAME__ ETH_RMII_TXD1
+#define __GPIO_PB_PIN_13_NAME__ PB13_NC
 
 /*--
 if this:PinExist("B", 13) then
@@ -1251,7 +1251,7 @@ if this:PinExist("B", 13) then
     this:AddPinMode("B", 13)
 end
 --*/
-#define __GPIO_PB_PIN_13_MODE__ _GPIO_ALT_OUT_PUSH_PULL_50MHZ
+#define __GPIO_PB_PIN_13_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("B", 13) then
@@ -1277,7 +1277,7 @@ if this:PinExist("B", 14) then
     this:AddProposals(PB14, "B", 14)
 end
 --*/
-#define __GPIO_PB_PIN_14_NAME__ PB14
+#define __GPIO_PB_PIN_14_NAME__ PB14_NC
 
 /*--
 if this:PinExist("B", 14) then
@@ -1285,7 +1285,7 @@ if this:PinExist("B", 14) then
     this:AddPinMode("B", 14)
 end
 --*/
-#define __GPIO_PB_PIN_14_MODE__ _GPIO_OUT_PUSH_PULL_2MHZ
+#define __GPIO_PB_PIN_14_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("B", 14) then
@@ -1313,7 +1313,7 @@ if this:PinExist("B", 15) then
     this:AddProposals(PB15, "B", 15)
 end
 --*/
-#define __GPIO_PB_PIN_15_NAME__ PB15
+#define __GPIO_PB_PIN_15_NAME__ PB15_NC
 
 /*--
 if this:PinExist("B", 15) then
@@ -1321,7 +1321,7 @@ if this:PinExist("B", 15) then
     this:AddPinMode("B", 15)
 end
 --*/
-#define __GPIO_PB_PIN_15_MODE__ _GPIO_OUT_PUSH_PULL_2MHZ
+#define __GPIO_PB_PIN_15_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("B", 15) then
@@ -1362,7 +1362,7 @@ if this:PinExist("C", 0) then
     this:AddPinState("C", 0)
 end
 --*/
-#define __GPIO_PC_PIN_0_STATE__ _FLOAT
+#define __GPIO_PC_PIN_0_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 1) then
@@ -1378,7 +1378,7 @@ if this:PinExist("C", 1) then
     this:AddProposals(PC1, "C", 1)
 end
 --*/
-#define __GPIO_PC_PIN_1_NAME__ ETH_RMII_MDC
+#define __GPIO_PC_PIN_1_NAME__ PC1_NC
 
 /*--
 if this:PinExist("C", 1) then
@@ -1386,7 +1386,7 @@ if this:PinExist("C", 1) then
     this:AddPinMode("C", 1)
 end
 --*/
-#define __GPIO_PC_PIN_1_MODE__ _GPIO_ALT_OUT_PUSH_PULL_50MHZ
+#define __GPIO_PC_PIN_1_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("C", 1) then
@@ -1425,7 +1425,7 @@ if this:PinExist("C", 2) then
     this:AddPinState("C", 2)
 end
 --*/
-#define __GPIO_PC_PIN_2_STATE__ _FLOAT
+#define __GPIO_PC_PIN_2_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 3) then
@@ -1456,7 +1456,7 @@ if this:PinExist("C", 3) then
     this:AddPinState("C", 3)
 end
 --*/
-#define __GPIO_PC_PIN_3_STATE__ _FLOAT
+#define __GPIO_PC_PIN_3_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 4) then
@@ -1489,7 +1489,7 @@ if this:PinExist("C", 4) then
     this:AddPinState("C", 4)
 end
 --*/
-#define __GPIO_PC_PIN_4_STATE__ _FLOAT
+#define __GPIO_PC_PIN_4_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 5) then
@@ -1506,7 +1506,7 @@ if this:PinExist("C", 5) then
     this:AddProposals(PC5, "C", 5)
 end
 --*/
-#define __GPIO_PC_PIN_5_NAME__ PC5
+#define __GPIO_PC_PIN_5_NAME__ PC5_NC
 
 /*--
 if this:PinExist("C", 5) then
@@ -1522,7 +1522,7 @@ if this:PinExist("C", 5) then
     this:AddPinState("C", 5)
 end
 --*/
-#define __GPIO_PC_PIN_5_STATE__ _FLOAT
+#define __GPIO_PC_PIN_5_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 6) then
@@ -1539,7 +1539,7 @@ if this:PinExist("C", 6) then
     this:AddProposals(PC6, "C", 6)
 end
 --*/
-#define __GPIO_PC_PIN_6_NAME__ PC6
+#define __GPIO_PC_PIN_6_NAME__ PC6_NC
 
 /*--
 if this:PinExist("C", 6) then
@@ -1555,7 +1555,7 @@ if this:PinExist("C", 6) then
     this:AddPinState("C", 6)
 end
 --*/
-#define __GPIO_PC_PIN_6_STATE__ _FLOAT
+#define __GPIO_PC_PIN_6_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 7) then
@@ -1572,7 +1572,7 @@ if this:PinExist("C", 7) then
     this:AddProposals(PC7, "C", 7)
 end
 --*/
-#define __GPIO_PC_PIN_7_NAME__ CS_0
+#define __GPIO_PC_PIN_7_NAME__ PC7_NC
 
 /*--
 if this:PinExist("C", 7) then
@@ -1580,7 +1580,7 @@ if this:PinExist("C", 7) then
     this:AddPinMode("C", 7)
 end
 --*/
-#define __GPIO_PC_PIN_7_MODE__ _GPIO_OUT_PUSH_PULL_2MHZ
+#define __GPIO_PC_PIN_7_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("C", 7) then
@@ -1588,7 +1588,7 @@ if this:PinExist("C", 7) then
     this:AddPinState("C", 7)
 end
 --*/
-#define __GPIO_PC_PIN_7_STATE__ _HIGH
+#define __GPIO_PC_PIN_7_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 8) then
@@ -1606,7 +1606,7 @@ if this:PinExist("C", 8) then
     this:AddProposals(PC8, "C", 8)
 end
 --*/
-#define __GPIO_PC_PIN_8_NAME__ CS_1
+#define __GPIO_PC_PIN_8_NAME__ PC8_NC
 
 /*--
 if this:PinExist("C", 8) then
@@ -1614,7 +1614,7 @@ if this:PinExist("C", 8) then
     this:AddPinMode("C", 8)
 end
 --*/
-#define __GPIO_PC_PIN_8_MODE__ _GPIO_OUT_PUSH_PULL_2MHZ
+#define __GPIO_PC_PIN_8_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("C", 8) then
@@ -1622,7 +1622,7 @@ if this:PinExist("C", 8) then
     this:AddPinState("C", 8)
 end
 --*/
-#define __GPIO_PC_PIN_8_STATE__ _HIGH
+#define __GPIO_PC_PIN_8_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 9) then
@@ -1640,7 +1640,7 @@ if this:PinExist("C", 9) then
     this:AddProposals(PC9, "C", 9)
 end
 --*/
-#define __GPIO_PC_PIN_9_NAME__ CS_2
+#define __GPIO_PC_PIN_9_NAME__ PC9_NC
 
 /*--
 if this:PinExist("C", 9) then
@@ -1648,7 +1648,7 @@ if this:PinExist("C", 9) then
     this:AddPinMode("C", 9)
 end
 --*/
-#define __GPIO_PC_PIN_9_MODE__ _GPIO_OUT_PUSH_PULL_2MHZ
+#define __GPIO_PC_PIN_9_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("C", 9) then
@@ -1656,7 +1656,7 @@ if this:PinExist("C", 9) then
     this:AddPinState("C", 9)
 end
 --*/
-#define __GPIO_PC_PIN_9_STATE__ _HIGH
+#define __GPIO_PC_PIN_9_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 10) then
@@ -1673,7 +1673,7 @@ if this:PinExist("C", 10) then
     this:AddProposals(PC10, "C", 10)
 end
 --*/
-#define __GPIO_PC_PIN_10_NAME__ SCK
+#define __GPIO_PC_PIN_10_NAME__ PC10_NC
 
 /*--
 if this:PinExist("C", 10) then
@@ -1681,7 +1681,7 @@ if this:PinExist("C", 10) then
     this:AddPinMode("C", 10)
 end
 --*/
-#define __GPIO_PC_PIN_10_MODE__ _GPIO_ALT_OUT_PUSH_PULL_10MHZ
+#define __GPIO_PC_PIN_10_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("C", 10) then
@@ -1704,7 +1704,7 @@ if this:PinExist("C", 11) then
     this:AddProposals(PC11, "C", 11)
 end
 --*/
-#define __GPIO_PC_PIN_11_NAME__ MISO
+#define __GPIO_PC_PIN_11_NAME__ PC11_NC
 
 /*--
 if this:PinExist("C", 11) then
@@ -1712,7 +1712,7 @@ if this:PinExist("C", 11) then
     this:AddPinMode("C", 11)
 end
 --*/
-#define __GPIO_PC_PIN_11_MODE__ _GPIO_IN_PULLED
+#define __GPIO_PC_PIN_11_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("C", 11) then
@@ -1720,7 +1720,7 @@ if this:PinExist("C", 11) then
     this:AddPinState("C", 11)
 end
 --*/
-#define __GPIO_PC_PIN_11_STATE__ _HIGH
+#define __GPIO_PC_PIN_11_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 12) then
@@ -1737,7 +1737,7 @@ if this:PinExist("C", 12) then
     this:AddProposals(PC12, "C", 12)
 end
 --*/
-#define __GPIO_PC_PIN_12_NAME__ MOSI
+#define __GPIO_PC_PIN_12_NAME__ PC12_NC
 
 /*--
 if this:PinExist("C", 12) then
@@ -1745,7 +1745,7 @@ if this:PinExist("C", 12) then
     this:AddPinMode("C", 12)
 end
 --*/
-#define __GPIO_PC_PIN_12_MODE__ _GPIO_ALT_OUT_PUSH_PULL_10MHZ
+#define __GPIO_PC_PIN_12_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("C", 12) then
@@ -1765,7 +1765,7 @@ if this:PinExist("C", 13) then
     this:AddProposals(PC13, "C", 13)
 end
 --*/
-#define __GPIO_PC_PIN_13_NAME__ CS_3
+#define __GPIO_PC_PIN_13_NAME__ PC13_NC
 
 /*--
 if this:PinExist("C", 13) then
@@ -1773,7 +1773,7 @@ if this:PinExist("C", 13) then
     this:AddPinMode("C", 13)
 end
 --*/
-#define __GPIO_PC_PIN_13_MODE__ _GPIO_OUT_PUSH_PULL_2MHZ
+#define __GPIO_PC_PIN_13_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("C", 13) then
@@ -1781,7 +1781,7 @@ if this:PinExist("C", 13) then
     this:AddPinState("C", 13)
 end
 --*/
-#define __GPIO_PC_PIN_13_STATE__ _HIGH
+#define __GPIO_PC_PIN_13_STATE__ _LOW
 
 /*--
 if this:PinExist("C", 14) then
@@ -1855,7 +1855,7 @@ if this:PinExist("D", 0) then
     this:AddProposals(PD0, "D", 0)
 end
 --*/
-#define __GPIO_PD_PIN_0_NAME__ PD0
+#define __GPIO_PD_PIN_0_NAME__ PD0_NC
 
 /*--
 if this:PinExist("D", 0) then
@@ -1871,7 +1871,7 @@ if this:PinExist("D", 0) then
     this:AddPinState("D", 0)
 end
 --*/
-#define __GPIO_PD_PIN_0_STATE__ _FLOAT
+#define __GPIO_PD_PIN_0_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 1) then
@@ -1886,7 +1886,7 @@ if this:PinExist("D", 1) then
     this:AddProposals(PD1, "D", 1)
 end
 --*/
-#define __GPIO_PD_PIN_1_NAME__ PD1
+#define __GPIO_PD_PIN_1_NAME__ PD1_NC
 
 /*--
 if this:PinExist("D", 1) then
@@ -1902,7 +1902,7 @@ if this:PinExist("D", 1) then
     this:AddPinState("D", 1)
 end
 --*/
-#define __GPIO_PD_PIN_1_STATE__ _FLOAT
+#define __GPIO_PD_PIN_1_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 2) then
@@ -1916,7 +1916,7 @@ if this:PinExist("D", 2) then
     this:AddProposals(PD2, "D", 2)
 end
 --*/
-#define __GPIO_PD_PIN_2_NAME__ PD2
+#define __GPIO_PD_PIN_2_NAME__ PD2_NC
 
 /*--
 if this:PinExist("D", 2) then
@@ -1932,7 +1932,7 @@ if this:PinExist("D", 2) then
     this:AddPinState("D", 2)
 end
 --*/
-#define __GPIO_PD_PIN_2_STATE__ _FLOAT
+#define __GPIO_PD_PIN_2_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 3) then
@@ -1945,7 +1945,7 @@ if this:PinExist("D", 3) then
     this:AddProposals(PD3, "D", 3)
 end
 --*/
-#define __GPIO_PD_PIN_3_NAME__ PD3
+#define __GPIO_PD_PIN_3_NAME__ PD3_NC
 
 /*--
 if this:PinExist("D", 3) then
@@ -1961,7 +1961,7 @@ if this:PinExist("D", 3) then
     this:AddPinState("D", 3)
 end
 --*/
-#define __GPIO_PD_PIN_3_STATE__ _FLOAT
+#define __GPIO_PD_PIN_3_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 4) then
@@ -1974,7 +1974,7 @@ if this:PinExist("D", 4) then
     this:AddProposals(PD4, "D", 4)
 end
 --*/
-#define __GPIO_PD_PIN_4_NAME__ PD4
+#define __GPIO_PD_PIN_4_NAME__ PD4_NC
 
 /*--
 if this:PinExist("D", 4) then
@@ -1990,7 +1990,7 @@ if this:PinExist("D", 4) then
     this:AddPinState("D", 4)
 end
 --*/
-#define __GPIO_PD_PIN_4_STATE__ _FLOAT
+#define __GPIO_PD_PIN_4_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 5) then
@@ -2003,7 +2003,7 @@ if this:PinExist("D", 5) then
     this:AddProposals(PD5, "D", 5)
 end
 --*/
-#define __GPIO_PD_PIN_5_NAME__ USART2_TX
+#define __GPIO_PD_PIN_5_NAME__ PD5_NC
 
 /*--
 if this:PinExist("D", 5) then
@@ -2011,7 +2011,7 @@ if this:PinExist("D", 5) then
     this:AddPinMode("D", 5)
 end
 --*/
-#define __GPIO_PD_PIN_5_MODE__ _GPIO_ALT_OUT_PUSH_PULL_10MHZ
+#define __GPIO_PD_PIN_5_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("D", 5) then
@@ -2019,7 +2019,7 @@ if this:PinExist("D", 5) then
     this:AddPinState("D", 5)
 end
 --*/
-#define __GPIO_PD_PIN_5_STATE__ _HIGH
+#define __GPIO_PD_PIN_5_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 6) then
@@ -2032,7 +2032,7 @@ if this:PinExist("D", 6) then
     this:AddProposals(PD6, "D", 6)
 end
 --*/
-#define __GPIO_PD_PIN_6_NAME__ USART2_RX
+#define __GPIO_PD_PIN_6_NAME__ PD6_NC
 
 /*--
 if this:PinExist("D", 6) then
@@ -2040,7 +2040,7 @@ if this:PinExist("D", 6) then
     this:AddPinMode("D", 6)
 end
 --*/
-#define __GPIO_PD_PIN_6_MODE__ _GPIO_IN_PULLED
+#define __GPIO_PD_PIN_6_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("D", 6) then
@@ -2048,7 +2048,7 @@ if this:PinExist("D", 6) then
     this:AddPinState("D", 6)
 end
 --*/
-#define __GPIO_PD_PIN_6_STATE__ _HIGH
+#define __GPIO_PD_PIN_6_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 7) then
@@ -2062,7 +2062,7 @@ if this:PinExist("D", 7) then
     this:AddProposals(PD7, "D", 7)
 end
 --*/
-#define __GPIO_PD_PIN_7_NAME__ PD7
+#define __GPIO_PD_PIN_7_NAME__ PD7_NC
 
 /*--
 if this:PinExist("D", 7) then
@@ -2078,7 +2078,7 @@ if this:PinExist("D", 7) then
     this:AddPinState("D", 7)
 end
 --*/
-#define __GPIO_PD_PIN_7_STATE__ _FLOAT
+#define __GPIO_PD_PIN_7_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 8) then
@@ -2093,7 +2093,7 @@ if this:PinExist("D", 8) then
     this:AddProposals(PD8, "D", 8)
 end
 --*/
-#define __GPIO_PD_PIN_8_NAME__ ETH_RMII_CRS_DV
+#define __GPIO_PD_PIN_8_NAME__ PD8_NC
 
 /*--
 if this:PinExist("D", 8) then
@@ -2101,7 +2101,7 @@ if this:PinExist("D", 8) then
     this:AddPinMode("D", 8)
 end
 --*/
-#define __GPIO_PD_PIN_8_MODE__ _GPIO_IN_FLOAT
+#define __GPIO_PD_PIN_8_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("D", 8) then
@@ -2109,7 +2109,7 @@ if this:PinExist("D", 8) then
     this:AddPinState("D", 8)
 end
 --*/
-#define __GPIO_PD_PIN_8_STATE__ _FLOAT
+#define __GPIO_PD_PIN_8_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 9) then
@@ -2124,7 +2124,7 @@ if this:PinExist("D", 9) then
     this:AddProposals(PD9, "D", 9)
 end
 --*/
-#define __GPIO_PD_PIN_9_NAME__ ETH_RMII_RXD0
+#define __GPIO_PD_PIN_9_NAME__ PD9_NC
 
 /*--
 if this:PinExist("D", 9) then
@@ -2132,7 +2132,7 @@ if this:PinExist("D", 9) then
     this:AddPinMode("D", 9)
 end
 --*/
-#define __GPIO_PD_PIN_9_MODE__ _GPIO_IN_FLOAT
+#define __GPIO_PD_PIN_9_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("D", 9) then
@@ -2140,7 +2140,7 @@ if this:PinExist("D", 9) then
     this:AddPinState("D", 9)
 end
 --*/
-#define __GPIO_PD_PIN_9_STATE__ _FLOAT
+#define __GPIO_PD_PIN_9_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 10) then
@@ -2155,7 +2155,7 @@ if this:PinExist("D", 10) then
     this:AddProposals(PD10, "D", 10)
 end
 --*/
-#define __GPIO_PD_PIN_10_NAME__ ETH_RMII_RXD1
+#define __GPIO_PD_PIN_10_NAME__ PD10_NC
 
 /*--
 if this:PinExist("D", 10) then
@@ -2163,7 +2163,7 @@ if this:PinExist("D", 10) then
     this:AddPinMode("D", 10)
 end
 --*/
-#define __GPIO_PD_PIN_10_MODE__ _GPIO_IN_FLOAT
+#define __GPIO_PD_PIN_10_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("D", 10) then
@@ -2171,7 +2171,7 @@ if this:PinExist("D", 10) then
     this:AddPinState("D", 10)
 end
 --*/
-#define __GPIO_PD_PIN_10_STATE__ _FLOAT
+#define __GPIO_PD_PIN_10_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 11) then
@@ -2277,7 +2277,7 @@ if this:PinExist("D", 14) then
     this:AddProposals(PD14, "D", 14)
 end
 --*/
-#define __GPIO_PD_PIN_14_NAME__ USB_HOST_OVR
+#define __GPIO_PD_PIN_14_NAME__ PD14_NC
 
 /*--
 if this:PinExist("D", 14) then
@@ -2285,7 +2285,7 @@ if this:PinExist("D", 14) then
     this:AddPinMode("D", 14)
 end
 --*/
-#define __GPIO_PD_PIN_14_MODE__ _GPIO_IN_FLOAT
+#define __GPIO_PD_PIN_14_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("D", 14) then
@@ -2293,7 +2293,7 @@ if this:PinExist("D", 14) then
     this:AddPinState("D", 14)
 end
 --*/
-#define __GPIO_PD_PIN_14_STATE__ _FLOAT
+#define __GPIO_PD_PIN_14_STATE__ _LOW
 
 /*--
 if this:PinExist("D", 15) then
@@ -2307,7 +2307,7 @@ if this:PinExist("D", 15) then
     this:AddProposals(PD15, "D", 15)
 end
 --*/
-#define __GPIO_PD_PIN_15_NAME__ USB_HOST_EN
+#define __GPIO_PD_PIN_15_NAME__ PD15_NC
 
 /*--
 if this:PinExist("D", 15) then
@@ -2315,7 +2315,7 @@ if this:PinExist("D", 15) then
     this:AddPinMode("D", 15)
 end
 --*/
-#define __GPIO_PD_PIN_15_MODE__ _GPIO_ALT_OUT_PUSH_PULL_10MHZ
+#define __GPIO_PD_PIN_15_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("D", 15) then
@@ -2339,7 +2339,7 @@ if this:PinExist("E", 0) then
     this:AddProposals(PE0, "E", 0)
 end
 --*/
-#define __GPIO_PE_PIN_0_NAME__ PE0
+#define __GPIO_PE_PIN_0_NAME__ PE0_NC
 
 /*--
 if this:PinExist("E", 0) then
@@ -2355,7 +2355,7 @@ if this:PinExist("E", 0) then
     this:AddPinState("E", 0)
 end
 --*/
-#define __GPIO_PE_PIN_0_STATE__ _FLOAT
+#define __GPIO_PE_PIN_0_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 1) then
@@ -2367,7 +2367,7 @@ if this:PinExist("E", 1) then
     this:AddProposals(PE1, "E", 1)
 end
 --*/
-#define __GPIO_PE_PIN_1_NAME__ PE1
+#define __GPIO_PE_PIN_1_NAME__ PE1_NC
 
 /*--
 if this:PinExist("E", 1) then
@@ -2383,7 +2383,7 @@ if this:PinExist("E", 1) then
     this:AddPinState("E", 1)
 end
 --*/
-#define __GPIO_PE_PIN_1_STATE__ _FLOAT
+#define __GPIO_PE_PIN_1_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 2) then
@@ -2396,7 +2396,7 @@ if this:PinExist("E", 2) then
     this:AddProposals(PE2, "E", 2)
 end
 --*/
-#define __GPIO_PE_PIN_2_NAME__ PE2
+#define __GPIO_PE_PIN_2_NAME__ PE2_NC
 
 /*--
 if this:PinExist("E", 2) then
@@ -2412,7 +2412,7 @@ if this:PinExist("E", 2) then
     this:AddPinState("E", 2)
 end
 --*/
-#define __GPIO_PE_PIN_2_STATE__ _FLOAT
+#define __GPIO_PE_PIN_2_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 3) then
@@ -2425,7 +2425,7 @@ if this:PinExist("E", 3) then
     this:AddProposals(PE3, "E", 3)
 end
 --*/
-#define __GPIO_PE_PIN_3_NAME__ PE3
+#define __GPIO_PE_PIN_3_NAME__ PE3_NC
 
 /*--
 if this:PinExist("E", 3) then
@@ -2441,7 +2441,7 @@ if this:PinExist("E", 3) then
     this:AddPinState("E", 3)
 end
 --*/
-#define __GPIO_PE_PIN_3_STATE__ _FLOAT
+#define __GPIO_PE_PIN_3_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 4) then
@@ -2454,7 +2454,7 @@ if this:PinExist("E", 4) then
     this:AddProposals(PE4, "E", 4)
 end
 --*/
-#define __GPIO_PE_PIN_4_NAME__ PE4
+#define __GPIO_PE_PIN_4_NAME__ PE4_NC
 
 /*--
 if this:PinExist("E", 4) then
@@ -2470,7 +2470,7 @@ if this:PinExist("E", 4) then
     this:AddPinState("E", 4)
 end
 --*/
-#define __GPIO_PE_PIN_4_STATE__ _FLOAT
+#define __GPIO_PE_PIN_4_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 5) then
@@ -2485,7 +2485,7 @@ if this:PinExist("E", 5) then
     this:AddProposals(PE5, "E", 5)
 end
 --*/
-#define __GPIO_PE_PIN_5_NAME__ PE5
+#define __GPIO_PE_PIN_5_NAME__ PE5_NC
 
 /*--
 if this:PinExist("E", 5) then
@@ -2501,7 +2501,7 @@ if this:PinExist("E", 5) then
     this:AddPinState("E", 5)
 end
 --*/
-#define __GPIO_PE_PIN_5_STATE__ _FLOAT
+#define __GPIO_PE_PIN_5_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 6) then
@@ -2516,7 +2516,7 @@ if this:PinExist("E", 6) then
     this:AddProposals(PE6, "E", 6)
 end
 --*/
-#define __GPIO_PE_PIN_6_NAME__ PE6
+#define __GPIO_PE_PIN_6_NAME__ PE6_NC
 
 /*--
 if this:PinExist("E", 6) then
@@ -2532,7 +2532,7 @@ if this:PinExist("E", 6) then
     this:AddPinState("E", 6)
 end
 --*/
-#define __GPIO_PE_PIN_6_STATE__ _FLOAT
+#define __GPIO_PE_PIN_6_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 7) then
@@ -2545,7 +2545,7 @@ if this:PinExist("E", 7) then
     this:AddProposals(PE7, "E", 7)
 end
 --*/
-#define __GPIO_PE_PIN_7_NAME__ PE7
+#define __GPIO_PE_PIN_7_NAME__ PE7_NC
 
 /*--
 if this:PinExist("E", 7) then
@@ -2561,7 +2561,7 @@ if this:PinExist("E", 7) then
     this:AddPinState("E", 7)
 end
 --*/
-#define __GPIO_PE_PIN_7_STATE__ _FLOAT
+#define __GPIO_PE_PIN_7_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 8) then
@@ -2574,7 +2574,7 @@ if this:PinExist("E", 8) then
     this:AddProposals(PE8, "E", 8)
 end
 --*/
-#define __GPIO_PE_PIN_8_NAME__ PE8
+#define __GPIO_PE_PIN_8_NAME__ PE8_NC
 
 /*--
 if this:PinExist("E", 8) then
@@ -2590,7 +2590,7 @@ if this:PinExist("E", 8) then
     this:AddPinState("E", 8)
 end
 --*/
-#define __GPIO_PE_PIN_8_STATE__ _FLOAT
+#define __GPIO_PE_PIN_8_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 9) then
@@ -2604,7 +2604,7 @@ if this:PinExist("E", 9) then
     this:AddProposals(PE9, "E", 9)
 end
 --*/
-#define __GPIO_PE_PIN_9_NAME__ PE9
+#define __GPIO_PE_PIN_9_NAME__ PE9_NC
 
 /*--
 if this:PinExist("E", 9) then
@@ -2620,7 +2620,7 @@ if this:PinExist("E", 9) then
     this:AddPinState("E", 9)
 end
 --*/
-#define __GPIO_PE_PIN_9_STATE__ _FLOAT
+#define __GPIO_PE_PIN_9_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 10) then
@@ -2633,7 +2633,7 @@ if this:PinExist("E", 10) then
     this:AddProposals(PE10, "E", 10)
 end
 --*/
-#define __GPIO_PE_PIN_10_NAME__ PE10
+#define __GPIO_PE_PIN_10_NAME__ PE10_NC
 
 /*--
 if this:PinExist("E", 10) then
@@ -2649,7 +2649,7 @@ if this:PinExist("E", 10) then
     this:AddPinState("E", 10)
 end
 --*/
-#define __GPIO_PE_PIN_10_STATE__ _FLOAT
+#define __GPIO_PE_PIN_10_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 11) then
@@ -2663,7 +2663,7 @@ if this:PinExist("E", 11) then
     this:AddProposals(PE11, "E", 11)
 end
 --*/
-#define __GPIO_PE_PIN_11_NAME__ PE11
+#define __GPIO_PE_PIN_11_NAME__ PE11_NC
 
 /*--
 if this:PinExist("E", 11) then
@@ -2679,7 +2679,7 @@ if this:PinExist("E", 11) then
     this:AddPinState("E", 11)
 end
 --*/
-#define __GPIO_PE_PIN_11_STATE__ _FLOAT
+#define __GPIO_PE_PIN_11_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 12) then
@@ -2692,7 +2692,7 @@ if this:PinExist("E", 12) then
     this:AddProposals(PE12, "E", 12)
 end
 --*/
-#define __GPIO_PE_PIN_12_NAME__ PE12
+#define __GPIO_PE_PIN_12_NAME__ PE12_NC
 
 /*--
 if this:PinExist("E", 12) then
@@ -2708,7 +2708,7 @@ if this:PinExist("E", 12) then
     this:AddPinState("E", 12)
 end
 --*/
-#define __GPIO_PE_PIN_12_STATE__ _FLOAT
+#define __GPIO_PE_PIN_12_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 13) then
@@ -2722,7 +2722,7 @@ if this:PinExist("E", 13) then
     this:AddProposals(PE13, "E", 13)
 end
 --*/
-#define __GPIO_PE_PIN_13_NAME__ PE13
+#define __GPIO_PE_PIN_13_NAME__ PE13_NC
 
 /*--
 if this:PinExist("E", 13) then
@@ -2738,7 +2738,7 @@ if this:PinExist("E", 13) then
     this:AddPinState("E", 13)
 end
 --*/
-#define __GPIO_PE_PIN_13_STATE__ _FLOAT
+#define __GPIO_PE_PIN_13_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 14) then
@@ -2752,7 +2752,7 @@ if this:PinExist("E", 14) then
     this:AddProposals(PE14, "E", 14)
 end
 --*/
-#define __GPIO_PE_PIN_14_NAME__ PE14
+#define __GPIO_PE_PIN_14_NAME__ PE14_NC
 
 /*--
 if this:PinExist("E", 14) then
@@ -2768,7 +2768,7 @@ if this:PinExist("E", 14) then
     this:AddPinState("E", 14)
 end
 --*/
-#define __GPIO_PE_PIN_14_STATE__ _FLOAT
+#define __GPIO_PE_PIN_14_STATE__ _LOW
 
 /*--
 if this:PinExist("E", 15) then
@@ -2781,7 +2781,7 @@ if this:PinExist("E", 15) then
     this:AddProposals(PE15, "E", 15)
 end
 --*/
-#define __GPIO_PE_PIN_15_NAME__ PE15
+#define __GPIO_PE_PIN_15_NAME__ PE15_NC
 
 /*--
 if this:PinExist("E", 15) then
@@ -2798,7 +2798,7 @@ if this:PinExist("E", 15) then
     this:Finish()
 end
 --*/
-#define __GPIO_PE_PIN_15_STATE__ _FLOAT
+#define __GPIO_PE_PIN_15_STATE__ _LOW
 
 
 /*------------------------------------------------------------------------------

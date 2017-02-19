@@ -64,9 +64,9 @@ __ENABLE_RAMFS__=_YES_
 # this:AddExtraWidget("Hyperlink", "DEVFS_CONFIGURE", "")
 # this:SetEvent("clicked", "DEVFS_CONFIGURE", function() end)
 #--*/
-#define __ENABLE_DEVFS__ _YES_
+#define __ENABLE_DEVFS__ _NO_
 #/*
-__ENABLE_DEVFS__=_YES_
+__ENABLE_DEVFS__=_NO_
 #*/
 
 #/*--
@@ -81,9 +81,9 @@ __ENABLE_DEVFS__=_YES_
 # this:AddExtraWidget("Hyperlink", "PROCFS_CONFIGURE", "")
 # this:SetEvent("clicked", "PROCFS_CONFIGURE", function() end)
 #--*/
-#define __ENABLE_PROCFS__ _YES_
+#define __ENABLE_PROCFS__ _NO_
 #/*
-__ENABLE_PROCFS__=_YES_
+__ENABLE_PROCFS__=_NO_
 #*/
 
 #/*--
@@ -96,9 +96,9 @@ __ENABLE_PROCFS__=_YES_
 # this:SetEvent("clicked", "FATFS_CONFIGURE", function() this:LoadFile("filesystems/fatfs_flags.h") end)
 #--*/
 #include "../filesystems/fatfs_flags.h"
-#define __ENABLE_FATFS__ _YES_
+#define __ENABLE_FATFS__ _NO_
 #/*
-__ENABLE_FATFS__=_YES_
+__ENABLE_FATFS__=_NO_
 #*/
 
 #/*--
@@ -112,9 +112,9 @@ __ENABLE_FATFS__=_YES_
 # this:SetEvent("clicked", "EXT2FS_CONFIGURE", function() this:LoadFile("filesystems/ext2fs_flags.h") end)
 #--*/
 #include "../filesystems/ext2fs_flags.h"
-#define __ENABLE_EXT2FS__ _YES_
+#define __ENABLE_EXT2FS__ _NO_
 #/*
-__ENABLE_EXT2FS__=_YES_
+__ENABLE_EXT2FS__=_NO_
 #*/
 
 #/*--
@@ -126,9 +126,9 @@ __ENABLE_EXT2FS__=_YES_
 # this:SetEvent("clicked", "EEFS_CONFIGURE", function() this:LoadFile("filesystems/eefs_flags.h") end)
 #--*/
 #include "../filesystems/eefs_flags.h"
-#define __ENABLE_EEFS__ _YES_
+#define __ENABLE_EEFS__ _NO_
 #/*
-__ENABLE_EEFS__=_YES_
+__ENABLE_EEFS__=_NO_
 #*/
 
 #endif /* _FILE_SYSTEMS_FLAGS_H_ */

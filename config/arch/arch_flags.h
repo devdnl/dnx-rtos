@@ -173,9 +173,9 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #     this:SetFlagValue("__ENABLE_GPIO__", "_NO_")
 # end
 #--*/
-#define __ENABLE_GPIO__ _NO_
+#define __ENABLE_GPIO__ _YES_
 #/*
-__ENABLE_GPIO__=_NO_
+__ENABLE_GPIO__=_YES_
 #*/
 
 #/*--
@@ -264,9 +264,9 @@ __ENABLE_SPI__=_NO_
 #     this:SetFlagValue("__ENABLE_UART__", "_NO_")
 # end
 #--*/
-#define __ENABLE_UART__ _NO_
+#define __ENABLE_UART__ _YES_
 #/*
-__ENABLE_UART__=_NO_
+__ENABLE_UART__=_YES_
 #*/
 
 #/*--
@@ -362,9 +362,9 @@ __ENABLE_SDSPI__=_NO_
 #/*--
 # this:PutWidgets("TTY", "arch/noarch/tty_flags.h")
 #--*/
-#define __ENABLE_TTY__ _NO_
+#define __ENABLE_TTY__ _YES_
 #/*
-__ENABLE_TTY__=_NO_
+__ENABLE_TTY__=_YES_
 #*/
 
 #/*--

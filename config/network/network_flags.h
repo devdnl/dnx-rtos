@@ -63,9 +63,9 @@ __ENABLE_NETWORK__=_NO_
 # this:AddExtraWidget("Hyperlink", "TCPIPConfigure", "Configure")
 # this:SetEvent("clicked", "TCPIPConfigure", function() this:LoadFile("network/tcpip_flags.h") end)
 #--*/
-#define __ENABLE_TCPIP_STACK__ _YES_
+#define __ENABLE_TCPIP_STACK__ _NO_
 #/*
-__ENABLE_TCPIP_STACK__=_YES_
+__ENABLE_TCPIP_STACK__=_NO_
 #*/
 
 #/*--

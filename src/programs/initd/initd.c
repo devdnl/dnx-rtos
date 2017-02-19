@@ -120,7 +120,7 @@ static void initialize_basic_drivers(void)
          */
         driver_init("AFIO", 0, 0, NULL);                // CPU-specific configuration (STM32F1xx)
         driver_init("CLK", 0, 0, "/dev/clk");           // system clock configuration
-        driver_init("UART", 1, 0, "/dev/ttyS0");        // UART2 will be used as TTY I/O
+        driver_init("UART", 0, 0, "/dev/ttyS0");        // UART1 will be used as TTY I/O
         driver_init("TTY", 0, 0, "/dev/tty0");          // first user terminal
 
         /*
@@ -223,8 +223,8 @@ static void mount_SD_card(void)
                         .clk_divider = SPI_CLK_DIV__8,
                         .mode        = SPI_MODE__0,
                         .msb_first   = true,
-                        .CS_port_idx = IOCTL_GPIO_PORT_IDX__SD_CS,      // port name configured in GPIO driver
-                        .CS_pin_idx  = IOCTL_GPIO_PIN_IDX__SD_CS        // pin name configured in GPIO driver
+                        .CS_port_idx = IOCTL_GPIO_PORT_IDX__NULL,      // port name configured in GPIO driver
+                        .CS_pin_idx  = IOCTL_GPIO_PIN_IDX__NULL        // pin name configured in GPIO driver
                 };
 
                 // configuration setup

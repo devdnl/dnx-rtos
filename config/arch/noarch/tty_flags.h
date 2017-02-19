@@ -57,7 +57,7 @@ this:AddWidget("Spinbox", 20, 200, "Output stream length (prompt length)")
 /*--
 this:AddWidget("Spinbox", 1, 12, "Number of terminals")
 --*/
-#define __TTY_NUMBER_OF_TERM__ 4
+#define __TTY_NUMBER_OF_TERM__ 2
 
 /*--
 this:AddWidget("Editline", true, "Terminal input file")

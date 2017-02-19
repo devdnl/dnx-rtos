@@ -43,7 +43,7 @@
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __CPU_FAMILY__ _STM32F10X_CL_
+#define __CPU_FAMILY__ _STM32F10X_MD_
 
 #/*--
 # local CPULIST = {{"STM32F100C8xx", "_STM32F10X_MD_VL_"},
@@ -101,9 +101,9 @@
 #    end
 # )
 #--*/
-#define __CPU_NAME__ STM32F107VCxx
+#define __CPU_NAME__ STM32F103TBxx
 #/*
-__CPU_NAME__=STM32F107VCxx
+__CPU_NAME__=STM32F103TBxx
 #*/
 
 #/*--

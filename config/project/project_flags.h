@@ -87,7 +87,7 @@ __CPU_ARCH__=stm32f1
 # this:AddWidget("Spinbox", 1e6, 100e6, "Oscillator frequency [Hz]")
 # this:SetToolTip("This is a frequency of a connected to the microcontroller external generator or crystal.")
 #--*/
-#define __CPU_OSC_FREQ__ 25000000
+#define __CPU_OSC_FREQ__ 8000000
 
 #endif /* _PROJECT_FLAGS_H_ */
 #/*=============================================================================

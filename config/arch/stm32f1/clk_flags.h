@@ -47,7 +47,7 @@ this:AddItem("Disable", "DISABLE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_LSI_ON", "")
 --*/
-#define __CLK_LSI_ON__ ENABLE
+#define __CLK_LSI_ON__ DISABLE
 
 /*--
 this:AddWidget("Combobox", "LSE oscillator")
@@ -67,7 +67,7 @@ this:AddItem("Baypass", "RCC_HSE_Bypass")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_HSE_ON", "")
 --*/
-#define __CLK_HSE_ON__ RCC_HSE_ON
+#define __CLK_HSE_ON__ RCC_HSE_OFF
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -178,7 +178,7 @@ if not(uC.FAMILY == "STM32F10X_CL") then
     this:AddExtraWidget("Label", "LABEL_PLL_SRC", "")
 end
 --*/
-#define __CLK_PLL_SRC__ RCC_PLLSource_HSE_Div1
+#define __CLK_PLL_SRC__ RCC_PLLSource_HSI_Div2
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -204,7 +204,7 @@ if not(uC.FAMILY == "STM32F10X_CL") then
     this:AddExtraWidget("Label", "LABEL_PLL_MUL", "")
 end
 --*/
-#define __CLK_PLL_MUL__ RCC_PLLMul_9
+#define __CLK_PLL_MUL__ RCC_PLLMul_12
 
 /*--
 this:AddWidget("Combobox", "System clock source")
@@ -224,7 +224,7 @@ this:AddItem("HSE clock divided by 128", "RCC_RTCCLKSource_HSE_Div128")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_RTCCLK_SRC", "")
 --*/
-#define __CLK_RTC_CLK_SRC__ RCC_RTCCLKSource_LSI
+#define __CLK_RTC_CLK_SRC__ RCC_RTCCLKSource_LSE
 
 /*--
 if uC.FAMILY == "STM32F10X_CL" then
@@ -278,7 +278,7 @@ if not(uC.FAMILY == "STM32F10X_CL") then
     this:AddExtraWidget("Label", "LABEL_USB_DIV", "")
 end
 --*/
-#define __CLK_USB_DIV__ RCC_USBCLKSource_PLLCLK_1Div5
+#define __CLK_USB_DIV__ RCC_USBCLKSource_PLLCLK_Div1
 
 /*--
 this:AddWidget("Combobox", "I2S2 clock source")
@@ -344,7 +344,7 @@ this:AddItem("HCLK / 16",  "RCC_HCLK_Div16")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_APB2_PRE", "")
 --*/
-#define __CLK_APB2_PRE__ RCC_HCLK_Div1
+#define __CLK_APB2_PRE__ RCC_HCLK_Div2
 
 /*--
 this:AddWidget("Combobox", "ADC prescaler")
@@ -355,13 +355,13 @@ this:AddItem("PCLK2 / 8",  "RCC_PCLK2_Div8")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_ADC_PRE", "")
 --*/
-#define __CLK_ADC_PRE__ RCC_PCLK2_Div8
+#define __CLK_ADC_PRE__ RCC_PCLK2_Div4
 
 /*--
 -- Value calculated automatically
 this:AddWidget("Value")
 --*/
-#define __CLK_FLASH_LATENCY__ 2
+#define __CLK_FLASH_LATENCY__ 1
 
 /*--
 this.CalculateFreq = function(self)

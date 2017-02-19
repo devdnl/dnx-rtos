@@ -170,19 +170,19 @@ this:SetToolTip("This function enables file remove functionality.")
 this:AddWidget("Checkbox", "rename() function")
 this:SetToolTip("This function enables file rename functionality.")
 --*/
-#define __OS_ENABLE_RENAME__ _YES_
+#define __OS_ENABLE_RENAME__ _NO_
 
 /*--
 this:AddWidget("Checkbox", "chmod() function")
 this:SetToolTip("This function enables changing of file mode.")
 --*/
-#define __OS_ENABLE_CHMOD__ _YES_
+#define __OS_ENABLE_CHMOD__ _NO_
 
 /*--
 this:AddWidget("Checkbox", "chown() function")
 this:SetToolTip("This function enables changing of file owner.")
 --*/
-#define __OS_ENABLE_CHOWN__ _YES_
+#define __OS_ENABLE_CHOWN__ _NO_
 
 /*--
 this:AddWidget("Checkbox", "statfs() and getmntentry() functions")
@@ -206,13 +206,13 @@ this:SetToolTip("This option enables getting statistics of file.")
 this:AddWidget("Checkbox", "System assert")
 this:SetToolTip("This option enables assert system assert function. Use only for debug purposes!")
 --*/
-#define __OS_ENABLE_SYS_ASSERT__ _YES_
+#define __OS_ENABLE_SYS_ASSERT__ _NO_
 
 /*--
 this:AddWidget("Checkbox", "IPC Shared memory")
 this:SetToolTip("This option enables IPC shared memory.")
 --*/
-#define __OS_ENABLE_SHARED_MEMORY__ _YES_
+#define __OS_ENABLE_SHARED_MEMORY__ _NO_
 
 /*--
 this:AddWidget("Checkbox", "System log function")
@@ -224,7 +224,7 @@ this:SetToolTip("If this function is selected then system messages can be send t
 this:AddWidget("Checkbox", "Filesystem cache")
 this:SetToolTip("If this option is selected then some file system are using cache to speed up IO operations.")
 --*/
-#define __OS_SYSTEM_FS_CACHE_ENABLE__ _YES_
+#define __OS_SYSTEM_FS_CACHE_ENABLE__ _NO_
 
 
 /*--
