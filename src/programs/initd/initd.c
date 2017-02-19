@@ -107,7 +107,9 @@ static void initialize_basic_drivers(void)
         /*
          * 1. Initialize GPIO drivers. Number of GPIO drivers depends on microcontroller
          *    pinout. If microcontroller has only 2 GPIO ports then only those
-         *    two should be initialized.
+         *    two should be initialized. Not all GPIOs should have file representation.
+         *    If file is not needed (because port is not used from application)
+         *    then node is not necessary (use NULL or empty string as file name).
          */
         driver_init("GPIO", 0, 0, "/dev/GPIOA");
         driver_init("GPIO", 1, 0, "/dev/GPIOB");
