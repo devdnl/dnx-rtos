@@ -121,12 +121,11 @@
 # end
 #++*/
 
-#define ARCH_noarch
-
 #/* include of CPU mandatory file in Makefile
 include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #*/
 
+#define ARCH_noarch
 #include "noarch/loop_flags.h"
 #include "noarch/tty_flags.h"
 #include "noarch/sdspi_flags.h"
@@ -168,6 +167,7 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #++*/
 
 
+#// MODULE LIST BEGIN
 #/*--
 # if uC.ARCH == "stm32f1" and uC.PERIPH[uC.NAME].GPIO ~= nil then
 #     this:PutWidgets("GPIO", "arch/stm32f1/gpio_flags.h")
@@ -337,7 +337,6 @@ __ENABLE_IRQ__=_NO_
 __ENABLE_PWM__=_NO_
 #*/
 
-#// NO ARCH MODULES ------------------------------------------------------------
 #/*--
 # this:PutWidgets("LOOP")
 #--*/
@@ -380,6 +379,7 @@ __ENABLE_TTY__=_NO_
 __ENABLE_DHT11__=_NO_
 #*/
 
+#// MODULE LIST END
 #//-----------------------------------------------------------------------------
 #/*-- save current configuration if CPU was changed
 # this:Save()

@@ -22,13 +22,13 @@ else
 #-------------------------------------------------------------------------------
 cat << EOF > $FSNAME.c
 /*=========================================================================*//**
-@file    $FSNAME.c
+File     $FSNAME.c
 
-@author  $AUTHOR
+Author   $AUTHOR
 
-@brief   $BRIEF
+Brief    $BRIEF
 
-@note    Copyright (C) $(date "+%Y") $AUTHOR <$EMAIL>
+         Copyright (C) $(date "+%Y") $AUTHOR <$EMAIL>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
