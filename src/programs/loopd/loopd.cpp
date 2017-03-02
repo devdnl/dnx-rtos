@@ -112,7 +112,7 @@ static void client2host_transaction(int i)
         }
 
         if (global->log) {
-                printf("%d\n", n);
+                printf("%u\n", n);
         }
 }
 
@@ -164,7 +164,7 @@ static void host2client_transaction(int i)
         }
 
         if (global->log) {
-                printf("%d\n", m);
+                printf("%u\n", m);
         }
 }
 

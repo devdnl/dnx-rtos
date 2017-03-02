@@ -83,6 +83,7 @@ int _vfprintf(FILE *file, const char *format, va_list arg)
                 va_list carg;
                 va_copy(carg, arg);
                 u32_t size = _vsnprintf(NULL, 0, format, carg) + 1;
+                va_end(carg);
 
                 char *str = NULL;
                 int err = _kzalloc(_MM_KRN, size, cast(void*, &str));

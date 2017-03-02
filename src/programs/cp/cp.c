@@ -78,6 +78,7 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
         errno = 0;
 
+        int   err      = EXIT_SUCCESS;
         char *buffer   = NULL;
         FILE *src_file = NULL;
         FILE *dst_file = NULL;
@@ -85,13 +86,15 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
         src_file = fopen(argv[1], "r");
         if (!src_file) {
                 perror(argv[1]);
-                goto exit_error;
+                err = EXIT_FAILURE;
+                goto exit;
         }
 
         dst_file = fopen(argv[2], "w");
         if (!dst_file) {
                 perror(argv[2]);
-                goto exit_error;
+                err = EXIT_FAILURE;
+                goto exit;
         }
 
         int buffer_size = BUFFER_MAX_SIZE;
@@ -100,12 +103,13 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                 if (buffer_size < 512) {
                         perror(NULL);
-                        goto exit_error;
+                        err = EXIT_FAILURE;
+                        goto exit;
                 }
         }
 
         int n;
-        while ((n = fread(buffer, sizeof(char), buffer_size, src_file)) > 0) {
+        while (buffer && (n = fread(buffer, sizeof(char), buffer_size, src_file)) > 0) {
                 if (ferror(src_file)) {
                         perror(argv[1]);
                         break;
@@ -118,13 +122,7 @@ int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                 }
         }
 
-        fclose(src_file);
-        fclose(dst_file);
-        free(buffer);
-
-        return EXIT_SUCCESS;
-
-exit_error:
+exit:
         if (buffer) {
                 free(buffer);
         }
@@ -137,7 +135,7 @@ exit_error:
                 fclose(dst_file);
         }
 
-        return EXIT_FAILURE;
+        return err;
 }
 
 /*==============================================================================

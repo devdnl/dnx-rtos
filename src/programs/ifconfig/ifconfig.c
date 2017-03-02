@@ -126,9 +126,9 @@ static void INET_up(const char *options)
                 }
 
         } else {
-                uint aa = UINT_MAX, ab = UINT_MAX, ac = UINT_MAX, ad = UINT_MAX;
-                uint ma = UINT_MAX, mb = UINT_MAX, mc = UINT_MAX, md = UINT_MAX;
-                uint ga = UINT_MAX, gb = UINT_MAX, gc = UINT_MAX, gd = UINT_MAX;
+                int aa = INT_MAX, ab = INT_MAX, ac = INT_MAX, ad = INT_MAX;
+                int ma = INT_MAX, mb = INT_MAX, mc = INT_MAX, md = INT_MAX;
+                int ga = INT_MAX, gb = INT_MAX, gc = INT_MAX, gd = INT_MAX;
 
                 sscanf(options, "%4d.%4d.%4d.%4d,"
                                 "%4d.%4d.%4d.%4d,"

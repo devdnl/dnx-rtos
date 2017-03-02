@@ -141,7 +141,7 @@ FILE *stdout = NULL;
 FILE *stderr = NULL;
 
 /* error number */
-int _errno = NULL;
+int _errno = ESUCC;
 
 /* global variables */
 struct _GVAR_STRUCT_NAME *global = NULL;
@@ -1060,11 +1060,13 @@ KERNELSPACE void _task_get_process_container(task_t *taskhdl, _process_t **proc,
                 _assert(taskhdl);
 
                 _process_t *p = _task_get_tag(taskhdl);
+                _assert(p);
+
                 if (proc) {
                         *proc = p;
                 }
 
-                u8_t threads = PROC_MAX_THREADS(*proc);
+                u8_t threads = PROC_MAX_THREADS(p);
 
                 for (int i = 0; i < threads; i++) {
                         if (p->task[i] == taskhdl) {
@@ -1316,7 +1318,7 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
         for (tid_t tid = 0; tid < threads; tid++) {
                 if (proc->task[tid]) {
                         stat->threads_count++;
-                        stat->memory_usage += sizeof(task_t);
+                        stat->memory_usage += sizeof(task_t*);
                 }
         }
 

@@ -81,63 +81,56 @@ char *fgets(char *str, int size, FILE *stream)
 
         struct stat file_stat;
         if (fstat(stream, &file_stat) == 0) {
+
+                char *p    = str;
+                int   c    = EOF;
+                i64_t fpos = 0;
+
+                size--;
+
                 if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
 
-                        int   c = EOF;
-                        char *p = str;
+                        while ((c != '\n') && size--) {
 
-                        for (p = str, size--; size > 0; size--) {
-                                if ((c = fgetc(stream)) == EOF)
+                                c = fgetc(stream);
+                                if (c == EOF) {
                                         break;
-                                *p++ = c;
-                                if (c == '\n') {
-                                        break;
+                                } else {
+                                        *p++ = c;
                                 }
                         }
 
-                        *p = '\0';
-                        if (p == str || c == EOF)
-                                return NULL;
-                        else
-                                return str;
-
                 } else {
-                        i64_t fpos = ftell(stream);
+                        fpos = ftell(stream);
 
-                        int   l = 0;
-                        char *p = str;
-                        size--;
+                        while ((c != '\n') && (size > 0) && !(ferror(stream) || feof(stream))) {
 
-                        while (true) {
                                 char cache[16];
                                 int n = fread(cache, 1, sizeof(cache), stream);
 
-                                for (int i = 0; size > 0 && i < n; size--, i++) {
-                                        int c = cache[i];
-
+                                for (int i = 0; c != '\n' && size > 0 && i < n; size--, i++) {
+                                        c    = cache[i];
                                         *p++ = c;
                                         fpos++;
-                                        if (c == '\n') {
-                                                goto finish;
-                                        }
-                                }
-
-                                if (ferror(stream) || feof(stream)) {
-                                        if (l == 0) {
-                                                str = NULL;
-                                        }
-
-                                        break;
                                 }
                         }
-
-                        finish:
-                        *p = '\0';
-
-                        fseek(stream, fpos, SEEK_SET);
-
-                        return str;
                 }
+
+                *p = '\0';
+
+                if (ferror(stream)) {
+                        str = NULL;
+
+                } else if (feof(stream)) {
+                        str = (p == str) ? NULL : str;
+
+                } else {
+                        if (fpos > 0) {
+                                fseek(stream, fpos, SEEK_SET);
+                        }
+                }
+
+                return str;
         }
 #else
         UNUSED_ARG3(str, size, stream);

@@ -76,7 +76,6 @@ char *base64_encode(const uint8_t *src, size_t len, size_t *out_len)
         char *out, *pos;
         const uint8_t *end, *in;
         size_t olen;
-        int line_len;
 
         olen = len * 4 / 3 + 4; /* 3-byte blocks to 4-byte */
         olen += olen / 72;      /* line feeds */
@@ -88,14 +87,13 @@ char *base64_encode(const uint8_t *src, size_t len, size_t *out_len)
         end = src + len;
         in  = src;
         pos = out;
-        line_len = 0;
+
         while (end - in >= 3) {
                 *pos++ = base64_table[in[0] >> 2];
                 *pos++ = base64_table[((in[0] & 0x03) << 4) | (in[1] >> 4)];
                 *pos++ = base64_table[((in[1] & 0x0f) << 2) | (in[2] >> 6)];
                 *pos++ = base64_table[in[2] & 0x3f];
                 in += 3;
-                line_len += 4;
         }
 
         if (end - in) {
@@ -108,7 +106,6 @@ char *base64_encode(const uint8_t *src, size_t len, size_t *out_len)
                         *pos++ = base64_table[(in[1] & 0x0f) << 2];
                 }
                 *pos++ = '=';
-                line_len += 4;
         }
 
         *pos = '\0';
@@ -134,7 +131,7 @@ uint8_t *base64_decode(const char *buf, size_t len, size_t *out_len)
 {
         const unsigned char *src = (void*)buf;
         uint8_t *out, *pos;
-        char dtable[256], in[4], block[4], tmp;
+        char dtable[256], in[4], block[4];
         size_t i, count, olen;
 
         memset(dtable, 0x80, 256);
@@ -160,7 +157,7 @@ uint8_t *base64_decode(const char *buf, size_t len, size_t *out_len)
 
         count = 0;
         for (i = 0; i < len; i++) {
-                tmp = dtable[src[i]];
+                char tmp = dtable[src[i]];
                 if (tmp == 0x80)
                         continue;
 

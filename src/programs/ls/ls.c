@@ -127,15 +127,15 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
 
                                 char mode[10];
-                                mode[0] = st.st_mode & S_IRUSR ? 'r' : '-';
-                                mode[1] = st.st_mode & S_IWUSR ? 'w' : '-';
-                                mode[2] = st.st_mode & S_IXUSR ? 'x' : '-';
-                                mode[3] = st.st_mode & S_IRGRP ? 'r' : '-';
-                                mode[4] = st.st_mode & S_IWGRP ? 'w' : '-';
-                                mode[5] = st.st_mode & S_IXGRP ? 'x' : '-';
-                                mode[6] = st.st_mode & S_IROTH ? 'r' : '-';
-                                mode[7] = st.st_mode & S_IWOTH ? 'w' : '-';
-                                mode[8] = st.st_mode & S_IXOTH ? 'x' : '-';
+                                mode[0] = (st.st_mode & S_IRUSR) ? 'r' : '-';
+                                mode[1] = (st.st_mode & S_IWUSR) ? 'w' : '-';
+                                mode[2] = (st.st_mode & S_IXUSR) ? 'x' : '-';
+                                mode[3] = (st.st_mode & S_IRGRP) ? 'r' : '-';
+                                mode[4] = (st.st_mode & S_IWGRP) ? 'w' : '-';
+                                mode[5] = (st.st_mode & S_IXGRP) ? 'x' : '-';
+                                mode[6] = (st.st_mode & S_IROTH) ? 'r' : '-';
+                                mode[7] = (st.st_mode & S_IWOTH) ? 'w' : '-';
+                                mode[8] = (st.st_mode & S_IXOTH) ? 'x' : '-';
                                 mode[9] = '\0';
 
                                 u32_t       size;

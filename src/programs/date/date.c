@@ -91,7 +91,7 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
 
                 if (strncmp("--set=", argv[i], 6) == 0) {
-                        uint day, month, year, hour, minute, second;
+                        int day, month, year, hour, minute, second;
                         day = month = year = hour = minute = second = 0xFFFF;
 
                         sscanf(&argv[i][6], "%d/%d/%d,%d:%d:%d",

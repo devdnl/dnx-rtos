@@ -82,6 +82,7 @@ int vfprintf(FILE *file, const char *format, va_list arg)
                 va_list carg;
                 va_copy(carg, arg);
                 u32_t size = vsnprintf(NULL, 0, format, carg) + 1;
+                va_end(carg);
 
                 char *str = calloc(1, size);
                 if (str) {

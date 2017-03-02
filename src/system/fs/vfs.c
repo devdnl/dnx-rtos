@@ -1125,8 +1125,11 @@ int _vfs_fseek(FILE *file, i64_t offset, int mode)
                 }
 
                 file->f_flag.eof     = false;
-                file->f_flag.error   = false;
                 file->f_flag.seekmod = true;
+
+                if ((mode == VFS_SEEK_SET) && (offset == 0)) {
+                        file->f_flag.error = false;
+                }
 
                 return ESUCC;
         }
