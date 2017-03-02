@@ -84,7 +84,8 @@ int_main(modinit, STACK_DEPTH_LOW, int argc, char *argv[])
                 return 0;
         }
 
-        errno = 0;
+        int err = EXIT_SUCCESS;
+        errno   = 0;
 
         bool release = false;
         for (int i = 1; i < argc; i++) {
@@ -98,27 +99,40 @@ int_main(modinit, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
         }
 
-        char *modname = NULL;
-        int status;
+        const char *modname = NULL;
+        const char *action  = "";
+        int         major   = 0;
+        int         minor   = 0;
+
         if (release) {
-                int major = atoi(argv[3]);
-                int minor = atoi(argv[4]);
-                modname   = argv[2];
-                status    = driver_release(modname, major, minor);
+                action     = "release";
+                major      = atoi(argv[3]);
+                minor      = atoi(argv[4]);
+                modname    = argv[2];
+
+                if (driver_release(modname, major, minor) != 0) {
+                        err = EXIT_FAILURE;
+                }
+
         } else {
-                int major = atoi(argv[2]);
-                int minor = atoi(argv[3]);
-                modname   = argv[1];
-                status    = driver_init(modname, major, minor, argv[4]);
+                action     = "initialize";
+                major      = atoi(argv[2]);
+                minor      = atoi(argv[3]);
+                modname    = argv[1];
+
+                if (driver_init(modname, major, minor, argv[4]) < 0) {
+                        err = EXIT_FAILURE;
+                }
         }
 
-        if (status >= 0) {
-                printf("Module '%s' initialized.\n", modname);
+        if (!err) {
+                printf("Module '%s%d-%d' %sd.\n", modname, major, minor, action);
         } else {
-                perror(modname);
+                fprintf(stderr, "Module '%s%d-%d' error: %s.\n",
+                        modname, major, minor, strerror(errno));
         }
 
-        return EXIT_SUCCESS;
+        return err;
 }
 
 /*==============================================================================

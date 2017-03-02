@@ -100,16 +100,21 @@ static int driver__get_module_no_and_mem(dev_t id, u16_t *modno, void **mem)
 
                 *modno = _dev_t__extract_modno(id);
 
-                _kernel_scheduler_lock();
-                {
-                        for (drvmem_t *drv = drvmem[*modno]; drv && err == ENODEV; drv = drv->next) {
-                                if (drv->devid == id) {
-                                        *mem   = drv->mem;
-                                        err = ESUCC;
+                if (*modno < _drvreg_number_of_modules) {
+                        _kernel_scheduler_lock();
+                        {
+                                for (drvmem_t *drv = drvmem[*modno];
+                                     drv != NULL && err == ENODEV;
+                                     drv = drv->next) {
+
+                                        if (drv->devid == id) {
+                                                *mem = drv->mem;
+                                                err  = ESUCC;
+                                        }
                                 }
                         }
+                        _kernel_scheduler_unlock();
                 }
-                _kernel_scheduler_unlock();
         }
 
         return err;
