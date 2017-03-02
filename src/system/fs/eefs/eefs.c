@@ -1595,7 +1595,14 @@ static int block_get_file_stat(EEFS_t *hdl, struct stat *stat)
                 struct vfs_dev_stat dev_stat;
                 err = sys_driver_stat(hdl->block.buf.node.dev, &dev_stat);
 
-                stat->st_size  = dev_stat.st_size;
+                if (!err) {
+                        stat->st_size = dev_stat.st_size;
+
+                } if (err == ENODEV) {
+                        stat->st_size = 0;
+                        err = ESUCC;
+                }
+
                 stat->st_dev   = hdl->block.buf.node.dev;
                 stat->st_mode  = hdl->block.buf.node.mode;
                 stat->st_uid   = hdl->block.buf.node.uid;
@@ -2493,11 +2500,15 @@ static int dir_read_entry(EEFS_t *hdl, dir_desc_t *dd, dir_entry_t *eefs_entry, 
         case ENTRY_TYPE_NODE:
                 err = block_read(hdl, &hdl->tmpblock);
                 if (!err) {
+                        dirent->dev = hdl->tmpblock.buf.node.dev;
+
                         struct vfs_dev_stat dev_stat;
                         err = sys_driver_stat(hdl->tmpblock.buf.node.dev, &dev_stat);
                         if (!err) {
                                 dirent->size = dev_stat.st_size;
-                                dirent->dev  = hdl->tmpblock.buf.node.dev;
+                        } else if (err == ENODEV) {
+                                dirent->size = 0;
+                                err = ESUCC;
                         }
                 }
                 break;

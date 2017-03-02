@@ -381,6 +381,9 @@ API_FS_READDIR(ramfs, void *fs_handle, DIR *dir)
                                 err = sys_driver_stat((dev_t)child->data, &dev_stat);
                                 if (err == ESUCC) {
                                         dir->dirent.size = dev_stat.st_size;
+                                } else if (err == ENODEV) {
+                                        dir->dirent.size = 0;
+                                        err = ESUCC;
                                 }
 
                                 dir->dirent.dev = (dev_t)child->data;
@@ -608,12 +611,17 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
                                 if (target->type == FILE_TYPE_DRV) {
                                         sys_mutex_unlock(hdl->resource_mtx);
 
+                                        stat->st_dev = cast(dev_t, target->data);
+                                        
                                         struct vfs_dev_stat dev_stat;
                                         err = sys_driver_stat(cast(dev_t, target->data),
                                                                   &dev_stat);
                                         if (err == ESUCC) {
                                                 stat->st_size = dev_stat.st_size;
-                                                stat->st_dev  = cast(dev_t, target->data);
+                                                
+                                        } else if (err == ENODEV) {
+                                                stat->st_size = 0;
+                                                err = ESUCC;
                                         }
 
                                         return err;
@@ -664,12 +672,17 @@ API_FS_FSTAT(ramfs, void *fs_handle, void *extra, struct stat *stat)
                         if (opened_file->child->type == FILE_TYPE_DRV) {
                                 sys_mutex_unlock(hdl->resource_mtx);
 
+                                stat->st_dev = cast(dev_t, opened_file->child->data);
+                                
                                 struct vfs_dev_stat dev_stat;
                                 err = sys_driver_stat(cast(dev_t, opened_file->child->data),
                                                           &dev_stat);
                                 if (err == ESUCC) {
                                         stat->st_size = dev_stat.st_size;
-                                        stat->st_dev  = cast(dev_t, opened_file->child->data);
+                                        
+                                } else if (err == ENODEV) {
+                                        stat->st_size = 0;
+                                        err = ESUCC;
                                 }
 
                                 return err;

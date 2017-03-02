@@ -162,7 +162,7 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                                 memset(mod, 0, sizeof(mod));
 
                                 if (st.st_type == FILE_TYPE_DRV) {
-                                        snprintf(mod, sizeof(mod), "%d,%d,%d",
+                                        snprintf(mod, sizeof(mod), "%2d,%2d,%2d",
                                                  mod_id, mod_major, mod_minor);
                                 }
 
@@ -173,9 +173,9 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                                 strftime(time, sizeof(time), "%d-%m-%Y %H:%M", &tm);
 
                                 printf("%s%s %9u %s"
-                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(25)"%s"
-                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(32)"%s"
-                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(49)"%s"
+                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(24)"%s"
+                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(34)"%s"
+                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(51)"%s"
                                        VT100_RESET_ATTRIBUTES"\n",
                                        type, mode, size, unit, mod, time, dirent->name);
 

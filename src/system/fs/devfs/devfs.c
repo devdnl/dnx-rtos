@@ -412,12 +412,16 @@ API_FS_FSTAT(devfs, void *fs_handle, void *fhdl, struct stat *stat)
         stat->st_mode  = node->mode;
 
         if (node->type == FILE_TYPE_DRV) {
+                stat->st_dev  = node->IF.drv;
+                stat->st_type = FILE_TYPE_DRV;
+
                 struct vfs_dev_stat devstat;
                 err = sys_driver_stat(node->IF.drv, &devstat);
                 if (err == ESUCC) {
-                        stat->st_dev  = node->IF.drv;
                         stat->st_size = devstat.st_size;
-                        stat->st_type = FILE_TYPE_DRV;
+                } else if (err == ENODEV) {
+                        stat->st_size = 0;
+                        err = ESUCC;
                 }
         } else if (node->type == FILE_TYPE_PIPE) {
                 size_t pipelen;
@@ -629,8 +633,9 @@ API_FS_READDIR(devfs, void *fs_handle, DIR *dir)
                                 err = sys_pipe_get_length(node->IF.pipe, &n);
                                 if (err == ESUCC) {
                                         dir->dirent.size = n;
-                                } else {
+                                } else if (err == ENODEV) {
                                         dir->dirent.size = 0;
+                                        err = ESUCC;
                                 }
 
                                 dir->dirent.filetype = FILE_TYPE_PIPE;
