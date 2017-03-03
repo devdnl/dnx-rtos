@@ -25,19 +25,75 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-clk System clock Driver
- *
- * \section drv-clk-desc Description
- * Driver handles system clock peripheral (PLL).
- *
- * \section drv-clk-sup-arch Supported architectures
- * \li STM32F10x
- *
- * @todo Details
- *
- *
- * @{
- */
+@defgroup drv-clk CLK Driver
+
+\section drv-clk-desc Description
+Driver handles system clock peripheral (PLL).
+
+\section drv-clk-sup-arch Supported architectures
+\li stm32f1
+
+\section drv-clk-ddesc Details
+\subsection drv-clk-ddesc-num Meaning of major and minor numbers
+There is no special meaning of major and minor numbers. Both numbers should be
+set to 0.
+
+\subsubsection drv-clk-ddesc-numres Numeration restrictions
+Both driver numbers should be set to 0.
+
+\subsection drv-clk-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("CLK", 0, 0, "/dev/clk");
+@endcode
+
+\subsection drv-clk-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("CLK", 0, 0);
+@endcode
+
+\subsection drv-clk-ddesc-cfg Driver configuration
+Driver can be configured only in configuration tool. Runtime configuration is
+not possible.
+
+\subsection drv-clk-ddesc-write Data write
+Write operation is not supported.
+
+\subsection drv-clk-ddesc-read Data read
+Read operation is not supported.
+
+\subsection drv-clk-ddesc-ioctl Getting clock frequencies
+The clock frequencies and clock names can be explored by ioctl() function.
+Example:
+
+@code
+// ...
+
+FILE *clk = fopen("/dev/clk", "r+");
+if (clk) {
+
+        CLK_info_t clkinf;
+        clkinf.iterator = 0;
+
+        while (  (ioctl(clk, IOCTL_CLK__GET_CLK_INFO, &clkinf) == 0)
+              && (clkinf.name != NULL) ) {
+
+                printf("Clock '%s': %d Hz\n", clkinf.name, clkinf.freq_Hz);
+        }
+
+        fclose(clk);
+} else {
+        perror("/dev/clk");
+}
+
+// ...
+@endcode
+
+@{
+*/
+
 
 #ifndef _CLK_IOCTL_H_
 #define _CLK_IOCTL_H_
@@ -65,17 +121,22 @@ extern "C" {
 
     //...
 
-    CLK_info_t clk;
-    clk.iterator = 0;
+    FILE *clk = fopen("/dev/clk", "r+");
+    if (clk) {
 
-    int stat;
+            CLK_info_t clkinf;
+            clkinf.iterator = 0;
 
-    do {
-            stat = ioctl(IOCTL_CLK__GET_CLK_INFO, &clk);
+            while (  (ioctl(clk, IOCTL_CLK__GET_CLK_INFO, &clkinf) == 0)
+                  && (clkinf.name != NULL) ) {
 
-            printf("%s: %d Hz\n", clk.name, clk.freq_Hz);
+                    printf("Clock '%s': %d Hz\n", clkinf.name, clkinf.freq_Hz);
+            }
 
-    while (stat == 0 && clk.name);
+            fclose(clk);
+    } else {
+            perror("/dev/clk");
+    }
 
     //...
     @endcode

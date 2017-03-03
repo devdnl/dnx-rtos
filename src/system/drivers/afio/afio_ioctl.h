@@ -34,7 +34,7 @@
  * selection, JTAG configuration, etc).
  *
  * \section drv-afio-sup-arch Supported architectures
- * \li STM32F10x
+ * \li stm32f1
  *
  * \section drv-afio-ddesc Details
  * \subsection drv-afio-ddesc-num Meaning of major and minor numbers
