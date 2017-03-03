@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#set -e
+set -e
 
 cd $(dirname $0)
 
@@ -24,7 +24,7 @@ else
 
 #-------------------------------------------------------------------------------
 cat << EOF > ${DRVNAME}_ioctl.h
-/*=========================================================================*//**
+/*==============================================================================
 File     ${DRVNAME}_ioctl.h
 
 Author   $AUTHOR
@@ -48,22 +48,54 @@ Brief    $BRIEF
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /**
- * @defgroup drv-${DRVNAME} $BRIEF
- *
- * \section drv-${DRVNAME}-desc Description
- * Driver handles ...
- *
- * \section drv-${DRVNAME}-sup-arch Supported architectures
- * \li ...
- *
- * @todo Details
- *
- *
- * @{
- */
+@defgroup drv-${DRVNAME} ${DRVNAME^^} Driver
+
+\section drv-${DRVNAME}-desc Description
+Driver handles ...
+
+\section drv-${DRVNAME}-sup-arch Supported architectures
+\li $ARCH
+
+\section drv-${DRVNAME}-ddesc Details
+\subsection drv-${DRVNAME}-ddesc-num Meaning of major and minor numbers
+\todo Meaning of major and minor numbers
+
+\subsubsection drv-${DRVNAME}-ddesc-numres Numeration restrictions
+\todo Numeration restrictions
+
+\subsection drv-${DRVNAME}-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("${DRVNAME^^}", 0, 0, "/dev/${DRVNAME^^}0-0");
+@endcode
+@code
+driver_init("${DRVNAME^^}", 0, 1, "/dev/${DRVNAME^^}0-1");
+@endcode
+
+\subsection drv-${DRVNAME}-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("${DRVNAME^^}", 0, 0);
+@endcode
+@code
+driver_release("${DRVNAME^^}", 0, 1);
+@endcode
+
+\subsection drv-${DRVNAME}-ddesc-cfg Driver configuration
+\todo Driver configuration
+
+\subsection drv-${DRVNAME}-ddesc-write Data write
+\todo Data write
+
+\subsection drv-${DRVNAME}-ddesc-read Data read
+\todo Data read
+
+@{
+*/
 
 #ifndef _${DRVNAME^^}_IOCTL_H_
 #define _${DRVNAME^^}_IOCTL_H_
@@ -153,7 +185,7 @@ fi
 #-------------------------------------------------------------------------------
 cd $ARCH
 cat << EOF > ${DRVNAME}_cfg.h
-/*=========================================================================*//**
+/*==============================================================================
 File     ${DRVNAME}_cfg.h
 
 Author   $AUTHOR
@@ -177,7 +209,7 @@ Brief    $BRIEF
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 #ifndef _${DRVNAME^^}_CFG_H_
 #define _${DRVNAME^^}_CFG_H_
@@ -224,7 +256,7 @@ EOF
 
 #-------------------------------------------------------------------------------
 cat << EOF > ${DRVNAME}.c
-/*=========================================================================*//**
+/*==============================================================================
 File     ${DRVNAME}.c
 
 Author   $AUTHOR
@@ -248,7 +280,7 @@ Brief    $BRIEF
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*==============================================================================
   Include files
@@ -502,7 +534,7 @@ mkdir -p $ARCH
 cd $ARCH
 
 cat << EOF > ${DRVNAME}_flags.h
-/*=========================================================================*//**
+/*==============================================================================
 File     ${DRVNAME}_flags.h
 
 Author   $AUTHOR
@@ -526,7 +558,7 @@ Brief    $BRIEF
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*
  * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as prefix
@@ -554,6 +586,8 @@ this:AddWidget("Checkbox", "Example configuration")
 ==============================================================================*/
 EOF
 
+#-------------------------------------------------------------------------------
+# ./config/arch/arch_flags.h
 #-------------------------------------------------------------------------------
 cd ..
 
@@ -622,4 +656,39 @@ EOF
     fi
 
     echo "Done"
+
+
+#-------------------------------------------------------------------------------
+# ./doc/doxygen/
+#-------------------------------------------------------------------------------
+cd ../../doc/doxygen
+
+readarray file < manual.h
+echo -n "" > manual.h
+
+for line in "${file[@]}"; do
+    if [[ "$line" =~ '\section sec-drivers Drivers' ]]; then
+        echo -n "$line" >> manual.h
+        echo "\li \subpage drv-${DRVNAME}" >> manual.h
+        continue
+    fi
+
+    echo -n "$line" >> manual.h
+done
+
+
+readarray file < Doxyfile
+echo -n "" > Doxyfile
+
+for line in "${file[@]}"; do
+    if [[ "$line" =~ 'manual.h' ]]; then
+        echo -n "$line" >> Doxyfile
+        echo "                         ../../src/system/drivers/${DRVNAME}/${DRVNAME}_ioctl.h \\" >> Doxyfile
+        continue
+    fi
+
+    echo -n "$line" >> Doxyfile
+done
+
+
 fi
