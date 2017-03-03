@@ -52,7 +52,7 @@ Project contains several folders:
 \li \subpage drv-i2cee
 \li \subpage drv-irq
 \li \subpage drv-loop
-\li \subpage drv-pll
+\li \subpage drv-clk
 \li \subpage drv-rtc
 \li \subpage drv-sdspi
 \li \subpage drv-spi
@@ -139,6 +139,9 @@ and add program’s files and Makefile</b>. The only one note is that the progra
 name should be the same as folder name (<tt><b>int_main()</b></tt> macro).
 Program’s Makefile is automatically added to the main system’s Makefile.
 
+@note <b>One can use <i>./tools/addprogram.sh</i> script to create program template.
+      It is the easiest way to create own program.</b>
+
 \section app-prg-example Example Application
 A simple program is presented in this section.
 \code
@@ -195,10 +198,13 @@ File structure:
 \arg ./src/programs/<b>example_program</b>/<i>Makefile</i>
 
 
+
 \section sec-app-example Users' Libraries
 Libraries are stored in the <b>./src/lib</b> folder and are automatically added to
 the system by the script at build process. Libraries are added to the system when
 contains the Makefile. To use a library in the program just include their header.
+To remove library from project just remove library folder (and remove dependencies
+from application).
 
 Example of Makefile script for library:
 \code
@@ -207,6 +213,19 @@ Example of Makefile script for library:
     CSRC_LIB   += mbus/mbus.c mbus/mbus_garbage.c mbus/mbus_signal.c
     CXXSRC_LIB +=
     HDRLOC_LIB += mbus
+\endcode
+
+Example how to use created library in application:
+\code
+    #include ...
+    #include <lib/mbus/mbus.h>
+    #include ...
+
+    ...
+
+    int_main(...) {
+        ...
+    }
 \endcode
 
 \section Examples
@@ -234,6 +253,9 @@ file system. In the system there are few file systems:
         system information in form of the files,
 \arg \c fatfs – the file system is used to read all storages that contains FAT12,
         FAT16, and FAT32 file systems.
+\arg \c eefs – the file system is used for small devices e.g. 24CXX memory.
+        File system requires small amount of memory and have size limitation
+        (up to around 16 MiB).
 
 As we can see, each file system has special role in the system. In this case,
 manage of the file systems must be the same for file that can comes from different
@@ -268,6 +290,8 @@ system functions are hidden and known only by the system.
 \arg API_FS_MKFIFO()
 \arg API_FS_MKNOD()
 \arg API_FS_OPENDIR()
+\arg API_FS_READDIR()
+\arg API_FS_CLOSEDIR()
 \arg API_FS_REMOVE()
 \arg API_FS_RENAME()
 \arg API_FS_CHMOD()
@@ -283,6 +307,9 @@ are met:
 \arg folder with file system is created in the <tt>./src/system/fs directory</tt>,
 \arg at least one source file is created in folder and contain file system API functions,
 \arg Makefile script is added to created folder.
+
+@note <b>One can use <i>./tools/addfilesystem.sh</i> script to create file system
+      template. It is the easiest way to create own file system.</b>
 
 \subsection subsec-fs-ex File System Source File
 @code
@@ -376,6 +403,12 @@ the build process automatically add driver to the system. No user action is need
 For example if one create <i>abc</i> driver then it can be used in the system
 as <i>ABC</i> module.
 
+@note <b>One can use <i>./tools/adddriver.sh</i> script to create new driver
+      template. It is the easiest way to create own driver. If driver is not for
+      <i>noarch</i> architecture then uC.PERIPH[] table in file
+      <i>./config/arch/arch_flags.h</i> should be updated for specified architecture
+      to see driver in configuration of selected microcontroller.</b>
+
 
 Example of driver source file (./src/system/drivers/abc/noarch/abc.c):
 @code
@@ -393,44 +426,44 @@ static ABC_t *ABC;
 
 API_MOD_INIT(ABC, void **device_handle, u8_t major, u8_t minor)
 {
-        int result = sys_zalloc(sizeof(ABC_t), cast(void**, &ABC));
+        int err = sys_zalloc(sizeof(ABC_t), cast(void**, &ABC));
 
         ...
 
-        return result;
+        return err;
 }
 
 API_MOD_RELEASE(ABC, void *device_handle)
 {
         ABC_t *hdl = device_handle;
 
-        int result = ...;
+        int err = ...;
 
         // ...
 
-        return result;
+        return err;
 }
 
 API_MOD_OPEN(ABC, void *device_handle, u32_t flags)
 {
         ABC_t *hdl = device_handle;
 
-        int result = ...;
+        int err = ...;
 
         // ...
 
-        return result;
+        return err;
 }
 
 API_MOD_CLOSE(ABC, void *device_handle, bool force)
 {
         ABC_t *hdl = device_handle;
 
-        int result = ...;
+        int err = ...;
 
         // ...
 
-        return result;
+        return err;
 }
 
 API_MOD_WRITE(ABC,
@@ -443,11 +476,11 @@ API_MOD_WRITE(ABC,
 {
         ABC_t *hdl = device_handle;
 
-        int result = ...;
+        int err = ...;
 
         // ...
 
-        return result;
+        return err;
 }
 
 API_MOD_READ(ABC,
@@ -460,22 +493,22 @@ API_MOD_READ(ABC,
 {
         ABC_t *hdl = device_handle;
 
-        int result = ...;
+        int err = ...;
 
         // ...
 
-        return result;
+        return err;
 }
 
 API_MOD_IOCTL(ABC, void *device_handle, int request, void *arg)
 {
         ABC_t *hdl = device_handle;
 
-        int result = ...;
+        int err = ...;
 
         // ...
 
-        return result;
+        return err;
 }
 
 API_MOD_FLUSH(ABC, void *device_handle)
@@ -488,8 +521,6 @@ API_MOD_FLUSH(ABC, void *device_handle)
 API_MOD_STAT(ABC, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         device_stat->st_size  = 0;
-        device_stat->st_major = 0;
-        device_stat->st_minor = 0;
 
         return ESUCC;
 }

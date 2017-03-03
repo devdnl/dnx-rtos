@@ -439,6 +439,10 @@ static inline void sync(void)
 /**
  * @brief Function return group ID of current user.
  *
+ * The getpid() function returns current group ID.
+ *
+ * @note Function returns always the root group ID (0).
+ *
  * @b Example
  * @code
         #include <unistd.h>
@@ -457,6 +461,10 @@ static inline gid_t getgid(void)
 //==============================================================================
 /**
  * @brief Function return user ID.
+ *
+ * The getuid() function returns ID of current user.
+ *
+ * @note Function returns always the root user ID (0).
  *
  * @b Example
  * @code

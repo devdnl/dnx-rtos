@@ -778,7 +778,7 @@ INPUT                  = " ." \
                          ../../src/system/drivers/i2cee/i2cee_ioctl.h \
                          ../../src/system/drivers/irq/irq_ioctl.h \
                          ../../src/system/drivers/loop/loop_ioctl.h \
-                         ../../src/system/drivers/pll/pll_ioctl.h \
+                         ../../src/system/drivers/clk/clk_ioctl.h \
                          ../../src/system/drivers/rtc/rtc_ioctl.h \
                          ../../src/system/drivers/sdspi/sdspi_ioctl.h \
                          ../../src/system/drivers/spi/spi_ioctl.h \
