@@ -31,7 +31,7 @@
  * Driver handles SPI peripheral.
  *
  * \section drv-spi-sup-arch Supported architectures
- * \li STM32F10x
+ * \li stm32f1
  *
  * \section drv-spi-ddesc Details
  * \subsection drv-spi-ddesc-num Meaning of major and minor numbers
@@ -83,19 +83,19 @@
    #include <stdbool.h>
    #include <sys/ioctl.h>
 
-   static const SPI_config_t cfg = {
-        .flush_byte  = 0xFF,                             // flush byte
-        .clk_divider = SPI_CLK_DIV__4,                   // Peripheral clock / 4
-        .mode        = SPI_MODE__0,                      // SPI mode 0
-        .msb_first   = true,                             // MSb first
-        .CS_port_idx = IOCTL_GPIO_PORT_IDX__CS0,         // port index of CS0
-        .CS_pin_idx  = IOCTL_GPIO_PIN_NO__CS0            // pin number of CS0
-   };
-
    static const char *dev_path = "/dev/SPI0-0";
 
    FILE *dev = fopen(dev_path, "r+");
    if (dev) {
+         static const SPI_config_t cfg = {
+              .flush_byte  = 0xFF,                             // flush byte
+              .clk_divider = SPI_CLK_DIV__4,                   // Peripheral clock / 4
+              .mode        = SPI_MODE__0,                      // SPI mode 0
+              .msb_first   = true,                             // MSb first
+              .CS_port_idx = IOCTL_GPIO_PORT_IDX__CS0,         // port index of CS0
+              .CS_pin_idx  = IOCTL_GPIO_PIN_NO__CS0            // pin number of CS0
+         };
+
          if (ioctl(dev, IOCTL_SPI__SET_CONFIGURATION, &cfg) != 0) {
                perror(dev_path);
          }
@@ -364,45 +364,52 @@ extern "C" {
  * Type represent peripheral divider.
  */
 enum SPI_clk_div {
-        SPI_CLK_DIV__2,         //!< SPI peripheral clock divided by 2.
-        SPI_CLK_DIV__4,         //!< SPI peripheral clock divided by 4.
-        SPI_CLK_DIV__8,         //!< SPI peripheral clock divided by 8.
-        SPI_CLK_DIV__16,        //!< SPI peripheral clock divided by 16.
-        SPI_CLK_DIV__32,        //!< SPI peripheral clock divided by 32.
-        SPI_CLK_DIV__64,        //!< SPI peripheral clock divided by 64.
-        SPI_CLK_DIV__128,       //!< SPI peripheral clock divided by 128.
-        SPI_CLK_DIV__256        //!< SPI peripheral clock divided by 256.
+        SPI_CLK_DIV__2,         /*!< SPI peripheral clock divided by 2.*/
+        SPI_CLK_DIV__4,         /*!< SPI peripheral clock divided by 4.*/
+        SPI_CLK_DIV__8,         /*!< SPI peripheral clock divided by 8.*/
+        SPI_CLK_DIV__16,        /*!< SPI peripheral clock divided by 16.*/
+        SPI_CLK_DIV__32,        /*!< SPI peripheral clock divided by 32.*/
+        SPI_CLK_DIV__64,        /*!< SPI peripheral clock divided by 64.*/
+        SPI_CLK_DIV__128,       /*!< SPI peripheral clock divided by 128.*/
+        SPI_CLK_DIV__256        /*!< SPI peripheral clock divided by 256.*/
 };
 
 /**
  * SPI peripheral modes.
  */
 enum SPI_mode {
-        SPI_MODE__0,    //!< CPOL = 0; CPHA = 0 (SCK 0 at idle, capture on rising edge).
-        SPI_MODE__1,    //!< CPOL = 0; CPHA = 1 (SCK 0 at idle, capture on falling edge).
-        SPI_MODE__2,    //!< CPOL = 1; CPHA = 0 (SCK 1 at idle, capture on falling edge).
-        SPI_MODE__3     //!< CPOL = 1; CPHA = 1 (SCK 1 at idle, capture on rising edge).
+        SPI_MODE__0,    /*!< CPOL = 0; CPHA = 0 (SCK 0 at idle, capture on rising edge).*/
+        SPI_MODE__1,    /*!< CPOL = 0; CPHA = 1 (SCK 0 at idle, capture on falling edge).*/
+        SPI_MODE__2,    /*!< CPOL = 1; CPHA = 0 (SCK 1 at idle, capture on falling edge).*/
+        SPI_MODE__3     /*!< CPOL = 1; CPHA = 1 (SCK 1 at idle, capture on rising edge).*/
 };
 
 /**
  *  SPI configuration type.
  */
 typedef struct {
-        u8_t             flush_byte  : 8;       //!< Flush byte in read transmission.
-        enum SPI_clk_div clk_divider : 3;       //!< Peripheral clock divider.
-        enum SPI_mode    mode        : 2;       //!< SPI mode.
-        bool             msb_first   : 1;       //!< MSb first (@b true).
-        u8_t             CS_port_idx;           //!< Chip Select port index.
-        u8_t             CS_pin_idx;            //!< Chip Select pin index.
+#ifndef DOXYGEN
+        u8_t             flush_byte  : 8;       /*!< Flush byte in read transmission.*/
+        enum SPI_clk_div clk_divider : 3;       /*!< Peripheral clock divider.*/
+        enum SPI_mode    mode        : 2;       /*!< SPI mode.*/
+        bool             msb_first   : 1;       /*!< MSb first (@b true).*/
+#else
+        u8_t             flush_byte;            /*!< Flush byte in read transmission.*/
+        enum SPI_clk_div clk_divider;           /*!< Peripheral clock divider.*/
+        enum SPI_mode    mode;                  /*!< SPI mode.*/
+        bool             msb_first;             /*!< MSb first (@b true).*/
+#endif
+        u8_t             CS_port_idx;           /*!< Chip Select port index.*/
+        u8_t             CS_pin_idx;            /*!< Chip Select pin index.*/
 } SPI_config_t;
 
 /**
  * SPI transmit and receive type.
  */
 typedef struct {
-        const u8_t      *tx_buffer;      //!< TX buffer pointer.
-        u8_t            *rx_buffer;      //!< RX buffer pointer.
-        size_t           count;          //!< RX and TX buffer size.
+        const u8_t      *tx_buffer;      /*!< TX buffer pointer.*/
+        u8_t            *rx_buffer;      /*!< RX buffer pointer.*/
+        size_t           count;          /*!< RX and TX buffer size.*/
 } SPI_transceive_t;
 
 /*==============================================================================

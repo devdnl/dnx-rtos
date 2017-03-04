@@ -52,9 +52,9 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static enum IRQn IRQ_major_to_NVIC_IRQn (u8_t major);
-static int       IRQ_configure          (u8_t major, enum _IRQ_MODE mode, int priority);
-static bool      IRQ_handler            (u8_t major);
+static enum IRQn IRQ_minor_to_NVIC_IRQn (u8_t minor);
+static int       IRQ_configure          (u8_t minor, enum _IRQ_MODE mode, int priority);
+static bool      IRQ_handler            (u8_t minor);
 
 /*==============================================================================
   Local object definitions
@@ -105,20 +105,20 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 {
         int err = ENODEV;
 
-        if (major < NUMBER_OF_IRQs && minor == 0) {
+        if (major == 0 && minor < NUMBER_OF_IRQs) {
                 if (IRQ == NULL) {
                         err = sys_zalloc(sizeof(IRQ_t), cast(void*, &IRQ));
                 }
 
                 if (IRQ) {
-                        err = sys_semaphore_create(1, 0, &IRQ->sem[major]);
-                        if (err == ESUCC) {
-                                // device's major number is used as identifier
-                                *device_handle = cast(void*, cast(u32_t, major));
+                        err = sys_semaphore_create(1, 0, &IRQ->sem[minor]);
+                        if (!err) {
+                                // device's minor number is used as identifier
+                                *device_handle = cast(void*, cast(u32_t, minor));
 
-                                IRQ_configure(major,
-                                              DEFAULT_CONFIG[major].mode,
-                                              DEFAULT_CONFIG[major].priority);
+                                IRQ_configure(minor,
+                                              DEFAULT_CONFIG[minor].mode,
+                                              DEFAULT_CONFIG[minor].priority);
                         }
                 }
         }
@@ -137,11 +137,11 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(IRQ, void *device_handle)
 {
-        u8_t major = cast(u32_t, device_handle);
+        u8_t minor = cast(u32_t, device_handle);
 
-        int err = sys_semaphore_destroy(IRQ->sem[major]);
+        int err = sys_semaphore_destroy(IRQ->sem[minor]);
         if (!err) {
-                IRQ_configure(major, _IRQ_MODE_DISABLED, -1);
+                IRQ_configure(minor, _IRQ_MODE_DISABLED, -1);
 
                 bool free_module_mem = true;
                 for (int i = 0; i < NUMBER_OF_IRQs && free_module_mem; i++) {
@@ -257,15 +257,15 @@ API_MOD_READ(IRQ,
 //==============================================================================
 API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 {
-        u8_t major = cast(u32_t, device_handle);
+        u8_t minor = cast(u32_t, device_handle);
         int  err   = EINVAL;
 
         if (arg) {
                 switch (request) {
                 case IOCTL_IRQ__CATCH: {
                         const u32_t *timeout = arg;
-                        if (IRQ->sem[major]) {
-                                err = sys_semaphore_wait(IRQ->sem[major], *timeout);
+                        if (IRQ->sem[minor]) {
+                                err = sys_semaphore_wait(IRQ->sem[minor], *timeout);
                         } else {
                                 err = ENODEV;
                         }
@@ -273,14 +273,14 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                 }
 
                 case IOCTL_IRQ__TRIGGER: {
-                        WRITE_REG(EXTI->SWIER, EXTI_SWIER_SWIER0 << major);
+                        WRITE_REG(EXTI->SWIER, EXTI_SWIER_SWIER0 << minor);
                         err = ESUCC;
                         break;
                 }
 
                 case IOCTL_IRQ__CONFIGURE: {
                         const IRQ_config_t *cfg = arg;
-                        err = IRQ_configure(major, cast(enum _IRQ_MODE, *cfg), -1);
+                        err = IRQ_configure(minor, cast(enum _IRQ_MODE, *cfg), -1);
                         break;
                 }
 
@@ -322,24 +322,24 @@ API_MOD_STAT(IRQ, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         UNUSED_ARG1(device_handle);
 
-        device_stat->st_size  = 0;
+        device_stat->st_size = 0;
 
         return ESUCC;
 }
 
 //==============================================================================
 /**
- * @brief Converts major IRQ number (0-15) to NVIC IRQ number
+ * @brief Converts minor IRQ number (0-15) to NVIC IRQ number
  *
- * @param major         device major number
+ * @param minor         device minor number
  *
  * @return On success, NVIC IRQ number is returned, otherwise 0.
  */
 //==============================================================================
-static enum IRQn IRQ_major_to_NVIC_IRQn(u8_t major)
+static enum IRQn IRQ_minor_to_NVIC_IRQn(u8_t minor)
 {
-        switch (major) {
-        case 0  ... 4 : return EXTI0_IRQn + major;
+        switch (minor) {
+        case 0  ... 4 : return EXTI0_IRQn + minor;
         case 5  ... 9 : return EXTI9_5_IRQn;
         case 10 ... 15: return EXTI15_10_IRQn;
         default:        return 0;
@@ -350,22 +350,22 @@ static enum IRQn IRQ_major_to_NVIC_IRQn(u8_t major)
 /**
  * @brief Function enable or disable selected EXTI interrupt
  *
- * @param major         IRQ major number (0-15)
+ * @param minor         IRQ minor number (0-15)
  * @param mode          IRQ mode (edge detector configuration)
  * @param priority      IRQ priority (-1 to ignore)
  *
  * @return None
  */
 //==============================================================================
-static int IRQ_configure(u8_t major, enum _IRQ_MODE mode, int priority)
+static int IRQ_configure(u8_t minor, enum _IRQ_MODE mode, int priority)
 {
-        enum IRQn IRQn = IRQ_major_to_NVIC_IRQn(major);
+        enum IRQn IRQn = IRQ_minor_to_NVIC_IRQn(minor);
         int       err  = ENODEV;
 
         if (IRQn != 0) {
                 if (mode == _IRQ_MODE_DISABLED) {
-                        CLEAR_BIT(EXTI->IMR, EXTI_IMR_MR0 << major);
-                        CLEAR_BIT(EXTI->EMR, EXTI_EMR_MR0 << major);
+                        CLEAR_BIT(EXTI->IMR, EXTI_IMR_MR0 << minor);
+                        CLEAR_BIT(EXTI->EMR, EXTI_EMR_MR0 << minor);
 
                         switch (IRQn) {
                         case EXTI9_5_IRQn: {
@@ -404,20 +404,20 @@ static int IRQ_configure(u8_t major, enum _IRQ_MODE mode, int priority)
                 } else {
                         switch (mode) {
                         case _IRQ_MODE_FALLING_EDGE:
-                                SET_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << major);
-                                CLEAR_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << major);
+                                SET_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << minor);
+                                CLEAR_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << minor);
                                 err = ESUCC;
                                 break;
 
                         case _IRQ_MODE_RISING_EDGE:
-                                CLEAR_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << major);
-                                SET_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << major);
+                                CLEAR_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << minor);
+                                SET_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << minor);
                                 err = ESUCC;
                                 break;
 
                         case _IRQ_MODE_FALLING_AND_RISING_EDGE:
-                                SET_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << major);
-                                SET_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << major);
+                                SET_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << minor);
+                                SET_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << minor);
                                 err = ESUCC;
                                 break;
 
@@ -427,8 +427,8 @@ static int IRQ_configure(u8_t major, enum _IRQ_MODE mode, int priority)
                         }
 
                         if (err == ESUCC) {
-                                SET_BIT(EXTI->IMR, EXTI_IMR_MR0 << major);
-                                SET_BIT(EXTI->EMR, EXTI_EMR_MR0 << major);
+                                SET_BIT(EXTI->IMR, EXTI_IMR_MR0 << minor);
+                                SET_BIT(EXTI->EMR, EXTI_EMR_MR0 << minor);
 
                                 NVIC_EnableIRQ(IRQn);
 
@@ -446,18 +446,18 @@ static int IRQ_configure(u8_t major, enum _IRQ_MODE mode, int priority)
 /**
  * @brief Handle interrupts for selected EXTI line
  *
- * @param major         IRQ major number
+ * @param minor         IRQ minor number
  *
  * @return true if task woken, otherwise false
  */
 //==============================================================================
-static bool IRQ_handler(u8_t major)
+static bool IRQ_handler(u8_t minor)
 {
-        WRITE_REG(EXTI->PR, EXTI_PR_PR0 << major);
+        WRITE_REG(EXTI->PR, EXTI_PR_PR0 << minor);
 
         if (IRQ) {
                 bool woken = false;
-                sys_semaphore_signal_from_ISR(IRQ->sem[major], &woken);
+                sys_semaphore_signal_from_ISR(IRQ->sem[minor], &woken);
                 return woken;
         } else {
                 return false;

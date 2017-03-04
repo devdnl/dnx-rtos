@@ -20,7 +20,8 @@ implementation of drivers and file systems (VFS) for embedded systems. We can
 say that dnx RTOS is a kind of the FreeRTOS kernel distribution (dnx/FreeRTOS).
 This software contains all features of the FreeRTOS and the unix-like
 architecture. The dnx is a compilation of miscellaneous software (e.g. drivers,
-kernel, file systems, communication stack, and utility applications).
+kernel, file systems, communication stack, and utility applications), giving
+users the complete development environment.
 
 \section sec-dirs Project directories
 Project contains several folders:
@@ -36,6 +37,33 @@ Project contains several folders:
 \arg \c src -- all project sources with user directories: \c lib, \c programs.
         There are also system sources in folder: \c system,
 \arg \c tools -- many scripts and programs that helps organize project.
+
+\section sec-compilation Project compilation
+When all program dependencies are meet (compiler and standard utils e.g. Cygwin
+are installed) then user can compile project. The first step is to start project
+configuration. Configuration can be started by typing
+\code make config \endcode
+command or by using <b>./configure</b> script (in UNIX terminal).
+Project configuration is realized by graphical tool (Configtool) that interprets
+special scripts in configuration files. When project is configured (especially
+GPIOs) then one can start project compilation. To do this the following command
+should be typed:
+\code make \endcode
+When operation is finished successfully then created image can be installed in
+a microcontroller. This opperation is triggered by typing following command:
+\code make install \endcode
+or
+\code make flash \endcode
+
+\note In the project is several scripts (./tools folder) that should be adjusted
+      to project requirements. In this case the following scripts should
+      be modified by user: <b>flash.sh</b>, <b>reset.sh</b>, <b>runocd.sh</b>,
+      and <b>terminal.sh</b>.
+
+\note There is several example programs and libraries that can be removed from
+      project (by removing library/program folder). When all programs and
+      libraries are used then there is big possibility that project exceeds
+      available free flash memory.
 
 \section sec-user_manual User Manual
 \li \subpage page-application

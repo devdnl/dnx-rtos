@@ -114,32 +114,6 @@ extern "C" {
  *  @brief  Get frequency and name of selected clock [Hz].
  *  @param  [WR,RD] @ref CLK_info_t * clock information.
  *  @return On success 0 is returned, otherwise -1.
- *
- *  @b Example
- *  @code
-    #include <sys/ioctl.h>
-
-    //...
-
-    FILE *clk = fopen("/dev/clk", "r+");
-    if (clk) {
-
-            CLK_info_t clkinf;
-            clkinf.iterator = 0;
-
-            while (  (ioctl(clk, IOCTL_CLK__GET_CLK_INFO, &clkinf) == 0)
-                  && (clkinf.name != NULL) ) {
-
-                    printf("Clock '%s': %d Hz\n", clkinf.name, clkinf.freq_Hz);
-            }
-
-            fclose(clk);
-    } else {
-            perror("/dev/clk");
-    }
-
-    //...
-    @endcode
  */
 #define IOCTL_CLK__GET_CLK_INFO   _IOWR(CLK, 0x00, CLK_info_t*)
 
@@ -150,9 +124,9 @@ extern "C" {
  * Type represent clock info object (iterator).
  */
 typedef struct {
-        u8_t        iterator;           //!< [IN]  Clock iterator (starts from 0, auto incremented).
-        u32_t       freq_Hz;            //!< [OUT] Clock frequency in Hz.
-        const char *name;               //!< [OUT] Clock name (NULL if clock does not exist, end of iteration).
+        u8_t        iterator;           /*!< [IN]  Clock iterator (starts from 0, auto incremented)*/
+        u32_t       freq_Hz;            /*!< [OUT] Clock frequency in Hz*/
+        const char *name;               /*!< [OUT] Clock name (NULL if clock does not exist -- end of iteration)*/
 } CLK_info_t;
 
 /*==============================================================================

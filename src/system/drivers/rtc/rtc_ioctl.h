@@ -25,19 +25,86 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-rtc RTC Driver
- *
- * \section drv-rtc-desc Description
- * Driver handles RTC peripheral.
- *
- * \section drv-rtc-sup-arch Supported architectures
- * \li STM32F10x
- *
- * @todo Details
- *
- *
- * @{
- */
+@defgroup drv-rtc RTC Driver
+
+\section drv-rtc-desc Description
+Driver handles real time clock peripheral.
+
+\section drv-rtc-sup-arch Supported architectures
+\li stm32f1
+
+\section drv-rtc-ddesc Details
+\subsection drv-rtc-ddesc-num Meaning of major and minor numbers
+The major number value depends on number RTC peripherals in microcontroller. The
+minor number should be set to 0.
+
+\subsubsection drv-rtc-ddesc-numres Numeration restrictions
+Major number architecture limitations:
+\li stm32f1: 0
+
+\subsection drv-rtc-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("RTC", 0, 0, "/dev/rtc");
+@endcode
+
+Driver path is used by system to read time. The path of RTC device can be
+configured by Configtool.
+
+\subsection drv-rtc-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("RTC", 0, 0);
+@endcode
+
+\subsection drv-rtc-ddesc-cfg Driver configuration
+Driver can be configured by using ioctl() function. The RTC alarm only can be
+configured. Example:
+\code
+#include <stdio.h>
+#include <sys/ioctl.h>
+#include <time.h>
+#include <unistd.h>
+#include <dnx/os.h>
+
+// ...
+
+FILE *rtc = fopen("/dev/rtc", "r+");
+if (rtc) {
+        // wake up in 5 seconds
+        time_t t = time(NULL) + 5000;
+
+        if (ioctl(rtc, IOCTL_RTC__SET_ALARM, &t) == 0) {
+                sync();
+                system_shutdown();
+        } else {
+                perror("ioctl()");
+        }
+
+        fclose(rtc);
+} else {
+        perror("/dev/rtc");
+}
+
+// ...
+
+\endcode
+
+\subsection drv-rtc-ddesc-write Data write
+Only sizeof(time_t) bytes can be written to the device at position 0. More bytes
+is trimmed. When write position is not 0 then error is returned.
+
+\note To setup time please use stime() function instead of direct device write.
+
+\subsection drv-rtc-ddesc-read Data read
+Only sizeof(time_t) bytes can be read from device at position 0. Reading other
+file positions is not allowed and error is generated.
+
+\note To read time please use time() function instead of direct device read.
+
+@{
+*/
 
 #ifndef _RTC_IOCTL_H_
 #define _RTC_IOCTL_H_

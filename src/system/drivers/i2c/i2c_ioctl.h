@@ -31,7 +31,7 @@
  * Driver handles I2C peripheral.
  *
  * \section drv-i2c-sup-arch Supported architectures
- * \li STM32F10x
+ * \li stm32f1
  *
  * \section drv-i2c-ddesc Details
  * \subsection drv-i2c-ddesc-num Meaning of major and minor numbers

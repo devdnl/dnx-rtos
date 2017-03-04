@@ -25,19 +25,142 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-irq IRQ Driver
- *
- * \section drv-irq-desc Description
- * Driver handles IRQ system.
- *
- * \section drv-irq-sup-arch Supported architectures
- * \li STM32F10x
- *
- * @todo Details
- *
- *
- * @{
- */
+@defgroup drv-irq IRQ Driver
+
+\section drv-irq-desc Description
+Driver handles external IRQ controller.
+
+\section drv-irq-sup-arch Supported architectures
+\li stm32f1
+
+\section drv-irq-ddesc Details
+\subsection drv-irq-ddesc-num Meaning of major and minor numbers
+The major device number select IRQ controller. The most microcontrollers have
+only one IRQ controller so the major number in the most cases should be set to 0
+(e.g. stm32f1 architecture). The minor number selects IRQ line. For stm32f1
+architecture range is from 0 to 15.
+
+\subsubsection drv-irq-ddesc-numres Numeration restrictions
+Number of IRQ controllers and IRQ lines determines range of major and minor
+numbers.
+
+\subsection drv-irq-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("IRQ", 0, 0, "/dev/button0");
+@endcode
+@code
+driver_init("IRQ", 0, 1, "/dev/button1");
+@endcode
+
+\subsection drv-irq-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("IRQ", 0, 0);
+@endcode
+@code
+driver_release("IRQ", 0, 1);
+@endcode
+
+\subsection drv-irq-ddesc-cfg Driver configuration
+Driver can be configured by using Configtool or ioctl() function. Configuration
+example:
+\code
+#include <stdio.h>
+#include <sys/ioctl.h>
+
+// ...
+
+FILE *irq = fopen("/dev/button0", "r+");
+if (irq) {
+        static const IRQ_config_t cfg = IRQ_CONFIG__TRIGGER_ON_FALLING_EDGE;
+        if (ioctl(irq, IOCTL_IRQ__CONFIGURE, &cfg) == 0) {
+                puts("Configuration success");
+        } else {
+                perror("ioctl()");
+        }
+
+        fclose(irq);
+} else {
+        perror("/dev/button0");
+}
+
+// ...
+
+\endcode
+
+\subsection drv-irq-ddesc-write Data write
+Operation not supported.
+
+\subsection drv-irq-ddesc-read Data read
+Operation not supported.
+
+\subsection drv-irq-ddesc-catch IRQ catch
+Each application can catch selected interrupt. In this case the ioctl() function
+should be used. Example:
+\code
+#include <stdio.h>
+#include <sys/ioctl.h>
+
+// ...
+
+FILE *irq = fopen("/dev/button0", "r+");
+if (!irq) {
+        abort();
+}
+
+// ...
+
+// interrupt catch
+u32_t timeout = 2000; // 2s timeout
+if (ioctl(irq, IOCTL_IRQ__CATCH, &timeout) == 0) {
+        puts("Interrupt caught!");
+
+        // ...
+
+} else {
+        puts("Interrupt timeout!");
+
+        // ...
+}
+
+
+// ...
+
+\endcode
+
+\subsection drv-irq-ddesc-trigger IRQ software trigger
+Not all architectures are able to trigger external interrupt by software. If
+selected architecture can do that the following example is valid:
+\code
+#include <stdio.h>
+#include <sys/ioctl.h>
+
+// ...
+
+FILE *irq = fopen("/dev/button0", "r+");
+if (!irq) {
+        abort();
+}
+
+// ...
+
+// interrupt trigger
+if (ioctl(irq, IOCTL_IRQ__TRIGGER) == 0) {
+        puts("Interrupt triggered!");
+
+        // ...
+
+} else {
+        puts("Error occurred");
+}
+
+// ...
+
+\endcode
+@{
+*/
 
 #ifndef _IRQ_IOCTL_H_
 #define _IRQ_IOCTL_H_

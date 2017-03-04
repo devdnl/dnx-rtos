@@ -25,19 +25,74 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-wdg Watchdog Driver
- *
- * \section drv-wdg-desc Description
- * Driver handles watchdog peripheral.
- *
- * \section drv-wdg-sup-arch Supported architectures
- * \li STM32F10x
- *
- * @todo Details
- *
- *
- * @{
- */
+@defgroup drv-wdg WDG Driver
+
+\section drv-wdg-desc Description
+Driver handles watchdog peripheral.
+
+\section drv-wdg-sup-arch Supported architectures
+\li stm32f1
+
+\section drv-wdg-ddesc Details
+\subsection drv-wdg-ddesc-num Meaning of major and minor numbers
+Both major and minor numbers should be set to 0.
+
+\subsubsection drv-wdg-ddesc-numres Numeration restrictions
+Both major and minor numbers should be set to 0.
+
+\subsection drv-wdg-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("WDG", 0, 0, "/dev/wdg");
+@endcode
+
+@note Watchdog peripheral starts counting reset time from driver initialization.
+      Make sure that system initialization is not too long or watchdog driver
+      is initialized at the end of system startup to protect against unexpected
+      reset.
+
+\subsection drv-wdg-ddesc-release Driver release
+There is not possibility to release WDG driver.
+
+\subsection drv-wdg-ddesc-cfg Driver configuration
+Watchdog can be configured only at project configuration by using Configtool.
+There is no possibility to reconfigure watchdog peripheral at runtime.
+
+\subsection drv-wdg-ddesc-write Data write
+Operation not supported.
+
+\subsection drv-wdg-ddesc-read Data read
+Operation not supported.
+
+\subsection drv-wdg-ddesc-reset Watchdog reset
+Watchdog should be reseted by using ioctl() function. Example:
+
+\code
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+
+//...
+
+FILE *wdg = fopen("/dev/wdg", "r+");
+if (!wdg) {
+        abort();
+}
+
+//...
+
+
+if (ioctl(wdg, IOCTL_WDG__RESET) != 0) {
+    // no permission or IO error
+}
+
+//...
+
+\endcode
+
+@{
+*/
 
 #ifndef _WDG_IOCTL_H_
 #define _WDG_IOCTL_H_
@@ -55,8 +110,10 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- *  @brief Reset watchdog counter. If this request won't send on time the
- *         watchdog resets the system.
+ *  @brief Reset watchdog counter.
+ *
+ *  If this request won't send on time the watchdog resets the system.
+ *
  *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_WDG__RESET                _IO(WDG, 0x00)

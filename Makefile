@@ -232,7 +232,7 @@ help :
 	@$(ECHO) "Non-build targets:"
 	@$(ECHO) "   check               static code analyze by using cppcheck"
 	@$(ECHO) "   quickcheck          quick static code analyze by using cppcheck"
-	@$(ECHO) "   flash               flash target CPU by using ./tools/flash.sh script"
+	@$(ECHO) "   flash, install      flash target CPU by using ./tools/flash.sh script"
 	@$(ECHO) "   reset               reset target CPU by using ./tools/reset.sh script"
 	@$(ECHO) "   release             create Release package"
 	@$(ECHO) "   doxygen             create Doxygen documentation"	
@@ -402,6 +402,9 @@ cleanall:
 .PHONY : flash
 flash:
 	@$(FLASH_CPU)
+
+.PHONY : install
+install : flash
 
 ####################################################################################################
 # reset target CPU by using ./tools/flash.sh script

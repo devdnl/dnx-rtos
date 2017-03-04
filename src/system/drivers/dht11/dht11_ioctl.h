@@ -25,110 +25,111 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-dht11 DHT11 Sensor Driver
- *
- * \section drv-dht11-desc Description
- * Driver handles DHT11 sensor.
- *
- * \section drv-dht11-sup-arch Supported architectures
- * \li Any
- *
- * \subsection drv-dht11-ddesc-num Meaning of major and minor numbers
- * Module handles only major device number. The minor number is not used. A new
- * instance of driver is next major number.
- *
- * \subsubsection drv-dht11-ddesc-numres Numeration restrictions
- * Number of devices (major number) can be theoretically up to 256 or to limits
- * of memory capacity.
- *
- * \subsection drv-dht11-ddesc-init Driver initialization
- * To initialize driver the following code can be used:
- *
- * @code
-   driver_init("DHT11", 0, 0, "/dev/DHT11-0");  // device path can be more descriptive
-   @endcode
-   @code
-   driver_init("DHT11", 1, 0, "/dev/DHT11-1");
-   @endcode
- *
- * \subsection drv-dht11-ddesc-release Driver release
- * To release driver the following code can be used:
- * @code
-   driver_release("DHT11", 0, 0);
-   @endcode
-   @code
-   driver_release("DHT11", 1, 0);
-   @endcode
- *
- * \subsection drv-dht11-ddesc-cfg Driver configuration
- * Driver configuration should be done before usage and after initialization.
- * The best place to do this is user application. To configure particular DHT11
- * sensor the ioctl() function shall be used as follow:
- * @code
-   #include <stdio.h>
-   #include <stdbool.h>
-   #include <sys/ioctl.h>
+@defgroup drv-dht11 DHT11 Driver
 
-   static const DHT11_config_t cfg = {
-         .port_idx = IOCTL_GPIO_PORT_IDX__DHT11,
-         .pin_idx  = IOCTL_GPIO_PIN_IDX__DHT11
-   };
+\section drv-dht11-desc Description
+Driver handles DHT11 sensor.
 
-   FILE *dev = fopen("/dev/DHT11-0", "r+");
-   if (dev) {
-         if (ioctl(dev, IOCTL_DHT11__CONFIGURE, &cfg) != 0) {
-               perror(NULL);
-         }
+\section drv-dht11-sup-arch Supported architectures
+\li Any
 
-         fclose(dev);
-   } else {
-         perror(NULL);
-   }
+\subsection drv-dht11-ddesc-num Meaning of major and minor numbers
+Module handles only major device number. The minor number is not used. A new
+instance of driver is next major number.
 
-   ...
-   @endcode
- *
- * \subsection drv-dht11-ddesc-write Data write
- * There is no possibility to write any data to the device.
- *
- * \subsection drv-dht11-ddesc-read Data read
- * Data from the DHT11 sensor can be read as regular file.
- *
- * @code
-   #include <stdio.h>
-   #include <stdbool.h>
-   #include <dnx/misc.h>
-   #include <sys/ioctl.h>
+\subsubsection drv-dht11-ddesc-numres Numeration restrictions
+Number of devices (major number) can be theoretically up to 256 or to limits
+of memory capacity. Minor number is ignored (should be set to 0).
 
-   GLOBAL_VARIABLES_SECTION {
-   };
+\subsection drv-dht11-ddesc-init Driver initialization
+To initialize driver the following code can be used:
 
-   static const DHT11_config_t cfg = {
-         .port_idx = IOCTL_GPIO_PORT_IDX__DHT11,
-         .pin_idx  = IOCTL_GPIO_PIN_IDX__DHT11
-   };
+@code
+driver_init("DHT11", 0, 0, "/dev/DHT11-0");  // device path can be more descriptive
+@endcode
+@code
+driver_init("DHT11", 1, 0, "/dev/DHT11-1");
+@endcode
 
-   int_main(dht11, STACK_DEPTH_LOW, int argc, char *argv[])
-   {
-         FILE *dev = fopen("/dev/DHT11-0", "r+");
-         if (dev) {
-               ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+\subsection drv-dht11-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("DHT11", 0, 0);
+@endcode
+@code
+driver_release("DHT11", 1, 0);
+@endcode
 
-               uint8_t buf[5];
-               fread(buf, 1, ARRAY_SIZE(buf), dev);
+\subsection drv-dht11-ddesc-cfg Driver configuration
+Driver configuration should be done before usage and after initialization.
+The best place to do this is user application. To configure particular DHT11
+sensor the ioctl() function shall be used as follow:
+@code
+#include <stdio.h>
+#include <stdbool.h>
+#include <sys/ioctl.h>
 
-               fclose(dev);
+static const DHT11_config_t cfg = {
+      .port_idx = IOCTL_GPIO_PORT_IDX__DHT11,
+      .pin_idx  = IOCTL_GPIO_PIN_IDX__DHT11
+};
 
-         } else {
-               perror(NULL);
-         }
+FILE *dev = fopen("/dev/DHT11-0", "r+");
+if (dev) {
+      if (ioctl(dev, IOCTL_DHT11__CONFIGURE, &cfg) != 0) {
+            perror(NULL);
+      }
 
-         return 0;
-   }
-   @endcode
- *
- * @{
- */
+      fclose(dev);
+} else {
+      perror(NULL);
+}
+
+...
+@endcode
+
+\subsection drv-dht11-ddesc-write Data write
+There is no possibility to write any data to the device.
+
+\subsection drv-dht11-ddesc-read Data read
+Data from the DHT11 sensor can be read as regular file.
+
+@code
+#include <stdio.h>
+#include <stdbool.h>
+#include <dnx/misc.h>
+#include <sys/ioctl.h>
+
+GLOBAL_VARIABLES_SECTION {
+};
+
+static const DHT11_config_t cfg = {
+      .port_idx = IOCTL_GPIO_PORT_IDX__DHT11,
+      .pin_idx  = IOCTL_GPIO_PIN_IDX__DHT11
+};
+
+int_main(dht11, STACK_DEPTH_LOW, int argc, char *argv[])
+{
+      FILE *dev = fopen("/dev/DHT11-0", "r+");
+      if (dev) {
+            ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+
+            uint8_t buf[5];
+            rewind(dev);
+            fread(buf, 1, ARRAY_SIZE(buf), dev);
+
+            fclose(dev);
+
+      } else {
+            perror(NULL);
+      }
+
+      return 0;
+}
+@endcode
+
+@{
+*/
 
 #ifndef _DHT11_IOCTL_H_
 #define _DHT11_IOCTL_H_
@@ -159,8 +160,8 @@ extern "C" {
  * Type represent DHT11 configuration.
  */
 typedef struct {
-        u8_t port_idx;      //!< Port index (use IOCTL_GPIO_PORT_IDX__xxx macro)
-        u8_t pin_idx;       //!< Pin index (use IOCTL_GPIO_PIN_IDX__xxx macro)
+        u8_t port_idx;      /*!< Port index (use IOCTL_GPIO_PORT_IDX__xxx macro).*/
+        u8_t pin_idx;       /*!< Pin index (use IOCTL_GPIO_PIN_IDX__xxx macro).*/
 } DHT11_config_t;
 
 /*==============================================================================

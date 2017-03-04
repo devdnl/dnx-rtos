@@ -81,7 +81,11 @@ MODULE_NAME(I2CEE);
 //==============================================================================
 API_MOD_INIT(I2CEE, void **device_handle, u8_t major, u8_t minor)
 {
-        UNUSED_ARG2(major, minor);
+        UNUSED_ARG1(major);
+
+        if (minor != 0) {
+                return ENODEV;
+        }
 
         int err = sys_zalloc(sizeof(I2CEE_t), device_handle);
         if (!err) {

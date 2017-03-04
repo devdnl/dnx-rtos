@@ -25,19 +25,63 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-tty TTY Driver
- *
- * \section drv-tty-desc Description
- * Driver handles TTY virtual device.
- *
- * \section drv-tty-sup-arch Supported architectures
- * \li Any
- *
- * @todo Details
- *
- *
- * @{
- */
+@defgroup drv-tty TTY Driver
+
+\section drv-tty-desc Description
+Driver handles terminal virtual device. Driver creates VT100 virtual terminal.
+Driver is necessary to handle user input and output. Each terminal can handle
+at least one application. It is possible to connect many application to single
+terminal but output may be mixed. In most cases the TTY driver input and output
+is UART device.
+
+Device (drivers) connection table
+| Grade | Device       | In                  | Out        |
+| ----: | :----------- | :------------------ | :----------|
+| 0     | UART/file    | -                   | /dev/ttyS0 |
+| 1     | TTY driver   | /dev/ttyS0          | /dev/tty0  |
+| 2     | Application  | /dev/tty0           | /dev/tty0  |
+
+\section drv-tty-sup-arch Supported architectures
+\li Any (noarch)
+
+\section drv-tty-ddesc Details
+\subsection drv-tty-ddesc-num Meaning of major and minor numbers
+The major number determine number of terminal. The minor number should be set
+always to 0.
+
+\subsubsection drv-tty-ddesc-numres Numeration restrictions
+Major number should be used in range from 0 to maximum number of terminals
+configured in module options. Minor number should be always 0.
+
+\subsection drv-tty-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("TTY", 0, 0, "/dev/tty0");          // terminal 0
+driver_init("TTY", 1, 0, "/dev/tty1");          // terminal 1
+@endcode
+
+\subsection drv-tty-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("TTY", 0, 0);
+driver_release("TTY", 1, 0);
+@endcode
+
+\subsection drv-tty-ddesc-cfg Driver configuration
+Driver can be configured in Configtool. Runtime configuration is not possible.
+
+\subsection drv-tty-ddesc-write Data write
+Writing data to device is the same as writing data to regular file.
+
+\subsection drv-tty-ddesc-read Data read
+Reading data from device is the same as reading data from regular file.
+
+\subsection drv-tty-ddesc-switch Terminal switching
+Terminals can be switched by using F1 - F4 keys or by using ioctl() function.
+
+@{
+*/
 
 #ifndef _TTY_IOCTL_H_
 #define _TTY_IOCTL_H_

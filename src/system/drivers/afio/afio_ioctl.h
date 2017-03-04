@@ -25,50 +25,51 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-afio AFIO Driver
- *
- * \section drv-afio-desc Description
- * Driver configures AFIO peripheral according to configuration. Driver is
- * responsible for setting Alternative Function Input Output functionality;
- * configures GPIO and other microcontroller-specific options (e.g. IRQ pin
- * selection, JTAG configuration, etc).
- *
- * \section drv-afio-sup-arch Supported architectures
- * \li stm32f1
- *
- * \section drv-afio-ddesc Details
- * \subsection drv-afio-ddesc-num Meaning of major and minor numbers
- * There is no special meaning of major-minor numbers. The peripheral is only
- * accessible by using major-minor set to 0.
- *
- * \subsection drv-afio-ddesc-init Driver initialization
- * To initialize driver the following code can be used:
- *
- * @code
-   driver_init("AFIO", 0, 0, "/dev/AFIO");
-   @endcode
- * or:
-   @code
-   driver_init("AFIO", 0, 0, NULL);  // without creating device node
-   @endcode
- *
- * \subsection drv-afio-ddesc-release Driver release
- * To release driver the following code can be used:
- * @code
-   driver_release("AFIO", 0, 0);
-   @endcode
- *
- * \subsection drv-afio-ddesc-cfg Driver configuration
- * Entire driver configuration is realized by using configuration files in
- * the <tt>./config</tt> directory or by using Configtool.
- *
- * \subsection drv-afio-ddesc-write Data write
- * There is no possibility to write any data to the device.
- *
- * \subsection drv-afio-ddesc-read Data read
- * There is no possibility to read any data from the device.
- * @{
- */
+@defgroup drv-afio AFIO Driver
+
+\section drv-afio-desc Description
+Driver configures AFIO peripheral according to configuration. Driver is
+responsible for setting Alternative Function Input Output functionality;
+configures GPIO and other microcontroller-specific options (e.g. IRQ pin
+selection, JTAG configuration, etc).
+
+\section drv-afio-sup-arch Supported architectures
+\li stm32f1
+
+\section drv-afio-ddesc Details
+\subsection drv-afio-ddesc-num Meaning of major and minor numbers
+There is no special meaning of major-minor numbers. The peripheral is only
+accessible by using major-minor set to 0.
+
+\subsection drv-afio-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("AFIO", 0, 0, "/dev/AFIO");
+@endcode
+or:
+@code
+driver_init("AFIO", 0, 0, NULL);  // without creating device node
+@endcode
+
+\subsection drv-afio-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("AFIO", 0, 0);
+@endcode
+
+\subsection drv-afio-ddesc-cfg Driver configuration
+Entire driver configuration is realized by using configuration files in
+the <tt>./config</tt> directory or by using Configtool.
+
+\subsection drv-afio-ddesc-write Data write
+There is no possibility to write any data to the device.
+
+\subsection drv-afio-ddesc-read Data read
+There is no possibility to read any data from the device.
+
+@{
+*/
 
 #ifndef _AFIO_IOCTL_H_
 #define _AFIO_IOCTL_H_

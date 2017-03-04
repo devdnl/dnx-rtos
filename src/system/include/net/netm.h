@@ -129,8 +129,8 @@ typedef uint32_t NET_INET_IPv4_t;
 
 /** INET socket address. This type contains IPv4 address and port. */
 typedef struct {
-        NET_INET_IPv4_t addr;                   //!< IPv4 address.
-        u16_t           port;                   //!< Port.
+        NET_INET_IPv4_t addr;                   /*!< IPv4 address.*/
+        u16_t           port;                   /*!< Port.*/
 } NET_INET_sockaddr_t;
 
 /** INET network state. */
@@ -152,23 +152,23 @@ typedef enum {
 
 /** INET configuration. */
 typedef struct {
-        NET_INET_mode_t mode;                   //!< Configuration mode.
-        NET_INET_IPv4_t address;                //!< Address if static mode selected.
-        NET_INET_IPv4_t mask;                   //!< Network mask if static mode selected.
-        NET_INET_IPv4_t gateway;                //!< Gateway address if static mode selected.
+        NET_INET_mode_t mode;                   /*!< Configuration mode.*/
+        NET_INET_IPv4_t address;                /*!< Address if static mode selected.*/
+        NET_INET_IPv4_t mask;                   /*!< Network mask if static mode selected.*/
+        NET_INET_IPv4_t gateway;                /*!< Gateway address if static mode selected.*/
 } NET_INET_config_t;
 
 /** INET status. */
 typedef struct {
-        NET_INET_state_t state;                 //!< Connection state.
-        NET_INET_IPv4_t  address;               //!< Connection address.
-        NET_INET_IPv4_t  mask;                  //!< Connection network mask.
-        NET_INET_IPv4_t  gateway;               //!< Connection gateway.
-        u8_t             hw_addr[6];            //!< MAC address.
-        u64_t            tx_bytes;              //!< Number of transmitted bytes.
-        u64_t            rx_bytes;              //!< Number of received bytes.
-        u64_t            tx_packets;            //!< Number of transmitted packets.
-        u64_t            rx_packets;            //!< Number of received packets.
+        NET_INET_state_t state;                 /*!< Connection state.*/
+        NET_INET_IPv4_t  address;               /*!< Connection address.*/
+        NET_INET_IPv4_t  mask;                  /*!< Connection network mask.*/
+        NET_INET_IPv4_t  gateway;               /*!< Connection gateway.*/
+        u8_t             hw_addr[6];            /*!< MAC address.*/
+        u64_t            tx_bytes;              /*!< Number of transmitted bytes.*/
+        u64_t            rx_bytes;              /*!< Number of received bytes.*/
+        u64_t            tx_packets;            /*!< Number of transmitted packets.*/
+        u64_t            rx_packets;            /*!< Number of received packets.*/
 } NET_INET_status_t;
 
 /*==============================================================================

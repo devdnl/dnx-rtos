@@ -25,19 +25,61 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-uart UART Driver
- *
- * \section drv-uart-desc Description
- * Driver handles UART peripheral.
- *
- * \section drv-uart-sup-arch Supported architectures
- * \li STM32F10x
- *
- * @todo Details
- *
- *
- * @{
- */
+@defgroup drv-uart UART Driver
+
+\section drv-uart-desc Description
+Driver handles UART peripheral.
+
+\section drv-uart-sup-arch Supported architectures
+\li stm32f1
+
+\section drv-uart-ddesc Details
+\subsection drv-uart-ddesc-num Meaning of major and minor numbers
+Some manufactures enumerate devices starting from 1 instead of 0 (e.g. ST).
+In this case major number starts from 0 and is connected to the first device
+e.g. UART1.
+\arg major number selects UART peripheral e.g.:@n
+     major = 0 -> UART0 (or UART1 if numerated from 1)
+
+The minor number has no meaning and should be always set to 0.
+
+\subsubsection drv-uart-ddesc-numres Numeration restrictions
+Number of peripherals determines how big major number can be. If there is
+only one UART peripheral then the major number is always 0. The minor number
+should be always set to 0.
+
+\subsection drv-uart-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("UART", 0, 0, "/dev/ttyS0");        // UART0
+driver_init("UART", 1, 0, "/dev/ttyS1");        // UART1
+@endcode
+
+\subsection drv-uart-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("UART", 0, 0);
+driver_release("UART", 1, 0);
+@endcode
+
+\subsection drv-uart-ddesc-cfg Driver configuration
+The default driver values should be configured in project configuration (Configtool).
+Runtime configuration should be always done at system startup or later in
+application. In this case the ioctl() function should be used.
+
+\subsection drv-uart-ddesc-write Data write
+Writing data to device is the same as writing data to regular file.
+File position is ignored because device handle stream.
+
+\subsection drv-uart-ddesc-read Data read
+Reading data from device is the same as reading data from regular file. Driver
+support not blocking character read by using ioctl() function (by using following
+requests: @ref IOCTL_UART__GET_CHAR_UNBLOCKING or @ref IOCTL_VFS__NON_BLOCKING_RD_MODE
+with fread() function). File position is ignored because device handle stream.
+
+@{
+*/
 
 #ifndef _UART_IOCTL_H_
 #define _UART_IOCTL_H_
@@ -107,15 +149,15 @@ enum UART_LIN_break {
  * Type represent UART configuration.
  */
 struct UART_config {
-        enum UART_parity    parity;             //!< Parity configuration.
-        enum UART_stop_bit  stop_bits;          //!< Stop bits configuration.
-        enum UART_LIN_break LIN_break_length;   //!< LIN break length.
-        bool                tx_enable;          //!< Tx channel enable.
-        bool                rx_enable;          //!< Rx channel enable.
-        bool                LIN_mode_enable;    //!< LIN mode enable.
-        bool                hardware_flow_ctrl; //!< Hardware flow control enable (RTS, CTS).
-        bool                single_wire_mode;   //!< Single wire mode enable.
-        u32_t               baud;               //!< Baudrate.
+        enum UART_parity    parity;             /*!< Parity configuration.*/
+        enum UART_stop_bit  stop_bits;          /*!< Stop bits configuration.*/
+        enum UART_LIN_break LIN_break_length;   /*!< LIN break length.*/
+        bool                tx_enable;          /*!< Tx channel enable.*/
+        bool                rx_enable;          /*!< Rx channel enable.*/
+        bool                LIN_mode_enable;    /*!< LIN mode enable.*/
+        bool                hardware_flow_ctrl; /*!< Hardware flow control enable (RTS, CTS).*/
+        bool                single_wire_mode;   /*!< Single wire mode enable.*/
+        u32_t               baud;               /*!< Baudrate.*/
 };
 
 /*==============================================================================
