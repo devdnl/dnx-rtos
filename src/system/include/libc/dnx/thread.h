@@ -116,15 +116,15 @@ extern "C" {
  * The type is used to configure process settings.
  */
 typedef struct {
-        FILE       *f_stdin;            //!< stdin  file object pointer (major)
-        FILE       *f_stdout;           //!< stdout file object pointer (major)
-        FILE       *f_stderr;           //!< stderr file object pointer (major)
-        const char *p_stdin;            //!< stdin  file path (minor)
-        const char *p_stdout;           //!< stdout file path (minor)
-        const char *p_stderr;           //!< stderr file path (minor)
-        const char *cwd;                //!< working directory path
-        i16_t       priority;           //!< process priority
-        bool        has_parent;         //!< parent exist and is waiting for this process
+        FILE       *f_stdin;            /*!< stdin  file object pointer (major).*/
+        FILE       *f_stdout;           /*!< stdout file object pointer (major).*/
+        FILE       *f_stderr;           /*!< stderr file object pointer (major).*/
+        const char *p_stdin;            /*!< stdin  file path (minor).*/
+        const char *p_stdout;           /*!< stdout file path (minor).*/
+        const char *p_stderr;           /*!< stderr file path (minor).*/
+        const char *cwd;                /*!< working directory path.*/
+        i16_t       priority;           /*!< process priority.*/
+        bool        has_parent;         /*!< parent exist and is waiting for this process.*/
 } process_attr_t;
 
 /**
@@ -147,8 +147,8 @@ typedef struct {} mutex_t;
  * The enumerator represent type of mutex object.
  */
 enum mutex_type {
-        MUTEX_TYPE_RECURSIVE,   //!< recursive mutex
-        MUTEX_TYPE_NORMAL       //!< normal mutex
+        MUTEX_TYPE_RECURSIVE,   /*!< recursive mutex.*/
+        MUTEX_TYPE_NORMAL       /*!< normal mutex.*/
 };
 
 /**
@@ -164,22 +164,22 @@ typedef struct {} queue_t;
  * The type represent process statistics.
  */
 typedef struct {
-        const char *name;               //!< process name
-        pid_t       pid;                //!< process ID
-        size_t      memory_usage;       //!< memory usage (allocated by process)
-        u16_t       memory_block_count; //!< number of used memory blocks
-        u16_t       files_count;        //!< number of opened files
-        u16_t       dir_count;          //!< number of opened directories
-        u16_t       mutexes_count;      //!< number of used mutexes
-        u16_t       semaphores_count;   //!< number of used sempahores
-        u16_t       queue_count;        //!< number of used queues
-        u16_t       socket_count;       //!< number of used sockets
-        u16_t       threads_count;      //!< number of threads
-        u16_t       CPU_load;           //!< CPU load (1% = 10)
-        u16_t       stack_size;         //!< stack size
-        u16_t       stack_max_usage;    //!< max stack usage
-        i16_t       priority;           //!< priority
-        bool        zombie;             //!< process finished and wait for destory
+        const char *name;               /*!< process name.*/
+        pid_t       pid;                /*!< process ID.*/
+        size_t      memory_usage;       /*!< memory usage (allocated by process).*/
+        u16_t       memory_block_count; /*!< number of used memory blocks.*/
+        u16_t       files_count;        /*!< number of opened files.*/
+        u16_t       dir_count;          /*!< number of opened directories.*/
+        u16_t       mutexes_count;      /*!< number of used mutexes.*/
+        u16_t       semaphores_count;   /*!< number of used sempahores.*/
+        u16_t       queue_count;        /*!< number of used queues.*/
+        u16_t       socket_count;       /*!< number of used sockets.*/
+        u16_t       threads_count;      /*!< number of threads.*/
+        u16_t       CPU_load;           /*!< CPU load (1% = 10).*/
+        u16_t       stack_size;         /*!< stack size.*/
+        u16_t       stack_max_usage;    /*!< max stack usage.*/
+        i16_t       priority;           /*!< priority.*/
+        bool        zombie;             /*!< process finished and wait for destory.*/
 } process_stat_t;
 
 /**
@@ -193,8 +193,8 @@ typedef void (*thread_func_t)(void *arg);
  * The type represent thread attributes that configures thread settings.
  */
 typedef struct {
-        size_t stack_depth;             //!< stack depth
-        i16_t  priority;                //!< thread priority
+        size_t stack_depth;             /*!< stack depth.*/
+        i16_t  priority;                /*!< thread priority.*/
 } thread_attr_t;
 
 #endif

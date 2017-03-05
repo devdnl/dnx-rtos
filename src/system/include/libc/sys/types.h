@@ -188,25 +188,25 @@ typedef struct dirent {
 
 /** @brief File information. */
 struct stat {
-        u64_t   st_size;        //!< Total size, in bytes
-        dev_t   st_dev;         //!< ID of device containing file
-        mode_t  st_mode;        //!< Protection
-        uid_t   st_uid;         //!< User ID of owner
-        gid_t   st_gid;         //!< Group ID of owner
-        time_t  st_ctime;       //!< Time of creation
-        time_t  st_mtime;       //!< Time of last modification
-        tfile_t st_type;        //!< Type of file
+        u64_t   st_size;        /*!< Total size, in bytes.*/
+        dev_t   st_dev;         /*!< ID of device containing file.*/
+        mode_t  st_mode;        /*!< Protection.*/
+        uid_t   st_uid;         /*!< User ID of owner.*/
+        gid_t   st_gid;         /*!< Group ID of owner.*/
+        time_t  st_ctime;       /*!< Time of creation.*/
+        time_t  st_mtime;       /*!< Time of last modification.*/
+        tfile_t st_type;        /*!< Type of file.*/
 };
 
 /** file system statistic */
 struct statfs {
-        u32_t       f_type;     //!< File system type
-        u32_t       f_bsize;    //!< Block size
-        u32_t       f_blocks;   //!< Total blocks
-        u32_t       f_bfree;    //!< Free blocks
-        u32_t       f_files;    //!< Total file nodes in file system
-        u32_t       f_ffree;    //!< Free file nodes in file system
-        const char *f_fsname;   //!< File system name
+        u32_t       f_type;     /*!< File system type.*/
+        u32_t       f_bsize;    /*!< Block size.*/
+        u32_t       f_blocks;   /*!< Total blocks.*/
+        u32_t       f_bfree;    /*!< Free blocks.*/
+        u32_t       f_files;    /*!< Total file nodes in file system.*/
+        u32_t       f_ffree;    /*!< Free file nodes in file system.*/
+        const char *f_fsname;   /*!< File system name.*/
 };
 
 /*==============================================================================

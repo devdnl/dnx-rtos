@@ -67,12 +67,14 @@ extern "C" {
  * @see get_memory_usage_details()
  */
 typedef struct {
-        i32_t static_memory_usage;      //!< The amount of memory that is used statically at build time
-        i32_t kernel_memory_usage;      //!< The amount of memory used by kernel
-        i32_t filesystems_memory_usage; //!< The amount of memory used by file systems
-        i32_t network_memory_usage;     //!< The amount of memory used by network subsystem
-        i32_t modules_memory_usage;     //!< The amount of memory used by modules (drivers)
-        i32_t programs_memory_usage;    //!< The amount of memory used by users' programs (applications)
+        i32_t static_memory_usage;      /*!< The amount of memory that is used statically at build time.*/
+        i32_t kernel_memory_usage;      /*!< The amount of memory used by kernel.*/
+        i32_t filesystems_memory_usage; /*!< The amount of memory used by file systems.*/
+        i32_t network_memory_usage;     /*!< The amount of memory used by network subsystem.*/
+        i32_t modules_memory_usage;     /*!< The amount of memory used by modules (drivers).*/
+        i32_t programs_memory_usage;    /*!< The amount of memory used by users' programs (applications).*/
+        i32_t shared_memory_usage;      /*!< The amount of memory used by shared buffers.*/
+        i32_t cached_memory_usage;      /*!< The anount of memory used by disc caches.*/
 } memstat_t;
 #else
 typedef _mm_mem_usage_t memstat_t;
@@ -88,10 +90,10 @@ typedef _mm_mem_usage_t memstat_t;
  * @see get_average_CPU_load()
  */
 typedef struct {
-        u16_t avg1sec;                  //!< average CPU laod within 1 second (1% = 10)
-        u16_t avg1min;                  //!< average CPU load within 1 minute (1% = 10)
-        u16_t avg5min;                  //!< average CPU load within 5 minutes (1% = 10)
-        u16_t avg15min;                 //!< average CPU load within 15 minutes (1% = 10)
+        u16_t avg1sec;                  /*!< average CPU laod within 1 second (1% = 10).*/
+        u16_t avg1min;                  /*!< average CPU load within 1 minute (1% = 10).*/
+        u16_t avg5min;                  /*!< average CPU load within 5 minutes (1% = 10).*/
+        u16_t avg15min;                 /*!< average CPU load within 15 minutes (1% = 10).*/
 } avg_CPU_load_t;
 #endif
 

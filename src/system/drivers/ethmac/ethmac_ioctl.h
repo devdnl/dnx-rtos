@@ -25,46 +25,46 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-ethmac Ethernet MAC Driver
- *
- * \section drv-ethmac-desc Description
- * Driver handles Ethernet MAC peripheral.
- *
- * \section drv-ethmac-sup-arch Supported architectures
- * \li STM32F10x (Connectivity line microcontrollers)
- *
- * \section drv-ethmac-ddesc Details
- * \subsection drv-ethmac-ddesc-num Meaning of major and minor numbers
- * The major number determines selection of Ethernet peripheral. Minor number
- * has no meaning and should be set to 0.
- *
- * \subsection drv-ethmac-ddesc-init Driver initialization
- * To initialize driver the following code can be used:
- *
- * @code
-   driver_init("ETHMAC", 0, 0, "/dev/eth0");
-   @endcode
- *
- * \subsection drv-ethmac-ddesc-release Driver release
- * To release driver the following code can be used:
- * @code
-   driver_release("ETHMAC", 0, 0);
-   @endcode
- *
- * \subsection drv-ethmac-ddesc-cfg Driver configuration
- * Entire driver configuration is realized by using configuration files in
- * the <tt>./config</tt> directory or by using Configtool.
- *
- * \subsection drv-ethmac-ddesc-write Data write
- * \todo Write access documentation
- *
- * \subsection drv-ethmac-ddesc-read Data read
- * \todo Read access documentation
- *
- * \subsection drv-ethmac-ddesc-pkthdl Packet handling
- * \todo Packet handling documentation
- * @{
- */
+@defgroup drv-ethmac Ethernet MAC Driver
+
+\section drv-ethmac-desc Description
+Driver handles Ethernet MAC peripheral.
+
+\section drv-ethmac-sup-arch Supported architectures
+\li STM32F10x (Connectivity line microcontrollers)
+
+\section drv-ethmac-ddesc Details
+\subsection drv-ethmac-ddesc-num Meaning of major and minor numbers
+The major number determines selection of Ethernet peripheral. Minor number
+has no meaning and should be set to 0.
+
+\subsection drv-ethmac-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("ETHMAC", 0, 0, "/dev/eth0");
+@endcode
+
+\subsection drv-ethmac-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("ETHMAC", 0, 0);
+@endcode
+
+\subsection drv-ethmac-ddesc-cfg Driver configuration
+Entire driver configuration is realized by using configuration files in
+the <tt>./config</tt> directory or by using Configtool.
+
+\subsection drv-ethmac-ddesc-write Data write
+\todo Write access documentation
+
+\subsection drv-ethmac-ddesc-read Data read
+\todo Read access documentation
+
+\subsection drv-ethmac-ddesc-pkthdl Packet handling
+\todo Packet handling documentation
+@{
+*/
 
 #ifndef _ETHMAC_IOCTL_H_
 #define _ETHMAC_IOCTL_H_
@@ -135,26 +135,26 @@ extern "C" {
  * Type represent packet chain.
  */
 typedef struct ETHMAC_packet_chain {
-        struct ETHMAC_packet_chain *next;               //!< Next chain of payload.
-        void                       *payload;            //!< Payload.
-        u16_t                       total_size;         //!< Total size.
-        u16_t                       payload_size;       //!< Payload size.
+        struct ETHMAC_packet_chain *next;               /*!< Next chain of payload.*/
+        void                       *payload;            /*!< Payload.*/
+        u16_t                       total_size;         /*!< Total size.*/
+        u16_t                       payload_size;       /*!< Payload size.*/
 } ETHMAC_packet_chain_t;
 
 /**
  * Type represent link status.
  */
 typedef enum {
-        ETHMAC_LINK_STATUS__CONNECTED,          //!< Link connected
-        ETHMAC_LINK_STATUS__DISCONNECTED        //!< Link disconnected
+        ETHMAC_LINK_STATUS__CONNECTED,          /*!< Link connected.*/
+        ETHMAC_LINK_STATUS__DISCONNECTED        /*!< Link disconnected.*/
 } ETHMAC_link_status_t;
 
 /**
  * Type represent packet waiting with selected timeout.
  */
 typedef struct {
-        int    timeout;    //!< Timeout value in milliseconds. Value is set by user at request.
-        size_t pkt_size;   //!< Size of received packet. Value is set by system at response.
+        int    timeout;    /*!< Timeout value in milliseconds. Value is set by user at request.*/
+        size_t pkt_size;   /*!< Size of received packet. Value is set by system at response.*/
 } ETHMAC_packet_wait_t;
 
 /*==============================================================================

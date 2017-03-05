@@ -227,24 +227,37 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 /**
- * Endpoint configuration (the ENDP0 configuration is ignored).
+ * Endpoint configuration structure.
+ */
+struct usbd_ep_config {
+#ifdef DOXYGEN
+        bool            IN_enabled;             /*!< IN enabled.*/
+        bool            OUT_enabled;            /*!< OUT enabled.*/
+        usb_transfer_t  transfer_type;          /*!< Transfer type.*/
+        u16_t           IN_buffer_size;         /*!< IN buffer size.*/
+        u16_t           OUT_buffer_size;        /*!< OUT buffer size.*/
+#else
+        bool            IN_enabled      : 1;    /*!< IN enabled.*/
+        bool            OUT_enabled     : 1;    /*!< OUT enabled.*/
+        usb_transfer_t  transfer_type   : 2;    /*!< Transfer type.*/
+        u16_t           IN_buffer_size  : 10;   /*!< IN buffer size.*/
+        u16_t           OUT_buffer_size : 10;   /*!< OUT buffer size.*/
+#endif
+};
+
+/**
+ * Endpoints configurations (the ENDP0 configuration is ignored).
  */
 typedef struct {
-        struct usbd_ep_config {
-                bool            IN_enabled      : 1;    //!< IN enabled
-                bool            OUT_enabled     : 1;    //!< OUT enabled
-                usb_transfer_t  transfer_type   : 2;    //!< Transfer type
-                u16_t           IN_buffer_size  : 10;   //!< IN buffer size
-                u16_t           OUT_buffer_size : 10;   //!< OUT buffer size
-        } ep[_USBD_NUMBER_OF_ENDPOINTS];
+        struct usbd_ep_config ep[_USBD_NUMBER_OF_ENDPOINTS];
 } usbd_ep_config_t;
 
 /**
  * SETUP packet container and receive timeout.
  */
 typedef struct {
-        usb_setup_packet_t packet;      //!< Setup packet
-        int                timeout;     //!< Timeout in milliseconds
+        usb_setup_packet_t packet;      /*!< Setup packet.*/
+        int                timeout;     /*!< Timeout in milliseconds.*/
 } usbd_setup_container_t;
 
 /*==============================================================================

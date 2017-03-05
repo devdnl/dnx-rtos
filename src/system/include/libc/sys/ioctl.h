@@ -52,37 +52,55 @@ extern "C" {
 ==============================================================================*/
 #if DOXYGEN
 /**
- * @brief Request closes opened \b pipe device
+ * @brief Request closes opened \b pipe device.
+ *
+ * Request closes opened \b pipe device.
+ *
  * @see   ioctl()
  */
 #define IOCTL_PIPE__CLOSE
 
 /**
- * @brief Request clears \b pipe device
+ * @brief Request clears \b pipe device.
+ *
+ * Request clears \b pipe device.
+ *
  * @see   ioctl()
  */
 #define IOCTL_PIPE__CLEAR
 
 /**
- * @brief Request set stream to non-blocking read mode
+ * @brief Request set stream to non-blocking read mode.
+ *
+ * Request set stream to non-blocking read mode.
+ *
  * @see   ioctl()
  */
 #define IOCTL_VFS__NON_BLOCKING_RD_MODE
 
 /**
- * @brief Request set stream to default read mode
+ * @brief Request set stream to default read mode.
+ *
+ * Request set stream to default read mode.
+ *
  * @see   ioctl()
  */
 #define IOCTL_VFS__DEFAULT_RD_MODE
 
 /**
- * @brief Request set stream to non-blocking write mode
+ * @brief Request set stream to non-blocking write mode.
+ *
+ * Request set stream to non-blocking write mode.
+ *
  * @see   ioctl()
  */
 #define IOCTL_VFS__NON_BLOCKING_WR_MODE
 
 /**
- * @brief Request set stream to default write mode
+ * @brief Request set stream to default write mode.
+ *
+ * Request set stream to default write mode.
+ *
  * @see   ioctl()
  */
 #define IOCTL_VFS__DEFAULT_WR_MODE

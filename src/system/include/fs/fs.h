@@ -573,8 +573,8 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
  * @brief Structure indicate file access mode.
  */
 struct vfs_fattr {
-        bool non_blocking_rd;         //!< Non-blocking file read access
-        bool non_blocking_wr;         //!< Non-blocking file write access
+        bool non_blocking_rd;         /*!< Non-blocking file read access.*/
+        bool non_blocking_wr;         /*!< Non-blocking file write access.*/
 };
 
 /**
@@ -582,10 +582,10 @@ struct vfs_fattr {
  * @see   sys_get_programs_table()
  */
  struct _prog_data {
-        const char     *name;           //!< Program name
-        const size_t   *globals_size;   //!< Size of program global variables
-        const size_t   *stack_depth;    //!< Stack depth
-        process_func_t  main;           //!< Program main function
+        const char     *name;           /*!< Program name.*/
+        const size_t   *globals_size;   /*!< Size of program global variables.*/
+        const size_t   *stack_depth;    /*!< Stack depth.*/
+        process_func_t  main;           /*!< Program main function.*/
 };
 #endif
 

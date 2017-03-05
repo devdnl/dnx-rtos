@@ -64,10 +64,10 @@ extern "C" {
         /* type defined in sys/types.h */
         /** @brief Directory entry. */
         typedef struct dirent {
-                char   *name;           //!< File name
-                u64_t   size;           //!< File size in bytes
-                tfile_t filetype;       //!< File type
-                dev_t   dev;            //!< Device address (if file type is driver)
+                char   *name;           /*!< File name.*/
+                u64_t   size;           /*!< File size in bytes.*/
+                tfile_t filetype;       /*!< File type.*/
+                dev_t   dev;            /*!< Device address (if file type is driver).*/
         } dirent_t;
 #else
         #ifndef __DIR_TYPE_DEFINED__

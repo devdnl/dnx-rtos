@@ -109,9 +109,9 @@ extern "C" {
  * system functions.
  */
 int errno;
-#endif
-
+#else
 extern int _errno;
+#endif
 
 /*==============================================================================
   Exported functions

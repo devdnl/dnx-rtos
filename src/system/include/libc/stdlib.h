@@ -95,8 +95,8 @@ extern "C" {
  * @see div()
  */
 typedef struct {
-        int quot;               //!< Quotient
-        int rem;                //!< Remainder
+        int quot;               /*!< Quotient.*/
+        int rem;                /*!< Remainder.*/
 } div_t;
 
 /**
@@ -108,8 +108,8 @@ typedef struct {
  * @see ldiv()
  */
 typedef struct {
-        long quot;              //!< Quotient
-        long rem;               //!< Remainder
+        long quot;              /*!< Quotient.*/
+        long rem;               /*!< Remainder.*/
 } ldiv_t;
 
 /**

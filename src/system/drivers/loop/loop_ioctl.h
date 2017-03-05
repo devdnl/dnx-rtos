@@ -152,9 +152,9 @@ typedef enum {
  * Type represent buffer descriptor for I/O operations.
  */
 typedef struct {
-        u8_t    *data;                          //!< Write/read Host buffer address.
-        size_t   size;                          //!< Number of bytes to write/read.
-        int      err_no;                        //!< Errno value if error occurred (if no error must be set to ESUCC).
+        u8_t    *data;                          /*!< Write/read Host buffer address.*/
+        size_t   size;                          /*!< Number of bytes to write/read.*/
+        int      err_no;                        /*!< Errno value if error occurred (if no error must be set to ESUCC).*/
 } LOOP_buffer_t;
 
 
@@ -162,7 +162,7 @@ typedef struct {
  * Type represent the response host->client for the ioctl request coming from client.
  */
 typedef struct {
-        int err_no;                             //!< Errno value if error occurred (if no error must be set to ESUCC).
+        int err_no;                             /*!< Errno value if error occurred (if no error must be set to ESUCC).*/
 } LOOP_ioctl_response_t;
 
 
@@ -170,8 +170,8 @@ typedef struct {
  * Type represent the response host->client for the stat() request coming from client.
  */
 typedef struct {
-        u64_t size;                             //!< Device capacity/file size.
-        int   err_no;                           //!< Errno value if error occurred (if no error must be set to ESUCC).
+        u64_t size;                             /*!< Device capacity/file size.*/
+        int   err_no;                           /*!< Errno value if error occurred (if no error must be set to ESUCC).*/
 } LOOP_stat_response_t;
 
 
@@ -179,19 +179,19 @@ typedef struct {
  * Type represent the request.
  */
 typedef struct {
-        LOOP_cmd_t cmd;                         //!< Requested action (command from Client).
+        LOOP_cmd_t cmd;                         /*!< Requested action (command from Client).*/
 
         union {
                 struct {
-                        size_t size;            //!< Requested size of read/write operation.
-                        fpos_t seek;            //!< Position in the device's file.
-                } rw;                           //!< Read/write transmission arguments group.
+                        size_t size;            /*!< Requested size of read/write operation.*/
+                        fpos_t seek;            /*!< Position in the device's file.*/
+                } rw;                           /*!< Read/write transmission arguments group.*/
 
                 struct {
-                        int   request;          //!< Ioctl's request number.
-                        void *arg;              //!< Ioctl's request argument.
-                } ioctl;                        //!< Ioctl argument group.
-        } arg;                                  //!< Command's arguments.
+                        int   request;          /*!< Ioctl's request number.*/
+                        void *arg;              /*!< Ioctl's request argument.*/
+                } ioctl;                        /*!< Ioctl argument group.*/
+        } arg;                                  /*!< Command's arguments.*/
 } LOOP_request_t;
 
 

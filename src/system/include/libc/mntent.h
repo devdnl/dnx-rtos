@@ -57,10 +57,10 @@ extern "C" {
 #ifdef DOXYGEN
 /** @brief Structure that describes a mount table entry. */
 struct mntent {
-        const char *mnt_fsname; //!< Device or server for file system
-        const char *mnt_dir;    //!< Directory mounted on
-        u64_t       mnt_total;  //!< Device total size in bytes
-        u64_t       mnt_free;   //!< Device free space in bytes
+        const char *mnt_fsname; /*!< Device or server for file system.*/
+        const char *mnt_dir;    /*!< Directory mounted on.*/
+        u64_t       mnt_total;  /*!< Device total size in bytes.*/
+        u64_t       mnt_free;   /*!< Device free space in bytes.*/
 };
 #endif
 

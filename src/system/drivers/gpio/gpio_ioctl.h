@@ -25,100 +25,100 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-gpio GPIO Driver
- *
- * \section drv-gpio-desc Description
- * Driver handles GPIO peripheral.
- *
- * \section drv-gpio-sup-arch Supported architectures
- * \li STM32F10x
- *
- * \section drv-gpio-ddesc Details
- * \subsection drv-gpio-ddesc-num Meaning of major and minor numbers
- * Some manufactures enumerate devices starting from 1 instead of 0 (e.g. ST).
- * In this case major number starts from 0 and is connected to the first device
- * e.g. GPIOA. Major number selects GPIO peripheral.
- *
- * \subsubsection drv-gpio-ddesc-numres Numeration restrictions
- * Number of peripherals determines how big the major number can be. If there is
- * only one GPIO peripheral then the major number is always 0.
- *
- * \subsection drv-gpio-ddesc-init Driver initialization
- * To initialize driver the following code can be used:
- *
- * @code
-   driver_init("GPIO", 0, 0, "/dev/GPIOA");
-   @endcode
-   @code
-   driver_init("GPIO", 1, 0, "/dev/GPIOB");
-   @endcode
- *
- * \subsection drv-gpio-ddesc-release Driver release
- * To release driver the following code can be used:
- * @code
-   driver_release("GPIO", 0, 0);
-   @endcode
-   @code
-   driver_release("GPIO", 1, 0);
-   @endcode
- *
- * \subsection drv-gpio-ddesc-cfg Driver configuration
- * Driver configuration can be done by using Configtool or configuration files.
- *
- * \subsection drv-gpio-ddesc-write Data write
- * Data to the GPIO device can be wrote as regular file. The entire wide of port
- * is used to send bytes. If port is 16-bit then entire word will set output
- * pins to selected state.
- *
- * \subsection drv-gpio-ddesc-read Data read
- * Data to the GPIO device can be read as regular file. The entire word of port
- * is read to buffer in read operation.
- *
- * \subsection drv-gpio-ddesc-pinctr Pin control
- * Each bit can be controlled by using ioctl() function. There is possibility to
- * control selected pin on not opened port for example: user opened GPIOA and
- * by using IOCTL_GPIO__SET_PIN_IN_PORT ioctl()'s request can control pin in
- * GPIOB. This is possible only by port index.
- *
- * @code
-   #include <stdio.h>
-   #include <sys/ioctl.h>
+@defgroup drv-gpio GPIO Driver
 
-   FILE *f = fopen("/dev/GPIOA", "r+);
-   if (f) {
+\section drv-gpio-desc Description
+Driver handles GPIO peripheral.
 
-        // control pin on port A...
-        static const u8_t LED = IOCTL_GPIO_PIN_IDX__LED;
-        ioctl(f, IOCTL_GPIO__CLEAR_PIN, &LED);
+\section drv-gpio-sup-arch Supported architectures
+\li stm32f1
 
-        // ... this same can be done by using alternative interface:
-        static const GPIO_pin_in_port_t LED_PORT = {
-               .pin_idx  = IOCTL_GPIO_PIN_IDX__LED,
-               .port_idx = IOCTL_GPIO_PORT_IDX__LED
-        };
-        ioctl(f, IOCTL_GPIO__CLEAR_PIN_IN_PORT, &LED_PORT);
+\section drv-gpio-ddesc Details
+\subsection drv-gpio-ddesc-num Meaning of major and minor numbers
+Some manufactures enumerate devices starting from 1 instead of 0 (e.g. ST).
+In this case major number starts from 0 and is connected to the first device
+e.g. GPIOA. Major number selects GPIO peripheral.
+
+\subsubsection drv-gpio-ddesc-numres Numeration restrictions
+Number of peripherals determines how big the major number can be. If there is
+only one GPIO peripheral then the major number is always 0.
+
+\subsection drv-gpio-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("GPIO", 0, 0, "/dev/GPIOA");
+@endcode
+@code
+driver_init("GPIO", 1, 0, "/dev/GPIOB");
+@endcode
+
+\subsection drv-gpio-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("GPIO", 0, 0);
+@endcode
+@code
+driver_release("GPIO", 1, 0);
+@endcode
+
+\subsection drv-gpio-ddesc-cfg Driver configuration
+Driver configuration can be done by using Configtool or configuration files.
+
+\subsection drv-gpio-ddesc-write Data write
+Data to the GPIO device can be wrote as regular file. The entire wide of port
+is used to send bytes. If port is 16-bit then entire word will set output
+pins to selected state.
+
+\subsection drv-gpio-ddesc-read Data read
+Data to the GPIO device can be read as regular file. The entire word of port
+is read to buffer in read operation.
+
+\subsection drv-gpio-ddesc-pinctr Pin control
+Each bit can be controlled by using ioctl() function. There is possibility to
+control selected pin on not opened port for example: user opened GPIOA and
+by using IOCTL_GPIO__SET_PIN_IN_PORT ioctl()'s request can control pin in
+GPIOB. This is possible only by port index.
+
+@code
+#include <stdio.h>
+#include <sys/ioctl.h>
+
+FILE *f = fopen("/dev/GPIOA", "r+);
+if (f) {
+
+     // control pin on port A...
+     static const u8_t LED = IOCTL_GPIO_PIN_IDX__LED;
+     ioctl(f, IOCTL_GPIO__CLEAR_PIN, &LED);
+
+     // ... this same can be done by using alternative interface:
+     static const GPIO_pin_in_port_t LED_PORT = {
+            .pin_idx  = IOCTL_GPIO_PIN_IDX__LED,
+            .port_idx = IOCTL_GPIO_PORT_IDX__LED
+     };
+     ioctl(f, IOCTL_GPIO__CLEAR_PIN_IN_PORT, &LED_PORT);
 
 
-        // there is possiblity to control pin on other port
-        static const GPIO_pin_in_port_t OTHER_PIN = {
-               .pin_idx  = IOCTL_GPIO_PIN_IDX__OTHER_PIN,
-               .port_idx = IOCTL_GPIO_PORT_IDX__OTHER_PIN
-        };
-        ioctl(f, IOCTL_GPIO__SET_PIN_IN_PORT, &OTHER_PIN);
+     // there is possiblity to control pin on other port
+     static const GPIO_pin_in_port_t OTHER_PIN = {
+            .pin_idx  = IOCTL_GPIO_PIN_IDX__OTHER_PIN,
+            .port_idx = IOCTL_GPIO_PORT_IDX__OTHER_PIN
+     };
+     ioctl(f, IOCTL_GPIO__SET_PIN_IN_PORT, &OTHER_PIN);
 
-        fclose(f);
+     fclose(f);
 
-   } else {
-        perror(NULL);
-   }
-   @endcode
- *
- * There are restrictions that allow user to control pins by using other port
- * file: the port that is controlled should be earlier initialized. If port is
- * not initialized then pin behavior is undefined (depends on microcontroller).
- *
- * @{
- */
+} else {
+     perror(NULL);
+}
+@endcode
+
+There are restrictions that allow user to control pins by using other port
+file: the port that is controlled should be earlier initialized. If port is
+not initialized then pin behavior is undefined (depends on microcontroller).
+
+@{
+*/
 
 #ifndef _GPIO_IOCTL_H_
 #define _GPIO_IOCTL_H_
@@ -144,25 +144,25 @@ extern "C" {
  * Type used to read pin state
  */
 typedef struct {
-        u8_t pin_idx;           //!< Pin index.
-        int  state;             //!< Pin state.
+        u8_t pin_idx;           /*!< Pin index.*/
+        int  state;             /*!< Pin state.*/
 } GPIO_pin_state_t;
 
 /**
  * Type represent pin on port selected by index.
  */
 typedef struct {
-        u8_t port_idx;
-        u8_t pin_idx;
+        u8_t port_idx;          /*!< Port index.*/
+        u8_t pin_idx;           /*!< Pin index.*/
 } GPIO_pin_in_port_t;
 
 /**
  * Type represent pin state on port selected by index.
  */
 typedef struct {
-        u8_t port_idx;          //!< Port index.
-        u8_t pin_idx;           //!< Pin index.
-        int  state;             //!< Pin state.
+        u8_t port_idx;          /*!< Port index.*/
+        u8_t pin_idx;           /*!< Pin index.*/
+        int  state;             /*!< Pin state.*/
 } GPIO_pin_in_port_state_t;
 
 /*==============================================================================
