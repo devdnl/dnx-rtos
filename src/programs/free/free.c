@@ -63,7 +63,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Cat main function
  */
 //==============================================================================
-int_main(free, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
+int_main(free, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         (void)argc;
 
