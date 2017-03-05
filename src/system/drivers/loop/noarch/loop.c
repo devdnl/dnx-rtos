@@ -31,6 +31,8 @@
 #include "noarch/loop_cfg.h"
 #include "../loop_ioctl.h"
 
+// TODO FIXME
+
 /*==============================================================================
   Local macros
 ==============================================================================*/
@@ -71,7 +73,6 @@ typedef struct {
         sem_t      *event_req;
         sem_t      *event_res;
         dev_lock_t  host_lock;
-        u8_t        major;
         req_t       action;
 } loop_t;
 
@@ -116,8 +117,6 @@ API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor)
         int err = sys_zalloc(sizeof(loop_t), device_handle);
         if (err == ESUCC) {
                 loop_t *hdl = *device_handle;
-
-                hdl->major = major;
 
                 sys_device_unlock(&hdl->host_lock, true);
 
@@ -461,7 +460,7 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
 
                         if (buf->err_no == ESUCC) {
                                 if (  buf->size == 0
-                                   || !buf->data
+                                   || buf->data == NULL
                                    || buf->size == hdl->action.arg.rw.size) {
 
                                         err = ESUCC;
@@ -469,9 +468,6 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                                 } else if (buf->size >= hdl->action.arg.rw.size) {
                                         buf->size = hdl->action.arg.rw.size;
                                         err = ESUCC;
-
-                                } else {
-                                        err = 1;
                                 }
 
                                 hdl->action.arg.rw.data = buf->data;
@@ -593,8 +589,6 @@ API_MOD_STAT(LOOP, void *device_handle, struct vfs_dev_stat *device_stat)
         loop_t  *hdl = device_handle;
         int      err;
 
-        device_stat->st_major = hdl->major;
-        device_stat->st_minor = 0;
         device_stat->st_size  = 0;
 
         if (hdl->host_lock) {

@@ -101,13 +101,10 @@ static void client2host_transaction(int i)
 
                 int s = ioctl(global->loop_dev, IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT, &buf);
                 if (s == 0) {
-                        n += fwrite(global->buffer, 1, part, global->src_dev);
-                }
-
-                if (s == 0 || s == -1) {
-                        break;
-                } else{
+                        n  += fwrite(global->buffer, 1, part, global->src_dev);
                         rd -= part;
+                } else {
+                        break;
                 }
         }
 
@@ -219,7 +216,7 @@ static void flush_request(int i)
 
         errno = 0;
         fflush(global->src_dev);
-        ioctl(global->loop_dev, IOCTL_LOOP__HOST_FLUSH_DONE, errno);
+        ioctl(global->loop_dev, IOCTL_LOOP__HOST_FLUSH_DONE, &errno);
 
         if (global->log) {
                 printf("%s\n", strerror(errno));

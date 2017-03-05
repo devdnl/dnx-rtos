@@ -753,6 +753,7 @@ INPUT                  = " ." \
                          ../../src/system/include/libc/sys/endian.h \
                          ../../src/system/include/libc/sys/ioctl.h \
                          ../../src/system/include/libc/sys/mount.h \
+                         ../../src/system/include/libc/sys/shm.h \
                          ../../src/system/include/libc/sys/stat.h \
                          ../../src/system/include/libc/sys/statfs.h \
                          ../../src/system/include/libc/sys/types.h \

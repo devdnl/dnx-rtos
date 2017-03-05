@@ -1,4 +1,4 @@
-/*=========================================================================*//**
+/*==============================================================================
 File     shm.h
 
 Author   Daniel Zorychta
@@ -22,10 +22,10 @@ Brief    Shared memory functions.
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /**
-@defgroup SHM_H_ SHM_H_
+@defgroup sys-shm-h <sys/shm.h>
 
 The library is used to control shared memory regions used in IPC.
 */

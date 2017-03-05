@@ -149,7 +149,7 @@ fseek() value and next read data sequence.
 <tt>Read:  [S][ADDR+W][POINTER:2][POINTER:1][POINTER:0][Sr][ADDR+R][DATA1][DATAn]...[P]</tt>
 
 \subsection drv-i2c-ddesc-write Data write
-Data to the I2C device can be wrote as regular file. Example assumptions:
+Data to the I2C device can be written as regular file. Example assumptions:
 - EEPROM device is AT24C32 (4KiB EEPROM)
 - EEPROM address is 0xA0
 - EEPROM is visible in system as "/dev/ee"

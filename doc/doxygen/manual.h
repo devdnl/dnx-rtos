@@ -127,6 +127,7 @@ There are documented libraries that are modified for system purposes.
 \li \subpage sys-endian-h   Endianness
 \li \subpage sys-ioctl-h    IO control library
 \li \subpage sys-mount-h    Library contains functions for file systems mount and drivers initialization
+\li \subpage sys-shm-h      Library contains functions for shared memory management
 \li \subpage sys-stat-h     Library contains functions for nodes create and information
 \li \subpage sys-statfs-h   File systems information
 \li \subpage sys-types-h    System types
