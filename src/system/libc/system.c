@@ -98,7 +98,7 @@ int system(const char *command)
                       .detached = false
                 };
 
-                process_wait(process_create(command, &attr), &status, MAX_DELAY_MS);
+                process_wait(process_create(cmd, &attr), &status, MAX_DELAY_MS);
 
                 free(cmd);
                 free(cwd);
