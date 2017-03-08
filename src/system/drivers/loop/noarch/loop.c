@@ -31,8 +31,6 @@
 #include "noarch/loop_cfg.h"
 #include "../loop_ioctl.h"
 
-// TODO FIXME
-
 /*==============================================================================
   Local macros
 ==============================================================================*/
@@ -40,6 +38,9 @@
 #define OPERATION_TIMEOUT       60000
 #define REQUEST_TIMEOUT         20000
 #define HOST_REQUEST_TIMEOUT    MAX_DELAY_MS
+
+#define FLAG_REQUEST            (1<<0)
+#define FLAG_RESPONSE           (1<<1)
 
 /*==============================================================================
   Local object types
@@ -64,14 +65,13 @@ typedef struct {
                 } stat;
         } arg;
 
-        int err_no;
+        int err;
 } req_t;
 
 
 typedef struct {
         mutex_t    *mtx;
-        sem_t      *event_req;
-        sem_t      *event_res;
+        flag_t     *flag;
         dev_lock_t  host_lock;
         req_t       action;
 } loop_t;
@@ -79,6 +79,10 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static int submit_request(loop_t *hdl);
+static int submit_response(loop_t *hdl);
+static int wait_for_response(loop_t *hdl, u32_t timeout);
+static int wait_for_request(loop_t *hdl, u32_t timeout);
 
 /*==============================================================================
   Local objects
@@ -110,43 +114,33 @@ MODULE_NAME(LOOP);
 //==============================================================================
 API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor)
 {
+        UNUSED_ARG1(major);
+
         if (minor != 0) {
                 return ENODEV;
         }
 
         int err = sys_zalloc(sizeof(loop_t), device_handle);
-        if (err == ESUCC) {
+        if (!err) {
                 loop_t *hdl = *device_handle;
 
                 sys_device_unlock(&hdl->host_lock, true);
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mtx);
-                if (err != ESUCC) {
-                        goto finish;
+                if (!err) {
+                        err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mtx);
                 }
 
-                err = sys_semaphore_create(1, 0, &hdl->event_req);
-                if (err != ESUCC) {
-                        goto finish;
+                if (!err) {
+                        err = sys_flag_create(&hdl->flag);
                 }
 
-                err = sys_semaphore_create(1, 0, &hdl->event_res);
-                if (err != ESUCC) {
-                        goto finish;
-                }
-
-                finish:
-                if (err != ESUCC) {
+                if (err) {
                         if (hdl->mtx) {
                                 sys_mutex_destroy(hdl->mtx);
                         }
 
-                        if (hdl->event_req) {
-                                sys_semaphore_destroy(hdl->event_req);
-                        }
-
-                        if (hdl->event_res) {
-                                sys_semaphore_destroy(hdl->event_res);
+                        if (hdl->flag) {
+                                sys_flag_destroy(hdl->flag);
                         }
 
                         sys_free(device_handle);
@@ -174,10 +168,7 @@ API_MOD_RELEASE(LOOP, void *device_handle)
                 mutex_t *mtx = hdl->mtx;
                 sys_mutex_unlock(mtx);
                 sys_mutex_destroy(mtx);
-
-                sys_semaphore_destroy(hdl->event_req);
-                sys_semaphore_destroy(hdl->event_res);
-
+                sys_flag_destroy(hdl->flag);
                 sys_free(device_handle);
         }
 
@@ -242,28 +233,27 @@ API_MOD_WRITE(LOOP,
 
         loop_t *hdl = device_handle;
 
-        if (hdl->host_lock == 0) {
+        if (sys_device_is_unlocked(&hdl->host_lock)) {
                 return ESRCH;
         }
 
         int err = sys_mutex_lock(hdl->mtx, OPERATION_TIMEOUT);
-        if (err == ESUCC) {
+        if (!err) {
 
                 hdl->action.cmd         = LOOP_CMD__TRANSMISSION_CLIENT2HOST;
                 hdl->action.arg.rw.data = const_cast(u8_t*, src);
                 hdl->action.arg.rw.size = count;
                 hdl->action.arg.rw.seek = *fpos;
 
-                err = sys_semaphore_signal(hdl->event_req);
-                if (err == ESUCC) {
+                err = submit_request(hdl);
+                if (!err) {
 
-                        err = sys_semaphore_wait(hdl->event_res, REQUEST_TIMEOUT);
-                        if (err == ESUCC) {
+                        err = wait_for_response(hdl, REQUEST_TIMEOUT);
+                        if (!err) {
 
-                                if (hdl->action.err_no == ESUCC) {
+                                err = hdl->action.err;
+                                if (!err) {
                                         *wrcnt = count - hdl->action.arg.rw.size;
-                                } else {
-                                        err = hdl->action.err_no;
                                 }
                         }
 
@@ -302,11 +292,12 @@ API_MOD_READ(LOOP,
 
         loop_t *hdl = device_handle;
 
-        if (sys_device_is_unlocked(&hdl->host_lock))
+        if (sys_device_is_unlocked(&hdl->host_lock)) {
                 return ESRCH;
+        }
 
         int err = sys_mutex_lock(hdl->mtx, OPERATION_TIMEOUT);
-        if (err == ESUCC) {
+        if (!err) {
 
                 hdl->action.cmd         = LOOP_CMD__TRANSMISSION_HOST2CLIENT;
                 hdl->action.arg.rw.data = dst;
@@ -315,17 +306,20 @@ API_MOD_READ(LOOP,
                 while (count) {
                         hdl->action.arg.rw.size = count;
 
-                        err = sys_semaphore_signal(hdl->event_req);
-                        if (err != ESUCC) {
+                        err = submit_request(hdl);
+                        if (err) {
                                 break;
                         }
 
-                        err = sys_semaphore_wait(hdl->event_res, REQUEST_TIMEOUT);
-                        if (err == ESUCC) {
+                        err = wait_for_response(hdl, REQUEST_TIMEOUT);
+                        if (!err) {
 
-                                if (hdl->action.err_no == ESUCC) {
+                                err = hdl->action.err;
 
-                                        if (hdl->action.arg.rw.size == 0) {
+                                if (!err) {
+
+                                        if (  hdl->action.arg.rw.size == 0
+                                           || hdl->action.arg.rw.data == NULL) {
                                                 break;
 
                                         } else if (hdl->action.arg.rw.size > count) {
@@ -345,7 +339,6 @@ API_MOD_READ(LOOP,
                                         *rdcnt += hdl->action.arg.rw.size;
 
                                 } else {
-                                        err = hdl->action.err_no;
                                         break;
                                 }
 
@@ -386,21 +379,21 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
 
         case IOCTL_LOOP__HOST_CLOSE:
                 err = sys_device_get_access(&hdl->host_lock);
-                if (err == ESUCC) {
-                        sys_semaphore_wait(hdl->event_req, 0);
-                        sys_semaphore_wait(hdl->event_res, 0);
+                if (!err) {
+                        sys_flag_clear(hdl->flag, FLAG_REQUEST | FLAG_RESPONSE);
                         sys_device_unlock(&hdl->host_lock, false);
                 }
                 break;
 
         case IOCTL_LOOP__HOST_WAIT_FOR_REQUEST:
                 err = sys_device_get_access(&hdl->host_lock);
-                if (arg && err == ESUCC) {
-                        err = sys_semaphore_wait(hdl->event_req, HOST_REQUEST_TIMEOUT);
-                        if (err == ESUCC) {
+                if (arg && !err) {
+                        err = wait_for_request(hdl, HOST_REQUEST_TIMEOUT);
+                        if (!err) {
                                 LOOP_request_t *req = cast(LOOP_request_t*, arg);
 
                                 req->cmd = hdl->action.cmd;
+
                                 switch(req->cmd) {
                                 case LOOP_CMD__TRANSMISSION_CLIENT2HOST:
                                 case LOOP_CMD__TRANSMISSION_HOST2CLIENT:
@@ -425,13 +418,13 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
 
         case IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT:
                 err = sys_device_get_access(&hdl->host_lock);
-                if (arg && err == ESUCC) {
+                if (arg && !err) {
                         LOOP_buffer_t *buf = cast(LOOP_buffer_t*, arg);
 
-                        if (buf->err_no == ESUCC) {
-                                if (buf->size > hdl->action.arg.rw.size) {
-                                        buf->size = hdl->action.arg.rw.size;
-                                }
+                        hdl->action.err = buf->err;
+
+                        if (!buf->err) {
+                                buf->size = min(buf->size, hdl->action.arg.rw.size);
 
                                 if (buf->size > 0 && buf->data) {
                                         memcpy(buf->data, hdl->action.arg.rw.data, buf->size);
@@ -441,48 +434,29 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                                 }
 
                                 if (hdl->action.arg.rw.size == 0 || buf->size == 0 || !buf->data) {
-                                        err = sys_semaphore_signal(hdl->event_res);
-                                } else {
-                                        err = ESUCC;
+                                        err = submit_response(hdl);
                                 }
 
                         } else {
-                                hdl->action.err_no = buf->err_no;
-                                err = sys_semaphore_signal(hdl->event_res);
+                                err = submit_response(hdl);
                         }
                 }
                 break;
 
         case IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT:
                 err = sys_device_get_access(&hdl->host_lock);
-                if (arg && err == ESUCC) {
+                if (arg && !err) {
                         LOOP_buffer_t *buf = cast(LOOP_buffer_t*, arg);
 
-                        if (buf->err_no == ESUCC) {
-                                if (  buf->size == 0
-                                   || buf->data == NULL
-                                   || buf->size == hdl->action.arg.rw.size) {
+                        hdl->action.err = buf->err;
 
-                                        err = ESUCC;
-
-                                } else if (buf->size >= hdl->action.arg.rw.size) {
-                                        buf->size = hdl->action.arg.rw.size;
-                                        err = ESUCC;
-                                }
-
+                        if (!buf->err) {
                                 hdl->action.arg.rw.data = buf->data;
-                                hdl->action.arg.rw.size = buf->size;
-                                hdl->action.err_no      = buf->err_no;
-
-                                sys_semaphore_signal(hdl->event_res);
-
-                                if (err) {
-                                        err = sys_semaphore_wait(hdl->event_req, HOST_REQUEST_TIMEOUT);
-                                }
-                        } else {
-                                hdl->action.err_no = buf->err_no;
-                                err = sys_semaphore_signal(hdl->event_res);
+                                hdl->action.arg.rw.size = min(buf->size, hdl->action.arg.rw.size);
+                                hdl->action.err         = buf->err;
                         }
+
+                        err = submit_response(hdl);
                 }
                 break;
 
@@ -491,9 +465,9 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                 if (arg && err == ESUCC) {
                         LOOP_ioctl_response_t *res  = cast(LOOP_ioctl_response_t*, arg);
 
-                        hdl->action.err_no = res->err_no;
+                        hdl->action.err = res->err;
 
-                        err = sys_semaphore_signal(hdl->event_res);
+                        err = submit_response(hdl);
                 }
                 break;
 
@@ -503,17 +477,17 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                         LOOP_stat_response_t *res = cast(LOOP_stat_response_t*, arg);
 
                         hdl->action.arg.stat.size = res->size;
-                        hdl->action.err_no        = res->err_no;
+                        hdl->action.err           = res->err;
 
-                        err = sys_semaphore_signal(hdl->event_res);
+                        err = submit_response(hdl);
                 }
                 break;
 
         case IOCTL_LOOP__HOST_FLUSH_DONE:
                 err = sys_device_get_access(&hdl->host_lock);
                 if (arg && err == ESUCC) {
-                        hdl->action.err_no = *cast(int*, arg);
-                        err = sys_semaphore_signal(hdl->event_res);
+                        hdl->action.err = *cast(int*, arg);
+                        err = submit_response(hdl);
                 }
                 break;
 
@@ -522,11 +496,12 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
                         hdl->action.cmd           = LOOP_CMD__IOCTL_REQUEST;
                         hdl->action.arg.ioctl.arg = arg;
                         hdl->action.arg.ioctl.rq  = request;
-                        sys_semaphore_signal(hdl->event_req);
 
-                        err = sys_semaphore_wait(hdl->event_res, REQUEST_TIMEOUT);
-                        if (err == ESUCC) {
-                                err = hdl->action.err_no;
+                        submit_request(hdl);
+
+                        err = wait_for_response(hdl, REQUEST_TIMEOUT);
+                        if (!err) {
+                                err = hdl->action.err;
                         }
                 } else {
                         err = ESRCH;
@@ -548,27 +523,20 @@ API_MOD_IOCTL(LOOP, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(LOOP, void *device_handle)
 {
-        loop_t  *hdl = device_handle;
-        int      err;
+        loop_t *hdl = device_handle;
+        int     err = ESUCC;
 
         if (sys_device_is_locked(&hdl->host_lock)) {
 
                 hdl->action.cmd = LOOP_CMD__FLUSH_BUFFERS;
-                sys_semaphore_signal(hdl->event_req);
+                submit_request(hdl);
 
-                err = sys_semaphore_wait(hdl->event_res, REQUEST_TIMEOUT);
-                if (err == ESUCC) {
-                        if (hdl->action.err_no == ESUCC) {
-                                err = ESUCC;
-                        } else {
-                                err = hdl->action.err_no;
-                        }
-
+                err = wait_for_response(hdl, REQUEST_TIMEOUT);
+                if (!err) {
+                        err = hdl->action.err;
                 }
 
                 hdl->action.cmd = LOOP_CMD__IDLE;
-        } else {
-                err = ESUCC;
         }
 
         return err;
@@ -587,32 +555,86 @@ API_MOD_FLUSH(LOOP, void *device_handle)
 API_MOD_STAT(LOOP, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         loop_t  *hdl = device_handle;
-        int      err;
+        int      err = ESUCC;
 
-        device_stat->st_size  = 0;
+        device_stat->st_size = 0;
 
-        if (hdl->host_lock) {
+        if (sys_device_is_locked(&hdl->host_lock)) {
+
                 hdl->action.cmd = LOOP_CMD__DEVICE_STAT;
-                sys_semaphore_signal(hdl->event_req);
+                submit_request(hdl);
 
-                err = sys_semaphore_wait(hdl->event_res, REQUEST_TIMEOUT);
-                if (err == ESUCC) {
+                err = wait_for_response(hdl, REQUEST_TIMEOUT);
+                if (!err) {
+                        err = hdl->action.err;
 
-                        if (hdl->action.err_no == ESUCC) {
+                        if (!err) {
                                 device_stat->st_size = hdl->action.arg.stat.size;
-                                err = ESUCC;
-                        } else {
-                                err = hdl->action.err_no;
                         }
-
                 }
 
                 hdl->action.cmd = LOOP_CMD__IDLE;
-        } else {
-                err = ESUCC;
         }
 
         return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function submit request.
+ *
+ * @param  hdl          driver handle
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int submit_request(loop_t *hdl)
+{
+        return sys_flag_set(hdl->flag, FLAG_REQUEST);
+}
+
+//==============================================================================
+/**
+ * @brief  Function submit response.
+ *
+ * @param  hdl          driver handle
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int submit_response(loop_t *hdl)
+{
+        return sys_flag_set(hdl->flag, FLAG_RESPONSE);
+}
+
+//==============================================================================
+/**
+ * @brief  Function wait for response.
+ *
+ * @param  hdl          driver handle
+ * @param  timeout      timeout in ms
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int wait_for_response(loop_t *hdl, u32_t timeout)
+{
+        return sys_flag_wait(hdl->flag, FLAG_RESPONSE, timeout);
+}
+
+//==============================================================================
+/**
+ * @brief  Function wait for request.
+ *
+ * @param  hdl          driver handle
+ * @param  timeout      timeout in ms
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int wait_for_request(loop_t *hdl, u32_t timeout)
+{
+        return sys_flag_wait(hdl->flag, FLAG_REQUEST, timeout);
 }
 
 /*==============================================================================

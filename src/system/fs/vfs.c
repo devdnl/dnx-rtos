@@ -914,35 +914,38 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-
                         int priority = increase_task_priority();
 
+                        err = fs->interface->fs_open(fs->handle,
+                                                     &file_obj->f_hdl,
+                                                     &file_obj->f_lseek,
+                                                     external_path,
+                                                     o_flags);
+
+                        struct stat stat;
                         if (!err) {
-                                err = fs->interface->fs_open(fs->handle,
-                                                             &file_obj->f_hdl,
-                                                             &file_obj->f_lseek,
-                                                             external_path,
-                                                             o_flags);
-                                if (!err) {
-                                        struct stat stat;
-                                        if (fs->interface->fs_fstat(fs->handle,
-                                                                    file_obj->f_hdl,
-                                                                    &stat) == ESUCC) {
+                                err = fs->interface->fs_fstat(fs->handle,
+                                                              file_obj->f_hdl,
+                                                              &stat);
+                        }
 
-                                                if ((stat.st_mode & S_IRUSR) == 0) {
-                                                        f_flags.rd = false;
-                                                }
-
-                                                if ((stat.st_mode & S_IWUSR) == 0) {
-                                                        f_flags.wr = false;
-                                                }
-                                        }
-
-                                        file_obj->FS_hdl      = fs->handle;
-                                        file_obj->FS_if       = fs->interface;
-                                        file_obj->f_flag      = f_flags;
-                                        file_obj->header.type = RES_TYPE_FILE;
+                        if (!err) {
+                                if ((stat.st_mode & S_IRUSR) == 0) {
+                                        f_flags.rd = false;
                                 }
+
+                                if ((stat.st_mode & S_IWUSR) == 0) {
+                                        f_flags.wr = false;
+                                }
+
+                                if (f_flags.append) {
+                                        file_obj->f_lseek = stat.st_size;
+                                }
+
+                                file_obj->FS_hdl      = fs->handle;
+                                file_obj->FS_if       = fs->interface;
+                                file_obj->f_flag      = f_flags;
+                                file_obj->header.type = RES_TYPE_FILE;
                         }
 
                         restore_priority(priority);

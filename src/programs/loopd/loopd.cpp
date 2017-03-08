@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   Realize the virtual loop device (transparent device operations example)
+@brief   Realize the virtual loop device (transparent device operations example).
 
 @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -42,7 +42,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define BUFSIZE         1024
+#define BUFSIZE         128
 
 /*==============================================================================
   Local types, enums definitions
@@ -92,12 +92,12 @@ static void client2host_transaction(int i)
         size_t n  = 0;
         size_t rd = global->client_req.arg.rw.size;
         while (rd) {
-                size_t part   = min(rd, sizeof(global->buffer));
+                size_t part = min(rd, sizeof(global->buffer));
 
                 LOOP_buffer_t buf;
-                buf.data   = reinterpret_cast<uint8_t*>(global->buffer);
-                buf.err_no = ESUCC;
-                buf.size   = part;
+                buf.data = reinterpret_cast<uint8_t*>(global->buffer);
+                buf.err  = ESUCC;
+                buf.size = part;
 
                 int s = ioctl(global->loop_dev, IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT, &buf);
                 if (s == 0) {
@@ -135,16 +135,16 @@ static void host2client_transaction(int i)
         while (wr) {
                 errno = 0;
                 int n = fread(global->buffer, 1, min(wr, sizeof(global->buffer)), global->src_dev);
-                if (n == 0)
+                if (n == 0) {
                         break;
+                }
 
                 LOOP_buffer_t buf;
-                buf.data   = reinterpret_cast<u8_t*>(global->buffer);
-                buf.err_no = ESUCC;
-                buf.size   = n;
+                buf.data = reinterpret_cast<u8_t*>(global->buffer);
+                buf.err  = ESUCC;
+                buf.size = n;
 
-                int s = ioctl(global->loop_dev, IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT, &buf);
-                if (s == -1) {
+                if (ioctl(global->loop_dev, IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT, &buf) != 0) {
                         break;
                 } else {
                         wr -= n;
@@ -154,9 +154,9 @@ static void host2client_transaction(int i)
 
         if (wr) {
                 LOOP_buffer_t buf;
-                buf.data   = NULL;
-                buf.size   = 0;
-                buf.err_no = errno;
+                buf.data = NULL;
+                buf.size = 0;
+                buf.err  = errno;
                 ioctl(global->loop_dev, IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT, &buf);
         }
 
@@ -188,10 +188,10 @@ static void ioctl_request(int i)
                   global->client_req.arg.ioctl.request,
                   global->client_req.arg.ioctl.arg) != 0) {
 
-                ioctl_resp.err_no = errno;
+                ioctl_resp.err = errno;
 
         } else {
-                ioctl_resp.err_no = ESUCC;
+                ioctl_resp.err = ESUCC;
         }
 
         ioctl(global->loop_dev, IOCTL_LOOP__HOST_SET_IOCTL_STATUS, &ioctl_resp);
@@ -241,11 +241,11 @@ static void stat_request(int i)
         LOOP_stat_response_t stat_resp;
 
         if (fstat(global->src_dev, &stat) == 0) {
-                stat_resp.err_no = ESUCC;
-                stat_resp.size   = stat.st_size;
+                stat_resp.err  = ESUCC;
+                stat_resp.size = stat.st_size;
         } else {
-                stat_resp.err_no = errno;
-                stat_resp.size   = 0;
+                stat_resp.err  = errno;
+                stat_resp.size = 0;
         }
 
         ioctl(global->loop_dev, IOCTL_LOOP__HOST_SET_DEVICE_STATS, &stat_resp);

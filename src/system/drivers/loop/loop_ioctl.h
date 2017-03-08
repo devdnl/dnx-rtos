@@ -225,9 +225,9 @@ Example code of handling Client to Host request:
 
                         // object used to transfer data from client
                         LOOP_buffer_t buf;
-                        buf.data   = buffer;
-                        buf.size   = part;
-                        buf.err_no = ESUCC;
+                        buf.data = buffer;
+                        buf.size = part;
+                        buf.err  = ESUCC;
 
                         int s = ioctl(loop_dev, IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT, &buf);
                         if (s == 0) {
@@ -275,9 +275,9 @@ application. Example code of handling Host to Client request:
                         size_t n = ...;
 
                         LOOP_buffer_t buf;
-                        buf.data   = buffer;
-                        buf.size   = n;
-                        buf.err_no = ESUCC;
+                        buf.data = buffer;
+                        buf.size = n;
+                        buf.err  = ESUCC;
 
                         int s = ioctl(loop_dev, IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT, &buf);
                         if (s != 0) {
@@ -290,9 +290,9 @@ application. Example code of handling Host to Client request:
                 // if host has not more bytes then can finish transaction
                 if (wr) {
                         LOOP_buffer_t buf;
-                        buf.data   = NULL;
-                        buf.size   = 0;
-                        buf.err_no = errno;
+                        buf.data = NULL;
+                        buf.size = 0;
+                        buf.err  = errno;
                         ioctl(loop_dev, IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT, &buf);
                 }
         }
@@ -331,7 +331,7 @@ request:
                 case ...:
                         // ...
                         // The rq.ioctl.arg can be used as well
-                        ioctl_resp.err_no = ESUCC;
+                        ioctl_resp.err = ESUCC;
                         break;
                 }
 
@@ -365,8 +365,8 @@ the host application should handle statistics request. Example code:
         void stat_request(LOOP_request_t *rq)
         {
                 LOOP_stat_response_t stat_resp;
-                stat_resp.size   = 100;         // example size
-                stat_resp.err_no = ESUCC;       // operation status
+                stat_resp.size = 100;         // example size
+                stat_resp.err  = ESUCC;       // operation status
 
                 if (ioctl(loop_dev, IOCTL_LOOP__HOST_SET_DEVICE_STATS, &stat_resp) != 0) {
                         perror(loop);
@@ -543,7 +543,7 @@ typedef enum {
 typedef struct {
         u8_t    *data;                          /*!< Write/read Host buffer address.*/
         size_t   size;                          /*!< Number of bytes to write/read.*/
-        int      err_no;                        /*!< Errno value if error occurred (if no error must be set to ESUCC).*/
+        int      err;                           /*!< Errno value if error occurred (if no error must be set to ESUCC).*/
 } LOOP_buffer_t;
 
 
@@ -551,7 +551,7 @@ typedef struct {
  * Type represent the response host->client for the ioctl request coming from client.
  */
 typedef struct {
-        int err_no;                             /*!< Errno value if error occurred (if no error must be set to ESUCC).*/
+        int err;                               /*!< Errno value if error occurred (if no error must be set to ESUCC).*/
 } LOOP_ioctl_response_t;
 
 
@@ -560,7 +560,7 @@ typedef struct {
  */
 typedef struct {
         u64_t size;                             /*!< Device capacity/file size.*/
-        int   err_no;                           /*!< Errno value if error occurred (if no error must be set to ESUCC).*/
+        int   err;                              /*!< Errno value if error occurred (if no error must be set to ESUCC).*/
 } LOOP_stat_response_t;
 
 
