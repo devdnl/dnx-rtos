@@ -64,17 +64,6 @@ extern "C" {
 #undef sys_malloc
 #undef sys_free
 
-/**
- * File system types.
- */
-enum {
-        SYS_FS_TYPE__RAM,       //!< RAM file system
-        SYS_FS_TYPE__SOLID,     //!< Solid file system storage
-        SYS_FS_TYPE__DEV,       //!< Special file system for device files
-        SYS_FS_TYPE__SYS,       //!< Special file system for system purposes
-        SYS_FS_TYPE__NET,       //!< Network file system
-};
-
 #ifdef __cplusplus
 inline void* operator new     (size_t size) {void *mem = NULL; _kmalloc(_MM_FS, size, &mem); return mem;}\
 inline void* operator new[]   (size_t size) {void *mem = NULL; _kmalloc(_MM_FS, size, &mem); return mem;}\
@@ -85,6 +74,18 @@ inline void  operator delete[](void* ptr  ) {_sysfree(&ptr);}
 #define _FS_EXTERN_C
 #endif
 #endif /* DOXYGEN */
+
+/**
+ * File system types.
+ * @see struct statfs
+ */
+enum SYS_FS_TYPE {
+        SYS_FS_TYPE__RAM,       //!< RAM file system
+        SYS_FS_TYPE__SOLID,     //!< Solid file system storage
+        SYS_FS_TYPE__DEV,       //!< Special file system for device files
+        SYS_FS_TYPE__SYS,       //!< Special file system for system purposes
+        SYS_FS_TYPE__NET,       //!< Network file system
+};
 
 #ifdef DOXYGEN
 /**

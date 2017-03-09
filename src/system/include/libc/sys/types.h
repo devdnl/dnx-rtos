@@ -200,7 +200,7 @@ struct stat {
 
 /** file system statistic */
 struct statfs {
-        u32_t       f_type;     /*!< File system type.*/
+        u32_t       f_type;     /*!< File system type. @see @ref SYS_FS_TYPE*/
         u32_t       f_bsize;    /*!< Block size.*/
         u32_t       f_blocks;   /*!< Total blocks.*/
         u32_t       f_bfree;    /*!< Free blocks.*/
