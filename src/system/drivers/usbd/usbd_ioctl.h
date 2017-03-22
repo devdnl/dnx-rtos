@@ -25,19 +25,76 @@
 *//*==========================================================================*/
 
 /**
- * @defgroup drv-usbd USB Device Driver
- *
- * \section drv-usbd-desc Description
- * Driver handles USB Device peripheral.
- *
- * \section drv-usbd-sup-arch Supported architectures
- * \li STM32F10x (with USB peripheral)
- *
- * @todo Details
- *
- *
- * @{
- */
+@defgroup drv-usbd USBD Driver
+
+\section drv-usbd-desc Description
+Driver handles USB Device peripheral. All data read from specified Endpoints
+should be handled by application. Incoming data is controlled by host device
+and slave device is responsible for correct handling USB protocol. There is no
+possibility to send RAW data. To obtain more information please read USB protocol
+specification. There are example applications that can be used to implement own
+USB device:
+\li src/programs/usbdevkbrd -- keyboard example
+\li src/programs/usbdevmouse -- mouse example
+\li src/programs/usbdevserial -- serial port example
+\li src/programs/usbdevstorage -- storage device example
+
+\section drv-usbd-sup-arch Supported architectures
+\li stm32f1
+
+\section drv-usbd-ddesc Details
+\subsection drv-usbd-ddesc-num Meaning of major and minor numbers
+The major number selects USB peripheral. The minor number selects USB Endpoint.
+
+\subsubsection drv-usbd-ddesc-numres Numeration restrictions
+Maximum major number depends on number of USB peripherals in microcontroller.
+The minor number depends on count of USB Endpoints.
+
+\subsection drv-usbd-ddesc-init Driver initialization
+To initialize driver the following code can be used:
+
+@code
+driver_init("USBD", 0, 0, "/dev/usb0_ep0");     // SETUP Endpoint
+driver_init("USBD", 0, 1, "/dev/usb0_ep1");
+driver_init("USBD", 0, 2, "/dev/usb0_ep2");
+driver_init("USBD", 0, 3, "/dev/usb0_ep3");
+driver_init("USBD", 0, 4, "/dev/usb0_ep4");
+@endcode
+
+\subsection drv-usbd-ddesc-release Driver release
+To release driver the following code can be used:
+@code
+driver_release("USBD", 0, 2);
+driver_release("USBD", 0, 3);
+@endcode
+
+\subsection drv-usbd-ddesc-cfg Driver configuration
+A moment when driver should be configured depends on USB protocol. User should
+read commands from Endpoint 0 and do requested commands. One of first commands
+is configuration request. To start USB peripheral one should send specified
+command:
+@code
+ioctl(ep0, IOCTL_USBD__START);
+@endcode
+After this operation a USB host will send several commands. Commands should be
+handled by application code.
+
+\subsection drv-usbd-ddesc-write Data write
+In most cases writing data to Endpoint is the same as writing to regular file.
+One should keep in mind that data flow is controlled directly by host device and
+selected device class. Writing is possible only when Endpoint is set to write
+(regulated by device-type class). In this case driver is waiting for data to be
+readout by host.
+
+\subsection drv-usbd-ddesc-read Data read
+In most cases reading data from Endpoint is the same as reading to regular file.
+One should keep in mind that data flow is controlled directly by host device and
+selected device class. Reading is possible only when Endpoint is set to read
+(regulated by device-type class). IN this case driver is waiting for host data
+write.
+
+@{
+*/
 
 #ifndef _USBD_IOCTL_H_
 #define _USBD_IOCTL_H_
