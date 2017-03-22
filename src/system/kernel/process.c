@@ -1301,24 +1301,15 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
         stat->stack_max_usage = proc->task[0] ? (stat->stack_size - _task_get_free_stack(proc->task[0])) : 0;
         stat->priority        = proc->task[0] ? _task_get_priority(proc->task[0]) : 0;
         stat->CPU_load        = proc->CPU_load;
-        stat->memory_usage   += sizeof(_process_t);
-        stat->memory_usage   += proc->task[0] ? (*proc->pdata->stack_depth * sizeof(StackType_t)) : 0;
-        stat->memory_usage   += proc->event ? sizeof(flag_t) : 0;
-        stat->memory_usage   += PROC_MAX_THREADS(proc) * sizeof(task_t*);
+        stat->memory_usage    = 0;
         stat->threads_count   = 0;
         stat->socket_count    = 0;
         stat->threads_count   = 0;
 
-        for (int i = 0; proc->argv && i < proc->argc; i++) {
-                stat->memory_usage += strnlen(proc->argv[i], 256);
-        }
-
         u8_t threads = PROC_MAX_THREADS(proc);
-
         for (tid_t tid = 0; tid < threads; tid++) {
                 if (proc->task[tid]) {
                         stat->threads_count++;
-                        stat->memory_usage += sizeof(task_t*);
                 }
         }
 
@@ -1326,28 +1317,23 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
                 switch (res->type) {
                 case RES_TYPE_FILE:
                         stat->files_count++;
-                        stat->memory_usage += sizeof(FILE);
                         break;
 
                 case RES_TYPE_DIR:
                         stat->dir_count++;
-                        stat->memory_usage += sizeof(DIR);
                         break;
 
                 case RES_TYPE_MUTEX:
                         stat->mutexes_count++;
-                        stat->memory_usage += sizeof(mutex_t);
                         break;
 
                 case RES_TYPE_QUEUE:
                         stat->queue_count++;
-                        stat->memory_usage += sizeof(queue_t);
                         break;
 
                 case RES_TYPE_FLAG:
                 case RES_TYPE_SEMAPHORE:
                         stat->semaphores_count++;
-                        stat->memory_usage += sizeof(sem_t);
                         break;
 
                 case RES_TYPE_MEMORY:

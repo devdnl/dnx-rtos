@@ -80,6 +80,7 @@ LFLAGS   = -g \
            -Wl,--gc-sections \
            -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
            -Wall \
+           -specs=nano.specs -specs=rdimon.specs \
            -lm
 
 #---------------------------------------------------------------------------------------------------
