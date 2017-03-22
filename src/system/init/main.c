@@ -39,6 +39,7 @@
 #include "kernel/kwrapper.h"
 #include "kernel/sysfunc.h"
 #include "kernel/khooks.h"
+#include "dnx/os.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -77,7 +78,8 @@ void dnxinit(void *arg)
         _assert(ESUCC == _vfs_init());
         _assert(ESUCC == _syscall_init());
 
-        printk("Welcome to dnx RTOS!");
+        printk("Welcome to dnx RTOS %s!", get_OS_version());
+        printk("Running on platform %s", get_platform_name());
 
         _task_exit();
 }
