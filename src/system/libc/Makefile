@@ -14,5 +14,6 @@ CSRC_CORE   += libc/ctime_r.c
 CSRC_CORE   += libc/mktime.c
 CSRC_CORE   += libc/gmtime_r.c
 CSRC_CORE   += libc/localtime_r.c
+CSRC_CORE   += libc/locale.c
 CSRC_CORE   += libc/system.c
 HDRLOC_CORE += libc

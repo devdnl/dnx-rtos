@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    mian.c
+/*==============================================================================
+File     locale.c
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   This file provide system initialisation and RTOS start.
+Brief    The library provides location specific settings.
 
-@note    Copyright (C) 2012, 2013  Daniel Zorychta <daniel.zorychta@gmail.com>
+	 Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -22,31 +22,22 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "portable/cpuctl.h"
-#include "mm/heap.h"
-#include "mm/cache.h"
-#include "mm/mm.h"
-#include "mm/shm.h"
-#include "fs/vfs.h"
+#include "locale.h"
+#include "lib/cast.h"
 #include "lib/unarg.h"
-#include "kernel/syscall.h"
-#include "kernel/kpanic.h"
-#include "kernel/kwrapper.h"
-#include "kernel/sysfunc.h"
-#include "kernel/khooks.h"
-#include "dnx/os.h"
+#include "stddef.h"
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Local object types
 ==============================================================================*/
 
 /*==============================================================================
@@ -54,57 +45,82 @@
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Local objects
+==============================================================================*/
+static const struct lconv locale = {
+        .decimal_point     = ".",
+        .thousands_sep     = " ",
+        .grouping          = NULL,
+        .int_curr_symbol   = "???",
+        .currency_symbol   = "?",
+        .mon_decimal_point = ".",
+        .mon_thousands_sep = " ",
+        .mon_grouping      = NULL,
+        .positive_sign     = "",
+        .negative_sign     = "-",
+        .int_frac_digits   = 2,
+        .frac_digits       = 2,
+        .p_cs_precedes     = 0,
+        .p_sep_by_space    = 0,
+        .n_cs_precedes     = 0,
+        .n_sep_by_space    = 0,
+        .p_sign_posn       = 0,
+        .n_sign_posn       = 0
+};
+
+/*==============================================================================
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object definitions
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
 //==============================================================================
 /**
- * @brief  Task used to initialize dnx RTOS system. This task decrease stack
- *         usage in startup phase. Task after system initialization is deleted.
+ * @brief  Function set locale values.
+ *
+ * Sets locale information to be used by the current program, either changing
+ * the entire locale or portions of it. The function can also be used to
+ * retrieve the current locale's name by passing NULL as the value for argument
+ * locale.
+ *
+ * @note Function is not supported by dnx RTOS. Function always return NULL.
+ *
+ * @param  category     category to set
+ * @param  locale       value to set
+ *
+ * @return On success, a pointer to a C string identifying the locale currently
+ *         set for the category.
  */
 //==============================================================================
-void dnxinit(void *arg)
+char *setlocale(int category, const char *locale)
 {
-        UNUSED_ARG1(arg);
-
-        _assert(ESUCC == _vfs_init());
-        _assert(ESUCC == _syscall_init());
-
-        printk("Welcome to dnx RTOS %s!", get_OS_version());
-        printk("Running on platform %s", get_platform_name());
-
-        _task_exit();
+        UNUSED_ARG2(category, locale);
+        return NULL;
 }
 
 //==============================================================================
 /**
- * @brief Main function
+ * @brief  Function get locale formatting parameters for quantities.
+ *
+ * Retrieves the values provided in the current locale object to format
+ * parameters for quantities. These are returned in an object of type
+ * struct lconv.
+ *
+ * @param  category     category to set
+ * @param  locale       value to set
+ *
+ * @return On success, a pointer to a C string identifying the locale currently
+ *         set for the category.
  */
 //==============================================================================
-int main(void)
+struct lconv *localeconv(void)
 {
-        _cpuctl_init();
-        _assert(ESUCC == _mm_init());
-
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-        _assert(ESUCC == _cache_init());
-#endif
-#if __OS_ENABLE_SHARED_MEMORY__ > 0
-        _assert(ESUCC == _shm_init());
-#endif
-
-        _assert(ESUCC == _kernel_panic_init());
-        _assert(ESUCC == _task_create(dnxinit, "", (1024 / sizeof(StackType_t)), NULL, NULL, NULL));
-        _kernel_start();
-        return -1;
+        return const_cast(struct lconv *, &locale);
 }
 
 /*==============================================================================

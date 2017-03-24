@@ -132,8 +132,10 @@ There are documented libraries that are modified for system purposes.
 \li \subpage sys-statfs-h   File systems information
 \li \subpage sys-types-h    System types
 \li \subpage assert-h       Program assertion macro
+\li \subpage ctype-h        Character classification routines
 \li \subpage dirent-h       Directory handling
 \li \subpage errno-h        Error code list
+\li \subpage locale-h       Location specific settings
 \li \subpage mntent-h       Information about file system entry
 \li \subpage stdio-h        Standard IO library
 \li \subpage stdlib-h       Standard library

@@ -104,6 +104,8 @@ extern void      *__ram_size;
 //==============================================================================
 int _mm_init(void)
 {
+        _heap_init();
+
         int err =  _kzalloc(_MM_KRN,
                             _drvreg_number_of_modules * sizeof(i32_t),
                             cast(void*, &module_memory_usage));

@@ -757,6 +757,8 @@ INPUT                  = " ." \
                          ../../src/system/include/libc/sys/stat.h \
                          ../../src/system/include/libc/sys/statfs.h \
                          ../../src/system/include/libc/sys/types.h \
+                         ../../src/system/include/libc/ctype.h \
+                         ../../src/system/include/libc/locale.h \
                          ../../src/system/include/libc/assert.h \
                          ../../src/system/include/libc/dirent.h \
                          ../../src/system/include/kernel/errno.h \
