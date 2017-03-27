@@ -236,7 +236,7 @@ help :
 	@$(ECHO) "   flash, install      flash target CPU by using ./tools/flash.sh script"
 	@$(ECHO) "   reset               reset target CPU by using ./tools/reset.sh script"
 	@$(ECHO) "   release             create Release package"
-	@$(ECHO) "   doxygen             create Doxygen documentation"	
+	@$(ECHO) "   doxygen             create Doxygen documentation"
 
 ####################################################################################################
 # project configuration wizard
@@ -299,13 +299,13 @@ status :
 generate :
 	@$(ECHO) "Adding user's programs to the project..."
 	@$(ADDPROGS) ./$(APP_PRG_LOC)
-	
+
 	@$(ECHO) "Adding user's libraries to the project..."
 	@$(ADDLIBS) ./$(APP_LIB_LOC)
-	
-	@$(ECHO) "Adding file systems to the project..."	
+
+	@$(ECHO) "Adding file systems to the project..."
 	@$(ADDFS) ./$(SYS_FS_LOC)
-	
+
 	@$(ECHO) "Adding drivers to the project..."
 	@$(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
 
@@ -387,15 +387,7 @@ cleantarget :
 .PHONY : clean
 clean :
 	@$(ECHO) "Deleting all build files..."
-	-@$(RM) -r $(TARGET_DIR_NAME)/*
-
-####################################################################################################
-# clean up project (remove all files who arent project files!)
-####################################################################################################
-.PHONY : cleanall
-cleanall:
-	@$(ECHO) "Cleaning up project..."
-	-@$(RM) -r $(TARGET_DIR_NAME) $(INFO_LOC)
+	-@$(RM) -r $(TARGET_DIR_NAME) ./doc/doxygen/html/ ./doc/doxygen/latex
 
 ####################################################################################################
 # flash target CPU by using ./tools/flash.sh script

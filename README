@@ -24,14 +24,16 @@ The system features:
 
 To configure the project, type in the terminal:
     make config
+or
+    configure
 
 To compile the project, type in the terminal:
     make
 
 Folder structure:
+- BSP    - board support packages
 - build  - the project's binaries
-- config - the project configuration
-- doc    - a documents
-- extra  - an extra sources (programs, drivers, etc)
+- config - the project's configuration
+- doc    - documentation
 - src    - the project's sources
 - tools  - the project's tools (scripts, wizard, etc)

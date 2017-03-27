@@ -2,8 +2,26 @@
 
 cd $(dirname $0)
 
-git_hook_path=../extra/git_hooks/commit-msg
+if [ -d "../.git/hooks" ] && [ ! -f ../.git/hooks/commit-msg ]; then
 
-if [ -d "../.git/hooks" ]; then
-   /bin/cp -u $git_hook_path ../.git/hooks
+    echo "Adding git commit hook..."
+
+cat << 'EOF' > ../.git/hooks/commit-msg
+#!/bin/sh
+#
+# Script adds branch name at the beginning of the commit message
+
+git_branch()
+{
+    local b="$(git symbolic-ref HEAD 2> /dev/null)";
+    if [ -n "$b" ]; then
+        printf "%s:" "${b##refs/heads/}";
+    fi
+}
+
+msg=$(cat $1)
+echo "$(git_branch) $msg" > $1
+exit 0
+EOF
+
 fi

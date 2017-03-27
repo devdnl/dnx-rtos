@@ -1,3 +1,0 @@
-Templates files are added to bash scripts that generate new drivers, filesystems,
-or applications. Please take a look to tools/adddriver.sh, tools/addfilesystem.sh,
-and tools/addprogram.sh scripts.

@@ -33,7 +33,6 @@ Project contains several folders:
 \arg \c doc -- project documentation. Use <tt><b>make doxygen</b></tt> command in the
         command line to generate Doxygen documentation. PDF version is also
         possible to generate by using LaTeX system,
-\arg \c extra -- contains additional files, e. g. templates,
 \arg \c src -- all project sources with user directories: \c lib, \c programs.
         There are also system sources in folder: \c system,
 \arg \c tools -- many scripts and programs that helps organize project.
