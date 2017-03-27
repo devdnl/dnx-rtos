@@ -342,7 +342,7 @@ API_MOD_WRITE(ETHMAC,
 
                                 u8_t *buffer = get_buffer_address(DMATxDescToSet);
                                 memcpy(buffer, src, packet_size);
-                                send_packet(count);
+                                send_packet(packet_size);
 
                                 *wrcnt += packet_size;
                                 count  -= packet_size;

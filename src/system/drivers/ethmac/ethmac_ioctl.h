@@ -25,13 +25,13 @@
 *//*==========================================================================*/
 
 /**
-@defgroup drv-ethmac Ethernet MAC Driver
+@defgroup drv-ethmac ETHMAC Driver
 
 \section drv-ethmac-desc Description
 Driver handles Ethernet MAC peripheral.
 
 \section drv-ethmac-sup-arch Supported architectures
-\li STM32F10x (Connectivity line microcontrollers)
+\li stm32f1
 
 \section drv-ethmac-ddesc Details
 \subsection drv-ethmac-ddesc-num Meaning of major and minor numbers
@@ -56,10 +56,20 @@ Entire driver configuration is realized by using configuration files in
 the <tt>./config</tt> directory or by using Configtool.
 
 \subsection drv-ethmac-ddesc-write Data write
-\todo Write access documentation
+Data to driver can be written as for regular file but if buffer is bigger than
+MTU then buffer is send is few parts. In general case this method is not
+recommended to handle communication protocol. To handle driver more efficient
+please use ioctl() family requests.
 
 \subsection drv-ethmac-ddesc-read Data read
-\todo Read access documentation
+Data from driver can be received as from regular file but with exception that
+read data buffer should be a size of ETH_MAX_PACKET_SIZE. In general case this
+method is not recommended to handle communication protocol. To handle driver more
+efficient please use ioctl() family requests.
+
+\subsection drv-ethmac-ddesc-conf Configuration
+
+\todo COnfiguration
 
 \subsection drv-ethmac-ddesc-pkthdl Packet handling
 \todo Packet handling documentation

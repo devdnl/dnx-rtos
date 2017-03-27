@@ -228,7 +228,6 @@ help :
 	@$(ECHO) "   help                this help"
 	@$(ECHO) "   config              project configuration (text mode)"
 	@$(ECHO) "   clean               clean project"
-	@$(ECHO) "   cleanall            clean all non-project files"
 	@$(ECHO) ""
 	@$(ECHO) "Non-build targets:"
 	@$(ECHO) "   check               static code analyze by using cppcheck"
@@ -236,7 +235,7 @@ help :
 	@$(ECHO) "   flash, install      flash target CPU by using ./tools/flash.sh script"
 	@$(ECHO) "   reset               reset target CPU by using ./tools/reset.sh script"
 	@$(ECHO) "   release             create Release package"
-	@$(ECHO) "   doxygen             create Doxygen documentation"
+	@$(ECHO) "   doc                 create documentation (Doxygen)"
 
 ####################################################################################################
 # project configuration wizard
@@ -419,8 +418,8 @@ release: cleanall
 ####################################################################################################
 # target used to Doxygen documentation
 ####################################################################################################
-.PHONY : doxygen
-doxygen:
+.PHONY : doc
+doc:
 	$(DOXYGEN)
 
 ####################################################################################################
