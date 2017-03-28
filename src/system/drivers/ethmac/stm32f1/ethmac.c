@@ -673,7 +673,7 @@ static void send_packet(size_t size)
  * @return Size of received packet
  */
 //==============================================================================
-static size_t wait_for_packet(struct ethmac *hdl, uint timeout)
+static size_t wait_for_packet(struct ethmac *hdl, uint32_t timeout)
 {
         size_t size = 0;
 
