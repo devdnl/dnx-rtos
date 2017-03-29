@@ -54,12 +54,6 @@ typedef struct FS_entry {
         u8_t                children_cnt;
 } FS_entry_t;
 
-enum path_correction {
-        ADD_SLASH,
-        SUB_SLASH,
-        NO_SLASH_ACTION,
-};
-
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
@@ -1613,8 +1607,9 @@ static int get_path_base_FS(const char *path, const char **ext_path, FS_entry_t 
 
 //==============================================================================
 /**
- * @brief Function create new path with slash and cwd correction
- *        Function set errno: ENOMEM
+ * @brief Function create new path with slash and CWD correction.
+ *        Function set errno: ENOMEM. Path should be destroyed by free() family
+ *        functions.
  *
  * @param[in]  path             path to correct
  * @param[in]  corr             path correction kind
@@ -1625,52 +1620,104 @@ static int get_path_base_FS(const char *path, const char **ext_path, FS_entry_t 
 //==============================================================================
 static int new_absolute_path(const struct vfs_path *path, enum path_correction corr, char **new_path)
 {
-        size_t new_path_len = strlen(path->PATH);
-        size_t cwd_len      = 0;
+        size_t abslen = 3;      // additional 2 slashes (if needed) and nul
 
-        /* correct ending slash */
-        if (corr == SUB_SLASH && LAST_CHARACTER(path->PATH) == '/') {
-                new_path_len--;
-        } else if (corr == ADD_SLASH && LAST_CHARACTER(path->PATH) != '/') {
-                new_path_len++;
+        if (path->PATH[0] == '/') {
+                abslen += strlen(path->PATH);
+        } else {
+                abslen += strlen(path->CWD) + strlen(path->PATH);
         }
 
-        /* correct cwd */
-        if (FIRST_CHARACTER(path->PATH) != '/') {
-                if (path->CWD) {
-                        cwd_len       = strlen(path->CWD);
-                        new_path_len += cwd_len;
-
-                        if (LAST_CHARACTER(path->CWD) != '/' && cwd_len) {
-                                new_path_len++;
-                                cwd_len++;
-                        }
-                }
-        }
-
-        int err = _kzalloc(_MM_KRN, new_path_len + 1, cast(void**, new_path));
-        if (not err) {
-                if (cwd_len && path->CWD) {
-                        strcpy(*new_path, path->CWD);
+        // memory allocation
+        char *abspath;
+        int err = _kzalloc(_MM_KRN, abslen, cast(void*, &abspath));
+        if (!err) {
+                if (path->PATH[0] == '/') {
+                        strcpy(abspath, path->PATH);
+                } else {
+                        strcpy(abspath, path->CWD);
 
                         if (LAST_CHARACTER(path->CWD) != '/') {
-                                strcat(*new_path, "/");
+                                strcat(abspath, "/");
+                        }
+
+                        strcat(abspath, path->PATH);
+                }
+
+                _vfs_realpath(abspath, corr);
+
+                size_t plen = strsize(abspath);
+
+                if (_mm_align(plen) < _mm_align(abslen)) {
+                        if (_kzalloc(_MM_KRN, plen, cast(void**, new_path)) == 0) {
+                                strcpy(*new_path, abspath);
+                                _kfree(_MM_KRN, cast(void*, &abspath));
+                                abspath = *new_path;
                         }
                 }
 
-                if (corr == SUB_SLASH) {
-                        strncat(*new_path, path->PATH, new_path_len - cwd_len);
+                *new_path = abspath;
+        }
 
-                } else if (corr == ADD_SLASH) {
-                        strcat(*new_path, path->PATH);
+        return err;
+}
 
-                        if (LAST_CHARACTER(*new_path) != '/') {
-                                strcat(*new_path, "/");
+//==============================================================================
+/**
+ * @brief Function reduce relative path elements from absolute path
+ *
+ * @param[in, out] path        reduce absolute path buffer (./, ../)
+ * @param[in]      corr        path correction kind
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+int _vfs_realpath(char *path, enum path_correction corr)
+{
+        int err = EINVAL;
+
+        if (path && path[0] == '/') {
+
+                char *rdptr = path;
+                char *wrptr = path;
+                char  last  = ' ';
+
+                while (*rdptr != '\0') {
+                        if (  *(rdptr + 0) == '.'
+                           && *(rdptr + 1) == '/' ) {
+
+                                rdptr += 2;
+
+                        } else if (  *(rdptr + 0) == '.'
+                                  && *(rdptr + 1) == '.'
+                                  && *(rdptr + 2) == '/' ) {
+
+                                if (wrptr > path) {
+                                        wrptr--;
+                                        while ((wrptr > path) && *(--wrptr) != '/');
+                                        wrptr += 1;
+                                        rdptr += 3;
+                                }
+
+                        } else {
+                                if (last == '/' && *rdptr == '/') {
+                                        rdptr++;
+                                } else {
+                                        last     = *rdptr;
+                                        *wrptr++ = *rdptr++;
+                                }
                         }
-
-                } else {
-                        strcat(*new_path, path->PATH);
                 }
+
+                switch (corr) {
+                case ADD_SLASH: if (last != '/') *wrptr++ = '/'; break;
+                case SUB_SLASH: if (last == '/')  wrptr--; break;
+                default: break;
+                }
+
+                *wrptr = '\0';
+
+                err = ESUCC;
         }
 
         return err;

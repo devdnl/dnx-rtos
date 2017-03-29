@@ -230,10 +230,18 @@ struct vfs_path {
         const char *PATH;
 };
 
+/** Path slash correction */
+enum path_correction {
+        ADD_SLASH,
+        SUB_SLASH,
+        NO_SLASH_ACTION,
+};
+
 /*==============================================================================
   Exported API functions
 ==============================================================================*/
 extern int  _vfs_init       (void);
+extern int  _vfs_realpath   (char *path, enum path_correction corr);
 extern int  _vfs_mount      (const struct vfs_path*, const struct vfs_path*, const struct vfs_FS_itf*, const char*);
 extern int  _vfs_umount     (const struct vfs_path*);
 extern int  _vfs_getmntentry(int, struct mntent*);
