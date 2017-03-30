@@ -356,6 +356,7 @@ static void change_directory(char *str)
                 getcwd(global->cwd, sizeof(global->cwd));
                 strlcat(global->cwd, "/", sizeof(global->cwd));
                 strlcat(global->cwd, arg, sizeof(global->cwd));
+                strlcat(global->cwd, "/", sizeof(global->cwd));
         }
 
         DIR *dir = opendir(global->cwd);
