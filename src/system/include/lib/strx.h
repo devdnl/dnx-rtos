@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    lua.c
+/*==============================================================================
+File     strlcpy.h
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   Lua Virtual Machine
+Brief
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -22,70 +22,56 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+==============================================================================*/
+
+/**
+@defgroup STRLCPY_H_ STRLCPY_H_
+
+Detailed Doxygen description.
+*/
+/**@{*/
+
+#ifndef _STRLCPY_H_
+#define _STRLCPY_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
-#include <stdlib.h>
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Exported functions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION {
-};
+extern size_t _strlcpy(char *dst, const char *src, size_t size);
+extern size_t _strlcat(char *dst, const char *src, size_t size);
 
 /*==============================================================================
-  Exported object definitions
+  Exported inline functions
 ==============================================================================*/
 
-/*==============================================================================
-  Function definitions
-==============================================================================*/
-//==============================================================================
-/**
- * @brief Program main function
- */
-//==============================================================================
-int_main(lua, STACK_DEPTH_HUGE, int argc, char *argv[])
-{
-        if (argc == 1) {
-                printf("%s [file]\n", argv[0]);
-                return 0;
-        }
-
-        lua_State *L = luaL_newstate();
-        if (L) {
-                luaL_openlibs(L);
-                if (luaL_dofile(L, argv[1]) != 0) {
-                        perror(lua_tostring(L, -1));
-                        lua_pop(L, 1);
-                }
-
-                lua_close(L);
-        } else {
-                perror("Lua VM not created!");
-        }
-
-        return 0;
+#ifdef __cplusplus
 }
+#endif
 
+#endif /* _STRLCPY_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

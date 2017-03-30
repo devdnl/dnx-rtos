@@ -41,6 +41,7 @@
 #include "kernel/khooks.h"
 #include "lib/cast.h"
 #include "lib/unarg.h"
+#include "lib/strx.h"
 #include "net/netm.h"
 #include "mm/shm.h"
 #include "mm/cache.h"
@@ -1347,7 +1348,7 @@ static void syscall_getcwd(syscallrq_t *rq)
         const char *cwd = NULL;
         if (buf && *size) {
                 cwd = _process_get_CWD(GETPROCESS());
-                strncpy(buf, cwd, *size);
+               _strlcpy(buf, cwd, *size);
         }
 
         SETRETURN(char*, cwd ? buf : NULL);

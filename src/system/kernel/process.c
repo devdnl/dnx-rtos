@@ -472,7 +472,7 @@ KERNELSPACE int _process_set_CWD(_process_t *proc, const char *CWD)
                         _vfs_realpath(cwd, SUB_SLASH);
 
                         if (proc->cwd) {
-                                _kfree(_MM_KRN, cast(char*, &proc->cwd));
+                                _kfree(_MM_KRN, cast(void*, &proc->cwd));
                         }
 
                         proc->cwd = cwd;

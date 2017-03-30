@@ -41,6 +41,7 @@ dnx RTOS miscellaneous macros and functions.
 #include <string.h>
 #include <lib/cast.h>
 #include <lib/unarg.h>
+#include <lib/strx.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -566,6 +567,52 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief The strlcpy() function copy strings.
+ *
+ * The strlcpy() function copies up to size - 1 characters from the NUL-terminated
+ * string src to dst, NUL-terminating the result.
+ *
+ * Note, however, that if strlcat() traverses size characters without finding
+ * a NUL, the length of the string is considered to be size and the destination
+ * string will not be NUL-terminated (since there was no space for the NUL).
+ *
+ * @param  dst  destination buffer
+ * @param  src  source buffer
+ * @param  size destination buffer size
+ *
+ * @return The strlcpy() function return the total length of the string they
+ *         tried to create. For strlcpy() that means the length of src.
+ */
+//==============================================================================
+static inline size_t strlcpy(char *dst, const char *src, size_t size)
+{
+        return _strlcpy(dst, src, size);
+}
+
+//==============================================================================
+/**
+ * @brief The strlcat() function concatenate strings.
+ *
+ * The strlcat() function appends the NUL-terminated string src to the end of
+ * dst. It will append at most size - strlen(dst) - 1 bytes, NUL-terminating
+ * the result.
+ *
+ * @param  dst  destination buffer
+ * @param  src  source buffer
+ * @param  size destination buffer size
+ *
+ * @return The strlcat() function return the total length of the string it
+ *         tried to create. For strlcat() that means the initial length of dst
+ *         plus the length of src. While this may seem somewhat confusing, it
+ *         was done to make truncation detection simple.
+ */
+//==============================================================================
+static inline size_t strlcat(char *dst, const char *src, size_t size)
+{
+        return _strlcat(dst, src, size);
+}
 
 /*==============================================================================
   Exported inline functions

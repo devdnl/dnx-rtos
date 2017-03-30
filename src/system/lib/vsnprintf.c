@@ -465,6 +465,26 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 #endif
 }
 
+//==============================================================================
+/**
+ * @brief Function convert arguments to stream.
+ *
+ * @param[in] *buf           buffer for stream
+ * @param[in]  size          buffer size
+ * @param[in] *format        message format
+ * @param[in]  ...           arguments
+ *
+ * @return number of printed characters
+ */
+//==============================================================================
+int _snprintf(char *bfr, size_t size, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        int r = _vsnprintf(bfr, size, format, arg);
+        va_end(arg);
+        return r;
+}
 
 /*==============================================================================
   End of file

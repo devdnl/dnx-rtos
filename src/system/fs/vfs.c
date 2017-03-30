@@ -1711,7 +1711,7 @@ int _vfs_realpath(char *path, enum path_correction corr)
 
                 switch (corr) {
                 case ADD_SLASH: if (last != '/') *wrptr++ = '/'; break;
-                case SUB_SLASH: if (last == '/')  wrptr--; break;
+                case SUB_SLASH: if ((last == '/') && (wrptr - path > 1))  wrptr--; break;
                 default: break;
                 }
 

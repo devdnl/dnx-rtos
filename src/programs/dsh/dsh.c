@@ -346,67 +346,27 @@ static char *find_arg(char *cmd)
 //==============================================================================
 static void change_directory(char *str)
 {
-        char  *newpath   = NULL;
-        bool   free_path = false;
-
         char *arg = find_arg(str);
 
-        if (strcmp(arg, "..") == 0) {
+        memset(global->cwd, 0, sizeof(global->cwd));
 
-                char *lastslash = strrchr(global->cwd, '/');
-                if (lastslash) {
-                        if (lastslash != global->cwd) {
-                                *lastslash = '\0';
-                        } else {
-                                 *(lastslash + 1) = '\0';
-                        }
-
-                        chdir(global->cwd);
-                }
-
-        } else if (strcmp(arg, ".") == 0) {
-                /* do nothing */
-
-        } else if (FIRST_CHARACTER(arg) != '/') {
-
-                newpath = calloc(strlen(arg) + strlen(global->cwd) + 2, ARRAY_ITEM_SIZE(global->cwd));
-                if (newpath) {
-                        strcpy(newpath, global->cwd);
-
-                        if (newpath[strlen(newpath) - 1] != '/') {
-                                newpath[strlen(newpath)] = '/';
-                        }
-
-                        strcat(newpath, arg);
-
-                        free_path = true;
-                } else {
-                        perror(NULL);
-                }
-
-        } else if (FIRST_CHARACTER(arg) == '/') {
-
-                newpath = arg;
-
+        if (arg[0] == '/') {
+                strlcpy(global->cwd, arg, sizeof(global->cwd));
         } else {
-
-                puts(strerror(ENOENT));
+                getcwd(global->cwd, sizeof(global->cwd));
+                strlcat(global->cwd, "/", sizeof(global->cwd));
+                strlcat(global->cwd, arg, sizeof(global->cwd));
         }
 
-        if (newpath) {
-                DIR *dir = opendir(newpath);
-                if (dir) {
-                        closedir(dir);
-                        strncpy(global->cwd, newpath, CWD_PATH_LEN);
-                        chdir(global->cwd);
-                } else {
-                        perror(arg);
-                }
-
-                if (free_path) {
-                        free(newpath);
-                }
+        DIR *dir = opendir(global->cwd);
+        if (dir) {
+                closedir(dir);
+                chdir(global->cwd);
+        } else {
+                perror(arg);
         }
+
+        getcwd(global->cwd, sizeof(global->cwd));
 }
 
 //==============================================================================
