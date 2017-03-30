@@ -24,4 +24,6 @@ echo "$(git_branch) $msg" > $1
 exit 0
 EOF
 
+    chmod +x ../.git/hooks/commit-msg
+
 fi
