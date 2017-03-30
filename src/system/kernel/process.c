@@ -78,7 +78,7 @@ struct _process {
         FILE            *f_stderr;      //!< stderr file
         void            *globals;       //!< address to global variables
         res_header_t    *res_list;      //!< list of used resources
-        const char      *cwd;           //!< current working path
+        char            *cwd;           //!< current working path
         const pdata_t   *pdata;         //!< program data
         char            **argv;         //!< program arguments
         u8_t             argc;          //!< number of arguments
@@ -443,9 +443,9 @@ KERNELSPACE void _process_abort(_process_t *proc)
 KERNELSPACE const char *_process_get_CWD(_process_t *proc)
 {
         if (is_proc_valid(proc)) {
-                return proc->cwd ? proc->cwd : "";
+                return proc->cwd ? proc->cwd : "/";
         } else {
-                return "";
+                return "/";
         }
 }
 
@@ -462,12 +462,24 @@ KERNELSPACE const char *_process_get_CWD(_process_t *proc)
 //==============================================================================
 KERNELSPACE int _process_set_CWD(_process_t *proc, const char *CWD)
 {
-        if (is_proc_valid(proc)) {
-                proc->cwd = CWD ? CWD : "";
-                return ESUCC;
-        } else {
-                return EINVAL;
+        int err = EINVAL;
+
+        if (is_proc_valid(proc) && CWD && CWD[0] == '/') {
+                char *cwd;
+                err = _kmalloc(_MM_KRN, strsize(CWD), cast(void*, &cwd));
+                if (!err) {
+                        strcpy(cwd, CWD);
+                        _vfs_realpath(cwd, SUB_SLASH);
+
+                        if (proc->cwd) {
+                                _kfree(_MM_KRN, cast(char*, &proc->cwd));
+                        }
+
+                        proc->cwd = cwd;
+                }
         }
+
+        return err;
 }
 
 //==============================================================================
@@ -1270,6 +1282,10 @@ static void process_destroy_all_resources(_process_t *proc)
                 }
         }
 
+        if (proc->cwd) {
+                _kfree(_MM_KRN, cast(void*, &proc->cwd));
+        }
+
         // detach from all shared memory regions
 #if __OS_ENABLE_SHARED_MEMORY__ > 0
         _shm_detach_anywhere(proc->pid);
@@ -1280,7 +1296,6 @@ static void process_destroy_all_resources(_process_t *proc)
         proc->f_stdout = NULL;
         proc->f_stderr = NULL;
         proc->globals  = NULL;
-        proc->cwd      = NULL;
 }
 
 //==============================================================================
@@ -1365,6 +1380,24 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
 
         if (attr) {
                 /*
+                 * Apply Current Working Directory path
+                 */
+                size_t cwdlen = attr->cwd ? strsize(attr->cwd) : strsize("/");
+
+                err = _kmalloc(_MM_KRN, cwdlen, cast(void*, &proc->cwd));
+                if (!err) {
+                        if (attr->cwd && attr->cwd[0] == '/') {
+                                strcpy(proc->cwd, attr->cwd);
+                        } else {
+                                strcpy(proc->cwd, "/");
+                        }
+
+                        _vfs_realpath(proc->cwd, SUB_SLASH);
+                } else {
+                        goto finish;
+                }
+
+                /*
                  * Apply stdin settings
                  * - if f_stdin is set then function use this resource as reference
                  * - if f_stdin is NULL and p_stdin is NULL then function set stdin as NULL
@@ -1375,11 +1408,11 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
 
                 } else if (attr->p_stdin) {
                         struct vfs_path cpath;
-                        cpath.CWD  = attr->cwd;
+                        cpath.CWD  = proc->cwd;
                         cpath.PATH = attr->p_stdin;
 
                         err = _vfs_fopen(&cpath, "a+", &proc->f_stdin);
-                        if (err == ESUCC) {
+                        if (!err) {
                                 _process_register_resource(proc, cast(res_header_t*, proc->f_stdin));
                         } else {
                                 goto finish;
@@ -1402,11 +1435,11 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
 
                         } else {
                                 struct vfs_path cpath;
-                                cpath.CWD  = attr->cwd;
+                                cpath.CWD  = proc->cwd;
                                 cpath.PATH = attr->p_stdout;
 
                                 err = _vfs_fopen(&cpath, "a", &proc->f_stdout);
-                                if (err == ESUCC) {
+                                if (!err) {
                                         _process_register_resource(proc, cast(res_header_t*, proc->f_stdout));
                                 } else {
                                         goto finish;
@@ -1434,11 +1467,11 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
 
                         } else {
                                 struct vfs_path cpath;
-                                cpath.CWD  = attr->cwd;
+                                cpath.CWD  = proc->cwd;
                                 cpath.PATH = attr->p_stderr;
 
                                 err = _vfs_fopen(&cpath, "a", &proc->f_stderr);
-                                if (err == ESUCC) {
+                                if (!err) {
                                         _process_register_resource(proc, cast(res_header_t*, proc->f_stderr));
                                 } else {
                                         goto finish;
@@ -1450,11 +1483,6 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                  * Set detached flag
                  */
                 proc->flag |= attr->detached ? FLAG_DETACHED : 0;
-
-                /*
-                 * Apply Current Working Directory path
-                 */
-                proc->cwd = attr->cwd;
         }
 
         finish:
