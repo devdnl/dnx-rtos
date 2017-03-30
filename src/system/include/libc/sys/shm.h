@@ -204,6 +204,7 @@ static inline int shmrm(const char *key)
  * @b Example
  * @code
         #include <sys/shm.h>
+        #include <dnx/misc.h>
 
         // ...
 
@@ -216,7 +217,7 @@ static inline int shmrm(const char *key)
                 if (shmat(SHMNAME, &shm, &sz) == 0) {
                         puts("Shared memory in use");
 
-                        strncpy(shm, "My region", sz);
+                        strlcpy(shm, "My region", sz);
 
                         // ...
 
@@ -264,6 +265,7 @@ static inline int shmat(const char *key, void **mem, size_t *size)
  * @b Example
  * @code
         #include <sys/shm.h>
+        #include <dnx/misc.h>
 
         // ...
 
@@ -276,7 +278,7 @@ static inline int shmat(const char *key, void **mem, size_t *size)
                 if (shmat(SHMNAME, &shm, &sz) == 0) {
                         puts("Shared memory in use");
 
-                        strncpy(shm, "My region", sz);
+                        strlcpy(shm, "My region", sz);
 
                         // ...
 

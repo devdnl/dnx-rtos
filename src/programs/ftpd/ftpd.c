@@ -545,7 +545,7 @@ static void handle_cmd_CWD(SOCKET *socket)
 
         DIR *dir = opendir(global->params);
         if (dir) {
-                strncpy(global->PWD, global->params, sizeof(global->PWD));
+                strlcpy(global->PWD, global->params, sizeof(global->PWD));
                 chdir(global->PWD);
                 closedir(dir);
         } else {
@@ -835,7 +835,7 @@ static void handle_cmd_NOOP(SOCKET *socket)
 //==============================================================================
 static void handle_cmd_REIN(SOCKET *socket)
 {
-        strncpy(global->PWD, global->CWD_arg, sizeof(global->PWD));
+        strlcpy(global->PWD, global->CWD_arg, sizeof(global->PWD));
         chdir(global->PWD);
 
         static const char *OK = "200 OK\r\n";
@@ -1081,7 +1081,7 @@ int_main(ftpd, STACK_DEPTH_LOW, int argc, char *argv[])
                                         SOCKET *new_socket;
                                         err = socket_accept(socket, &new_socket);
                                         if (!err) {
-                                                strncpy(global->PWD,
+                                                strlcpy(global->PWD,
                                                         global->CWD_arg,
                                                         sizeof(global->PWD));
 

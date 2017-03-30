@@ -1657,8 +1657,7 @@ static int argtab_create(const char *str, u8_t *argc, char **argv[])
                                 char *arg;
                                 err = _kmalloc(_MM_KRN, str_len + 1, cast(void**, &arg));
                                 if (!err) {
-                                        strncpy(arg, start, str_len);
-                                        arg[str_len] = '\0';
+                                        _strlcpy(arg, start, str_len + 1);
 
                                         if (_llist_push_back(largs, arg) == NULL) {
                                                 _kfree(_MM_KRN, cast(void*, &arg));

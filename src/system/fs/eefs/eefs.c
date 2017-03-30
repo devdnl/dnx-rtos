@@ -721,7 +721,7 @@ API_FS_RENAME(eefs, void *fs_handle, const char *old_name, const char *new_name)
                                 if (  is_entry_item_used(dirent)
                                    && isstreqn(basenameold, dirent->name, NAME_LEN)) {
 
-                                        strncpy(dirent->name, basenamenew, NAME_LEN);
+                                        strlcpy(dirent->name, basenamenew, NAME_LEN);
 
                                         err = block_write(hdl, &hdl->block);
 
@@ -2067,8 +2067,7 @@ static int dir_add_item(EEFS_t *hdl, dir_entry_t *dirent, const char *name, u16_
 
                 size_t namelen = strnlen(name, NAME_LEN - 1);
                 namelen = LAST_CHARACTER(name) == '/' ? namelen - 1 : namelen;
-                strncpy(dirent->name, name, namelen);
-                dirent->name[namelen] = '\0';
+                strlcpy(dirent->name, name, namelen);
 
                 // create new object
                 memset(&hdl->tmpblock.buf, 0xFF, sizeof(hdl->tmpblock.buf));
@@ -2476,7 +2475,7 @@ static int dir_read_entry(EEFS_t *hdl, dir_desc_t *dd, dir_entry_t *eefs_entry, 
 {
         int err = EILSEQ;
 
-        strncpy(dd->name, eefs_entry->name, sizeof(dd->name));
+        strlcpy(dd->name, eefs_entry->name, sizeof(dd->name));
 
         dirent->filetype  = eefs2vfs_file_type(eefs_entry->type);
         dirent->dev       = -1;

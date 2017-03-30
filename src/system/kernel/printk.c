@@ -135,7 +135,7 @@ size_t _printk_read(char *str, size_t len, u32_t *timestamp_ms)
                         if (log_buf.size > 0) {
                                 log_buf.size--;
 
-                                strncpy(str, log_buf.msg[log_buf.rdidx].str, len);
+                                strlcpy(str, log_buf.msg[log_buf.rdidx].str, len);
 
                                 n = min(len, strnlen(log_buf.msg[log_buf.rdidx].str,
                                                      __OS_SYSTEM_MSG_COLS__));
