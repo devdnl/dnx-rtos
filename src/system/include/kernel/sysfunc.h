@@ -4980,12 +4980,12 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
  * @param  blkpos       block position (in block unit)
  * @param  blksz        block size
  * @param  buf          source buffer (of block size)
- * @param  sync         synchronous write (if cache already does not exist)
+ * @param  mode         write mode
  *
  * @return One of errno value.
  */
 //==============================================================================
-extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, bool sync);
+extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, enum cache_mode mode);
 
 //==============================================================================
 /**
@@ -4997,12 +4997,11 @@ extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *b
  * @param  blkpos       block position (in block unit)
  * @param  blksz        block size
  * @param  buf          destination buffer (of block size)
- * @param  sync         synchronous read (if cache already does not exist)
  *
  * @return One of errno value.
  */
 //==============================================================================
-extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf, bool sync);
+extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf);
 
 #ifdef __cplusplus
 }

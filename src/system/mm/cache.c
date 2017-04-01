@@ -434,15 +434,15 @@ bool _cache_is_sync_needed(void)
  * @param  blkpos       block position
  * @param  blksz        block size
  * @param  buf          buffer to write from (block)
- * @param  sync         synchronous write (if cache already does not exist)
+ * @param  mode         write mode
  *
  * @return One of errno value.
  */
 //==============================================================================
-int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, bool sync)
+int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, enum cache_mode mode)
 {
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ == 0
-        UNUSED_ARG1(sync);
+        UNUSED_ARG1(mode);
 #endif
 
         if (!file || !blksz || !buf) {
@@ -457,13 +457,13 @@ int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, boo
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
                         err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
                         if (!err) {
-                                cache_t *cache;
+                                cache_t *cache = NULL;
 
                                 if (cache_find(stat.st_dev, blkpos, blksz, &cache) != ESUCC) {
 
-                                        if (sync || cache_alloc(stat.st_dev,
-                                                                blkpos, blksz,
-                                                                &cache) != ESUCC) {
+                                        if (cache_alloc(stat.st_dev,
+                                                        blkpos, blksz,
+                                                        &cache) != ESUCC) {
                                                 cache = NULL;
                                         }
                                 }
@@ -472,8 +472,9 @@ int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, boo
                                         memcpy(&cache_buf(cache), buf, blksz);
                                         cache->dirty = true;
                                         cache->temp++;
+                                }
 
-                                } else {
+                                if (!cache || mode == CACHE_WRITE_THROUGH) {
 #endif
                                         fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
                                         size_t wrcnt = 0;
@@ -519,17 +520,12 @@ int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, boo
  * @param  blkpos       block position
  * @param  blksz        block size
  * @param  buf          buffer to read (block)
- * @param  sync         synchronous read (if cache already does not exist)
  *
  * @return One of errno value.
  */
 //==============================================================================
-int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf, bool sync)
+int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf)
 {
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ == 0
-        UNUSED_ARG1(sync);
-#endif
-
         if (!file || !blksz || !buf) {
                 return EINVAL;
         }
@@ -541,7 +537,7 @@ int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf, bool sync)
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
                         err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
                         if (!err) {
-                                cache_t *cache;
+                                cache_t *cache = NULL;
 
                                 if (cache_find(stat.st_dev, blkpos, blksz, &cache) == ESUCC) {
                                         memcpy(buf, &cache_buf(cache), blksz);
@@ -562,7 +558,7 @@ int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf, bool sync)
                                         }
 
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-                                        if (!err && !sync) {
+                                        if (!err) {
                                                 if (cache_alloc(stat.st_dev, blkpos, blksz, &cache) == ESUCC) {
                                                         memcpy(&cache_buf(cache), buf, blksz);
                                                 }
