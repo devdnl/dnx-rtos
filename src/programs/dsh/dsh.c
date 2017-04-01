@@ -142,7 +142,6 @@ static bool read_input()
 
                 if (feof(global->input)) {
                         global->stream_closed = true;
-                        return false;
                 }
 
                 /* remove LF at the end of line */
@@ -294,6 +293,21 @@ static bool is_exit_cmd(const char *cmd)
 
 //==============================================================================
 /**
+ * @brief Check if line is commented.
+ *
+ * @param  cmd
+ *
+ * @return True when commented, otherwise false.
+ */
+//==============================================================================
+static bool is_comment(const char *cmd)
+{
+        cmd += strspn(cmd, " ");
+        return cmd[0] == '#';
+}
+
+//==============================================================================
+/**
  * @brief  Find ampersand at end of string and replace it by null.
  *
  * @param  cmd  Command string. String modified when ampersand is found.
@@ -401,7 +415,7 @@ static void print_fail_message(char *cmd)
         if (strchr(cmd, ' '))
                 *strchr(cmd, ' ') = '\0';
 
-        if (errno == ENOMEM) {
+        if (errno == ENOMEM || errno == EACCES) {
                 perror(cmd);
         } else {
                 printf("\'%s\' is unknown command.\n", cmd);
@@ -718,6 +732,10 @@ int_main(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
 
                 if (strlen(cmd) == 0)
                         continue;
+
+                if (is_comment(cmd)) {
+                        continue;
+                }
 
                 if (is_cd_cmd(cmd)) {
                         change_directory(cmd);
