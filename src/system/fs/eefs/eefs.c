@@ -32,9 +32,10 @@ Brief    EEPROM File System. File system for small memories 1-64KiB EEPROM.
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#if __EEFS_LOG_ENABLE__ == 0
-#undef printk
-#define printk(...)
+#if __EEFS_LOG_ENABLE__ > 0
+#define DBG(...) printk("EEFS: "__VA_ARGS__)
+#else
+#define DBG(...)
 #endif
 
 #define BUSY_TIMEOUT                    2000
@@ -313,10 +314,12 @@ API_FS_INIT(eefs, void **fs_handle, const char *src_path, const char *opts)
                                 if (!isstrempty(opts)) {
                                         if (strstr(opts, "sync")) {
                                                 hdl->flag |= FLAG_SYNC;
+                                                DBG("enabled cache write-through");
                                         }
 
                                         if (strstr(opts, "ro")) {
                                                 hdl->flag |= FLAG_RDONLY;
+                                                DBG("readonly mount");
                                         }
                                 }
                         } else {
@@ -326,7 +329,7 @@ API_FS_INIT(eefs, void **fs_handle, const char *src_path, const char *opts)
 
                 finish:
                 if (err) {
-                        printk("EEFS: init error %d", err);
+                        DBG("init error %d", err);
 
                         if (hdl->srcdev) {
                                 sys_fclose(hdl->srcdev);
@@ -409,7 +412,7 @@ API_FS_MKNOD(eefs, void *fs_handle, const char *path, const dev_t dev)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: mknod '%s' (%d)", path, err);
+        DBG("mknod '%s' (%d)", path, err);
 
         return err;
 }
@@ -441,7 +444,7 @@ API_FS_MKDIR(eefs, void *fs_handle, const char *path, mode_t mode)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: mkdir '%s' (%d)", path, err);
+        DBG("mkdir '%s' (%d)", path, err);
 
         return err;
 }
@@ -502,7 +505,7 @@ API_FS_OPENDIR(eefs, void *fs_handle, const char *path, DIR *dir)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: opendir '%s' (%d)", path, err);
+        DBG("opendir '%s' (%d)", path, err);
 
         return err;
 }
@@ -556,7 +559,7 @@ API_FS_CLOSEDIR(eefs, void *fs_handle, DIR *dir)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: closedir (%d)", err);
+        DBG("closedir (%d)", err);
 
         return err;
 }
@@ -577,7 +580,7 @@ API_FS_READDIR(eefs, void *fs_handle, DIR *dir)
 
         dir_desc_t *dd = dir->d_hdl;
         if (!dd || dd->magic != DIR_DESC_MAGIC) {
-                printk("EEFS: readdir, broken descriptor.");
+                DBG("readdir, broken descriptor");
                 return EINVAL;
         }
 
@@ -633,7 +636,7 @@ API_FS_READDIR(eefs, void *fs_handle, DIR *dir)
                 err = ENOENT;
         }
 
-        printk("EEFS: readdir (%d)", err);
+        DBG("readdir (%d)", err);
 
         return err;
 }
@@ -660,7 +663,7 @@ API_FS_REMOVE(eefs, void *fs_handle, const char *path)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: remove '%s' (%d)", path, err);
+        DBG("remove '%s' (%d)", path, err);
 
         return err;
 }
@@ -753,7 +756,7 @@ API_FS_RENAME(eefs, void *fs_handle, const char *old_name, const char *new_name)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: rename '%s' -> '%s' (%d)", old_name, new_name, err);
+        DBG("rename '%s' -> '%s' (%d)", old_name, new_name, err);
 
         return err;
 }
@@ -804,7 +807,7 @@ API_FS_CHMOD(eefs, void *fs_handle, const char *path, mode_t mode)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: chmod '%s' 0%o", path, mode);
+        DBG("chmod '%s' 0%o", path, mode);
 
         return err;
 }
@@ -859,7 +862,7 @@ API_FS_CHOWN(eefs, void *fs_handle, const char *path, uid_t owner, gid_t group)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: chown '%s' %d %d (%d)", path, owner, group, err);
+        DBG("chown '%s' %d %d (%d)", path, owner, group, err);
 
         return err;
 }
@@ -890,7 +893,7 @@ API_FS_STAT(eefs, void *fs_handle, const char *path, struct stat *stat)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: stat '%s' (%d)", path, err);
+        DBG("stat '%s' (%d)", path, err);
 
         return err;
 }
@@ -929,7 +932,7 @@ API_FS_FSTAT(eefs, void *fs_handle, void *fhdl, struct stat *stat)
                 }
         }
 
-        printk("EEFS: fstat (%d)", err);
+        DBG("fstat (%d)", err);
 
         return err;
 }
@@ -972,7 +975,7 @@ API_FS_STATFS(eefs, void *fs_handle, struct statfs *statfs)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: statfs (%d)", err);
+        DBG("statfs (%d)", err);
 
         return err;
 }
@@ -1052,7 +1055,7 @@ API_FS_OPEN(eefs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path, 
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: file open '%s' (%d)", path, err);
+        DBG("file open '%s' (%d)", path, err);
 
         return err;
 }
@@ -1125,7 +1128,7 @@ API_FS_CLOSE(eefs, void *fs_handle, void *fhdl, bool force)
                 sys_mutex_unlock(hdl->lock_mtx);
         }
 
-        printk("EEFS: close file '%d' (%d)", cast(file_desc_t*, fhdl)->block_num, err);
+        DBG("close file '%d' (%d)", cast(file_desc_t*, fhdl)->block_num, err);
 
         return err;
 }
@@ -1461,7 +1464,7 @@ static int block_load(EEFS_t *hdl, const char *path)
         const char *path_ref = path_get_next_item(path, &name, &namelen, &namelast);
 
         if (!path_ref) {
-                printk("EEFS: load_block() '%s'", path);
+                DBG("load_block() '%s'", path);
                 return ENOENT;
         }
 
@@ -1544,7 +1547,7 @@ static int block_load_by_type(EEFS_t *hdl, const char *path, uint32_t type)
         int err = block_load(hdl, path);
         if (!err) {
                 if (hdl->block.buf.dir.magic != type) {
-                        printk("EEFS: load_dir_block() invalid block");
+                        DBG("load_dir_block() invalid block");
                         err = ENOENT;
                 }
         }
@@ -2066,10 +2069,13 @@ static int dir_add_item(EEFS_t *hdl, dir_entry_t *dirent, const char *name, u16_
                 // set directory entry
                 dirent->type       = type;
                 dirent->block_addr = hdl->tmpblock.num;
+                strlcpy(dirent->name, name, NAME_LEN);
 
-                size_t namelen = strnlen(name, NAME_LEN - 1);
-                namelen = LAST_CHARACTER(name) == '/' ? namelen - 1 : namelen;
-                strlcpy(dirent->name, name, namelen);
+                // remove slash at the end if exist
+                char *lch = &LAST_CHARACTER(dirent->name);
+                if (*lch == '/') {
+                        *lch = '\0';
+                }
 
                 // create new object
                 memset(&hdl->tmpblock.buf, 0xFF, sizeof(hdl->tmpblock.buf));
@@ -2622,7 +2628,7 @@ static int file_add_chain(EEFS_t *hdl)
                 }
         }
 
-        printk("EEFS: added file chain (%d)", err);
+        DBG("added file chain (%d)", err);
 
         return err;
 }

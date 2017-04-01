@@ -284,15 +284,18 @@ void _cache_sync(void)
                                 size_t wrcnt = 0;
                                 struct vfs_fattr fattr = {false, false};
 
-                                if (_driver_write(cache->dev,
-                                                  cast(const u8_t*, &cache_buf(cache)),
-                                                  cache->size, &fpos, &wrcnt,
-                                                  fattr) != ESUCC) {
-
-                                        printk("CACHE: file sync error");
+                                int e = _driver_write(cache->dev,
+                                                      cast(const u8_t*, &cache_buf(cache)),
+                                                      cache->size, &fpos, &wrcnt, fattr);
+                                if (e) {
+                                        printk("CACHE: sync error %d [%d:%d:%d]", e,
+                                               _dev_t__extract_modno(cache->dev),
+                                               _dev_t__extract_major(cache->dev),
+                                               _dev_t__extract_minor(cache->dev));
+                                } else {
+                                        cache->dirty = false;
                                 }
 
-                                cache->dirty = false;
                                 sync_cnt++;
                         }
 
