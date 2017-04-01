@@ -52,6 +52,8 @@
 #define foreach_resource(_v, _l)        for (res_header_t *_v = _l; _v; _v = _v->next)
 #define foreach_process(_v, _l)         for (_process_t *_v = _l; _v; _v = cast(_process_t*, _v->header.next))
 
+#define SHEBANGLEN                      64
+
 // critical section - mutex wait must set to max possible
 #define ATOMIC for (int __ = 0; __ == 0;)\
         for (int _e = _mutex_lock(process_mtx, MAX_DELAY_MS); _e == 0 && __ == 0; _mutex_unlock(process_mtx), __++)
@@ -102,6 +104,8 @@ static void process_code(void *mainfn);
 static void thread_code(void *args);
 static void process_destroy_all_resources(_process_t *proc);
 static int  resource_destroy(res_header_t *resource);
+static bool is_cmd_path(const char *cmd);
+static int  analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg);
 static int  argtab_create(const char *str, u8_t *argc, char **argv[]);
 static void argtab_destroy(char **argv);
 static int  find_program(const char *name, const struct _prog_data **prog);
@@ -174,21 +178,35 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                 _assert(_mutex_create(MUTEX_TYPE_RECURSIVE, &process_mtx) == ESUCC);
         }
 
-        _process_t *proc = NULL;
+        if (!cmd) {
+                return ENOENT;
+        }
+
+        char       *cmdarg = NULL;
+        _process_t *proc   = NULL;
         int err = _kzalloc(_MM_KRN, sizeof(_process_t), cast(void**, &proc));
         if (!err) {
                 proc->header.type = RES_TYPE_PROCESS;
 
-                err = argtab_create(cmd, &proc->argc, &proc->argv);
+                err = process_apply_attributes(proc, attr);
                 if (err) goto finish;
+
+                if (is_cmd_path(cmd)) {
+                        err = analyze_shebang(proc, cmd, &cmdarg);
+                        if (err) goto finish;
+                }
+
+                err = argtab_create(cmdarg ? cmdarg : cmd, &proc->argc, &proc->argv);
+                if (err) goto finish;
+
+                if (cmdarg) {
+                        _kfree(_MM_KRN, cast(void**, &cmdarg));
+                }
 
                 err = find_program(proc->argv[0], &proc->pdata);
                 if (err) goto finish;
 
                 err = allocate_process_globals(proc, proc->pdata);
-                if (err) goto finish;
-
-                err = process_apply_attributes(proc, attr);
                 if (err) goto finish;
 
                 err = get_pid(&proc->pid);
@@ -237,6 +255,10 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 
         finish:
         if (err) {
+                if (cmdarg) {
+                        _kfree(_MM_KRN, cast(void**, &cmdarg));
+                }
+
                 if (proc) {
                         process_destroy_all_resources(proc);
                         _kfree(_MM_KRN, cast(void**, &proc));
@@ -1596,6 +1618,124 @@ static int resource_destroy(res_header_t *resource)
         }
 
         return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if first command argument is a path.
+ *
+ * @param  cmd          command to check
+ *
+ * @return True if command is in path form, otherwise false.
+ */
+//==============================================================================
+static bool is_cmd_path(const char *cmd)
+{
+        cmd += strspn(cmd, " ");
+        return ((cmd[0] == '.' && cmd[1] == '/') || cmd[0] =='/');
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if argument is a file with shebang (#!).
+ *
+ * @param  proc         process
+ * @param  cmd          RAW command
+ * @param  cmdarg       commands after shebang analyze
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg)
+{
+        // allocations
+        char *filename = NULL;
+        char *line     = NULL;
+        FILE *file     = NULL;
+
+        // skip leading spaces
+        cmd += strspn(cmd, " ");
+
+        // argument start
+        char  *args    = strchr(cmd, ' ');
+               args   += args ? 1 : 0;
+        size_t argslen = args ? strsize(args) : 0;
+
+        // file name length
+        size_t fnlen = args ? ((u32_t)args - (u32_t)cmd) : strsize(cmd);
+
+        // allocate file name
+        int err = _kmalloc(_MM_KRN, fnlen, cast(void**, &filename));
+        if (err) goto finish;
+        strlcpy(filename, cmd, fnlen);
+
+        // allocate line
+        err = _kzalloc(_MM_KRN, SHEBANGLEN, cast(void**, &line));
+        if (err) goto finish;
+
+        // open file
+        struct vfs_path path;
+        path.CWD  = proc->cwd;
+        path.PATH = filename;
+        err       = _vfs_fopen(&path, "r", &file);
+        if (err) goto finish;
+
+        // check that file is set to execute
+        struct stat st;
+        st.st_mode = 0;
+        err = _vfs_fstat(file, &st);
+        if (err) goto finish;
+        if ((st.st_mode & S_IXUSR) == 0) {
+                err = EACCES;
+                goto finish;
+        }
+
+        // read line
+        size_t rd = 0;
+        err = _vfs_fread(line, SHEBANGLEN - 1, &rd, file);
+        if (err) goto finish;
+
+        // check shebang
+        if (line[0] == '#' && line[1] == '!') {
+                char *p  = line + 2;
+                      p += strspn(p, " ");
+
+                char *end = strchr(p, '\r');
+                end = end ? end : strchr(p, '\n');
+
+                if (end) {
+                        *end = '\0';
+                }
+
+                size_t arglen = strsize(p) + strsize(filename) + argslen;
+
+                err = _kmalloc(_MM_KRN, arglen, cast(void**, cmdarg));
+                if (!err) {
+                        strlcpy(*cmdarg, p, arglen);
+                        strlcat(*cmdarg, " ", arglen);
+                        strlcat(*cmdarg, filename, arglen);
+
+                        if (args) {
+                                strlcat(*cmdarg, " ", arglen);
+                                strlcat(*cmdarg, args, arglen);
+                        }
+                }
+        }
+
+        finish:
+        if (filename) {
+                _kfree(_MM_KRN, cast(void**, &filename));
+        }
+
+        if (line) {
+                _kfree(_MM_KRN, cast(void**, &line));
+        }
+
+        if (file) {
+                _vfs_fclose(file, true);
+        }
+
+        return err;
 }
 
 //==============================================================================
