@@ -226,9 +226,14 @@ this:SetToolTip("If this option is selected then some file system are using cach
 --*/
 #define __OS_SYSTEM_FS_CACHE_ENABLE__ _NO_
 
+/*--
+this:AddWidget("Checkbox", "Execute scripts")
+this:SetToolTip("If this option is enabled then system is able to run scripts with shebang (#!).")
+--*/
+#define __OS_SYSTEM_SHEBANG_ENABLE__ _NO_
 
 /*--
---this:AddExtraWidget("Void", "VoidOption")
+this:AddExtraWidget("Void", "VoidOption") -- uncomment if number of upper widgets is odd
 this:AddExtraWidget("Label", "LabelSizes", "\nMemory parameters", -1, "bold")
 this:AddExtraWidget("Void", "VoidSizes")
 ++*/

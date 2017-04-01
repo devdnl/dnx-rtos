@@ -104,8 +104,6 @@ static void process_code(void *mainfn);
 static void thread_code(void *args);
 static void process_destroy_all_resources(_process_t *proc);
 static int  resource_destroy(res_header_t *resource);
-static bool is_cmd_path(const char *cmd);
-static int  analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg);
 static int  argtab_create(const char *str, u8_t *argc, char **argv[]);
 static void argtab_destroy(char **argv);
 static int  find_program(const char *name, const struct _prog_data **prog);
@@ -114,6 +112,11 @@ static int  process_apply_attributes(_process_t *proc, const process_attr_t *att
 static void process_get_stat(_process_t *proc, process_stat_t *stat);
 static void process_move_list(_process_t *proc, _process_t **list_from, _process_t **list_to);
 static int  get_pid(pid_t *pid);
+
+#if __OS_SYSTEM_SHEBANG_ENABLE__ > 0
+static bool is_cmd_path(const char *cmd);
+static int  analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg);
+#endif
 
 /*==============================================================================
   Local object definitions
@@ -191,10 +194,12 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                 err = process_apply_attributes(proc, attr);
                 if (err) goto finish;
 
+#if __OS_SYSTEM_SHEBANG_ENABLE__ > 0
                 if (is_cmd_path(cmd)) {
                         err = analyze_shebang(proc, cmd, &cmdarg);
                         if (err) goto finish;
                 }
+#endif
 
                 err = argtab_create(cmdarg ? cmdarg : cmd, &proc->argc, &proc->argv);
                 if (err) goto finish;
@@ -1629,11 +1634,15 @@ static int resource_destroy(res_header_t *resource)
  * @return True if command is in path form, otherwise false.
  */
 //==============================================================================
+#if __OS_SYSTEM_SHEBANG_ENABLE__ > 0
 static bool is_cmd_path(const char *cmd)
 {
         cmd += strspn(cmd, " ");
-        return ((cmd[0] == '.' && cmd[1] == '/') || cmd[0] =='/');
+        return (  (cmd[0] == '.' && cmd[1] == '/')
+               || (cmd[0] == '.' && cmd[1] == '.' && cmd[2] == '/')
+               || (cmd[0] == '/') );
 }
+#endif
 
 //==============================================================================
 /**
@@ -1646,6 +1655,7 @@ static bool is_cmd_path(const char *cmd)
  * @return One of errno value.
  */
 //==============================================================================
+#if __OS_SYSTEM_SHEBANG_ENABLE__ > 0
 static int analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg)
 {
         // allocations
@@ -1737,6 +1747,7 @@ static int analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg)
 
         return err;
 }
+#endif
 
 //==============================================================================
 /**
