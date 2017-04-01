@@ -63,7 +63,6 @@ static void  print_prompt         ();
 static bool  read_input           ();
 static bool  history_request      ();
 static bool  command_hint         ();
-static char *find_cmd_begin       ();
 static bool  is_cd_cmd            (const char *cmd);
 static bool  is_exit_cmd          (const char *cmd);
 static bool  is_detached_cmd      (char *cmd);
@@ -71,7 +70,7 @@ static char *find_arg             (char *cmd);
 static void  change_directory     (char *str);
 static char *remove_leading_spaces(char *str);
 static void  print_fail_message   (char *cmd);
-static bool  start_program        (char *master, char *slave, char *file, bool detached);
+static bool  start_program        (char *master, char *slave, char *file, char *fmode, bool detached);
 static bool  analyze_line         (char *cmd);
 
 /*==============================================================================
@@ -142,7 +141,6 @@ static bool read_input()
 
                 if (feof(global->input)) {
                         global->stream_closed = true;
-                        return false;
                 }
 
                 /* remove LF at the end of line */
@@ -251,21 +249,6 @@ static bool command_hint()
 
 //==============================================================================
 /**
- * @brief Finds command start (ignore first spaces if exist)
- *
- * @return pointer to commnad in command line
- */
-//==============================================================================
-static char *find_cmd_begin()
-{
-        char *cmd  = global->line;
-        cmd       += strspn(global->line, " ");
-
-        return cmd;
-}
-
-//==============================================================================
-/**
  * @brief Check if command is CD
  *
  * @param cmd
@@ -290,6 +273,20 @@ static bool is_cd_cmd(const char *cmd)
 static bool is_exit_cmd(const char *cmd)
 {
         return strncmp(cmd, "exit ", 5) == 0 || strcmp(cmd, "exit") == 0;
+}
+
+//==============================================================================
+/**
+ * @brief Check if line is commented.
+ *
+ * @param  cmd
+ *
+ * @return True when commented, otherwise false.
+ */
+//==============================================================================
+static bool is_comment(const char *cmd)
+{
+        return cmd[0] == '#';
 }
 
 //==============================================================================
@@ -381,10 +378,7 @@ static void change_directory(char *str)
 //==============================================================================
 static char *remove_leading_spaces(char *str)
 {
-        if (FIRST_CHARACTER(str) == ' ')
-                while (*(++str) == ' ');
-
-        return str;
+        return str + strspn(str, " ");
 }
 
 //==============================================================================
@@ -401,7 +395,7 @@ static void print_fail_message(char *cmd)
         if (strchr(cmd, ' '))
                 *strchr(cmd, ' ') = '\0';
 
-        if (errno == ENOMEM) {
+        if (errno == ENOMEM || errno == EACCES) {
                 perror(cmd);
         } else {
                 printf("\'%s\' is unknown command.\n", cmd);
@@ -415,12 +409,14 @@ static void print_fail_message(char *cmd)
  * @param master        master program name
  * @param slave         slave program name
  * @param file          output file
+ * @param fmode         file mode
  * @param detached      detached operation
  *
  * @return true if command executed, false if error
  */
 //==============================================================================
-static bool start_program(char *master, char *slave, char *file, bool detached)
+static bool start_program(char *master, char *slave,
+                          char *file,   char *fmode, bool detached)
 {
         errno              = 0;
         FILE    *pipe      = NULL;
@@ -443,7 +439,7 @@ static bool start_program(char *master, char *slave, char *file, bool detached)
         }
 
         if (file) {
-                fout = fopen(file, "a");
+                fout = fopen(file, fmode);
                 if (!fout) {
                         perror(file);
                         goto free_resources;
@@ -596,17 +592,25 @@ free_resources:
 //==============================================================================
 static bool analyze_line(char *cmd)
 {
-        int  pipe_number = 0;
-        int  out_number  = 0;
-        bool detached    = is_detached_cmd(cmd);
+        int   pipe_number = 0;
+        int   out_number  = 0;
+        bool  detached    = is_detached_cmd(cmd);
+        char *fmode       = "";
 
-
-        for (size_t i = 0; i < strlen(cmd); i++) {
-                if (cmd[i] == '|')
+        size_t n = strlen(cmd);
+        for (size_t i = 0; i < n; i++) {
+                if (cmd[i] == '|') {
                         pipe_number++;
 
-                if (cmd[i] == '>')
+                } else if (cmd[i + 0] == '>' && cmd[i + 1] == '>') {
                         out_number++;
+                        fmode = "a";
+                        i++;
+
+                } else if (cmd[i] == '>') {
+                        out_number++;
+                        fmode = "w";
+                }
         }
 
         if (pipe_number > 1 || out_number > 1) {
@@ -627,7 +631,7 @@ static bool analyze_line(char *cmd)
                         char *file = strchr(slave, '>');
                         *file++ = '\0';
 
-                        return start_program(master, slave, file, detached);
+                        return start_program(master, slave, file, fmode, detached);
                 }
         }
 
@@ -641,7 +645,11 @@ static bool analyze_line(char *cmd)
                         char *file = strchr(master, '>');
                         *file++ = '\0';
 
-                        return start_program(master, NULL, file, detached);
+                        if (*file == '>') {
+                                *file++ = '\0';
+                        }
+
+                        return start_program(master, NULL, file, fmode, detached);
                 }
         }
 
@@ -655,12 +663,12 @@ static bool analyze_line(char *cmd)
                         char *slave = strchr(master, '|');
                         *slave++ = '\0';
 
-                        return start_program(master, slave, NULL, detached);
+                        return start_program(master, slave, NULL, fmode, detached);
                 }
         }
 
         if (strlen(cmd)) {
-                return start_program(cmd, NULL, NULL, detached);
+                return start_program(cmd, NULL, NULL, fmode, detached);
         } else {
                 return false;
         }
@@ -714,10 +722,14 @@ int_main(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
                 if (command_hint())
                         continue;
 
-                char *cmd = find_cmd_begin();
+                char *cmd = remove_leading_spaces(global->line);
 
                 if (strlen(cmd) == 0)
                         continue;
+
+                if (is_comment(cmd)) {
+                        continue;
+                }
 
                 if (is_cd_cmd(cmd)) {
                         change_directory(cmd);

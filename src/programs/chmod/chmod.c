@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    fgets.h
+/*==============================================================================
+File     chmod.c
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief
+Brief    Modify file mode.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -22,16 +22,17 @@
          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <sys/stat.h>
-#include "lib/unarg.h"
+#include <ctype.h>
 
 /*==============================================================================
   Local macros
@@ -48,6 +49,8 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
+GLOBAL_VARIABLES_SECTION {
+};
 
 /*==============================================================================
   Exported objects
@@ -60,87 +63,77 @@
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  Print help message.
+ *
+ * @param  name         this program name
+ */
+//==============================================================================
+static void print_help(const char *name)
+{
+        printf("Usage: %s MODE FILE\n\n", name);
+        printf("Mode:\n");
+        printf("   [+|-][x|r|w]  flag selection (only USR)\n");
+        printf("   value         mode value\n");
+}
 
 //==============================================================================
 /**
- * @brief Function receive string from selected file.
+ * Main program function.
  *
- * @param[out] *str          buffer with string
- * @param[in]   size         buffer size
- * @param[in]  *stream       source stream
+ * Note: Please adjust stack size according to programs needs.
  *
- * @retval NULL if error, otherwise pointer to str
+ * @param argc      argument count
+ * @param argv      arguments
  */
 //==============================================================================
-char *fgets(char *str, int size, FILE *stream)
+int_main(chmod, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 {
-#if (__OS_PRINTF_ENABLE__ > 0)
-        if (!str || size < 1 || !stream) {
-                return NULL;
-        }
+        int err = EXIT_FAILURE;
 
-        struct stat file_stat;
-        if (fstat(stream, &file_stat) == 0) {
+        if (argc < 3) {
+                print_help(argv[0]);
+        } else {
+                struct stat st;
+                if (stat(argv[2], &st) == 0) {
 
-                char *p = str;
-                int   c = EOF;
+                        bool set   = argv[1][0] == '+';
+                        bool unset = argv[1][0] == '-';
 
-                size--;
+                        if (set || unset) {
+                                mode_t flag = 0;
 
-                if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
-
-                        while ((c != '\n') && size--) {
-
-                                c = fgetc(stream);
-                                if (c == EOF) {
-                                        break;
-                                } else {
-                                        *p++ = c;
+                                switch (argv[1][1]) {
+                                case 'r': flag = S_IRUSR; break;
+                                case 'w': flag = S_IWUSR; break;
+                                case 'x': flag = S_IXUSR; break;
                                 }
+
+                                st.st_mode |=  (set   ? flag : 0);
+                                st.st_mode &= ~(unset ? flag : 0);
+                        } else {
+                                if (isdigit(argv[1][0])) {
+                                        char *end;
+                                        st.st_mode = strtol(argv[1], &end, 0);
+                                } else {
+                                        print_help(argv[0]);
+                                        return EXIT_FAILURE;
+                                }
+                        }
+
+                        if (chmod(argv[2], st.st_mode) == 0) {
+                                err = EXIT_SUCCESS;
+                        } else {
+                                perror(argv[2]);
                         }
 
                 } else {
-                        char chunk[16];
-                        int  n = 0;
-
-                        i64_t fpos = ftell(stream);
-
-                        fseek(stream, 0, SEEK_END);
-                        i64_t end = ftell(stream);
-
-                        fseek(stream, fpos, SEEK_SET);
-
-                        while ((c != '\n') && (size > 0) && !(ferror(stream) || feof(stream))) {
-
-                                n = fread(chunk, 1, sizeof(chunk), stream);
-
-                                for (int i = 0; c != '\n' && size > 0 && i < n; size--, i++) {
-                                        c    = chunk[i];
-                                        *p++ = c;
-                                        fpos++;
-                                }
-                        }
-
-                        if ((c == '\n' || size == 0) && fpos < end) {
-                                fseek(stream, fpos, SEEK_SET);
-                        }
+                        perror(argv[2]);
                 }
-
-                *p = '\0';
-
-                if (ferror(stream)) {
-                        str = NULL;
-
-                } else if (feof(stream)) {
-                        str = (p == str) ? NULL : str;
-                }
-
-                return str;
         }
-#else
-        UNUSED_ARG3(str, size, stream);
-#endif
-        return NULL;
+
+        return err;
 }
 
 /*==============================================================================
