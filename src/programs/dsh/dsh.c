@@ -703,7 +703,7 @@ int_main(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
         }
 
-        mkdir("/run", 0777);
+        mkdir("/run", 0666);
 
         getcwd(global->cwd, CWD_PATH_LEN);
         chdir(global->cwd);

@@ -82,10 +82,10 @@ static void create_base_file_system_structure(void)
          * 2. Create basic folders. This folders can be used to store device
          *    files or to mount next file systems e.g. SD Card etc.
          */
-        mkdir("/dev", 0777);    // this folder store devices drivers
-        mkdir("/tmp", 0777);    // this folder store temporary files
-        mkdir("/run", 0777);    // this folder store runtime files
-        mkdir("/mnt", 0777);    // this folder store SD card content
+        mkdir("/dev", 0666);    // this folder store devices drivers
+        mkdir("/tmp", 0666);    // this folder store temporary files
+        mkdir("/run", 0666);    // this folder store runtime files
+        mkdir("/mnt", 0666);    // this folder store SD card content
 
         /*
          * NOTE: Number and naming of folders depends on user needs. There can
