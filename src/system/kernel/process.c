@@ -195,8 +195,18 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                 if (err) goto finish;
 
 #if __OS_SYSTEM_SHEBANG_ENABLE__ > 0
-                if (is_cmd_path(cmd)) {
-                        err = analyze_shebang(proc, cmd, &cmdarg);
+                u8_t  level   = 8;
+                const char *c = cmd;
+                while (c && level-- && is_cmd_path(c)) {
+
+                        err = analyze_shebang(proc, c, &cmdarg);
+
+                        if (c && c != cmd) {
+                                _kfree(_MM_KRN, cast(void**, &c));
+                        }
+
+                        c = cmdarg;
+
                         if (err) goto finish;
                 }
 #endif
