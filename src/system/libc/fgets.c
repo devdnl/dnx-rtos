@@ -82,9 +82,8 @@ char *fgets(char *str, int size, FILE *stream)
         struct stat file_stat;
         if (fstat(stream, &file_stat) == 0) {
 
-                char *p    = str;
-                int   c    = EOF;
-                i64_t fpos = 0;
+                char *p = str;
+                int   c = EOF;
 
                 size--;
 
@@ -101,18 +100,29 @@ char *fgets(char *str, int size, FILE *stream)
                         }
 
                 } else {
-                        fpos = ftell(stream);
+                        char chunk[16];
+                        int  n = 0;
+
+                        i64_t fpos = ftell(stream);
+
+                        fseek(stream, 0, SEEK_END);
+                        i64_t end = ftell(stream);
+
+                        fseek(stream, fpos, SEEK_SET);
 
                         while ((c != '\n') && (size > 0) && !(ferror(stream) || feof(stream))) {
 
-                                char cache[16];
-                                int n = fread(cache, 1, sizeof(cache), stream);
+                                n = fread(chunk, 1, sizeof(chunk), stream);
 
                                 for (int i = 0; c != '\n' && size > 0 && i < n; size--, i++) {
-                                        c    = cache[i];
+                                        c    = chunk[i];
                                         *p++ = c;
                                         fpos++;
                                 }
+                        }
+
+                        if ((c == '\n' || size == 0) && fpos < end) {
+                                fseek(stream, fpos, SEEK_SET);
                         }
                 }
 
@@ -123,11 +133,6 @@ char *fgets(char *str, int size, FILE *stream)
 
                 } else if (feof(stream)) {
                         str = (p == str) ? NULL : str;
-
-                } else {
-                        if (fpos > 0) {
-                                fseek(stream, fpos, SEEK_SET);
-                        }
                 }
 
                 return str;
