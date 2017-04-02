@@ -405,7 +405,7 @@ reset:
 # target used to create Release archive
 ####################################################################################################
 .PHONY : release
-release: cleanall
+release: clean
 	git clean -xfd
 	tar --exclude=.git -zcvf release.tar.gz .
 	zip release.zip . -r -9 --exclude /.git*
