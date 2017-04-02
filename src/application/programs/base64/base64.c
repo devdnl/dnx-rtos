@@ -33,7 +33,7 @@ Brief    Base64 code and encode program.
 #include <stdbool.h>
 #include <errno.h>
 #include <dnx/misc.h>
-#include <lib/base64/base64.h>
+#include <base64.h>
 
 /*==============================================================================
   Local symbolic constants/macros

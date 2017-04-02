@@ -104,8 +104,9 @@ OBJ_DIR_NAME    = obj
 DEP_FILE_NAME   = $(PROJECT).d
 
 # folder localizations
-APP_PRG_LOC     = src/programs
-APP_LIB_LOC     = src/lib
+APP_LOC         = src/application
+APP_PRG_LOC     = $(APP_LOC)/programs
+APP_LIB_LOC     = $(APP_LOC)/libs
 SYS_LOC         = src/system
 
 SYS_DRV_LOC     = $(SYS_LOC)/drivers
@@ -142,8 +143,7 @@ OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 CONFIGTOOL = ./tools/configtool.sh
 CODECHECK  = cppcheck
-ADDPROGS   = ./$(APP_PRG_LOC)/addprogs.sh
-ADDLIBS    = ./$(APP_LIB_LOC)/addlibs.sh
+ADDAPPS    = ./$(APP_LOC)/addapps.sh
 ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
 ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
 FLASH_CPU  = ./tools/flash.sh
@@ -176,8 +176,7 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
 # list of sources to compile
--include $(APP_PRG_LOC)/Makefile   # file is created in the add_programs target
--include $(APP_LIB_LOC)/Makefile   # file is created in the add_programs target
+-include $(APP_LOC)/Makefile   # file is created in the addapps script
 include $(SYS_LOC)/Makefile
 
 # defines objects localizations
@@ -296,11 +295,8 @@ status :
 ####################################################################################################
 .PHONY : generate
 generate :
-	@$(ECHO) "Adding user's programs to the project..."
-	@$(ADDPROGS) ./$(APP_PRG_LOC)
-
-	@$(ECHO) "Adding user's libraries to the project..."
-	@$(ADDLIBS) ./$(APP_LIB_LOC)
+	@$(ECHO) "Adding user's programs and libraries to the project..."
+	@$(ADDAPPS) ./$(APP_LOC)
 
 	@$(ECHO) "Adding file systems to the project..."
 	@$(ADDFS) ./$(SYS_FS_LOC)

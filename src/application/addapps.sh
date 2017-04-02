@@ -32,7 +32,18 @@ function check_args()
 #-------------------------------------------------------------------------------
 function get_program_list()
 {
-    echo $(ls -F "$1" | grep -P '/|@' | sed 's/\///g' | sed 's/@//g')
+    echo $(ls -F "$1/programs" | grep -P '/|@' | sed 's/\///g' | sed 's/@//g')
+}
+
+#-------------------------------------------------------------------------------
+# @brief  Gets program list in the current directory. Folder are interpreted as
+#         programs. Files are ignored.
+# @param  path to scan
+# @return program list
+#-------------------------------------------------------------------------------
+function get_library_list()
+{
+    echo $(ls -F "$1/libs" | grep -P '/|@' | sed 's/\///g' | sed 's/@//g')
 }
 
 #-------------------------------------------------------------------------------
@@ -40,14 +51,29 @@ function get_program_list()
 # @param  None
 # @return None
 #-------------------------------------------------------------------------------
-function create_makefile()
+function create_makefile_programs()
 {
     echo '# Makefile for GNU make - file generated at build process'
     echo ''
 
-    echo 'CSRC_PROGRAMS += program_registration.c'
+    echo 'CSRC_PROGRAMS += ../program_registration.c'
     for prog in $program_list; do
         echo '-include $(APP_PRG_LOC)/'"$prog"'/Makefile'
+    done
+}
+
+#-------------------------------------------------------------------------------
+# @brief  Creates empty Makefile
+# @param  None
+# @return None
+#-------------------------------------------------------------------------------
+function create_makefile_libs()
+{
+    echo '# Makefile for GNU make - file generated at build process'
+    echo ''
+
+    for lib in $library_list; do
+        echo '-include $(APP_LIB_LOC)/'"$lib"'/Makefile'
     done
 }
 
@@ -91,11 +117,15 @@ function main()
     check_args "$1"
 
     Makefile_path="$1/$Makefile_name"
+
     program_registration_path="$1/$program_registration_file_name"
     program_list=$(get_program_list "$1")
 
-    create_makefile > "$Makefile_path"
+    create_makefile_programs > "$Makefile_path"
     create_program_registration_file > "$program_registration_path"
+
+    library_list=$(get_library_list "$1")
+    create_makefile_libs >> "$Makefile_path"
 }
 
 main "$1"
