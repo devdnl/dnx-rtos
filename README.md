@@ -51,7 +51,7 @@ make
 
 ## Website
 The whole documenation and exmaples you can found at
-[dnx RTOS official website](https://www.dnx-rtos.org).
+[dnx RTOS official website](http://www.dnx-rtos.org).
 
 There is also additional software repository with
 [applications](https://github.com/devdnl/dnx-rtos-apps).
