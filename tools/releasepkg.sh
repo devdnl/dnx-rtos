@@ -9,9 +9,8 @@ get_version() {
     | sed -e 's/.*return\s"//' -e 's/";//' -e 's/\s/_/'
 }
 
-VERSION=$(get_version)
+VERSION="dnx-RTOS-v$(get_version)"
 
 git clean -xfd
-tar --exclude=.git -zcvf ${VERSION}.tar.gz .
-zip ${VERSION}.zip . -r -9 --exclude /.git* --exclude ${VERSION}.tar.gz
+zip ${VERSION}.zip . -r -9 --exclude /.git* -A
 echo "Done"

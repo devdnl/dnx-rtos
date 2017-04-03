@@ -297,13 +297,13 @@ status :
 .PHONY : generate
 generate :
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(ADDAPPS) ./$(APP_LOC)
+	@$(SHELL) $(ADDAPPS) ./$(APP_LOC)
 
 	@$(ECHO) "Adding file systems to the project..."
-	@$(ADDFS) ./$(SYS_FS_LOC)
+	@$(SHELL) $(ADDFS) ./$(SYS_FS_LOC)
 
 	@$(ECHO) "Adding drivers to the project..."
-	@$(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
+	@$(SHELL) $(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
 
 ####################################################################################################
 # Copy git hooks to git repository
@@ -407,7 +407,7 @@ reset:
 ####################################################################################################
 .PHONY : release
 release: clean
-	@$(shell $(RELEASEPKG))
+	@$(SHELL) $(RELEASEPKG)
 
 ####################################################################################################
 # target used to Doxygen documentation
