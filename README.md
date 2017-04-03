@@ -11,8 +11,9 @@ FreeRTOS kernel distribution.
 ## The minimal hardware requirements
 There are minimal hardware requirements that allows to start system but with
 very minimalistic software base:
-1. 32 KiB Flash memory,
-2. 10 KiB RAM memory.
+- 32 KiB Flash memory,
+- 10 KiB RAM memory.
+
 The hardware requirements depends on the user's configuration.
 
 ## The system features

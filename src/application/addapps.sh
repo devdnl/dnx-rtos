@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#-------------------------------------------------------------------------------
+#
+# NOTE: script add programs and libraries to the system.
+#
+#-------------------------------------------------------------------------------
 
 # configuration
 Makefile_name="Makefile"
@@ -69,8 +74,8 @@ function create_makefile_programs()
 #-------------------------------------------------------------------------------
 function create_makefile_libs()
 {
-    echo '# Makefile for GNU make - file generated at build process'
-    echo ''
+    echo ""
+    echo '# libraries'
 
     for lib in $library_list; do
         echo '-include $(APP_LIB_LOC)/'"$lib"'/Makefile'

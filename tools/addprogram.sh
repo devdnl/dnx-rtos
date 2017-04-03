@@ -11,7 +11,7 @@ if [[ "$*" < "2" ]]; then
     echo "Usage: $(basename $0) <program-name> [brief] [author] [email]"
     exit 1
 else
-    cd ../src/programs
+    cd ../src/application/programs
     mkdir $PROGNAME
     cd $PROGNAME
 
