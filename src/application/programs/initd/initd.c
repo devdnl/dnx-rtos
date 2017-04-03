@@ -138,11 +138,11 @@ static void initialize_basic_drivers(void)
 
 //==============================================================================
 /**
- * @brief Function creates output stream. Stream is created as soon as possible
- *        to present user system messages.
+ * @brief Function open output stream. Stream is should be opened as soon as
+ *        possible to present user system messages.
  */
 //==============================================================================
-static void create_output_stream(void)
+static void open_output_stream(void)
 {
         /*
          * 1. Open standard output and standard error streams to see system
@@ -178,7 +178,7 @@ static void show_kernel_panic_message(void)
 static void initialize_additional_drivers(void)
 {
         /*
-         * 1. Initialize next terminals that can be used to hold user application.
+         * 1. Initialize next terminals that can be used to hold user applications.
          *    Number of terminals can be configured in the TTY module configuration
          *    by using Configtool. Number of terminals depends on user needs.
          *    In special cases TTY terminals does not need to be initialized.
@@ -301,7 +301,7 @@ static void start_DHCP_client(void)
         };
 
         /*
-         * 2. Command that start DHCP client mode.
+         * 2. Command setup network interface.
          */
         errno = 0;
         if (ifup(NET_FAMILY__INET, &cfg_dhcp) != 0) {
@@ -407,7 +407,7 @@ int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
         initialize_basic_drivers();
 
         // 3. Create first output stream.
-        create_output_stream();
+        open_output_stream();
 
         // 4. Show kernel panic message if occurred.
         show_kernel_panic_message();
