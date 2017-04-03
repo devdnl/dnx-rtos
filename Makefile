@@ -150,6 +150,7 @@ FLASH_CPU  = ./tools/flash.sh
 RESET_CPU  = ./tools/reset.sh
 GIT_HOOKS  = ./tools/apply_git_hooks.sh
 DOXYGEN    = ./tools/doxygen.sh
+RELEASEPKG = ./tools/releasepkg.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -406,10 +407,7 @@ reset:
 ####################################################################################################
 .PHONY : release
 release: clean
-	git clean -xfd
-	tar --exclude=.git -zcvf release.tar.gz .
-	zip release.zip . -r -9 --exclude /.git*
-	$(ECHO) "Done"
+	@$(shell $(RELEASEPKG))
 
 ####################################################################################################
 # target used to Doxygen documentation
