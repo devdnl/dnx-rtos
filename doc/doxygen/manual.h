@@ -30,7 +30,7 @@ Project contains several folders:
 \arg \c config -- project configuration files. The best way is to use the Configtool
         program to adjust system. Configtool can be started by using
         Eclipse IDE or in terminal by using <tt><b>make config</b></tt> command,
-\arg \c doc -- project documentation. Use <tt><b>make doxygen</b></tt> command in the
+\arg \c doc -- project documentation. Use <tt><b>make doc</b></tt> command in the
         command line to generate Doxygen documentation. PDF version is also
         possible to generate by using LaTeX system,
 \arg \c src -- all project sources with user directories: \c lib, \c programs.
@@ -49,7 +49,7 @@ GPIOs) then one can start project compilation. To do this the following command
 should be typed:
 \code make \endcode
 When operation is finished successfully then created image can be installed in
-a microcontroller. This opperation is triggered by typing following command:
+a microcontroller. This operation is triggered by typing following command:
 \code make install \endcode
 or
 \code make flash \endcode
@@ -162,9 +162,9 @@ The dnx RTOS program implementation has some limitations:
 \section app-prg-reg Application Registration Details
 As was mentioned above, each program in order to be visible should be registered
 in the system register. The system register is localized in the
-<i>./src/programs/program_registration.c</i> file. This file is created automatically
+<i>./src/application/programs/program_registration.c</i> file. This file is created automatically
 by the build script. No other actions are needed to add a new program to the
-system. <b>To create a new program just create a new folder in the <i>./src/programs/</i>
+system. <b>To create a new program just create a new folder in the <i>./src/application/programs/</i>
 and add program’s files and Makefile</b>. The only one note is that the program’s
 name should be the same as folder name (<tt><b>int_main()</b></tt> macro).
 Program’s Makefile is automatically added to the main system’s Makefile.
@@ -224,17 +224,17 @@ Makefile script:
 \endcode
 
 File structure:
-\arg ./src/programs/<b>example_program</b>/<i>example_program.c</i>
-\arg ./src/programs/<b>example_program</b>/<i>Makefile</i>
+\arg ./src/application/programs/<b>example_program</b>/<i>example_program.c</i>
+\arg ./src/application/programs/<b>example_program</b>/<i>Makefile</i>
 
 
 
 \section sec-app-example Users' Libraries
-Libraries are stored in the <b>./src/lib</b> folder and are automatically added to
-the system by the script at build process. Libraries are added to the system when
-contains the Makefile. To use a library in the program just include their header.
-To remove library from project just remove library folder (and remove dependencies
-from application).
+Libraries are stored in the <b>./src/application/libs</b> folder and are
+automatically added to the system by the script at build process. Libraries are
+added to the system when contains the Makefile. To use a library in the program
+just include their header. To remove library from project just remove library
+folder (and remove dependencies from application).
 
 Example of Makefile script for library:
 \code
@@ -248,7 +248,7 @@ Example of Makefile script for library:
 Example how to use created library in application:
 \code
     #include ...
-    #include <lib/mbus/mbus.h>
+    #include <mbus.h>
     #include ...
 
     ...
@@ -259,8 +259,8 @@ Example how to use created library in application:
 \endcode
 
 \section Examples
-To obtain applications and libraries code examples please browse <b>./src/programs/</b>
-and <b>./src/lib/</b> folders.
+To obtain applications and libraries code examples please browse <b>./src/application/programs/</b>
+and <b>./src/application/libs/</b> folders.
 */
 
 //------------------------------------------------------------------------------

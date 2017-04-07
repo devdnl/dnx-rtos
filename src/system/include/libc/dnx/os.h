@@ -497,7 +497,7 @@ static inline const char *get_OS_version(void)
 //==============================================================================
 static inline const char *get_OS_codename(void)
 {
-        return "Dingo";
+        return "Cheetah";
 }
 
 //==============================================================================

@@ -1,28 +1,26 @@
-dnx RTOS 2.0.0
-==============
+dnx RTOS 2.0.0 Cheetah
+======================
 New Features, Improvements:
 - Added processes
 - Simplified system structure
 - Improved system stability
-- Implemented seperated system stack and process
+- Implemented seperated system and process stacks
 - Improved network layer
 - Added new drivers
 - Added new file systems
 - Any program can used as boot daemon
+- Decreased RAM usage by static variables
+- Moved additional programs to seperated repository: https://github.com/devdnl/dnx-rtos-app
+- and more...
 
 Fixed Bugs:
 - Fixed USB device driver
-
-dnx RTOS 1.6.1
-==============
-New Features, Improvements:
-
-Fixed Bugs:
 - fopen(): incorrect behavior of "a" and "a+" modes (issue #156)
 - readdir(): return object instead of pointer to object (issue #157)
+- and more...
 
-dnx RTOS 1.6.0
-==============
+dnx RTOS 1.6.0 Butterfly
+========================
 New Features, Improvements:
 - Added lua library (with lua and luac programs)
 - Added time.h library
@@ -48,24 +46,24 @@ Fixed Bugs:
 - Fixed memory leak in pipe implementation
 - Fixed memory leak in mbus library
 
-dnx RTOS 1.5.4
-==============
+dnx RTOS 1.5.4 Antelope
+=======================
 New Features, Improvements:
 - Added new configurations
 
 Fixed Bugs:
 - Fixed PLL module in the Configtool
 
-dnx RTOS 1.5.2
-==============
+dnx RTOS 1.5.2 Antelope
+=======================
 New Features, Improvements:
 - Decreased ROM usage in some configurations
 
 Fixed Bugs:
 - Fixed net.h library (compiler error when network disabled)
 
-dnx RTOS 1.5.0
-==============
+dnx RTOS 1.5.0 Antelope
+=======================
 New Features, Improvements:
 - Configtool: corrected project configuraiton script to be faster
 - Configtool: the import of the configuration with unknown CPU architecture is disabled
