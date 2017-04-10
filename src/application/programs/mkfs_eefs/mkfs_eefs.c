@@ -12,7 +12,7 @@ Brief    Format selected file by EEFS.
          the Free Software Foundation and modified by the dnx RTOS exception.
 
          NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes FreeRTOS without
+               distribute a combined work that includes dnx RTOS without
                being obliged to provide the source  code for proprietary
                components outside of the dnx RTOS.
 
