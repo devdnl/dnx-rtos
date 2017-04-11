@@ -4974,36 +4974,40 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
 
 //==============================================================================
 /**
- * @brief Function write block by using cache subsystem.
+ * @brief Function write block to selected file. If cache exist then block is
+ *        write to the cache. If cache does not exist then new one is created.
+ *        Only files that are linked with drivers are cached, other files are
+ *        written directly.
  *
- * @note Function can be used only by file system or driver code.
- *
- * @param  file         file
- * @param  blkpos       block position (in block unit)
+ * @param  file         file to write
+ * @param  blkpos       block position
  * @param  blksz        block size
- * @param  buf          source buffer (of block size)
+ * @param  blkcnt       block count
+ * @param  buf          buffer to write from (blocks)
  * @param  mode         write mode
  *
  * @return One of errno value.
  */
 //==============================================================================
-extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, enum cache_mode mode);
+extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, const u8_t *buf, enum cache_mode mode);
 
 //==============================================================================
 /**
- * @brief Function read block by using cache subsystem.
+ * @brief Function read block from selected file. If cache exist then cache
+ *        data is used. If cache does not exist then file is read and new cache
+ *        is created. Function does not cache blocks from files that are not
+ *        directly connected do drivers.
  *
- * @note Function can be used only by file system or driver code.
- *
- * @param  file         file
- * @param  blkpos       block position (in block unit)
+ * @param  file         file to read
+ * @param  blkpos       block position
  * @param  blksz        block size
- * @param  buf          destination buffer (of block size)
+ * @param  blkcnt       block count
+ * @param  buf          buffer to read (blocks)
  *
  * @return One of errno value.
  */
 //==============================================================================
-extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf);
+extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, u8_t *buf);
 
 #ifdef __cplusplus
 }

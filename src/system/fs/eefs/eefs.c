@@ -1377,7 +1377,7 @@ API_FS_SYNC(eefs, void *fs_handle)
 //==============================================================================
 static int block_read(EEFS_t *hdl, block_buf_t *blk)
 {
-        return sys_cache_read(hdl->srcdev, blk->num, sizeof(block_t),
+        return sys_cache_read(hdl->srcdev, blk->num, sizeof(block_t), 1,
                               cast(u8_t*, &blk->buf));
 }
 
@@ -1397,7 +1397,7 @@ static int block_write(EEFS_t *hdl, const block_buf_t *blk)
                return EROFS;
 
         } else {
-                return sys_cache_write(hdl->srcdev, blk->num, sizeof(block_t),
+                return sys_cache_write(hdl->srcdev, blk->num, sizeof(block_t), 1,
                                        cast(u8_t*, &blk->buf),
                                        hdl->flag & FLAG_SYNC ? CACHE_WRITE_THROUGH
                                                              : CACHE_WRITE_BACK);

@@ -34,7 +34,7 @@ make config
 ```
 or
 ```
-configure
+./configure
 ```
 
 To compile the project, type in the terminal:
