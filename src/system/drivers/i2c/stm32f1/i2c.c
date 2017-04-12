@@ -1030,6 +1030,8 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
                 }
         }
 
+        stop(hdl);
+
         return n;
 }
 
