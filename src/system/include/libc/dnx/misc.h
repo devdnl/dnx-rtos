@@ -43,7 +43,8 @@ dnx RTOS miscellaneous macros and functions.
 #include <string.h>
 #include <lib/cast.h>
 #include <lib/unarg.h>
-#include <lib/strx.h>
+#include <lib/strlcat.h>
+#include <lib/strlcpy.h>
 
 #ifdef __cplusplus
 extern "C" {

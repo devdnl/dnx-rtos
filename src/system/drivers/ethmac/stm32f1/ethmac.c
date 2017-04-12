@@ -62,7 +62,7 @@ struct ethmac {
 ==============================================================================*/
 static bool   is_Ethernet_started       ();
 static void   send_packet               (size_t size);
-static size_t wait_for_packet           (struct ethmac *hdl, uint timeout);
+static size_t wait_for_packet           (struct ethmac *hdl, uint32_t timeout);
 static void   give_Rx_buffer_to_DMA     ();
 static bool   is_buffer_owned_by_DMA    (ETH_DMADESCTypeDef *DMA_descriptor);
 static void   make_Rx_buffer_available  ();

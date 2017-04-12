@@ -1,9 +1,9 @@
 /*==============================================================================
-File     strlcpy.h
+File     strlcat.c
 
 Author   Daniel Zorychta
 
-Brief    Strings functions.
+Brief    String functions.
 
          Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -26,31 +26,26 @@ Brief    Strings functions.
 
 ==============================================================================*/
 
-/**
-@defgroup STRLCPY_H_ STRLCPY_H_
-
-Detailed Doxygen description.
-*/
-/**@{*/
-
-#ifndef _STRLCPY_H_
-#define _STRLCPY_H_
-
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stddef.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <string.h>
+#include "lib/strlcat.h"
 
 /*==============================================================================
-  Exported macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
+  Local object types
+==============================================================================*/
+
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local objects
 ==============================================================================*/
 
 /*==============================================================================
@@ -58,22 +53,64 @@ extern "C" {
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  External objects
 ==============================================================================*/
-extern size_t _strlcpy(char *dst, const char *src, size_t size);
-extern size_t _strlcat(char *dst, const char *src, size_t size);
 
 /*==============================================================================
-  Exported inline functions
+  Function definitions
 ==============================================================================*/
 
-#ifdef __cplusplus
+//==============================================================================
+/**
+ * @brief The strlcat() function concatenate strings.
+ *
+ * The strlcat() function appends the NUL-terminated string src to the end of
+ * dst. It will append at most size - strlen(dst) - 1 bytes, NUL-terminating
+ * the result.
+ *
+ * @param  dst  destination buffer
+ * @param  src  source buffer
+ * @param  size destination buffer size
+ *
+ * @return The strlcat() function return the total length of the string it
+ *         tried to create. For strlcat() that means the initial length of dst
+ *         plus the length of src. While this may seem somewhat confusing, it
+ *         was done to make truncation detection simple.
+ */
+//==============================================================================
+size_t _strlcat(char *dst, const char *src, size_t size)
+{
+        char       *d = dst;
+        const char *s = src;
+        size_t      n = size;
+        size_t      dlen;
+
+        /* Find the end of dst and adjust bytes left but don't go past end */
+        while (n-- != 0 && *d != '\0') {
+                d++;
+        }
+
+        dlen = d - dst;
+        n    = size - dlen;
+
+        if (n == 0) {
+                return (dlen + strlen(s));
+        }
+
+        while (*s != '\0') {
+                if (n != 1) {
+                        *d++ = *s;
+                         n--;
+                }
+                s++;
+        }
+
+        *d = '\0';
+
+        /* count does not include NUL */
+        return (dlen + (s - src));
 }
-#endif
 
-#endif /* _STRLCPY_H_ */
-
-/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/
