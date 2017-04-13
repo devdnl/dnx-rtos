@@ -535,14 +535,12 @@ API_MOD_STAT(SDSPI, void *device_handle, struct vfs_dev_stat *device_stat)
         sdpart_t *part = device_handle;
 
         if (SDSPI->card[part->major]->initialized) {
-                device_stat->st_major = part->major;
-                device_stat->st_minor = part->minor;
-                device_stat->st_size  = cast(u64_t, part->size) * sector_size;
-
-                return ESUCC;
+                device_stat->st_size = cast(u64_t, part->size) * sector_size;
         } else {
-                return ENOMEDIUM;
+                device_stat->st_size = 0;
         }
+
+        return ESUCC;
 }
 
 //==============================================================================
