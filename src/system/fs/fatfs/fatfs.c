@@ -659,7 +659,8 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
                 stat->st_mtime = time_fat2unix((file_info.fdate << 16) | file_info.ftime);
                 stat->st_size  = file_info.fsize;
                 stat->st_uid   = 0;
-                stat->st_type  = FILE_TYPE_REGULAR;
+                stat->st_type  = file_info.fattrib & LIBFAT_AM_DIR ?
+                                 FILE_TYPE_DIR : FILE_TYPE_REGULAR;
         }
 
         return err;

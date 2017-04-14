@@ -309,7 +309,7 @@ struct usbd_ep_config {
  */
 typedef struct {
         struct usbd_ep_config ep[_USBD_NUMBER_OF_ENDPOINTS];
-} usbd_ep_config_t;
+} USBD_ep_config_t;
 
 /**
  * SETUP packet container and receive timeout.
@@ -317,7 +317,7 @@ typedef struct {
 typedef struct {
         usb_setup_packet_t packet;      /*!< Setup packet.*/
         int                timeout;     /*!< Timeout in milliseconds.*/
-} usbd_setup_container_t;
+} USBD_setup_container_t;
 
 /*==============================================================================
   Exported objects

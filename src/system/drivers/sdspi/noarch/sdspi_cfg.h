@@ -40,11 +40,6 @@ extern "C" {
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-#define SDSPI_NUMBER_OF_CARDS                   __SDSPI_NUMBER_OF_CARDS__
-#define SDSPI_CARD0_TIMEOUT                     __SDSPI_CARD0_TIMEOUT__
-#define SDSPI_CARD1_TIMEOUT                     __SDSPI_CARD1_TIMEOUT__
-#define SDSPI_CARD0_FILE                        __SDSPI_CARD0_FILE__
-#define SDSPI_CARD1_FILE                        __SDSPI_CARD1_FILE__
 
 /*==============================================================================
   Exported types, enums definitions

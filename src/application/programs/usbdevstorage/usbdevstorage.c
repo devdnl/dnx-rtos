@@ -89,7 +89,7 @@ GLOBAL_VARIABLES_SECTION {
 };
 
 /* USB constants */
-static const usbd_ep_config_t ep_cfg = {
+static const USBD_ep_config_t ep_cfg = {
         .ep[USB_EP_NUM__ENDP0] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USBD_EP0_SIZE, USBD_EP0_SIZE),
         .ep[USB_EP_NUM__ENDP1] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__BULK, BULK_BUF_SIZE, BULK_BUF_SIZE),
         .ep[USB_EP_NUM__ENDP2] = USBD_EP_CONFIG_DISABLED(),
@@ -284,9 +284,9 @@ static void ep1_handler(void *arg)
 {
         (void)arg;
 
-        FILE *gpio   = fopen(GPIO_PORT_PATH, "r+");
-        FILE *ep1    = fopen("/dev/usbd-ep1", "r+");
-        FILE *sda    = fopen("/dev/sda", "r+");
+        FILE *gpio = fopen(GPIO_PORT_PATH, "r+");
+        FILE *ep1  = fopen("/dev/usbd-ep1", "r+");
+        FILE *sda  = fopen("/dev/sda", "r+");
 
         if (sda) {
                 struct stat stat;
@@ -566,7 +566,7 @@ int_main(usbdevstorage, STACK_DEPTH_LOW, int argc, char *argv[])
         tid_t ep1_thread = thread_create(ep1_handler, &attr, NULL);
 
         if (ep0 && ep1_thread) {
-                usbd_setup_container_t setup = {.timeout = 250};
+                USBD_setup_container_t setup = {.timeout = 250};
 
                 ioctl(stdin, IOCTL_VFS__NON_BLOCKING_RD_MODE);
                 ioctl(ep0, IOCTL_USBD__START);

@@ -137,7 +137,7 @@ typedef struct {
  */
 typedef struct {
         USB_ep_t               *ep[NUMBER_OF_ENDPOINTS];
-        const usbd_ep_config_t *ep_config;
+        const USBD_ep_config_t *ep_config;
         u8_t                    major;
         bool                    activated;
         bool                    reset;
@@ -849,7 +849,7 @@ API_MOD_IOCTL(USBD, void *device_handle, int request, void *arg)
                         if (arg) {
                                 set_setup_in_progress(hdl->minor, true);
 
-                                usbd_setup_container_t *setup = arg;
+                                USBD_setup_container_t *setup = arg;
                                 if (sys_semaphore_wait(hdl->setup, setup->timeout) == ESUCC) {
 
                                         if (hdl->setup_in_progress == true) {

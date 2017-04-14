@@ -52,7 +52,8 @@ Device (drivers) connection table
 \section drv-sdspi-ddesc Details
 \subsection drv-sdspi-ddesc-num Meaning of major and minor numbers
 There is special meaning of major and minor numbers. The major number selects
-SD card 0 or 1. The minor number selects as follow:
+SD card. There is possibility to use up to 256 SD Cards. The minor number
+selects volume and partitions as follow:
 \li 0: entire card volume
 \li 1: partition 1 (MBR only)
 \li 2: partition 2 (MBR only)
@@ -60,8 +61,9 @@ SD card 0 or 1. The minor number selects as follow:
 \li 4: partition 4 (MBR only)
 
 \subsubsection drv-sdspi-ddesc-numres Numeration restrictions
-Major number can be set in range 0 to 1. The minor number can be used in range
-from 0 to 4.
+Major number can be set in range 0 to 255. The minor number can be used in range
+from 0 to 4. Each new major number is a new instance of driver that can handle
+SD Card.
 
 \subsection drv-sdspi-ddesc-init Driver initialization
 To initialize driver the following code can be used:
@@ -90,15 +92,42 @@ device files can be used directly by file systems.
 \subsection drv-sdspi-ddesc-release Driver release
 To release driver the following code can be used:
 @code
-driver_release("SDSPI", 0, 4);          // disable supporting of partition number 4
+driver_release("SDSPI", 0, 4);  // disable supporting of card 0 partition 4
 @endcode
 @code
-driver_release("SDSPI", 1, 1);          // disable supporting of partition number 1
+driver_release("SDSPI", 1, 1);  // disable supporting of card 1 partition 1
 @endcode
 
 \subsection drv-sdspi-ddesc-cfg Driver configuration
-Driver configuration can be done by using Configtool. There is possibility to set
-SPI interface file path and additional options.
+Driver configuration can be done by using SDSPI_config_t object and ioctl()
+function.
+
+@code
+#include <stdio.h>
+#include <stdbool.h>
+#include <sys/ioctl.h>
+
+static const char *dev_path = "/dev/spi_sda";
+
+FILE *dev = fopen(dev_path, "r+");
+if (dev) {
+        static const SDSPI_config_t cfg = {
+                 .filepath = "/dev/spi_sda",
+                 .timeout  = 1000
+        };
+
+        if (ioctl(dev, IOCTL_SDSPI__CONFIGURE, &cfg) != 0) {
+            perror(dev_path);
+        }
+
+        fclose(dev);
+} else {
+      perror(dev_path);
+}
+
+...
+@endcode
+
 
 \subsection drv-sdspi-ddesc-write Data write
 Writing data to device is the same as writing data to regular file.
@@ -107,15 +136,16 @@ Writing data to device is the same as writing data to regular file.
 Reading data from device is the same as reading data from regular file.
 
 \subsection drv-sdspi-ddesc-mbr Card initialization
-There is special ioctl() request (@ref IOCTL_SDSPI__INITIALIZE_CARD) that initialize
-selected SD card. Initialization can be done on any partition (e.g. sda1) giving
-the same effect as initialization on master card file (e.g. sda, sdb). If
-initialization is already done on selected partition then is not necessary to
-initialize remained partitions.
+There is special ioctl() request (@ref IOCTL_SDSPI__INITIALIZE_CARD or
+@ref IOCTL_STORAGE__INITIALIZE) that initialize selected SD card. Initialization
+can be done on any partition (e.g. sda1) giving the same effect as initialization
+on master card file (e.g. sda, sdb). If initialization is already done on
+selected partition then is not necessary to initialize remained partitions.
 
 After initialization the MBR table should be read by driver. In this case the
-ioctl() request (@ref IOCTL_SDSPI__READ_MBR) should be used. This procedure
-load all MBR entries and set required offsets in partition files (/dev/sd<i>x</i><b>y</b>).
+ioctl() request (@ref IOCTL_SDSPI__READ_MBR or @ref IOCTL_STORAGE__READ_MBR)
+should be used. This procedure load all MBR entries and set required offsets in
+partition files (/dev/sd<i>x</i><b>y</b>).
 
 <b> The SDSPI Driver configures some options of SPI interface. There are options
 that should be configured by user manually:</b>
@@ -183,6 +213,14 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
+ *  @brief  SDSPI configuration.
+ *  @param  [WR] @ref SDSPI_cfg_t *  SDSPI configuration object.
+ *  @return On success 0 is returned.
+ *          On error -1 is returned and @ref errno is set.
+ */
+#define IOCTL_SDSPI__CONFIGURE          _IOW(SDSPI, 0x00, SDSPI_cfg_t*)
+
+/**
  *  @brief  Initialize SD card (OS storage request).
  *  @return On success (card initialized) 0 is returned.
  *          On error (card not initialized) -1 is returned and @ref errno is set.
@@ -199,6 +237,11 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/** card configuration structure */
+typedef struct {
+        const char *filepath;           /*!< File path to SPI interface. */
+        u32_t       timeout;            /*!< Timeout in milliseconds. */
+} SDSPI_config_t;
 
 /*==============================================================================
   Exported objects

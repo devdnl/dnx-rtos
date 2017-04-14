@@ -68,7 +68,7 @@ driver_release("UART", 1, 0);
 \subsection drv-uart-ddesc-cfg Driver configuration
 The default driver values should be configured in project configuration (Configtool).
 Runtime configuration should be always done at system startup or later in
-application. In this case the ioctl() function should be used.
+application. In this case the ioctl() function should be used and UART_config_t object.
 
 \subsection drv-uart-ddesc-write Data write
 Writing data to device is the same as writing data to regular file.
@@ -150,7 +150,7 @@ enum UART_LIN_break {
 /**
  * Type represent UART configuration.
  */
-struct UART_config {
+typedef struct UART_config {
         enum UART_parity    parity;             /*!< Parity configuration.*/
         enum UART_stop_bit  stop_bits;          /*!< Stop bits configuration.*/
         enum UART_LIN_break LIN_break_length;   /*!< LIN break length.*/
@@ -160,7 +160,7 @@ struct UART_config {
         bool                hardware_flow_ctrl; /*!< Hardware flow control enable (RTS, CTS).*/
         bool                single_wire_mode;   /*!< Single wire mode enable.*/
         u32_t               baud;               /*!< Baudrate.*/
-};
+} UART_config_t;
 
 /*==============================================================================
   Exported objects

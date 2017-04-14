@@ -70,6 +70,9 @@ extern "C" {
 #undef  sys_free
 #define sys_free(void__ppmem)                                    _kfree(_MM_MOD, void__ppmem, _module_get_ID(_module_name_))
 
+#undef sys_get_driver_instance
+#define sys_module_get_instance(u8_t__major, u8_t__minor, void_pp__mem) _module_get_instance(_module_name_, u8_t__major, u8_t__minor, void_pp__mem)
+
 #undef  sys_llist_create
 #define sys_llist_create(llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist)\
         _llist_create_mod(_get_module_number(_module_name_), llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist);

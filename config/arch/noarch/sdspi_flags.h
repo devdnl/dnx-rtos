@@ -41,58 +41,6 @@ this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > SDSPI",
                function() this:LoadFile("arch/arch_flags.h") end)
 ++*/
 
-/*--
-this:AddExtraWidget("Label", "LabelGeneral", "General", -1, "bold")
-this:AddExtraWidget("Void", "VoidGeneral")
-++*/
-/*--
-this:AddWidget("Combobox", "Number of cards")
-this:AddItem("One SD card", "1")
-this:AddItem("Two SD cards", "2")
---*/
-#define __SDSPI_NUMBER_OF_CARDS__ 1
-
-
-/*--
-this:AddExtraWidget("Label", "LabelCard1", "\nCard 1", -1, "bold")
-this:AddExtraWidget("Void", "VoidCard1")
-++*/
-/*--
-this:AddWidget("Spinbox", 100, 1000, "Timeout [ms]")
---*/
-#define __SDSPI_CARD0_TIMEOUT__ 500
-
-/*--
-this:AddWidget("Editline", true, "Device path")
---*/
-#define __SDSPI_CARD0_FILE__ "/dev/spi_sda"
-
-
-/*--
-this:AddExtraWidget("Label", "LabelCard2", "\nCard 2", -1, "bold")
-this:AddExtraWidget("Void", "VoidCard2")
-++*/
-/*--
-this:AddWidget("Spinbox", 100, 1000, "Timeout [ms]")
---*/
-#define __SDSPI_CARD1_TIMEOUT__ 500
-
-/*--
-this:AddWidget("Editline", true, "Device path")
---*/
-#define __SDSPI_CARD1_FILE__ "/dev/spi_sdb"
-
-/*--
-this:AddExtraWidget("Void", "Void1")
-this:AddExtraWidget("Label", "LabelNote1", "\nNotes:")
-
-this:AddExtraWidget("Void", "Void2")
-this:AddExtraWidget("Label", "LabelNote2", "- clock frequency and SPI mode can be configured in the SPI module")
-
-this:AddExtraWidget("Void", "Void3")
-this:AddExtraWidget("Label", "LabelNote4", "- make sure that the MISO pin is set to input pulled-up mode\n  or is connected to external pull-up resistor.")
-++*/
-
 #endif /* _SDSPI_FLAGS_H_ */
 /*==============================================================================
   End of file

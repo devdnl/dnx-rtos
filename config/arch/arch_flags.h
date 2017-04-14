@@ -354,7 +354,10 @@ __ENABLE_I2CEE__=_NO_
 #*/
 
 #/*--
-# this:PutWidgets("SDSPI", "arch/noarch/sdspi_flags.h")
+# this:PutWidgets("SDSPI")
+# this:SetToolTip("SD Card driver for SPI interface.\n"..
+#                 "Note: make sure that the MISO pin is set to input\n"..
+#                 "pulled-up mode or is connected to external pull-up resistor.")
 #--*/
 #define __ENABLE_SDSPI__ _NO_
 #/*

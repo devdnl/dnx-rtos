@@ -61,7 +61,7 @@
 GLOBAL_VARIABLES_SECTION {
 };
 
-static const usbd_ep_config_t ep_cfg = {
+static const USBD_ep_config_t ep_cfg = {
         .ep[USB_EP_NUM__ENDP0] = USBD_EP_CONFIG_IN_OUT(USB_TRANSFER__CONTROL, USBD_EP0_SIZE, USBD_EP0_SIZE),
         .ep[USB_EP_NUM__ENDP1] = USBD_EP_CONFIG_IN(USB_TRANSFER__INTERRUPT, 8),
         .ep[USB_EP_NUM__ENDP2] = USBD_EP_CONFIG_DISABLED(),
@@ -269,9 +269,9 @@ int_main(usbdevkbrd, STACK_DEPTH_LOW, int argc, char *argv[])
         FILE *gpio = fopen(GPIO_PORT_PATH, "r+");
 
         if (ep0 && ep1) {
-                usbd_setup_container_t setup     = {.timeout = 25};
-                bool                  configured = false;
-                int                   operation  = -1;
+                USBD_setup_container_t setup     = {.timeout = 25};
+                bool                   configured = false;
+                int                    operation  = -1;
 
                 ioctl(stdin, IOCTL_VFS__NON_BLOCKING_RD_MODE);
                 ioctl(ep0, IOCTL_USBD__START);

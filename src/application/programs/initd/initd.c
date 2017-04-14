@@ -251,6 +251,12 @@ static void mount_SD_card(void)
          */
         f = fopen("/dev/sda", "r+");
         if (f) {
+                static const SDSPI_config_t cfg = {
+                         .filepath = "/dev/spi_sda",
+                         .timeout  = 1000
+                };
+
+                ioctl(f, IOCTL_SDSPI__CONFIGURE, &cfg);
                 ioctl(f, IOCTL_STORAGE__INITIALIZE);
                 ioctl(f, IOCTL_STORAGE__READ_MBR);
                 fclose(f);
