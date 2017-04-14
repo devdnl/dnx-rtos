@@ -38,6 +38,9 @@ blocks. Entire SD card protocol is handled by this driver. Driver support
 MBR partitions. Each partition can be mounted as regular file (automatic partition
 offset).
 
+@note Make sure that MISO pin is pulled-up. Pull-up is required to correct
+      initialize the SD Card SPI interface.
+
 Device (drivers) connection table
 | Grade | Device       | In                  | Out              |
 | ----: | :----------- | :------------------ | :--------------- |
@@ -237,7 +240,9 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-/** card configuration structure */
+/**
+ * SDSPI module configuration structure.
+ */
 typedef struct {
         const char *filepath;           /*!< File path to SPI interface. */
         u32_t       timeout;            /*!< Timeout in milliseconds. */

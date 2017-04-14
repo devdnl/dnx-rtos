@@ -267,6 +267,25 @@ static inline int sys_zalloc(size_t size, void **mem);
  */
 //==============================================================================
 static inline int sys_free(void **mem);
+
+//==============================================================================
+/**
+ * @brief  Get module allocated memory for specified major and minor number.
+ *
+ * Function get memory instance of module that call this function. The major
+ * and minor numbers specify the instance.
+ *
+ * @note Function can be used only by driver code.
+ *
+ * @param major         major number
+ * @param minor         minor number
+ * @param mem           driver instance memory
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+int sys_module_get_instance(u8_t major, u8_t minor, void **mem);
+
 #endif
 
 //==============================================================================
