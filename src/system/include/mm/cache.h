@@ -93,6 +93,7 @@ enum cache_mode {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+extern int  sys_cache_drop(FILE*);
 extern int  sys_cache_write(FILE*, u32_t, size_t, size_t, const u8_t*, enum cache_mode);
 extern int  sys_cache_read(FILE*, u32_t, size_t, size_t, u8_t*);
 extern int  _cache_init(void);

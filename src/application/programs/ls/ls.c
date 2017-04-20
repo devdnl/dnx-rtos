@@ -114,6 +114,10 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                 dirent_t *dirent = readdir(dir);
                 while (!errno && dirent) {
 
+                        if (isstreq(dirent->name, ".") || isstreq(dirent->name, "..") ) {
+                                goto next;
+                        }
+
                         struct stat st;
                         if (stat(dirent->name, &st) == 0) {
 
@@ -187,6 +191,7 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                                 break;
                         }
 
+                        next:
                         dirent = readdir(dir);
                 }
 

@@ -185,7 +185,6 @@ API_FS_CLOSE($FSNAME, void *fs_handle, void *fhdl, bool force)
 API_FS_WRITE($FSNAME,
              void            *fs_handle,
              void            *fhdl,
-             fd_t             fd,
              const u8_t      *src,
              size_t           count,
              fpos_t          *fpos,
@@ -288,6 +287,51 @@ API_FS_FSTAT($FSNAME, void *fs_handle, void *fhdl, struct stat *stat)
         int err = ESUCC;
 
         return err;
+}
+
+//==============================================================================
+/**
+ * @brief Return file/dir status.
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   file path
+ * @param[out]          *stat                   file status
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
+API_FS_STAT($FSNAME, void *fs_handle, const char *path, struct stat *stat)
+{
+        ${FSNAME}_t *hdl = fs_handle;
+
+        int err = ESUCC;
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Return file system status.
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[out]          *statfs                 file system status
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
+API_FS_STATFS($FSNAME, void *fs_handle, struct statfs *statfs)
+{
+        ${FSNAME}_t *hdl = fs_handle;
+
+        statfs->f_bsize  = 0;
+        statfs->f_blocks = 0;
+        statfs->f_bfree  = 0;
+        statfs->f_ffree  = 0;
+        statfs->f_files  = 0;
+        statfs->f_type   = SYS_FS_TYPE__SOLID;
+        statfs->f_fsname = "$FSNAME";
+
+        return ESUCC;
 }
 
 //==============================================================================
@@ -486,51 +530,6 @@ API_FS_CHOWN($FSNAME, void *fs_handle, const char *path, uid_t owner, gid_t grou
         int err = ESUCC;
 
         return err;
-}
-
-//==============================================================================
-/**
- * @brief Return file/dir status.
- *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *path                   file path
- * @param[out]          *stat                   file status
- *
- * @return One of errno value (errno.h).
- */
-//==============================================================================
-API_FS_STAT($FSNAME, void *fs_handle, const char *path, struct stat *stat)
-{
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief Return file system status.
- *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[out]          *statfs                 file system status
- *
- * @return One of errno value (errno.h).
- */
-//==============================================================================
-API_FS_STATFS($FSNAME, void *fs_handle, struct statfs *statfs)
-{
-        ${FSNAME}_t *hdl = fs_handle;
-
-        statfs->f_bsize  = 0;
-        statfs->f_blocks = 0;
-        statfs->f_bfree  = 0;
-        statfs->f_ffree  = 0;
-        statfs->f_files  = 0;
-        statfs->f_type   = SYS_FS_TYPE__SOLID;
-        statfs->f_fsname = "$FSNAME";
-
-        return ESUCC;
 }
 
 //==============================================================================

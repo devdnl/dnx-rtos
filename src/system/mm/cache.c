@@ -559,6 +559,77 @@ bool _cache_is_sync_needed(void)
 
 //==============================================================================
 /**
+ * @brief  Function drop cache of selected device (sync on dirty pages).
+ *         Function try to synchronize and drop cache of selected device file.
+ *         If selected file is a regular file then operation is not continued
+ *         because regular files are not cached directly. When file is a device
+ *         file then cache is synchronized with storage and dropped from memory.
+ *
+ * @param  file         file to synchronize.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int sys_cache_drop(FILE *file)
+{
+        int err = ESUCC;
+
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+        struct stat stat;
+        err = _vfs_fstat(file, &stat);
+        if (!err) {
+                if (stat.st_type != FILE_TYPE_DRV) {
+                        return ESUCC;
+                }
+        } else {
+                return err;
+        }
+
+        err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
+        if (!err) {
+                cache_t *cache = cman.list_head;
+
+                while (!err && cache) {
+                        cache_t *next = cache->next;
+
+                        if (cache->dev == stat.st_dev) {
+
+                                if (cache->dirty) {
+
+                                        fpos_t fpos  = cast(fpos_t, cache->pos) * cache->size;
+                                        size_t wrcnt = 0;
+                                        struct vfs_fattr fattr = {false, false};
+
+                                        err = _driver_write(cache->dev,
+                                                            cast(const u8_t*, &cache_buf(cache)),
+                                                            cache->size, &fpos, &wrcnt, fattr);
+                                        if (err) {
+                                                printk("CACHE: sync error %d [%d:%d:%d]", err,
+                                                       _dev_t__extract_modno(cache->dev),
+                                                       _dev_t__extract_major(cache->dev),
+                                                       _dev_t__extract_minor(cache->dev));
+                                        } else {
+                                                cache->dirty = false;
+                                        }
+                                }
+
+                                if (!err) {
+                                        cache_free(cache);
+                                }
+                        }
+
+                        cache = next;
+                }
+
+                _mutex_unlock(cman.list_mtx);
+        }
+#endif
+
+        return err;
+}
+
+//==============================================================================
+/**
  * @brief Function write block to selected file. If cache exist then block is
  *        write to the cache. If cache does not exist then new one is created.
  *        Only files that are linked with drivers are cached, other files are

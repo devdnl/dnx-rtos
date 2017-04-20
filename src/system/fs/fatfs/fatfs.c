@@ -124,7 +124,8 @@ API_FS_RELEASE(fatfs, void *fs_handle)
 
         if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
                 err = faterr_2_errno(libfat_umount(&hdl->fatfs));
-                if (err == ESUCC) {
+                if (!err) {
+                        sys_cache_drop(hdl->fsfile);
                         sys_fclose(hdl->fsfile);
                         sys_free(fs_handle);
                 }

@@ -133,6 +133,18 @@ __ENABLE_EXT2FS__=_NO_
 __ENABLE_EEFS__=_NO_
 #*/
 
+#/*--
+# this:AddWidget("Checkbox", "Enable ext4fs")
+# this:SetToolTip("EXT4 file system")
+# this:AddExtraWidget("Hyperlink", "EXT4FS_CONFIGURE", "Configure")
+# this:SetEvent("clicked", "EXT4FS_CONFIGURE", function() this:LoadFile("filesystems/ext4fs_flags.h") end)
+#--*/
+#include "../filesystems/ext4fs_flags.h"
+#define __ENABLE_EXT4FS__ _NO_
+#/*
+__ENABLE_EXT4FS__=_NO_
+#*/
+
 #endif /* _FILE_SYSTEMS_FLAGS_H_ */
 #/*=============================================================================
 #  End of file

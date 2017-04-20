@@ -1,13 +1,14 @@
 dnx RTOS 2.0.0 Cheetah
 ======================
 New Features, Improvements:
+- File system cache subsystem
 - Added processes
 - Simplified system structure
 - Improved system stability
 - Implemented seperated system and process stacks
 - Improved network layer
 - Added new drivers
-- Added new file systems
+- Added new file systems (EEFS, EXT2,3,4)
 - Any program can used as boot daemon
 - Decreased RAM usage by static variables
 - Moved additional programs to seperated repository: https://github.com/devdnl/dnx-rtos-app

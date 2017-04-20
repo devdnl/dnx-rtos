@@ -4993,6 +4993,21 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
 
 //==============================================================================
 /**
+ * @brief  Function drop cache of selected device (sync on dirty pages).
+ *         Function try to synchronize and drop cache of selected device file.
+ *         If selected file is a regular file then operation is not continued
+ *         because regular files are not cached directly. When file is a device
+ *         file then cache is synchronized with storage and dropped from memory.
+ *
+ * @param  file         file to synchronize.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int sys_cache_drop(FILE *file);
+
+//==============================================================================
+/**
  * @brief Function write block to selected file. If cache exist then block is
  *        write to the cache. If cache does not exist then new one is created.
  *        Only files that are linked with drivers are cached, other files are

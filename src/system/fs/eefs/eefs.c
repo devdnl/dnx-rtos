@@ -365,6 +365,7 @@ API_FS_RELEASE(eefs, void *fs_handle)
         if (!err) {
                 if ((hdl->open_files == NULL) && (hdl->open_dirs == NULL)) {
 
+                        sys_cache_drop(hdl->srcdev);
                         sys_fclose(hdl->srcdev);
 
                         mutex_t *mtx = hdl->lock_mtx;
