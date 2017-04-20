@@ -146,17 +146,17 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
 
                                 u32_t       size;
                                 const char *unit;
-                                if (dirent->size >= (u64_t)(10*GiB)) {
-                                        size = CONVERT_TO_GiB(dirent->size);
+                                if (st.st_size >= (u64_t)(10*GiB)) {
+                                        size = CONVERT_TO_GiB(st.st_size);
                                         unit = "GiB";
-                                } else if (dirent->size >= 10*MiB) {
-                                        size = CONVERT_TO_MiB(dirent->size);
+                                } else if (st.st_size >= 10*MiB) {
+                                        size = CONVERT_TO_MiB(st.st_size);
                                         unit = "MiB";
-                                } else if (dirent->size >= 10*KiB) {
-                                        size = CONVERT_TO_KiB(dirent->size);
+                                } else if (st.st_size >= 10*KiB) {
+                                        size = CONVERT_TO_KiB(st.st_size);
                                         unit = "KiB";
                                 } else {
-                                        size = dirent->size;
+                                        size = st.st_size;
                                         unit = "B";
                                 }
 
