@@ -35,18 +35,18 @@
  * @brief Journal handle functions
  */
 
-#include "ext4_config.h"
-#include "ext4_types.h"
-#include "ext4_misc.h"
-#include "ext4_errno.h"
-#include "ext4_debug.h"
+#include <ext4_config.h>
+#include <ext4_types.h>
+#include <ext4_misc.h>
+#include <ext4_errno.h>
+#include <ext4_debug.h>
 
-#include "ext4_fs.h"
-#include "ext4_super.h"
-#include "ext4_journal.h"
-#include "ext4_blockdev.h"
-#include "ext4_crc32.h"
-#include "ext4_journal.h"
+#include <ext4_fs.h>
+#include <ext4_super.h>
+#include <ext4_journal.h>
+#include <ext4_blockdev.h>
+#include <ext4_crc32.h>
+#include <ext4_journal.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -458,24 +458,25 @@ int jbd_get_fs(struct ext4_fs *fs,
 	rc = ext4_fs_get_inode_ref(fs,
 				   journal_ino,
 				   &jbd_fs->inode_ref);
-	if (rc != EOK) {
-		memset(jbd_fs, 0, sizeof(struct jbd_fs));
+	if (rc != EOK)
 		return rc;
-	}
+
 	rc = jbd_sb_read(jbd_fs, &jbd_fs->sb);
-	if (rc != EOK) {
-		memset(jbd_fs, 0, sizeof(struct jbd_fs));
-		ext4_fs_put_inode_ref(&jbd_fs->inode_ref);
-		return rc;
-	}
+	if (rc != EOK)
+		goto Error;
+
 	if (!jbd_verify_sb(&jbd_fs->sb)) {
-		memset(jbd_fs, 0, sizeof(struct jbd_fs));
-		ext4_fs_put_inode_ref(&jbd_fs->inode_ref);
 		rc = EIO;
+		goto Error;
 	}
 
 	if (rc == EOK)
 		jbd_fs->bdev = fs->bdev;
+
+	return rc;
+Error:
+	ext4_fs_put_inode_ref(&jbd_fs->inode_ref);
+	memset(jbd_fs, 0, sizeof(struct jbd_fs));
 
 	return rc;
 }

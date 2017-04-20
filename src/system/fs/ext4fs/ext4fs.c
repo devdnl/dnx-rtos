@@ -431,9 +431,11 @@ API_FS_STAT(ext4fs, void *fs_handle, const char *path, struct stat *stat)
         err = ext4_mode_get(hdl->mp, path, &mode);
         if (err) goto finish;
 
+        u64_t     size = 0;
         ext4_file file;
         memset(&file, 0, sizeof(ext4_file));
         if (ext4_fopen(hdl->mp, &file, path, O_RDONLY) == ESUCC) {
+                size = ext4_fsize(&file);
                 ext4_fclose(&file);
         }
 
@@ -444,7 +446,7 @@ API_FS_STAT(ext4fs, void *fs_handle, const char *path, struct stat *stat)
                 stat->st_uid   = uid;
                 stat->st_gid   = gid;
                 stat->st_mode  = mode & ~EXT4_INODE_MODE_TYPE_MASK;
-                stat->st_size  = ext4_fsize(&file);
+                stat->st_size  = size;
                 stat->st_type  = ext4ftype2vfs(mode);
         }
 
