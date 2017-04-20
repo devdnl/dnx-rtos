@@ -104,22 +104,6 @@ __ENABLE_FATFS__=_NO_
 #*/
 
 #/*--
-# this:AddWidget("Checkbox", "Enable ext2fs")
-# this:SetToolTip("The ext2fs is standard Linux file system. This file system\n"..
-#                 "requires more RAM and stack than fatfs, but provides better\n"..
-#                 "performance because of caching system. Higher values of cache\n"..
-#                 "size makes file system faster. Cache size is a number of blocks\n"..
-#                 "that will be load to memory.")
-# this:AddExtraWidget("Hyperlink", "EXT2FS_CONFIGURE", "Configure")
-# this:SetEvent("clicked", "EXT2FS_CONFIGURE", function() this:LoadFile("filesystems/ext2fs_flags.h") end)
-#--*/
-#include "../filesystems/ext2fs_flags.h"
-#define __ENABLE_EXT2FS__ _NO_
-#/*
-__ENABLE_EXT2FS__=_NO_
-#*/
-
-#/*--
 # this:AddWidget("Checkbox", "Enable eefs")
 # this:SetToolTip("The eefs is small file system that support very small EEPROM memories.\n"..
 #                 "Typical size of EEPROM memory connected to I2C bus is 1-64 KiB thus\n"..
@@ -135,7 +119,7 @@ __ENABLE_EEFS__=_NO_
 
 #/*--
 # this:AddWidget("Checkbox", "Enable ext4fs")
-# this:SetToolTip("EXT4 file system")
+# this:SetToolTip("EXT2,3,4 file systems.")
 # this:AddExtraWidget("Hyperlink", "EXT4FS_CONFIGURE", "Configure")
 # this:SetEvent("clicked", "EXT4FS_CONFIGURE", function() this:LoadFile("filesystems/ext4fs_flags.h") end)
 #--*/
