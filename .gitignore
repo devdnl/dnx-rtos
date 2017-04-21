@@ -1,7 +1,6 @@
 build/
-src/lib/Makefile
-src/programs/Makefile
-src/programs/program_registration.c
+src/application/Makefile
+src/application/program_registration.c
 *.o
 *.lst
 *.d

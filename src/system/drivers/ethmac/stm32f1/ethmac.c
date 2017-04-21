@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -60,7 +62,7 @@ struct ethmac {
 ==============================================================================*/
 static bool   is_Ethernet_started       ();
 static void   send_packet               (size_t size);
-static size_t wait_for_packet           (struct ethmac *hdl, uint timeout);
+static size_t wait_for_packet           (struct ethmac *hdl, uint32_t timeout);
 static void   give_Rx_buffer_to_DMA     ();
 static bool   is_buffer_owned_by_DMA    (ETH_DMADESCTypeDef *DMA_descriptor);
 static void   make_Rx_buffer_available  ();
@@ -152,7 +154,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                  */
                 ETH_InitTypeDef ETH_InitStructure;
                 ETH_StructInit(&ETH_InitStructure);
-                ETH_InitStructure.ETH_AutoNegotiation             = ETH_AutoNegotiation_Enable;
+                ETH_InitStructure.ETH_AutoNegotiation             = ETHMAC_PHY_AUTONEGOTIATION;
                 ETH_InitStructure.ETH_LoopbackMode                = ETH_LoopbackMode_Disable;
                 ETH_InitStructure.ETH_RetryTransmission           = ETH_RetryTransmission_Disable;
                 ETH_InitStructure.ETH_AutomaticPadCRCStrip        = ETH_AutomaticPadCRCStrip_Disable;

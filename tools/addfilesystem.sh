@@ -22,28 +22,29 @@ else
 #-------------------------------------------------------------------------------
 cat << EOF > $FSNAME.c
 /*==============================================================================
-File     $FSNAME.c
+File    $FSNAME.c
 
-Author   $AUTHOR
+Author  $AUTHOR
 
-Brief    $BRIEF
+Brief   $BRIEF
 
-         Copyright (C) $(date "+%Y") $AUTHOR <$EMAIL>
+        Copyright (C) $(date "+%Y") $AUTHOR <$EMAIL>
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+        This program is free software; you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        NOTE: The modification  to the GPL is  included to allow you to
+              distribute a combined work that includes dnx RTOS without
+              being obliged to provide the source  code for proprietary
+              components outside of the dnx RTOS.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+        The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+        but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
+        MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+        GNU General Public License for more details.
 
+        Full license text is available on the following file: doc/license.txt.
 
 ==============================================================================*/
 
@@ -184,7 +185,6 @@ API_FS_CLOSE($FSNAME, void *fs_handle, void *fhdl, bool force)
 API_FS_WRITE($FSNAME,
              void            *fs_handle,
              void            *fhdl,
-             fd_t             fd,
              const u8_t      *src,
              size_t           count,
              fpos_t          *fpos,
@@ -287,6 +287,51 @@ API_FS_FSTAT($FSNAME, void *fs_handle, void *fhdl, struct stat *stat)
         int err = ESUCC;
 
         return err;
+}
+
+//==============================================================================
+/**
+ * @brief Return file/dir status.
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *path                   file path
+ * @param[out]          *stat                   file status
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
+API_FS_STAT($FSNAME, void *fs_handle, const char *path, struct stat *stat)
+{
+        ${FSNAME}_t *hdl = fs_handle;
+
+        int err = ESUCC;
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Return file system status.
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[out]          *statfs                 file system status
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
+API_FS_STATFS($FSNAME, void *fs_handle, struct statfs *statfs)
+{
+        ${FSNAME}_t *hdl = fs_handle;
+
+        statfs->f_bsize  = 0;
+        statfs->f_blocks = 0;
+        statfs->f_bfree  = 0;
+        statfs->f_ffree  = 0;
+        statfs->f_files  = 0;
+        statfs->f_type   = SYS_FS_TYPE__SOLID;
+        statfs->f_fsname = "$FSNAME";
+
+        return ESUCC;
 }
 
 //==============================================================================
@@ -485,51 +530,6 @@ API_FS_CHOWN($FSNAME, void *fs_handle, const char *path, uid_t owner, gid_t grou
         int err = ESUCC;
 
         return err;
-}
-
-//==============================================================================
-/**
- * @brief Return file/dir status.
- *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *path                   file path
- * @param[out]          *stat                   file status
- *
- * @return One of errno value (errno.h).
- */
-//==============================================================================
-API_FS_STAT($FSNAME, void *fs_handle, const char *path, struct stat *stat)
-{
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief Return file system status.
- *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[out]          *statfs                 file system status
- *
- * @return One of errno value (errno.h).
- */
-//==============================================================================
-API_FS_STATFS($FSNAME, void *fs_handle, struct statfs *statfs)
-{
-        ${FSNAME}_t *hdl = fs_handle;
-
-        statfs->f_bsize  = 0;
-        statfs->f_blocks = 0;
-        statfs->f_bfree  = 0;
-        statfs->f_ffree  = 0;
-        statfs->f_files  = 0;
-        statfs->f_type   = SYS_FS_TYPE__SOLID;
-        statfs->f_fsname = "$FSNAME";
-
-        return ESUCC;
 }
 
 //==============================================================================

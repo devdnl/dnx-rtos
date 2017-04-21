@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -66,7 +68,7 @@ driver_release("UART", 1, 0);
 \subsection drv-uart-ddesc-cfg Driver configuration
 The default driver values should be configured in project configuration (Configtool).
 Runtime configuration should be always done at system startup or later in
-application. In this case the ioctl() function should be used.
+application. In this case the ioctl() function should be used and UART_config_t object.
 
 \subsection drv-uart-ddesc-write Data write
 Writing data to device is the same as writing data to regular file.
@@ -98,14 +100,14 @@ extern "C" {
 ==============================================================================*/
 /**
  *  @brief  Set UART configuration.
- *  @param  [WR] struct @ref UART_config * UART peripheral configuration
+ *  @param  [WR] struct @ref UART_config_t * UART peripheral configuration
  *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_UART__SET_CONFIGURATION           _IOW(UART, 0x00, struct UART_config*)
 
 /**
  *  @brief  Gets UART configuration.
- *  @param  [RD] struct @ref UART_config * UART peripheral configuration
+ *  @param  [RD] struct @ref UART_config_t * UART peripheral configuration
  *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_UART__GET_CONFIGURATION           _IOR(UART, 0x01, struct UART_config*)
@@ -148,7 +150,7 @@ enum UART_LIN_break {
 /**
  * Type represent UART configuration.
  */
-struct UART_config {
+typedef struct UART_config {
         enum UART_parity    parity;             /*!< Parity configuration.*/
         enum UART_stop_bit  stop_bits;          /*!< Stop bits configuration.*/
         enum UART_LIN_break LIN_break_length;   /*!< LIN break length.*/
@@ -158,7 +160,7 @@ struct UART_config {
         bool                hardware_flow_ctrl; /*!< Hardware flow control enable (RTS, CTS).*/
         bool                single_wire_mode;   /*!< Single wire mode enable.*/
         u32_t               baud;               /*!< Baudrate.*/
-};
+} UART_config_t;
 
 /*==============================================================================
   Exported objects

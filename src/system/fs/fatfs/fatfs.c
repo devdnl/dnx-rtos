@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -122,7 +124,8 @@ API_FS_RELEASE(fatfs, void *fs_handle)
 
         if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
                 err = faterr_2_errno(libfat_umount(&hdl->fatfs));
-                if (err == ESUCC) {
+                if (!err) {
+                        sys_cache_drop(hdl->fsfile);
                         sys_fclose(hdl->fsfile);
                         sys_free(fs_handle);
                 }
@@ -657,7 +660,8 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
                 stat->st_mtime = time_fat2unix((file_info.fdate << 16) | file_info.ftime);
                 stat->st_size  = file_info.fsize;
                 stat->st_uid   = 0;
-                stat->st_type  = FILE_TYPE_REGULAR;
+                stat->st_type  = file_info.fattrib & LIBFAT_AM_DIR ?
+                                 FILE_TYPE_DIR : FILE_TYPE_REGULAR;
         }
 
         return err;

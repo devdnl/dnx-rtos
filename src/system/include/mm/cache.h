@@ -5,21 +5,23 @@ Author   Daniel Zorychta
 
 Brief    Cache management.
 
-         Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -67,7 +69,7 @@ enum cache_mode {
          * re-read data frequently as data is stored in cache and results in
          * low read latency.
          */
-        CACHE_WRITE_THROUGH,//!< CACHE_WRITE_THROUGH
+        CACHE_WRITE_THROUGH,
 
         /**
          * Write-back cache is where write I/O is directed to cache and
@@ -81,7 +83,7 @@ enum cache_mode {
          * Write-back cache is the best performing solution for mixed workloads
          * as both read and write I/O have similar response time levels.
          */
-        CACHE_WRITE_BACK,   //!< CACHE_WRITE_BACK
+        CACHE_WRITE_BACK
 };
 
 /*==============================================================================
@@ -91,8 +93,9 @@ enum cache_mode {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int  sys_cache_write(FILE*, u32_t, size_t, const u8_t*, enum cache_mode);
-extern int  sys_cache_read(FILE*, u32_t, size_t, u8_t*);
+extern int  sys_cache_drop(FILE*);
+extern int  sys_cache_write(FILE*, u32_t, size_t, size_t, const u8_t*, enum cache_mode);
+extern int  sys_cache_read(FILE*, u32_t, size_t, size_t, u8_t*);
 extern int  _cache_init(void);
 extern void _cache_sync(void);
 extern void _cache_drop(void);

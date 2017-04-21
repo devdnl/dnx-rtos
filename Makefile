@@ -104,8 +104,9 @@ OBJ_DIR_NAME    = obj
 DEP_FILE_NAME   = $(PROJECT).d
 
 # folder localizations
-APP_PRG_LOC     = src/programs
-APP_LIB_LOC     = src/lib
+APP_LOC         = src/application
+APP_PRG_LOC     = $(APP_LOC)/programs
+APP_LIB_LOC     = $(APP_LOC)/libs
 SYS_LOC         = src/system
 
 SYS_DRV_LOC     = $(SYS_LOC)/drivers
@@ -142,14 +143,14 @@ OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 CONFIGTOOL = ./tools/configtool.sh
 CODECHECK  = cppcheck
-ADDPROGS   = ./$(APP_PRG_LOC)/addprogs.sh
-ADDLIBS    = ./$(APP_LIB_LOC)/addlibs.sh
+ADDAPPS    = ./$(APP_LOC)/addapps.sh
 ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
 ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
 FLASH_CPU  = ./tools/flash.sh
 RESET_CPU  = ./tools/reset.sh
 GIT_HOOKS  = ./tools/apply_git_hooks.sh
 DOXYGEN    = ./tools/doxygen.sh
+RELEASEPKG = ./tools/releasepkg.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -176,8 +177,7 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
 # list of sources to compile
--include $(APP_PRG_LOC)/Makefile   # file is created in the add_programs target
--include $(APP_LIB_LOC)/Makefile   # file is created in the add_programs target
+-include $(APP_LOC)/Makefile   # file is created in the addapps script
 include $(SYS_LOC)/Makefile
 
 # defines objects localizations
@@ -296,17 +296,14 @@ status :
 ####################################################################################################
 .PHONY : generate
 generate :
-	@$(ECHO) "Adding user's programs to the project..."
-	@$(ADDPROGS) ./$(APP_PRG_LOC)
-
-	@$(ECHO) "Adding user's libraries to the project..."
-	@$(ADDLIBS) ./$(APP_LIB_LOC)
+	@$(ECHO) "Adding user's programs and libraries to the project..."
+	@$(SHELL) $(ADDAPPS) ./$(APP_LOC)
 
 	@$(ECHO) "Adding file systems to the project..."
-	@$(ADDFS) ./$(SYS_FS_LOC)
+	@$(SHELL) $(ADDFS) ./$(SYS_FS_LOC)
 
 	@$(ECHO) "Adding drivers to the project..."
-	@$(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
+	@$(SHELL) $(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
 
 ####################################################################################################
 # Copy git hooks to git repository
@@ -409,11 +406,8 @@ reset:
 # target used to create Release archive
 ####################################################################################################
 .PHONY : release
-release: cleanall
-	git clean -xfd
-	tar --exclude=.git -zcvf release.tar.gz .
-	zip release.zip . -r -9 --exclude /.git*
-	$(ECHO) "Done"
+release: clean
+	@$(SHELL) $(RELEASEPKG)
 
 ####################################################################################################
 # target used to Doxygen documentation

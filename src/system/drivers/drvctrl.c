@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -529,6 +531,26 @@ int _driver_stat(dev_t id, struct vfs_dev_stat *stat)
 
 //==============================================================================
 /**
+ * @brief  Function return instance of selected module.
+ *
+ * @param  module_name          module name
+ * @param  major                module major number
+ * @param  minor                module minor number
+ * @param  mem                  memory instance
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+int _module_get_instance(const char *module_name, u8_t major, u8_t minor, void **mem)
+{
+        dev_t dev = _dev_t__create(_module_get_ID(module_name), major, minor);
+
+        u16_t  modno = 0;
+        return driver__get_module_no_and_mem(dev, &modno, mem);
+}
+
+//==============================================================================
+/**
  * @brief Function return module name
  *
  * @param module_number         the module number in the table
@@ -567,7 +589,7 @@ size_t _module_get_count(void)
  * @return module number, -1 on error
  */
 //==============================================================================
-int _module_get_ID(const char *module_name)
+i32_t _module_get_ID(const char *module_name)
 {
         if (module_name) {
                 for (size_t module = 0; module < _drvreg_number_of_modules; module++) {

@@ -9,17 +9,19 @@ Brief    EEPROM File System. File system for small memories 1-64KiB EEPROM.
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -363,6 +365,7 @@ API_FS_RELEASE(eefs, void *fs_handle)
         if (!err) {
                 if ((hdl->open_files == NULL) && (hdl->open_dirs == NULL)) {
 
+                        sys_cache_drop(hdl->srcdev);
                         sys_fclose(hdl->srcdev);
 
                         mutex_t *mtx = hdl->lock_mtx;
@@ -1375,7 +1378,7 @@ API_FS_SYNC(eefs, void *fs_handle)
 //==============================================================================
 static int block_read(EEFS_t *hdl, block_buf_t *blk)
 {
-        return sys_cache_read(hdl->srcdev, blk->num, sizeof(block_t),
+        return sys_cache_read(hdl->srcdev, blk->num, sizeof(block_t), 1,
                               cast(u8_t*, &blk->buf));
 }
 
@@ -1395,7 +1398,7 @@ static int block_write(EEFS_t *hdl, const block_buf_t *blk)
                return EROFS;
 
         } else {
-                return sys_cache_write(hdl->srcdev, blk->num, sizeof(block_t),
+                return sys_cache_write(hdl->srcdev, blk->num, sizeof(block_t), 1,
                                        cast(u8_t*, &blk->buf),
                                        hdl->flag & FLAG_SYNC ? CACHE_WRITE_THROUGH
                                                              : CACHE_WRITE_BACK);

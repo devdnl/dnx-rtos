@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -107,9 +109,10 @@ extern int         _driver_read                   (dev_t, u8_t*, size_t, fpos_t*
 extern int         _driver_ioctl                  (dev_t, int, void*);
 extern int         _driver_flush                  (dev_t);
 extern int         _driver_stat                   (dev_t, struct vfs_dev_stat*);
+extern int         _module_get_instance           (const char*, u8_t, u8_t, void**);
 extern const char *_module_get_name               (size_t);
 extern size_t      _module_get_count              (void);
-extern int         _module_get_ID                 (const char*);
+extern i32_t       _module_get_ID                 (const char*);
 extern ssize_t     _module_get_number_of_instances(size_t);
 extern int         _module_get_driver_info        (size_t, const char**, int*, int*);
 extern int         _device_lock                   (dev_lock_t*);

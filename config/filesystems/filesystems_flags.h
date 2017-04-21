@@ -10,17 +10,19 @@
 #
 #          This program is free software; you can redistribute it and/or modify
 #          it under the terms of the GNU General Public License as published by
-#          the  Free Software  Foundation;  either version 2 of the License, or
-#          any later version.
+#          the Free Software Foundation and modified by the dnx RTOS exception.
 #
-#          This  program  is  distributed  in the hope that  it will be useful,
-#          but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+#          NOTE: The modification  to the GPL is  included to allow you to
+#                distribute a combined work that includes dnx RTOS without
+#                being obliged to provide the source  code for proprietary
+#                components outside of the dnx RTOS.
+#
+#          The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+#          but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
 #          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
 #          GNU General Public License for more details.
 #
-#          You  should  have received a copy  of the GNU General Public License
-#          along  with  this  program;  if not,  write  to  the  Free  Software
-#          Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#          Full license text is available on the following file: doc/license.txt.
 #
 #
 #=============================================================================*/
@@ -102,22 +104,6 @@ __ENABLE_FATFS__=_NO_
 #*/
 
 #/*--
-# this:AddWidget("Checkbox", "Enable ext2fs")
-# this:SetToolTip("The ext2fs is standard Linux file system. This file system\n"..
-#                 "requires more RAM and stack than fatfs, but provides better\n"..
-#                 "performance because of caching system. Higher values of cache\n"..
-#                 "size makes file system faster. Cache size is a number of blocks\n"..
-#                 "that will be load to memory.")
-# this:AddExtraWidget("Hyperlink", "EXT2FS_CONFIGURE", "Configure")
-# this:SetEvent("clicked", "EXT2FS_CONFIGURE", function() this:LoadFile("filesystems/ext2fs_flags.h") end)
-#--*/
-#include "../filesystems/ext2fs_flags.h"
-#define __ENABLE_EXT2FS__ _NO_
-#/*
-__ENABLE_EXT2FS__=_NO_
-#*/
-
-#/*--
 # this:AddWidget("Checkbox", "Enable eefs")
 # this:SetToolTip("The eefs is small file system that support very small EEPROM memories.\n"..
 #                 "Typical size of EEPROM memory connected to I2C bus is 1-64 KiB thus\n"..
@@ -129,6 +115,18 @@ __ENABLE_EXT2FS__=_NO_
 #define __ENABLE_EEFS__ _NO_
 #/*
 __ENABLE_EEFS__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Checkbox", "Enable ext4fs")
+# this:SetToolTip("EXT2,3,4 file systems.")
+# this:AddExtraWidget("Hyperlink", "EXT4FS_CONFIGURE", "Configure")
+# this:SetEvent("clicked", "EXT4FS_CONFIGURE", function() this:LoadFile("filesystems/ext4fs_flags.h") end)
+#--*/
+#include "../filesystems/ext4fs_flags.h"
+#define __ENABLE_EXT4FS__ _NO_
+#/*
+__ENABLE_EXT4FS__=_NO_
 #*/
 
 #endif /* _FILE_SYSTEMS_FLAGS_H_ */

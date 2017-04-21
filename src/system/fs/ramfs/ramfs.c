@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -612,13 +614,13 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
                                         sys_mutex_unlock(hdl->resource_mtx);
 
                                         stat->st_dev = cast(dev_t, target->data);
-                                        
+
                                         struct vfs_dev_stat dev_stat;
                                         err = sys_driver_stat(cast(dev_t, target->data),
                                                                   &dev_stat);
                                         if (err == ESUCC) {
                                                 stat->st_size = dev_stat.st_size;
-                                                
+
                                         } else if (err == ENODEV) {
                                                 stat->st_size = 0;
                                                 err = ESUCC;
@@ -673,13 +675,13 @@ API_FS_FSTAT(ramfs, void *fs_handle, void *extra, struct stat *stat)
                                 sys_mutex_unlock(hdl->resource_mtx);
 
                                 stat->st_dev = cast(dev_t, opened_file->child->data);
-                                
+
                                 struct vfs_dev_stat dev_stat;
                                 err = sys_driver_stat(cast(dev_t, opened_file->child->data),
                                                           &dev_stat);
                                 if (err == ESUCC) {
                                         stat->st_size = dev_stat.st_size;
-                                        
+
                                 } else if (err == ENODEV) {
                                         stat->st_size = 0;
                                         err = ESUCC;

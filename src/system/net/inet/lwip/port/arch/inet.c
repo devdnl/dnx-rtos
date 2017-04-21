@@ -5,21 +5,23 @@ Author   Daniel Zorychta
 
 Brief    Network management.
 
-	 Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -369,14 +371,20 @@ static int IF_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const i
 //==============================================================================
 static int DHCP_start_client()
 {
-        int status = ENONET;
+        int err = ENONET;
 
         if (inet) {
-                status = EADDRINUSE;
+                if (netif_is_up(&inet->netif)) {
+                        err = EADDRINUSE;
+                        goto finish;
+                }
 
-                if (!netif_is_up(&inet->netif)
-                   && is_init_done()
-                   && sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC ) {
+                if (not is_init_done()) {
+                        err = EAGAIN;
+                        goto finish;
+                }
+
+                if (sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC) {
 
                         clear_rx_tx_counters();
                         netif_set_down(&inet->netif);
@@ -393,7 +401,7 @@ static int DHCP_start_client()
 
                                         if (inet->netif.dhcp->state == DHCP_BOUND) {
                                                 inet->configured = true;
-                                                status = ESUCC;
+                                                err = ESUCC;
                                                 break;
                                         } else {
                                                 sys_msleep(100);
@@ -405,7 +413,8 @@ static int DHCP_start_client()
                 }
         }
 
-        return status;
+        finish:
+        return err;
 }
 
 //==============================================================================

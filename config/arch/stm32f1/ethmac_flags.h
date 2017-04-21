@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -120,6 +122,15 @@ this:AddWidget("Spinbox", 100, 2000, "Reset delay [ms]")
 this:AddWidget("Spinbox", 100, 2000, "Setup delay [ms]")
 --*/
 #define __ETHMAC_PHY_CONFIG_DELAY__ 500
+
+/*--
+this:AddWidget("Combobox", "Auto negotiation")
+this:AddItem("Disable", "ETH_AutoNegotiation_Disable")
+this:AddItem("Enable", "ETH_AutoNegotiation_Enable")
+this:SetToolTip("If auto negotiation is enabled then link should be connected to PHY. "..
+                "If link is not connected then module does not initialize.")
+--*/
+#define __ETHMAC_PHY_AUTONEGOTIATION__ ETH_AutoNegotiation_Disable
 
 #endif /* _ETHMAC_FLAGS_H_ */
 /*==============================================================================

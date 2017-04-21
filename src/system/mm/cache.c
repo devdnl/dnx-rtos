@@ -5,21 +5,23 @@ Author   Daniel Zorychta
 
 Brief    Cache management.
 
-	 Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -176,13 +178,12 @@ static int cache_free(cache_t *cache)
  *
  * @param  dev          device
  * @param  blkpos       block position
- * @param  blksz        block size
  * @param  cache        cache result
  *
  * @return One of errno value.
  */
 //==============================================================================
-static int cache_find(dev_t dev, u32_t blkpos, size_t blksz, cache_t **cache)
+static int cache_find(dev_t dev, u32_t blkpos, cache_t **cache)
 {
         int err = ENOENT;
 
@@ -190,9 +191,7 @@ static int cache_find(dev_t dev, u32_t blkpos, size_t blksz, cache_t **cache)
         while (c) {
                 cache_t *next = c->next;
 
-                if (  c->dev  == dev
-                   && c->size == blksz
-                   && c->pos  == blkpos) {
+                if ((c->dev == dev) && (c->pos == blkpos)) {
 
                         *cache = c;
                         err    = ESUCC;
@@ -241,6 +240,138 @@ static void get_cache_stats(i32_t *tmin, size_t *tmincnt, size_t *dirty, size_t 
                 *count += 1;
                 cache   = cache->next;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Function write block to selected device. If cache exist then block is
+ *        write to the cache. If cache does not exist then new one is created.
+ *        When CACHE_WRITE_THROUGH is used then data is write both to the cache
+ *        and device.
+ *
+ * @param  dev          block device
+ * @param  blkpos       block position
+ * @param  blksz        block size
+ * @param  blkcnt       block count
+ * @param  buf          buffer to write from (blocks)
+ * @param  mode         write mode
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int _cache_write(dev_t dev, u32_t blkpos, size_t blksz, size_t blkcnt, const u8_t *buf, enum cache_mode mode)
+{
+        int err = ESUCC;
+
+        if (mode == CACHE_WRITE_THROUGH) {
+                fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
+                size_t wrcnt = 0;
+                size_t wrsz  = blksz * blkcnt;
+                struct vfs_fattr fattr = {false, false};
+
+                err = _driver_write(dev, buf, wrsz, &fpos, &wrcnt, fattr);
+
+                if (!err && (wrcnt != wrsz) ) {
+                        err = EIO;
+                }
+        }
+
+        while (!err && blkcnt--) {
+                cache_t *cache = NULL;
+
+                err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
+                if (!err) {
+
+                        if (cache_find(dev, blkpos, &cache) != ESUCC) {
+
+                                if (cache_alloc(dev, blkpos, blksz, &cache) != ESUCC) {
+                                        cache = NULL;
+                                }
+                        }
+
+                        if (cache) {
+                                memcpy(&cache_buf(cache), buf, blksz);
+                                cache->dirty = true;
+                                cache->temp++;
+                        }
+
+                        _mutex_unlock(cman.list_mtx);
+                }
+
+                if (!err && !cache && mode != CACHE_WRITE_THROUGH) {
+                        fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
+                        size_t wrcnt = 0;
+                        struct vfs_fattr fattr = {false, false};
+
+                        err = _driver_write(dev, buf, blksz, &fpos, &wrcnt, fattr);
+
+                        if (!err && wrcnt != blksz) {
+                                err = EIO;
+                        }
+                }
+
+                blkpos++;
+                buf += blksz;
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Function read block from selected device. If cache exist then cache
+ *        data is used. If cache does not exist then file is read and new cache
+ *        is created.
+ *
+ * @param  dev          block dev
+ * @param  blkpos       block position
+ * @param  blksz        block size
+ * @param  blkcnt       block count
+ * @param  buf          buffer to read (blocks)
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int _cache_read(dev_t dev, u32_t blkpos, size_t blksz, size_t blkcnt, u8_t *buf)
+{
+        int err = ESUCC;
+
+        while (!err && blkcnt--) {
+                cache_t *cache = NULL;
+
+                err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
+                if (!err) {
+
+                        if (cache_find(dev, blkpos, &cache) == ESUCC) {
+                                memcpy(buf, &cache_buf(cache), blksz);
+                                cache->temp++;
+
+                        } else {
+                                fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
+                                size_t rdcnt = 0;
+                                struct vfs_fattr fattr = {false, false};
+
+                                err = _driver_read(dev, buf, blksz, &fpos, &rdcnt, fattr);
+
+                                if (!err && rdcnt != blksz) {
+                                        err = EIO;
+                                }
+
+                                if (!err) {
+                                        if (cache_alloc(dev, blkpos, blksz, &cache) == ESUCC) {
+                                                memcpy(&cache_buf(cache), buf, blksz);
+                                        }
+                                }
+                        }
+
+                        _mutex_unlock(cman.list_mtx);
+                }
+
+                blkpos++;
+                buf += blksz;
+        }
+
+        return err;
 }
 #endif
 
@@ -428,6 +559,77 @@ bool _cache_is_sync_needed(void)
 
 //==============================================================================
 /**
+ * @brief  Function drop cache of selected device (sync on dirty pages).
+ *         Function try to synchronize and drop cache of selected device file.
+ *         If selected file is a regular file then operation is not continued
+ *         because regular files are not cached directly. When file is a device
+ *         file then cache is synchronized with storage and dropped from memory.
+ *
+ * @param  file         file to synchronize.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int sys_cache_drop(FILE *file)
+{
+        int err = ESUCC;
+
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+        struct stat stat;
+        err = _vfs_fstat(file, &stat);
+        if (!err) {
+                if (stat.st_type != FILE_TYPE_DRV) {
+                        return ESUCC;
+                }
+        } else {
+                return err;
+        }
+
+        err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
+        if (!err) {
+                cache_t *cache = cman.list_head;
+
+                while (!err && cache) {
+                        cache_t *next = cache->next;
+
+                        if (cache->dev == stat.st_dev) {
+
+                                if (cache->dirty) {
+
+                                        fpos_t fpos  = cast(fpos_t, cache->pos) * cache->size;
+                                        size_t wrcnt = 0;
+                                        struct vfs_fattr fattr = {false, false};
+
+                                        err = _driver_write(cache->dev,
+                                                            cast(const u8_t*, &cache_buf(cache)),
+                                                            cache->size, &fpos, &wrcnt, fattr);
+                                        if (err) {
+                                                printk("CACHE: sync error %d [%d:%d:%d]", err,
+                                                       _dev_t__extract_modno(cache->dev),
+                                                       _dev_t__extract_major(cache->dev),
+                                                       _dev_t__extract_minor(cache->dev));
+                                        } else {
+                                                cache->dirty = false;
+                                        }
+                                }
+
+                                if (!err) {
+                                        cache_free(cache);
+                                }
+                        }
+
+                        cache = next;
+                }
+
+                _mutex_unlock(cman.list_mtx);
+        }
+#endif
+
+        return err;
+}
+
+//==============================================================================
+/**
  * @brief Function write block to selected file. If cache exist then block is
  *        write to the cache. If cache does not exist then new one is created.
  *        Only files that are linked with drivers are cached, other files are
@@ -436,19 +638,16 @@ bool _cache_is_sync_needed(void)
  * @param  file         file to write
  * @param  blkpos       block position
  * @param  blksz        block size
- * @param  buf          buffer to write from (block)
+ * @param  blkcnt       block count
+ * @param  buf          buffer to write from (blocks)
  * @param  mode         write mode
  *
  * @return One of errno value.
  */
 //==============================================================================
-int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, enum cache_mode mode)
+int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, const u8_t *buf, enum cache_mode mode)
 {
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ == 0
-        UNUSED_ARG1(mode);
-#endif
-
-        if (!file || !blksz || !buf) {
+        if (!file || !blksz || !blkcnt || !buf) {
                 return EINVAL;
         }
 
@@ -456,53 +655,30 @@ int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, enu
         int err = _vfs_fstat(file, &stat);
         if (!err) {
                 if (stat.st_type == FILE_TYPE_DRV) {
-
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-                        err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
-                        if (!err) {
-                                cache_t *cache = NULL;
+                        err = _cache_write(stat.st_dev, blkpos, blksz, blkcnt, buf, mode);
+#else
+                        UNUSED_ARG1(mode);
 
-                                if (cache_find(stat.st_dev, blkpos, blksz, &cache) != ESUCC) {
+                        fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
+                        size_t wrcnt = 0;
+                        size_t wrsz  = blksz * blkcnt;
+                        struct vfs_fattr fattr = {false, false};
 
-                                        if (cache_alloc(stat.st_dev,
-                                                        blkpos, blksz,
-                                                        &cache) != ESUCC) {
-                                                cache = NULL;
-                                        }
-                                }
+                        err = _driver_write(stat.st_dev, buf, wrsz, &fpos, &wrcnt, fattr);
 
-                                if (cache) {
-                                        memcpy(&cache_buf(cache), buf, blksz);
-                                        cache->dirty = true;
-                                        cache->temp++;
-                                }
-
-                                if (!cache || mode == CACHE_WRITE_THROUGH) {
-#endif
-                                        fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
-                                        size_t wrcnt = 0;
-                                        struct vfs_fattr fattr = {false, false};
-
-                                        err = _driver_write(stat.st_dev, buf,
-                                                            blksz, &fpos, &wrcnt,
-                                                            fattr);
-
-                                        if (!err && wrcnt != blksz) {
-                                                err = EIO;
-                                        }
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-                                }
-
-                                _mutex_unlock(cman.list_mtx);
+                        if (!err && (wrcnt != wrsz) ) {
+                                err = EIO;
                         }
 #endif
                 } else {
                         err = _vfs_fseek(file, cast(i64_t, blkpos) * blksz, VFS_SEEK_SET);
                         if (!err) {
                                 size_t wrcnt = 0;
-                                err = _vfs_fwrite(buf, blksz, &wrcnt, file);
+                                size_t wrsz  = blksz * blkcnt;
+                                err = _vfs_fwrite(buf, wrsz, &wrcnt, file);
 
-                                if (!err && wrcnt != blksz) {
+                                if (!err && (wrcnt != wrsz) ) {
                                         err = EIO;
                                 }
                         }
@@ -522,14 +698,15 @@ int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, enu
  * @param  file         file to read
  * @param  blkpos       block position
  * @param  blksz        block size
- * @param  buf          buffer to read (block)
+ * @param  blkcnt       block count
+ * @param  buf          buffer to read (blocks)
  *
  * @return One of errno value.
  */
 //==============================================================================
-int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf)
+int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, u8_t *buf)
 {
-        if (!file || !blksz || !buf) {
+        if (!file || !blksz || !blkcnt || !buf) {
                 return EINVAL;
         }
 
@@ -538,45 +715,27 @@ int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf)
         if (!err) {
                 if (stat.st_type == FILE_TYPE_DRV) {
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-                        err = _mutex_lock(cman.list_mtx, MTX_TIMEOUT);
-                        if (!err) {
-                                cache_t *cache = NULL;
+                        err = _cache_read(stat.st_dev, blkpos, blksz, blkcnt, buf);
+#else
+                        fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
+                        size_t rdcnt = 0;
+                        size_t rdsz  = blksz * blkcnt;
+                        struct vfs_fattr fattr = {false, false};
 
-                                if (cache_find(stat.st_dev, blkpos, blksz, &cache) == ESUCC) {
-                                        memcpy(buf, &cache_buf(cache), blksz);
-                                        cache->temp++;
+                        err = _driver_read(stat.st_dev, buf, rdsz, &fpos, &rdcnt, fattr);
 
-                                } else {
-#endif
-                                        fpos_t fpos  = cast(fpos_t, blkpos) * blksz;
-                                        size_t rdcnt = 0;
-                                        struct vfs_fattr fattr = {false, false};
-
-                                        err = _driver_read(stat.st_dev, buf,
-                                                           blksz, &fpos,
-                                                           &rdcnt, fattr);
-
-                                        if (!err && rdcnt != blksz) {
-                                                err = EIO;
-                                        }
-
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-                                        if (!err) {
-                                                if (cache_alloc(stat.st_dev, blkpos, blksz, &cache) == ESUCC) {
-                                                        memcpy(&cache_buf(cache), buf, blksz);
-                                                }
-                                        }
-                                }
-                                _mutex_unlock(cman.list_mtx);
+                        if (!err && (rdcnt != rdsz)) {
+                                err = EIO;
                         }
 #endif
                 } else {
                         err = _vfs_fseek(file, cast(i64_t, blkpos) * blksz, VFS_SEEK_SET);
                         if (!err) {
                                 size_t rdcnt = 0;
-                                err = _vfs_fread(buf, blksz, &rdcnt, file);
+                                size_t rdsz  = blksz * blkcnt;
+                                err = _vfs_fread(buf, rdsz, &rdcnt, file);
 
-                                if (!err && rdcnt != blksz) {
+                                if (!err && (rdcnt != rdsz)) {
                                         err = EIO;
                                 }
                         }

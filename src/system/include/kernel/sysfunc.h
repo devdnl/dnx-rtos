@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -265,6 +267,25 @@ static inline int sys_zalloc(size_t size, void **mem);
  */
 //==============================================================================
 static inline int sys_free(void **mem);
+
+//==============================================================================
+/**
+ * @brief  Get module allocated memory for specified major and minor number.
+ *
+ * Function get memory instance of module that call this function. The major
+ * and minor numbers specify the instance.
+ *
+ * @note Function can be used only by driver code.
+ *
+ * @param major         major number
+ * @param minor         minor number
+ * @param mem           driver instance memory
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+int sys_module_get_instance(u8_t major, u8_t minor, void **mem);
+
 #endif
 
 //==============================================================================
@@ -4972,36 +4993,55 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
 
 //==============================================================================
 /**
- * @brief Function write block by using cache subsystem.
+ * @brief  Function drop cache of selected device (sync on dirty pages).
+ *         Function try to synchronize and drop cache of selected device file.
+ *         If selected file is a regular file then operation is not continued
+ *         because regular files are not cached directly. When file is a device
+ *         file then cache is synchronized with storage and dropped from memory.
  *
- * @note Function can be used only by file system or driver code.
+ * @param  file         file to synchronize.
  *
- * @param  file         file
- * @param  blkpos       block position (in block unit)
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int sys_cache_drop(FILE *file);
+
+//==============================================================================
+/**
+ * @brief Function write block to selected file. If cache exist then block is
+ *        write to the cache. If cache does not exist then new one is created.
+ *        Only files that are linked with drivers are cached, other files are
+ *        written directly.
+ *
+ * @param  file         file to write
+ * @param  blkpos       block position
  * @param  blksz        block size
- * @param  buf          source buffer (of block size)
+ * @param  blkcnt       block count
+ * @param  buf          buffer to write from (blocks)
  * @param  mode         write mode
  *
  * @return One of errno value.
  */
 //==============================================================================
-extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, const u8_t *buf, enum cache_mode mode);
+extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, const u8_t *buf, enum cache_mode mode);
 
 //==============================================================================
 /**
- * @brief Function read block by using cache subsystem.
+ * @brief Function read block from selected file. If cache exist then cache
+ *        data is used. If cache does not exist then file is read and new cache
+ *        is created. Function does not cache blocks from files that are not
+ *        directly connected do drivers.
  *
- * @note Function can be used only by file system or driver code.
- *
- * @param  file         file
- * @param  blkpos       block position (in block unit)
+ * @param  file         file to read
+ * @param  blkpos       block position
  * @param  blksz        block size
- * @param  buf          destination buffer (of block size)
+ * @param  blkcnt       block count
+ * @param  buf          buffer to read (blocks)
  *
  * @return One of errno value.
  */
 //==============================================================================
-extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, u8_t *buf);
+extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, u8_t *buf);
 
 #ifdef __cplusplus
 }
