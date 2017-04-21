@@ -496,6 +496,10 @@
 				["key"]="__ETHMAC_PHY_CONFIG_DELAY__";
 				["value"]="500";
 			};
+			[11.000000]={
+				["key"]="__ETHMAC_PHY_AUTONEGOTIATION__";
+				["value"]="ETH_AutoNegotiation_Disable";
+			};
 		};
 		["arch/stm32f1/gpio_flags.h"]={
 			[1.000000]={
