@@ -122,9 +122,15 @@ static void initialize_basic_drivers(void)
         /*
          * 2. Next part of drivers that can be initialized at this early stage.
          */
-        driver_init("AFIO", 0, 0, NULL);                // CPU-specific configuration (STM32F1xx)
+        driver_init("AFM", 0, 0, NULL);                 // alternative function configuration
         driver_init("CLK", 0, 0, "/dev/clk");           // system clock configuration
+
+        /*
+         * NOTE: make sure that UART1 is used as terminal output!
+         *       Some BSPs use UART2 as default terminal output.
+         */
         driver_init("UART", 0, 0, "/dev/ttyS0");        // UART1 will be used as TTY I/O
+
         driver_init("TTY", 0, 0, "/dev/tty0");          // first user terminal
 
         /*
@@ -238,12 +244,11 @@ static void mount_SD_card(void)
 
         /*
          * 3. Initialization of SD card driver - SDSPI. This module handle SD card
-         *    by using SPI interface. The /dev/spi_sda file is used as data source.
-         *    This can be reconfigured by using Configtool in the SDSPI module
-         *    configuration.
+         *    by using SPI interface.
          */
         driver_init("SDSPI", 0, 0, "/dev/sda");
         driver_init("SDSPI", 0, 1, "/dev/sda1");
+        driver_init("SDSPI", 0, 2, "/dev/sda2");
 
         /*
          * 4. SD Card initialization and MBR read. After this operation SD card
@@ -252,7 +257,7 @@ static void mount_SD_card(void)
         f = fopen("/dev/sda", "r+");
         if (f) {
                 static const SDSPI_config_t cfg = {
-                         .filepath = "/dev/spi_sda",
+                         .filepath = "/dev/spi_sda",    // SPI interface connected to SD card
                          .timeout  = 1000
                 };
 
@@ -265,7 +270,7 @@ static void mount_SD_card(void)
         /*
          * 5. Partition mount. The partition contains e.g. FAT32 file system.
          *    The file system will be mounted in the /mnt folder created in the
-         *    previous stage.
+         *    previous stage. The EXT2,3,4 can be used alternatively (ext4fs).
          */
         mount("fatfs", "/dev/sda1", "/mnt", "");
 }

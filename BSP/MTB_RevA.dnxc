@@ -75,28 +75,6 @@
 				["value"]="_NO_";
 			};
 		};
-		["arch/noarch/sdspi_flags.h"]={
-			[1.000000]={
-				["key"]="__SDSPI_NUMBER_OF_CARDS__";
-				["value"]="1";
-			};
-			[2.000000]={
-				["key"]="__SDSPI_CARD0_TIMEOUT__";
-				["value"]="500";
-			};
-			[3.000000]={
-				["key"]="__SDSPI_CARD0_FILE__";
-				["value"]="\"/dev/spi_sda\"";
-			};
-			[4.000000]={
-				["key"]="__SDSPI_CARD1_TIMEOUT__";
-				["value"]="500";
-			};
-			[5.000000]={
-				["key"]="__SDSPI_CARD1_FILE__";
-				["value"]="\"/dev/spi_sdb\"";
-			};
-		};
 		["arch/noarch/tty_flags.h"]={
 			[1.000000]={
 				["key"]="__TTY_TERM_COLS__";
@@ -1876,7 +1854,7 @@
 			};
 			[3.000000]={
 				["key"]="__I2C1_SCL_FREQ__";
-				["value"]="10000";
+				["value"]="100000";
 			};
 			[4.000000]={
 				["key"]="__I2C2_USE_DMA__";
@@ -2171,10 +2149,22 @@
 				["value"]="_NO_";
 			};
 		};
-		["filesystems/ext2fs_flags.h"]={
+		["filesystems/ext4fs_flags.h"]={
 			[1.000000]={
-				["key"]="__EXT2FS_CACHE_SIZE__";
+				["key"]="__EXT4FS_CFG_FEATURE__";
 				["value"]="4";
+			};
+			[2.000000]={
+				["key"]="__EXT4FS_CFG_JOURNALING__";
+				["value"]="1";
+			};
+			[3.000000]={
+				["key"]="__EXT4FS_CFG_DIR_INDEXING__";
+				["value"]="1";
+			};
+			[4.000000]={
+				["key"]="__EXT4FS_CFG_BLK_CACHE_SIZE__";
+				["value"]="1";
 			};
 		};
 		["filesystems/fatfs_flags.h"]={
@@ -2205,11 +2195,11 @@
 				["value"]="_YES_";
 			};
 			[5.000000]={
-				["key"]="__ENABLE_EXT2FS__";
+				["key"]="__ENABLE_EEFS__";
 				["value"]="_NO_";
 			};
 			[6.000000]={
-				["key"]="__ENABLE_EEFS__";
+				["key"]="__ENABLE_EXT4FS__";
 				["value"]="_NO_";
 			};
 		};
@@ -3005,54 +2995,58 @@
 				["value"]="_YES_";
 			};
 			[29.000000]={
+				["key"]="__OS_SYSTEM_SHEBANG_ENABLE__";
+				["value"]="_NO_";
+			};
+			[30.000000]={
 				["key"]="__OS_STREAM_BUFFER_LENGTH__";
 				["value"]="100";
 			};
-			[30.000000]={
+			[31.000000]={
 				["key"]="__OS_PIPE_LENGTH__";
 				["value"]="8";
 			};
-			[31.000000]={
+			[32.000000]={
 				["key"]="__HEAP_BLOCK_SIZE__";
 				["value"]="4";
 			};
-			[32.000000]={
+			[33.000000]={
 				["key"]="__OS_SYSTEM_MSG_COLS__";
 				["value"]="64";
 			};
-			[33.000000]={
+			[34.000000]={
 				["key"]="__OS_SYSTEM_MSG_ROWS__";
 				["value"]="24";
 			};
-			[34.000000]={
+			[35.000000]={
 				["key"]="__OS_SYSTEM_CACHE_MIN_FREE__";
 				["value"]="1024";
 			};
-			[35.000000]={
+			[36.000000]={
 				["key"]="__OS_SYSTEM_CACHE_SYNC_PERIOD__";
 				["value"]="30";
 			};
-			[36.000000]={
+			[37.000000]={
 				["key"]="__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__";
 				["value"]="0";
 			};
-			[37.000000]={
+			[38.000000]={
 				["key"]="__OS_ERRNO_STRING_LEN__";
 				["value"]="3";
 			};
-			[38.000000]={
+			[39.000000]={
 				["key"]="__OS_HOSTNAME__";
 				["value"]="\"Sterownik\"";
 			};
-			[39.000000]={
+			[40.000000]={
 				["key"]="__OS_RTC_FILE_PATH__";
 				["value"]="\"/dev/rtc\"";
 			};
-			[40.000000]={
+			[41.000000]={
 				["key"]="__OS_INIT_PROG__";
 				["value"]="\"initd\"";
 			};
-			[41.000000]={
+			[42.000000]={
 				["key"]="__OS_SYSTEM_PROG__";
 				["value"]="\"dsh -e\"";
 			};
