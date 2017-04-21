@@ -140,13 +140,13 @@ Reading data from device is the same as reading data from regular file.
 
 \subsection drv-sdspi-ddesc-mbr Card initialization
 There is special ioctl() request (@ref IOCTL_SDSPI__INITIALIZE_CARD or
-@ref IOCTL_STORAGE__INITIALIZE) that initialize selected SD card. Initialization
+IOCTL_STORAGE__INITIALIZE) that initialize selected SD card. Initialization
 can be done on any partition (e.g. sda1) giving the same effect as initialization
 on master card file (e.g. sda, sdb). If initialization is already done on
 selected partition then is not necessary to initialize remained partitions.
 
 After initialization the MBR table should be read by driver. In this case the
-ioctl() request (@ref IOCTL_SDSPI__READ_MBR or @ref IOCTL_STORAGE__READ_MBR)
+ioctl() request (@ref IOCTL_SDSPI__READ_MBR or IOCTL_STORAGE__READ_MBR)
 should be used. This procedure load all MBR entries and set required offsets in
 partition files (/dev/sd<i>x</i><b>y</b>).
 
@@ -217,7 +217,7 @@ extern "C" {
 ==============================================================================*/
 /**
  *  @brief  SDSPI configuration.
- *  @param  [WR] @ref SDSPI_cfg_t *  SDSPI configuration object.
+ *  @param  [WR] @ref SDSPI_config_t *  SDSPI configuration object.
  *  @return On success 0 is returned.
  *          On error -1 is returned and @ref errno is set.
  */

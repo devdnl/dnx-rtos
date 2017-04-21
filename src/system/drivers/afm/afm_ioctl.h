@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    afio_ioctl.h
+@file    afm_ioctl.h
 
 @author  Daniel Zorychta
 
-@brief   This driver support AFIO ioctl request codes.
+@brief   This driver support AFM ioctl request codes.
 
 @note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -27,54 +27,52 @@
 *//*==========================================================================*/
 
 /**
-@defgroup drv-afio AFIO Driver
+@defgroup drv-afm AFM Driver
 
-\section drv-afio-desc Description
-Driver configures AFIO peripheral according to configuration. Driver is
-responsible for setting Alternative Function Input Output functionality;
-configures GPIO and other microcontroller-specific options (e.g. IRQ pin
-selection, JTAG configuration, etc).
+\section drv-afm-desc Description
+Driver configure alternative functions of microcontroller e.g. JTAG pins disable,
+external interrupt pin assignment, GPIO remap, etc.
 
-\section drv-afio-sup-arch Supported architectures
+\section drv-afm-sup-arch Supported architectures
 \li stm32f1
 
-\section drv-afio-ddesc Details
-\subsection drv-afio-ddesc-num Meaning of major and minor numbers
+\section drv-afm-ddesc Details
+\subsection drv-afm-ddesc-num Meaning of major and minor numbers
 There is no special meaning of major-minor numbers. The peripheral is only
 accessible by using major-minor set to 0.
 
-\subsection drv-afio-ddesc-init Driver initialization
+\subsection drv-afm-ddesc-init Driver initialization
 To initialize driver the following code can be used:
 
 @code
-driver_init("AFIO", 0, 0, "/dev/AFIO");
+driver_init("AFM", 0, 0, "/dev/AFM");
 @endcode
 or:
 @code
-driver_init("AFIO", 0, 0, NULL);  // without creating device node
+driver_init("AFM", 0, 0, NULL);  // without creating device node
 @endcode
 
-\subsection drv-afio-ddesc-release Driver release
+\subsection drv-afm-ddesc-release Driver release
 To release driver the following code can be used:
 @code
-driver_release("AFIO", 0, 0);
+driver_release("AFM", 0, 0);
 @endcode
 
-\subsection drv-afio-ddesc-cfg Driver configuration
+\subsection drv-afm-ddesc-cfg Driver configuration
 Entire driver configuration is realized by using configuration files in
 the <tt>./config</tt> directory or by using Configtool.
 
-\subsection drv-afio-ddesc-write Data write
+\subsection drv-afm-ddesc-write Data write
 There is no possibility to write any data to the device.
 
-\subsection drv-afio-ddesc-read Data read
+\subsection drv-afm-ddesc-read Data read
 There is no possibility to read any data from the device.
 
 @{
 */
 
-#ifndef _AFIO_IOCTL_H_
-#define _AFIO_IOCTL_H_
+#ifndef _AFM_IOCTL_H_
+#define _AFM_IOCTL_H_
 
 /*==============================================================================
   Include files
@@ -109,7 +107,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _AFIO_IOCTL_H_ */
+#endif /* _AFM_IOCTL_H_ */
 /**@}*/
 /*==============================================================================
   End of file

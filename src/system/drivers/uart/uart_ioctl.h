@@ -100,14 +100,14 @@ extern "C" {
 ==============================================================================*/
 /**
  *  @brief  Set UART configuration.
- *  @param  [WR] struct @ref UART_config * UART peripheral configuration
+ *  @param  [WR] struct @ref UART_config_t * UART peripheral configuration
  *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_UART__SET_CONFIGURATION           _IOW(UART, 0x00, struct UART_config*)
 
 /**
  *  @brief  Gets UART configuration.
- *  @param  [RD] struct @ref UART_config * UART peripheral configuration
+ *  @param  [RD] struct @ref UART_config_t * UART peripheral configuration
  *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_UART__GET_CONFIGURATION           _IOR(UART, 0x01, struct UART_config*)
