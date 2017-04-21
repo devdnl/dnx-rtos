@@ -95,6 +95,11 @@ extern "C" {
  */
 #define ETHMAC_PHY_DUPLEX_STATUS_BM     __ETHMAC_PHY_DUPLEX_STATUS_BM__
 
+/*
+ * PHY link auto negotiation
+ */
+#define ETHMAC_PHY_AUTONEGOTIATION      __ETHMAC_PHY_AUTONEGOTIATION__
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/

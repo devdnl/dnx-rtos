@@ -123,6 +123,15 @@ this:AddWidget("Spinbox", 100, 2000, "Setup delay [ms]")
 --*/
 #define __ETHMAC_PHY_CONFIG_DELAY__ 500
 
+/*--
+this:AddWidget("Combobox", "Auto negotiation")
+this:AddItem("Disable", "ETH_AutoNegotiation_Disable")
+this:AddItem("Enable", "ETH_AutoNegotiation_Enable")
+this:SetToolTip("If auto negotiation is enabled then link should be connected to PHY. "..
+                "If link is not connected then module does not initialize.")
+--*/
+#define __ETHMAC_PHY_AUTONEGOTIATION__ ETH_AutoNegotiation_Disable
+
 #endif /* _ETHMAC_FLAGS_H_ */
 /*==============================================================================
   End of file
