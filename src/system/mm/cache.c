@@ -623,8 +623,9 @@ int sys_cache_drop(FILE *file)
 
                 _mutex_unlock(cman.list_mtx);
         }
+#else
+        UNUSED_ARG1(file);
 #endif
-
         return err;
 }
 
