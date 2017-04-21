@@ -131,7 +131,7 @@ static bool is_summer_time(void)
  * @brief Program main function
  */
 //==============================================================================
-int_main(timechg, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
+int_main(timechg, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         if (argc != 2) {
                 printf("Usage: %s <interval-sec>\n", argv[0]);

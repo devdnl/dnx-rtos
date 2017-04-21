@@ -154,7 +154,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                  */
                 ETH_InitTypeDef ETH_InitStructure;
                 ETH_StructInit(&ETH_InitStructure);
-                ETH_InitStructure.ETH_AutoNegotiation             = ETH_AutoNegotiation_Enable;
+                ETH_InitStructure.ETH_AutoNegotiation             = ETH_AutoNegotiation_Disable;
                 ETH_InitStructure.ETH_LoopbackMode                = ETH_LoopbackMode_Disable;
                 ETH_InitStructure.ETH_RetryTransmission           = ETH_RetryTransmission_Disable;
                 ETH_InitStructure.ETH_AutomaticPadCRCStrip        = ETH_AutomaticPadCRCStrip_Disable;
