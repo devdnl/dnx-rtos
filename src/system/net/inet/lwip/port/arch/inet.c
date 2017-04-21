@@ -371,14 +371,20 @@ static int IF_up(const ip_addr_t *ip_address, const ip_addr_t *net_mask, const i
 //==============================================================================
 static int DHCP_start_client()
 {
-        int status = ENONET;
+        int err = ENONET;
 
         if (inet) {
-                status = EADDRINUSE;
+                if (netif_is_up(&inet->netif)) {
+                        err = EADDRINUSE;
+                        goto finish;
+                }
 
-                if (!netif_is_up(&inet->netif)
-                   && is_init_done()
-                   && sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC ) {
+                if (not is_init_done()) {
+                        err = EAGAIN;
+                        goto finish;
+                }
+
+                if (sys_mutex_lock(inet->access, ACCESS_TIMEOUT) == ESUCC) {
 
                         clear_rx_tx_counters();
                         netif_set_down(&inet->netif);
@@ -395,7 +401,7 @@ static int DHCP_start_client()
 
                                         if (inet->netif.dhcp->state == DHCP_BOUND) {
                                                 inet->configured = true;
-                                                status = ESUCC;
+                                                err = ESUCC;
                                                 break;
                                         } else {
                                                 sys_msleep(100);
@@ -407,7 +413,8 @@ static int DHCP_start_client()
                 }
         }
 
-        return status;
+        finish:
+        return err;
 }
 
 //==============================================================================
