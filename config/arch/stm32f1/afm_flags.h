@@ -98,7 +98,7 @@ this:AddWidget("Combobox", "Remap USART2")
 this:AddItem("No (CTS/PA0, RTS/PA1, TX/PA2, RX/PA3, CK/PA4)", "0")
 this:AddItem("Yes (CTS/PD3, RTS/PD4, TX/PD5, RX/PD6, CK/PD7)", "1")
 --*/
-#define __AFM_REMAP_USART2__ 1
+#define __AFM_REMAP_USART2__ 0
 
 /*--
 this:AddWidget("Combobox", "Remap USART3")

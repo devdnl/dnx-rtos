@@ -128,7 +128,7 @@
 			};
 			[7.000000]={
 				["key"]="__AFM_REMAP_USART2__";
-				["value"]="1";
+				["value"]="0";
 			};
 			[8.000000]={
 				["key"]="__AFM_REMAP_USART3__";
