@@ -7,7 +7,7 @@
 				["value"]="_YES_";
 			};
 			[2.000000]={
-				["key"]="__ENABLE_AFIO__";
+				["key"]="__ENABLE_AFM__";
 				["value"]="_YES_";
 			};
 			[3.000000]={
@@ -123,229 +123,229 @@
 				["value"]="\"/dev/ttyS0\"";
 			};
 		};
-		["arch/stm32f1/afio_flags.h"]={
+		["arch/stm32f1/afm_flags.h"]={
 			[1.000000]={
-				["key"]="__AFIO_EVENT_OUT_ENABLE__";
+				["key"]="__AFM_EVENT_OUT_ENABLE__";
 				["value"]="_NO_";
 			};
 			[2.000000]={
-				["key"]="__AFIO_EVENT_OUT_PORT__";
+				["key"]="__AFM_EVENT_OUT_PORT__";
 				["value"]="0";
 			};
 			[3.000000]={
-				["key"]="__AFIO_EVENT_OUT_PIN__";
+				["key"]="__AFM_EVENT_OUT_PIN__";
 				["value"]="0";
 			};
 			[4.000000]={
-				["key"]="__AFIO_REMAP_SPI1__";
+				["key"]="__AFM_REMAP_SPI1__";
 				["value"]="0";
 			};
 			[5.000000]={
-				["key"]="__AFIO_REMAP_I2C1__";
+				["key"]="__AFM_REMAP_I2C1__";
 				["value"]="0";
 			};
 			[6.000000]={
-				["key"]="__AFIO_REMAP_USART1__";
+				["key"]="__AFM_REMAP_USART1__";
 				["value"]="0";
 			};
 			[7.000000]={
-				["key"]="__AFIO_REMAP_USART2__";
+				["key"]="__AFM_REMAP_USART2__";
 				["value"]="1";
 			};
 			[8.000000]={
-				["key"]="__AFIO_REMAP_USART3__";
+				["key"]="__AFM_REMAP_USART3__";
 				["value"]="0";
 			};
 			[9.000000]={
-				["key"]="__AFIO_REMAP_TIM1__";
+				["key"]="__AFM_REMAP_TIM1__";
 				["value"]="0";
 			};
 			[10.000000]={
-				["key"]="__AFIO_REMAP_TIM2__";
+				["key"]="__AFM_REMAP_TIM2__";
 				["value"]="0";
 			};
 			[11.000000]={
-				["key"]="__AFIO_REMAP_TIM3__";
+				["key"]="__AFM_REMAP_TIM3__";
 				["value"]="0";
 			};
 			[12.000000]={
-				["key"]="__AFIO_REMAP_TIM4__";
+				["key"]="__AFM_REMAP_TIM4__";
 				["value"]="0";
 			};
 			[13.000000]={
-				["key"]="__AFIO_REMAP_TIM5CH4__";
+				["key"]="__AFM_REMAP_TIM5CH4__";
 				["value"]="0";
 			};
 			[14.000000]={
-				["key"]="__AFIO_REMAP_CAN__";
+				["key"]="__AFM_REMAP_CAN__";
 				["value"]="0";
 			};
 			[15.000000]={
-				["key"]="__AFIO_REMAP_PD01__";
+				["key"]="__AFM_REMAP_PD01__";
 				["value"]="0";
 			};
 			[16.000000]={
-				["key"]="__AFIO_REMAP_ADC1_ETRGINJ__";
+				["key"]="__AFM_REMAP_ADC1_ETRGINJ__";
 				["value"]="0";
 			};
 			[17.000000]={
-				["key"]="__AFIO_REMAP_ADC1_ETRGREG__";
+				["key"]="__AFM_REMAP_ADC1_ETRGREG__";
 				["value"]="0";
 			};
 			[18.000000]={
-				["key"]="__AFIO_REMAP_ADC2_ETRGINJ__";
+				["key"]="__AFM_REMAP_ADC2_ETRGINJ__";
 				["value"]="0";
 			};
 			[19.000000]={
-				["key"]="__AFIO_REMAP_ADC2_ETRGREG__";
+				["key"]="__AFM_REMAP_ADC2_ETRGREG__";
 				["value"]="0";
 			};
 			[20.000000]={
-				["key"]="__AFIO_REMAP_SWJ_CFG__";
+				["key"]="__AFM_REMAP_SWJ_CFG__";
 				["value"]="0";
 			};
 			[21.000000]={
-				["key"]="__AFIO_REMAP_ETH__";
+				["key"]="__AFM_REMAP_ETH__";
 				["value"]="1";
 			};
 			[22.000000]={
-				["key"]="__AFIO_REMAP_MII_RMII_SEL__";
+				["key"]="__AFM_REMAP_MII_RMII_SEL__";
 				["value"]="1";
 			};
 			[23.000000]={
-				["key"]="__AFIO_REMAP_PTP_PPS__";
+				["key"]="__AFM_REMAP_PTP_PPS__";
 				["value"]="0";
 			};
 			[24.000000]={
-				["key"]="__AFIO_REMAP_CAN2__";
+				["key"]="__AFM_REMAP_CAN2__";
 				["value"]="0";
 			};
 			[25.000000]={
-				["key"]="__AFIO_REMAP_SPI3__";
+				["key"]="__AFM_REMAP_SPI3__";
 				["value"]="1";
 			};
 			[26.000000]={
-				["key"]="__AFIO_REMAP_TIM2ITR1__";
+				["key"]="__AFM_REMAP_TIM2ITR1__";
 				["value"]="0";
 			};
 			[27.000000]={
-				["key"]="__AFIO_REMAP_TIM15__";
+				["key"]="__AFM_REMAP_TIM15__";
 				["value"]="0";
 			};
 			[28.000000]={
-				["key"]="__AFIO_REMAP_TIM16__";
+				["key"]="__AFM_REMAP_TIM16__";
 				["value"]="0";
 			};
 			[29.000000]={
-				["key"]="__AFIO_REMAP_TIM17__";
+				["key"]="__AFM_REMAP_TIM17__";
 				["value"]="0";
 			};
 			[30.000000]={
-				["key"]="__AFIO_REMAP_CEC__";
+				["key"]="__AFM_REMAP_CEC__";
 				["value"]="0";
 			};
 			[31.000000]={
-				["key"]="__AFIO_REMAP_TIM1_DMA__";
+				["key"]="__AFM_REMAP_TIM1_DMA__";
 				["value"]="0";
 			};
 			[32.000000]={
-				["key"]="__AFIO_REMAP_TIM76_DAC_DMA__";
+				["key"]="__AFM_REMAP_TIM76_DAC_DMA__";
 				["value"]="0";
 			};
 			[33.000000]={
-				["key"]="__AFIO_REMAP_TIM12__";
+				["key"]="__AFM_REMAP_TIM12__";
 				["value"]="0";
 			};
 			[34.000000]={
-				["key"]="__AFIO_REMAP_MISC__";
+				["key"]="__AFM_REMAP_MISC__";
 				["value"]="0";
 			};
 			[35.000000]={
-				["key"]="__AFIO_REMAP_TIM9__";
+				["key"]="__AFM_REMAP_TIM9__";
 				["value"]="0";
 			};
 			[36.000000]={
-				["key"]="__AFIO_REMAP_TIM10__";
+				["key"]="__AFM_REMAP_TIM10__";
 				["value"]="0";
 			};
 			[37.000000]={
-				["key"]="__AFIO_REMAP_TIM11__";
+				["key"]="__AFM_REMAP_TIM11__";
 				["value"]="0";
 			};
 			[38.000000]={
-				["key"]="__AFIO_REMAP_TIM13__";
+				["key"]="__AFM_REMAP_TIM13__";
 				["value"]="0";
 			};
 			[39.000000]={
-				["key"]="__AFIO_REMAP_TIM14__";
+				["key"]="__AFM_REMAP_TIM14__";
 				["value"]="0";
 			};
 			[40.000000]={
-				["key"]="__AFIO_REMAP_FSMC_NADV__";
+				["key"]="__AFM_REMAP_FSMC_NADV__";
 				["value"]="0";
 			};
 			[41.000000]={
-				["key"]="__AFIO_EXTI0_PORT__";
+				["key"]="__AFM_EXTI0_PORT__";
 				["value"]="0";
 			};
 			[42.000000]={
-				["key"]="__AFIO_EXTI1_PORT__";
+				["key"]="__AFM_EXTI1_PORT__";
 				["value"]="0";
 			};
 			[43.000000]={
-				["key"]="__AFIO_EXTI2_PORT__";
+				["key"]="__AFM_EXTI2_PORT__";
 				["value"]="0";
 			};
 			[44.000000]={
-				["key"]="__AFIO_EXTI3_PORT__";
+				["key"]="__AFM_EXTI3_PORT__";
 				["value"]="0";
 			};
 			[45.000000]={
-				["key"]="__AFIO_EXTI4_PORT__";
+				["key"]="__AFM_EXTI4_PORT__";
 				["value"]="0";
 			};
 			[46.000000]={
-				["key"]="__AFIO_EXTI5_PORT__";
+				["key"]="__AFM_EXTI5_PORT__";
 				["value"]="0";
 			};
 			[47.000000]={
-				["key"]="__AFIO_EXTI6_PORT__";
+				["key"]="__AFM_EXTI6_PORT__";
 				["value"]="0";
 			};
 			[48.000000]={
-				["key"]="__AFIO_EXTI7_PORT__";
+				["key"]="__AFM_EXTI7_PORT__";
 				["value"]="0";
 			};
 			[49.000000]={
-				["key"]="__AFIO_EXTI8_PORT__";
+				["key"]="__AFM_EXTI8_PORT__";
 				["value"]="0";
 			};
 			[50.000000]={
-				["key"]="__AFIO_EXTI9_PORT__";
+				["key"]="__AFM_EXTI9_PORT__";
 				["value"]="0";
 			};
 			[51.000000]={
-				["key"]="__AFIO_EXTI10_PORT__";
+				["key"]="__AFM_EXTI10_PORT__";
 				["value"]="0";
 			};
 			[52.000000]={
-				["key"]="__AFIO_EXTI11_PORT__";
+				["key"]="__AFM_EXTI11_PORT__";
 				["value"]="0";
 			};
 			[53.000000]={
-				["key"]="__AFIO_EXTI12_PORT__";
+				["key"]="__AFM_EXTI12_PORT__";
 				["value"]="0";
 			};
 			[54.000000]={
-				["key"]="__AFIO_EXTI13_PORT__";
+				["key"]="__AFM_EXTI13_PORT__";
 				["value"]="0";
 			};
 			[55.000000]={
-				["key"]="__AFIO_EXTI14_PORT__";
+				["key"]="__AFM_EXTI14_PORT__";
 				["value"]="0";
 			};
 			[56.000000]={
-				["key"]="__AFIO_EXTI15_PORT__";
+				["key"]="__AFM_EXTI15_PORT__";
 				["value"]="0";
 			};
 		};
