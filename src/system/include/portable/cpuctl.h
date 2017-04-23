@@ -41,6 +41,8 @@ extern "C" {
 
 #if defined(ARCH_stm32f1)
 #       include "stm32f1/cpuctl.h"
+#elif defined(ARCH_stm32f4)
+#       include "stm32f4/cpuctl.h"
 #endif
 
 /*==============================================================================

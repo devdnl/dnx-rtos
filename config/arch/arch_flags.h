@@ -6,7 +6,7 @@
 # @brief   This file contains list of existing modules
 #          Hybrid file: included both by Make and CC.
 #
-# @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+# @note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 #
 #          This program is free software; you can redistribute it and/or modify
 #          it under the terms of the GNU General Public License as published by
@@ -120,6 +120,171 @@
 #     uC.PERIPH["STM32F107VBxx"] = {GPIO = true, CLK = true, CRC = true, WDG = true, UART = true, SPI = true, AFM = true, IRQ = true, I2C = true, RTC = true, ETHMAC = true}
 #     uC.PERIPH["STM32F107VCxx"] = {GPIO = true, CLK = true, CRC = true, WDG = true, UART = true, SPI = true, AFM = true, IRQ = true, I2C = true, RTC = true, ETHMAC = true}
 # end
+#
+# if uC.ARCH == "stm32f4" then
+#     uC.AddPriorityItems = function(this, no_default)
+#         this:AddItem("Priority 0 (the highest)", "0x0F")
+#         for i = 1, 12 do this:AddItem("Priority "..i, "0x"..i.."F") end
+#         this:AddItem("Priority 13 (the lowest)", "0xDF")
+#         if no_default ~= true then
+#             this:AddItem("Default priority", "__CPU_IRQ_USER_PRIORITY__")
+#         end
+#     end
+#
+#     uC.PERIPH["STM32F401CBxx"] = {}
+#     uC.PERIPH["STM32F401RBxx"] = {}
+#     uC.PERIPH["STM32F401VBxx"] = {}
+#     uC.PERIPH["STM32F401CCxx"] = {}
+#     uC.PERIPH["STM32F401RCxx"] = {}
+#     uC.PERIPH["STM32F401VCxx"] = {}
+#     uC.PERIPH["STM32F401CDxx"] = {}
+#     uC.PERIPH["STM32F401RDxx"] = {}
+#     uC.PERIPH["STM32F401VDxx"] = {}
+#     uC.PERIPH["STM32F401CExx"] = {}
+#     uC.PERIPH["STM32F401RExx"] = {}
+#     uC.PERIPH["STM32F401VExx"] = {}
+#     uC.PERIPH["STM32F405RGxx"] = {}
+#     uC.PERIPH["STM32F405OExx"] = {}
+#     uC.PERIPH["STM32F405OGxx"] = {}
+#     uC.PERIPH["STM32F405VGxx"] = {}
+#     uC.PERIPH["STM32F405ZGxx"] = {}
+#     uC.PERIPH["STM32F407VExx"] = {}
+#     uC.PERIPH["STM32F407VGxx"] = {}
+#     uC.PERIPH["STM32F407ZExx"] = {}
+#     uC.PERIPH["STM32F407ZGxx"] = {}
+#     uC.PERIPH["STM32F407IExx"] = {}
+#     uC.PERIPH["STM32F407IGxx"] = {}
+#     uC.PERIPH["STM32F410T8Yx"] = {}
+#     uC.PERIPH["STM32F410TBYx"] = {}
+#     uC.PERIPH["STM32F410C8Ux"] = {}
+#     uC.PERIPH["STM32F410CBUx"] = {}
+#     uC.PERIPH["STM32F410C8Tx"] = {}
+#     uC.PERIPH["STM32F410CBTx"] = {}
+#     uC.PERIPH["STM32F410R8Tx"] = {}
+#     uC.PERIPH["STM32F410RBTx"] = {}
+#     uC.PERIPH["STM32F410R8Ix"] = {}
+#     uC.PERIPH["STM32F410RBIx"] = {}
+#     uC.PERIPH["STM32F411CCxx"] = {}
+#     uC.PERIPH["STM32F411RCxx"] = {}
+#     uC.PERIPH["STM32F411VCxx"] = {}
+#     uC.PERIPH["STM32F411CExx"] = {}
+#     uC.PERIPH["STM32F411RExx"] = {}
+#     uC.PERIPH["STM32F411VExx"] = {}
+#     uC.PERIPH["STM32F412CExx"] = {}
+#     uC.PERIPH["STM32F412CGxx"] = {}
+#     uC.PERIPH["STM32F412RExx"] = {}
+#     uC.PERIPH["STM32F412RGxx"] = {}
+#     uC.PERIPH["STM32F412VExx"] = {}
+#     uC.PERIPH["STM32F412VGxx"] = {}
+#     uC.PERIPH["STM32F412ZExx"] = {}
+#     uC.PERIPH["STM32F412ZGxx"] = {}
+#     uC.PERIPH["STM32F413CGxx"] = {}
+#     uC.PERIPH["STM32F413RGxx"] = {}
+#     uC.PERIPH["STM32F413MGxx"] = {}
+#     uC.PERIPH["STM32F413VGxx"] = {}
+#     uC.PERIPH["STM32F413ZGxx"] = {}
+#     uC.PERIPH["STM32F413CHxx"] = {}
+#     uC.PERIPH["STM32F413RHxx"] = {}
+#     uC.PERIPH["STM32F413MHxx"] = {}
+#     uC.PERIPH["STM32F413VHxx"] = {}
+#     uC.PERIPH["STM32F413ZHxx"] = {}
+#     uC.PERIPH["STM32F415RGxx"] = {}
+#     uC.PERIPH["STM32F415OGxx"] = {}
+#     uC.PERIPH["STM32F415VGxx"] = {}
+#     uC.PERIPH["STM32F415ZGxx"] = {}
+#     uC.PERIPH["STM32F417VExx"] = {}
+#     uC.PERIPH["STM32F417VGxx"] = {}
+#     uC.PERIPH["STM32F417ZExx"] = {}
+#     uC.PERIPH["STM32F417ZGxx"] = {}
+#     uC.PERIPH["STM32F417IExx"] = {}
+#     uC.PERIPH["STM32F417IGxx"] = {}
+#     uC.PERIPH["STM32F423CHxx"] = {}
+#     uC.PERIPH["STM32F423RHxx"] = {}
+#     uC.PERIPH["STM32F423MHxx"] = {}
+#     uC.PERIPH["STM32F423VHxx"] = {}
+#     uC.PERIPH["STM32F423ZHxx"] = {}
+#     uC.PERIPH["STM32F427VGxx"] = {}
+#     uC.PERIPH["STM32F427VIxx"] = {}
+#     uC.PERIPH["STM32F427ZGxx"] = {}
+#     uC.PERIPH["STM32F427ZIxx"] = {}
+#     uC.PERIPH["STM32F427AGxx"] = {}
+#     uC.PERIPH["STM32F427AIxx"] = {}
+#     uC.PERIPH["STM32F427IGxx"] = {}
+#     uC.PERIPH["STM32F427IIxx"] = {}
+#     uC.PERIPH["STM32F429VExx"] = {}
+#     uC.PERIPH["STM32F429VGxx"] = {}
+#     uC.PERIPH["STM32F429VIxx"] = {}
+#     uC.PERIPH["STM32F429ZExx"] = {}
+#     uC.PERIPH["STM32F429ZGxx"] = {}
+#     uC.PERIPH["STM32F429ZIxx"] = {}
+#     uC.PERIPH["STM32F429AGxx"] = {}
+#     uC.PERIPH["STM32F429AIxx"] = {}
+#     uC.PERIPH["STM32F429IExx"] = {}
+#     uC.PERIPH["STM32F429IGxx"] = {}
+#     uC.PERIPH["STM32F429IIxx"] = {}
+#     uC.PERIPH["STM32F429BExx"] = {}
+#     uC.PERIPH["STM32F429BGxx"] = {}
+#     uC.PERIPH["STM32F429BIxx"] = {}
+#     uC.PERIPH["STM32F429NExx"] = {}
+#     uC.PERIPH["STM32F429NGxx"] = {}
+#     uC.PERIPH["STM32F429NIxx"] = {}
+#     uC.PERIPH["STM32F437VGxx"] = {}
+#     uC.PERIPH["STM32F437VIxx"] = {}
+#     uC.PERIPH["STM32F437ZGxx"] = {}
+#     uC.PERIPH["STM32F437ZIxx"] = {}
+#     uC.PERIPH["STM32F437IGxx"] = {}
+#     uC.PERIPH["STM32F437IIxx"] = {}
+#     uC.PERIPH["STM32F437AIxx"] = {}
+#     uC.PERIPH["STM32F439VGxx"] = {}
+#     uC.PERIPH["STM32F439VIxx"] = {}
+#     uC.PERIPH["STM32F439ZGxx"] = {}
+#     uC.PERIPH["STM32F439ZIxx"] = {}
+#     uC.PERIPH["STM32F439IGxx"] = {}
+#     uC.PERIPH["STM32F439IIxx"] = {}
+#     uC.PERIPH["STM32F439BGxx"] = {}
+#     uC.PERIPH["STM32F439BIxx"] = {}
+#     uC.PERIPH["STM32F439NGxx"] = {}
+#     uC.PERIPH["STM32F439NIxx"] = {}
+#     uC.PERIPH["STM32F439AIxx"] = {}
+#     uC.PERIPH["STM32F446MCxx"] = {}
+#     uC.PERIPH["STM32F446RCxx"] = {}
+#     uC.PERIPH["STM32F446VCxx"] = {}
+#     uC.PERIPH["STM32F446ZCxx"] = {}
+#     uC.PERIPH["STM32F446MExx"] = {}
+#     uC.PERIPH["STM32F446RExx"] = {}
+#     uC.PERIPH["STM32F446VExx"] = {}
+#     uC.PERIPH["STM32F446ZExx"] = {}
+#     uC.PERIPH["STM32F469VExx"] = {}
+#     uC.PERIPH["STM32F469VGxx"] = {}
+#     uC.PERIPH["STM32F469VIxx"] = {}
+#     uC.PERIPH["STM32F469ZExx"] = {}
+#     uC.PERIPH["STM32F469ZGxx"] = {}
+#     uC.PERIPH["STM32F469ZIxx"] = {}
+#     uC.PERIPH["STM32F469AExx"] = {}
+#     uC.PERIPH["STM32F469AGxx"] = {}
+#     uC.PERIPH["STM32F469AIxx"] = {}
+#     uC.PERIPH["STM32F469IExx"] = {}
+#     uC.PERIPH["STM32F469IGxx"] = {}
+#     uC.PERIPH["STM32F469IIxx"] = {}
+#     uC.PERIPH["STM32F469BExx"] = {}
+#     uC.PERIPH["STM32F469BGxx"] = {}
+#     uC.PERIPH["STM32F469BIxx"] = {}
+#     uC.PERIPH["STM32F469NExx"] = {}
+#     uC.PERIPH["STM32F469NGxx"] = {}
+#     uC.PERIPH["STM32F469NIxx"] = {}
+#     uC.PERIPH["STM32F479VGxx"] = {}
+#     uC.PERIPH["STM32F479VIxx"] = {}
+#     uC.PERIPH["STM32F479ZGxx"] = {}
+#     uC.PERIPH["STM32F479ZIxx"] = {}
+#     uC.PERIPH["STM32F479AGxx"] = {}
+#     uC.PERIPH["STM32F479AIxx"] = {}
+#     uC.PERIPH["STM32F479IGxx"] = {}
+#     uC.PERIPH["STM32F479IIxx"] = {}
+#     uC.PERIPH["STM32F479BGxx"] = {}
+#     uC.PERIPH["STM32F479BIxx"] = {}
+#     uC.PERIPH["STM32F479NGxx"] = {}
+#     uC.PERIPH["STM32F479NIxx"] = {}
+# end
 #++*/
 
 #/* include of CPU mandatory file in Makefile
@@ -147,6 +312,10 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32f1/usbd_flags.h"
 #include "stm32f1/irq_flags.h"
 #include "stm32f1/i2c_flags.h"
+#endif
+
+#if (__CPU_ARCH__ == stm32f4)
+#include "stm32f4/cpu_flags.h"
 #endif
 
 #/*--
