@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -29,9 +31,11 @@
 ==============================================================================*/
 #include "config.h"
 #include "kernel/khooks.h"
-#include "core/printx.h"
-#include "core/sysmoni.h"
-#include "core/progman.h"
+#include "kernel/kpanic.h"
+#include "kernel/process.h"
+#include "kernel/printk.h"
+#include "dnx/misc.h"
+#include "lib/unarg.h"
 #include "portable/cpuctl.h"
 
 /*==============================================================================
@@ -49,13 +53,13 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-/** uptime counter */
-u32_t uptime_counter_sec;
-u32_t uptime_divider;
+static u32_t sec_divider;
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+u32_t        _uptime_counter_sec = 0;
+extern u32_t _CPU_total_time;
 
 /*==============================================================================
   Function definitions
@@ -68,9 +72,20 @@ u32_t uptime_divider;
 //==============================================================================
 void vApplicationIdleHook(void)
 {
-#if (CONFIG_RTOS_SLEEP_ON_IDLE > 0)
+        /*
+         * Set priority of idle task to lowest possible.
+         * The _kernel_release_resources() function set idle task with the highest
+         * priority to release finished tasks. This function restore original
+         * idle task priority.
+         */
+        vTaskPrioritySet(xTaskGetIdleTaskHandle(), 0);
+
+        /*
+         * Sleep CPU for single tick to save energy.
+         */
+        #if (__OS_SLEEP_ON_IDLE__ > 0)
         _cpuctl_sleep();
-#endif
+        #endif
 }
 
 //==============================================================================
@@ -78,10 +93,10 @@ void vApplicationIdleHook(void)
  * @brief Stack overflow hook
  */
 //==============================================================================
-void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
+void vApplicationStackOverflowHook(TaskHandle_t taskHdl, char *taskName)
 {
-        (void)taskHdl;
-        _sysm_kernel_panic_report(taskName, _KERNEL_PANIC_DESC_CAUSE_STACKOVF);
+        UNUSED_ARG2(taskHdl, taskName);
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_STACKOVF);
 }
 
 //==============================================================================
@@ -91,32 +106,43 @@ void vApplicationStackOverflowHook(task_t *taskHdl, char *taskName)
 //==============================================================================
 void vApplicationTickHook(void)
 {
-        if (++uptime_divider >= (configTICK_RATE_HZ)) {
-                uptime_divider = 0;
-                uptime_counter_sec++;
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
+        _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();
+#endif
+
+        if (++sec_divider >= configTICK_RATE_HZ) {
+                sec_divider = 0;
+                _uptime_counter_sec++;
+                _calculate_CPU_load();
         }
 }
 
 //==============================================================================
 /**
- * @brief Hook when task is switched in
+ * @brief Memory for idle task.
  */
 //==============================================================================
-void vApplicationSwitchedIn(void)
+void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
+                                   StackType_t **ppxIdleTaskStackBuffer,
+                                   uint32_t *pulIdleTaskStackSize )
 {
-        _copy_task_context_to_standard_variables();
-        _sysm_task_switched_in();
-}
+        /* If the buffers to be provided to the Idle task are declared inside this
+        function then they must be declared static - otherwise they will be allocated on
+        the stack and so not exists after this function exits. */
+        static StaticTask_t xIdleTaskTCB;
+        static StackType_t  uxIdleTaskStack[configMINIMAL_STACK_SIZE + __OS_IRQ_STACK_DEPTH__];
 
-//==============================================================================
-/**
- * @brief Hook when task is switched out
- */
-//==============================================================================
-void vApplicationSwitchedOut(void)
-{
-        _copy_standard_variables_to_task_context();
-        _sysm_task_switched_out();
+        /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
+        state will be stored. */
+        *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+
+        /* Pass out the array that will be used as the Idle task's stack. */
+        *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+
+        /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+        Note that, as the array is necessarily of type StackType_t,
+        configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+        *pulIdleTaskStackSize = ARRAY_SIZE(uxIdleTaskStack);
 }
 
 //==============================================================================
@@ -128,8 +154,24 @@ void vApplicationSwitchedOut(void)
 //==============================================================================
 u32_t _get_uptime_counter(void)
 {
-        return uptime_counter_sec;
+        return _uptime_counter_sec;
 }
+
+#if __OS_ENABLE_SYS_ASSERT__ > 0
+//==============================================================================
+/**
+ * @brief  Function is called when assertion is not meet.
+ *
+ * @param  assert       if true then no action
+ */
+//==============================================================================
+void _assert_hook(bool assert)
+{
+        if (!assert) {
+                _printk("System assert occurred!");
+        }
+}
+#endif
 
 /*==============================================================================
   End of file

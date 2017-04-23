@@ -2,6 +2,8 @@
 HDRLOC_ARCH += drivers/gpio
 
 ifeq ($(__ENABLE_GPIO__), _YES_)
-   CSRC_ARCH   += drivers/gpio/$(TARGET)/gpio.c
-   CXXSRC_ARCH += 
+   ifeq ($(TARGET), stm32f1)
+      CSRC_ARCH   += drivers/gpio/$(TARGET)/gpio.c
+      CXXSRC_ARCH += 
+   endif
 endif

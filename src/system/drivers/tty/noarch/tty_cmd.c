@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -27,7 +29,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "tty.h"
 #include "tty_cfg.h"
 
@@ -44,7 +46,7 @@ struct ttycmd {
         void           *self;
         char            token[VT100_TOKEN_LEN + 1];
         u8_t            token_cnt;
-        uint            timer;
+        u32_t           timer;
 };
 
 /*==============================================================================
@@ -82,19 +84,21 @@ static inline bool is_valid(ttycmd_t *this)
 
 //==============================================================================
 /**
- * @brief Initialize command object
+ * @brief  Initialize command object
  *
- * @return pointer to object if success, NULL on error
+ * @param  ttycmd        pointer to target pointer of created object
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-ttycmd_t *ttycmd_new()
+int ttycmd_create(ttycmd_t **ttycmd)
 {
-        ttycmd_t *ttycmd = calloc(1, sizeof(ttycmd_t));
-        if (ttycmd) {
-                ttycmd->self = ttycmd;
+        int err = sys_zalloc(sizeof(ttycmd_t), cast(void**, ttycmd));
+        if (err == ESUCC) {
+                (*ttycmd)->self = *ttycmd;
         }
 
-        return ttycmd;
+        return err;
 }
 
 //==============================================================================
@@ -104,11 +108,14 @@ ttycmd_t *ttycmd_new()
  * @param this          command analyze object
  */
 //==============================================================================
-void ttycmd_delete(ttycmd_t *this)
+int ttycmd_destroy(ttycmd_t *this)
 {
         if (is_valid(this)) {
                 this->self = NULL;
-                free(this);
+                sys_free(cast(void**, &this));
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
 }
 
@@ -141,7 +148,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                         memset(this->token, 0, VT100_TOKEN_LEN);
                         this->token[0]  = c;
                         this->token_cnt = 1;
-                        this->timer     = _sys_time_get_reference();
+                        this->timer     = sys_time_get_reference();
                         return TTYCMD_BUSY;
 
                 } else if (this->token_cnt) {
@@ -174,7 +181,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                 else if (strcmp(VT100_F12        , this->token) == 0) return TTYCMD_KEY_F12;
                                 else return TTYCMD_BUSY;
                         } else {
-                                if (  _sys_time_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
+                                if (  sys_time_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
                                    || this->token_cnt >= VT100_TOKEN_LEN ) {
 
                                         this->token_cnt = 0;

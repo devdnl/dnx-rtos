@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -37,6 +39,9 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+/* Cortex System Control register address */
+#define SCB_SysCtrl             (*((__IO uint32_t *)0xE000ED10))
+#define SysCtrl_SLEEPDEEP       ((uint32_t)0x00000004)
 
 /*==============================================================================
   Local types, enums definitions
@@ -49,9 +54,6 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
-static const u32_t timer_frequency = 1000000;
-#endif
 
 /*==============================================================================
   Function definitions
@@ -59,7 +61,12 @@ static const u32_t timer_frequency = 1000000;
 
 //==============================================================================
 /**
- * @brief Basic (first) CPU/microcontroller configuration
+ * @brief  Basic (first) CPU/microcontroller configuration. This function is
+ *         called before system start.
+ *
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 void _cpuctl_init(void)
@@ -70,11 +77,15 @@ void _cpuctl_init(void)
 
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
+
+        #if (__OS_MONITOR_CPU_LOAD__ > 0)
+        _cpuctl_init_CPU_load_counter();
+        #endif
 }
 
 //==============================================================================
 /**
- * @brief Restart CPU
+ * @brief  This function restart CPU.
  */
 //==============================================================================
 void _cpuctl_restart_system(void)
@@ -84,58 +95,80 @@ void _cpuctl_restart_system(void)
 
 //==============================================================================
 /**
- * @brief Start counter used in CPU load measurement
+ * @brief  This function restart CPU.
  */
 //==============================================================================
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
+void _cpuctl_shutdown_system(void)
+{
+        // Note: implementation enters to deep sleep mode.
+
+        /* Clear Wake-up flag */
+        PWR->CR |= PWR_CR_CWUF;
+
+        /* Select STANDBY mode */
+        PWR->CR |= PWR_CR_PDDS;
+
+        /* Set SLEEPDEEP bit of Cortex System Control Register */
+        SCB_SysCtrl |= SysCtrl_SLEEPDEEP;
+
+        /* Request Wait For Interrupt */
+        __WFI();
+}
+
+//==============================================================================
+/**
+ * @brief  Start counter used for CPU load measurement. Timer should be set
+ *         to at least 1MHz and should not overflow until 1 second.
+ *
+ * @param  None
+ *
+ * @return None
+ */
+//==============================================================================
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
 void _cpuctl_init_CPU_load_counter(void)
 {
-        /* enable clock */
-        RCC->APB1ENR  |= RCC_APB1ENR_TIM2EN;
-
-        /* reset timer */
-        RCC->APB1RSTR |=  RCC_APB1RSTR_TIM2RST;
-        RCC->APB1RSTR &= ~RCC_APB1RSTR_TIM2RST;
-
-        /* configure timer */
-        RCC_ClocksTypeDef freq;
-        RCC_GetClocksFreq(&freq);
-        if (RCC->CFGR & RCC_CFGR_PPRE1_2)
-                freq.PCLK1_Frequency *= 2;
-
-        TIM2->PSC = (freq.PCLK1_Frequency/timer_frequency) - 1;
-        TIM2->ARR = 0xFFFF;
-        TIM2->CR1 = TIM_CR1_CEN;
 }
 #endif
 
 //==============================================================================
 /**
- * @brief Function called after task go to ready state
+ * @brief  Function return valut that was counted from last call of this function.
+ *         This function must reset timer after read. Function is called from
+ *         IRQs.
+ *
+ * @param  None
+ *
+ * @return Timer value for last read (time delta).
  */
 //==============================================================================
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
-void _cpuctl_reset_CPU_load_counter(void)
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
+u32_t _cpuctl_get_CPU_load_counter_delta(void)
 {
-        TIM2->CNT = 0;
+        static uint32_t last;
+        bool  ovf = SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk;
+        u32_t now = SysTick->VAL;
+
+        u32_t delta;
+        if (ovf) {
+                delta = ((SysTick->LOAD + 1) - now) + last;
+        } else {
+                delta = last - now;
+        }
+
+        last = now;
+
+        return delta;
 }
 #endif
 
 //==============================================================================
 /**
- * @brief Function called when task go out ready state
- */
-//==============================================================================
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
-u32_t _cpuctl_get_CPU_load_counter_value(void)
-{
-        return TIM2->CNT;
-}
-#endif
-
-//==============================================================================
-/**
- * @brief Function sleep CPU (is not a deep sleep, wake up by any IRQ)
+ * @brief  Function sleep CPU weakly. All IRQs must be able to wake up CPU.
+ *
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 void _cpuctl_sleep(void)
@@ -145,16 +178,19 @@ void _cpuctl_sleep(void)
 
 //==============================================================================
 /**
- * @brief Function update all system clock after CPU frequency change
+ * @brief  Function update all system clock after CPU frequency change.
+ *         Function must update all devices which base on main clock oscillator.
+ *         Function is called after clock/frequency change from clock management driver.
  *
- * Function shall update all devices which base on main clock oscillator.
- * Function is called after clock/frequency change from clock management driver.
+ * @param  None
+ *
+ * @return None
  */
 //==============================================================================
 void _cpuctl_update_system_clocks(void)
 {
         /* update CPU load timer frequency */
-#if (CONFIG_MONITOR_CPU_LOAD > 0)
+#if (__OS_MONITOR_CPU_LOAD__ > 0)
         _cpuctl_init_CPU_load_counter();
 #endif
 
@@ -162,7 +198,7 @@ void _cpuctl_update_system_clocks(void)
         _critical_section_begin();
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
-        SysTick_Config((freq.HCLK_Frequency / (u32_t)CONFIG_RTOS_TASK_SCHED_FREQ) - 1);
+        SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
         _critical_section_end();
 }
 

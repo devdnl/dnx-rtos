@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -62,13 +64,6 @@ extern "C" {
 #define _FLOAT                                  0U
 #define _LOW                                    0U
 #define _HIGH                                   1U
-
-/** PIN control macros */
-#define GPIO_SET_PIN(name)                      if ((GPIO_t*)_CONCAT(_GPIO_, name)) {((GPIO_t*)_CONCAT(_GPIO_, name))->BSRR |= _CONCAT(_BM_, name);}
-#define GPIO_CLEAR_PIN(name)                    if ((GPIO_t*)_CONCAT(_GPIO_, name)) {((GPIO_t*)_CONCAT(_GPIO_, name))->BRR  |= _CONCAT(_BM_, name);}
-#define GPIO_TEST_PIN(name)                     (((GPIO_t*)_CONCAT(_GPIO_, name))->IDR & _CONCAT(_BM_, name))
-#define GPIO_PIN_PORT(name)                     ((GPIO_t*)_CONCAT(_GPIO_, name))
-#define GPIO_PIN_MASK(name)                     (_CONCAT(_BM_, name))
 
 /*==============================================================================
   Exported object types

@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -27,10 +29,10 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/module.h"
+#include "drivers/driver.h"
 #include "stm32f1/irq_cfg.h"
-#include "stm32f1/irq_def.h"
 #include "stm32f1/stm32f10x.h"
+#include "../irq_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -41,7 +43,7 @@
   Local types, enums definitions
 ==============================================================================*/
 typedef struct {
-        sem_t *irqsem[NUMBER_OF_IRQs];
+        sem_t *sem[NUMBER_OF_IRQs];
 } IRQ_t;
 
 typedef struct {
@@ -52,20 +54,16 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static enum IRQn EXTI_IRQ_number_to_NVIC_IRQn(uint EXTI_IRQ_n);
-static void change_EXTI_IRQ_state(uint EXTI_IRQ_n, bool state);
-static void set_EXTI_IRQ_priority(uint EXTI_IRQ_n, u32_t priority);
-static void set_EXTI_edge_detector(uint EXTI_IRQ_n, bool falling, bool rising);
-static inline void disable_EXTI_IRQ(uint EXTI_IRQ_n);
-static inline void enable_EXTI_IRQ(uint EXTI_IRQ_n);
-static bool IRQ_handler(uint EXIT_IRQ_n);
+static enum IRQn IRQ_minor_to_NVIC_IRQn (u8_t minor);
+static int       IRQ_configure          (u8_t minor, enum _IRQ_MODE mode, int priority);
+static bool      IRQ_handler            (u8_t minor);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 MODULE_NAME(IRQ);
 
-static const default_cfg_t default_config[NUMBER_OF_IRQs] = {
+static const default_cfg_t DEFAULT_CONFIG[NUMBER_OF_IRQs] = {
         {.priority = _IRQ_LINE_0_PRIO,  .mode = _IRQ_LINE_0_MODE },
         {.priority = _IRQ_LINE_1_PRIO,  .mode = _IRQ_LINE_1_MODE },
         {.priority = _IRQ_LINE_2_PRIO,  .mode = _IRQ_LINE_2_MODE },
@@ -102,67 +100,32 @@ static IRQ_t *IRQ;
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 {
-        if (major == _IRQ_MAJOR_NUMBER && minor == _IRQ_MINOR_NUMBER) {
-                IRQ_t *hdl = calloc(1, sizeof(IRQ_t));
-                if (hdl) {
-                        for (uint i = 0; i < NUMBER_OF_IRQs; i++) {
-                                switch (default_config[i].mode) {
-                                default:
-                                case _IRQ_MODE_DISABLED:
-                                        disable_EXTI_IRQ(i);
-                                        break;
+        int err = ENODEV;
 
-                                case _IRQ_MODE_FALLING_EDGE:
-                                        set_EXTI_edge_detector(i, true, false);
-                                        enable_EXTI_IRQ(i);
-                                        break;
+        if (major == 0 && minor < NUMBER_OF_IRQs) {
+                if (IRQ == NULL) {
+                        err = sys_zalloc(sizeof(IRQ_t), cast(void*, &IRQ));
+                }
 
-                                case _IRQ_MODE_RISING_EDGE:
-                                        set_EXTI_edge_detector(i, false, true);
-                                        enable_EXTI_IRQ(i);
-                                        break;
+                if (IRQ) {
+                        err = sys_semaphore_create(1, 0, &IRQ->sem[minor]);
+                        if (!err) {
+                                // device's minor number is used as identifier
+                                *device_handle = cast(void*, cast(u32_t, minor));
 
-                                case _IRQ_MODE_FALLING_AND_RISING_EDGE:
-                                        set_EXTI_edge_detector(i, true, true);
-                                        enable_EXTI_IRQ(i);
-                                        break;
-                                }
-
-                                if (default_config[i].mode != _IRQ_MODE_DISABLED) {
-                                        set_EXTI_IRQ_priority(i, default_config[i].priority);
-
-                                        hdl->irqsem[i] = _sys_semaphore_new(1, 0);
-                                        if (hdl->irqsem[i] == NULL) {
-                                                for (int s = 0; s < NUMBER_OF_IRQs; s++) {
-                                                        disable_EXTI_IRQ(s);
-
-                                                        if (hdl->irqsem[s]) {
-                                                                _sys_semaphore_delete(hdl->irqsem[s]);
-                                                                hdl->irqsem[s] = NULL;
-                                                        }
-                                                }
-
-                                                free(hdl);
-                                                IRQ = NULL;
-                                                return STD_RET_ERROR;
-                                        }
-                                }
+                                IRQ_configure(minor,
+                                              DEFAULT_CONFIG[minor].mode,
+                                              DEFAULT_CONFIG[minor].priority);
                         }
-
-                        *device_handle = hdl;
-                        IRQ = hdl;
-
-                        return STD_RET_OK;
                 }
         }
 
-        return STD_RET_ERROR;
+        return err;
 }
 
 //==============================================================================
@@ -171,31 +134,28 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_RELEASE(IRQ, void *device_handle)
 {
-        IRQ_t *hdl = device_handle;
+        u8_t minor = cast(u32_t, device_handle);
 
-        _sys_critical_section_begin();
+        int err = sys_semaphore_destroy(IRQ->sem[minor]);
+        if (!err) {
+                IRQ_configure(minor, _IRQ_MODE_DISABLED, -1);
 
-        for (uint i = 0; i < NUMBER_OF_IRQs; i++) {
-                disable_EXTI_IRQ(i);
+                bool free_module_mem = true;
+                for (int i = 0; i < NUMBER_OF_IRQs && free_module_mem; i++) {
+                        free_module_mem = IRQ->sem[i] == NULL;
+                }
 
-                if (hdl->irqsem[i]) {
-                        _sys_semaphore_delete(hdl->irqsem[i]);
-                        hdl->irqsem[i] = NULL;
+                if (free_module_mem) {
+                        sys_free(cast(void*, &IRQ));
                 }
         }
 
-        free(hdl);
-        IRQ = NULL;
-
-        _sys_critical_section_end();
-
-        return STD_RET_OK;
+        return err;
 }
 
 //==============================================================================
@@ -205,16 +165,14 @@ API_MOD_RELEASE(IRQ, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_OPEN(IRQ, void *device_handle, vfs_open_flags_t flags)
+API_MOD_OPEN(IRQ, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(flags);
+        UNUSED_ARG2(device_handle, flags);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -224,16 +182,14 @@ API_MOD_OPEN(IRQ, void *device_handle, vfs_open_flags_t flags)
  * @param[in ]          *device_handle          device allocated memory
  * @param[in ]           force                  device force close (true)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_CLOSE(IRQ, void *device_handle, bool force)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(force);
+        UNUSED_ARG2(device_handle, force);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -244,22 +200,23 @@ API_MOD_CLOSE(IRQ, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_WRITE(IRQ, void *device_handle, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_WRITE(IRQ,
+              void             *device_handle,
+              const u8_t       *src,
+              size_t            count,
+              fpos_t           *fpos,
+              size_t           *wrcnt,
+              struct vfs_fattr  fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(src);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG6(device_handle, src, count, fpos, wrcnt, fattr);
 
-        errno = EPERM;
-
-        return 0;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -270,22 +227,23 @@ API_MOD_WRITE(IRQ, void *device_handle, const u8_t *src, size_t count, fpos_t *f
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_READ(IRQ, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_MOD_READ(IRQ,
+             void            *device_handle,
+             u8_t            *dst,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *rdcnt,
+             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(device_handle);
-        UNUSED_ARG(dst);
-        UNUSED_ARG(count);
-        UNUSED_ARG(fpos);
-        UNUSED_ARG(fattr);
+        UNUSED_ARG6(device_handle, dst, count, fpos, rdcnt, fattr);
 
-        errno = EPERM;
-
-        return 0;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -296,89 +254,44 @@ API_MOD_READ(IRQ, void *device_handle, u8_t *dst, size_t count, fpos_t *fpos, st
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @return On success return 0 or 1. On error, -1 is returned, and errno set
- *         appropriately.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG(device_handle);
-
-        IRQ_t *hdl = device_handle;
+        u8_t minor = cast(u32_t, device_handle);
+        int  err   = EINVAL;
 
         if (arg) {
                 switch (request) {
                 case IOCTL_IRQ__CATCH: {
-                        const IRQ_catch_t *irqn = arg;
-                        if (irqn->irq_number < NUMBER_OF_IRQs) {
-                                if (hdl->irqsem[irqn->irq_number]) {
-                                        return _sys_semaphore_wait(hdl->irqsem[irqn->irq_number], irqn->timeout);
-                                }
+                        const u32_t *timeout = arg;
+                        if (IRQ->sem[minor]) {
+                                err = sys_semaphore_wait(IRQ->sem[minor], *timeout);
+                        } else {
+                                err = ENODEV;
                         }
-
                         break;
                 }
 
                 case IOCTL_IRQ__TRIGGER: {
-                        const int irqn = (int)arg;
-                        if (irqn < NUMBER_OF_IRQs) {
-                                WRITE_REG(EXTI->SWIER, EXTI_SWIER_SWIER0 << irqn);
-                                return 0;
-                        }
-
+                        WRITE_REG(EXTI->SWIER, EXTI_SWIER_SWIER0 << minor);
+                        err = ESUCC;
                         break;
                 }
 
                 case IOCTL_IRQ__CONFIGURE: {
                         const IRQ_config_t *cfg = arg;
-                        if (cfg->irq_number < NUMBER_OF_IRQs) {
-                                if (cfg->mode == IRQ_CONFIG_MODE__IRQ_DISABLED) {
-                                        disable_EXTI_IRQ(cfg->irq_number);
-
-                                        if (hdl->irqsem[cfg->irq_number]) {
-                                                _sys_semaphore_delete(hdl->irqsem[cfg->irq_number]);
-                                                hdl->irqsem[cfg->irq_number] = NULL;
-                                        }
-                                } else {
-                                        if (hdl->irqsem[cfg->irq_number] == NULL) {
-                                                hdl->irqsem[cfg->irq_number] = _sys_semaphore_new(1, 0);
-                                                if (hdl->irqsem[cfg->irq_number] == NULL)
-                                                        break;
-                                        }
-
-                                        bool falling, rising;
-                                        if (cfg->mode == IRQ_CONFIG_MODE__TRIGGER_ON_FALLING_EDGE) {
-                                                falling = true;
-                                                rising  = false;
-                                        } else if (cfg->mode == IRQ_CONFIG_MODE__TRIGGER_ON_RISING_EDGE) {
-                                                falling = false;
-                                                rising  = true;
-                                        } else if (cfg->mode == IRQ_CONFIG_MODE__TRIGGER_ON_FALLING_AND_RISING_EDGE) {
-                                                falling = true;
-                                                rising  = true;
-                                        } else {
-                                                falling = false;
-                                                rising  = false;
-                                        }
-
-                                        set_EXTI_edge_detector(cfg->irq_number, falling, rising);
-                                        enable_EXTI_IRQ(cfg->irq_number);
-                                }
-
-                                return 0;
-                        }
-
+                        err = IRQ_configure(minor, cast(enum _IRQ_MODE, *cfg), -1);
                         break;
                 }
 
                 default:
-                        errno = EBADRQC;
-                        return -1;
+                        err = EBADRQC;
                 }
         }
 
-        errno = EINVAL;
-        return -1;
+        return err;
 }
 
 //==============================================================================
@@ -387,15 +300,14 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
  *
  * @param[in ]          *device_handle          device allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_FLUSH(IRQ, void *device_handle)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -405,34 +317,31 @@ API_MOD_FLUSH(IRQ, void *device_handle)
  * @param[in ]          *device_handle          device allocated memory
  * @param[out]          *device_stat            device status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_MOD_STAT(IRQ, void *device_handle, struct vfs_dev_stat *device_stat)
 {
-        UNUSED_ARG(device_handle);
+        UNUSED_ARG1(device_handle);
 
-        device_stat->st_size  = 0;
-        device_stat->st_major = _IRQ_MAJOR_NUMBER;
-        device_stat->st_minor = _IRQ_MINOR_NUMBER;
+        device_stat->st_size = 0;
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
 /**
- * @brief Converts EXTI IRQ number (0-15) to NVIC IRQ number
+ * @brief Converts minor IRQ number (0-15) to NVIC IRQ number
  *
- * @param EXTI_IRQ_n    EXTI IRQ number
+ * @param minor         device minor number
  *
  * @return On success, NVIC IRQ number is returned, otherwise 0.
  */
 //==============================================================================
-static enum IRQn EXTI_IRQ_number_to_NVIC_IRQn(uint EXTI_IRQ_n)
+static enum IRQn IRQ_minor_to_NVIC_IRQn(u8_t minor)
 {
-        switch (EXTI_IRQ_n) {
-        case 0  ... 4 : return EXTI0_IRQn + EXTI_IRQ_n;
+        switch (minor) {
+        case 0  ... 4 : return EXTI0_IRQn + minor;
         case 5  ... 9 : return EXTI9_5_IRQn;
         case 10 ... 15: return EXTI15_10_IRQn;
         default:        return 0;
@@ -443,48 +352,46 @@ static enum IRQn EXTI_IRQ_number_to_NVIC_IRQn(uint EXTI_IRQ_n)
 /**
  * @brief Function enable or disable selected EXTI interrupt
  *
- * @param EXTI_IRQ_n    EXTI IRQ number (0-15)
- * @param state         new interrupt state
+ * @param minor         IRQ minor number (0-15)
+ * @param mode          IRQ mode (edge detector configuration)
+ * @param priority      IRQ priority (-1 to ignore)
  *
  * @return None
  */
 //==============================================================================
-static void change_EXTI_IRQ_state(uint EXTI_IRQ_n, bool state)
+static int IRQ_configure(u8_t minor, enum _IRQ_MODE mode, int priority)
 {
-        enum IRQn IRQn = EXTI_IRQ_number_to_NVIC_IRQn(EXTI_IRQ_n);
+        enum IRQn IRQn = IRQ_minor_to_NVIC_IRQn(minor);
+        int       err  = ENODEV;
 
         if (IRQn != 0) {
-                if (state) {
-                        SET_BIT(EXTI->IMR, EXTI_IMR_MR0 << EXTI_IRQ_n);
-                        SET_BIT(EXTI->EMR, EXTI_EMR_MR0 << EXTI_IRQ_n);
-                        NVIC_EnableIRQ(IRQn);
-                } else {
-                        CLEAR_BIT(EXTI->IMR, EXTI_IMR_MR0 << EXTI_IRQ_n);
-                        CLEAR_BIT(EXTI->EMR, EXTI_EMR_MR0 << EXTI_IRQ_n);
+                if (mode == _IRQ_MODE_DISABLED) {
+                        CLEAR_BIT(EXTI->IMR, EXTI_IMR_MR0 << minor);
+                        CLEAR_BIT(EXTI->EMR, EXTI_EMR_MR0 << minor);
 
                         switch (IRQn) {
                         case EXTI9_5_IRQn: {
-                                static const u32_t IRQ9_5_mask = EXTI_IMR_MR5
+                                static const u32_t IRQ9_5_MASK = EXTI_IMR_MR5
                                                                | EXTI_IMR_MR6
                                                                | EXTI_IMR_MR7
                                                                | EXTI_IMR_MR8
                                                                | EXTI_IMR_MR9;
 
-                                if ((EXTI->IMR & IRQ9_5_mask) == 0) {
+                                if ((EXTI->IMR & IRQ9_5_MASK) == 0) {
                                         NVIC_DisableIRQ(IRQn);
                                 }
                                 break;
                         }
 
                         case EXTI15_10_IRQn: {
-                                static const u32_t IRQ15_10_mask = EXTI_IMR_MR10
+                                static const u32_t IRQ15_10_MASK = EXTI_IMR_MR10
                                                                  | EXTI_IMR_MR11
                                                                  | EXTI_IMR_MR12
                                                                  | EXTI_IMR_MR13
                                                                  | EXTI_IMR_MR14
                                                                  | EXTI_IMR_MR15;
 
-                                if ((EXTI->IMR & IRQ15_10_mask) == 0) {
+                                if ((EXTI->IMR & IRQ15_10_MASK) == 0) {
                                         NVIC_DisableIRQ(IRQn);
                                 }
                                 break;
@@ -495,106 +402,68 @@ static void change_EXTI_IRQ_state(uint EXTI_IRQ_n, bool state)
                                 break;
                         }
 
-                }
-        }
-}
-
-//==============================================================================
-/**
- * @brief Function changes selected EXTI priority
- *
- * @param EXTI_IRQ_n    EXTI IRQ number
- * @param prio          new interrupt priority
- *
- * @return None
- */
-//==============================================================================
-static void set_EXTI_IRQ_priority(uint EXTI_IRQ_n, u32_t priority)
-{
-        enum IRQn IRQn = EXTI_IRQ_number_to_NVIC_IRQn(EXTI_IRQ_n);
-
-        if (IRQn != 0) {
-                NVIC_SetPriority(IRQn, priority);
-        }
-}
-
-//==============================================================================
-/**
- * @brief Changes interrupt detector sensitivity
- *
- * @param EXTI_IRQ_n    EXTI IRQ number
- * @param falling       interrupt triggered on falling edge
- * @param rising        interrupt triggered on rising edge
- *
- * @return None
- */
-//==============================================================================
-static void set_EXTI_edge_detector(uint EXTI_IRQ_n, bool falling, bool rising)
-{
-        if (EXTI_IRQ_n < NUMBER_OF_IRQs) {
-                if (falling) {
-                        SET_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << EXTI_IRQ_n);
+                        err = ESUCC;
                 } else {
-                        CLEAR_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << EXTI_IRQ_n);
-                }
+                        switch (mode) {
+                        case _IRQ_MODE_FALLING_EDGE:
+                                SET_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << minor);
+                                CLEAR_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << minor);
+                                err = ESUCC;
+                                break;
 
-                if (rising) {
-                        SET_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << EXTI_IRQ_n);
-                } else {
-                        CLEAR_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << EXTI_IRQ_n);
+                        case _IRQ_MODE_RISING_EDGE:
+                                CLEAR_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << minor);
+                                SET_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << minor);
+                                err = ESUCC;
+                                break;
+
+                        case _IRQ_MODE_FALLING_AND_RISING_EDGE:
+                                SET_BIT(EXTI->FTSR, EXTI_FTSR_TR0 << minor);
+                                SET_BIT(EXTI->RTSR, EXTI_RTSR_TR0 << minor);
+                                err = ESUCC;
+                                break;
+
+                        default:
+                                err = ENOTSUP;
+                                break;
+                        }
+
+                        if (err == ESUCC) {
+                                SET_BIT(EXTI->IMR, EXTI_IMR_MR0 << minor);
+                                SET_BIT(EXTI->EMR, EXTI_EMR_MR0 << minor);
+
+                                NVIC_EnableIRQ(IRQn);
+
+                                if (priority >= 0) {
+                                        NVIC_SetPriority(IRQn, priority);
+                                }
+                        }
                 }
         }
-}
 
-//==============================================================================
-/**
- * @brief Disables selected EXTI interrupt
- *
- * @param EXTI_IRQ_n    EXTI IRQ number
- *
- * @return None
- */
-//==============================================================================
-static inline void disable_EXTI_IRQ(uint EXTI_IRQ_n)
-{
-        change_EXTI_IRQ_state(EXTI_IRQ_n, false);
-}
-
-//==============================================================================
-/**
- * @brief Enables selected EXTI interrupt
- *
- * @param EXTI_IRQ_n    EXTI IRQ number
- *
- * @return None
- */
-//==============================================================================
-static inline void enable_EXTI_IRQ(uint EXTI_IRQ_n)
-{
-        change_EXTI_IRQ_state(EXTI_IRQ_n, true);
+        return err;
 }
 
 //==============================================================================
 /**
  * @brief Handle interrupts for selected EXTI line
  *
- * @param EXTI_IRQ_n    EXTI IRQ number
+ * @param minor         IRQ minor number
  *
  * @return true if task woken, otherwise false
  */
 //==============================================================================
-static bool IRQ_handler(uint EXIT_IRQ_n)
+static bool IRQ_handler(u8_t minor)
 {
-        WRITE_REG(EXTI->PR, EXTI_PR_PR0 << EXIT_IRQ_n);
+        WRITE_REG(EXTI->PR, EXTI_PR_PR0 << minor);
 
-        if (IRQ == NULL) {
+        if (IRQ) {
+                bool woken = false;
+                sys_semaphore_signal_from_ISR(IRQ->sem[minor], &woken);
+                return woken;
+        } else {
                 return false;
         }
-
-        bool woken = false;
-        _sys_semaphore_signal_from_ISR(IRQ->irqsem[EXIT_IRQ_n], &woken);
-
-        return woken;
 }
 
 //==============================================================================
@@ -604,9 +473,7 @@ static bool IRQ_handler(uint EXIT_IRQ_n)
 //==============================================================================
 void EXTI0_IRQHandler(void)
 {
-        if (IRQ_handler(0)) {
-                _sys_task_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(0));
 }
 
 //==============================================================================
@@ -616,9 +483,7 @@ void EXTI0_IRQHandler(void)
 //==============================================================================
 void EXTI1_IRQHandler(void)
 {
-        if (IRQ_handler(1)) {
-                _sys_task_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(1));
 }
 
 //==============================================================================
@@ -628,9 +493,7 @@ void EXTI1_IRQHandler(void)
 //==============================================================================
 void EXTI2_IRQHandler(void)
 {
-        if (IRQ_handler(2)) {
-                _sys_task_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(2));
 }
 
 //==============================================================================
@@ -640,9 +503,7 @@ void EXTI2_IRQHandler(void)
 //==============================================================================
 void EXTI3_IRQHandler(void)
 {
-        if (IRQ_handler(3)) {
-                _sys_task_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(3));
 }
 
 //==============================================================================
@@ -652,9 +513,7 @@ void EXTI3_IRQHandler(void)
 //==============================================================================
 void EXTI4_IRQHandler(void)
 {
-        if (IRQ_handler(4)) {
-                _sys_task_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(IRQ_handler(4));
 }
 
 //==============================================================================
@@ -670,9 +529,7 @@ void EXTI9_5_IRQHandler(void)
                 woken |= IRQ_handler(i);
         }
 
-        if (woken) {
-                _sys_task_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(woken);
 }
 
 //==============================================================================
@@ -688,9 +545,7 @@ void EXTI15_10_IRQHandler(void)
                 woken |= IRQ_handler(i);
         }
 
-        if (woken) {
-                _sys_task_yield_from_ISR();
-        }
+        sys_thread_yield_from_ISR(woken);
 }
 
 /*==============================================================================

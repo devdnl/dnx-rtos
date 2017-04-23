@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -27,7 +29,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"
+#include "fs/fs.h"
 
 /*==============================================================================
   Local macros
@@ -67,14 +69,12 @@ struct devfs {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static stdret_t            closedir                     (void *fs_handle, DIR *dir);
-static dirent_t            readdir                      (void *fs_handle, DIR *dir);
-static struct devfs_chain *chain_new                    (void);
-static void                chain_delete                 (struct devfs_chain *chain);
-static struct devnode     *chain_get_node_by_path       (struct devfs_chain *chain, const char *path);
-static struct devnode     *chain_get_empty_node         (struct devfs_chain *chain);
-static struct devnode     *chain_get_n_node             (struct devfs_chain *chain, int n);
-static int                 create_new_chain_if_necessary(struct devfs *devfs);
+static int  chain_create                 (struct devfs_chain **chain);
+static void chain_destroy                (struct devfs_chain *chain);
+static int  chain_get_node_by_path       (struct devfs_chain *chain, const char *path, struct devnode **node);
+static int  chain_get_empty_node         (struct devfs_chain *chain, struct devnode **node);
+static int  chain_get_n_node             (struct devfs_chain *chain, int n, struct devnode **node);
+static int  create_new_chain_if_necessary(struct devfs *devfs);
 
 /*==============================================================================
   Local objects
@@ -98,43 +98,44 @@ static int                 create_new_chain_if_necessary(struct devfs *devfs);
  *
  * @param[out]          **fs_handle             file system allocated memory
  * @param[in ]           *src_path              file source path
+ * @param[in ]           *opts                  file system options (can be NULL)
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_INIT(devfs, void **fs_handle, const char *src_path)
+API_FS_INIT(devfs, void **fs_handle, const char *src_path, const char *opts)
 {
-        UNUSED_ARG(src_path);
+        UNUSED_ARG2(src_path, opts);
 
-        struct devfs       *devfs = malloc(sizeof(struct devfs));
-        mutex_t            *mtx   = _sys_mutex_new(MUTEX_NORMAL);
-        struct devfs_chain *chain = chain_new();
+        int err = sys_zalloc(sizeof(struct devfs), fs_handle);
+        if (err == ESUCC) {
+                struct devfs *devfs = *fs_handle;
 
-        if (devfs && mtx && chain) {
-                devfs->root_chain               = chain;
-                devfs->mutex                    = mtx;
-                devfs->number_of_chains         = 1;
-                devfs->number_of_opened_files   = 0;
-                devfs->number_of_used_nodes     = 0;
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &devfs->mutex);
+                if (err != ESUCC)
+                        goto finish;
 
-                *fs_handle = devfs;
-                return STD_RET_OK;
-        } else {
-                if (devfs) {
-                        free(devfs);
-                }
+                err = chain_create(&devfs->root_chain);
+                if (err != ESUCC)
+                        goto finish;
 
-                if (mtx) {
-                        _sys_mutex_delete(mtx);
-                }
+                devfs->number_of_chains       = 1;
+                devfs->number_of_opened_files = 0;
+                devfs->number_of_used_nodes   = 0;
 
-                if (chain) {
-                        chain_delete(chain);
+                finish:
+                if (err != ESUCC) {
+                        if (devfs->mutex)
+                                sys_mutex_destroy(devfs->mutex);
+
+                        if (devfs->root_chain)
+                                chain_destroy(devfs->root_chain);
+
+                        sys_free(fs_handle);
                 }
         }
 
-        return STD_RET_ERROR;
+        return err;
 }
 
 //==============================================================================
@@ -143,35 +144,33 @@ API_FS_INIT(devfs, void **fs_handle, const char *src_path)
  *
  * @param[in ]          *fs_handle              file system allocated memory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RELEASE(devfs, void *fs_handle)
 {
         struct devfs *devfs = fs_handle;
 
-        if (_sys_mutex_lock(devfs->mutex, 100)) {
+        int err = sys_mutex_lock(devfs->mutex, 100);
+        if (!err) {
                 if (devfs->number_of_opened_files != 0) {
-                        _sys_mutex_unlock(devfs->mutex);
-                        errno = EBUSY;
-                        return STD_RET_ERROR;
+                        sys_mutex_unlock(devfs->mutex);
+                        err = EBUSY;
+
+                } else {
+                        chain_destroy(devfs->root_chain);
+
+                        mutex_t *mtx = devfs->mutex;
+                        memset(devfs, 0, sizeof(struct devfs));
+
+                        sys_mutex_unlock(mtx);
+                        sys_mutex_destroy(mtx);
+
+                        sys_free(fs_handle);
                 }
-
-                _sys_critical_section_begin();
-                _sys_mutex_unlock(devfs->mutex);
-
-                chain_delete(devfs->root_chain);
-                _sys_mutex_delete(devfs->mutex);
-                free(devfs);
-
-                _sys_critical_section_end();
-                return STD_RET_OK;
-        } else {
-                errno = EBUSY;
-
-                return STD_RET_ERROR;
         }
+
+        return err;
 }
 
 //==============================================================================
@@ -179,49 +178,45 @@ API_FS_RELEASE(devfs, void *fs_handle)
  * @brief Open file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[out]          *extra                  file extra data
- * @param[out]          *fd                     file descriptor
+ * @param[out]          *fhdl                   file extra data
  * @param[out]          *fpos                   file position
  * @param[in]           *path                   file path
  * @param[in]            flags                  file open flags
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const char *path, vfs_open_flags_t flags)
+API_FS_OPEN(devfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path, u32_t flags)
 {
-        UNUSED_ARG(fd);
-
         struct devfs *devfs  = fs_handle;
-        stdret_t      status = STD_RET_ERROR;
 
-        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        int err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        if (err == ESUCC) {
 
-                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
-                if (node) {
-                        stdret_t open = STD_RET_ERROR;
+                struct devnode *node;
+                err = chain_get_node_by_path(devfs->root_chain, path, &node);
+                if (err == ESUCC) {
+                        int open;
                         if (node->type == FILE_TYPE_DRV) {
-                                open = _sys_driver_open(node->IF.drv, flags);
+                                open = sys_driver_open(node->IF.drv, flags);
                         } else if (node->type == FILE_TYPE_PIPE) {
-                                open = STD_RET_OK;
+                                open = ESUCC;
+                        } else {
+                                open = ENOENT;
                         }
 
-                        if (open == STD_RET_OK) {
-                                *extra = node;
-                                *fpos  = 0;
+                        if (open == ESUCC) {
+                                *fhdl = node;
+                                *fpos = 0;
                                 devfs->number_of_opened_files++;
                                 node->opended++;
-                                status = STD_RET_OK;
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
-        } else {
-                errno = EBUSY;
+                sys_mutex_unlock(devfs->mutex);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -229,40 +224,37 @@ API_FS_OPEN(devfs, void *fs_handle, void **extra, fd_t *fd, fpos_t *fpos, const 
  * @brief Close file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           force                  force close
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
+API_FS_CLOSE(devfs, void *fs_handle, void *fhdl, bool force)
 {
-        UNUSED_ARG(fd);
-
         struct devfs   *devfs  = fs_handle;
-        struct devnode *node   = extra;
+        struct devnode *node   = fhdl;
 
-        stdret_t close = STD_RET_ERROR;
+        int err;
         if (node->type == FILE_TYPE_DRV) {
-                close = _sys_driver_close(node->IF.drv, force);
+                err = sys_driver_close(node->IF.drv, force);
         } else if (node->type == FILE_TYPE_PIPE) {
-                close = STD_RET_OK;
+                err = sys_pipe_close(node->IF.pipe);
+        } else {
+                err = ENOENT;
         }
 
-        if (close == STD_RET_OK) {
+        if (err == ESUCC) {
 
-                if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+                err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+                if (err == ESUCC) {
                         devfs->number_of_opened_files--;
                         node->opended--;
-                        _sys_mutex_unlock(devfs->mutex);
+                        sys_mutex_unlock(devfs->mutex);
                 }
-
-                return STD_RET_OK;
-        } else {
-                return STD_RET_ERROR;
         }
+
+        return err;
 }
 
 //==============================================================================
@@ -270,30 +262,37 @@ API_FS_CLOSE(devfs, void *fs_handle, void *extra, fd_t fd, bool force)
  * @brief Write data to the file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
+ * @param[out]          *wrcnt                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of written bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_WRITE(devfs,
+             void            *fs_handle,
+             void            *fhdl,
+             fd_t             fd,
+             const u8_t      *src,
+             size_t           count,
+             fpos_t          *fpos,
+             size_t          *wrcnt,
+             struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(fd);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_write(node->IF.drv, src, count, fpos, fattr);
+                return sys_driver_write(node->IF.drv, src, count, fpos, wrcnt, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return _sys_pipe_write(node->IF.pipe, src, count, fattr.non_blocking_wr);
+                return sys_pipe_write(node->IF.pipe, src, count, wrcnt, fattr.non_blocking_wr);
         } else {
-                errno = ENXIO;
-                return -1;
+                return ENXIO;
         }
 }
 
@@ -302,30 +301,35 @@ API_FS_WRITE(devfs, void *fs_handle,void *extra, fd_t fd, const u8_t *src, size_
  * @brief Read data from file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
+ * @param[out]          *rdcnt                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
- * @return number of read bytes, -1 if error
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t count, fpos_t *fpos, struct vfs_fattr fattr)
+API_FS_READ(devfs,
+            void            *fs_handle,
+            void            *fhdl,
+            u8_t            *dst,
+            size_t           count,
+            fpos_t          *fpos,
+            size_t          *rdcnt,
+            struct vfs_fattr fattr)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_read(node->IF.drv, dst, count, fpos, fattr);
+                return sys_driver_read(node->IF.drv, dst, count, fpos, rdcnt, fattr);
         } else if (node->type == FILE_TYPE_PIPE) {
-                return _sys_pipe_read(node->IF.pipe, dst, count, fattr.non_blocking_rd);
+                return sys_pipe_read(node->IF.pipe, dst, count, rdcnt, fattr.non_blocking_rd);
         } else {
-                errno = ENXIO;
-                return -1;
+                return ENXIO;
         }
 }
 
@@ -334,31 +338,27 @@ API_FS_READ(devfs, void *fs_handle, void *extra, fd_t fd, u8_t *dst, size_t coun
  * @brief IO operations on files
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *arg)
+API_FS_IOCTL(devfs, void *fs_handle, void *fhdl, int request, void *arg)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_ioctl(node->IF.drv, request, arg);
+                return sys_driver_ioctl(node->IF.drv, request, arg);
         } else if (node->type == FILE_TYPE_PIPE && request == IOCTL_PIPE__CLOSE) {
-                return _sys_pipe_close(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
+                return sys_pipe_close(node->IF.pipe) ? ESUCC : EINVAL;
         } else if (node->type == FILE_TYPE_PIPE && request == IOCTL_PIPE__CLEAR) {
-                return _sys_pipe_clear(node->IF.pipe) ? STD_RET_OK : STD_RET_ERROR;
+                return sys_pipe_clear(node->IF.pipe) ? ESUCC : EINVAL;
         } else {
-                errno = EBADRQC;
-                return STD_RET_ERROR;
+                return EBADRQC;
         }
 }
 
@@ -367,24 +367,21 @@ API_FS_IOCTL(devfs, void *fs_handle, void *extra, fd_t fd, int request, void *ar
  * @brief Flush file data
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
+API_FS_FLUSH(devfs, void *fs_handle, void *fhdl)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
         if (node->type == FILE_TYPE_DRV) {
-                return _sys_driver_flush(node->IF.drv);
+                return sys_driver_flush(node->IF.drv);
         } else {
-                return STD_RET_ERROR;
+                return EINVAL;
         }
 }
 
@@ -393,54 +390,52 @@ API_FS_FLUSH(devfs, void *fs_handle, void *extra, fd_t fd)
  * @brief Return file status
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *extra                  file extra data
- * @param[in ]           fd                     file descriptor
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
+API_FS_FSTAT(devfs, void *fs_handle, void *fhdl, struct stat *stat)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(fd);
+        UNUSED_ARG1(fs_handle);
 
-        struct devnode *node = extra;
+        struct devnode *node = fhdl;
 
-        struct vfs_dev_stat devstat;
-        int                 pipelen;
-        stdret_t            getfstat = STD_RET_ERROR;
+        int err = EINVAL;
+
+        time_t t = 0;
+        sys_get_time(&t);
+
+        stat->st_ctime = t;
+        stat->st_mtime = t;
+        stat->st_gid   = node->gid;
+        stat->st_uid   = node->uid;
+        stat->st_mode  = node->mode;
 
         if (node->type == FILE_TYPE_DRV) {
-                getfstat = _sys_driver_stat(node->IF.drv, &devstat);
-                if (getfstat == STD_RET_OK) {
-                        stat->st_dev  = devstat.st_major << 8 | devstat.st_minor;
+                stat->st_dev  = node->IF.drv;
+                stat->st_type = FILE_TYPE_DRV;
+
+                struct vfs_dev_stat devstat;
+                err = sys_driver_stat(node->IF.drv, &devstat);
+                if (err == ESUCC) {
                         stat->st_size = devstat.st_size;
-                        stat->st_type = FILE_TYPE_DRV;
+                } else if (err == ENODEV) {
+                        stat->st_size = 0;
+                        err = ESUCC;
                 }
         } else if (node->type == FILE_TYPE_PIPE) {
-                pipelen = _sys_pipe_get_length(node->IF.pipe);
-                if (pipelen >= 0) {
+                size_t pipelen;
+                err = sys_pipe_get_length(node->IF.pipe, &pipelen);
+                if (err == ESUCC) {
+                        stat->st_dev  = 0;
                         stat->st_size = pipelen;
                         stat->st_type = FILE_TYPE_PIPE;
-                        stat->st_dev  = 0;
-
-                        getfstat = STD_RET_OK;
                 }
         }
 
-        if (getfstat == STD_RET_OK) {
-                stat->st_atime = 0;
-                stat->st_mtime = 0;
-                stat->st_gid   = node->gid;
-                stat->st_uid   = node->uid;
-                stat->st_mode  = node->mode;
-
-                return STD_RET_OK;
-        } else {
-                return STD_RET_ERROR;
-        }
+        return err;
 }
 
 //==============================================================================
@@ -451,19 +446,16 @@ API_FS_FSTAT(devfs, void *fs_handle, void *extra, fd_t fd, struct stat *stat)
  * @param[in ]          *path                   name of created directory
  * @param[in ]           mode                   dir mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKDIR(devfs, void *fs_handle, const char *path, mode_t mode)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(path);
-        UNUSED_ARG(mode);
+        UNUSED_ARG1(fs_handle);
+        UNUSED_ARG1(path);
+        UNUSED_ARG1(mode);
 
-        errno = EPERM;
-
-        return STD_RET_ERROR;
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -474,54 +466,48 @@ API_FS_MKDIR(devfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]          *path                   name of created pipe
  * @param[in ]           mode                   pipe mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct devfs *devfs  = fs_handle;
-        stdret_t      status = STD_RET_ERROR;
 
-        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        int err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        if (err == ESUCC) {
 
-                if (create_new_chain_if_necessary(devfs) >= 0) {
+                err = create_new_chain_if_necessary(devfs);
+                if (err == ESUCC) {
 
-                        struct devnode *node = chain_get_empty_node(devfs->root_chain);
-                        if (node) {
-                                node->IF.pipe = _sys_pipe_new();
-                                node->path    = malloc(strlen(path + 1) + 1);
+                        struct devnode *node;
+                        err = chain_get_empty_node(devfs->root_chain, &node);
+                        if (err == ESUCC) {
 
-                                if (node->IF.pipe && node->path) {
-                                        strcpy(node->path, path + 1);
-                                        node->gid  = 0;
-                                        node->uid  = 0;
-                                        node->mode = mode;
-                                        node->type = FILE_TYPE_PIPE;
+                                err = sys_pipe_create(&node->IF.pipe);
+                                if (err == ESUCC) {
 
-                                        devfs->number_of_used_nodes++;
+                                        err = sys_malloc(strlen(path + 1) + 1,
+                                                             cast(void**, &node->path));
+                                        if (err == ESUCC) {
 
-                                        status = STD_RET_OK;
-                                } else {
-                                        if (node->IF.pipe) {
-                                                _sys_pipe_delete(node->IF.pipe);
-                                                node->IF.pipe = NULL;
+                                                strcpy(node->path, path + 1);
+                                                node->gid  = 0;
+                                                node->uid  = 0;
+                                                node->mode = mode;
+                                                node->type = FILE_TYPE_PIPE;
+
+                                                devfs->number_of_used_nodes++;
+                                        } else {
+                                                sys_pipe_destroy(node->IF.pipe);
                                         }
-
-                                        if (node->path) {
-                                                free(node->path);
-                                                node->path = NULL;
-                                        }
-
-                                        errno = ENOSPC;
                                 }
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -532,43 +518,42 @@ API_FS_MKFIFO(devfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]          *path                   name of created node
  * @param[in ]           dev                    driver number
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
 {
         struct devfs *devfs  = fs_handle;
-        stdret_t      status = STD_RET_ERROR;
 
-        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        int err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        if (err == ESUCC) {
 
-                if (create_new_chain_if_necessary(devfs) >= 0) {
+                err = create_new_chain_if_necessary(devfs);
+                if (err == ESUCC) {
 
-                        struct devnode *node = chain_get_empty_node(devfs->root_chain);
-                        if (node) {
-                                node->path = malloc(strlen(path + 1) + 1);
-                                if (node->path) {
+                        struct devnode *node;
+                        err = chain_get_empty_node(devfs->root_chain, &node);
+                        if (err == ESUCC) {
+
+                                err = sys_malloc(strlen(path + 1) + 1, cast(void**, &node->path));
+                                if (err == ESUCC) {
+
                                         strcpy(node->path, path + 1);
                                         node->IF.drv = dev;
                                         node->gid    = 0;
                                         node->uid    = 0;
-                                        node->mode   = S_IRUSR | S_IWUSR | S_IRGRO | S_IWGRO | S_IROTH | S_IWOTH;
+                                        node->mode   = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
                                         node->type   = FILE_TYPE_DRV;
 
                                         devfs->number_of_used_nodes++;
-
-                                        status = STD_RET_OK;
-                                } else {
-                                        errno = ENOSPC;
                                 }
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -579,8 +564,7 @@ API_FS_MKNOD(devfs, void *fs_handle, const char *path, const dev_t dev)
  * @param[in ]          *path                   name of opened directory
  * @param[in ]          *dir                    directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_OPENDIR(devfs, void *fs_handle, const char *path, DIR *dir)
@@ -588,17 +572,13 @@ API_FS_OPENDIR(devfs, void *fs_handle, const char *path, DIR *dir)
         struct devfs *devfs = fs_handle;
 
         if (strcmp(path, "/") == 0) {
-                dir->f_closedir = closedir;
-                dir->f_readdir  = readdir;
-                dir->f_dd       = NULL;
-                dir->f_handle   = fs_handle;
-                dir->f_items    = devfs->number_of_used_nodes;
-                dir->f_seek     = 0;
+                dir->d_hdl   = NULL;
+                dir->d_items = devfs->number_of_used_nodes;
+                dir->d_seek  = 0;
 
-                return STD_RET_OK;
+                return ESUCC;
         } else {
-                errno = ENOENT;
-                return STD_RET_ERROR;
+                return ENOENT;
         }
 }
 
@@ -609,16 +589,13 @@ API_FS_OPENDIR(devfs, void *fs_handle, const char *path, DIR *dir)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *dir                    directory object
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static stdret_t closedir(void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(devfs, void *fs_handle, DIR *dir)
 {
-        UNUSED_ARG(fs_handle);
-        UNUSED_ARG(dir);
-
-        return STD_RET_OK;
+        UNUSED_ARG2(fs_handle, dir);
+        return ESUCC;
 }
 
 //==============================================================================
@@ -626,55 +603,56 @@ static stdret_t closedir(void *fs_handle, DIR *dir)
  * @brief Read directory
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *dir                    directory object
+ * @param[in,out]       *dir                    directory object
  *
- * @return directory entry description object
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
-static dirent_t readdir(void *fs_handle, DIR *dir)
+API_FS_READDIR(devfs, void *fs_handle, DIR *dir)
 {
-        struct devfs *devfs = fs_handle;
+        struct devfs *devfs  = fs_handle;
 
-        dirent_t dirent;
-        dirent.filetype = FILE_TYPE_REGULAR;
-        dirent.name     = NULL;
-        dirent.size     = 0;
+        int err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        if (err == ESUCC) {
 
-        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+                struct devnode *node;
+                err = chain_get_n_node(devfs->root_chain, dir->d_seek, &node);
+                if (err == ESUCC) {
 
-                struct devnode *node = chain_get_n_node(devfs->root_chain, dir->f_seek);
-                if (node) {
                         if (node->type == FILE_TYPE_DRV) {
                                 struct vfs_dev_stat devstat;
-                                if (_sys_driver_stat(node->IF.drv, &devstat) == STD_RET_OK) {
-                                        dirent.size = devstat.st_size;
+                                err = sys_driver_stat(node->IF.drv, &devstat);
+                                if (err == ESUCC) {
+                                        dir->dirent.size = devstat.st_size;
                                 } else {
-                                        dirent.size = 0;
+                                        dir->dirent.size = 0;
                                 }
-                                dirent.dev      = node->IF.drv;
-                                dirent.filetype = FILE_TYPE_DRV;
+                                dir->dirent.dev      = node->IF.drv;
+                                dir->dirent.filetype = FILE_TYPE_DRV;
 
                         } else if (node->type == FILE_TYPE_PIPE) {
-                                int n = _sys_pipe_get_length(node->IF.pipe);
-                                if (n >= 0) {
-                                        dirent.size = n;
-                                } else {
-                                        dirent.size = 0;
+                                size_t n;
+                                err = sys_pipe_get_length(node->IF.pipe, &n);
+                                if (err == ESUCC) {
+                                        dir->dirent.size = n;
+                                } else if (err == ENODEV) {
+                                        dir->dirent.size = 0;
+                                        err = ESUCC;
                                 }
 
-                                dirent.filetype = FILE_TYPE_PIPE;
+                                dir->dirent.filetype = FILE_TYPE_PIPE;
+                        } else {
+                                err = EINVAL;
                         }
 
-                        dirent.name = node->path;
-                        dir->f_seek++;
-                } else {
-                        errno = 0;
+                        dir->dirent.name = node->path;
+                        dir->d_seek++;
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
-        return dirent;
+        return err;
 }
 
 //==============================================================================
@@ -684,42 +662,42 @@ static dirent_t readdir(void *fs_handle, DIR *dir)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[in ]          *path                   name of removed file/directory
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_REMOVE(devfs, void *fs_handle, const char *path)
 {
         struct devfs *devfs  = fs_handle;
-        stdret_t      status = STD_RET_ERROR;
 
-        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        int err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        if (err == ESUCC) {
 
-                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
-                if (node) {
+                struct devnode *node;
+                err = chain_get_node_by_path(devfs->root_chain, path, &node);
+                if (err == ESUCC) {
+
                         if (node->opended == 0) {
                                 if (node->type == FILE_TYPE_PIPE) {
-                                        _sys_pipe_delete(node->IF.pipe);
+                                        sys_pipe_destroy(node->IF.pipe);
                                 }
                                 node->IF.generic = NULL;
 
-                                free(node->path);
+                                sys_free(cast(void**, &node->path));
                                 node->path  = NULL;
                                 node->gid   = 0;
                                 node->uid   = 0;
                                 node->mode  = 0;
 
                                 devfs->number_of_used_nodes--;
-                                status = STD_RET_OK;
                         } else {
-                                errno = EBUSY;
+                                err = EBUSY;
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -730,35 +708,35 @@ API_FS_REMOVE(devfs, void *fs_handle, const char *path)
  * @param[in ]          *old_name               old object name
  * @param[in ]          *new_name               new object name
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name)
 {
         struct devfs *devfs  = fs_handle;
-        stdret_t      status = STD_RET_ERROR;
 
-        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        int err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        if (err == ESUCC) {
 
-                struct devnode *node = chain_get_node_by_path(devfs->root_chain, old_name);
-                if (node) {
-                        char *name = malloc(strlen(new_name) + 1);
-                        if (name) {
+                struct devnode *node;
+                err = chain_get_node_by_path(devfs->root_chain, old_name, &node);
+                if (err == ESUCC) {
+
+                        char *name;
+                        err = sys_malloc(strlen(new_name) + 1, cast(void**, &name));
+                        if (err == ESUCC) {
                                 strcpy(name, new_name);
-                                free(node->path);
+                                sys_free(cast(void**, &node->path));
                                 node->path = name;
-
-                                status = STD_RET_OK;
                         } else {
-                                errno = ENOMEM;
+                                err = ENOSPC;
                         }
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -769,27 +747,26 @@ API_FS_RENAME(devfs, void *fs_handle, const char *old_name, const char *new_name
  * @param[in ]          *path                   file path
  * @param[in ]           mode                   new file mode
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHMOD(devfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct devfs *devfs  = fs_handle;
-        stdret_t      status = STD_RET_ERROR;
 
-        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        int err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        if (err == ESUCC) {
 
-                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
-                if (node) {
+                struct devnode *node;
+                err = chain_get_node_by_path(devfs->root_chain, path, &node);
+                if (err == ESUCC) {
                         node->mode = mode;
-                        status = STD_RET_OK;
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -801,29 +778,27 @@ API_FS_CHMOD(devfs, void *fs_handle, const char *path, mode_t mode)
  * @param[in ]           owner                  new file owner
  * @param[in ]           group                  new file group
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_CHOWN(devfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         struct devfs *devfs  = fs_handle;
-        stdret_t      status = STD_RET_ERROR;
 
-        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        int err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        if (err == ESUCC) {
 
-                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
-                if (node) {
+                struct devnode *node;
+                err = chain_get_node_by_path(devfs->root_chain, path, &node);
+                if (err == ESUCC) {
                         node->uid = owner;
                         node->gid = group;
-
-                        status = STD_RET_OK;
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -834,26 +809,26 @@ API_FS_CHOWN(devfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
  * @param[in ]          *path                   file path
  * @param[out]          *stat                   file status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
 {
         struct devfs *devfs  = fs_handle;
-        stdret_t      status = STD_RET_ERROR;
 
-        if (_sys_mutex_lock(devfs->mutex, TIMEOUT_MS)) {
+        int err = sys_mutex_lock(devfs->mutex, TIMEOUT_MS);
+        if (err == ESUCC) {
 
-                struct devnode *node = chain_get_node_by_path(devfs->root_chain, path);
-                if (node) {
-                        status = _devfs_fstat(devfs, node, 0, stat);
+                struct devnode *node;
+                err = chain_get_node_by_path(devfs->root_chain, path, &node);
+                if (err == ESUCC) {
+                        err = _devfs_fstat(devfs, node, stat);
                 }
 
-                _sys_mutex_unlock(devfs->mutex);
+                sys_mutex_unlock(devfs->mutex);
         }
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -863,8 +838,7 @@ API_FS_STAT(devfs, void *fs_handle, const char *path, struct stat *stat)
  * @param[in ]          *fs_handle              file system allocated memory
  * @param[out]          *statfs                 file system status
  *
- * @retval STD_RET_OK
- * @retval STD_RET_ERROR
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 API_FS_STATFS(devfs, void *fs_handle, struct statfs *statfs)
@@ -876,10 +850,10 @@ API_FS_STATFS(devfs, void *fs_handle, struct statfs *statfs)
         statfs->f_bfree  = statfs->f_blocks - devfs->number_of_used_nodes;
         statfs->f_ffree  = statfs->f_blocks - devfs->number_of_used_nodes;
         statfs->f_files  = devfs->number_of_used_nodes;
-        statfs->f_type   = 1;
+        statfs->f_type   = SYS_FS_TYPE__DEV;
         statfs->f_fsname = "devfs";
 
-        return STD_RET_OK;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -893,100 +867,107 @@ API_FS_STATFS(devfs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_SYNC(devfs, void *fs_handle)
 {
-        UNUSED_ARG(fs_handle);
+        UNUSED_ARG1(fs_handle);
+        return ESUCC;
 }
 
 //==============================================================================
 /**
  * @brief Return node pointer
- *        Errno: ENOENT
  *
- * @param[in] chain             chain
- * @param[in] path              node's path
+ * @param[in]  chain            chain
+ * @param[in]  path             node's path
+ * @param[out] node             found node
  *
- * @return node pointer
+ * @retval ESUCC
+ * @retval ENOENT
  */
 //==============================================================================
-static struct devnode *chain_get_node_by_path(struct devfs_chain *chain, const char *path)
+static int chain_get_node_by_path(struct devfs_chain *chain, const char *path, struct devnode **node)
 {
         for (struct devfs_chain *nchain = chain; nchain != NULL; nchain = nchain->next) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
-                        if (nchain->devnode[i].path == NULL)
+                        if (nchain->devnode[i].path == NULL) {
                                 continue;
+                        }
 
-                        if (strcmp(nchain->devnode[i].path, path + 1) == 0)
-                                return &nchain->devnode[i];
+                        if (strcmp(nchain->devnode[i].path, path + 1) == 0) {
+                                *node = &nchain->devnode[i];
+                                return ESUCC;
+                        }
                 }
         }
 
-        errno = ENOENT;
-
-        return NULL;
+        return ENOENT;
 }
 
 //==============================================================================
 /**
  * @brief Return node pointer
- *        Errno: ENOENT
  *
- * @param[in] chain             chain
+ * @param[in]  chain            chain
+ * @param[out] node             found node
  *
- * @return node pointer
+ * @retval ESUCC
+ * @retval ENOENT
  */
 //==============================================================================
-static struct devnode *chain_get_empty_node(struct devfs_chain *chain)
+static int chain_get_empty_node(struct devfs_chain *chain, struct devnode **node)
 {
         for (struct devfs_chain *nchain = chain; nchain != NULL; nchain = nchain->next) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
-                        if (nchain->devnode[i].path == NULL)
-                                return &nchain->devnode[i];
+                        if (nchain->devnode[i].path == NULL) {
+                                *node = &nchain->devnode[i];
+                                return ESUCC;
+                        }
                 }
         }
 
-        errno = ENOENT;
-
-        return NULL;
+        return ENOENT;
 }
 
 //==============================================================================
 /**
  * @brief Return node pointer
- *        Errno: ENOENT
  *
- * @param[in] *devfs            file system memory
+ * @param[in]  devfs            file system memory
  * @param[in]  n                node number
+ * @param[out] node             found node
  *
- * @return node pointer
+ * @retval ESUCC
+ * @retval ENOENT
  */
 //==============================================================================
-static struct devnode *chain_get_n_node(struct devfs_chain *chain, int n)
+static int chain_get_n_node(struct devfs_chain *chain, int n, struct devnode **node)
 {
         int n_node = 0;
 
         for (struct devfs_chain *nchain = chain; nchain != NULL; nchain = nchain->next) {
                 for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
                         if (nchain->devnode[i].path != NULL) {
-                                if (n_node++ == n)
-                                        return &nchain->devnode[i];
+                                if (n_node++ == n) {
+                                        *node = &nchain->devnode[i];
+                                        return ESUCC;
+                                }
                         }
                 }
         }
 
-        errno = ENOENT;
-
-        return NULL;
+        return ENOENT;
 }
 
 //==============================================================================
 /**
  * @brief Create new chain for nodes
  *
- * @return pointer to new object or NULL if error
+ * @param[out] chain    pointer to chain object pointer
+ *
+ * @return One of errno value
  */
 //==============================================================================
-static struct devfs_chain *chain_new(void)
+static int chain_create(struct devfs_chain **chain)
 {
-        return calloc(1, sizeof(struct devfs_chain));
+        return sys_zalloc(sizeof(struct devfs_chain), cast(void**, chain));
 }
 
 //==============================================================================
@@ -996,35 +977,33 @@ static struct devfs_chain *chain_new(void)
  * @param[in] *chain            chain to delete
  */
 //==============================================================================
-static void chain_delete(struct devfs_chain *chain)
+static void chain_destroy(struct devfs_chain *chain)
 {
         if (chain->next) {
-                chain_delete(chain->next);
+                chain_destroy(chain->next);
         }
 
         for (int i = 0; i < CHAIN_NUMBER_OF_NODES; i++) {
                 if (chain->devnode[i].IF.generic) {
-                        free(chain->devnode[i].IF.generic);
+                        sys_free(&chain->devnode[i].IF.generic);
                 }
 
                 if (chain->devnode[i].path) {
-                        free(chain->devnode[i].path);
+                        sys_free(cast(void**, &chain->devnode[i].path));
                 }
         }
 
-        free(chain);
+        sys_free(cast(void**, &chain));
 }
 
 //==============================================================================
 /**
  * @brief Function create new chain if no empty nodes exist
- * ERRNO: ENOSPC
  *
  * @param devfs         file system object
  *
- * @retval 1            new chain created
- * @retval 0            number of nodes is enough
- * @retval -1           error occurred
+ * @retval ESUCC        new chain created or exist
+ * @retval ENOSPC       no space on disc (no memory)
  */
 //==============================================================================
 static int create_new_chain_if_necessary(struct devfs *devfs)
@@ -1035,17 +1014,14 @@ static int create_new_chain_if_necessary(struct devfs *devfs)
                         chain = chain->next;
                 }
 
-                chain->next = chain_new();
-                if (!chain->next) {
-                        errno = ENOSPC;
-                        return -1;
-                } else {
+                if (chain_create(&chain->next) == ESUCC) {
                         devfs->number_of_chains++;
-                        return 1;
+                } else {
+                        return ENOSPC;
                 }
         }
 
-        return 0;
+        return ESUCC;
 }
 
 /*==============================================================================

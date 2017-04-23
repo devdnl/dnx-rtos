@@ -1,60 +1,64 @@
 /*
-    FreeRTOS V8.1.2 - Copyright (C) 2014 Real Time Engineers Ltd.
+    FreeRTOS V9.0.0 - Copyright (C) 2016 Real Time Engineers Ltd.
     All rights reserved
 
     VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
-
-    ***************************************************************************
-     *                                                                       *
-     *    FreeRTOS provides completely free yet professionally developed,    *
-     *    robust, strictly quality controlled, supported, and cross          *
-     *    platform software that has become a de facto standard.             *
-     *                                                                       *
-     *    Help yourself get started quickly and support the FreeRTOS         *
-     *    project by purchasing a FreeRTOS tutorial book, reference          *
-     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
-     *                                                                       *
-     *    Thank you!                                                         *
-     *                                                                       *
-    ***************************************************************************
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
+    Free Software Foundation >>>> AND MODIFIED BY <<<< the FreeRTOS exception.
 
+    ***************************************************************************
     >>!   NOTE: The modification to the GPL is included to allow you to     !<<
     >>!   distribute a combined work that includes FreeRTOS without being   !<<
     >>!   obliged to provide the source code for proprietary components     !<<
     >>!   outside of the FreeRTOS kernel.                                   !<<
+    ***************************************************************************
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
+    FOR A PARTICULAR PURPOSE.  Full license text is available on the following
     link: http://www.freertos.org/a00114.html
 
-    1 tab == 4 spaces!
-
     ***************************************************************************
      *                                                                       *
-     *    Having a problem?  Start by reading the FAQ "My application does   *
-     *    not run, what could be wrong?"                                     *
+     *    FreeRTOS provides completely free yet professionally developed,    *
+     *    robust, strictly quality controlled, supported, and cross          *
+     *    platform software that is more than just the market leader, it     *
+     *    is the industry's de facto standard.                               *
      *                                                                       *
-     *    http://www.FreeRTOS.org/FAQHelp.html                               *
+     *    Help yourself get started quickly while simultaneously helping     *
+     *    to support the FreeRTOS project by purchasing a FreeRTOS           *
+     *    tutorial book, reference manual, or both:                          *
+     *    http://www.FreeRTOS.org/Documentation                              *
      *                                                                       *
     ***************************************************************************
 
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
-    license and Real Time Engineers Ltd. contact details.
+    http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
+    the FAQ page "My application does not run, what could be wrong?".  Have you
+    defined configASSERT()?
+
+    http://www.FreeRTOS.org/support - In return for receiving this top quality
+    embedded software for free we request you assist our global community by
+    participating in the support forum.
+
+    http://www.FreeRTOS.org/training - Investing in training allows your team to
+    be as productive as possible as early as possible.  Now you can receive
+    FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
+    Ltd, and the world's leading authority on the world's leading RTOS.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool, a DOS
     compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
-    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
-    licenses offer ticketed support, indemnification and middleware.
+    http://www.FreeRTOS.org/labs - Where new FreeRTOS products go to incubate.
+    Come and try FreeRTOS+TCP, our new open source TCP/IP stack for FreeRTOS.
+
+    http://www.OpenRTOS.com - Real Time Engineers ltd. license FreeRTOS to High
+    Integrity Systems ltd. to sell under the OpenRTOS brand.  Low cost OpenRTOS
+    licenses offer ticketed support, indemnification and commercial middleware.
 
     http://www.SafeRTOS.com - High Integrity Systems also provide a safety
     engineered and independently SIL3 certified version for use in safety and
@@ -63,10 +67,12 @@
     1 tab == 4 spaces!
 */
 
+/* Standard includes. */
+#include <stdio.h>
+
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
-#include <stdio.h>
 
 #ifdef __GNUC__
 	#include "mmsystem.h"
@@ -77,6 +83,21 @@
 #define portMAX_INTERRUPTS				( ( uint32_t ) sizeof( uint32_t ) * 8UL ) /* The number of bits in an uint32_t. */
 #define portNO_CRITICAL_NESTING 		( ( uint32_t ) 0 )
 
+/* The priorities at which the various components of the simulation execute.
+Priorities are higher when a soak test is performed to lessen the effect of
+Windows interfering with the timing. */
+#define portSOAK_TEST
+#ifndef portSOAK_TEST
+	#define portDELETE_SELF_THREAD_PRIORITY			 THREAD_PRIORITY_HIGHEST /* Must be highest. */
+	#define portSIMULATED_INTERRUPTS_THREAD_PRIORITY THREAD_PRIORITY_NORMAL
+	#define portSIMULATED_TIMER_THREAD_PRIORITY		 THREAD_PRIORITY_BELOW_NORMAL
+	#define portTASK_THREAD_PRIORITY				 THREAD_PRIORITY_IDLE
+#else
+	#define portDELETE_SELF_THREAD_PRIORITY			 THREAD_PRIORITY_TIME_CRITICAL /* Must be highest. */
+	#define portSIMULATED_INTERRUPTS_THREAD_PRIORITY THREAD_PRIORITY_HIGHEST
+	#define portSIMULATED_TIMER_THREAD_PRIORITY		 THREAD_PRIORITY_ABOVE_NORMAL
+	#define portTASK_THREAD_PRIORITY				 THREAD_PRIORITY_NORMAL
+#endif
 /*
  * Created as a high priority thread, this function uses a timer to simulate
  * a tick interrupt being generated on an embedded target.  In this Windows
@@ -176,7 +197,7 @@ TIMECAPS xTimeCaps;
 	/* Just to prevent compiler warnings. */
 	( void ) lpParameter;
 
-	for(;;)
+	for( ;; )
 	{
 		/* Wait until the timer expires and we can access the simulated interrupt
 		variables.  *NOTE* this is not a 'real time' way of generating tick
@@ -241,6 +262,17 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 {
 xThreadState *pxThreadState = NULL;
 int8_t *pcTopOfStack = ( int8_t * ) pxTopOfStack;
+const SIZE_T xStackSize = 1024; /* Set the size to a small number which will get rounded up to the minimum possible. */
+
+	#ifdef portSOAK_TEST
+	{
+		/* Ensure highest priority class is inherited. */
+		if( !SetPriorityClass( GetCurrentProcess(), REALTIME_PRIORITY_CLASS ) )
+		{
+			printf( "SetPriorityClass() failed\r\n" );
+		}
+	}
+	#endif
 
 	/* In this simulated case a stack is not initialised, but instead a thread
 	is created that will execute the task being created.  The thread handles
@@ -251,11 +283,11 @@ int8_t *pcTopOfStack = ( int8_t * ) pxTopOfStack;
 	pxThreadState = ( xThreadState * ) ( pcTopOfStack - sizeof( xThreadState ) );
 
 	/* Create the thread itself. */
-	pxThreadState->pvThread = CreateThread( NULL, 0, ( LPTHREAD_START_ROUTINE ) pxCode, pvParameters, CREATE_SUSPENDED, NULL );
-	configASSERT( pxThreadState->pvThread );
+	pxThreadState->pvThread = CreateThread( NULL, xStackSize, ( LPTHREAD_START_ROUTINE ) pxCode, pvParameters, CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION, NULL );
+	configASSERT( pxThreadState->pvThread ); /* See comment where TerminateThread() is called. */
 	SetThreadAffinityMask( pxThreadState->pvThread, 0x01 );
 	SetThreadPriorityBoost( pxThreadState->pvThread, TRUE );
-	SetThreadPriority( pxThreadState->pvThread, THREAD_PRIORITY_IDLE );
+	SetThreadPriority( pxThreadState->pvThread, portTASK_THREAD_PRIORITY );
 
 	return ( StackType_t * ) pxThreadState;
 }
@@ -292,7 +324,7 @@ xThreadState *pxThreadState;
 
 	if( lSuccess == pdPASS )
 	{
-		if( SetThreadPriority( pvHandle, THREAD_PRIORITY_NORMAL ) == 0 )
+		if( SetThreadPriority( pvHandle, portSIMULATED_INTERRUPTS_THREAD_PRIORITY ) == 0 )
 		{
 			lSuccess = pdFAIL;
 		}
@@ -306,17 +338,18 @@ xThreadState *pxThreadState;
 		tick interrupts.  The priority is set below that of the simulated
 		interrupt handler so the interrupt event mutex is used for the
 		handshake / overrun protection. */
-		pvHandle = CreateThread( NULL, 0, prvSimulatedPeripheralTimer, NULL, 0, NULL );
+		pvHandle = CreateThread( NULL, 0, prvSimulatedPeripheralTimer, NULL, CREATE_SUSPENDED, NULL );
 		if( pvHandle != NULL )
 		{
-			SetThreadPriority( pvHandle, THREAD_PRIORITY_BELOW_NORMAL );
+			SetThreadPriority( pvHandle, portSIMULATED_TIMER_THREAD_PRIORITY );
 			SetThreadPriorityBoost( pvHandle, TRUE );
 			SetThreadAffinityMask( pvHandle, 0x01 );
+			ResumeThread( pvHandle );
 		}
 
 		/* Start the highest priority task by obtaining its associated thread
 		state structure, in which is stored the thread handle. */
-		pxThreadState = ( xThreadState * ) *( ( uint32_t * ) pxCurrentTCB );
+		pxThreadState = ( xThreadState * ) *( ( size_t * ) pxCurrentTCB );
 		ulCriticalNesting = portNO_CRITICAL_NESTING;
 
 		/* Bump up the priority of the thread that is going to run, in the
@@ -358,6 +391,7 @@ static void prvProcessSimulatedInterrupts( void )
 uint32_t ulSwitchRequired, i;
 xThreadState *pxThreadState;
 void *pvObjectList[ 2 ];
+CONTEXT xContext;
 
 	/* Going to block on the mutex that ensured exclusive access to the simulated
 	interrupt objects, and the event that signals that a simulated interrupt
@@ -416,12 +450,19 @@ void *pvObjectList[ 2 ];
 			if( pvOldCurrentTCB != pxCurrentTCB )
 			{
 				/* Suspend the old thread. */
-				pxThreadState = ( xThreadState *) *( ( uint32_t * ) pvOldCurrentTCB );
+				pxThreadState = ( xThreadState *) *( ( size_t * ) pvOldCurrentTCB );
 				SuspendThread( pxThreadState->pvThread );
+
+				/* Ensure the thread is actually suspended by performing a
+				synchronous operation that can only complete when the thread is
+				actually suspended.  The below code asks for dummy register
+				data. */
+				xContext.ContextFlags = CONTEXT_INTEGER;
+				( void ) GetThreadContext( pxThreadState->pvThread, &xContext );
 
 				/* Obtain the state of the task now selected to enter the
 				Running state. */
-				pxThreadState = ( xThreadState * ) ( *( uint32_t *) pxCurrentTCB );
+				pxThreadState = ( xThreadState * ) ( *( size_t *) pxCurrentTCB );
 				ResumeThread( pxThreadState->pvThread );
 			}
 		}
@@ -440,7 +481,7 @@ uint32_t ulErrorCode;
 	( void ) ulErrorCode;
 
 	/* Find the handle of the thread being deleted. */
-	pxThreadState = ( xThreadState * ) ( *( uint32_t *) pvTaskToDelete );
+	pxThreadState = ( xThreadState * ) ( *( size_t *) pvTaskToDelete );
 
 	/* Check that the thread is still valid, it might have been closed by
 	vPortCloseRunningThread() - which will be the case if the task associated
@@ -450,6 +491,10 @@ uint32_t ulErrorCode;
 	{
 		WaitForSingleObject( pvInterruptEventMutex, INFINITE );
 
+		/* !!! This is not a nice way to terminate a thread, and will eventually
+		result in resources being depleted if tasks frequently delete other
+		tasks (rather than deleting themselves) as the task stacks will not be
+		freed. */
 		ulErrorCode = TerminateThread( pxThreadState->pvThread, 0 );
 		configASSERT( ulErrorCode );
 
@@ -471,14 +516,14 @@ uint32_t ulErrorCode;
 	( void ) ulErrorCode;
 
 	/* Find the handle of the thread being deleted. */
-	pxThreadState = ( xThreadState * ) ( *( uint32_t *) pvTaskToDelete );
+	pxThreadState = ( xThreadState * ) ( *( size_t *) pvTaskToDelete );
 	pvThread = pxThreadState->pvThread;
 
 	/* Raise the Windows priority of the thread to ensure the FreeRTOS scheduler
 	does not run and swap it out before it is closed.  If that were to happen
 	the thread would never run again and effectively be a thread handle and
 	memory leak. */
-	SetThreadPriority( pvThread, THREAD_PRIORITY_ABOVE_NORMAL );
+	SetThreadPriority( pvThread, portDELETE_SELF_THREAD_PRIORITY );
 
 	/* This function will not return, therefore a yield is set as pending to
 	ensure a context switch occurs away from this thread on the next tick. */
@@ -491,6 +536,10 @@ uint32_t ulErrorCode;
 	/* Close the thread. */
 	ulErrorCode = CloseHandle( pvThread );
 	configASSERT( ulErrorCode );
+
+	/* This is called from a critical section, which must be exited before the
+	thread stops. */
+	taskEXIT_CRITICAL();
 
 	ExitThread( 0 );
 }
@@ -509,13 +558,15 @@ void vPortGenerateSimulatedInterrupt( uint32_t ulInterruptNumber )
 
 	if( ( ulInterruptNumber < portMAX_INTERRUPTS ) && ( pvInterruptEventMutex != NULL ) )
 	{
-		/* Yield interrupts are processed even when critical nesting is non-zero. */
+		/* Yield interrupts are processed even when critical nesting is
+		non-zero. */
 		WaitForSingleObject( pvInterruptEventMutex, INFINITE );
 		ulPendingInterrupts |= ( 1 << ulInterruptNumber );
 
-		/* The simulated interrupt is now held pending, but don't actually process it
-		yet if this call is within a critical section.  It is possible for this to
-		be in a critical section as calls to wait for mutexes are accumulative. */
+		/* The simulated interrupt is now held pending, but don't actually
+		process it yet if this call is within a critical section.  It is
+		possible for this to be in a critical section as calls to wait for
+		mutexes are accumulative. */
 		if( ulCriticalNesting == 0 )
 		{
 			SetEvent( pvInterruptEvent );

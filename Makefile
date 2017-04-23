@@ -25,8 +25,7 @@
 #
 ####################################################################################################
 
-include ./config/project/Makefile
-include ./config/$(__PROJECT_CPU_ARCH__)/Makefile
+include ./config/config.h
 
 ####################################################################################################
 # PROJECT CONFIGURATION
@@ -42,7 +41,7 @@ TOOLCHAIN = $(__PROJECT_TOOLCHAIN__)
 AFLAGS   = -c \
            -g \
            -ggdb3 \
-           -include ./config/project/flags.h \
+           -include ./config/config.h \
            $(CPUCONFIG_AFLAGS)
 
 CFLAGS   = -c \
@@ -55,7 +54,8 @@ CFLAGS   = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
-           -include ./config/project/flags.h \
+           -include ./config/config.h \
+           -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            $(CPUCONFIG_CFLAGS)
 
 CXXFLAGS = -c \
@@ -71,16 +71,16 @@ CXXFLAGS = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
-           -include ./config/project/flags.h \
+           -include ./config/config.h \
+           -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            $(CPUCONFIG_CXXFLAGS)
 
 LFLAGS   = -g \
            $(CPUCONFIG_LDFLAGS) \
-           -nostartfiles \
-           -T$(CPUCONFIG_LD) \
            -Wl,--gc-sections \
            -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
            -Wall \
+           -specs=nano.specs -specs=rdimon.specs \
            -lm
 
 #---------------------------------------------------------------------------------------------------
@@ -104,15 +104,21 @@ OBJ_DIR_NAME    = obj
 DEP_FILE_NAME   = $(PROJECT).d
 
 # folder localizations
-PROG_LOC   = src/programs
-SYS_LOC    = src/system
-LIB_LOC    = src/lib
-CORE_LOC   = $(SYS_LOC)/core
-FS_LOC     = $(SYS_LOC)/fs
-KERNEL_LOC = $(SYS_LOC)/kernel
-NET_LOC    = $(SYS_LOC)/net
-DRV_LOC    = $(SYS_LOC)/drivers
-PORT_LOC   = $(SYS_LOC)/portable
+APP_LOC         = src/application
+APP_PRG_LOC     = $(APP_LOC)/programs
+APP_LIB_LOC     = $(APP_LOC)/libs
+SYS_LOC         = src/system
+
+SYS_DRV_LOC     = $(SYS_LOC)/drivers
+SYS_DRV_INC_LOC = $(SYS_LOC)/include/drivers
+SYS_FS_LOC      = $(SYS_LOC)/fs
+SYS_INIT_LOC    = $(SYS_LOC)/init
+SYS_KRN_LOC     = $(SYS_LOC)/kernel
+SYS_LIB_LOC     = $(SYS_LOC)/lib
+SYS_MM_LOC      = $(SYS_LOC)/mm
+SYS_NET_LOC     = $(SYS_LOC)/net
+SYS_PORT_LOC    = $(SYS_LOC)/portable
+SYS_LIBC_LOC    = $(SYS_LOC)/libc
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -137,18 +143,19 @@ OBJDUMP    = $(TOOLCHAIN)objdump
 SIZE       = $(TOOLCHAIN)size
 CONFIGTOOL = ./tools/configtool.sh
 CODECHECK  = cppcheck
-ADDPROGS   = ./tools/progsearch.sh
-ADDLIBS    = ./tools/libsearch.sh
+ADDAPPS    = ./$(APP_LOC)/addapps.sh
+ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
+ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
 FLASH_CPU  = ./tools/flash.sh
 RESET_CPU  = ./tools/reset.sh
 GIT_HOOKS  = ./tools/apply_git_hooks.sh
+DOXYGEN    = ./tools/doxygen.sh
+RELEASEPKG = ./tools/releasepkg.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
 #---------------------------------------------------------------------------------------------------
 # defines VALUES
-_YES_ = 1
-_NO_  = 0
 EMPTY =
 
 # defines this makefile name
@@ -161,7 +168,7 @@ THREAD = $(shell $(ECHO) $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l)
 SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
 
 # main target without defined prefixes
-TARGET = $(__PROJECT_CPU_ARCH__)
+TARGET = $(__CPU_ARCH__)
 
 # target path
 TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
@@ -170,28 +177,27 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
 # list of sources to compile
--include $(PROG_LOC)/Makefile   # file is created in the add_programs target
--include $(LIB_LOC)/Makefile    # file is created in the add_programs target
+-include $(APP_LOC)/Makefile   # file is created in the addapps script
 include $(SYS_LOC)/Makefile
 
 # defines objects localizations
-HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(PROG_LOC)/$(file)) \
-          $(foreach file, $(HDRLOC_LIB),$(LIB_LOC)/$(file)) \
+HDRLOC  = $(foreach file, $(HDRLOC_PROGRAMS),$(APP_PRG_LOC)/$(file)) \
+          $(foreach file, $(HDRLOC_LIB),$(APP_LIB_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_CORE),$(SYS_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_NOARCH),$(SYS_LOC)/$(file)) \
           $(foreach file, $(HDRLOC_ARCH),$(SYS_LOC)/$(file)) \
           src/
 
 # defines all C sources
-CSRC    = $(foreach file, $(CSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
-          $(foreach file, $(CSRC_LIB),$(LIB_LOC)/$(file)) \
+CSRC    = $(foreach file, $(CSRC_PROGRAMS),$(APP_PRG_LOC)/$(file)) \
+          $(foreach file, $(CSRC_LIB),$(APP_LIB_LOC)/$(file)) \
           $(foreach file, $(CSRC_CORE),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CSRC_NOARCH),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CSRC_ARCH),$(SYS_LOC)/$(file))
 
 # defines all C++ sources
-CXXSRC  = $(foreach file, $(CXXSRC_PROGRAMS),$(PROG_LOC)/$(file)) \
-          $(foreach file, $(CXXSRC_LIB),$(LIB_LOC)/$(file)) \
+CXXSRC  = $(foreach file, $(CXXSRC_PROGRAMS),$(APP_PRG_LOC)/$(file)) \
+          $(foreach file, $(CXXSRC_LIB),$(APP_LIB_LOC)/$(file)) \
           $(foreach file, $(CXXSRC_CORE),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CXXSRC_NOARCH),$(SYS_LOC)/$(file)) \
           $(foreach file, $(CXXSRC_ARCH),$(SYS_LOC)/$(file))
@@ -206,7 +212,7 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 # targets
 ####################################################################################################
 .PHONY : all
-all : add_programs apply_git_hooks
+all : generate apply_git_hooks
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
@@ -222,13 +228,14 @@ help :
 	@$(ECHO) "   help                this help"
 	@$(ECHO) "   config              project configuration (text mode)"
 	@$(ECHO) "   clean               clean project"
-	@$(ECHO) "   cleanall            clean all non-project files"
 	@$(ECHO) ""
 	@$(ECHO) "Non-build targets:"
 	@$(ECHO) "   check               static code analyze by using cppcheck"
 	@$(ECHO) "   quickcheck          quick static code analyze by using cppcheck"
-	@$(ECHO) "   flash               flash target CPU by using ./tools/flash.sh script"
+	@$(ECHO) "   flash, install      flash target CPU by using ./tools/flash.sh script"
 	@$(ECHO) "   reset               reset target CPU by using ./tools/reset.sh script"
+	@$(ECHO) "   release             create Release package"
+	@$(ECHO) "   doc                 create documentation (Doxygen)"
 
 ####################################################################################################
 # project configuration wizard
@@ -246,7 +253,7 @@ check :
 	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,information,missingInclude --force --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CSRC) $(CXXSRC)
 
 quickcheck :
-	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,missingInclude --force --inconclusive --include=./config/project/flags.h -I src/system/include/stdc/dnx $(CSRC) $(CXXSRC)
+	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,missingInclude --force --inconclusive --include=./config/project/flags.h -I src/system/include/libc/dnx $(CSRC) $(CXXSRC)
 
 
 ####################################################################################################
@@ -287,11 +294,16 @@ status :
 # ./src/programs/Makefile, and ./src/lib/Makefile files required in the
 # build process
 ####################################################################################################
-.PHONY : add_programs
-add_programs :
+.PHONY : generate
+generate :
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(ADDPROGS) ./src/programs
-	@$(ADDLIBS) ./src/lib
+	@$(SHELL) $(ADDAPPS) ./$(APP_LOC)
+
+	@$(ECHO) "Adding file systems to the project..."
+	@$(SHELL) $(ADDFS) ./$(SYS_FS_LOC)
+
+	@$(ECHO) "Adding drivers to the project..."
+	@$(SHELL) $(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
 
 ####################################################################################################
 # Copy git hooks to git repository
@@ -336,25 +348,25 @@ buildobjects_$(TARGET) :$(foreach var,$(OBJECTS),$(OBJ_PATH)/$(var))
 # rule used to compile object files from c sources
 ####################################################################################################
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
-	@$(ECHO) "Building: $@..."
+	@$(ECHO) "Compiling: $<"
 	@$(MKDIR) $(dir $@)
-	@$(CC) $(CFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(C_EXT))) -o $@
+	@$(CC) $(CFLAGS) $(SEARCHPATH) $< -o $@
 
 ####################################################################################################
 # rule used to compile object files from C++ sources
 ####################################################################################################
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
-	@$(ECHO) "Building: $@..."
+	@$(ECHO) "Compiling: $<"
 	@$(MKDIR) $(dir $@)
-	@$(CXX) $(CXXFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(CXX_EXT))) -o $@
+	@$(CXX) $(CXXFLAGS) $(SEARCHPATH) $< -o $@
 
 ####################################################################################################
 # rule used to compile object files from assembler sources
 ####################################################################################################
 $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(AS_EXT) $(THIS_MAKEFILE)
-	@$(ECHO) "Building: $@..."
+	@$(ECHO) "Compiling: $<"
 	@$(MKDIR) $(dir $@)
-	@$(AS) $(AFLAGS) $(SEARCHPATH) $(subst $(OBJ_PATH)/,,$(@:.$(OBJ_EXT)=.$(AS_EXT))) -o $@
+	@$(AS) $(AFLAGS) $(SEARCHPATH) $< -o $@
 
 ####################################################################################################
 # clean target
@@ -371,15 +383,7 @@ cleantarget :
 .PHONY : clean
 clean :
 	@$(ECHO) "Deleting all build files..."
-	-@$(RM) -r $(TARGET_DIR_NAME)/*
-
-####################################################################################################
-# clean up project (remove all files who arent project files!)
-####################################################################################################
-.PHONY : cleanall
-cleanall:
-	@$(ECHO) "Cleaning up project..."
-	-@$(RM) -r $(TARGET_DIR_NAME) $(INFO_LOC)
+	-@$(RM) -r $(TARGET_DIR_NAME) ./doc/doxygen/html/ ./doc/doxygen/latex
 
 ####################################################################################################
 # flash target CPU by using ./tools/flash.sh script
@@ -388,12 +392,29 @@ cleanall:
 flash:
 	@$(FLASH_CPU)
 
+.PHONY : install
+install : flash
+
 ####################################################################################################
 # reset target CPU by using ./tools/flash.sh script
 ####################################################################################################
 .PHONY : reset
 reset:
 	@$(RESET_CPU)
+
+####################################################################################################
+# target used to create Release archive
+####################################################################################################
+.PHONY : release
+release: clean
+	@$(SHELL) $(RELEASEPKG)
+
+####################################################################################################
+# target used to Doxygen documentation
+####################################################################################################
+.PHONY : doc
+doc:
+	$(DOXYGEN)
 
 ####################################################################################################
 # include all dependencies

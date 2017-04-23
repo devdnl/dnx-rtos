@@ -1,0 +1,3 @@
+[submodule "tools/configtool"]
+	path = tools/configtool
+	url = https://bitbucket.org/devdnl/configtool.git

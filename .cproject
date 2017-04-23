@@ -24,7 +24,7 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1945861268" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.266880486" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.347086855" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value=".././src/system/include/stdc"/>
+									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.178026589" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -38,7 +38,7 @@
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.193515825" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value=".././src/system/include/stdc"/>
+									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -216,12 +216,14 @@
 		<configuration configurationName="Quick static code check">
 			<resource resourceType="PROJECT" workspacePath="/dnx"/>
 		</configuration>
+		<configuration configurationName="Quick Static Code Analyze"/>
 		<configuration configurationName="Build">
 			<resource resourceType="PROJECT" workspacePath="/dnx"/>
 		</configuration>
 		<configuration configurationName="stm32f1">
 			<resource resourceType="PROJECT" workspacePath="/dnx"/>
 		</configuration>
+		<configuration configurationName="Static Code Analyze"/>
 		<configuration configurationName="Static code check"/>
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/dnx"/>

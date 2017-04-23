@@ -2,7 +2,9 @@
 HDRLOC_ARCH += drivers/ethmac
 
 ifeq ($(__ENABLE_ETHMAC__), _YES_)
-   CSRC_ARCH   += drivers/ethmac/$(TARGET)/ethmac.c
-   CSRC_ARCH   += drivers/ethmac/$(TARGET)/stm32_eth_driver/stm32_eth.c
-   CXXSRC_ARCH += 
+	ifeq ($(TARGET), stm32f1)
+      CSRC_ARCH   += drivers/ethmac/$(TARGET)/ethmac.c
+      CSRC_ARCH   += drivers/ethmac/$(TARGET)/stm32_eth_driver/stm32_eth.c
+      CXXSRC_ARCH += 
+   endif
 endif

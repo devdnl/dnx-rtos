@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -49,7 +51,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"                    /* dnx file system support */
+#include "fs/fs.h"                      /* dnx file system support */
 #include "libfat_conf.h"                /* FatFs configuration options */
 
 /*==============================================================================
@@ -151,6 +153,8 @@ typedef struct {
         uint8_t         pad1;
         uint32_t        fptr;                   /* File read/write pointer (0ed on file open) */
         uint32_t        fsize;                  /* File size */
+        uint16_t        fdate;                  /* Last modified date */
+        uint16_t        ftime;                  /* Last modified time */
         uint32_t        sclust;                 /* File data start cluster (0:no data cluster, always 0 when fsize is 0) */
         uint32_t        clust;                  /* Current cluster of fpter */
         uint32_t        dsect;                  /* Current data sector of fpter */
@@ -229,6 +233,7 @@ typedef enum {
 ==============================================================================*/
 extern FRESULT  libfat_mount     (FILE*, FATFS*);
 extern FRESULT  libfat_umount    (FATFS*);
+extern FRESULT  libfat_sync      (FATFS*);
 extern FRESULT  libfat_open      (FATFS*, FATFILE*, const TCHAR*, uint8_t);
 extern FRESULT  libfat_read      (FATFILE*, void*, uint, uint*);
 extern FRESULT  libfat_lseek     (FATFILE*, uint32_t);
@@ -239,7 +244,7 @@ extern FRESULT  libfat_stat      (FATFS*, const TCHAR*, FILEINFO*);
 extern FRESULT  libfat_write     (FATFILE*, const void*, uint, uint*);
 extern FRESULT  libfat_getfree   (FATFS *fs, uint32_t *nclst);
 extern FRESULT  libfat_truncate  (FATFILE*);
-extern FRESULT  libfat_sync      (FATFILE*);
+extern FRESULT  libfat_flush     (FATFILE*);
 extern FRESULT  libfat_unlink    (FATFS*, const TCHAR*);
 extern FRESULT  libfat_mkdir     (FATFS*, const TCHAR*);
 extern FRESULT  libfat_chmod     (FATFS*, const TCHAR*, uint8_t, uint8_t);

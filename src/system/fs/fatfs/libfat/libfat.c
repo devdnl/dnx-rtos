@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -372,9 +374,15 @@
 #       define INIT_BUF(dobj)           {(dobj).fn = sfn; (dobj).lfn = lbuf;}
 #       define FREE_BUF()
 #elif _LIBFAT_USE_LFN == 2
-#       define DEF_NAMEBUF              uint8_t sfn[12]; wchar_t *lfn
-#       define INIT_BUF(dobj)           {lfn = _libfat_malloc((_LIBFAT_MAX_LFN + 1) * 2); if (!lfn) {LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE);} (dobj).lfn = lfn; (dobj).fn = sfn;}
-#       define FREE_BUF()               _libfat_free(lfn)
+#       if _LIBFAT_LFN_UNICODE == 0
+#               define DEF_NAMEBUF      uint8_t sfn[12]; wchar_t *lfn
+#               define INIT_BUF(dobj)   {lfn = _libfat_malloc(_LIBFAT_MAX_LFN + 1); if (!lfn) {LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE);} (dobj).lfn = lfn; (dobj).fn = sfn;}
+#               define FREE_BUF()       _libfat_free(lfn)
+#	else
+#               define DEF_NAMEBUF      uint8_t sfn[12]; wchar_t *lfn
+#               define INIT_BUF(dobj)   {lfn = _libfat_malloc((_LIBFAT_MAX_LFN + 1) * 2); if (!lfn) {LEAVE_FF((dobj).fs, FR_NOT_ENOUGH_CORE);} (dobj).lfn = lfn; (dobj).fn = sfn;}
+#               define FREE_BUF()       _libfat_free(lfn)
+#       endif
 #else
 #       error Wrong LFN configuration.
 #endif
@@ -736,7 +744,10 @@ static FRESULT sync_fs(FATFS *fs)
                         STORE_UINT32(fs->win+FSI_Nxt_Free, fs->last_clust);
 
                         /* Write it into the FSInfo sector */
-                        _libfat_disk_write(fs->srcfile, fs->win, fs->fsi_sector, 1);
+                        if (_libfat_disk_write(fs->srcfile, fs->win, fs->fsi_sector, 1) != RES_OK) {
+                                res = FR_DISK_ERR;
+                        }
+
                         fs->fsi_flag = 0;
                 }
 
@@ -2494,11 +2505,28 @@ FRESULT libfat_mount(FILE *fsfile, FATFS *fs)
 FRESULT libfat_umount(FATFS *fs)
 {
         if (fs) {
+                libfat_sync(fs);
                 _libfat_delete_mutex(fs->sobj);
                 return FR_OK;
         }
 
         return FR_DISK_ERR;
+}
+
+//==============================================================================
+/**
+ * @brief Function synchronize FS.
+ *
+ * @param[in] *fs       pointer to existing library instance
+ *
+ * @retval FR_OK
+ * @retval FR_DISK_ERR
+ */
+//==============================================================================
+FRESULT libfat_sync(FATFS *fs)
+{
+        fs->fsi_flag = 1;
+        return sync_fs(fs);
 }
 
 //==============================================================================
@@ -2531,7 +2559,11 @@ FRESULT libfat_open(FATFS *fs, FATFILE *fp, const TCHAR *path, uint8_t mode)
 
         fp->fs = fs;
 
-        mode &= LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS | LIBFAT_FA_OPEN_ALWAYS | LIBFAT_FA_CREATE_NEW;
+        mode &= LIBFAT_FA_READ
+              | LIBFAT_FA_WRITE
+              | LIBFAT_FA_CREATE_ALWAYS
+              | LIBFAT_FA_OPEN_ALWAYS
+              | LIBFAT_FA_CREATE_NEW;
 
         ENTER_FF(fs);
         dj.fs = fs;
@@ -2546,12 +2578,17 @@ FRESULT libfat_open(FATFS *fs, FATFILE *fp, const TCHAR *path, uint8_t mode)
                 if (!dir) {
                         /* Current dir itself */
                         res = FR_INVALID_NAME;
-                }
+                } else {
+                        FILEINFO fno;
+                        fno.lfname = NULL;
+                        fno.lfsize = 0;
+                        get_fileinfo(&dj, &fno);
+                        fp->fdate = fno.fdate;
+                        fp->ftime = fno.ftime;
 #if _LIBFAT_FS_LOCK
-                else {
                         res = chk_lock(&dj, (mode & ~LIBFAT_FA_READ) ? 1 : 0);
-                }
 #endif
+                }
         }
 
         /* Create or Open a file */
@@ -3008,7 +3045,7 @@ FRESULT libfat_write(FATFILE *fp, const void *buff, uint btw, uint *bw)
  * @retval FR_INT_ERR
  */
 //==============================================================================
-FRESULT libfat_sync(FATFILE *fp)
+FRESULT libfat_flush(FATFILE *fp)
 {
         FRESULT  res;
         uint32_t tm;
@@ -3072,7 +3109,7 @@ FRESULT libfat_close(FATFILE *fp)
         FRESULT res;
 
         /* Flush cached data */
-        res = libfat_sync(fp);
+        res = libfat_flush(fp);
 #if _LIBFAT_FS_LOCK
         /* Decrement open counter */
         if (res == FR_OK) {
@@ -3839,8 +3876,8 @@ FRESULT libfat_utime(FATFS *fs, const TCHAR *path, const FILEINFO *fno)
                         STORE_UINT16(dir+DIR_WrtDate, fno->fdate);
                         dj.fs->wflag = 1;
                         res = sync_fs(dj.fs);
-                        }
                 }
+        }
 
         LEAVE_FF(dj.fs, res);
 }

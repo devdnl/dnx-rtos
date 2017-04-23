@@ -1,12 +1,61 @@
-            GNU GENERAL PUBLIC LICENSE
-		       Version 2, June 1991
+The dnx RTOS open source license covers the dnx RTOS source files,
+which are located in the ./src/system directory of the official dnx RTOS
+download.  It also covers most of the source files in the application
+projects, which are located in the ./src/application directory of the official
+dnx RTOS download.  The project may also include third party software that
+is not part of dnx RTOS and is licensed separately to dnx RTOS.  Examples of
+third party software includes header files provided by chip or tools vendors,
+linker scripts, peripheral drivers, file systems, etc.  All the software in
+subdirectories of the ./src or ./tools directories are either open source or
+distributed with permission, and is free for use.  For the avoidance of doubt,
+refer to the comments at the top of each source file.
+
+The dnx RTOS GPL Exception text on this page applies to dnx RTOS v2.0.0 up to
+the latest version.
+
+
+NOTE: The modification to the GPL is included to allow you to distribute a
+combined work that includes dnx RTOS without being obliged to provide the source
+code for proprietary components.
+
+
+The dnx RTOS GPL exception text follows:
+
+Any dnx RTOS *source code*, whether modified or in it's original release form,
+or whether in whole or in part, can only be distributed by you under the terms
+of the GNU General Public License plus this exception.  An independent module is
+a module which is not derived from or based on dnx RTOS.
+
+Clause 1:
+
+Linking dnx RTOS with other modules is making a combined work based on dnx RTOS.
+Thus, the terms and conditions of the GNU General Public License V2 cover the
+whole combination.
+
+As a special exception, the copyright holders of dnx RTOS give you permission to
+link dnx RTOS with independent modules to produce a statically linked
+executable, regardless of the license terms of these independent modules, and to
+copy and distribute the resulting executable under terms of your choice,
+provided that you also meet, for each linked independent module, the terms and
+conditions of the license of that module.  An independent module is a module
+which is not derived from or based on dnx RTOS.
+
+
+--------------------------------------------------------------------------------
+
+
+The standard GPL V2 text:
+
+
+          GNU GENERAL PUBLIC LICENSE
+             Version 2, June 1991
 
  Copyright (C) 1989, 1991 Free Software Foundation, Inc.
                        59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  Everyone is permitted to copy and distribute verbatim copies
  of this license document, but changing it is not allowed.
 
-			    Preamble
+             Preamble
 
   The licenses for most software are designed to take away your
 freedom to share and change it.  By contrast, the GNU General Public
@@ -55,8 +104,8 @@ patent must be licensed for everyone's free use or not licensed at all.
 
   The precise terms and conditions for copying, distribution and
 modification follow.
-
-		    GNU GENERAL PUBLIC LICENSE
+
+          GNU GENERAL PUBLIC LICENSE
    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
   0. This License applies to any program or other work which contains
@@ -277,9 +326,9 @@ YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
 PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGES.
 
-		     END OF TERMS AND CONDITIONS
-
-	    How to Apply These Terms to Your New Programs
+           END OF TERMS AND CONDITIONS
+
+       How to Apply These Terms to Your New Programs
 
   If you develop a new program, and you want it to be of the greatest
 possible use to the public, the best way to achieve this is to make it

@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -35,6 +37,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <sys/types.h>
+#include <stdbool.h>
+#include <FreeRTOS.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -47,10 +51,61 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+/** KERNELSPACE: resource type */
+typedef enum {
+        RES_TYPE_UNKNOWN       = 0,
+        RES_TYPE_PROCESS       = 0x958701BA,
+        RES_TYPE_MUTEX         = 0x300C6B74,
+        RES_TYPE_SEMAPHORE     = 0x4E59901B,
+        RES_TYPE_QUEUE         = 0x83D50ADB,
+        RES_TYPE_FILE          = 0x7D129250,
+        RES_TYPE_DIR           = 0x19586E97,
+        RES_TYPE_MEMORY        = 0x9E834645,
+        RES_TYPE_SOCKET        = 0x63ACC316,
+        RES_TYPE_FLAG          = 0x18FAEC0D
+} res_type_t;
+
+/** KERNELSPACE: object header (must be the first in object) */
+typedef struct res_header {
+        struct res_header *next;
+        res_type_t         type;
+} res_header_t;
+
+/** KERNELSPACE: task type */
 typedef void task_t;
-typedef struct sem sem_t;
-typedef struct queue queue_t;
-typedef struct mutex mutex_t;
+
+/** KERNELSPACE: task function type */
+typedef void (*task_func_t)(void*);
+
+/** KERNELSPACE/USERSPACE: semaphore type */
+typedef struct {
+        res_header_t      header;
+        void             *object;
+        StaticSemaphore_t buffer;
+} sem_t;
+
+/** KERNELSPACE/USERSPACE: queue type */
+typedef struct {
+        res_header_t  header;
+        void         *object;
+        StaticQueue_t buffer;
+        uint8_t       storage[];
+} queue_t;
+
+/** KERNELSPACE/USERSPACE: mutex type */
+typedef struct {
+        res_header_t      header;
+        void             *object;
+        StaticSemaphore_t buffer;
+        bool              recursive;
+} mutex_t;
+
+/** KERNELSPACE: flag type */
+typedef struct {
+        res_header_t       header;
+        void              *object;
+        StaticEventGroup_t buffer;
+} flag_t;
 
 /*==============================================================================
    Exported object declarations

@@ -9,17 +9,19 @@
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the  Free Software  Foundation;  either version 2 of the License, or
-         any later version.
+         the Free Software Foundation and modified by the dnx RTOS exception.
 
-         This  program  is  distributed  in the hope that  it will be useful,
-         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
+         NOTE: The modification  to the GPL is  included to allow you to
+               distribute a combined work that includes dnx RTOS without
+               being obliged to provide the source  code for proprietary
+               components outside of the dnx RTOS.
+
+         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         You  should  have received a copy  of the GNU General Public License
-         along  with  this  program;  if not,  write  to  the  Free  Software
-         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+         Full license text is available on the following file: doc/license.txt.
 
 
 *//*==========================================================================*/
@@ -35,7 +37,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "core/fs.h"
+#include "fs/fs.h"
 #include "libfat_user.h"
 #include "libfat_conf.h"
 
@@ -78,12 +80,8 @@
 //==============================================================================
 DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        _sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (_sys_fread(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
-                return RES_ERROR;
-        } else {
-                return RES_OK;
-        }
+        return sys_cache_read(srcfile, sector, _LIBFAT_MAX_SS, count, buff) == ESUCC ?
+               RES_OK : RES_ERROR;
 }
 
 //==============================================================================
@@ -101,12 +99,8 @@ DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t
 //==============================================================================
 DRESULT _libfat_disk_write(FILE *srcfile, const uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        _sys_fseek(srcfile, (u64_t)sector * _LIBFAT_MAX_SS, SEEK_SET);
-        if (_sys_fwrite(buff, _LIBFAT_MAX_SS, count, srcfile) != count) {
-                return RES_ERROR;
-        } else {
-                return RES_OK;
-        }
+        return sys_cache_write(srcfile, sector, _LIBFAT_MAX_SS, count, buff, CACHE_WRITE_BACK) == ESUCC ?
+               RES_OK : RES_ERROR;
 }
 
 //==============================================================================
@@ -128,7 +122,7 @@ DRESULT _libfat_disk_ioctl(FILE *srcfile, uint8_t cmd, void *buff)
 
         switch (cmd) {
         case CTRL_SYNC:
-                if (_sys_fflush(srcfile) == 0)
+                if (sys_fflush(srcfile) == 0)
                         return RES_OK;
                 else
                         return RES_ERROR;
@@ -151,16 +145,18 @@ DRESULT _libfat_disk_ioctl(FILE *srcfile, uint8_t cmd, void *buff)
 //==============================================================================
 uint32_t _libfat_get_fattime(void)
 {
-        time_t t = _sys_time(NULL);
+        time_t t;
+        sys_get_time(&t);
 
         struct tm tm;
-        _sys_gmtime_r(&t, &tm);
+        sys_gmtime_r(&t, &tm);
 
-        uint32_t fattime = ((tm.tm_sec  / 2) & 0x1F)
-                         | ((tm.tm_min  & 0x3F) << 5)
-                         | ((tm.tm_hour & 0x1F) << 11)
-                         | (((tm.tm_mon  + 1 ) & 0x1F) << 16)
-                         | (((tm.tm_year - 80) & 0x7F) << 25);
+        uint32_t fattime = (tm.tm_sec >> 1)
+                         | (tm.tm_min << 5)
+                         | (tm.tm_hour << 11)
+                         | (tm.tm_mday << 16)
+                         | ((tm.tm_mon + 1) << 21)
+                         | ((tm.tm_year - 80) << 25);
 
         return fattime;
 }
@@ -177,15 +173,7 @@ uint32_t _libfat_get_fattime(void)
 //==============================================================================
 int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 {
-        if (sobj) {
-                _LIBFAT_MUTEX_t mtx = _sys_mutex_new(MUTEX_NORMAL);
-                if (mtx) {
-                        *sobj = mtx;
-                        return 1;
-                }
-        }
-
-        return 0;
+        return sys_mutex_create(MUTEX_TYPE_NORMAL, sobj) == ESUCC ? 1 : 0;
 }
 
 //==============================================================================
@@ -200,12 +188,7 @@ int _libfat_create_mutex(_LIBFAT_MUTEX_t *sobj)
 //==============================================================================
 int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 {
-        if (sobj) {
-                _sys_mutex_delete(sobj);
-                return 1;
-        }
-
-        return 0;
+        return sys_mutex_destroy(sobj) == ESUCC ? 1 : 0;
 }
 
 //==============================================================================
@@ -220,13 +203,7 @@ int _libfat_delete_mutex (_LIBFAT_MUTEX_t sobj)
 //==============================================================================
 int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 {
-        if (sobj) {
-                if (_sys_mutex_lock(sobj, _LIBFAT_FS_TIMEOUT)) {
-                        return 1;
-                }
-        }
-
-        return 0;
+        return sys_mutex_lock(sobj, _LIBFAT_FS_TIMEOUT) == ESUCC ? 1 : 0;
 }
 
 //==============================================================================
@@ -238,9 +215,7 @@ int _libfat_lock_access(_LIBFAT_MUTEX_t sobj)
 //==============================================================================
 void _libfat_unlock_access(_LIBFAT_MUTEX_t sobj)
 {
-        if (sobj) {
-                _sys_mutex_unlock(sobj);
-        }
+        sys_mutex_unlock(sobj);
 }
 
 //==============================================================================
@@ -254,7 +229,9 @@ void _libfat_unlock_access(_LIBFAT_MUTEX_t sobj)
 //==============================================================================
 void *_libfat_malloc(uint msize)
 {
-        return malloc(msize);
+        void *mem = NULL;
+        sys_malloc(msize, &mem);
+        return mem;
 }
 
 //==============================================================================
@@ -266,7 +243,7 @@ void *_libfat_malloc(uint msize)
 //==============================================================================
 void _libfat_free(void *mblock)
 {
-        free(mblock);
+        sys_free(&mblock);
 }
 
 /*==============================================================================
