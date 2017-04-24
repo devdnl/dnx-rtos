@@ -131,159 +131,159 @@
 #         end
 #     end
 #
-#     uC.PERIPH["STM32F401CBxx"] = {}
-#     uC.PERIPH["STM32F401RBxx"] = {}
-#     uC.PERIPH["STM32F401VBxx"] = {}
-#     uC.PERIPH["STM32F401CCxx"] = {}
-#     uC.PERIPH["STM32F401RCxx"] = {}
-#     uC.PERIPH["STM32F401VCxx"] = {}
-#     uC.PERIPH["STM32F401CDxx"] = {}
-#     uC.PERIPH["STM32F401RDxx"] = {}
-#     uC.PERIPH["STM32F401VDxx"] = {}
-#     uC.PERIPH["STM32F401CExx"] = {}
-#     uC.PERIPH["STM32F401RExx"] = {}
-#     uC.PERIPH["STM32F401VExx"] = {}
-#     uC.PERIPH["STM32F405RGxx"] = {}
-#     uC.PERIPH["STM32F405OExx"] = {}
-#     uC.PERIPH["STM32F405OGxx"] = {}
-#     uC.PERIPH["STM32F405VGxx"] = {}
-#     uC.PERIPH["STM32F405ZGxx"] = {}
-#     uC.PERIPH["STM32F407VExx"] = {}
-#     uC.PERIPH["STM32F407VGxx"] = {}
-#     uC.PERIPH["STM32F407ZExx"] = {}
-#     uC.PERIPH["STM32F407ZGxx"] = {}
-#     uC.PERIPH["STM32F407IExx"] = {}
-#     uC.PERIPH["STM32F407IGxx"] = {}
-#     uC.PERIPH["STM32F410T8Yx"] = {}
-#     uC.PERIPH["STM32F410TBYx"] = {}
-#     uC.PERIPH["STM32F410C8Ux"] = {}
-#     uC.PERIPH["STM32F410CBUx"] = {}
-#     uC.PERIPH["STM32F410C8Tx"] = {}
-#     uC.PERIPH["STM32F410CBTx"] = {}
-#     uC.PERIPH["STM32F410R8Tx"] = {}
-#     uC.PERIPH["STM32F410RBTx"] = {}
-#     uC.PERIPH["STM32F410R8Ix"] = {}
-#     uC.PERIPH["STM32F410RBIx"] = {}
-#     uC.PERIPH["STM32F411CCxx"] = {}
-#     uC.PERIPH["STM32F411RCxx"] = {}
-#     uC.PERIPH["STM32F411VCxx"] = {}
-#     uC.PERIPH["STM32F411CExx"] = {}
-#     uC.PERIPH["STM32F411RExx"] = {}
-#     uC.PERIPH["STM32F411VExx"] = {}
-#     uC.PERIPH["STM32F412CExx"] = {}
-#     uC.PERIPH["STM32F412CGxx"] = {}
-#     uC.PERIPH["STM32F412RExx"] = {}
-#     uC.PERIPH["STM32F412RGxx"] = {}
-#     uC.PERIPH["STM32F412VExx"] = {}
-#     uC.PERIPH["STM32F412VGxx"] = {}
-#     uC.PERIPH["STM32F412ZExx"] = {}
-#     uC.PERIPH["STM32F412ZGxx"] = {}
-#     uC.PERIPH["STM32F413CGxx"] = {}
-#     uC.PERIPH["STM32F413RGxx"] = {}
-#     uC.PERIPH["STM32F413MGxx"] = {}
-#     uC.PERIPH["STM32F413VGxx"] = {}
-#     uC.PERIPH["STM32F413ZGxx"] = {}
-#     uC.PERIPH["STM32F413CHxx"] = {}
-#     uC.PERIPH["STM32F413RHxx"] = {}
-#     uC.PERIPH["STM32F413MHxx"] = {}
-#     uC.PERIPH["STM32F413VHxx"] = {}
-#     uC.PERIPH["STM32F413ZHxx"] = {}
-#     uC.PERIPH["STM32F415RGxx"] = {}
-#     uC.PERIPH["STM32F415OGxx"] = {}
-#     uC.PERIPH["STM32F415VGxx"] = {}
-#     uC.PERIPH["STM32F415ZGxx"] = {}
-#     uC.PERIPH["STM32F417VExx"] = {}
-#     uC.PERIPH["STM32F417VGxx"] = {}
-#     uC.PERIPH["STM32F417ZExx"] = {}
-#     uC.PERIPH["STM32F417ZGxx"] = {}
-#     uC.PERIPH["STM32F417IExx"] = {}
-#     uC.PERIPH["STM32F417IGxx"] = {}
-#     uC.PERIPH["STM32F423CHxx"] = {}
-#     uC.PERIPH["STM32F423RHxx"] = {}
-#     uC.PERIPH["STM32F423MHxx"] = {}
-#     uC.PERIPH["STM32F423VHxx"] = {}
-#     uC.PERIPH["STM32F423ZHxx"] = {}
-#     uC.PERIPH["STM32F427VGxx"] = {}
-#     uC.PERIPH["STM32F427VIxx"] = {}
-#     uC.PERIPH["STM32F427ZGxx"] = {}
-#     uC.PERIPH["STM32F427ZIxx"] = {}
-#     uC.PERIPH["STM32F427AGxx"] = {}
-#     uC.PERIPH["STM32F427AIxx"] = {}
-#     uC.PERIPH["STM32F427IGxx"] = {}
-#     uC.PERIPH["STM32F427IIxx"] = {}
-#     uC.PERIPH["STM32F429VExx"] = {}
-#     uC.PERIPH["STM32F429VGxx"] = {}
-#     uC.PERIPH["STM32F429VIxx"] = {}
-#     uC.PERIPH["STM32F429ZExx"] = {}
-#     uC.PERIPH["STM32F429ZGxx"] = {}
-#     uC.PERIPH["STM32F429ZIxx"] = {}
-#     uC.PERIPH["STM32F429AGxx"] = {}
-#     uC.PERIPH["STM32F429AIxx"] = {}
-#     uC.PERIPH["STM32F429IExx"] = {}
-#     uC.PERIPH["STM32F429IGxx"] = {}
-#     uC.PERIPH["STM32F429IIxx"] = {}
-#     uC.PERIPH["STM32F429BExx"] = {}
-#     uC.PERIPH["STM32F429BGxx"] = {}
-#     uC.PERIPH["STM32F429BIxx"] = {}
-#     uC.PERIPH["STM32F429NExx"] = {}
-#     uC.PERIPH["STM32F429NGxx"] = {}
-#     uC.PERIPH["STM32F429NIxx"] = {}
-#     uC.PERIPH["STM32F437VGxx"] = {}
-#     uC.PERIPH["STM32F437VIxx"] = {}
-#     uC.PERIPH["STM32F437ZGxx"] = {}
-#     uC.PERIPH["STM32F437ZIxx"] = {}
-#     uC.PERIPH["STM32F437IGxx"] = {}
-#     uC.PERIPH["STM32F437IIxx"] = {}
-#     uC.PERIPH["STM32F437AIxx"] = {}
-#     uC.PERIPH["STM32F439VGxx"] = {}
-#     uC.PERIPH["STM32F439VIxx"] = {}
-#     uC.PERIPH["STM32F439ZGxx"] = {}
-#     uC.PERIPH["STM32F439ZIxx"] = {}
-#     uC.PERIPH["STM32F439IGxx"] = {}
-#     uC.PERIPH["STM32F439IIxx"] = {}
-#     uC.PERIPH["STM32F439BGxx"] = {}
-#     uC.PERIPH["STM32F439BIxx"] = {}
-#     uC.PERIPH["STM32F439NGxx"] = {}
-#     uC.PERIPH["STM32F439NIxx"] = {}
-#     uC.PERIPH["STM32F439AIxx"] = {}
-#     uC.PERIPH["STM32F446MCxx"] = {}
-#     uC.PERIPH["STM32F446RCxx"] = {}
-#     uC.PERIPH["STM32F446VCxx"] = {}
-#     uC.PERIPH["STM32F446ZCxx"] = {}
-#     uC.PERIPH["STM32F446MExx"] = {}
-#     uC.PERIPH["STM32F446RExx"] = {}
-#     uC.PERIPH["STM32F446VExx"] = {}
-#     uC.PERIPH["STM32F446ZExx"] = {}
-#     uC.PERIPH["STM32F469VExx"] = {}
-#     uC.PERIPH["STM32F469VGxx"] = {}
-#     uC.PERIPH["STM32F469VIxx"] = {}
-#     uC.PERIPH["STM32F469ZExx"] = {}
-#     uC.PERIPH["STM32F469ZGxx"] = {}
-#     uC.PERIPH["STM32F469ZIxx"] = {}
-#     uC.PERIPH["STM32F469AExx"] = {}
-#     uC.PERIPH["STM32F469AGxx"] = {}
-#     uC.PERIPH["STM32F469AIxx"] = {}
-#     uC.PERIPH["STM32F469IExx"] = {}
-#     uC.PERIPH["STM32F469IGxx"] = {}
-#     uC.PERIPH["STM32F469IIxx"] = {}
-#     uC.PERIPH["STM32F469BExx"] = {}
-#     uC.PERIPH["STM32F469BGxx"] = {}
-#     uC.PERIPH["STM32F469BIxx"] = {}
-#     uC.PERIPH["STM32F469NExx"] = {}
-#     uC.PERIPH["STM32F469NGxx"] = {}
-#     uC.PERIPH["STM32F469NIxx"] = {}
-#     uC.PERIPH["STM32F479VGxx"] = {}
-#     uC.PERIPH["STM32F479VIxx"] = {}
-#     uC.PERIPH["STM32F479ZGxx"] = {}
-#     uC.PERIPH["STM32F479ZIxx"] = {}
-#     uC.PERIPH["STM32F479AGxx"] = {}
-#     uC.PERIPH["STM32F479AIxx"] = {}
-#     uC.PERIPH["STM32F479IGxx"] = {}
-#     uC.PERIPH["STM32F479IIxx"] = {}
-#     uC.PERIPH["STM32F479BGxx"] = {}
-#     uC.PERIPH["STM32F479BIxx"] = {}
-#     uC.PERIPH["STM32F479NGxx"] = {}
-#     uC.PERIPH["STM32F479NIxx"] = {}
+#     uC.PERIPH["STM32F401CBxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401RBxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401VBxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401CCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401RCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401VCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401CDxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401RDxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401VDxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401CExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401RExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F401VExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F405RGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F405OExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F405OGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F405VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F405ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F407VExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F407VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F407ZExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F407ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F407IExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F407IGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F410T8Yx"] = {GPIO = true}
+#     uC.PERIPH["STM32F410TBYx"] = {GPIO = true}
+#     uC.PERIPH["STM32F410C8Ux"] = {GPIO = true}
+#     uC.PERIPH["STM32F410CBUx"] = {GPIO = true}
+#     uC.PERIPH["STM32F410C8Tx"] = {GPIO = true}
+#     uC.PERIPH["STM32F410CBTx"] = {GPIO = true}
+#     uC.PERIPH["STM32F410R8Tx"] = {GPIO = true}
+#     uC.PERIPH["STM32F410RBTx"] = {GPIO = true}
+#     uC.PERIPH["STM32F410R8Ix"] = {GPIO = true}
+#     uC.PERIPH["STM32F410RBIx"] = {GPIO = true}
+#     uC.PERIPH["STM32F411CCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F411RCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F411VCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F411CExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F411RExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F411VExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F412CExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F412CGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F412RExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F412RGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F412VExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F412VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F412ZExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F412ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413CGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413RGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413MGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413CHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413RHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413MHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413VHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F413ZHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F415RGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F415OGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F415VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F415ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F417VExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F417VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F417ZExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F417ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F417IExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F417IGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F423CHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F423RHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F423MHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F423VHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F423ZHxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F427VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F427VIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F427ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F427ZIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F427AGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F427AIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F427IGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F427IIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429VExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429VIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429ZExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429ZIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429AGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429AIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429IExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429IGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429IIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429BExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429BGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429BIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429NExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429NGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F429NIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F437VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F437VIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F437ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F437ZIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F437IGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F437IIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F437AIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439VIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439ZIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439IGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439IIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439BGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439BIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439NGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439NIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F439AIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F446MCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F446RCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F446VCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F446ZCxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F446MExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F446RExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F446VExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F446ZExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469VExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469VIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469ZExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469ZIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469AExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469AGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469AIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469IExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469IGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469IIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469BExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469BGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469BIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469NExx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469NGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F469NIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479VGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479VIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479ZGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479ZIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479AGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479AIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479IGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479IIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479BGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479BIxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479NGxx"] = {GPIO = true}
+#     uC.PERIPH["STM32F479NIxx"] = {GPIO = true}
 # end
 #++*/
 
@@ -316,6 +316,7 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 
 #if (__CPU_ARCH__ == stm32f4)
 #include "stm32f4/cpu_flags.h"
+#include "stm32f4/gpio_flags.h"
 #endif
 
 #/*--
@@ -437,9 +438,9 @@ __ENABLE_SPI__=_NO_
 #     this:SetFlagValue("__ENABLE_UART__", "_NO_")
 # end
 #--*/
-#define __ENABLE_UART__ _YES_
+#define __ENABLE_UART__ _NO_
 #/*
-__ENABLE_UART__=_YES_
+__ENABLE_UART__=_NO_
 #*/
 
 #/*--
