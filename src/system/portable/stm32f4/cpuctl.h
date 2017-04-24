@@ -43,7 +43,7 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* CPU/platform name */
-#define _CPUCTL_PLATFORM_NAME                   "ARM Cortex-M4 STM32F4xx"
+#define _CPUCTL_PLATFORM_NAME                   "ARM Cortex-M4F STM32F4xx"
 #define _CPUCTL_VENDOR_NAME                     "STMicroelectronics"
 #define _CPUCTL_BYTE_ORDER                      _BYTE_ORDER_LITTLE_ENDIAN
 

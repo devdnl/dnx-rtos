@@ -45,19 +45,19 @@
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __CPU_FAMILY__ _STM32F4XX_ACCESSLINE_
+#define __CPU_FAMILY__ _STM32F4XX_ADVANCEDLINE_
 
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __CPU_SERIES__ _STM32F401xC
+#define __CPU_SERIES__ _STM32F429xx
 
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __LD_SCRIPT__ STM32F401xBxx
+#define __LD_SCRIPT__ STM32F42xxIxx
 #/*
-__LD_SCRIPT__=STM32F401xBxx
+__LD_SCRIPT__=STM32F42xxIxx
 #*/
 
 #/*--
@@ -234,9 +234,9 @@ __LD_SCRIPT__=STM32F401xBxx
 #    end
 # )
 #--*/
-#define __CPU_NAME__ STM32F401CBxx
+#define __CPU_NAME__ STM32F429ZIxx
 #/*
-__CPU_NAME__=STM32F401CBxx
+__CPU_NAME__=STM32F429ZIxx
 #*/
 
 #/*--
@@ -249,7 +249,7 @@ __CPU_NAME__=STM32F401CBxx
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------
-#define _CPU_START_FREQUENCY_           (8000000UL)
+#define _CPU_START_FREQUENCY_           (16000000UL)
 #define _CPU_HEAP_ALIGN_                (4)
 #define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (0xFF)
 #define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (0xEF)
