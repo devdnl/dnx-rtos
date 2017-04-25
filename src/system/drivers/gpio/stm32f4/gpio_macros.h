@@ -50,17 +50,19 @@ extern "C" {
 #define _GPIO_SPEED_VERY_HIGH                   0x03
 
 /** [mmmm tttt pppp] (do not edit) */
+#define _GPIO_MODE_IN                           0x000
+#define _GPIO_MODE_IN_PU                        0x001
+#define _GPIO_MODE_IN_PD                        0x002
 #define _GPIO_MODE_PP                           0x100
 #define _GPIO_MODE_OD                           0x110
 #define _GPIO_MODE_OD_PU                        0x111
 #define _GPIO_MODE_OD_PD                        0x112
 #define _GPIO_MODE_AF_PP                        0x200
+#define _GPIO_MODE_AF_PP_PU                     0x201
+#define _GPIO_MODE_AF_PP_PD                     0x202
 #define _GPIO_MODE_AF_OD                        0x210
 #define _GPIO_MODE_AF_OD_PU                     0x211
 #define _GPIO_MODE_AF_OD_PD                     0x212
-#define _GPIO_MODE_IN_FLOAT                     0x000
-#define _GPIO_MODE_IN_PU                        0x001
-#define _GPIO_MODE_IN_PD                        0x002
 #define _GPIO_MODE_ANALOG                       0x300
 
 /** define pin state (do not edit) */
