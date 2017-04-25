@@ -244,7 +244,7 @@ if this:PinExist("A", 0) then
     this:AddPinMode("A", 0)
 end
 --*/
-#define __GPIO_PA_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 0) then
@@ -296,7 +296,7 @@ if this:PinExist("A", 1) then
     this:AddPinMode("A", 1)
 end
 --*/
-#define __GPIO_PA_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 1) then
@@ -346,7 +346,7 @@ if this:PinExist("A", 2) then
     this:AddPinMode("A", 2)
 end
 --*/
-#define __GPIO_PA_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 2) then
@@ -398,7 +398,7 @@ if this:PinExist("A", 3) then
     this:AddPinMode("A", 3)
 end
 --*/
-#define __GPIO_PA_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 3) then
@@ -449,7 +449,7 @@ if this:PinExist("A", 4) then
     this:AddPinMode("A", 4)
 end
 --*/
-#define __GPIO_PA_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 4) then
@@ -499,7 +499,7 @@ if this:PinExist("A", 5) then
     this:AddPinMode("A", 5)
 end
 --*/
-#define __GPIO_PA_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 5) then
@@ -550,7 +550,7 @@ if this:PinExist("A", 6) then
     this:AddPinMode("A", 6)
 end
 --*/
-#define __GPIO_PA_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 6) then
@@ -603,7 +603,7 @@ if this:PinExist("A", 7) then
     this:AddPinMode("A", 7)
 end
 --*/
-#define __GPIO_PA_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 7) then
@@ -653,7 +653,7 @@ if this:PinExist("A", 8) then
     this:AddPinMode("A", 8)
 end
 --*/
-#define __GPIO_PA_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 8) then
@@ -703,7 +703,7 @@ if this:PinExist("A", 9) then
     this:AddPinMode("A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 9) then
@@ -751,7 +751,7 @@ if this:PinExist("A", 10) then
     this:AddPinMode("A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 10) then
@@ -800,7 +800,7 @@ if this:PinExist("A", 11) then
     this:AddPinMode("A", 11)
 end
 --*/
-#define __GPIO_PA_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 11) then
@@ -849,7 +849,7 @@ if this:PinExist("A", 12) then
     this:AddPinMode("A", 12)
 end
 --*/
-#define __GPIO_PA_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 12) then
@@ -878,7 +878,7 @@ if this:PinExist("A", 13) then
     this:AddProposals(PA13, "A", 13)
 end
 --*/
-#define __GPIO_PA_PIN_13_NAME__ PA13_NC
+#define __GPIO_PA_PIN_13_NAME__ JTMS_SWDIO
 
 /*--
 if this:PinExist("A", 13) then
@@ -886,7 +886,7 @@ if this:PinExist("A", 13) then
     this:AddPinSpeed("A", 13)
 end
 --*/
-#define __GPIO_PA_PIN_13_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_13_SPEED__ _GPIO_SPEED_HIGH
 
 /*--
 if this:PinExist("A", 13) then
@@ -894,7 +894,7 @@ if this:PinExist("A", 13) then
     this:AddPinMode("A", 13)
 end
 --*/
-#define __GPIO_PA_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_13_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 if this:PinExist("A", 13) then
@@ -923,7 +923,7 @@ if this:PinExist("A", 14) then
     this:AddProposals(PA14, "A", 14)
 end
 --*/
-#define __GPIO_PA_PIN_14_NAME__ PA14_NC
+#define __GPIO_PA_PIN_14_NAME__ JTCK_SWCLK
 
 /*--
 if this:PinExist("A", 14) then
@@ -931,7 +931,7 @@ if this:PinExist("A", 14) then
     this:AddPinSpeed("A", 14)
 end
 --*/
-#define __GPIO_PA_PIN_14_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_14_SPEED__ _GPIO_SPEED_HIGH
 
 /*--
 if this:PinExist("A", 14) then
@@ -939,7 +939,7 @@ if this:PinExist("A", 14) then
     this:AddPinMode("A", 14)
 end
 --*/
-#define __GPIO_PA_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_14_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 if this:PinExist("A", 14) then
@@ -973,7 +973,7 @@ if this:PinExist("A", 15) then
     this:AddProposals(PA15, "A", 15)
 end
 --*/
-#define __GPIO_PA_PIN_15_NAME__ PA15_NC
+#define __GPIO_PA_PIN_15_NAME__ JTDI
 
 /*--
 if this:PinExist("A", 15) then
@@ -981,7 +981,7 @@ if this:PinExist("A", 15) then
     this:AddPinSpeed("A", 15)
 end
 --*/
-#define __GPIO_PA_PIN_15_SPEED__ _GPIO_SPEED_LOW
+#define __GPIO_PA_PIN_15_SPEED__ _GPIO_SPEED_HIGH
 
 /*--
 if this:PinExist("A", 15) then
@@ -989,7 +989,7 @@ if this:PinExist("A", 15) then
     this:AddPinMode("A", 15)
 end
 --*/
-#define __GPIO_PA_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PA_PIN_15_MODE__ _GPIO_MODE_AF_PP
 
 /*--
 if this:PinExist("A", 15) then
@@ -1041,7 +1041,7 @@ if this:PinExist("B", 0) then
     this:AddPinMode("B", 0)
 end
 --*/
-#define __GPIO_PB_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 0) then
@@ -1092,7 +1092,7 @@ if this:PinExist("B", 1) then
     this:AddPinMode("B", 1)
 end
 --*/
-#define __GPIO_PB_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 1) then
@@ -1136,7 +1136,7 @@ if this:PinExist("B", 2) then
     this:AddPinMode("B", 2)
 end
 --*/
-#define __GPIO_PB_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 2) then
@@ -1186,7 +1186,7 @@ if this:PinExist("B", 3) then
     this:AddPinMode("B", 3)
 end
 --*/
-#define __GPIO_PB_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 3) then
@@ -1235,7 +1235,7 @@ if this:PinExist("B", 4) then
     this:AddPinMode("B", 4)
 end
 --*/
-#define __GPIO_PB_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 4) then
@@ -1290,7 +1290,7 @@ if this:PinExist("B", 5) then
     this:AddPinMode("B", 5)
 end
 --*/
-#define __GPIO_PB_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 5) then
@@ -1341,7 +1341,7 @@ if this:PinExist("B", 6) then
     this:AddPinMode("B", 6)
 end
 --*/
-#define __GPIO_PB_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 6) then
@@ -1390,7 +1390,7 @@ if this:PinExist("B", 7) then
     this:AddPinMode("B", 7)
 end
 --*/
-#define __GPIO_PB_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 7) then
@@ -1442,7 +1442,7 @@ if this:PinExist("B", 8) then
     this:AddPinMode("B", 8)
 end
 --*/
-#define __GPIO_PB_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 8) then
@@ -1495,7 +1495,7 @@ if this:PinExist("B", 9) then
     this:AddPinMode("B", 9)
 end
 --*/
-#define __GPIO_PB_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 9) then
@@ -1548,7 +1548,7 @@ if this:PinExist("B", 10) then
     this:AddPinMode("B", 10)
 end
 --*/
-#define __GPIO_PB_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 10) then
@@ -1600,7 +1600,7 @@ if this:PinExist("B", 11) then
     this:AddPinMode("B", 11)
 end
 --*/
-#define __GPIO_PB_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 11) then
@@ -1654,7 +1654,7 @@ if this:PinExist("B", 12) then
     this:AddPinMode("B", 12)
 end
 --*/
-#define __GPIO_PB_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 12) then
@@ -1706,7 +1706,7 @@ if this:PinExist("B", 13) then
     this:AddPinMode("B", 13)
 end
 --*/
-#define __GPIO_PB_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 13) then
@@ -1757,7 +1757,7 @@ if this:PinExist("B", 14) then
     this:AddPinMode("B", 14)
 end
 --*/
-#define __GPIO_PB_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 14) then
@@ -1808,7 +1808,7 @@ if this:PinExist("B", 15) then
     this:AddPinMode("B", 15)
 end
 --*/
-#define __GPIO_PB_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PB_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("B", 15) then
@@ -1856,7 +1856,7 @@ if this:PinExist("C", 0) then
     this:AddPinMode("C", 0)
 end
 --*/
-#define __GPIO_PC_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 0) then
@@ -1905,7 +1905,7 @@ if this:PinExist("C", 1) then
     this:AddPinMode("C", 1)
 end
 --*/
-#define __GPIO_PC_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 1) then
@@ -1954,7 +1954,7 @@ if this:PinExist("C", 2) then
     this:AddPinMode("C", 2)
 end
 --*/
-#define __GPIO_PC_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 2) then
@@ -2003,7 +2003,7 @@ if this:PinExist("C", 3) then
     this:AddPinMode("C", 3)
 end
 --*/
-#define __GPIO_PC_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 3) then
@@ -2050,7 +2050,7 @@ if this:PinExist("C", 4) then
     this:AddPinMode("C", 4)
 end
 --*/
-#define __GPIO_PC_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 4) then
@@ -2097,7 +2097,7 @@ if this:PinExist("C", 5) then
     this:AddPinMode("C", 5)
 end
 --*/
-#define __GPIO_PC_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 5) then
@@ -2148,7 +2148,7 @@ if this:PinExist("C", 6) then
     this:AddPinMode("C", 6)
 end
 --*/
-#define __GPIO_PC_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 6) then
@@ -2199,7 +2199,7 @@ if this:PinExist("C", 7) then
     this:AddPinMode("C", 7)
 end
 --*/
-#define __GPIO_PC_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 7) then
@@ -2249,7 +2249,7 @@ if this:PinExist("C", 8) then
     this:AddPinMode("C", 8)
 end
 --*/
-#define __GPIO_PC_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 8) then
@@ -2301,7 +2301,7 @@ if this:PinExist("C", 9) then
     this:AddPinMode("C", 9)
 end
 --*/
-#define __GPIO_PC_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 9) then
@@ -2353,7 +2353,7 @@ if this:PinExist("C", 10) then
     this:AddPinMode("C", 10)
 end
 --*/
-#define __GPIO_PC_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 10) then
@@ -2404,7 +2404,7 @@ if this:PinExist("C", 11) then
     this:AddPinMode("C", 11)
 end
 --*/
-#define __GPIO_PC_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 11) then
@@ -2455,7 +2455,7 @@ if this:PinExist("C", 12) then
     this:AddPinMode("C", 12)
 end
 --*/
-#define __GPIO_PC_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 12) then
@@ -2499,7 +2499,7 @@ if this:PinExist("C", 13) then
     this:AddPinMode("C", 13)
 end
 --*/
-#define __GPIO_PC_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 13) then
@@ -2543,7 +2543,7 @@ if this:PinExist("C", 14) then
     this:AddPinMode("C", 14)
 end
 --*/
-#define __GPIO_PC_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 14) then
@@ -2587,7 +2587,7 @@ if this:PinExist("C", 15) then
     this:AddPinMode("C", 15)
 end
 --*/
-#define __GPIO_PC_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PC_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("C", 15) then
@@ -2631,7 +2631,7 @@ if this:PinExist("D", 0) then
     this:AddPinMode("D", 0)
 end
 --*/
-#define __GPIO_PD_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 0) then
@@ -2674,7 +2674,7 @@ if this:PinExist("D", 1) then
     this:AddPinMode("D", 1)
 end
 --*/
-#define __GPIO_PD_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 1) then
@@ -2717,7 +2717,7 @@ if this:PinExist("D", 2) then
     this:AddPinMode("D", 2)
 end
 --*/
-#define __GPIO_PD_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 2) then
@@ -2760,7 +2760,7 @@ if this:PinExist("D", 3) then
     this:AddPinMode("D", 3)
 end
 --*/
-#define __GPIO_PD_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 3) then
@@ -2803,7 +2803,7 @@ if this:PinExist("D", 4) then
     this:AddPinMode("D", 4)
 end
 --*/
-#define __GPIO_PD_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 4) then
@@ -2846,7 +2846,7 @@ if this:PinExist("D", 5) then
     this:AddPinMode("D", 5)
 end
 --*/
-#define __GPIO_PD_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 5) then
@@ -2889,7 +2889,7 @@ if this:PinExist("D", 6) then
     this:AddPinMode("D", 6)
 end
 --*/
-#define __GPIO_PD_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 6) then
@@ -2932,7 +2932,7 @@ if this:PinExist("D", 7) then
     this:AddPinMode("D", 7)
 end
 --*/
-#define __GPIO_PD_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 7) then
@@ -2975,7 +2975,7 @@ if this:PinExist("D", 8) then
     this:AddPinMode("D", 8)
 end
 --*/
-#define __GPIO_PD_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 8) then
@@ -3018,7 +3018,7 @@ if this:PinExist("D", 9) then
     this:AddPinMode("D", 9)
 end
 --*/
-#define __GPIO_PD_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 9) then
@@ -3061,7 +3061,7 @@ if this:PinExist("D", 10) then
     this:AddPinMode("D", 10)
 end
 --*/
-#define __GPIO_PD_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 10) then
@@ -3104,7 +3104,7 @@ if this:PinExist("D", 11) then
     this:AddPinMode("D", 11)
 end
 --*/
-#define __GPIO_PD_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 11) then
@@ -3147,7 +3147,7 @@ if this:PinExist("D", 12) then
     this:AddPinMode("D", 12)
 end
 --*/
-#define __GPIO_PD_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 12) then
@@ -3190,7 +3190,7 @@ if this:PinExist("D", 13) then
     this:AddPinMode("D", 13)
 end
 --*/
-#define __GPIO_PD_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 13) then
@@ -3233,7 +3233,7 @@ if this:PinExist("D", 14) then
     this:AddPinMode("D", 14)
 end
 --*/
-#define __GPIO_PD_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 14) then
@@ -3276,7 +3276,7 @@ if this:PinExist("D", 15) then
     this:AddPinMode("D", 15)
 end
 --*/
-#define __GPIO_PD_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PD_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("D", 15) then
@@ -3320,7 +3320,7 @@ if this:PinExist("E", 0) then
     this:AddPinMode("E", 0)
 end
 --*/
-#define __GPIO_PE_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 0) then
@@ -3363,7 +3363,7 @@ if this:PinExist("E", 1) then
     this:AddPinMode("E", 1)
 end
 --*/
-#define __GPIO_PE_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 1) then
@@ -3406,7 +3406,7 @@ if this:PinExist("E", 2) then
     this:AddPinMode("E", 2)
 end
 --*/
-#define __GPIO_PE_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 2) then
@@ -3449,7 +3449,7 @@ if this:PinExist("E", 3) then
     this:AddPinMode("E", 3)
 end
 --*/
-#define __GPIO_PE_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 3) then
@@ -3492,7 +3492,7 @@ if this:PinExist("E", 4) then
     this:AddPinMode("E", 4)
 end
 --*/
-#define __GPIO_PE_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 4) then
@@ -3535,7 +3535,7 @@ if this:PinExist("E", 5) then
     this:AddPinMode("E", 5)
 end
 --*/
-#define __GPIO_PE_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 5) then
@@ -3578,7 +3578,7 @@ if this:PinExist("E", 6) then
     this:AddPinMode("E", 6)
 end
 --*/
-#define __GPIO_PE_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 6) then
@@ -3621,7 +3621,7 @@ if this:PinExist("E", 7) then
     this:AddPinMode("E", 7)
 end
 --*/
-#define __GPIO_PE_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 7) then
@@ -3664,7 +3664,7 @@ if this:PinExist("E", 8) then
     this:AddPinMode("E", 8)
 end
 --*/
-#define __GPIO_PE_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 8) then
@@ -3707,7 +3707,7 @@ if this:PinExist("E", 9) then
     this:AddPinMode("E", 9)
 end
 --*/
-#define __GPIO_PE_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 9) then
@@ -3750,7 +3750,7 @@ if this:PinExist("E", 10) then
     this:AddPinMode("E", 10)
 end
 --*/
-#define __GPIO_PE_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 10) then
@@ -3793,7 +3793,7 @@ if this:PinExist("E", 11) then
     this:AddPinMode("E", 11)
 end
 --*/
-#define __GPIO_PE_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 11) then
@@ -3836,7 +3836,7 @@ if this:PinExist("E", 12) then
     this:AddPinMode("E", 12)
 end
 --*/
-#define __GPIO_PE_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 12) then
@@ -3879,7 +3879,7 @@ if this:PinExist("E", 13) then
     this:AddPinMode("E", 13)
 end
 --*/
-#define __GPIO_PE_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 13) then
@@ -3922,7 +3922,7 @@ if this:PinExist("E", 14) then
     this:AddPinMode("E", 14)
 end
 --*/
-#define __GPIO_PE_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 14) then
@@ -3965,7 +3965,7 @@ if this:PinExist("E", 15) then
     this:AddPinMode("E", 15)
 end
 --*/
-#define __GPIO_PE_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PE_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("E", 15) then
@@ -4009,7 +4009,7 @@ if this:PinExist("F", 0) then
     this:AddPinMode("F", 0)
 end
 --*/
-#define __GPIO_PF_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 0) then
@@ -4052,7 +4052,7 @@ if this:PinExist("F", 1) then
     this:AddPinMode("F", 1)
 end
 --*/
-#define __GPIO_PF_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 1) then
@@ -4095,7 +4095,7 @@ if this:PinExist("F", 2) then
     this:AddPinMode("F", 2)
 end
 --*/
-#define __GPIO_PF_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 2) then
@@ -4138,7 +4138,7 @@ if this:PinExist("F", 3) then
     this:AddPinMode("F", 3)
 end
 --*/
-#define __GPIO_PF_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 3) then
@@ -4181,7 +4181,7 @@ if this:PinExist("F", 4) then
     this:AddPinMode("F", 4)
 end
 --*/
-#define __GPIO_PF_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 4) then
@@ -4224,7 +4224,7 @@ if this:PinExist("F", 5) then
     this:AddPinMode("F", 5)
 end
 --*/
-#define __GPIO_PF_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 5) then
@@ -4267,7 +4267,7 @@ if this:PinExist("F", 6) then
     this:AddPinMode("F", 6)
 end
 --*/
-#define __GPIO_PF_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 6) then
@@ -4310,7 +4310,7 @@ if this:PinExist("F", 7) then
     this:AddPinMode("F", 7)
 end
 --*/
-#define __GPIO_PF_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 7) then
@@ -4353,7 +4353,7 @@ if this:PinExist("F", 8) then
     this:AddPinMode("F", 8)
 end
 --*/
-#define __GPIO_PF_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 8) then
@@ -4396,7 +4396,7 @@ if this:PinExist("F", 9) then
     this:AddPinMode("F", 9)
 end
 --*/
-#define __GPIO_PF_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 9) then
@@ -4439,7 +4439,7 @@ if this:PinExist("F", 10) then
     this:AddPinMode("F", 10)
 end
 --*/
-#define __GPIO_PF_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 10) then
@@ -4482,7 +4482,7 @@ if this:PinExist("F", 11) then
     this:AddPinMode("F", 11)
 end
 --*/
-#define __GPIO_PF_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 11) then
@@ -4525,7 +4525,7 @@ if this:PinExist("F", 12) then
     this:AddPinMode("F", 12)
 end
 --*/
-#define __GPIO_PF_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 12) then
@@ -4568,7 +4568,7 @@ if this:PinExist("F", 13) then
     this:AddPinMode("F", 13)
 end
 --*/
-#define __GPIO_PF_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 13) then
@@ -4611,7 +4611,7 @@ if this:PinExist("F", 14) then
     this:AddPinMode("F", 14)
 end
 --*/
-#define __GPIO_PF_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 14) then
@@ -4654,7 +4654,7 @@ if this:PinExist("F", 15) then
     this:AddPinMode("F", 15)
 end
 --*/
-#define __GPIO_PF_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PF_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("F", 15) then
@@ -4698,7 +4698,7 @@ if this:PinExist("G", 0) then
     this:AddPinMode("G", 0)
 end
 --*/
-#define __GPIO_PG_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 0) then
@@ -4741,7 +4741,7 @@ if this:PinExist("G", 1) then
     this:AddPinMode("G", 1)
 end
 --*/
-#define __GPIO_PG_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 1) then
@@ -4784,7 +4784,7 @@ if this:PinExist("G", 2) then
     this:AddPinMode("G", 2)
 end
 --*/
-#define __GPIO_PG_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 2) then
@@ -4827,7 +4827,7 @@ if this:PinExist("G", 3) then
     this:AddPinMode("G", 3)
 end
 --*/
-#define __GPIO_PG_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 3) then
@@ -4870,7 +4870,7 @@ if this:PinExist("G", 4) then
     this:AddPinMode("G", 4)
 end
 --*/
-#define __GPIO_PG_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 4) then
@@ -4913,7 +4913,7 @@ if this:PinExist("G", 5) then
     this:AddPinMode("G", 5)
 end
 --*/
-#define __GPIO_PG_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 5) then
@@ -4956,7 +4956,7 @@ if this:PinExist("G", 6) then
     this:AddPinMode("G", 6)
 end
 --*/
-#define __GPIO_PG_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 6) then
@@ -4999,7 +4999,7 @@ if this:PinExist("G", 7) then
     this:AddPinMode("G", 7)
 end
 --*/
-#define __GPIO_PG_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 7) then
@@ -5042,7 +5042,7 @@ if this:PinExist("G", 8) then
     this:AddPinMode("G", 8)
 end
 --*/
-#define __GPIO_PG_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 8) then
@@ -5085,7 +5085,7 @@ if this:PinExist("G", 9) then
     this:AddPinMode("G", 9)
 end
 --*/
-#define __GPIO_PG_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 9) then
@@ -5128,7 +5128,7 @@ if this:PinExist("G", 10) then
     this:AddPinMode("G", 10)
 end
 --*/
-#define __GPIO_PG_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 10) then
@@ -5171,7 +5171,7 @@ if this:PinExist("G", 11) then
     this:AddPinMode("G", 11)
 end
 --*/
-#define __GPIO_PG_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 11) then
@@ -5214,7 +5214,7 @@ if this:PinExist("G", 12) then
     this:AddPinMode("G", 12)
 end
 --*/
-#define __GPIO_PG_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 12) then
@@ -5257,7 +5257,7 @@ if this:PinExist("G", 13) then
     this:AddPinMode("G", 13)
 end
 --*/
-#define __GPIO_PG_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 13) then
@@ -5300,7 +5300,7 @@ if this:PinExist("G", 14) then
     this:AddPinMode("G", 14)
 end
 --*/
-#define __GPIO_PG_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 14) then
@@ -5316,7 +5316,7 @@ if this:PinExist("G", 14) then
     this:AddPinState("G", 14)
 end
 --*/
-#define __GPIO_PG_PIN_14_STATE__ _LOW
+#define __GPIO_PG_PIN_14_STATE__ _HIGH
 
 /*--
 if this:PinExist("G", 15) then
@@ -5343,7 +5343,7 @@ if this:PinExist("G", 15) then
     this:AddPinMode("G", 15)
 end
 --*/
-#define __GPIO_PG_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PG_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("G", 15) then
@@ -5387,7 +5387,7 @@ if this:PinExist("H", 0) then
     this:AddPinMode("H", 0)
 end
 --*/
-#define __GPIO_PH_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 0) then
@@ -5430,7 +5430,7 @@ if this:PinExist("H", 1) then
     this:AddPinMode("H", 1)
 end
 --*/
-#define __GPIO_PH_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 1) then
@@ -5473,7 +5473,7 @@ if this:PinExist("H", 2) then
     this:AddPinMode("H", 2)
 end
 --*/
-#define __GPIO_PH_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 2) then
@@ -5516,7 +5516,7 @@ if this:PinExist("H", 3) then
     this:AddPinMode("H", 3)
 end
 --*/
-#define __GPIO_PH_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 3) then
@@ -5559,7 +5559,7 @@ if this:PinExist("H", 4) then
     this:AddPinMode("H", 4)
 end
 --*/
-#define __GPIO_PH_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 4) then
@@ -5602,7 +5602,7 @@ if this:PinExist("H", 5) then
     this:AddPinMode("H", 5)
 end
 --*/
-#define __GPIO_PH_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 5) then
@@ -5645,7 +5645,7 @@ if this:PinExist("H", 6) then
     this:AddPinMode("H", 6)
 end
 --*/
-#define __GPIO_PH_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 6) then
@@ -5688,7 +5688,7 @@ if this:PinExist("H", 7) then
     this:AddPinMode("H", 7)
 end
 --*/
-#define __GPIO_PH_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 7) then
@@ -5731,7 +5731,7 @@ if this:PinExist("H", 8) then
     this:AddPinMode("H", 8)
 end
 --*/
-#define __GPIO_PH_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 8) then
@@ -5774,7 +5774,7 @@ if this:PinExist("H", 9) then
     this:AddPinMode("H", 9)
 end
 --*/
-#define __GPIO_PH_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 9) then
@@ -5817,7 +5817,7 @@ if this:PinExist("H", 10) then
     this:AddPinMode("H", 10)
 end
 --*/
-#define __GPIO_PH_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 10) then
@@ -5860,7 +5860,7 @@ if this:PinExist("H", 11) then
     this:AddPinMode("H", 11)
 end
 --*/
-#define __GPIO_PH_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 11) then
@@ -5903,7 +5903,7 @@ if this:PinExist("H", 12) then
     this:AddPinMode("H", 12)
 end
 --*/
-#define __GPIO_PH_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 12) then
@@ -5946,7 +5946,7 @@ if this:PinExist("H", 13) then
     this:AddPinMode("H", 13)
 end
 --*/
-#define __GPIO_PH_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 13) then
@@ -5989,7 +5989,7 @@ if this:PinExist("H", 14) then
     this:AddPinMode("H", 14)
 end
 --*/
-#define __GPIO_PH_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 14) then
@@ -6032,7 +6032,7 @@ if this:PinExist("H", 15) then
     this:AddPinMode("H", 15)
 end
 --*/
-#define __GPIO_PH_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PH_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("H", 15) then
@@ -6076,7 +6076,7 @@ if this:PinExist("I", 0) then
     this:AddPinMode("I", 0)
 end
 --*/
-#define __GPIO_PI_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 0) then
@@ -6119,7 +6119,7 @@ if this:PinExist("I", 1) then
     this:AddPinMode("I", 1)
 end
 --*/
-#define __GPIO_PI_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 1) then
@@ -6162,7 +6162,7 @@ if this:PinExist("I", 2) then
     this:AddPinMode("I", 2)
 end
 --*/
-#define __GPIO_PI_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 2) then
@@ -6205,7 +6205,7 @@ if this:PinExist("I", 3) then
     this:AddPinMode("I", 3)
 end
 --*/
-#define __GPIO_PI_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 3) then
@@ -6248,7 +6248,7 @@ if this:PinExist("I", 4) then
     this:AddPinMode("I", 4)
 end
 --*/
-#define __GPIO_PI_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 4) then
@@ -6291,7 +6291,7 @@ if this:PinExist("I", 5) then
     this:AddPinMode("I", 5)
 end
 --*/
-#define __GPIO_PI_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 5) then
@@ -6334,7 +6334,7 @@ if this:PinExist("I", 6) then
     this:AddPinMode("I", 6)
 end
 --*/
-#define __GPIO_PI_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 6) then
@@ -6377,7 +6377,7 @@ if this:PinExist("I", 7) then
     this:AddPinMode("I", 7)
 end
 --*/
-#define __GPIO_PI_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 7) then
@@ -6420,7 +6420,7 @@ if this:PinExist("I", 8) then
     this:AddPinMode("I", 8)
 end
 --*/
-#define __GPIO_PI_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 8) then
@@ -6463,7 +6463,7 @@ if this:PinExist("I", 9) then
     this:AddPinMode("I", 9)
 end
 --*/
-#define __GPIO_PI_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 9) then
@@ -6506,7 +6506,7 @@ if this:PinExist("I", 10) then
     this:AddPinMode("I", 10)
 end
 --*/
-#define __GPIO_PI_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 10) then
@@ -6549,7 +6549,7 @@ if this:PinExist("I", 11) then
     this:AddPinMode("I", 11)
 end
 --*/
-#define __GPIO_PI_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 11) then
@@ -6592,7 +6592,7 @@ if this:PinExist("I", 12) then
     this:AddPinMode("I", 12)
 end
 --*/
-#define __GPIO_PI_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 12) then
@@ -6635,7 +6635,7 @@ if this:PinExist("I", 13) then
     this:AddPinMode("I", 13)
 end
 --*/
-#define __GPIO_PI_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 13) then
@@ -6678,7 +6678,7 @@ if this:PinExist("I", 14) then
     this:AddPinMode("I", 14)
 end
 --*/
-#define __GPIO_PI_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 14) then
@@ -6721,7 +6721,7 @@ if this:PinExist("I", 15) then
     this:AddPinMode("I", 15)
 end
 --*/
-#define __GPIO_PI_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PI_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("I", 15) then
@@ -6765,7 +6765,7 @@ if this:PinExist("J", 0) then
     this:AddPinMode("J", 0)
 end
 --*/
-#define __GPIO_PJ_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 0) then
@@ -6808,7 +6808,7 @@ if this:PinExist("J", 1) then
     this:AddPinMode("J", 1)
 end
 --*/
-#define __GPIO_PJ_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 1) then
@@ -6851,7 +6851,7 @@ if this:PinExist("J", 2) then
     this:AddPinMode("J", 2)
 end
 --*/
-#define __GPIO_PJ_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 2) then
@@ -6894,7 +6894,7 @@ if this:PinExist("J", 3) then
     this:AddPinMode("J", 3)
 end
 --*/
-#define __GPIO_PJ_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 3) then
@@ -6937,7 +6937,7 @@ if this:PinExist("J", 4) then
     this:AddPinMode("J", 4)
 end
 --*/
-#define __GPIO_PJ_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 4) then
@@ -6980,7 +6980,7 @@ if this:PinExist("J", 5) then
     this:AddPinMode("J", 5)
 end
 --*/
-#define __GPIO_PJ_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 5) then
@@ -7023,7 +7023,7 @@ if this:PinExist("J", 6) then
     this:AddPinMode("J", 6)
 end
 --*/
-#define __GPIO_PJ_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 6) then
@@ -7066,7 +7066,7 @@ if this:PinExist("J", 7) then
     this:AddPinMode("J", 7)
 end
 --*/
-#define __GPIO_PJ_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 7) then
@@ -7109,7 +7109,7 @@ if this:PinExist("J", 8) then
     this:AddPinMode("J", 8)
 end
 --*/
-#define __GPIO_PJ_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 8) then
@@ -7152,7 +7152,7 @@ if this:PinExist("J", 9) then
     this:AddPinMode("J", 9)
 end
 --*/
-#define __GPIO_PJ_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 9) then
@@ -7195,7 +7195,7 @@ if this:PinExist("J", 10) then
     this:AddPinMode("J", 10)
 end
 --*/
-#define __GPIO_PJ_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 10) then
@@ -7238,7 +7238,7 @@ if this:PinExist("J", 11) then
     this:AddPinMode("J", 11)
 end
 --*/
-#define __GPIO_PJ_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 11) then
@@ -7281,7 +7281,7 @@ if this:PinExist("J", 12) then
     this:AddPinMode("J", 12)
 end
 --*/
-#define __GPIO_PJ_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 12) then
@@ -7324,7 +7324,7 @@ if this:PinExist("J", 13) then
     this:AddPinMode("J", 13)
 end
 --*/
-#define __GPIO_PJ_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 13) then
@@ -7367,7 +7367,7 @@ if this:PinExist("J", 14) then
     this:AddPinMode("J", 14)
 end
 --*/
-#define __GPIO_PJ_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 14) then
@@ -7410,7 +7410,7 @@ if this:PinExist("J", 15) then
     this:AddPinMode("J", 15)
 end
 --*/
-#define __GPIO_PJ_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PJ_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("J", 15) then
@@ -7454,7 +7454,7 @@ if this:PinExist("K", 0) then
     this:AddPinMode("K", 0)
 end
 --*/
-#define __GPIO_PK_PIN_0_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_0_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 0) then
@@ -7497,7 +7497,7 @@ if this:PinExist("K", 1) then
     this:AddPinMode("K", 1)
 end
 --*/
-#define __GPIO_PK_PIN_1_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_1_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 1) then
@@ -7540,7 +7540,7 @@ if this:PinExist("K", 2) then
     this:AddPinMode("K", 2)
 end
 --*/
-#define __GPIO_PK_PIN_2_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_2_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 2) then
@@ -7583,7 +7583,7 @@ if this:PinExist("K", 3) then
     this:AddPinMode("K", 3)
 end
 --*/
-#define __GPIO_PK_PIN_3_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_3_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 3) then
@@ -7626,7 +7626,7 @@ if this:PinExist("K", 4) then
     this:AddPinMode("K", 4)
 end
 --*/
-#define __GPIO_PK_PIN_4_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_4_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 4) then
@@ -7669,7 +7669,7 @@ if this:PinExist("K", 5) then
     this:AddPinMode("K", 5)
 end
 --*/
-#define __GPIO_PK_PIN_5_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_5_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 5) then
@@ -7712,7 +7712,7 @@ if this:PinExist("K", 6) then
     this:AddPinMode("K", 6)
 end
 --*/
-#define __GPIO_PK_PIN_6_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_6_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 6) then
@@ -7755,7 +7755,7 @@ if this:PinExist("K", 7) then
     this:AddPinMode("K", 7)
 end
 --*/
-#define __GPIO_PK_PIN_7_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_7_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 7) then
@@ -7798,7 +7798,7 @@ if this:PinExist("K", 8) then
     this:AddPinMode("K", 8)
 end
 --*/
-#define __GPIO_PK_PIN_8_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_8_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 8) then
@@ -7841,7 +7841,7 @@ if this:PinExist("K", 9) then
     this:AddPinMode("K", 9)
 end
 --*/
-#define __GPIO_PK_PIN_9_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 9) then
@@ -7884,7 +7884,7 @@ if this:PinExist("K", 10) then
     this:AddPinMode("K", 10)
 end
 --*/
-#define __GPIO_PK_PIN_10_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 10) then
@@ -7927,7 +7927,7 @@ if this:PinExist("K", 11) then
     this:AddPinMode("K", 11)
 end
 --*/
-#define __GPIO_PK_PIN_11_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_11_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 11) then
@@ -7970,7 +7970,7 @@ if this:PinExist("K", 12) then
     this:AddPinMode("K", 12)
 end
 --*/
-#define __GPIO_PK_PIN_12_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_12_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 12) then
@@ -8013,7 +8013,7 @@ if this:PinExist("K", 13) then
     this:AddPinMode("K", 13)
 end
 --*/
-#define __GPIO_PK_PIN_13_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_13_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 13) then
@@ -8056,7 +8056,7 @@ if this:PinExist("K", 14) then
     this:AddPinMode("K", 14)
 end
 --*/
-#define __GPIO_PK_PIN_14_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_14_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 14) then
@@ -8099,7 +8099,7 @@ if this:PinExist("K", 15) then
     this:AddPinMode("K", 15)
 end
 --*/
-#define __GPIO_PK_PIN_15_MODE__ _GPIO_MODE_ANALOG
+#define __GPIO_PK_PIN_15_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("K", 15) then

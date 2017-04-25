@@ -51,9 +51,9 @@ enum port##_##number##_CFG {\
         _CONCAT(_GPIO_, pin_name) = port##_BASE,\
         _CONCAT(_BP_, pin_name) = (number),\
         _CONCAT(_BM_, pin_name) = (1 << (number)),\
-        _##port##_PIN_##number##_MODE  = ((mode >> 8) & 0xF),\
-        _##port##_PIN_##number##_TYPE  = ((mode >> 4) & 0xF),\
-        _##port##_PIN_##number##_PUPD  = ((mode >> 0) & 0xF),\
+        _##port##_PIN_##number##_MODE  = (((u32_t)(mode) >> 8) & 0x3),\
+        _##port##_PIN_##number##_TYPE  = (((u32_t)(mode) >> 4) & 0x1),\
+        _##port##_PIN_##number##_PUPD  = (((u32_t)(mode) >> 0) & 0x3),\
         _##port##_PIN_##number##_SPEED = (speed),\
         _##port##_PIN_##number##_STATE = (state),\
         _##port##_PIN_##number##_AF    = (af),\
