@@ -32,6 +32,7 @@
 #include "config.h"
 #include "stm32f4/cpuctl.h"
 #include "stm32f4/stm32f4xx.h"
+#include "stm32f4/lib/stm32f4xx_rcc.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
@@ -189,12 +190,11 @@ void _cpuctl_update_system_clocks(void)
 #endif
 
         /* update context switch counter frequency */
-//        _critical_section_begin();
-//        RCC_ClocksTypeDef freq;
-//        HAL_RCC_GetSysClockFreq()
-//        RCC_GetClocksFreq(&freq);
-//        SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
-//        _critical_section_end();
+        _critical_section_begin();
+        RCC_ClocksTypeDef freq;
+        RCC_GetClocksFreq(&freq);
+        SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
+        _critical_section_end();
 }
 
 /*==============================================================================

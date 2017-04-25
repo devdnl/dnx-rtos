@@ -137,6 +137,16 @@
                                          |(__STM32F4xx_CMSIS_VERSION_SUB2 << 8 )\
                                          |(__STM32F4xx_CMSIS_VERSION))
 
+#define HSE_VALUE ((uint32_t)__CPU_OSC_FREQ__)
+
+/**
+ * @brief In the following line adjust the External High Speed oscillator (HSE) Startup
+   Timeout value
+   */
+#define HSE_STARTUP_TIMEOUT   ((uint16_t)0x0500) /*!< Time out for HSE start up */
+
+#define HSI_VALUE    ((uint32_t)16000000) /*!< Value of the Internal oscillator in Hz*/
+
 /**
   * @}
   */
