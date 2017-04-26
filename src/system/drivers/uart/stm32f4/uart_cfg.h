@@ -65,6 +65,12 @@ extern "C" {
 /* UART8 IRQ priority */
 #define _UART8_IRQ_PRIORITY                     __UART_UART8_IRQ_PRIORITY__
 
+/* UART9 IRQ priority */
+#define _UART9_IRQ_PRIORITY                     __UART_UART9_IRQ_PRIORITY__
+
+/* UART10 IRQ priority */
+#define _UART10_IRQ_PRIORITY                    __UART_UART10_IRQ_PRIORITY__
+
 /* RX buffer size [B] */
 #define _UART_RX_BUFFER_SIZE                    __UART_RX_BUFFER_LEN__
 

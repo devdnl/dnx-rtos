@@ -71,6 +71,12 @@ enum {
         #if defined(RCC_APB1ENR_UART8EN)
         _UART8,
         #endif
+        #if defined(RCC_APB2ENR_UART9EN)
+        _UART9,
+        #endif
+        #if defined(RCC_APB2ENR_UART10EN)
+        _UART10,
+        #endif
         _UART_COUNT
 };
 
@@ -213,6 +219,28 @@ static const UART_regs_t UART[] = {
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART8RST,
                 .IRQn            = UART8_IRQn,
                 .PRIORITY        = _UART8_IRQ_PRIORITY
+        },
+        #endif
+        #if defined(RCC_APB2ENR_UART9EN)
+        {
+                .UART            = UART9,
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_UART9EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_UART9RST,
+                .IRQn            = UART9_IRQn,
+                .PRIORITY        = _UART9_IRQ_PRIORITY
+        },
+        #endif
+        #if defined(RCC_APB2ENR_UART10EN)
+        {
+                .UART            = UART10,
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_UART10EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_UART10RST,
+                .IRQn            = UART10_IRQn,
+                .PRIORITY        = _UART10_IRQ_PRIORITY
         }
         #endif
 };
@@ -902,6 +930,30 @@ void UART7_IRQHandler(void)
 void UART8_IRQHandler(void)
 {
         IRQ_handle(_UART8);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief UART9 Interrupt
+ */
+//==============================================================================
+#if defined(RCC_APB2ENR_UART9EN)
+void UART9_IRQHandler(void)
+{
+        IRQ_handle(_UART9);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief UART10 Interrupt
+ */
+//==============================================================================
+#if defined(RCC_APB2ENR_UART10EN)
+void UART10_IRQHandler(void)
+{
+        IRQ_handle(_UART10);
 }
 #endif
 
