@@ -66,6 +66,46 @@
   * @{
   */
 
+#if defined(STM32F401xC) || defined(STM32F401xE)
+#define STM32F401xx
+#endif
+
+#if defined(STM32F405xx) || defined(STM32F407xx) || defined(STM32F415xx) || defined(STM32F417xx)
+#define STM32F40_41xxx
+#endif
+
+#if defined(STM32F427xx) || defined(STM32F437xx)
+#define STM32F427_437xx
+#endif
+
+#if defined(STM32F429xx) || defined(STM32F439xx)
+#define STM32F429_439xx
+#endif
+
+#if defined(STM32F410Tx) || defined(STM32F410Cx) || defined(STM32F410Rx)
+#define STM32F410xx
+#endif
+
+#if defined(STM32F411xE)
+#define STM32F411xE
+#endif
+
+#if defined(STM32F412Cx) || defined(STM32F412Rx) || defined(STM32F412Vx) || defined(STM32F412Zx)
+#define STM32F412xG
+#endif
+
+#if defined(STM32F413xx) || defined(STM32F423xx)
+#define STM32F413_423xx
+#endif
+
+#if defined(STM32F446xx)
+#define STM32F446xx
+#endif
+
+#if defined(STM32F469xx) || defined(STM32F479xx)
+#define STM32F469_479xx
+#endif
+
 /**
   * @brief STM32 Family
   */
