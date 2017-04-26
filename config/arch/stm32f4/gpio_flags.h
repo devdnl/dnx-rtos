@@ -214,7 +214,7 @@ end
 /*--
 if this:PinExist("A", 0) then
     local PA0 = {}
-    PA0[#PA0 + 1] = {NAME = "PA0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA0[#PA0 + 1] = {NAME = "PA0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA0[#PA0 + 1] = {NAME = "TIM2_CH1", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA0[#PA0 + 1] = {NAME = "TIM2_ETR", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA0[#PA0 + 1] = {NAME = "TIM4_CH1", MODE = "_GPIO_MODE_AF_PP_PD", AF = "2", STATE = "_LOW"}
@@ -265,7 +265,7 @@ end
 /*--
 if this:PinExist("A", 1) then
     local PA1 = {}
-    PA1[#PA1 + 1] = {NAME = "PA1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA1[#PA1 + 1] = {NAME = "PA1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA1[#PA1 + 1] = {NAME = "TIM2_CH2", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA1[#PA1 + 1] = {NAME = "TIM5_CH2", MODE = "_GPIO_MODE_AF_PP_PD", AF = "2", STATE = "_LOW"}
     PA1[#PA1 + 1] = {NAME = "USART2_RTS", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
@@ -317,7 +317,7 @@ end
 /*--
 if this:PinExist("A", 2) then
     local PA2 = {}
-    PA2[#PA2 + 1] = {NAME = "PA2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA2[#PA2 + 1] = {NAME = "PA2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA2[#PA2 + 1] = {NAME = "TIM2_CH3", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA2[#PA2 + 1] = {NAME = "TIM5_CH3", MODE = "_GPIO_MODE_AF_PP_PD", AF = "2", STATE = "_LOW"}
     PA2[#PA2 + 1] = {NAME = "TIM9_CH1", MODE = "_GPIO_MODE_AF_PP_PD", AF = "3", STATE = "_LOW"}
@@ -367,7 +367,7 @@ end
 /*--
 if this:PinExist("A", 3) then
     local PA3 = {}
-    PA3[#PA3 + 1] = {NAME = "PA3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA3[#PA3 + 1] = {NAME = "PA3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA3[#PA3 + 1] = {NAME = "TIM2_CH4", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA3[#PA3 + 1] = {NAME = "TIM5_CH4", MODE = "_GPIO_MODE_AF_PP_PD", AF = "2", STATE = "_LOW"}
     PA3[#PA3 + 1] = {NAME = "TIM9_CH2", MODE = "_GPIO_MODE_AF_PP_PD", AF = "3", STATE = "_LOW"}
@@ -419,7 +419,7 @@ end
 /*--
 if this:PinExist("A", 4) then
     local PA4 = {}
-    PA4[#PA4 + 1] = {NAME = "PA4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA4[#PA4 + 1] = {NAME = "PA4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA4[#PA4 + 1] = {NAME = "SPI1_NSS", MODE = "_GPIO_MODE_AF_PP_PU", AF = "5", STATE = "_LOW"}
     PA4[#PA4 + 1] = {NAME = "SPI3_NSS", MODE = "_GPIO_MODE_AF_PP_PU", AF = "6", STATE = "_LOW"}
     PA4[#PA4 + 1] = {NAME = "I2S3_WS", MODE = "_GPIO_MODE_AF_PP_PU", AF = "6", STATE = "_LOW"}
@@ -470,7 +470,7 @@ end
 /*--
 if this:PinExist("A", 5) then
     local PA5 = {}
-    PA5[#PA5 + 1] = {NAME = "PA5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA5[#PA5 + 1] = {NAME = "PA5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA5[#PA5 + 1] = {NAME = "TIM2_CH1", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA5[#PA5 + 1] = {NAME = "TIM2_ETR", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA5[#PA5 + 1] = {NAME = "TIM8_CH1", MODE = "_GPIO_MODE_AF_PP_PD", AF = "3", STATE = "_LOW"}
@@ -520,7 +520,7 @@ end
 /*--
 if this:PinExist("A", 6) then
     local PA6 = {}
-    PA6[#PA6 + 1] = {NAME = "PA6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA6[#PA6 + 1] = {NAME = "PA6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA6[#PA6 + 1] = {NAME = "TIM1_BKIN", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA6[#PA6 + 1] = {NAME = "TIM3_CH1", MODE = "_GPIO_MODE_AF_PP_PD", AF = "2", STATE = "_LOW"}
     PA6[#PA6 + 1] = {NAME = "TIM8_BKIN", MODE = "_GPIO_MODE_AF_PP_PD", AF = "3", STATE = "_LOW"}
@@ -571,7 +571,7 @@ end
 /*--
 if this:PinExist("A", 7) then
     local PA7 = {}
-    PA7[#PA7 + 1] = {NAME = "PA7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA7[#PA7 + 1] = {NAME = "PA7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA7[#PA7 + 1] = {NAME = "TIM1_CH1N", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA7[#PA7 + 1] = {NAME = "TIM3_CH2", MODE = "_GPIO_MODE_AF_PP_PD", AF = "2", STATE = "_LOW"}
     PA7[#PA7 + 1] = {NAME = "TIM8_CH1N", MODE = "_GPIO_MODE_AF_PP_PD", AF = "3", STATE = "_LOW"}
@@ -624,7 +624,7 @@ end
 /*--
 if this:PinExist("A", 8) then
     local PA8 = {}
-    PA8[#PA8 + 1] = {NAME = "PA8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA8[#PA8 + 1] = {NAME = "PA8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA8[#PA8 + 1] = {NAME = "MCO1", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PA8[#PA8 + 1] = {NAME = "TIM1_CH1", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA8[#PA8 + 1] = {NAME = "I2C3_SCL", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
@@ -674,7 +674,7 @@ end
 /*--
 if this:PinExist("A", 9) then
     local PA9 = {}
-    PA9[#PA9 + 1] = {NAME = "PA9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA9[#PA9 + 1] = {NAME = "PA9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA9[#PA9 + 1] = {NAME = "TIM1_CH2", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA9[#PA9 + 1] = {NAME = "I2C3_SMBA", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PA9[#PA9 + 1] = {NAME = "SPI2_SCK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -724,7 +724,7 @@ end
 /*--
 if this:PinExist("A", 10) then
     local PA10 = {}
-    PA10[#PA10 + 1] = {NAME = "PA10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA10[#PA10 + 1] = {NAME = "PA10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA10[#PA10 + 1] = {NAME = "TIM1_CH3", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA10[#PA10 + 1] = {NAME = "USART1_RX", MODE = "_GPIO_MODE_AF_PP_PU", AF = "7", STATE = "_LOW"}
     PA10[#PA10 + 1] = {NAME = "OTG_FS_ID", MODE = "_GPIO_MODE_AF_PP_PD", AF = "10", STATE = "_LOW"}
@@ -772,7 +772,7 @@ end
 /*--
 if this:PinExist("A", 11) then
     local PA11 = {}
-    PA11[#PA11 + 1] = {NAME = "PA11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA11[#PA11 + 1] = {NAME = "PA11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA11[#PA11 + 1] = {NAME = "TIM1_CH4", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA11[#PA11 + 1] = {NAME = "USART1_CTS", MODE = "_GPIO_MODE_AF_PP_PU", AF = "7", STATE = "_LOW"}
     PA11[#PA11 + 1] = {NAME = "CAN1_RX", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
@@ -821,7 +821,7 @@ end
 /*--
 if this:PinExist("A", 12) then
     local PA12 = {}
-    PA12[#PA12 + 1] = {NAME = "PA12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA12[#PA12 + 1] = {NAME = "PA12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA12[#PA12 + 1] = {NAME = "TIM1_ETR", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA12[#PA12 + 1] = {NAME = "USART1_RTS", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
     PA12[#PA12 + 1] = {NAME = "CAN1_TX", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
@@ -870,7 +870,7 @@ end
 /*--
 if this:PinExist("A", 13) then
     local PA13 = {}
-    PA13[#PA13 + 1] = {NAME = "PA13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA13[#PA13 + 1] = {NAME = "PA13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA13[#PA13 + 1] = {NAME = "JTMS_SWDIO", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PA13[#PA13 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
@@ -915,7 +915,7 @@ end
 /*--
 if this:PinExist("A", 14) then
     local PA14 = {}
-    PA14[#PA14 + 1] = {NAME = "PA14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA14[#PA14 + 1] = {NAME = "PA14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA14[#PA14 + 1] = {NAME = "JTCK_SWCLK", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PA14[#PA14 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
@@ -960,7 +960,7 @@ end
 /*--
 if this:PinExist("A", 15) then
     local PA15 = {}
-    PA15[#PA15 + 1] = {NAME = "PA15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PA15[#PA15 + 1] = {NAME = "PA15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PA15[#PA15 + 1] = {NAME = "JTDI", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PA15[#PA15 + 1] = {NAME = "TIM2_CH1", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PA15[#PA15 + 1] = {NAME = "TIM2_ETR", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
@@ -1011,7 +1011,7 @@ end
 /*--
 if this:PinExist("B", 0) then
     local PB0 = {}
-    PB0[#PB0 + 1] = {NAME = "PB0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB0[#PB0 + 1] = {NAME = "PB0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB0[#PB0 + 1] = {NAME = "TIM1_CH2N", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PB0[#PB0 + 1] = {NAME = "TIM3_CH3", MODE = "_GPIO_MODE_AF_PP_PD", AF = "2", STATE = "_LOW"}
     PB0[#PB0 + 1] = {NAME = "TIM8_CH2N", MODE = "_GPIO_MODE_AF_PP_PD", AF = "3", STATE = "_LOW"}
@@ -1062,7 +1062,7 @@ end
 /*--
 if this:PinExist("B", 1) then
     local PB1 = {}
-    PB1[#PB1 + 1] = {NAME = "PB1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB1[#PB1 + 1] = {NAME = "PB1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB1[#PB1 + 1] = {NAME = "TIM1_CH3N", MODE = "_GPIO_MODE_AF_PP_PD", AF = "1", STATE = "_LOW"}
     PB1[#PB1 + 1] = {NAME = "TIM3_CH4", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PB1[#PB1 + 1] = {NAME = "TIM8_CH3N", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
@@ -1113,7 +1113,7 @@ end
 /*--
 if this:PinExist("B", 2) then
     local PB2 = {}
-    PB2[#PB2 + 1] = {NAME = "PB2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB2[#PB2 + 1] = {NAME = "PB2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB2[#PB2 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PB2")
@@ -1157,7 +1157,7 @@ end
 /*--
 if this:PinExist("B", 3) then
     local PB3 = {}
-    PB3[#PB3 + 1] = {NAME = "PB3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB3[#PB3 + 1] = {NAME = "PB3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB3[#PB3 + 1] = {NAME = "JTDO", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PB3[#PB3 + 1] = {NAME = "TRACESWO", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PB3[#PB3 + 1] = {NAME = "TIM2_CH2", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
@@ -1207,7 +1207,7 @@ end
 /*--
 if this:PinExist("B", 4) then
     local PB4 = {}
-    PB4[#PB4 + 1] = {NAME = "PB4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB4[#PB4 + 1] = {NAME = "PB4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB4[#PB4 + 1] = {NAME = "NJTRST", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PB4[#PB4 + 1] = {NAME = "TIM3_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PB4[#PB4 + 1] = {NAME = "SPI1_MISO", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -1256,7 +1256,7 @@ end
 /*--
 if this:PinExist("B", 5) then
     local PB5 = {}
-    PB5[#PB5 + 1] = {NAME = "PB5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB5[#PB5 + 1] = {NAME = "PB5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB5[#PB5 + 1] = {NAME = "TIM3_CH2", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PB5[#PB5 + 1] = {NAME = "I2C1_SMBA", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PB5[#PB5 + 1] = {NAME = "SPI1_MOSI", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -1311,7 +1311,7 @@ end
 /*--
 if this:PinExist("B", 6) then
     local PB6 = {}
-    PB6[#PB6 + 1] = {NAME = "PB6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB6[#PB6 + 1] = {NAME = "PB6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB6[#PB6 + 1] = {NAME = "TIM4_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PB6[#PB6 + 1] = {NAME = "I2C1_SCL", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PB6[#PB6 + 1] = {NAME = "USART1_TX", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
@@ -1362,7 +1362,7 @@ end
 /*--
 if this:PinExist("B", 7) then
     local PB7 = {}
-    PB7[#PB7 + 1] = {NAME = "PB7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB7[#PB7 + 1] = {NAME = "PB7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB7[#PB7 + 1] = {NAME = "TIM3_CH2", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PB7[#PB7 + 1] = {NAME = "I2C1_SDA", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PB7[#PB7 + 1] = {NAME = "USART1_RX", MODE = "_GPIO_MODE_AF_PP_PU", AF = "7", STATE = "_LOW"}
@@ -1411,7 +1411,7 @@ end
 /*--
 if this:PinExist("B", 8) then
     local PB8 = {}
-    PB8[#PB8 + 1] = {NAME = "PB8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB8[#PB8 + 1] = {NAME = "PB8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB8[#PB8 + 1] = {NAME = "TIM4_CH3", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PB8[#PB8 + 1] = {NAME = "TIM10_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
     PB8[#PB8 + 1] = {NAME = "I2C1_SCL", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
@@ -1463,7 +1463,7 @@ end
 /*--
 if this:PinExist("B", 9) then
     local PB9 = {}
-    PB9[#PB9 + 1] = {NAME = "PB9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB9[#PB9 + 1] = {NAME = "PB9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB9[#PB9 + 1] = {NAME = "TIM4_CH4", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PB9[#PB9 + 1] = {NAME = "TIM11_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
     PB9[#PB9 + 1] = {NAME = "I2C1_SDA", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
@@ -1516,7 +1516,7 @@ end
 /*--
 if this:PinExist("B", 10) then
     local PB10 = {}
-    PB10[#PB10 + 1] = {NAME = "PB10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB10[#PB10 + 1] = {NAME = "PB10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB10[#PB10 + 1] = {NAME = "TIM2_CH3", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PB10[#PB10 + 1] = {NAME = "I2C2_SCL", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PB10[#PB10 + 1] = {NAME = "SPI2_SCK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -1569,7 +1569,7 @@ end
 /*--
 if this:PinExist("B", 11) then
     local PB11 = {}
-    PB11[#PB11 + 1] = {NAME = "PB11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB11[#PB11 + 1] = {NAME = "PB11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB11[#PB11 + 1] = {NAME = "TIM2_CH4", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PB11[#PB11 + 1] = {NAME = "I2C2_SDA", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PB11[#PB11 + 1] = {NAME = "USART3_RX", MODE = "_GPIO_MODE_AF_PP_PU", AF = "7", STATE = "_LOW"}
@@ -1621,7 +1621,7 @@ end
 /*--
 if this:PinExist("B", 12) then
     local PB12 = {}
-    PB12[#PB12 + 1] = {NAME = "PB12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB12[#PB12 + 1] = {NAME = "PB12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB12[#PB12 + 1] = {NAME = "TIM1_BKIN", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PB12[#PB12 + 1] = {NAME = "I2C2_SMBA", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PB12[#PB12 + 1] = {NAME = "SPI2_NSS", MODE = "_GPIO_MODE_AF_PP_PU", AF = "5", STATE = "_LOW"}
@@ -1675,7 +1675,7 @@ end
 /*--
 if this:PinExist("B", 13) then
     local PB13 = {}
-    PB13[#PB13 + 1] = {NAME = "PB13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB13[#PB13 + 1] = {NAME = "PB13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB13[#PB13 + 1] = {NAME = "TIM1_CH1N", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PB13[#PB13 + 1] = {NAME = "SPI2_SCK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PB13[#PB13 + 1] = {NAME = "I2S2_CK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -1727,7 +1727,7 @@ end
 /*--
 if this:PinExist("B", 14) then
     local PB14 = {}
-    PB14[#PB14 + 1] = {NAME = "PB14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB14[#PB14 + 1] = {NAME = "PB14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB14[#PB14 + 1] = {NAME = "TIM1_CH2N", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PB14[#PB14 + 1] = {NAME = "TIM8_CH2N", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
     PB14[#PB14 + 1] = {NAME = "SPI2_MISO", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -1778,7 +1778,7 @@ end
 /*--
 if this:PinExist("B", 15) then
     local PB15 = {}
-    PB15[#PB15 + 1] = {NAME = "PB15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PB15[#PB15 + 1] = {NAME = "PB15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PB15[#PB15 + 1] = {NAME = "RTC_REFIN", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PB15[#PB15 + 1] = {NAME = "TIM1_CH3N", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PB15[#PB15 + 1] = {NAME = "TIM8_CH3N", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
@@ -1830,7 +1830,7 @@ end
 /*--
 if this:PinExist("C", 0) then
     local PC0 = {}
-    PC0[#PC0 + 1] = {NAME = "PC0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC0[#PC0 + 1] = {NAME = "PC0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC0[#PC0 + 1] = {NAME = "OTG_HS_ULPI_STP", MODE = "_GPIO_MODE_AF_PP", AF = "10", STATE = "_LOW"}
     PC0[#PC0 + 1] = {NAME = "FMC_SDNWE", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PC0[#PC0 + 1] = {NAME = "LCD_R5", MODE = "_GPIO_MODE_AF_PP", AF = "14", STATE = "_LOW"}
@@ -1877,7 +1877,7 @@ end
 /*--
 if this:PinExist("C", 1) then
     local PC1 = {}
-    PC1[#PC1 + 1] = {NAME = "PC1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC1[#PC1 + 1] = {NAME = "PC1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC1[#PC1 + 1] = {NAME = "TRACED0", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PC1[#PC1 + 1] = {NAME = "SPI2_MOSI", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PC1[#PC1 + 1] = {NAME = "I2S2_SD", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -1926,7 +1926,7 @@ end
 /*--
 if this:PinExist("C", 2) then
     local PC2 = {}
-    PC2[#PC2 + 1] = {NAME = "PC2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC2[#PC2 + 1] = {NAME = "PC2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC2[#PC2 + 1] = {NAME = "SPI2_MISO", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PC2[#PC2 + 1] = {NAME = "I2S2EXT_SD", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
     PC2[#PC2 + 1] = {NAME = "OTG_HS_ULPI_DIR", MODE = "_GPIO_MODE_AF_PP", AF = "10", STATE = "_LOW"}
@@ -1975,7 +1975,7 @@ end
 /*--
 if this:PinExist("C", 3) then
     local PC3 = {}
-    PC3[#PC3 + 1] = {NAME = "PC3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC3[#PC3 + 1] = {NAME = "PC3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC3[#PC3 + 1] = {NAME = "SPI2_MOSI", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PC3[#PC3 + 1] = {NAME = "I2S2_SD", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PC3[#PC3 + 1] = {NAME = "OTG_HS_ULPI_NXT", MODE = "_GPIO_MODE_AF_PP", AF = "10", STATE = "_LOW"}
@@ -2024,7 +2024,7 @@ end
 /*--
 if this:PinExist("C", 4) then
     local PC4 = {}
-    PC4[#PC4 + 1] = {NAME = "PC4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC4[#PC4 + 1] = {NAME = "PC4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC4[#PC4 + 1] = {NAME = "ETH_MII_RXD0", MODE = "_GPIO_MODE_AF_PP", AF = "11", STATE = "_LOW"}
     PC4[#PC4 + 1] = {NAME = "ETH_RMII_RDXD0", MODE = "_GPIO_MODE_AF_PP", AF = "11", STATE = "_LOW"}
     PC4[#PC4 + 1] = {NAME = "FMC_SDNE0", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -2071,7 +2071,7 @@ end
 /*--
 if this:PinExist("C", 5) then
     local PC5 = {}
-    PC5[#PC5 + 1] = {NAME = "PC5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC5[#PC5 + 1] = {NAME = "PC5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC5[#PC5 + 1] = {NAME = "ETH_MII_RXD1", MODE = "_GPIO_MODE_AF_PP", AF = "11", STATE = "_LOW"}
     PC5[#PC5 + 1] = {NAME = "ETH_RMII_RXD1", MODE = "_GPIO_MODE_AF_PP", AF = "11", STATE = "_LOW"}
     PC5[#PC5 + 1] = {NAME = "FMC_SDCKE0", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -2118,7 +2118,7 @@ end
 /*--
 if this:PinExist("C", 6) then
     local PC6 = {}
-    PC6[#PC6 + 1] = {NAME = "PC6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC6[#PC6 + 1] = {NAME = "PC6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC6[#PC6 + 1] = {NAME = "TIM3_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PC6[#PC6 + 1] = {NAME = "TIM8_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
     PC6[#PC6 + 1] = {NAME = "I2S2_MCK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -2169,7 +2169,7 @@ end
 /*--
 if this:PinExist("C", 7) then
     local PC7 = {}
-    PC7[#PC7 + 1] = {NAME = "PC7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC7[#PC7 + 1] = {NAME = "PC7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC7[#PC7 + 1] = {NAME = "TIM3_CH2", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PC7[#PC7 + 1] = {NAME = "TIM8_CH2", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
     PC7[#PC7 + 1] = {NAME = "I2S3_MCK", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
@@ -2220,7 +2220,7 @@ end
 /*--
 if this:PinExist("C", 8) then
     local PC8 = {}
-    PC8[#PC8 + 1] = {NAME = "PC8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC8[#PC8 + 1] = {NAME = "PC8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC8[#PC8 + 1] = {NAME = "TRACED1", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PC8[#PC8 + 1] = {NAME = "TIM3_CH3", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PC8[#PC8 + 1] = {NAME = "TIM8_CH3", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
@@ -2270,7 +2270,7 @@ end
 /*--
 if this:PinExist("C", 9) then
     local PC9 = {}
-    PC9[#PC9 + 1] = {NAME = "PC9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC9[#PC9 + 1] = {NAME = "PC9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC9[#PC9 + 1] = {NAME = "MCO2", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PC9[#PC9 + 1] = {NAME = "TIM3_CH4", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PC9[#PC9 + 1] = {NAME = "TIM8_CH4", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
@@ -2322,7 +2322,7 @@ end
 /*--
 if this:PinExist("C", 10) then
     local PC10 = {}
-    PC10[#PC10 + 1] = {NAME = "PC10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC10[#PC10 + 1] = {NAME = "PC10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC10[#PC10 + 1] = {NAME = "SPI3_SCK", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
     PC10[#PC10 + 1] = {NAME = "I2S3_CK", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
     PC10[#PC10 + 1] = {NAME = "USART3_TX", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
@@ -2374,7 +2374,7 @@ end
 /*--
 if this:PinExist("C", 11) then
     local PC11 = {}
-    PC11[#PC11 + 1] = {NAME = "PC11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC11[#PC11 + 1] = {NAME = "PC11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC11[#PC11 + 1] = {NAME = "I2S3EXT_SD", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PC11[#PC11 + 1] = {NAME = "SPI3_MISO", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
     PC11[#PC11 + 1] = {NAME = "USART3_RX", MODE = "_GPIO_MODE_AF_PP_PU", AF = "7", STATE = "_LOW"}
@@ -2425,7 +2425,7 @@ end
 /*--
 if this:PinExist("C", 12) then
     local PC12 = {}
-    PC12[#PC12 + 1] = {NAME = "PC12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC12[#PC12 + 1] = {NAME = "PC12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC12[#PC12 + 1] = {NAME = "TRACED3", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PC12[#PC12 + 1] = {NAME = "SPI3_MOSI", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
     PC12[#PC12 + 1] = {NAME = "I2S3_SD", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
@@ -2476,7 +2476,7 @@ end
 /*--
 if this:PinExist("C", 13) then
     local PC13 = {}
-    PC13[#PC13 + 1] = {NAME = "PC13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC13[#PC13 + 1] = {NAME = "PC13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC13[#PC13 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PC13")
@@ -2520,7 +2520,7 @@ end
 /*--
 if this:PinExist("C", 14) then
     local PC14 = {}
-    PC14[#PC14 + 1] = {NAME = "PC14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC14[#PC14 + 1] = {NAME = "PC14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC14[#PC14 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PC14")
@@ -2564,7 +2564,7 @@ end
 /*--
 if this:PinExist("C", 15) then
     local PC15 = {}
-    PC15[#PC15 + 1] = {NAME = "PC15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PC15[#PC15 + 1] = {NAME = "PC15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PC15[#PC15 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PC15")
@@ -2609,7 +2609,7 @@ end
 /*--
 if this:PinExist("D", 0) then
     local PD0 = {}
-    PD0[#PD0 + 1] = {NAME = "PD0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD0[#PD0 + 1] = {NAME = "PD0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD0[#PD0 + 1] = {NAME = "CAN1_RX", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
     PD0[#PD0 + 1] = {NAME = "FMC_D2", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD0[#PD0 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -2655,7 +2655,7 @@ end
 /*--
 if this:PinExist("D", 1) then
     local PD1 = {}
-    PD1[#PD1 + 1] = {NAME = "PD1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD1[#PD1 + 1] = {NAME = "PD1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD1[#PD1 + 1] = {NAME = "CAN1_Tx", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
     PD1[#PD1 + 1] = {NAME = "FMC_D3", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD1[#PD1 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -2701,7 +2701,7 @@ end
 /*--
 if this:PinExist("D", 2) then
     local PD2 = {}
-    PD2[#PD2 + 1] = {NAME = "PD2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD2[#PD2 + 1] = {NAME = "PD2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD2[#PD2 + 1] = {NAME = "TRACED2", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PD2[#PD2 + 1] = {NAME = "TIM3_ETR", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PD2[#PD2 + 1] = {NAME = "UART5_RX", MODE = "_GPIO_MODE_AF_PP_PU", AF = "8", STATE = "_LOW"}
@@ -2750,7 +2750,7 @@ end
 /*--
 if this:PinExist("D", 3) then
     local PD3 = {}
-    PD3[#PD3 + 1] = {NAME = "PD3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD3[#PD3 + 1] = {NAME = "PD3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD3[#PD3 + 1] = {NAME = "SPI2_SCK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PD3[#PD3 + 1] = {NAME = "I2S2_CK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PD3[#PD3 + 1] = {NAME = "USART2_CTS", MODE = "_GPIO_MODE_AF_PP_PU", AF = "7", STATE = "_LOW"}
@@ -2800,7 +2800,7 @@ end
 /*--
 if this:PinExist("D", 4) then
     local PD4 = {}
-    PD4[#PD4 + 1] = {NAME = "PD4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD4[#PD4 + 1] = {NAME = "PD4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD4[#PD4 + 1] = {NAME = "USART2_RTS", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
     PD4[#PD4 + 1] = {NAME = "FMC_NOE", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD4[#PD4 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -2846,7 +2846,7 @@ end
 /*--
 if this:PinExist("D", 5) then
     local PD5 = {}
-    PD5[#PD5 + 1] = {NAME = "PD5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD5[#PD5 + 1] = {NAME = "PD5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD5[#PD5 + 1] = {NAME = "USART2_TX", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
     PD5[#PD5 + 1] = {NAME = "FMC_NWE", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD5[#PD5 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -2892,7 +2892,7 @@ end
 /*--
 if this:PinExist("D", 6) then
     local PD6 = {}
-    PD6[#PD6 + 1] = {NAME = "PD6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD6[#PD6 + 1] = {NAME = "PD6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD6[#PD6 + 1] = {NAME = "SPI3_MOSI", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PD6[#PD6 + 1] = {NAME = "I2S3_SD", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PD6[#PD6 + 1] = {NAME = "SAI1_SD_A", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
@@ -2943,7 +2943,7 @@ end
 /*--
 if this:PinExist("D", 7) then
     local PD7 = {}
-    PD7[#PD7 + 1] = {NAME = "PD7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD7[#PD7 + 1] = {NAME = "PD7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD7[#PD7 + 1] = {NAME = "USART2_CK", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
     PD7[#PD7 + 1] = {NAME = "FMC_NE1", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD7[#PD7 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -2989,7 +2989,7 @@ end
 /*--
 if this:PinExist("D", 8) then
     local PD8 = {}
-    PD8[#PD8 + 1] = {NAME = "PD8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD8[#PD8 + 1] = {NAME = "PD8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD8[#PD8 + 1] = {NAME = "USART3_TX", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
     PD8[#PD8 + 1] = {NAME = "FMC_D13", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD8[#PD8 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -3035,7 +3035,7 @@ end
 /*--
 if this:PinExist("D", 9) then
     local PD9 = {}
-    PD9[#PD9 + 1] = {NAME = "PD9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD9[#PD9 + 1] = {NAME = "PD9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD9[#PD9 + 1] = {NAME = "USART3_RX", MODE = "_GPIO_MODE_AF_PP_PU", AF = "7", STATE = "_LOW"}
     PD9[#PD9 + 1] = {NAME = "FMC_D14", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD9[#PD9 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -3081,7 +3081,7 @@ end
 /*--
 if this:PinExist("D", 10) then
     local PD10 = {}
-    PD10[#PD10 + 1] = {NAME = "PD10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD10[#PD10 + 1] = {NAME = "PD10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD10[#PD10 + 1] = {NAME = "USART3_CK", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
     PD10[#PD10 + 1] = {NAME = "FMC_D15", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD10[#PD10 + 1] = {NAME = "LCD_B3", MODE = "_GPIO_MODE_AF_PP", AF = "14", STATE = "_LOW"}
@@ -3128,7 +3128,7 @@ end
 /*--
 if this:PinExist("D", 11) then
     local PD11 = {}
-    PD11[#PD11 + 1] = {NAME = "PD11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD11[#PD11 + 1] = {NAME = "PD11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD11[#PD11 + 1] = {NAME = "USART3_CTS", MODE = "_GPIO_MODE_AF_PP_PU", AF = "7", STATE = "_LOW"}
     PD11[#PD11 + 1] = {NAME = "QUADSPI_BK1_IO0", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
     PD11[#PD11 + 1] = {NAME = "FMC_A16", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -3176,7 +3176,7 @@ end
 /*--
 if this:PinExist("D", 12) then
     local PD12 = {}
-    PD12[#PD12 + 1] = {NAME = "PD12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD12[#PD12 + 1] = {NAME = "PD12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD12[#PD12 + 1] = {NAME = "TIM4_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PD12[#PD12 + 1] = {NAME = "USART3_RTS", MODE = "_GPIO_MODE_AF_PP", AF = "7", STATE = "_LOW"}
     PD12[#PD12 + 1] = {NAME = "QUADSPI_BK1_IO1", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
@@ -3225,7 +3225,7 @@ end
 /*--
 if this:PinExist("D", 13) then
     local PD13 = {}
-    PD13[#PD13 + 1] = {NAME = "PD13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD13[#PD13 + 1] = {NAME = "PD13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD13[#PD13 + 1] = {NAME = "TIM4_CH2", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PD13[#PD13 + 1] = {NAME = "QUADSPI_BK1_IO3", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
     PD13[#PD13 + 1] = {NAME = "FMC_A18", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -3272,7 +3272,7 @@ end
 /*--
 if this:PinExist("D", 14) then
     local PD14 = {}
-    PD14[#PD14 + 1] = {NAME = "PD14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD14[#PD14 + 1] = {NAME = "PD14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD14[#PD14 + 1] = {NAME = "TIM4_CH3", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PD14[#PD14 + 1] = {NAME = "FMC_D0", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD14[#PD14 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -3318,7 +3318,7 @@ end
 /*--
 if this:PinExist("D", 15) then
     local PD15 = {}
-    PD15[#PD15 + 1] = {NAME = "PD15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PD15[#PD15 + 1] = {NAME = "PD15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PD15[#PD15 + 1] = {NAME = "TIM4_CH4", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PD15[#PD15 + 1] = {NAME = "FMC_D1", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PD15[#PD15 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -3365,7 +3365,7 @@ end
 /*--
 if this:PinExist("E", 0) then
     local PE0 = {}
-    PE0[#PE0 + 1] = {NAME = "PE0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE0[#PE0 + 1] = {NAME = "PE0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE0[#PE0 + 1] = {NAME = "TIM4_ETR", MODE = "_GPIO_MODE_AF_PP", AF = "2", STATE = "_LOW"}
     PE0[#PE0 + 1] = {NAME = "UART8_RX", MODE = "_GPIO_MODE_AF_PP_PU", AF = "8", STATE = "_LOW"}
     PE0[#PE0 + 1] = {NAME = "FMC_NBL0", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -3413,7 +3413,7 @@ end
 /*--
 if this:PinExist("E", 1) then
     local PE1 = {}
-    PE1[#PE1 + 1] = {NAME = "PE1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE1[#PE1 + 1] = {NAME = "PE1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE1[#PE1 + 1] = {NAME = "UART8_TX", MODE = "_GPIO_MODE_AF_PP", AF = "8", STATE = "_LOW"}
     PE1[#PE1 + 1] = {NAME = "FMC_NBL1", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PE1[#PE1 + 1] = {NAME = "DCMI_D3", MODE = "_GPIO_MODE_AF_PP", AF = "13", STATE = "_LOW"}
@@ -3460,7 +3460,7 @@ end
 /*--
 if this:PinExist("E", 2) then
     local PE2 = {}
-    PE2[#PE2 + 1] = {NAME = "PE2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE2[#PE2 + 1] = {NAME = "PE2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE2[#PE2 + 1] = {NAME = "TRACECLK", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PE2[#PE2 + 1] = {NAME = "SPI4_SCK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PE2[#PE2 + 1] = {NAME = "SA1_MCLK_A", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
@@ -3510,7 +3510,7 @@ end
 /*--
 if this:PinExist("E", 3) then
     local PE3 = {}
-    PE3[#PE3 + 1] = {NAME = "PE3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE3[#PE3 + 1] = {NAME = "PE3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE3[#PE3 + 1] = {NAME = "TRACED0", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PE3[#PE3 + 1] = {NAME = "SAI1_SD_B", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
     PE3[#PE3 + 1] = {NAME = "FMC_A19", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -3557,7 +3557,7 @@ end
 /*--
 if this:PinExist("E", 4) then
     local PE4 = {}
-    PE4[#PE4 + 1] = {NAME = "PE4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE4[#PE4 + 1] = {NAME = "PE4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE4[#PE4 + 1] = {NAME = "TRACED1", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PE4[#PE4 + 1] = {NAME = "SPI4_NSS", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PE4[#PE4 + 1] = {NAME = "SAI1_FS_A", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
@@ -3607,7 +3607,7 @@ end
 /*--
 if this:PinExist("E", 5) then
     local PE5 = {}
-    PE5[#PE5 + 1] = {NAME = "PE5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE5[#PE5 + 1] = {NAME = "PE5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE5[#PE5 + 1] = {NAME = "TRACED2", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PE5[#PE5 + 1] = {NAME = "TIM9_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
     PE5[#PE5 + 1] = {NAME = "SPI4_MISO", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -3658,7 +3658,7 @@ end
 /*--
 if this:PinExist("E", 6) then
     local PE6 = {}
-    PE6[#PE6 + 1] = {NAME = "PE6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE6[#PE6 + 1] = {NAME = "PE6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE6[#PE6 + 1] = {NAME = "TRACED3", MODE = "_GPIO_MODE_AF_PP", AF = "0", STATE = "_LOW"}
     PE6[#PE6 + 1] = {NAME = "TIM9_CH2", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
     PE6[#PE6 + 1] = {NAME = "SPI4_MOSI", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
@@ -3709,7 +3709,7 @@ end
 /*--
 if this:PinExist("E", 7) then
     local PE7 = {}
-    PE7[#PE7 + 1] = {NAME = "PE7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE7[#PE7 + 1] = {NAME = "PE7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE7[#PE7 + 1] = {NAME = "TIM1_ETR", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PE7[#PE7 + 1] = {NAME = "UART7_RX", MODE = "_GPIO_MODE_AF_PP_PU", AF = "8", STATE = "_LOW"}
     PE7[#PE7 + 1] = {NAME = "QUADSPI_BK2_IO0", MODE = "_GPIO_MODE_AF_PP", AF = "10", STATE = "_LOW"}
@@ -3757,7 +3757,7 @@ end
 /*--
 if this:PinExist("E", 8) then
     local PE8 = {}
-    PE8[#PE8 + 1] = {NAME = "PE8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE8[#PE8 + 1] = {NAME = "PE8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE8[#PE8 + 1] = {NAME = "TIM1_CH1N", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PE8[#PE8 + 1] = {NAME = "UART7_TX", MODE = "_GPIO_MODE_AF_PP", AF = "8", STATE = "_LOW"}
     PE8[#PE8 + 1] = {NAME = "QUADSPI_BK2_IO1", MODE = "_GPIO_MODE_AF_PP", AF = "10", STATE = "_LOW"}
@@ -3805,7 +3805,7 @@ end
 /*--
 if this:PinExist("E", 9) then
     local PE9 = {}
-    PE9[#PE9 + 1] = {NAME = "PE9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE9[#PE9 + 1] = {NAME = "PE9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE9[#PE9 + 1] = {NAME = "TIM1_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PE9[#PE9 + 1] = {NAME = "QUADSPI_BK2_IO2", MODE = "_GPIO_MODE_AF_PP", AF = "10", STATE = "_LOW"}
     PE9[#PE9 + 1] = {NAME = "FMC_D6", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -3852,7 +3852,7 @@ end
 /*--
 if this:PinExist("E", 10) then
     local PE10 = {}
-    PE10[#PE10 + 1] = {NAME = "PE10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE10[#PE10 + 1] = {NAME = "PE10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE10[#PE10 + 1] = {NAME = "TIM1_CH2N", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PE10[#PE10 + 1] = {NAME = "QUADSPI_BK2_IO3", MODE = "_GPIO_MODE_AF_PP", AF = "10", STATE = "_LOW"}
     PE10[#PE10 + 1] = {NAME = "FMC_D7", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -3899,7 +3899,7 @@ end
 /*--
 if this:PinExist("E", 11) then
     local PE11 = {}
-    PE11[#PE11 + 1] = {NAME = "PE11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE11[#PE11 + 1] = {NAME = "PE11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE11[#PE11 + 1] = {NAME = "TIM1_CH2", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PE11[#PE11 + 1] = {NAME = "SPI4_NSS", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PE11[#PE11 + 1] = {NAME = "FMC_D8", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -3947,7 +3947,7 @@ end
 /*--
 if this:PinExist("E", 12) then
     local PE12 = {}
-    PE12[#PE12 + 1] = {NAME = "PE12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE12[#PE12 + 1] = {NAME = "PE12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE12[#PE12 + 1] = {NAME = "TIM1_CH3N", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PE12[#PE12 + 1] = {NAME = "SPI4_SCK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PE12[#PE12 + 1] = {NAME = "FMC_D9", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -3995,7 +3995,7 @@ end
 /*--
 if this:PinExist("E", 13) then
     local PE13 = {}
-    PE13[#PE13 + 1] = {NAME = "PE13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE13[#PE13 + 1] = {NAME = "PE13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE13[#PE13 + 1] = {NAME = "TIM1_CH3", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PE13[#PE13 + 1] = {NAME = "SPI4_MISO", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PE13[#PE13 + 1] = {NAME = "FMC_D10", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -4043,7 +4043,7 @@ end
 /*--
 if this:PinExist("E", 14) then
     local PE14 = {}
-    PE14[#PE14 + 1] = {NAME = "PE14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE14[#PE14 + 1] = {NAME = "PE14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE14[#PE14 + 1] = {NAME = "TIM1_CH4", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PE14[#PE14 + 1] = {NAME = "SPI4_MOSI", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PE14[#PE14 + 1] = {NAME = "FMC_D11", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
@@ -4091,7 +4091,7 @@ end
 /*--
 if this:PinExist("E", 15) then
     local PE15 = {}
-    PE15[#PE15 + 1] = {NAME = "PE15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PE15[#PE15 + 1] = {NAME = "PE15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PE15[#PE15 + 1] = {NAME = "TIM1_BKIN", MODE = "_GPIO_MODE_AF_PP", AF = "1", STATE = "_LOW"}
     PE15[#PE15 + 1] = {NAME = "FMC_D12", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PE15[#PE15 + 1] = {NAME = "LCD_R7", MODE = "_GPIO_MODE_AF_PP", AF = "14", STATE = "_LOW"}
@@ -4139,7 +4139,7 @@ end
 /*--
 if this:PinExist("F", 0) then
     local PF0 = {}
-    PF0[#PF0 + 1] = {NAME = "PF0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF0[#PF0 + 1] = {NAME = "PF0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF0[#PF0 + 1] = {NAME = "I2C2_SDA", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PF0[#PF0 + 1] = {NAME = "FMC_A0", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF0[#PF0 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -4185,7 +4185,7 @@ end
 /*--
 if this:PinExist("F", 1) then
     local PF1 = {}
-    PF1[#PF1 + 1] = {NAME = "PF1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF1[#PF1 + 1] = {NAME = "PF1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF1[#PF1 + 1] = {NAME = "I2C2_SCL", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PF1[#PF1 + 1] = {NAME = "FMC_A1", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF1[#PF1 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -4231,7 +4231,7 @@ end
 /*--
 if this:PinExist("F", 2) then
     local PF2 = {}
-    PF2[#PF2 + 1] = {NAME = "PF2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF2[#PF2 + 1] = {NAME = "PF2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF2[#PF2 + 1] = {NAME = "I2C2_SMBA", MODE = "_GPIO_MODE_AF_OD_PU", AF = "4", STATE = "_LOW"}
     PF2[#PF2 + 1] = {NAME = "FMC_A2", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF2[#PF2 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
@@ -4277,7 +4277,7 @@ end
 /*--
 if this:PinExist("F", 3) then
     local PF3 = {}
-    PF3[#PF3 + 1] = {NAME = "PF3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF3[#PF3 + 1] = {NAME = "PF3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF3[#PF3 + 1] = {NAME = "FMC_A3", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF3[#PF3 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
@@ -4322,7 +4322,7 @@ end
 /*--
 if this:PinExist("F", 4) then
     local PF4 = {}
-    PF4[#PF4 + 1] = {NAME = "PF4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF4[#PF4 + 1] = {NAME = "PF4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF4[#PF4 + 1] = {NAME = "FMC_A4", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF4[#PF4 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
@@ -4367,7 +4367,7 @@ end
 /*--
 if this:PinExist("F", 5) then
     local PF5 = {}
-    PF5[#PF5 + 1] = {NAME = "PF5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF5[#PF5 + 1] = {NAME = "PF5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF5[#PF5 + 1] = {NAME = "FMC_A5", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF5[#PF5 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
@@ -4412,7 +4412,7 @@ end
 /*--
 if this:PinExist("F", 6) then
     local PF6 = {}
-    PF6[#PF6 + 1] = {NAME = "PF6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF6[#PF6 + 1] = {NAME = "PF6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF6[#PF6 + 1] = {NAME = "TIM10_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
     PF6[#PF6 + 1] = {NAME = "SPI5_NSS", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PF6[#PF6 + 1] = {NAME = "SAI1_SD_B", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
@@ -4461,7 +4461,7 @@ end
 /*--
 if this:PinExist("F", 7) then
     local PF7 = {}
-    PF7[#PF7 + 1] = {NAME = "PF7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF7[#PF7 + 1] = {NAME = "PF7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF7[#PF7 + 1] = {NAME = "TIM11_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "3", STATE = "_LOW"}
     PF7[#PF7 + 1] = {NAME = "SPI5_SCK", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PF7[#PF7 + 1] = {NAME = "SAI1_MCLK_B", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
@@ -4510,7 +4510,7 @@ end
 /*--
 if this:PinExist("F", 8) then
     local PF8 = {}
-    PF8[#PF8 + 1] = {NAME = "PF8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF8[#PF8 + 1] = {NAME = "PF8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF8[#PF8 + 1] = {NAME = "SPI5_MISO", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PF8[#PF8 + 1] = {NAME = "SAI1_SCK_B", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
     PF8[#PF8 + 1] = {NAME = "TIM13_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
@@ -4558,7 +4558,7 @@ end
 /*--
 if this:PinExist("F", 9) then
     local PF9 = {}
-    PF9[#PF9 + 1] = {NAME = "PF9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF9[#PF9 + 1] = {NAME = "PF9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF9[#PF9 + 1] = {NAME = "SPI5_MOSI", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PF9[#PF9 + 1] = {NAME = "SAI1_FS_B", MODE = "_GPIO_MODE_AF_PP", AF = "6", STATE = "_LOW"}
     PF9[#PF9 + 1] = {NAME = "TIM14_CH1", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
@@ -4606,7 +4606,7 @@ end
 /*--
 if this:PinExist("F", 10) then
     local PF10 = {}
-    PF10[#PF10 + 1] = {NAME = "PF10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF10[#PF10 + 1] = {NAME = "PF10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF10[#PF10 + 1] = {NAME = "QUADSPI_CLK", MODE = "_GPIO_MODE_AF_PP", AF = "9", STATE = "_LOW"}
     PF10[#PF10 + 1] = {NAME = "DCMI_D11", MODE = "_GPIO_MODE_AF_PP", AF = "13", STATE = "_LOW"}
     PF10[#PF10 + 1] = {NAME = "LCD_DE", MODE = "_GPIO_MODE_AF_PP", AF = "14", STATE = "_LOW"}
@@ -4653,7 +4653,7 @@ end
 /*--
 if this:PinExist("F", 11) then
     local PF11 = {}
-    PF11[#PF11 + 1] = {NAME = "PF11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF11[#PF11 + 1] = {NAME = "PF11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF11[#PF11 + 1] = {NAME = "SPI5_MOSI", MODE = "_GPIO_MODE_AF_PP", AF = "5", STATE = "_LOW"}
     PF11[#PF11 + 1] = {NAME = "FMC_SDNRAS", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF11[#PF11 + 1] = {NAME = "DCMI_D12", MODE = "_GPIO_MODE_AF_PP", AF = "13", STATE = "_LOW"}
@@ -4700,7 +4700,7 @@ end
 /*--
 if this:PinExist("F", 12) then
     local PF12 = {}
-    PF12[#PF12 + 1] = {NAME = "PF12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF12[#PF12 + 1] = {NAME = "PF12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF12[#PF12 + 1] = {NAME = "FMC_A6", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF12[#PF12 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
@@ -4745,7 +4745,7 @@ end
 /*--
 if this:PinExist("F", 13) then
     local PF13 = {}
-    PF13[#PF13 + 1] = {NAME = "PF13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF13[#PF13 + 1] = {NAME = "PF13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF13[#PF13 + 1] = {NAME = "FMC_A7", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF13[#PF13 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
@@ -4790,7 +4790,7 @@ end
 /*--
 if this:PinExist("F", 14) then
     local PF14 = {}
-    PF14[#PF14 + 1] = {NAME = "PF14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF14[#PF14 + 1] = {NAME = "PF14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF14[#PF14 + 1] = {NAME = "FMC_A8", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF14[#PF14 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
@@ -4835,7 +4835,7 @@ end
 /*--
 if this:PinExist("F", 15) then
     local PF15 = {}
-    PF15[#PF15 + 1] = {NAME = "PF15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PF15[#PF15 + 1] = {NAME = "PF15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
     PF15[#PF15 + 1] = {NAME = "FMC_A9", MODE = "_GPIO_MODE_AF_PP", AF = "12", STATE = "_LOW"}
     PF15[#PF15 + 1] = {NAME = "EVENTOUT", MODE = "_GPIO_MODE_AF_PP", AF = "15", STATE = "_LOW"}
 
@@ -4881,7 +4881,7 @@ end
 /*--
 if this:PinExist("G", 0) then
     local PG0 = {}
-    PG0[#PG0 + 1] = {NAME = "PG0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG0[#PG0 + 1] = {NAME = "PG0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG0")
     this:AddProposals(PG0, "G", 0)
@@ -4924,7 +4924,7 @@ end
 /*--
 if this:PinExist("G", 1) then
     local PG1 = {}
-    PG1[#PG1 + 1] = {NAME = "PG1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG1[#PG1 + 1] = {NAME = "PG1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG1")
     this:AddProposals(PG1, "G", 1)
@@ -4967,7 +4967,7 @@ end
 /*--
 if this:PinExist("G", 2) then
     local PG2 = {}
-    PG2[#PG2 + 1] = {NAME = "PG2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG2[#PG2 + 1] = {NAME = "PG2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG2")
     this:AddProposals(PG2, "G", 2)
@@ -5010,7 +5010,7 @@ end
 /*--
 if this:PinExist("G", 3) then
     local PG3 = {}
-    PG3[#PG3 + 1] = {NAME = "PG3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG3[#PG3 + 1] = {NAME = "PG3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG3")
     this:AddProposals(PG3, "G", 3)
@@ -5053,7 +5053,7 @@ end
 /*--
 if this:PinExist("G", 4) then
     local PG4 = {}
-    PG4[#PG4 + 1] = {NAME = "PG4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG4[#PG4 + 1] = {NAME = "PG4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG4")
     this:AddProposals(PG4, "G", 4)
@@ -5096,7 +5096,7 @@ end
 /*--
 if this:PinExist("G", 5) then
     local PG5 = {}
-    PG5[#PG5 + 1] = {NAME = "PG5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG5[#PG5 + 1] = {NAME = "PG5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG5")
     this:AddProposals(PG5, "G", 5)
@@ -5139,7 +5139,7 @@ end
 /*--
 if this:PinExist("G", 6) then
     local PG6 = {}
-    PG6[#PG6 + 1] = {NAME = "PG6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG6[#PG6 + 1] = {NAME = "PG6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG6")
     this:AddProposals(PG6, "G", 6)
@@ -5182,7 +5182,7 @@ end
 /*--
 if this:PinExist("G", 7) then
     local PG7 = {}
-    PG7[#PG7 + 1] = {NAME = "PG7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG7[#PG7 + 1] = {NAME = "PG7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG7")
     this:AddProposals(PG7, "G", 7)
@@ -5225,7 +5225,7 @@ end
 /*--
 if this:PinExist("G", 8) then
     local PG8 = {}
-    PG8[#PG8 + 1] = {NAME = "PG8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG8[#PG8 + 1] = {NAME = "PG8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG8")
     this:AddProposals(PG8, "G", 8)
@@ -5268,7 +5268,7 @@ end
 /*--
 if this:PinExist("G", 9) then
     local PG9 = {}
-    PG9[#PG9 + 1] = {NAME = "PG9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG9[#PG9 + 1] = {NAME = "PG9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG9")
     this:AddProposals(PG9, "G", 9)
@@ -5311,7 +5311,7 @@ end
 /*--
 if this:PinExist("G", 10) then
     local PG10 = {}
-    PG10[#PG10 + 1] = {NAME = "PG10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG10[#PG10 + 1] = {NAME = "PG10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG10")
     this:AddProposals(PG10, "G", 10)
@@ -5354,7 +5354,7 @@ end
 /*--
 if this:PinExist("G", 11) then
     local PG11 = {}
-    PG11[#PG11 + 1] = {NAME = "PG11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG11[#PG11 + 1] = {NAME = "PG11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG11")
     this:AddProposals(PG11, "G", 11)
@@ -5397,7 +5397,7 @@ end
 /*--
 if this:PinExist("G", 12) then
     local PG12 = {}
-    PG12[#PG12 + 1] = {NAME = "PG12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG12[#PG12 + 1] = {NAME = "PG12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG12")
     this:AddProposals(PG12, "G", 12)
@@ -5440,7 +5440,7 @@ end
 /*--
 if this:PinExist("G", 13) then
     local PG13 = {}
-    PG13[#PG13 + 1] = {NAME = "PG13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG13[#PG13 + 1] = {NAME = "PG13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG13")
     this:AddProposals(PG13, "G", 13)
@@ -5483,7 +5483,7 @@ end
 /*--
 if this:PinExist("G", 14) then
     local PG14 = {}
-    PG14[#PG14 + 1] = {NAME = "PG14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG14[#PG14 + 1] = {NAME = "PG14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG14")
     this:AddProposals(PG14, "G", 14)
@@ -5526,7 +5526,7 @@ end
 /*--
 if this:PinExist("G", 15) then
     local PG15 = {}
-    PG15[#PG15 + 1] = {NAME = "PG15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PG15[#PG15 + 1] = {NAME = "PG15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PG15")
     this:AddProposals(PG15, "G", 15)
@@ -5570,7 +5570,7 @@ end
 /*--
 if this:PinExist("H", 0) then
     local PH0 = {}
-    PH0[#PH0 + 1] = {NAME = "PH0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH0[#PH0 + 1] = {NAME = "PH0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH0")
     this:AddProposals(PH0, "H", 0)
@@ -5613,7 +5613,7 @@ end
 /*--
 if this:PinExist("H", 1) then
     local PH1 = {}
-    PH1[#PH1 + 1] = {NAME = "PH1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH1[#PH1 + 1] = {NAME = "PH1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH1")
     this:AddProposals(PH1, "H", 1)
@@ -5656,7 +5656,7 @@ end
 /*--
 if this:PinExist("H", 2) then
     local PH2 = {}
-    PH2[#PH2 + 1] = {NAME = "PH2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH2[#PH2 + 1] = {NAME = "PH2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH2")
     this:AddProposals(PH2, "H", 2)
@@ -5699,7 +5699,7 @@ end
 /*--
 if this:PinExist("H", 3) then
     local PH3 = {}
-    PH3[#PH3 + 1] = {NAME = "PH3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH3[#PH3 + 1] = {NAME = "PH3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH3")
     this:AddProposals(PH3, "H", 3)
@@ -5742,7 +5742,7 @@ end
 /*--
 if this:PinExist("H", 4) then
     local PH4 = {}
-    PH4[#PH4 + 1] = {NAME = "PH4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH4[#PH4 + 1] = {NAME = "PH4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH4")
     this:AddProposals(PH4, "H", 4)
@@ -5785,7 +5785,7 @@ end
 /*--
 if this:PinExist("H", 5) then
     local PH5 = {}
-    PH5[#PH5 + 1] = {NAME = "PH5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH5[#PH5 + 1] = {NAME = "PH5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH5")
     this:AddProposals(PH5, "H", 5)
@@ -5828,7 +5828,7 @@ end
 /*--
 if this:PinExist("H", 6) then
     local PH6 = {}
-    PH6[#PH6 + 1] = {NAME = "PH6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH6[#PH6 + 1] = {NAME = "PH6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH6")
     this:AddProposals(PH6, "H", 6)
@@ -5871,7 +5871,7 @@ end
 /*--
 if this:PinExist("H", 7) then
     local PH7 = {}
-    PH7[#PH7 + 1] = {NAME = "PH7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH7[#PH7 + 1] = {NAME = "PH7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH7")
     this:AddProposals(PH7, "H", 7)
@@ -5914,7 +5914,7 @@ end
 /*--
 if this:PinExist("H", 8) then
     local PH8 = {}
-    PH8[#PH8 + 1] = {NAME = "PH8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH8[#PH8 + 1] = {NAME = "PH8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH8")
     this:AddProposals(PH8, "H", 8)
@@ -5957,7 +5957,7 @@ end
 /*--
 if this:PinExist("H", 9) then
     local PH9 = {}
-    PH9[#PH9 + 1] = {NAME = "PH9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH9[#PH9 + 1] = {NAME = "PH9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH9")
     this:AddProposals(PH9, "H", 9)
@@ -6000,7 +6000,7 @@ end
 /*--
 if this:PinExist("H", 10) then
     local PH10 = {}
-    PH10[#PH10 + 1] = {NAME = "PH10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH10[#PH10 + 1] = {NAME = "PH10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH10")
     this:AddProposals(PH10, "H", 10)
@@ -6043,7 +6043,7 @@ end
 /*--
 if this:PinExist("H", 11) then
     local PH11 = {}
-    PH11[#PH11 + 1] = {NAME = "PH11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH11[#PH11 + 1] = {NAME = "PH11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH11")
     this:AddProposals(PH11, "H", 11)
@@ -6086,7 +6086,7 @@ end
 /*--
 if this:PinExist("H", 12) then
     local PH12 = {}
-    PH12[#PH12 + 1] = {NAME = "PH12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH12[#PH12 + 1] = {NAME = "PH12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH12")
     this:AddProposals(PH12, "H", 12)
@@ -6129,7 +6129,7 @@ end
 /*--
 if this:PinExist("H", 13) then
     local PH13 = {}
-    PH13[#PH13 + 1] = {NAME = "PH13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH13[#PH13 + 1] = {NAME = "PH13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH13")
     this:AddProposals(PH13, "H", 13)
@@ -6172,7 +6172,7 @@ end
 /*--
 if this:PinExist("H", 14) then
     local PH14 = {}
-    PH14[#PH14 + 1] = {NAME = "PH14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH14[#PH14 + 1] = {NAME = "PH14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH14")
     this:AddProposals(PH14, "H", 14)
@@ -6215,7 +6215,7 @@ end
 /*--
 if this:PinExist("H", 15) then
     local PH15 = {}
-    PH15[#PH15 + 1] = {NAME = "PH15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PH15[#PH15 + 1] = {NAME = "PH15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PH15")
     this:AddProposals(PH15, "H", 15)
@@ -6259,7 +6259,7 @@ end
 /*--
 if this:PinExist("I", 0) then
     local PI0 = {}
-    PI0[#PI0 + 1] = {NAME = "PI0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI0[#PI0 + 1] = {NAME = "PI0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI0")
     this:AddProposals(PI0, "I", 0)
@@ -6302,7 +6302,7 @@ end
 /*--
 if this:PinExist("I", 1) then
     local PI1 = {}
-    PI1[#PI1 + 1] = {NAME = "PI1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI1[#PI1 + 1] = {NAME = "PI1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI1")
     this:AddProposals(PI1, "I", 1)
@@ -6345,7 +6345,7 @@ end
 /*--
 if this:PinExist("I", 2) then
     local PI2 = {}
-    PI2[#PI2 + 1] = {NAME = "PI2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI2[#PI2 + 1] = {NAME = "PI2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI2")
     this:AddProposals(PI2, "I", 2)
@@ -6388,7 +6388,7 @@ end
 /*--
 if this:PinExist("I", 3) then
     local PI3 = {}
-    PI3[#PI3 + 1] = {NAME = "PI3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI3[#PI3 + 1] = {NAME = "PI3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI3")
     this:AddProposals(PI3, "I", 3)
@@ -6431,7 +6431,7 @@ end
 /*--
 if this:PinExist("I", 4) then
     local PI4 = {}
-    PI4[#PI4 + 1] = {NAME = "PI4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI4[#PI4 + 1] = {NAME = "PI4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI4")
     this:AddProposals(PI4, "I", 4)
@@ -6474,7 +6474,7 @@ end
 /*--
 if this:PinExist("I", 5) then
     local PI5 = {}
-    PI5[#PI5 + 1] = {NAME = "PI5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI5[#PI5 + 1] = {NAME = "PI5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI5")
     this:AddProposals(PI5, "I", 5)
@@ -6517,7 +6517,7 @@ end
 /*--
 if this:PinExist("I", 6) then
     local PI6 = {}
-    PI6[#PI6 + 1] = {NAME = "PI6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI6[#PI6 + 1] = {NAME = "PI6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI6")
     this:AddProposals(PI6, "I", 6)
@@ -6560,7 +6560,7 @@ end
 /*--
 if this:PinExist("I", 7) then
     local PI7 = {}
-    PI7[#PI7 + 1] = {NAME = "PI7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI7[#PI7 + 1] = {NAME = "PI7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI7")
     this:AddProposals(PI7, "I", 7)
@@ -6603,7 +6603,7 @@ end
 /*--
 if this:PinExist("I", 8) then
     local PI8 = {}
-    PI8[#PI8 + 1] = {NAME = "PI8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI8[#PI8 + 1] = {NAME = "PI8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI8")
     this:AddProposals(PI8, "I", 8)
@@ -6646,7 +6646,7 @@ end
 /*--
 if this:PinExist("I", 9) then
     local PI9 = {}
-    PI9[#PI9 + 1] = {NAME = "PI9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI9[#PI9 + 1] = {NAME = "PI9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI9")
     this:AddProposals(PI9, "I", 9)
@@ -6689,7 +6689,7 @@ end
 /*--
 if this:PinExist("I", 10) then
     local PI10 = {}
-    PI10[#PI10 + 1] = {NAME = "PI10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI10[#PI10 + 1] = {NAME = "PI10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI10")
     this:AddProposals(PI10, "I", 10)
@@ -6732,7 +6732,7 @@ end
 /*--
 if this:PinExist("I", 11) then
     local PI11 = {}
-    PI11[#PI11 + 1] = {NAME = "PI11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI11[#PI11 + 1] = {NAME = "PI11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI11")
     this:AddProposals(PI11, "I", 11)
@@ -6775,7 +6775,7 @@ end
 /*--
 if this:PinExist("I", 12) then
     local PI12 = {}
-    PI12[#PI12 + 1] = {NAME = "PI12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI12[#PI12 + 1] = {NAME = "PI12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI12")
     this:AddProposals(PI12, "I", 12)
@@ -6818,7 +6818,7 @@ end
 /*--
 if this:PinExist("I", 13) then
     local PI13 = {}
-    PI13[#PI13 + 1] = {NAME = "PI13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI13[#PI13 + 1] = {NAME = "PI13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI13")
     this:AddProposals(PI13, "I", 13)
@@ -6861,7 +6861,7 @@ end
 /*--
 if this:PinExist("I", 14) then
     local PI14 = {}
-    PI14[#PI14 + 1] = {NAME = "PI14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI14[#PI14 + 1] = {NAME = "PI14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI14")
     this:AddProposals(PI14, "I", 14)
@@ -6904,7 +6904,7 @@ end
 /*--
 if this:PinExist("I", 15) then
     local PI15 = {}
-    PI15[#PI15 + 1] = {NAME = "PI15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PI15[#PI15 + 1] = {NAME = "PI15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PI15")
     this:AddProposals(PI15, "I", 15)
@@ -6948,7 +6948,7 @@ end
 /*--
 if this:PinExist("J", 0) then
     local PJ0 = {}
-    PJ0[#PJ0 + 1] = {NAME = "PJ0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ0[#PJ0 + 1] = {NAME = "PJ0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ0")
     this:AddProposals(PJ0, "J", 0)
@@ -6991,7 +6991,7 @@ end
 /*--
 if this:PinExist("J", 1) then
     local PJ1 = {}
-    PJ1[#PJ1 + 1] = {NAME = "PJ1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ1[#PJ1 + 1] = {NAME = "PJ1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ1")
     this:AddProposals(PJ1, "J", 1)
@@ -7034,7 +7034,7 @@ end
 /*--
 if this:PinExist("J", 2) then
     local PJ2 = {}
-    PJ2[#PJ2 + 1] = {NAME = "PJ2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ2[#PJ2 + 1] = {NAME = "PJ2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ2")
     this:AddProposals(PJ2, "J", 2)
@@ -7077,7 +7077,7 @@ end
 /*--
 if this:PinExist("J", 3) then
     local PJ3 = {}
-    PJ3[#PJ3 + 1] = {NAME = "PJ3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ3[#PJ3 + 1] = {NAME = "PJ3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ3")
     this:AddProposals(PJ3, "J", 3)
@@ -7120,7 +7120,7 @@ end
 /*--
 if this:PinExist("J", 4) then
     local PJ4 = {}
-    PJ4[#PJ4 + 1] = {NAME = "PJ4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ4[#PJ4 + 1] = {NAME = "PJ4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ4")
     this:AddProposals(PJ4, "J", 4)
@@ -7163,7 +7163,7 @@ end
 /*--
 if this:PinExist("J", 5) then
     local PJ5 = {}
-    PJ5[#PJ5 + 1] = {NAME = "PJ5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ5[#PJ5 + 1] = {NAME = "PJ5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ5")
     this:AddProposals(PJ5, "J", 5)
@@ -7206,7 +7206,7 @@ end
 /*--
 if this:PinExist("J", 6) then
     local PJ6 = {}
-    PJ6[#PJ6 + 1] = {NAME = "PJ6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ6[#PJ6 + 1] = {NAME = "PJ6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ6")
     this:AddProposals(PJ6, "J", 6)
@@ -7249,7 +7249,7 @@ end
 /*--
 if this:PinExist("J", 7) then
     local PJ7 = {}
-    PJ7[#PJ7 + 1] = {NAME = "PJ7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ7[#PJ7 + 1] = {NAME = "PJ7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ7")
     this:AddProposals(PJ7, "J", 7)
@@ -7292,7 +7292,7 @@ end
 /*--
 if this:PinExist("J", 8) then
     local PJ8 = {}
-    PJ8[#PJ8 + 1] = {NAME = "PJ8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ8[#PJ8 + 1] = {NAME = "PJ8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ8")
     this:AddProposals(PJ8, "J", 8)
@@ -7335,7 +7335,7 @@ end
 /*--
 if this:PinExist("J", 9) then
     local PJ9 = {}
-    PJ9[#PJ9 + 1] = {NAME = "PJ9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ9[#PJ9 + 1] = {NAME = "PJ9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ9")
     this:AddProposals(PJ9, "J", 9)
@@ -7378,7 +7378,7 @@ end
 /*--
 if this:PinExist("J", 10) then
     local PJ10 = {}
-    PJ10[#PJ10 + 1] = {NAME = "PJ10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ10[#PJ10 + 1] = {NAME = "PJ10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ10")
     this:AddProposals(PJ10, "J", 10)
@@ -7421,7 +7421,7 @@ end
 /*--
 if this:PinExist("J", 11) then
     local PJ11 = {}
-    PJ11[#PJ11 + 1] = {NAME = "PJ11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ11[#PJ11 + 1] = {NAME = "PJ11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ11")
     this:AddProposals(PJ11, "J", 11)
@@ -7464,7 +7464,7 @@ end
 /*--
 if this:PinExist("J", 12) then
     local PJ12 = {}
-    PJ12[#PJ12 + 1] = {NAME = "PJ12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ12[#PJ12 + 1] = {NAME = "PJ12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ12")
     this:AddProposals(PJ12, "J", 12)
@@ -7507,7 +7507,7 @@ end
 /*--
 if this:PinExist("J", 13) then
     local PJ13 = {}
-    PJ13[#PJ13 + 1] = {NAME = "PJ13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ13[#PJ13 + 1] = {NAME = "PJ13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ13")
     this:AddProposals(PJ13, "J", 13)
@@ -7550,7 +7550,7 @@ end
 /*--
 if this:PinExist("J", 14) then
     local PJ14 = {}
-    PJ14[#PJ14 + 1] = {NAME = "PJ14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ14[#PJ14 + 1] = {NAME = "PJ14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ14")
     this:AddProposals(PJ14, "J", 14)
@@ -7593,7 +7593,7 @@ end
 /*--
 if this:PinExist("J", 15) then
     local PJ15 = {}
-    PJ15[#PJ15 + 1] = {NAME = "PJ15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PJ15[#PJ15 + 1] = {NAME = "PJ15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PJ15")
     this:AddProposals(PJ15, "J", 15)
@@ -7637,7 +7637,7 @@ end
 /*--
 if this:PinExist("K", 0) then
     local PK0 = {}
-    PK0[#PK0 + 1] = {NAME = "PK0_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK0[#PK0 + 1] = {NAME = "PK0_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK0")
     this:AddProposals(PK0, "K", 0)
@@ -7680,7 +7680,7 @@ end
 /*--
 if this:PinExist("K", 1) then
     local PK1 = {}
-    PK1[#PK1 + 1] = {NAME = "PK1_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK1[#PK1 + 1] = {NAME = "PK1_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK1")
     this:AddProposals(PK1, "K", 1)
@@ -7723,7 +7723,7 @@ end
 /*--
 if this:PinExist("K", 2) then
     local PK2 = {}
-    PK2[#PK2 + 1] = {NAME = "PK2_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK2[#PK2 + 1] = {NAME = "PK2_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK2")
     this:AddProposals(PK2, "K", 2)
@@ -7766,7 +7766,7 @@ end
 /*--
 if this:PinExist("K", 3) then
     local PK3 = {}
-    PK3[#PK3 + 1] = {NAME = "PK3_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK3[#PK3 + 1] = {NAME = "PK3_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK3")
     this:AddProposals(PK3, "K", 3)
@@ -7809,7 +7809,7 @@ end
 /*--
 if this:PinExist("K", 4) then
     local PK4 = {}
-    PK4[#PK4 + 1] = {NAME = "PK4_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK4[#PK4 + 1] = {NAME = "PK4_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK4")
     this:AddProposals(PK4, "K", 4)
@@ -7852,7 +7852,7 @@ end
 /*--
 if this:PinExist("K", 5) then
     local PK5 = {}
-    PK5[#PK5 + 1] = {NAME = "PK5_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK5[#PK5 + 1] = {NAME = "PK5_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK5")
     this:AddProposals(PK5, "K", 5)
@@ -7895,7 +7895,7 @@ end
 /*--
 if this:PinExist("K", 6) then
     local PK6 = {}
-    PK6[#PK6 + 1] = {NAME = "PK6_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK6[#PK6 + 1] = {NAME = "PK6_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK6")
     this:AddProposals(PK6, "K", 6)
@@ -7938,7 +7938,7 @@ end
 /*--
 if this:PinExist("K", 7) then
     local PK7 = {}
-    PK7[#PK7 + 1] = {NAME = "PK7_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK7[#PK7 + 1] = {NAME = "PK7_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK7")
     this:AddProposals(PK7, "K", 7)
@@ -7981,7 +7981,7 @@ end
 /*--
 if this:PinExist("K", 8) then
     local PK8 = {}
-    PK8[#PK8 + 1] = {NAME = "PK8_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK8[#PK8 + 1] = {NAME = "PK8_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK8")
     this:AddProposals(PK8, "K", 8)
@@ -8024,7 +8024,7 @@ end
 /*--
 if this:PinExist("K", 9) then
     local PK9 = {}
-    PK9[#PK9 + 1] = {NAME = "PK9_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK9[#PK9 + 1] = {NAME = "PK9_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK9")
     this:AddProposals(PK9, "K", 9)
@@ -8067,7 +8067,7 @@ end
 /*--
 if this:PinExist("K", 10) then
     local PK10 = {}
-    PK10[#PK10 + 1] = {NAME = "PK10_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK10[#PK10 + 1] = {NAME = "PK10_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK10")
     this:AddProposals(PK10, "K", 10)
@@ -8110,7 +8110,7 @@ end
 /*--
 if this:PinExist("K", 11) then
     local PK11 = {}
-    PK11[#PK11 + 1] = {NAME = "PK11_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK11[#PK11 + 1] = {NAME = "PK11_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK11")
     this:AddProposals(PK11, "K", 11)
@@ -8153,7 +8153,7 @@ end
 /*--
 if this:PinExist("K", 12) then
     local PK12 = {}
-    PK12[#PK12 + 1] = {NAME = "PK12_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK12[#PK12 + 1] = {NAME = "PK12_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK12")
     this:AddProposals(PK12, "K", 12)
@@ -8196,7 +8196,7 @@ end
 /*--
 if this:PinExist("K", 13) then
     local PK13 = {}
-    PK13[#PK13 + 1] = {NAME = "PK13_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK13[#PK13 + 1] = {NAME = "PK13_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK13")
     this:AddProposals(PK13, "K", 13)
@@ -8239,7 +8239,7 @@ end
 /*--
 if this:PinExist("K", 14) then
     local PK14 = {}
-    PK14[#PK14 + 1] = {NAME = "PK14_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK14[#PK14 + 1] = {NAME = "PK14_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK14")
     this:AddProposals(PK14, "K", 14)
@@ -8282,7 +8282,7 @@ end
 /*--
 if this:PinExist("K", 15) then
     local PK15 = {}
-    PK15[#PK15 + 1] = {NAME = "PK15_NC", MODE = "_GPIO_MODE_ANALOG", AF = "0", STATE = "_LOW"}
+    PK15[#PK15 + 1] = {NAME = "PK15_NC", MODE = "_GPIO_MODE_IN", AF = "0", STATE = "_LOW"}
 
     this:AddWidget("Textbox", "PK15")
     this:AddProposals(PK15, "K", 15)
