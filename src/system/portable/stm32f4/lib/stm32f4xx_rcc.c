@@ -2500,6 +2500,7 @@ void RCC_APB2PeriphClockLPModeCmd(uint32_t RCC_APB2Periph, FunctionalState NewSt
   }
 }
 
+#if defined(STM32F410xx) || defined(STM32F411xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
 /**
   * @brief Configures the External Low Speed oscillator mode (LSE mode).
   * @note This mode is only available for STM32F410xx/STM32F411xx/STM32F446xx/STM32F469_479xx devices.
@@ -2509,17 +2510,18 @@ void RCC_APB2PeriphClockLPModeCmd(uint32_t RCC_APB2Periph, FunctionalState NewSt
   *            @arg RCC_LSE_HIGHDRIVE_MODE: LSE oscillator in High Drive mode.
   * @retval None
   */
-//void RCC_LSEModeConfig(uint8_t RCC_Mode)
-//{
-//  if(RCC_Mode == RCC_LSE_HIGHDRIVE_MODE)
-//  {
-//    SET_BIT(RCC->BDCR, RCC_BDCR_LSEMOD);
-//  }
-//  else
-//  {
-//    CLEAR_BIT(RCC->BDCR, RCC_BDCR_LSEMOD);
-//  }
-//}
+void RCC_LSEModeConfig(uint8_t RCC_Mode)
+{
+  if(RCC_Mode == RCC_LSE_HIGHDRIVE_MODE)
+  {
+    SET_BIT(RCC->BDCR, RCC_BDCR_LSEMOD);
+  }
+  else
+  {
+    CLEAR_BIT(RCC->BDCR, RCC_BDCR_LSEMOD);
+  }
+}
+#endif
 
 #if defined(STM32F410xx) || defined(STM32F413_423xx)
 /**

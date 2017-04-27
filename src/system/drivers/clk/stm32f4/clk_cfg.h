@@ -116,7 +116,6 @@ extern "C" {
  */
 #define _CLK_CFG__MCO2_DIV              __CLK_MC02_CLK_DIV__
 
-// TODO I2S, SAI, LCD clock sources
 
 /*------------------------------------------------------------------------------
  * PLL CONFIGURATION
@@ -145,7 +144,7 @@ extern "C" {
  *       frequency ranges from 1 to 2 MHz. It is recommended to select a frequency
  *       of 2 MHz to limit PLL jitter.
  */
-#define _CLK_CFG__PLL_SRC_DIV           __CLK_PLL_SRC_DIV__
+#define _CLK_CFG__PLL_M                 __CLK_PLL_M__
 
 /*
  * PLL multiplier (PLLN)
@@ -156,7 +155,7 @@ extern "C" {
  * NOTE: You have to set the PLLN parameter correctly to ensure that the VCO
  *       output frequency is between 100 and 432 MHz.
  */
-#define _CLK_CFG__PLL_MUL               __CLK_PLL_MUL__
+#define _CLK_CFG__PLL_N                 __CLK_PLL_N__
 
 /*
  * PLL output division factor (PLLP)
@@ -167,7 +166,7 @@ extern "C" {
  * NOTE: You have to set the PLLP parameter correctly to not exceed 168 MHz on
  *       the System clock frequency.
  */
-#define _CLK_CFG__PLL_OUT_SYSCLK_DIV    __CLK_PLL_OUT_SYSCLK_DIV__
+#define _CLK_CFG__PLL_P                 __CLK_PLL_P__
 
 /*
  * PLL OTG FS, SDIO, RNG output division factor (PLLQ)
@@ -180,7 +179,7 @@ extern "C" {
  *       the SDIO and RNG need a frequency lower than or equal to 48 MHz to work
  *       correctly.
  */
-#define _CLK_CFG__PLL_OUT_48MHz_DIV     __CLK_PLL_OUT_48MHz_DIV__
+#define _CLK_CFG__PLL_Q                 __CLK_PLL_Q__
 
 /*
  * PLL I2S, SAI, SYSTEM, SPDIF (PLLR)
@@ -194,7 +193,136 @@ extern "C" {
  *       the SDIO and RNG need a frequency lower than or equal to 48 MHz to work
  *       correctly.
  */
-#define _CLK_CFG__PLL_OUT_I2S_DIV       __CLK_PLL_OUT_I2S_DIV__
+#define _CLK_CFG__PLL_R                 __CLK_PLL_R__
+
+
+/*------------------------------------------------------------------------------
+ * PLLI2S CONFIGURATION
+ *----------------------------------------------------------------------------*/
+/*
+ * PLLI2S Enable
+ * ENABLE
+ * DISABLE
+ */
+#define _CLK_CFG__PLLI2S_ON             __CLK_PLLI2S_ON__
+
+/*
+ * PLLI2S division factor for VCO input clock
+ * 2..63
+ *
+ * PLLI2SM: specifies the division factor for PLLI2S VCO input clock
+ *          This parameter must be a number between Min_Data = 2 and Max_Data = 63.
+ *
+ * NOTE:    You have to set the PLLI2SM parameter correctly to ensure that the VCO input
+ *          frequency ranges from 1 to 2 MHz. It is recommended to select a frequency
+ *          of 2 MHz to limit PLLI2S jitter.
+ */
+#define _CLK_CFG__PLLI2S_M              __CLK_PLLI2S_M__
+
+/*
+ * PLLI2S multiplication factor
+ * 50..432
+ *
+ * PLLI2SN: specifies the multiplication factor for PLLI2S VCO output clock
+ *          This parameter must be a number between 50 and 432.
+ *
+ * NOTE:    You have to set the PLLI2SN parameter correctly to ensure that the VCO
+ *          output frequency is between 100 and 432 MHz.
+ */
+#define _CLK_CFG__PLLI2S_N              __CLK_PLLI2S_N__
+
+/*
+ * PLLI2S division factor for 48MHz
+ * {2, 4, 6, or 8}
+ *
+ * PLLI2SP: specifies the division factor for PLL 48Mhz clock output
+ *          This parameter must be a number in the range {2, 4, 6, or 8}.
+ */
+#define _CLK_CFG__PLLI2S_P              __CLK_PLLI2S_P__
+
+/*
+ * PLLI2S division factor for SAI1 clock
+ * 2..15
+ *
+ * PLLI2SQ: specifies the division factor for SAI1 clock
+ *          This parameter must be a number between 2 and 15.
+ */
+#define _CLK_CFG__PLLI2S_Q              __CLK_PLLI2S_Q__
+
+/*
+ * PLLI2S division factor for I2S clock
+ * 2..7
+ *
+ * PLLI2SR: specifies the division factor for I2S clock
+ *          This parameter must be a number between 2 and 7.
+ *
+ * NOTE:    You have to set the PLLI2SR parameter correctly to not exceed 192 MHz
+ *          on the I2S clock frequency.
+ */
+#define _CLK_CFG__PLLI2S_R              __CLK_PLLI2S_R__
+
+
+/*------------------------------------------------------------------------------
+ * PLLSAI CONFIGURATION
+ *----------------------------------------------------------------------------*/
+/*
+ * PLLSAI Enable
+ * ENABLE
+ * DISABLE
+ */
+#define _CLK_CFG__PLLSAI_ON             __CLK_PLLSAI_ON__
+
+/*
+ * PLLSAI division factor for VCO input clock
+ * 2..63
+ *
+ * PLLSAIM: specifies the division factor for PLLSAI VCO input clock
+ *          This parameter must be a number between Min_Data = 2 and Max_Data = 63.
+ *
+ * NOTE:    You have to set the PLLSAIM parameter correctly to ensure that the VCO input
+ *          frequency ranges from 1 to 2 MHz. It is recommended to select a frequency
+ *          of 2 MHz to limit PLLSAI jitter.
+ */
+#define _CLK_CFG__PLLSAI_M              __CLK_PLLSAI_M__
+
+/*
+ * PLLSAI multiplication factor
+ * 50..432
+ *
+ * PLLSAIN: specifies the multiplication factor for PLLSAI VCO output clock
+ *          This parameter must be a number between 50 and 432.
+ *
+ * NOTE:    You have to set the PLLSAIN parameter correctly to ensure that the VCO
+ *          output frequency is between 100 and 432 MHz.
+ */
+#define _CLK_CFG__PLLSAI_N              __CLK_PLLSAI_N__
+
+/*
+ * PLLSAI division factor for 48MHz
+ * {2, 4, 6, or 8}
+ *
+ * PLLSAIP: specifies the division factor for PLL 48Mhz clock output
+ *          This parameter must be a number in the range {2, 4, 6, or 8}.
+ */
+#define _CLK_CFG__PLLSAI_P              __CLK_PLLSAI_P__
+
+/*
+ * PLLSAI division factor for SAI1 clock
+ * 2..15
+ *
+ * PLLSAIQ: specifies the division factor for SAI1 clock
+ *          This parameter must be a number between 2 and 15.
+ */
+#define _CLK_CFG__PLLSAI_Q              __CLK_PLLSAI_Q__
+
+/*
+ * PLLSAI division factor for LTDC clock
+ * 2..7
+ *
+ * PLLSAIR: specifies the division factor for LTDC clock
+ *          This parameter must be a number between 2 and 7.
+ */
+#define _CLK_CFG__PLLSAI_R              __CLK_PLLSAI_R__
 
 
 /*------------------------------------------------------------------------------

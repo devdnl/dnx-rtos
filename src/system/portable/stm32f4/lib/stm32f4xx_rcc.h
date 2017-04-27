@@ -1000,7 +1000,9 @@ void        RCC_APB1PeriphClockLPModeCmd(uint32_t RCC_APB1Periph, FunctionalStat
 void        RCC_APB2PeriphClockLPModeCmd(uint32_t RCC_APB2Periph, FunctionalState NewState);
 
 /* Features available only for STM32F410xx/STM32F411xx/STM32F446xx/STM32F469_479xx devices */
-//void        RCC_LSEModeConfig(uint8_t RCC_Mode);
+#if defined(STM32F410xx) || defined(STM32F411xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
+void        RCC_LSEModeConfig(uint8_t RCC_Mode);
+#endif
 
 /* Features available only for STM32F469_479xx devices */
 #if defined(STM32F469_479xx)

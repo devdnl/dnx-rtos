@@ -126,37 +126,36 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         //----------------------------------------------------------------------
         // RTC clock selection
         //----------------------------------------------------------------------
-//        if (  (  (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE && _CLK_CFG__LSE_ON)
-//              || (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSI && _CLK_CFG__LSI_ON)
-//              || (IS_RCC_RTCCLK_SOURCE(_CLK_CFG__RTCCLK_SRC)   && _CLK_CFG__HSE_ON) )
-//           && (RCC->BDCR & RCC_BDCR_RTCEN) == 0
-//           && (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_0)) == RCC_BDCR_RTCSEL_NOCLOCK) {
-//
-//                PWR_BackupAccessCmd(ENABLE);
-//
-//                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
-//                SET_BIT(PWR->CR, PWR_CR_DBP);
-//                RCC_RTCCLKConfig(_CLK_CFG__RTCCLK_SRC);
-//        }
+        if ( (  (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE && _CLK_CFG__LSE_ON)
+             || (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSI && _CLK_CFG__LSI_ON)
+             || (IS_RCC_RTCCLK_SOURCE(_CLK_CFG__RTCCLK_SRC)   && _CLK_CFG__HSE_ON) )
+
+           && (RCC->BDCR & RCC_BDCR_RTCEN) == 0
+           && (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_0)) == 0) {
+
+                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
+                SET_BIT(PWR->CR, PWR_CR_DBP);
+                RCC_RTCCLKConfig(_CLK_CFG__RTCCLK_SRC);
+        }
 
         //----------------------------------------------------------------------
-        // PLL configuration
+        // Main PLL configuration
         //----------------------------------------------------------------------
 #if defined(STM32F410xx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
         RCC_PLLConfig(_CLK_CFG__PLL_SRC,
-                      _CLK_CFG__PLL_SRC_DIV,
-                      _CLK_CFG__PLL_MUL,
-                      _CLK_CFG__PLL_OUT_SYSCLK_DIV,
-                      _CLK_CFG__PLL_OUT_48MHz_DIV,
-                      _CLK_CFG__PLL_OUT_I2S_DIV);
+                      _CLK_CFG__PLL_M,
+                      _CLK_CFG__PLL_N,
+                      _CLK_CFG__PLL_P,
+                      _CLK_CFG__PLL_Q,
+                      _CLK_CFG__PLL_R);
 #endif
 
 #if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE)
         RCC_PLLConfig(_CLK_CFG__PLL_SRC,
-                      _CLK_CFG__PLL_SRC_DIV,
-                      _CLK_CFG__PLL_MUL,
-                      _CLK_CFG__PLL_OUT_SYSCLK_DIV,
-                      _CLK_CFG__PLL_OUT_48MHz_DIV);
+                      _CLK_CFG__PLL_M,
+                      _CLK_CFG__PLL_N,
+                      _CLK_CFG__PLL_P,
+                      _CLK_CFG__PLL_Q);
 #endif
 
         RCC_PLLCmd(_CLK_CFG__PLL_ON);
@@ -167,15 +166,54 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         //----------------------------------------------------------------------
         // I2S PLL configuration
         //----------------------------------------------------------------------
+#if defined(STM32F40_41xxx) || defined(STM32F401xx)
+        RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_R);
+#endif
 
+#if defined(STM32F411xE)
+        RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_R, _CLK_CFG__PLLI2S_M);
+#endif
+
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
+        RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_Q, _CLK_CFG__PLLI2S_R);
+#endif
+
+#if defined(STM32F412xG ) || defined(STM32F413_423xx) || defined(STM32F446xx)
+        RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_M, _CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_P,
+                         _CLK_CFG__PLLI2S_Q, _CLK_CFG__PLLI2S_R);
+#endif
+
+#if defined(STM32F40_41xxx) || defined(STM32F401xx) || defined(STM32F411xE) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx) || defined(STM32F412xG ) || defined(STM32F413_423xx) || defined(STM32F446xx)
+        RCC_PLLI2SCmd(_CLK_CFG__PLLI2S_ON);
+        if (_CLK_CFG__PLLI2S_ON) {
+                err = wait_for_flag(RCC_FLAG_PLLI2SRDY, TIMEOUT_MS);
+        }
+#endif
 
         //----------------------------------------------------------------------
         // SAI PLL configuration
         //----------------------------------------------------------------------
+#if defined(STM32F469_479xx)
+        RCC_PLLSAIConfig(_CLK_CFG__PLLSAI_N, _CLK_CFG__PLLSAI_P, _CLK_CFG__PLLSAI_Q, _CLK_CFG__PLLSAI_R);
+#endif
 
+#if defined(STM32F446xx)
+        RCC_PLLSAIConfig(_CLK_CFG__PLLSAI_M, _CLK_CFG__PLLSAI_N, _CLK_CFG__PLLSAI_P, _CLK_CFG__PLLSAI_Q);
+#endif
+
+#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE)
+        RCC_PLLSAIConfig(_CLK_CFG__PLLSAI_N, _CLK_CFG__PLLSAI_Q, _CLK_CFG__PLLSAI_R);
+#endif
+
+#if defined(STM32F469_479xx) || defined(STM32F446xx) || defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE)
+        RCC_PLLSAICmd(_CLK_CFG__PLLSAI_ON);
+        if (_CLK_CFG__PLLSAI_ON) {
+                err = wait_for_flag(RCC_FLAG_PLLSAIRDY, TIMEOUT_MS);
+        }
+#endif
 
         //----------------------------------------------------------------------
-        // Peripheral clock sources
+        // Peripheral clock sources and prescalers
         //----------------------------------------------------------------------
         RCC_PCLK2Config(_CLK_CFG__APB2_PRE);
         RCC_PCLK1Config(_CLK_CFG__APB1_PRE);
@@ -183,7 +221,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_SYSCLKConfig(_CLK_CFG__SYSCLK_SRC);
 
         //----------------------------------------------------------------------
-        // MCOx clock sources
+        // MCOx clock sources and prescalers
         //----------------------------------------------------------------------
         RCC_MCO1Config(_CLK_CFG__MCO1_SRC, _CLK_CFG__MCO1_DIV);
         RCC_MCO2Config(_CLK_CFG__MCO2_SRC, _CLK_CFG__MCO2_DIV);
