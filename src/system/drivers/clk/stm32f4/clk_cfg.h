@@ -103,10 +103,11 @@ extern "C" {
 
 /*
  * MCO1 clock source
- * RCC_MCO2Source_HSE
- * RCC_MCO2Source_LSE
- * RCC_MCO2Source_PLLCLK
  * RCC_MCO2Source_SYSCLK
+ * RCC_MCO2Source_PLLI2SCLK
+ * RCC_MCO2Source_I2SCLK
+ * RCC_MCO2Source_HSE
+ * RCC_MCO2Source_PLLCLK
  */
 #define _CLK_CFG__MCO2_SRC              __CLK_MC02_CLK_SRC__
 

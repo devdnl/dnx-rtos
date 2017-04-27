@@ -306,10 +306,11 @@ this:AddExtraWidget("Label", "LABEL_MCO1_DIV", "")
 
 /*--
 this:AddWidget("Combobox", "MCO2 Clock source")
-this:AddItem("HSE", "RCC_MCO2Source_HSE")
-this:AddItem("LSE", "RCC_MCO2Source_LSE")
-this:AddItem("PLLCLK", "RCC_MCO2Source_PLLCLK")
 this:AddItem("SYSCLK", "RCC_MCO2Source_SYSCLK")
+this:AddItem("PLLI2SCLK", "RCC_MCO2Source_PLLI2SCLK")
+this:AddItem("HSE", "RCC_MCO2Source_HSE")
+this:AddItem("PLLCLK", "RCC_MCO2Source_PLLCLK")
+if uC.NAME:match("STM32F410") then this:AddItem("I2SCLK", "RCC_MCO2Source_I2SCLK") end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO2_SRC", "")
 --*/
@@ -633,10 +634,14 @@ this.CalculateFreq = function(self)
     freq.MCO1CLKDIV = freq.MCO1CLK / MCO1DIV
 
     -- calculate MCO2 frequency ------------------------------------------------
-    if MCO2SRC == "RCC_MCO2Source_HSE" then
+    if MCO2SRC == "RCC_MCO2Source_SYSCLK" then
+        freq.MCO2CLK = freq.SYSCLK
+    elseif MCO2SRC == "RCC_MCO2Source_PLLI2SCLK" then
+        freq.MCO2CLK = freq.PLLI2SR
+    elseif MCO2SRC == "RCC_MCO2Source_I2SCLK" then
+        freq.MCO2CLK = 0 -- only STM32F410xx TODO
+    elseif MCO2SRC == "RCC_MCO2Source_HSE" then
         freq.MCO2CLK = freq.HSE
-    elseif MCO2SRC == "RCC_MCO2Source_LSE" then
-        freq.MCO2CLK = freq.LSE
     elseif MCO2SRC == "RCC_MCO2Source_PLLCLK" then
         freq.MCO2CLK = freq.PLLCLK
     else
