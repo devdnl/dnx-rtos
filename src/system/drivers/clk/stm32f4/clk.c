@@ -219,6 +219,23 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PCLK1Config(_CLK_CFG__APB1_PRE);
         RCC_HCLKConfig(_CLK_CFG__AHB_PRE);
         RCC_SYSCLKConfig(_CLK_CFG__SYSCLK_SRC);
+        sys_update_system_clocks();
+
+        //----------------------------------------------------------------------
+        // I2S clock source
+        //----------------------------------------------------------------------
+#if defined (STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx)
+        RCC_I2SCLKConfig(RCC_I2SBus_APB1, _CLK_CFG__I2SAPB1_CLK_SRC);
+        RCC_I2SCLKConfig(RCC_I2SBus_APB2, _CLK_CFG__I2SAPB2_CLK_SRC);
+#endif
+
+#if defined(STM32F410xx)
+        RCC_I2SCLKConfig(_CLK_CFG__I2S_CLK_SRC);
+#endif
+
+#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE) || defined(STM32F469_479xx)
+        RCC_I2SCLKConfig(_CLK_CFG__I2S_CLK_SRC);
+#endif
 
         //----------------------------------------------------------------------
         // MCOx clock sources and prescalers
@@ -226,7 +243,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_MCO1Config(_CLK_CFG__MCO1_SRC, _CLK_CFG__MCO1_DIV);
         RCC_MCO2Config(_CLK_CFG__MCO2_SRC, _CLK_CFG__MCO2_DIV);
 
-        sys_update_system_clocks();
+#if defined(STM32F410xx)
+        RCC_MCO1Cmd(_CLK_CFG__MCO1_SRC == 0 ? DISABLE : ENABLE);
+        RCC_MCO2Cmd(_CLK_CFG__MCO2_SRC == 0 ? DISABLE : ENABLE);
+#endif
 
         return err;
 }

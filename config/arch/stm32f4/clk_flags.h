@@ -287,6 +287,7 @@ this:AddExtraWidget("Label", "LABEL_RTCCLK_SRC", "")
 
 /*--
 this:AddWidget("Combobox", "MCO1 Clock source")
+if uC.NAME:match("STM32F410") then this:AddItem("Disable", "0") end
 this:AddItem("HSI", "RCC_MCO1Source_HSI")
 this:AddItem("HSE", "RCC_MCO1Source_HSE")
 this:AddItem("LSE", "RCC_MCO1Source_LSE")
@@ -306,6 +307,7 @@ this:AddExtraWidget("Label", "LABEL_MCO1_DIV", "")
 
 /*--
 this:AddWidget("Combobox", "MCO2 Clock source")
+if uC.NAME:match("STM32F410") then this:AddItem("Disable", "0") end
 this:AddItem("SYSCLK", "RCC_MCO2Source_SYSCLK")
 this:AddItem("PLLI2SCLK", "RCC_MCO2Source_PLLI2SCLK")
 this:AddItem("HSE", "RCC_MCO2Source_HSE")
@@ -323,6 +325,59 @@ this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO2_DIV", "")
 --*/
 #define __CLK_MC02_CLK_DIV__ 1
+
+/*--
+if   uC.NAME:match("STM32F412") or uC.NAME:match("STM32F413")
+  or uC.NAME:match("STM32F423") or uC.NAME:match("STM32F446") then
+
+    this:AddWidget("Combobox", "I2S1 clock source")
+    this:AddItem("I2S PLL clock", "RCC_I2SCLKSource_PLLI2S")
+    this:AddItem("External clock", "RCC_I2SCLKSource_Ext")
+    this:AddItem("PLL clock", "RCC_I2SCLKSource_PLL")
+    this:AddItem("HSI or HSE clock", "RCC_I2SCLKSource_HSI_HSE")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_I2S1_CLK_SRC", "")
+end
+--*/
+#define __CLK_I2SAPB1_CLK_SRC__ RCC_I2SCLKSource_HSI_HSE
+
+/*--
+if   uC.NAME:match("STM32F412") or uC.NAME:match("STM32F413")
+  or uC.NAME:match("STM32F423") or uC.NAME:match("STM32F446") then
+
+    this:AddWidget("Combobox", "I2S2 clock source")
+    this:AddItem("I2S PLL clock", "RCC_I2SCLKSource_PLLI2S")
+    this:AddItem("External clock", "RCC_I2SCLKSource_Ext")
+    this:AddItem("PLL clock", "RCC_I2SCLKSource_PLL")
+    this:AddItem("HSI or HSE clock", "RCC_I2SCLKSource_HSI_HSE")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_I2S2_CLK_SRC", "")
+end
+--*/
+#define __CLK_I2SAPB2_CLK_SRC__ RCC_I2SCLKSource_HSI_HSE
+
+/*--
+if uC.NAME:match("STM32F410") then
+    this:AddWidget("Combobox", "I2S clock source")
+    this:AddItem("I2S PLLR", "RCC_I2SAPBCLKSOURCE_PLLR")
+    this:AddItem("External clock", "RCC_I2SAPBCLKSOURCE_EXT")
+    this:AddItem("PLL clock source", "RCC_I2SAPBCLKSOURCE_PLLSRC")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_I2S_CLK_SRC", "")
+
+elseif uC.NAME:match("STM32F40")  or uC.NAME:match("STM32F41")  or uC.NAME:match("STM32F427")
+    or uC.NAME:match("STM32F437") or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+    or uC.NAME:match("STM32F401") or uC.NAME:match("STM32F411") or uC.NAME:match("STM32F469")
+    or uC.NAME:match("STM32F479") then
+
+    this:AddWidget("Combobox", "I2S clock source")
+    this:AddItem("I2S PLL clock", "RCC_I2S2CLKSource_PLLI2S")
+    this:AddItem("External clock", "RCC_I2SAPBCLKSOURCE_EXT")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_I2S_CLK_SRC", "")
+end
+--*/
+#define __CLK_I2S_CLK_SRC__ RCC_I2S2CLKSource_PLLI2S
 
 
 //==============================================================================
@@ -447,6 +502,10 @@ this.CalculateFreq = function(self)
     local MCO2DIV    = this:GetFlagValue("__CLK_MC02_CLK_DIV__")
     local CPUVOLTAGE = this:GetFlagValue("__CLK_CPU_VOLTAGE__")
 
+    local I2S1SRC    = this:GetFlagValue("__CLK_I2SAPB1_CLK_SRC__")
+    local I2S2SRC    = this:GetFlagValue("__CLK_I2SAPB2_CLK_SRC__")
+    local I2SSRC     = this:GetFlagValue("__CLK_I2S_CLK_SRC__")
+
     local freq        = {}
     freq.HSE          = uC.OSCFREQ * HSEON
     freq.HSI          = 16e6
@@ -470,7 +529,6 @@ this.CalculateFreq = function(self)
     freq.PLLSAIQ      = 0
     freq.PLLSAIR      = 0
     freq.HCLK         = 0
-    freq.FCLK         = 0
     freq.PCLK1        = 0
     freq.PCLK2        = 0
     freq.TIMCLK1      = 0
@@ -479,7 +537,15 @@ this.CalculateFreq = function(self)
     freq.MCO1CLKDIV   = 0
     freq.MCO2CLK      = 0
     freq.MCO2CLKDIV   = 0
+    freq.I2S1CLK      = 0
+    freq.I2S2CLK      = 0
+    freq.I2SCLK       = 0
     freq.FLASHLATENCY = 0
+
+    -- print base frequencies --------------------------------------------------
+    this:SetFlagValue("LABEL_LSI_ON", PrintFrequency(freq.LSI).." (LSI)")
+    this:SetFlagValue("LABEL_LSE_ON", PrintFrequency(freq.LSE).." (LSE)")
+    this:SetFlagValue("LABEL_HSE_ON", PrintFrequency(freq.HSE).." (HSE)")
 
     -- calculate RTCCLK --------------------------------------------------------
     if RTCSRC == "RCC_RTCCLKSource_LSI" then
@@ -489,6 +555,7 @@ this.CalculateFreq = function(self)
     else
         freq.RTCCLK = freq.HSE / RTCSRC:gsub("RCC_RTCCLKSource_HSE_Div", "")
     end
+    this:SetFlagValue("LABEL_RTCCLK_SRC", PrintFrequency(freq.RTCCLK).." (RTCCLK)")
 
     -- calculate PLL Clk frequency ---------------------------------------------
     if PLLON == 1 then
@@ -620,6 +687,7 @@ this.CalculateFreq = function(self)
     else
         freq.SYSCLK = freq.PLLCLK
     end
+    this:SetFlagValue("LABEL_SYSCLK_SRC", PrintFrequency(freq.SYSCLK).." (SYSCLK)")
 
     -- calculate MCO1 frequency ------------------------------------------------
     if MCO1SRC == "RCC_MCO1Source_HSI" then
@@ -632,6 +700,8 @@ this.CalculateFreq = function(self)
         freq.MCO1CLK = freq.PLLCLK
     end
     freq.MCO1CLKDIV = freq.MCO1CLK / MCO1DIV
+    this:SetFlagValue("LABEL_MCO1_SRC", PrintFrequency(freq.MCO1CLK))
+    this:SetFlagValue("LABEL_MCO1_DIV", PrintFrequency(freq.MCO1CLKDIV).." (MCO1 pin)")
 
     -- calculate MCO2 frequency ------------------------------------------------
     if MCO2SRC == "RCC_MCO2Source_SYSCLK" then
@@ -639,7 +709,7 @@ this.CalculateFreq = function(self)
     elseif MCO2SRC == "RCC_MCO2Source_PLLI2SCLK" then
         freq.MCO2CLK = freq.PLLI2SR
     elseif MCO2SRC == "RCC_MCO2Source_I2SCLK" then
-        freq.MCO2CLK = 0 -- only STM32F410xx TODO
+        freq.MCO2CLK = freq.PLLI2SR
     elseif MCO2SRC == "RCC_MCO2Source_HSE" then
         freq.MCO2CLK = freq.HSE
     elseif MCO2SRC == "RCC_MCO2Source_PLLCLK" then
@@ -648,14 +718,91 @@ this.CalculateFreq = function(self)
         freq.MCO2CLK = freq.SYSCLK
     end
     freq.MCO2CLKDIV = freq.MCO2CLK / MCO2DIV
+    this:SetFlagValue("LABEL_MCO2_SRC", PrintFrequency(freq.MCO2CLK))
+    this:SetFlagValue("LABEL_MCO2_DIV", PrintFrequency(freq.MCO2CLKDIV).." (MCO2 pin)")
+
+    -- calculate I2S1 clock frequency ------------------------------------------
+    if   uC.NAME:match("STM32F412") or uC.NAME:match("STM32F413")
+      or uC.NAME:match("STM32F423") or uC.NAME:match("STM32F446") then
+
+        if I2S1SRC == "RCC_I2SCLKSource_PLLI2S" then
+            freq.I2S1CLK = freq.PLLI2SR
+        elseif I2S1SRC == "RCC_I2SCLKSource_Ext" then
+            freq.I2S1CLK = 192e6
+        elseif I2S1SRC == "RCC_I2SCLKSource_PLL" then
+            freq.I2S1CLK = freq.PLLCLK
+        else -- RCC_I2SCLKSource_HSI_HSE
+            if PLLSRC == "RCC_PLLSource_HSI" then
+                freq.I2S1CLK = freq.HSI
+            else
+                freq.I2S1CLK = freq.HSE
+            end
+        end
+        this:SetFlagValue("LABEL_I2S1_CLK_SRC", PrintFrequency(freq.I2S1CLK))
+    end
+
+    -- calculate I2S2 clock frequency ------------------------------------------
+    if   uC.NAME:match("STM32F412") or uC.NAME:match("STM32F413")
+      or uC.NAME:match("STM32F423") or uC.NAME:match("STM32F446") then
+
+        if I2S2SRC == "RCC_I2SCLKSource_PLLI2S" then
+            freq.I2S2CLK = freq.PLLI2SR
+        elseif I2S2SRC == "RCC_I2SCLKSource_Ext" then
+            freq.I2S2CLK = 192e6
+        elseif I2S2SRC == "RCC_I2SCLKSource_PLL" then
+            freq.I2S2CLK = freq.PLLCLK
+        else -- RCC_I2SCLKSource_HSI_HSE
+            if PLLSRC == "RCC_PLLSource_HSI" then
+                freq.I2S2CLK = freq.HSI
+            else
+                freq.I2S2CLK = freq.HSE
+            end
+        end
+        this:SetFlagValue("LABEL_I2S2_CLK_SRC", PrintFrequency(freq.I2S2CLK))
+    end
+
+    -- calculate I2S clock frequency -------------------------------------------
+    if uC.NAME:match("STM32F410") then
+        if I2SSRC == "RCC_I2SAPBCLKSOURCE_PLLR" then
+            freq.I2SCLK = freq.PLLI2SR
+        elseif I2SSRC == "RCC_I2SAPBCLKSOURCE_EXT" then
+            freq.I2SCLK = 192e6
+        elseif I2SSRC == "RCC_I2SAPBCLKSOURCE_PLLSRC" then
+            if PLLSRC == "RCC_PLLSource_HSI" then
+                freq.I2SCLK = freq.HSI
+            else
+                freq.I2SCLK = freq.HSE
+            end
+        else
+            freq.I2SCLK = 0
+        end
+        this:SetFlagValue("LABEL_I2S_CLK_SRC", PrintFrequency(freq.I2SCLK))
+
+    elseif uC.NAME:match("STM32F40")  or uC.NAME:match("STM32F41")  or uC.NAME:match("STM32F427")
+        or uC.NAME:match("STM32F437") or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+        or uC.NAME:match("STM32F401") or uC.NAME:match("STM32F411") or uC.NAME:match("STM32F469")
+        or uC.NAME:match("STM32F479") then
+
+        if I2SSRC == "RCC_I2S2CLKSource_PLLI2S" then
+            freq.I2SCLK = freq.PLLI2SR
+        elseif I2SSRC == "RCC_I2SAPBCLKSOURCE_EXT" then
+            freq.I2SCLK = 192e6
+        else
+            freq.I2SCLK = 0
+        end
+        this:SetFlagValue("LABEL_I2S_CLK_SRC", PrintFrequency(freq.I2SCLK))
+    end
 
     -- calculate output clocks -------------------------------------------------
     freq.HCLK     = freq.SYSCLK / AHBPRE:gsub("RCC_SYSCLK_Div", "")
-    freq.FCLK     = freq.HCLK
     freq.PCLK1    = freq.HCLK / APB1PRE:gsub("RCC_HCLK_Div", "")
     freq.PCLK2    = freq.HCLK / APB2PRE:gsub("RCC_HCLK_Div", "")
     freq.TIMxCLK1 = iff(APB1PRE == "RCC_HCLK_Div1", freq.PCLK1, freq.PCLK1 * 2)
     freq.TIMxCLK2 = iff(APB2PRE == "RCC_HCLK_Div1", freq.PCLK1, freq.PCLK1 * 2)
+
+    this:SetFlagValue("LABEL_AHB_PRE", PrintFrequency(freq.HCLK).." (HCLK)")
+    this:SetFlagValue("LABEL_APB1_PRE", PrintFrequency(freq.PCLK1).." (PCLK1)")
+    this:SetFlagValue("LABEL_APB2_PRE", PrintFrequency(freq.PCLK2).." (PCLK2)")
 
     -- calculate flash latency -------------------------------------------------
     local FLV = 0
@@ -671,20 +818,6 @@ this.CalculateFreq = function(self)
 
     freq.FLASHLATENCY = math.ceil(freq.SYSCLK / FLV) - 1
     if freq.FLASHLATENCY < 0 then freq.FLASHLATENCY = 0 end
-
-    -- Results -----------------------------------------------------------------
-    this:SetFlagValue("LABEL_LSI_ON", PrintFrequency(freq.LSI).." (LSI)")
-    this:SetFlagValue("LABEL_LSE_ON", PrintFrequency(freq.LSE).." (LSE)")
-    this:SetFlagValue("LABEL_HSE_ON", PrintFrequency(freq.HSE).." (HSE)")
-    this:SetFlagValue("LABEL_SYSCLK_SRC", PrintFrequency(freq.SYSCLK).." (SYSCLK)")
-    this:SetFlagValue("LABEL_RTCCLK_SRC", PrintFrequency(freq.RTCCLK).." (RTCCLK)")
-    this:SetFlagValue("LABEL_AHB_PRE", PrintFrequency(freq.HCLK).." (HCLK)")
-    this:SetFlagValue("LABEL_APB1_PRE", PrintFrequency(freq.PCLK1).." (PCLK1)")
-    this:SetFlagValue("LABEL_APB2_PRE", PrintFrequency(freq.PCLK2).." (PCLK2)")
-    this:SetFlagValue("LABEL_MCO1_SRC", PrintFrequency(freq.MCO1CLK))
-    this:SetFlagValue("LABEL_MCO1_DIV", PrintFrequency(freq.MCO1CLKDIV).." (MCO1 pin)")
-    this:SetFlagValue("LABEL_MCO2_SRC", PrintFrequency(freq.MCO2CLK))
-    this:SetFlagValue("LABEL_MCO2_DIV", PrintFrequency(freq.MCO2CLKDIV).." (MCO2 pin)")
     this:SetFlagValue("LABEL_FLASH_LATENCY", freq.FLASHLATENCY.." Flash delay cycles")
     this:SetFlagValue("__CLK_FLASH_LATENCY__", tostring(freq.FLASHLATENCY))
 end

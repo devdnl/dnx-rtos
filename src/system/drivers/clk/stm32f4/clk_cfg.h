@@ -117,6 +117,38 @@ extern "C" {
  */
 #define _CLK_CFG__MCO2_DIV              __CLK_MC02_CLK_DIV__
 
+/*
+ * Clock source of I2S peripheral instance on APB1 Bus
+ * (STM32F412xG, STM32F413_423xx, STM32F446xx)
+ * RCC_I2SCLKSource_PLLI2S
+ * RCC_I2SCLKSource_Ext
+ * RCC_I2SCLKSource_PLL
+ * RCC_I2SCLKSource_HSI_HSE
+ */
+#define _CLK_CFG__I2SAPB1_CLK_SRC       __CLK_I2SAPB1_CLK_SRC__
+
+/*
+ * Clock source of I2S peripheral instance on APB2 Bus
+ * (STM32F412xG, STM32F413_423xx, STM32F446xx)
+ * RCC_I2SCLKSource_PLLI2S
+ * RCC_I2SCLKSource_Ext
+ * RCC_I2SCLKSource_PLL
+ * RCC_I2SCLKSource_HSI_HSE
+ */
+#define _CLK_CFG__I2SAPB2_CLK_SRC       __CLK_I2SAPB2_CLK_SRC__
+
+/*
+ * Clock source of I2S peripheral
+ * (STM32F410xx):
+ * RCC_I2SAPBCLKSOURCE_PLLR
+ * RCC_I2SAPBCLKSOURCE_EXT
+ * RCC_I2SAPBCLKSOURCE_PLLSRC
+ *
+ * (STM32F410xx, STM32F40_41xxx, STM32F427_437xx, STM32F429_439xx, STM32F401xx, STM32F411xE, STM32F469_479xx):
+ * RCC_I2S2CLKSource_PLLI2S
+ * RCC_I2SAPBCLKSOURCE_EXT
+ */
+#define _CLK_CFG__I2S_CLK_SRC           __CLK_I2S_CLK_SRC__
 
 /*------------------------------------------------------------------------------
  * PLL CONFIGURATION
