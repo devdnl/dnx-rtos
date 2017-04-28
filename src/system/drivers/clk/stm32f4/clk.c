@@ -139,6 +139,18 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         }
 
         //----------------------------------------------------------------------
+        // SAI clock source
+        //----------------------------------------------------------------------
+#if defined(STM32F446xx)
+        RCC_SAICLKConfig(RCC_SAIInstance_SAI1, _CLK_CFG__SAI1_CLK_SRC);
+        RCC_SAICLKConfig(RCC_SAIInstance_SAI2, _CLK_CFG__SAI2_CLK_SRC);
+#endif
+
+#if defined(STM32F413_423xx)
+        RCC_SAIBlockACLKConfig(_CLK_CFG__SAI_BLOCK_A_CLK_SRC); // TODO SAI BLOCK A
+#endif
+
+        //----------------------------------------------------------------------
         // Main PLL configuration
         //----------------------------------------------------------------------
 #if defined(STM32F410xx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
@@ -165,7 +177,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
 
         //----------------------------------------------------------------------
         // I2S PLL configuration
-        //----------------------------------------------------------------------
+        //---------------------------------------------------------------------- TODO disable unused PLLS in cfg
 #if defined(STM32F40_41xxx) || defined(STM32F401xx)
         RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_R);
 #endif

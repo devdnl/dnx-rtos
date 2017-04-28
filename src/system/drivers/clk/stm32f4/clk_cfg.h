@@ -82,7 +82,8 @@ extern "C" {
  * System clock source
  * RCC_SYSCLKSource_HSI
  * RCC_SYSCLKSource_HSE
- * RCC_SYSCLKSource_PLLCLK
+ * RCC_SYSCLKSource_PLLCLK (RCC_SYSCLKSource_PLLPCLK STM32F446xx)
+ * RCC_SYSCLKSource_PLLRCLK (STM32F412xG, STM32F413_423xx and STM32F446xx)
  */
 #define _CLK_CFG__SYSCLK_SRC            __CLK_SYS_CLK_SRC__
 
@@ -149,6 +150,26 @@ extern "C" {
  * RCC_I2SAPBCLKSOURCE_EXT
  */
 #define _CLK_CFG__I2S_CLK_SRC           __CLK_I2S_CLK_SRC__
+
+/*
+ * SAI1 clock source
+ * (STM32F446xx)
+ * RCC_SAICLKSource_PLLSAI
+ * RCC_SAICLKSource_PLLI2S
+ * RCC_SAICLKSource_PLL
+ * RCC_SAICLKSource_HSI_HSE
+ */
+#define _CLK_CFG__SAI1_CLK_SRC          __CLK_SAI1_CLK_SRC__
+
+/*
+ * SAI2 clock source
+ * (STM32F446xx)
+ * RCC_SAICLKSource_PLLSAI
+ * RCC_SAICLKSource_PLLI2S
+ * RCC_SAICLKSource_PLL
+ * RCC_SAICLKSource_HSI_HSE
+ */
+#define _CLK_CFG__SAI2_CLK_SRC          __CLK_SAI2_CLK_SRC__
 
 /*------------------------------------------------------------------------------
  * PLL CONFIGURATION
