@@ -141,13 +141,24 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         //----------------------------------------------------------------------
         // SAI clock source
         //----------------------------------------------------------------------
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
+        RCC_SAIPLLSAIClkDivConfig(_CLK_CFG__SAI_PLLSAI_CLK_DIV);
+        RCC_SAIPLLI2SClkDivConfig(_CLK_CFG__SAI_PLLI2S_CLK_DIV);
+#endif
+
+#if defined(STM32F413_423xx)
+        RCC_SAIPLLI2SRClkDivConfig(_CLK_CFG__SAI_PLLI2S_CLK_DIVR); // TODO
+        RCC_SAIPLLRClkDivConfig(_CLK_CFG__SAI_PLL_CLK_DIVR); // TODO
+#endif
+
 #if defined(STM32F446xx)
         RCC_SAICLKConfig(RCC_SAIInstance_SAI1, _CLK_CFG__SAI1_CLK_SRC);
         RCC_SAICLKConfig(RCC_SAIInstance_SAI2, _CLK_CFG__SAI2_CLK_SRC);
 #endif
 
-#if defined(STM32F413_423xx)
-        RCC_SAIBlockACLKConfig(_CLK_CFG__SAI_BLOCK_A_CLK_SRC); // TODO SAI BLOCK A
+#if defined(STM32F413_423xx) || defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
+        RCC_SAIBlockACLKConfig(_CLK_CFG__SAI_BLOCK_A_CLK_SRC);
+        RCC_SAIBlockBCLKConfig(_CLK_CFG__SAI_BLOCK_B_CLK_SRC);
 #endif
 
         //----------------------------------------------------------------------

@@ -171,6 +171,50 @@ extern "C" {
  */
 #define _CLK_CFG__SAI2_CLK_SRC          __CLK_SAI2_CLK_SRC__
 
+/*
+ * Configures the SAI clock Divider coming from PLLSAI.
+ * (STM32F42xxx/43xxx/446xx/469xx/479xx devices):
+ * 1..32
+ */
+#define _CLK_CFG__SAI_PLLSAI_CLK_DIV   __CLK_SAI_PLLSAI_CLK_DIV__
+
+/*
+ * Configures the SAI clock Divider coming from PLLI2S.
+ * (STM32F42xxx/43xxx/446xx/469xx/479xx devices):
+ * 1..32
+ */
+#define _CLK_CFG__SAI_PLLI2S_CLK_DIV   __CLK_SAI_PLLI2S_CLK_DIV__
+
+/*
+ * SAI Block A Clock Source
+ * (STM32F40_41xxx, STM32F427_437xx, STM32F429_439xx, STM32F469_479xx):
+ * RCC_SAIACLKSource_PLLI2S: PLLI2S_Q clock divided by PLLI2SDIVQ used as SAI1 Block A clock
+ * RCC_SAIACLKSource_PLLSAI: PLLISAI_Q clock divided by PLLSAIDIVQ used as SAI1 Block A clock
+ * RCC_SAIACLKSource_Ext:    External clock mapped on the I2S_CKIN pin used as SAI1 Block A clock
+ *
+ * (STM32F413_423xx):
+ * RCC_SAIACLKSource_PLLI2SR: PLLI2SR clock used as SAI clock source
+ * RCC_SAIACLKSource_PLLI2S:  PLLI2S clock used as SAI clock source
+ * RCC_SAIACLKSource_PLL:     PLL clock used as SAI clock source
+ * RCC_SAIACLKSource_HSI_HSE: HSI or HSE depends on PLLSRC used as SAI clock source
+ */
+#define _CLK_CFG__SAI_BLOCK_A_CLK_SRC   __CLK_SAI_BLOCK_A_CLK_SRC__
+
+/*
+ * SAI Block B Clock Source
+ * (STM32F40_41xxx, STM32F427_437xx, STM32F429_439xx, STM32F469_479xx):
+ * RCC_SAIACLKSource_PLLI2S: PLLI2S_Q clock divided by PLLI2SDIVQ used as SAI1 Block A clock
+ * RCC_SAIACLKSource_PLLSAI: PLLISAI_Q clock divided by PLLSAIDIVQ used as SAI1 Block A clock
+ * RCC_SAIACLKSource_Ext:    External clock mapped on the I2S_CKIN pin used as SAI1 Block A clock
+ *
+ * (STM32F413_423xx):
+ * RCC_SAIACLKSource_PLLI2SR: PLLI2SR clock used as SAI clock source
+ * RCC_SAIACLKSource_PLLI2S:  PLLI2S clock used as SAI clock source
+ * RCC_SAIACLKSource_PLL:     PLL clock used as SAI clock source
+ * RCC_SAIACLKSource_HSI_HSE: HSI or HSE depends on PLLSRC used as SAI clock source
+ */
+#define _CLK_CFG__SAI_BLOCK_B_CLK_SRC   __CLK_SAI_BLOCK_B_CLK_SRC__
+
 /*------------------------------------------------------------------------------
  * PLL CONFIGURATION
  *----------------------------------------------------------------------------*/

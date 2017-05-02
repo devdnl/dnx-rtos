@@ -415,6 +415,83 @@ end
 --*/
 #define __CLK_SAI2_CLK_SRC__ RCC_SAICLKSource_HSI_HSE
 
+/*--
+if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+  or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+  or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479")
+  or uC.NAME:match("STM32F446") then
+
+    this:AddWidget("Spinbox", 1, 32, "PLLSAI SAI clock divider")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_PLLSAI_SAI_CLK_DIV", "")
+end
+--*/
+#define __CLK_SAI_PLLSAI_CLK_DIV__ 1
+
+/*--
+if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+  or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+  or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479")
+  or uC.NAME:match("STM32F446") then
+
+    this:AddWidget("Spinbox", 1, 32, "PLLI2S SAI clock divider")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_PLLI2S_SAI_CLK_DIV", "")
+end
+--*/
+#define __CLK_SAI_PLLI2S_CLK_DIV__ 1
+
+/*--
+if   uC.NAME:match("STM32F41" )
+  or uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+  or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+  or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
+
+    this:AddWidget("Combobox", "SAI Block A clock source")
+    this:AddItem("I2S PLL clock", "RCC_SAIACLKSource_PLLI2S")
+    this:AddItem("SAI PLL clock", "RCC_SAIACLKSource_PLLSAI")
+    this:AddItem("External clock", "RCC_SAIACLKSource_Ext")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_SAI_BLOCK_A_CLK_SRC", "")
+
+elseif uC.NAME:match("STM32F413") or uC.NAME:match("STM32F423") then
+
+    this:AddWidget("Combobox", "SAI Block A clock source")
+    this:AddItem("I2S PLL R clock", "RCC_SAIACLKSource_PLLI2SR")
+    this:AddItem("I2S PLL Q clock", "RCC_SAIACLKSource_PLLI2S")
+    this:AddItem("PLL clock", "RCC_SAIACLKSource_PLL")
+    this:AddItem("HSI or HSE clock", "RCC_SAIACLKSource_HSI_HSE")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_SAI_BLOCK_A_CLK_SRC", "")
+end
+--*/
+#define __CLK_SAI_BLOCK_A_CLK_SRC__ RCC_SAIACLKSource_PLLI2S
+
+/*--
+if   uC.NAME:match("STM32F41" )
+  or uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+  or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+  or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
+
+    this:AddWidget("Combobox", "SAI Block B clock source")
+    this:AddItem("I2S PLL clock", "RCC_SAIBCLKSource_PLLI2S")
+    this:AddItem("SAI PLL clock", "RCC_SAIBCLKSource_PLLSAI")
+    this:AddItem("External clock", "RCC_SAIBCLKSource_Ext")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_SAI_BLOCK_B_CLK_SRC", "")
+
+elseif uC.NAME:match("STM32F413") or uC.NAME:match("STM32F423") then
+
+    this:AddWidget("Combobox", "SAI Block B clock source")
+    this:AddItem("I2S PLL R clock", "RCC_SAIBCLKSource_PLLI2SR")
+    this:AddItem("I2S PLL Q clock", "RCC_SAIBCLKSource_PLLI2S")
+    this:AddItem("PLL clock", "RCC_SAIBCLKSource_PLL")
+    this:AddItem("HSI or HSE clock", "RCC_SAIBACLKSource_HSI_HSE")
+    this:SetEvent("clicked", function() this.CalculateFreq() end)
+    this:AddExtraWidget("Label", "LABEL_SAI_BLOCK_B_CLK_SRC", "")
+end
+--*/
+#define __CLK_SAI_BLOCK_B_CLK_SRC__ RCC_SAIBCLKSource_PLLI2S
 
 //==============================================================================
 // System Clocks Prescallers Configuration
@@ -545,16 +622,23 @@ this.CalculateFreq = function(self)
     local SAI1SRC    = this:GetFlagValue("__CLK_SAI1_CLK_SRC__")
     local SAI2SRC    = this:GetFlagValue("__CLK_SAI2_CLK_SRC__")
 
+    local SAIPLLSAIDIV = this:GetFlagValue("__CLK_SAI_PLLSAI_CLK_DIV__")
+    local SAIPLLI2SDIV = this:GetFlagValue("__CLK_SAI_PLLI2S_CLK_DIV__")
+    local SAIBLKASRC   = this:GetFlagValue("__CLK_SAI_BLOCK_A_CLK_SRC__")
+    local SAIBLKBSRC   = this:GetFlagValue("__CLK_SAI_BLOCK_B_CLK_SRC__")
+
     local freq        = {}
     freq.HSE          = uC.OSCFREQ * HSEON
     freq.HSI          = 16e6
     freq.LSI          = 32e3 * LSION
     freq.LSE          = 32768 * LSEON
+    freq.I2SCLKIN     = 2.048e6
     freq.RTCCLK       = 0
     freq.SYSCLK       = 0
     freq.PLLCLK       = 0
     freq.PLLVCO       = 0
     freq.PLL48CLK     = 0
+    freq.PLLQ         = 0
     freq.PLLR         = 0
     freq.PLLM         = 0
     freq.PLLI2SM      = 0
@@ -581,6 +665,8 @@ this.CalculateFreq = function(self)
     freq.I2SCLK       = 0
     freq.SAI1CLK      = 0
     freq.SAI2CLK      = 0
+    freq.SAIBLKACLK   = 0
+    freq.SAIBLKBCLK   = 0
     freq.FLASHLATENCY = 0
 
     -- print base frequencies --------------------------------------------------
@@ -624,7 +710,8 @@ this.CalculateFreq = function(self)
         freq.PLLCLK = freq.PLLVCO / PLLP
         this:SetFlagValue("LABEL_PLL_P", PrintFrequency(freq.PLLCLK).." (PLLCLK)")
 
-        freq.PLL48CLK = freq.PLLVCO / PLLQ
+        freq.PLLQ     = freq.PLLVCO / PLLQ
+        freq.PLL48CLK = freq.PLLQ
         this:SetFlagValue("LABEL_PLL_Q", PrintFrequency(freq.PLL48CLK).." (PLL48CLK)")
 
         freq.PLLR = freq.PLLVCO / PLLR
@@ -769,7 +856,7 @@ this.CalculateFreq = function(self)
         if I2S1SRC == "RCC_I2SCLKSource_PLLI2S" then
             freq.I2S1CLK = freq.PLLI2SR
         elseif I2S1SRC == "RCC_I2SCLKSource_Ext" then
-            freq.I2S1CLK = 192e6
+            freq.I2S1CLK = freq.I2SCLKIN
         elseif I2S1SRC == "RCC_I2SCLKSource_PLL" then
             freq.I2S1CLK = freq.PLLCLK
         else -- RCC_I2SCLKSource_HSI_HSE
@@ -789,7 +876,7 @@ this.CalculateFreq = function(self)
         if I2S2SRC == "RCC_I2SCLKSource_PLLI2S" then
             freq.I2S2CLK = freq.PLLI2SR
         elseif I2S2SRC == "RCC_I2SCLKSource_Ext" then
-            freq.I2S2CLK = 192e6
+            freq.I2S2CLK = freq.I2SCLKIN
         elseif I2S2SRC == "RCC_I2SCLKSource_PLL" then
             freq.I2S2CLK = freq.PLLCLK
         else -- RCC_I2SCLKSource_HSI_HSE
@@ -807,7 +894,7 @@ this.CalculateFreq = function(self)
         if I2SSRC == "RCC_I2SAPBCLKSOURCE_PLLR" then
             freq.I2SCLK = freq.PLLI2SR
         elseif I2SSRC == "RCC_I2SAPBCLKSOURCE_EXT" then
-            freq.I2SCLK = 192e6
+            freq.I2SCLK = freq.I2SCLKIN
         elseif I2SSRC == "RCC_I2SAPBCLKSOURCE_PLLSRC" then
             if PLLSRC == "RCC_PLLSource_HSI" then
                 freq.I2SCLK = freq.HSI
@@ -827,7 +914,7 @@ this.CalculateFreq = function(self)
         if I2SSRC == "RCC_I2S2CLKSource_PLLI2S" then
             freq.I2SCLK = freq.PLLI2SR
         elseif I2SSRC == "RCC_I2SAPBCLKSOURCE_EXT" then
-            freq.I2SCLK = 192e6
+            freq.I2SCLK = freq.I2SCLKIN
         else
             freq.I2SCLK = 0
         end
@@ -868,6 +955,92 @@ this.CalculateFreq = function(self)
             end
         end
         this:SetFlagValue("LABEL_SAI2_CLK_SRC", PrintFrequency(freq.SAI2CLK))
+    end
+
+    -- calculate SAI Block A clock frequency -----------------------------------
+    if not (  uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+           or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+           or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479")
+           or uC.NAME:match("STM32F446") ) then
+
+        SAIPLLI2SDIV = 1
+        SAIPLLSAIDIV = 1
+    end
+
+    if   uC.NAME:match("STM32F41" )
+      or uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+      or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+      or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
+
+        if SAIBLKASRC == "RCC_SAIACLKSource_PLLI2S" then
+            freq.SAIBLKACLK = freq.PLLI2SQ / SAIPLLI2SDIV
+        elseif SAIBLKASRC == "RCC_SAIACLKSource_PLLSAI" then
+            freq.SAIBLKACLK = freq.PLLSAIQ / SAIPLLSAIDIV
+        elseif SAIBLKASRC == "RCC_SAIACLKSource_Ext" then
+            freq.SAIBLKACLK = freq.I2SCLKIN
+        else
+            freq.SAIBLKACLK = 0
+        end
+
+        this:SetFlagValue("LABEL_SAI_BLOCK_A_CLK_SRC", PrintFrequency(freq.SAIBLKACLK))
+
+    elseif uC.NAME:match("STM32F413") or uC.NAME:match("STM32F423") then
+        if SAIBLKASRC == "RCC_SAIACLKSource_PLLI2SR" then
+            freq.SAIBLKACLK = freq.PLLI2SR -- TODO divisor R
+        elseif SAIBLKASRC == "RCC_SAIACLKSource_PLLI2S" then
+            freq.SAIBLKACLK = freq.PLLI2SR
+        elseif SAIBLKASRC == "RCC_SAIACLKSource_PLL" then
+            freq.SAIBLKACLK = freq.PLLQ
+        elseif SAIBLKASRC == "RCC_SAIACLKSource_HSI_HSE" then
+            freq.SAIBLKACLK = iff(PLLSRC == "RCC_PLLSource_HSI", freq.HSI, freq.HSE)
+        else
+            freq.SAIBLKACLK = 0
+        end
+
+        this:SetFlagValue("LABEL_SAI_BLOCK_A_CLK_SRC", PrintFrequency(freq.SAIBLKACLK))
+    end
+
+    -- calculate SAI Block B clock frequency -----------------------------------
+    if not (  uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+           or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+           or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479")
+           or uC.NAME:match("STM32F446") ) then
+
+        SAIPLLI2SDIV = 1
+        SAIPLLSAIDIV = 1
+    end
+
+    if   uC.NAME:match("STM32F41" )
+      or uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+      or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
+      or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
+
+        if SAIBLKBSRC == "RCC_SAIBCLKSource_PLLI2S" then
+            freq.SAIBLKBCLK = freq.PLLI2SQ / SAIPLLI2SDIV
+        elseif SAIBLKBSRC == "RCC_SAIBCLKSource_PLLSAI" then
+            freq.SAIBLKBCLK = freq.PLLSAIQ / SAIPLLSAIDIV
+        elseif SAIBLKBSRC == "RCC_SAIBCLKSource_Ext" then
+            freq.SAIBLKBCLK = freq.I2SCLKIN
+        else
+            freq.SAIBLKBCLK = 0
+        end
+
+        this:SetFlagValue("LABEL_SAI_BLOCK_B_CLK_SRC", PrintFrequency(freq.SAIBLKBCLK))
+
+    elseif uC.NAME:match("STM32F413") or uC.NAME:match("STM32F423") then
+        if SAIBLKBSRC == "RCC_SAIBCLKSource_PLLI2SR" then
+            freq.SAIBLKBCLK = freq.PLLI2SR -- TODO divisor R
+        elseif SAIBLKBSRC == "RCC_SAIBCLKSource_PLLI2S" then
+            freq.SAIBLKBCLK = freq.PLLI2SR
+        elseif SAIBLKBSRC == "RCC_SAIBCLKSource_PLL" then
+            freq.SAIBLKBCLK = freq.PLLQ
+        elseif SAIBLKBSRC == "RCC_SAIBCLKSource_HSI_HSE" then
+            freq.SAIBLKBCLK = iff(PLLSRC == "RCC_PLLSource_HSI", freq.HSI, freq.HSE)
+        else
+            freq.SAIBLKBCLK = 0
+        end
+
+        this:SetFlagValue("LABEL_SAI_BLOCK_B_CLK_SRC", PrintFrequency(freq.SAIBLKBCLK))
     end
 
     -- calculate output clocks -------------------------------------------------
