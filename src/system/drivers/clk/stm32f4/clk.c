@@ -147,8 +147,8 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
 #endif
 
 #if defined(STM32F413_423xx)
-        RCC_SAIPLLI2SRClkDivConfig(_CLK_CFG__SAI_PLLI2S_CLK_DIVR); // TODO
-        RCC_SAIPLLRClkDivConfig(_CLK_CFG__SAI_PLL_CLK_DIVR); // TODO
+        RCC_SAIPLLI2SRClkDivConfig(_CLK_CFG__SAI_PLLI2S_CLK_DIVR);
+        RCC_SAIPLLRClkDivConfig(_CLK_CFG__SAI_PLL_CLK_DIVR);
 #endif
 
 #if defined(STM32F446xx)
@@ -159,6 +159,67 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
 #if defined(STM32F413_423xx) || defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
         RCC_SAIBlockACLKConfig(_CLK_CFG__SAI_BLOCK_A_CLK_SRC);
         RCC_SAIBlockBCLKConfig(_CLK_CFG__SAI_BLOCK_B_CLK_SRC);
+#endif
+
+        //----------------------------------------------------------------------
+        // LTDC clock source
+        //----------------------------------------------------------------------
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
+        RCC_LTDCCLKDivConfig(_CLK_CFG__LTDC_CLK_DIV);
+#endif
+
+        //----------------------------------------------------------------------
+        // DFSDM clock source
+        //----------------------------------------------------------------------
+#if defined(STM32F412xG) || defined(STM32F413_423xx)
+        RCC_DFSDM1CLKConfig(_CLK_CFG__DFSDM1_CLK_SRC);
+        RCC_DFSDM1ACLKConfig(_CLK_CFG__DFSDM1_ACLK_SRC);
+
+#if defined(STM32F413_423xx)
+        RCC_DFSDM2ACLKConfig(_CLK_CFG__DFSDM2_ACLK_SRC);
+#endif
+#endif
+
+        //----------------------------------------------------------------------
+        // DSI clock source
+        //----------------------------------------------------------------------
+#if defined(STM32F469_479xx)
+        RCC_DSIClockSourceConfig(_CLK_CFG__DSI_CLK_SRC);
+#endif
+
+        //----------------------------------------------------------------------
+        // DFSDM clock source
+        //----------------------------------------------------------------------
+#if defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
+        RCC_48MHzClockSourceConfig(_CLK_CFG__48MHZ_CLK_SRC);
+#endif
+
+        //----------------------------------------------------------------------
+        // SDIO clock source
+        //----------------------------------------------------------------------
+#if defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
+        RCC_SDIOClockSourceConfig(_CLK_CFG__SDIO_CLK_SRC);
+#endif
+
+        //----------------------------------------------------------------------
+        // SPDIF clock source
+        //----------------------------------------------------------------------
+#if defined(STM32F446xx)
+        RCC_SPDIFRXClockSourceConfig(_CLK_CFG__SPDIF_CLK_SRC);
+#endif
+
+        //----------------------------------------------------------------------
+        // CEC clock source
+        //----------------------------------------------------------------------
+#if defined(STM32F446xx)
+        RCC_CECClockSourceConfig(_CLK_CFG__CEC_CLK_SRC);
+#endif
+
+        //----------------------------------------------------------------------
+        // FMPI2C clock source
+        //----------------------------------------------------------------------
+#if defined(STM32F410xx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx)
+        RCC_FMPI2C1ClockSourceConfig(_CLK_CFG__FMPI2C1_CLK_SRC);
 #endif
 
         //----------------------------------------------------------------------
@@ -184,11 +245,13 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PLLCmd(_CLK_CFG__PLL_ON);
         if (_CLK_CFG__PLL_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
+                if (err)
+                        return err;
         }
 
         //----------------------------------------------------------------------
         // I2S PLL configuration
-        //---------------------------------------------------------------------- TODO disable unused PLLS in cfg
+        //----------------------------------------------------------------------
 #if defined(STM32F40_41xxx) || defined(STM32F401xx)
         RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_R);
 #endif
@@ -210,6 +273,8 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PLLI2SCmd(_CLK_CFG__PLLI2S_ON);
         if (_CLK_CFG__PLLI2S_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLI2SRDY, TIMEOUT_MS);
+                if (err)
+                        return err;
         }
 #endif
 
@@ -232,6 +297,8 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PLLSAICmd(_CLK_CFG__PLLSAI_ON);
         if (_CLK_CFG__PLLSAI_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLSAIRDY, TIMEOUT_MS);
+                if (err)
+                        return err;
         }
 #endif
 
@@ -242,12 +309,11 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PCLK1Config(_CLK_CFG__APB1_PRE);
         RCC_HCLKConfig(_CLK_CFG__AHB_PRE);
         RCC_SYSCLKConfig(_CLK_CFG__SYSCLK_SRC);
-        sys_update_system_clocks();
 
         //----------------------------------------------------------------------
         // I2S clock source
         //----------------------------------------------------------------------
-#if defined (STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx)
+#if defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx)
         RCC_I2SCLKConfig(RCC_I2SBus_APB1, _CLK_CFG__I2SAPB1_CLK_SRC);
         RCC_I2SCLKConfig(RCC_I2SBus_APB2, _CLK_CFG__I2SAPB2_CLK_SRC);
 #endif
@@ -270,6 +336,8 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_MCO1Cmd(_CLK_CFG__MCO1_SRC == 0 ? DISABLE : ENABLE);
         RCC_MCO2Cmd(_CLK_CFG__MCO2_SRC == 0 ? DISABLE : ENABLE);
 #endif
+
+        sys_update_system_clocks();
 
         return err;
 }

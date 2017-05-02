@@ -176,14 +176,28 @@ extern "C" {
  * (STM32F42xxx/43xxx/446xx/469xx/479xx devices):
  * 1..32
  */
-#define _CLK_CFG__SAI_PLLSAI_CLK_DIV   __CLK_SAI_PLLSAI_CLK_DIV__
+#define _CLK_CFG__SAI_PLLSAI_CLK_DIV    __CLK_SAI_PLLSAI_CLK_DIV__
 
 /*
  * Configures the SAI clock Divider coming from PLLI2S.
  * (STM32F42xxx/43xxx/446xx/469xx/479xx devices):
  * 1..32
  */
-#define _CLK_CFG__SAI_PLLI2S_CLK_DIV   __CLK_SAI_PLLI2S_CLK_DIV__
+#define _CLK_CFG__SAI_PLLI2S_CLK_DIV    __CLK_SAI_PLLI2S_CLK_DIV__
+
+/*
+ * Configures the SAI clock Divider coming from PLLI2S.
+ * (STM32F413, STM32F423):
+ * 1..32
+ */
+#define _CLK_CFG__SAI_PLLI2S_CLK_DIVR   __CLK_SAI_PLLI2S_CLK_DIVR__
+
+/*
+ * Configures the SAI clock Divider coming from PLL.
+ * (STM32F413, STM32F423):
+ * 1..32
+ */
+#define _CLK_CFG__SAI_PLL_CLK_DIVR      __CLK_SAI_PLL_CLK_DIVR__
 
 /*
  * SAI Block A Clock Source
@@ -214,6 +228,90 @@ extern "C" {
  * RCC_SAIACLKSource_HSI_HSE: HSI or HSE depends on PLLSRC used as SAI clock source
  */
 #define _CLK_CFG__SAI_BLOCK_B_CLK_SRC   __CLK_SAI_BLOCK_B_CLK_SRC__
+
+/*
+ * Configures the LTDC clock Divider coming from PLLSAI.
+ * (STM32F427_437xx, STM32F429_439xx, STM32F446xx, STM32F469_479xx):
+ * RCC_PLLSAIDivR_Div2
+ * RCC_PLLSAIDivR_Div4
+ * RCC_PLLSAIDivR_Div8
+ * RCC_PLLSAIDivR_Div16
+ */
+#define _CLK_CFG__LTDC_CLK_DIV          __CLK_LTDC_DIV__
+
+/*
+ * Configures the DFSDM clock source (DFSDMCLK).
+ * (STM32F412xG, STM32F413, STM32F423):
+ * RCC_DFSDMCLKSource_APB
+ * RCC_DFSDMCLKSource_SYS
+ */
+#define _CLK_CFG__DFSDM1_CLK_SRC        __CLK_DFSDM1_CLK_SRC__
+
+/*
+ * Configures the DFSDM Audio clock source (DFSDMACLK).
+ * (STM32F412xG, STM32F413, STM32F423):
+ * RCC_DFSDM1AUDIOCLKSOURCE_I2SAPB1
+ * RCC_DFSDM1AUDIOCLKSOURCE_I2SAPB2
+ */
+#define _CLK_CFG__DFSDM1_ACLK_SRC       __CLK_DFSDM1_ACLK_SRC__
+
+/*
+ * Configures the DFSDM Audio clock source (DFSDMACLK).
+ * (STM32F413, STM32F423):
+ * RCC_DFSDM1AUDIOCLKSOURCE_I2SAPB1
+ * RCC_DFSDM1AUDIOCLKSOURCE_I2SAPB2
+ */
+#define _CLK_CFG__DFSDM2_ACLK_SRC       __CLK_DFSDM2_ACLK_SRC__
+
+/*
+ * Configures the DSI clock Source.
+ * (STM32F469, STM32F479):
+ * RCC_DSICLKSource_PHY
+ * RCC_DSICLKSource_PLLR
+ */
+#define _CLK_CFG__DSI_CLK_SRC           __CLK_DSI_SRC__
+
+/*
+ * Configures the 48MHz clock Source.
+ * (STM32F412xG, STM32F413_423xx, STM32F446xx, STM32F469_479xx):
+ * RCC_48MHZCLKSource_PLL
+ * RCC_48MHZCLKSource_PLLSAI
+ * RCC_CK48CLKSOURCE_PLLI2SQ
+ */
+#define _CLK_CFG__48MHZ_CLK_SRC         __CLK_48MHZ_SRC__
+
+/*
+ * Configures the SDIO clock Source.
+ * (STM32F412xG, STM32F413_423xx, STM32F446xx, STM32F469_479xx):
+ * RCC_SDIOCLKSource_48MHZ
+ * RCC_SDIOCLKSource_SYSCLK
+ */
+#define _CLK_CFG__SDIO_CLK_SRC          __CLK_SDIO_SRC__
+
+/*
+ * Configures the SPDIFRX clock Source.
+ * (STM32F446):
+ * RCC_SPDIFRXCLKSource_PLLR
+ * RCC_SPDIFRXCLKSource_PLLI2SP
+ */
+#define _CLK_CFG__SPDIF_CLK_SRC         __CLK_SPDIF_SRC__
+
+/*
+ * Configures the CEC clock Source.
+ * (STM32F446):
+ * RCC_CECCLKSource_HSIDiv488
+ * RCC_CECCLKSource_LSE
+ */
+#define _CLK_CFG__CEC_CLK_SRC           __CLK_CEC_SRC__
+
+/*
+ * Configures the FMPI2C1 clock Source.
+ * (STM32F410xx, STM32F412xG, STM32F413, STM32F423xx, STM32F446xx):
+ * RCC_FMPI2C1CLKSource_APB1
+ * RCC_FMPI2C1CLKSource_SYSCLK
+ * RCC_FMPI2C1CLKSource_HSI
+ */
+#define _CLK_CFG__FMPI2C1_CLK_SRC        __CLK_FMPI2C1_SRC__
 
 /*------------------------------------------------------------------------------
  * PLL CONFIGURATION
