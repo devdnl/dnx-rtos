@@ -85,11 +85,13 @@ int_main(free, STACK_DEPTH_LOW, int argc, char *argv[])
 
         u32_t m_free = get_free_memory();
         u32_t m_used = get_used_memory();
+        u32_t m_size = get_memory_size();
+        u32_t m_perc = (m_used * 1000) / m_size;
 
-        printf("Total: %d\n", get_memory_size());
+        printf("Total: %d\n", m_size);
         printf("Free : %d\n", m_free);
         printf("Used : %d\n", m_used);
-        printf("Memory usage: %d%%\n", (m_used * 100)/get_memory_size());
+        printf("Memory usage: %d.%d%%\n", m_perc / 10, m_perc % 10);
 
         if (strcmp(argv[1], "-d") == 0) {
                 printf("\nDetailed memory usage:\n");
