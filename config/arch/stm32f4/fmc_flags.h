@@ -99,7 +99,7 @@ this:AddItem("SDCLK disabled", "0")
 this:AddItem("2 x HCLK periods", "2")
 this:AddItem("3 x HCLK periods", "3")
 --*/
-#define __FMC_SDRAM_SDCLK__ 0
+#define __FMC_SDRAM_SDCLK__ 2
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row precharge delay")
@@ -151,14 +151,14 @@ this:AddItem("1 cycle", "1")
 this:AddItem("2 cycles", "2")
 this:AddItem("3 cycles", "3")
 --*/
-#define __FMC_SDRAM_1_CAS__ 3
+#define __FMC_SDRAM_1_CAS__ 2
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")
 this:AddItem("2 internal banks", "0")
 this:AddItem("4 internal banks", "1")
 --*/
-#define __FMC_SDRAM_1_NB__ 0
+#define __FMC_SDRAM_1_NB__ 1
 
 /*--
 this:AddWidget("Combobox", "Data bus width")
@@ -166,7 +166,7 @@ this:AddItem("8 bits", "0")
 this:AddItem("16 bits", "1")
 this:AddItem("32 bits", "2")
 --*/
-#define __FMC_SDRAM_1_MWID__ 0
+#define __FMC_SDRAM_1_MWID__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of row address bits")
@@ -174,7 +174,7 @@ this:AddItem("11 bits", "0")
 this:AddItem("12 bits", "1")
 this:AddItem("13 bits", "2")
 --*/
-#define __FMC_SDRAM_1_NR__ 0
+#define __FMC_SDRAM_1_NR__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of column address bits")
@@ -200,7 +200,7 @@ this:AddWidget("Combobox", "Memory bank")
 this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 --*/
-#define __FMC_SDRAM_2_ENABLE__ 0
+#define __FMC_SDRAM_2_ENABLE__ 1
 
 /*--
 this:AddWidget("Combobox", "CAS Latency")
@@ -208,14 +208,14 @@ this:AddItem("1 cycle", "1")
 this:AddItem("2 cycles", "2")
 this:AddItem("3 cycles", "3")
 --*/
-#define __FMC_SDRAM_2_CAS__ 3
+#define __FMC_SDRAM_2_CAS__ 2
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")
 this:AddItem("2 internal banks", "0")
 this:AddItem("4 internal banks", "1")
 --*/
-#define __FMC_SDRAM_2_NB__ 0
+#define __FMC_SDRAM_2_NB__ 1
 
 /*--
 this:AddWidget("Combobox", "Data bus width")
@@ -223,7 +223,7 @@ this:AddItem("8 bits", "0")
 this:AddItem("16 bits", "1")
 this:AddItem("32 bits", "2")
 --*/
-#define __FMC_SDRAM_2_MWID__ 0
+#define __FMC_SDRAM_2_MWID__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of row address bits")
@@ -231,7 +231,7 @@ this:AddItem("11 bits", "0")
 this:AddItem("12 bits", "1")
 this:AddItem("13 bits", "2")
 --*/
-#define __FMC_SDRAM_2_NR__ 0
+#define __FMC_SDRAM_2_NR__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of column address bits")
