@@ -219,7 +219,7 @@ typedef struct {} llist_t;
 /**
  * @brief Memory region type used for dynamic memory allocation.
  */
-typedef _mm_region_t region_t;
+typedef _mm_region_t mem_region_t;
 
 /*==============================================================================
   Exported objects
@@ -5072,7 +5072,7 @@ extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt,
  * @code
         // ...
 
-        region_t ram2;
+        mem_region_t ram2;
 
         int err = sys_memory_register(&ram2, 0x20001000, 16384);
         if (!err) {
@@ -5084,7 +5084,7 @@ extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt,
  *
  */
 //==============================================================================
-static inline int sys_memory_register(region_t *region, void *start, size_t size)
+static inline int sys_memory_register(mem_region_t *region, void *start, size_t size)
 {
         return _mm_register_region(region, start, size);
 }

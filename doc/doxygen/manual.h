@@ -70,6 +70,7 @@ or
 \li \subpage page-drivers
 
 \section sec-drivers Drivers
+\li \subpage drv-fmc
 \li \subpage drv-afm
 \li \subpage drv-crc
 \li \subpage drv-dht11
