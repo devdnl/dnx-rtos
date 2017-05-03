@@ -37,6 +37,12 @@ __ram_start = ORIGIN(ram);
 __ram_size  = LENGTH(ram);
 __ram_end   = __ram_start + __ram_size;
 
+__ram2_start = ORIGIN(ram2);
+__ram2_size  = LENGTH(ram2);
+
+__ram3_start = ORIGIN(ram3);
+__ram3_size  = LENGTH(ram3);
+
 PROVIDE(__rom_start = __rom_start);
 PROVIDE(__rom_size  = __rom_size);
 PROVIDE(__rom_end   = __rom_end);
@@ -44,6 +50,12 @@ PROVIDE(__rom_end   = __rom_end);
 PROVIDE(__ram_start = __ram_start);
 PROVIDE(__ram_size  = __ram_size);
 PROVIDE(__ram_end   = __ram_end);
+
+PROVIDE(__ram2_start = __ram2_start);
+PROVIDE(__ram2_size  = __ram2_size);
+
+PROVIDE(__ram3_start = __ram3_start);
+PROVIDE(__ram3_size  = __ram3_size);
 
 /*==============================================================================
 entry point

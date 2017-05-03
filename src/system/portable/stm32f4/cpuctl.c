@@ -42,6 +42,12 @@
 #define SCB_SysCtrl             (*((__IO uint32_t *)0xE000ED10))
 #define SysCtrl_SLEEPDEEP       ((uint32_t)0x00000004)
 
+#define RAM2_START              ((void *)&__ram2_start)
+#define RAM2_SIZE               ((size_t)&__ram2_size)
+
+#define RAM3_START              ((void *)&__ram3_start)
+#define RAM3_SIZE               ((size_t)&__ram3_size)
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -53,6 +59,13 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+extern void *__ram2_start;
+extern void *__ram2_size;
+extern void *__ram3_start;
+extern void *__ram3_size;
+
+static _mm_region_t ram2;
+static _mm_region_t ram3;
 
 /*==============================================================================
   Function definitions
@@ -76,6 +89,9 @@ void _cpuctl_init(void)
         #if (__OS_MONITOR_CPU_LOAD__ > 0)
         _cpuctl_init_CPU_load_counter();
         #endif
+
+        _mm_register_region(&ram2, RAM2_START, RAM2_SIZE);
+        _mm_register_region(&ram3, RAM3_START, RAM3_SIZE);
 }
 
 //==============================================================================
