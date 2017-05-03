@@ -241,7 +241,7 @@ void RCC_DeInit(void)
   RCC->PLLI2SCFGR = 0x20003000;
 #endif /* STM32F40_41xxx || STM32F427_437xx || STM32F429_439xx || STM32F401xx || STM32F411xE || STM32F446xx || STM32F413_423xx || STM32F469_479xx */
 
-#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
   /* Reset PLLSAICFGR register, only available for STM32F42xxx/43xxx/446xx/469xx/479xx devices */
   RCC->PLLSAICFGR = 0x24003000;
 #endif /* STM32F40_41xxx || STM32F427_437xx || STM32F429_439xx || STM32F446xx || STM32F469_479xx */
@@ -253,7 +253,9 @@ void RCC_DeInit(void)
   RCC->CIR = 0x00000000;
 
   /* Disable Timers clock prescalers selection, only available for STM32F42/43xxx and STM32F413_423xx devices */
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F413_423xx)
   RCC->DCKCFGR = 0x00000000;
+#endif
 
 #if defined(STM32F410xx) || defined(STM32F413_423xx)
   /* Disable LPTIM and FMPI2C clock prescalers selection, only available for STM32F410xx and STM32F413_423xx devices */
@@ -749,7 +751,7 @@ void RCC_PLLSAIConfig(uint32_t PLLSAIM, uint32_t PLLSAIN, uint32_t PLLSAIP, uint
 }
 #endif /* STM32F446xx */
 
-#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE)
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx)
 /**
   * @brief  Configures the PLLSAI clock multiplication and division factors.
   *
@@ -1590,7 +1592,7 @@ void RCC_I2SCLKConfig(uint32_t RCC_I2SCLKSource)
 }
 #endif /* STM32F40_41xxx || STM32F427_437xx || STM32F429_439xx || STM32F401xx || STM32F411xE || STM32F469_479xx */
 
-#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
 /**
   * @brief  Configures SAI1BlockA clock source selection.
   *
@@ -1623,7 +1625,9 @@ void RCC_SAIBlockACLKConfig(uint32_t RCC_SAIBlockACLKSource)
   /* Store the new value */
   RCC->DCKCFGR = tmpreg;
 }
+#endif
 
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
 /**
   * @brief  Configures SAI1BlockB clock source selection.
   *
@@ -1656,8 +1660,9 @@ void RCC_SAIBlockBCLKConfig(uint32_t RCC_SAIBlockBCLKSource)
   /* Store the new value */
   RCC->DCKCFGR = tmpreg;
 }
-#endif /* STM32F40_41xxx || STM32F427_437xx || STM32F429_439xx || STM32F469_479xx */
+#endif
 
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
 /**
   * @brief  Configures the SAI clock Divider coming from PLLI2S.
   *
@@ -1686,7 +1691,9 @@ void RCC_SAIPLLI2SClkDivConfig(uint32_t RCC_PLLI2SDivQ)
   /* Store the new value */
   RCC->DCKCFGR = tmpreg;
 }
+#endif
 
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
 /**
   * @brief  Configures the SAI clock Divider coming from PLLSAI.
   *
@@ -1715,6 +1722,7 @@ void RCC_SAIPLLSAIClkDivConfig(uint32_t RCC_PLLSAIDivQ)
   /* Store the new value */
   RCC->DCKCFGR = tmpreg;
 }
+#endif
 
 #if defined(STM32F413_423xx)
 /**
@@ -1773,6 +1781,7 @@ void RCC_SAIPLLRClkDivConfig(uint32_t RCC_PLLDivR)
 }
 #endif /* STM32F413_423xx */
 
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
 /**
   * @brief  Configures the LTDC clock Divider coming from PLLSAI.
   *
@@ -1805,6 +1814,7 @@ void RCC_LTDCCLKDivConfig(uint32_t RCC_PLLSAIDivR)
   /* Store the new value */
   RCC->DCKCFGR = tmpreg;
 }
+#endif
 
 #if defined(STM32F412xG) || defined(STM32F413_423xx)
 /**
@@ -1873,9 +1883,6 @@ void RCC_DFSDM1ACLKConfig(uint32_t RCC_DFSDM1ACLKSource)
 void RCC_DFSDM2ACLKConfig(uint32_t RCC_DFSDMACLKSource)
 {
   uint32_t tmpreg = 0;
-
-  /* Check the parameters */
-  assert_param(IS_RCC_DFSDMCLK_SOURCE(RCC_DFSDMACLKSource));
 
   tmpreg = RCC->DCKCFGR;
 
@@ -1960,6 +1967,7 @@ void RCC_AHB1PeriphClockCmd(uint32_t RCC_AHB1Periph, FunctionalState NewState)
   }
 }
 
+#if !defined(STM32F410xx)
 /**
   * @brief  Enables or disables the AHB2 peripheral clock.
   * @note   After reset, the peripheral clock (used for registers read/write access)
@@ -1987,6 +1995,7 @@ void RCC_AHB2PeriphClockCmd(uint32_t RCC_AHB2Periph, FunctionalState NewState)
     RCC->AHB2ENR &= ~RCC_AHB2Periph;
   }
 }
+#endif
 
 #if defined(STM32F40_41xxx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
 /**
@@ -2153,6 +2162,7 @@ void RCC_AHB1PeriphResetCmd(uint32_t RCC_AHB1Periph, FunctionalState NewState)
   }
 }
 
+#if !defined(STM32F410xx)
 /**
   * @brief  Forces or releases AHB2 peripheral reset.
   * @param  RCC_AHB2Periph: specifies the AHB2 peripheral to reset.
@@ -2177,6 +2187,7 @@ void RCC_AHB2PeriphResetCmd(uint32_t RCC_AHB2Periph, FunctionalState NewState)
     RCC->AHB2RSTR &= ~RCC_AHB2Periph;
   }
 }
+#endif
 
 #if defined(STM32F40_41xxx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
 /**
@@ -2341,6 +2352,7 @@ void RCC_AHB1PeriphClockLPModeCmd(uint32_t RCC_AHB1Periph, FunctionalState NewSt
   }
 }
 
+#if !defined(STM32F410xx)
 /**
   * @brief  Enables or disables the AHB2 peripheral clock during Low Power (Sleep) mode.
   * @note   Peripheral clock gating in SLEEP mode can be used to further reduce
@@ -2369,6 +2381,7 @@ void RCC_AHB2PeriphClockLPModeCmd(uint32_t RCC_AHB2Periph, FunctionalState NewSt
     RCC->AHB2LPENR &= ~RCC_AHB2Periph;
   }
 }
+#endif
 
 #if defined(STM32F40_41xxx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
 /**

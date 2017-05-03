@@ -226,11 +226,9 @@ end
 //==============================================================================
 /*--
 this.is_PLLSAI =  uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479")
-               or uC.NAME:match("STM32F446") or uC.NAME:match("STM32F40")
-               or uC.NAME:match("STM32F41")  or uC.NAME:match("STM32F427")
+               or uC.NAME:match("STM32F446") or uC.NAME:match("STM32F427")
                or uC.NAME:match("STM32F437") or uC.NAME:match("STM32F429")
-               or uC.NAME:match("STM32F439") or uC.NAME:match("STM32F401")
-               or uC.NAME:match("STM32F411.E")
+               or uC.NAME:match("STM32F439")
 
 if this.is_PLLSAI ~= nil then
         this:AddExtraWidget("Label", "LABEL_PLLSAI", "\nSAI PLL Configuration", -1, "bold")
@@ -382,9 +380,9 @@ if   uC.NAME:match("STM32F412") or uC.NAME:match("STM32F413")
   or uC.NAME:match("STM32F423") or uC.NAME:match("STM32F446") then
 
     this:AddWidget("Combobox", "I2S1 clock source")
-    this:AddItem("I2S PLL clock", "RCC_I2SCLKSource_PLLI2S")
+    this:AddItem("I2S PLL R clock", "RCC_I2SCLKSource_PLLI2S")
     this:AddItem("External clock", "RCC_I2SCLKSource_Ext")
-    this:AddItem("PLL clock", "RCC_I2SCLKSource_PLL")
+    this:AddItem("PLL R clock", "RCC_I2SCLKSource_PLL")
     this:AddItem("HSI or HSE clock", "RCC_I2SCLKSource_HSI_HSE")
     this:SetEvent("clicked", function() this.CalculateFreq() end)
     this:AddExtraWidget("Label", "LABEL_I2S1_CLK_SRC", "")
@@ -397,9 +395,9 @@ if   uC.NAME:match("STM32F412") or uC.NAME:match("STM32F413")
   or uC.NAME:match("STM32F423") or uC.NAME:match("STM32F446") then
 
     this:AddWidget("Combobox", "I2S2 clock source")
-    this:AddItem("I2S PLL clock", "RCC_I2SCLKSource_PLLI2S")
+    this:AddItem("PLL I2S R clock", "RCC_I2SCLKSource_PLLI2S")
     this:AddItem("External clock", "RCC_I2SCLKSource_Ext")
-    this:AddItem("PLL clock", "RCC_I2SCLKSource_PLL")
+    this:AddItem("PLL R clock", "RCC_I2SCLKSource_PLL")
     this:AddItem("HSI or HSE clock", "RCC_I2SCLKSource_HSI_HSE")
     this:SetEvent("clicked", function() this.CalculateFreq() end)
     this:AddExtraWidget("Label", "LABEL_I2S2_CLK_SRC", "")
@@ -416,7 +414,8 @@ if uC.NAME:match("STM32F410") then
     this:SetEvent("clicked", function() this.CalculateFreq() end)
     this:AddExtraWidget("Label", "LABEL_I2S_CLK_SRC", "")
 
-elseif uC.NAME:match("STM32F40")  or uC.NAME:match("STM32F41")  or uC.NAME:match("STM32F427")
+elseif uC.NAME:match("STM32F405") or uC.NAME:match("STM32F407") or uC.NAME:match("STM32F415")
+    or uC.NAME:match("STM32F417") or uC.NAME:match("STM32F427")
     or uC.NAME:match("STM32F437") or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
     or uC.NAME:match("STM32F401") or uC.NAME:match("STM32F411") or uC.NAME:match("STM32F469")
     or uC.NAME:match("STM32F479") then
@@ -501,8 +500,7 @@ end
 #define __CLK_SAI_PLL_CLK_DIVR__ 1
 
 /*--
-if   uC.NAME:match("STM32F41" )
-  or uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
   or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
   or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
 
@@ -527,8 +525,7 @@ end
 #define __CLK_SAI_BLOCK_A_CLK_SRC__ RCC_SAIACLKSource_PLLI2S
 
 /*--
-if   uC.NAME:match("STM32F41" )
-  or uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
   or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
   or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
 
@@ -555,8 +552,7 @@ end
 /*--
 if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
   or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
-  or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479")
-  or uC.NAME:match("STM32F446") then
+  or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
 
     this:AddWidget("Combobox", "LTDC clock divider")
     this:AddItem("PLLSAI R / 2",  "RCC_PLLSAIDivR_Div2")
@@ -1082,7 +1078,7 @@ this.CalculateFreq = function(self)
         elseif I2S1SRC == "RCC_I2SCLKSource_Ext" then
             freq.I2S1CLK = freq.I2SCLKIN
         elseif I2S1SRC == "RCC_I2SCLKSource_PLL" then
-            freq.I2S1CLK = freq.PLLCLK
+            freq.I2S1CLK = freq.PLLR
         else -- RCC_I2SCLKSource_HSI_HSE
             if PLLSRC == "RCC_PLLSource_HSI" then
                 freq.I2S1CLK = freq.HSI
@@ -1102,7 +1098,7 @@ this.CalculateFreq = function(self)
         elseif I2S2SRC == "RCC_I2SCLKSource_Ext" then
             freq.I2S2CLK = freq.I2SCLKIN
         elseif I2S2SRC == "RCC_I2SCLKSource_PLL" then
-            freq.I2S2CLK = freq.PLLCLK
+            freq.I2S2CLK = freq.PLLR
         else -- RCC_I2SCLKSource_HSI_HSE
             if PLLSRC == "RCC_PLLSource_HSI" then
                 freq.I2S2CLK = freq.HSI
@@ -1130,7 +1126,8 @@ this.CalculateFreq = function(self)
         end
         this:SetFlagValue("LABEL_I2S_CLK_SRC", PrintFrequency(freq.I2SCLK))
 
-    elseif uC.NAME:match("STM32F40")  or uC.NAME:match("STM32F41")  or uC.NAME:match("STM32F427")
+    elseif uC.NAME:match("STM32F405") or uC.NAME:match("STM32F407") or uC.NAME:match("STM32F415")
+        or uC.NAME:match("STM32F417") or uC.NAME:match("STM32F427")
         or uC.NAME:match("STM32F437") or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
         or uC.NAME:match("STM32F401") or uC.NAME:match("STM32F411") or uC.NAME:match("STM32F469")
         or uC.NAME:match("STM32F479") then
@@ -1182,8 +1179,7 @@ this.CalculateFreq = function(self)
     end
 
     -- calculate SAI Block A clock frequency -----------------------------------
-    if   uC.NAME:match("STM32F41" )
-      or uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+    if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
       or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
       or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
 
@@ -1216,8 +1212,7 @@ this.CalculateFreq = function(self)
     end
 
     -- calculate SAI Block B clock frequency -----------------------------------
-    if   uC.NAME:match("STM32F41" )
-      or uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
+    if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
       or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
       or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
 
@@ -1252,8 +1247,7 @@ this.CalculateFreq = function(self)
     -- calculate LTDC clock frequency ------------------------------------------
     if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
       or uC.NAME:match("STM32F429") or uC.NAME:match("STM32F439")
-      or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479")
-      or uC.NAME:match("STM32F446") then
+      or uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479") then
 
         freq.LTDCCLK = freq.PLLSAIR / LTDCDIV
         this:SetFlagValue("LABEL_LTDC_CLK_DIV", PrintFrequency(freq.LTDCCLK))

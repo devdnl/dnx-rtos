@@ -651,8 +651,15 @@ static void UART_configure(u8_t major, const struct UART_config *config)
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
 
-        u32_t PCLK = (DEV->UART == USART1 || DEV->UART == USART6) ?
-                     freq.PCLK2_Frequency : freq.PCLK1_Frequency;
+        u32_t PCLK = freq.PCLK1_Frequency;
+
+        #if defined(USART1)
+        PCLK = (DEV->UART == USART1) ? freq.PCLK2_Frequency : PCLK;
+        #endif
+
+        #if defined(USART6)
+        PCLK = (DEV->UART == USART6) ? freq.PCLK2_Frequency : PCLK;
+        #endif
 
         DEV->UART->BRR = (PCLK / (config->baud)) + 1;
 

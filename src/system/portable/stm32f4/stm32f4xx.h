@@ -92,7 +92,7 @@
 #define STM32F411xE
 #endif
 
-#if defined(STM32F412Cx) || defined(STM32F412Rx) || defined(STM32F412Vx) || defined(STM32F412Zx)
+#if (__CPU_NAME__ == STM32F412RGxx) || (__CPU_NAME__ == STM32F412VGxx) || (__CPU_NAME__ == STM32F412ZGxx)
 #define STM32F412xG
 #endif
 

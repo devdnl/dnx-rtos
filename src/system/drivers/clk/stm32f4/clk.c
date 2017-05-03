@@ -156,7 +156,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_SAICLKConfig(RCC_SAIInstance_SAI2, _CLK_CFG__SAI2_CLK_SRC);
 #endif
 
-#if defined(STM32F413_423xx) || defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
+#if defined(STM32F413_423xx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
         RCC_SAIBlockACLKConfig(_CLK_CFG__SAI_BLOCK_A_CLK_SRC);
         RCC_SAIBlockBCLKConfig(_CLK_CFG__SAI_BLOCK_B_CLK_SRC);
 #endif
@@ -164,7 +164,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         //----------------------------------------------------------------------
         // LTDC clock source
         //----------------------------------------------------------------------
-#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
         RCC_LTDCCLKDivConfig(_CLK_CFG__LTDC_CLK_DIV);
 #endif
 
@@ -289,11 +289,11 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PLLSAIConfig(_CLK_CFG__PLLSAI_M, _CLK_CFG__PLLSAI_N, _CLK_CFG__PLLSAI_P, _CLK_CFG__PLLSAI_Q);
 #endif
 
-#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE)
+#if defined(STM32F427_437xx) || defined(STM32F429_439xx)
         RCC_PLLSAIConfig(_CLK_CFG__PLLSAI_N, _CLK_CFG__PLLSAI_Q, _CLK_CFG__PLLSAI_R);
 #endif
 
-#if defined(STM32F469_479xx) || defined(STM32F446xx) || defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE)
+#if defined(STM32F469_479xx) || defined(STM32F446xx) || defined(STM32F427_437xx) || defined(STM32F429_439xx)
         RCC_PLLSAICmd(_CLK_CFG__PLLSAI_ON);
         if (_CLK_CFG__PLLSAI_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLSAIRDY, TIMEOUT_MS);
@@ -318,7 +318,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_I2SCLKConfig(RCC_I2SBus_APB2, _CLK_CFG__I2SAPB2_CLK_SRC);
 #endif
 
-#if defined(STM32F410xx)
+#if defined(STM32F410xx) || defined(STM32F40_41xxx)
         RCC_I2SCLKConfig(_CLK_CFG__I2S_CLK_SRC);
 #endif
 
