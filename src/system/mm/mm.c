@@ -489,43 +489,45 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 
                 size = MEM_ALIGN_SIZE(size);
 
-                for (int i = 0; i <= 1; i++) {
+                for (int try = 0; try <= 1; try++) {
                         size_t allocated = 0;
                         void  *blk       = NULL;
 
                         for (_mm_region_t *r = &memory_region; r; r = r->next) {
                                 if (_heap_get_free(&r->heap) >= size) {
+
                                         blk = _heap_alloc(&r->heap, size, &allocated);
-                                        break;
+
+                                        if (blk) {
+                                                _kernel_scheduler_lock();
+                                                *usage += allocated;
+                                                _kernel_scheduler_unlock();
+
+                                                if (clear) {
+                                                        memset(blk, 0, size);
+                                                }
+
+                                                if (mpur == _MM_PROG) {
+                                                         cast(res_header_t*, blk)->next = NULL;
+                                                         cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
+                                                }
+
+                                                *mem = blk;
+
+                                                err = ESUCC;
+                                                goto finish;
+                                        }
                                 }
                         }
 
-                        if (blk) {
-                                _kernel_scheduler_lock();
-                                *usage += allocated;
-                                _kernel_scheduler_unlock();
-
-                                if (clear) {
-                                        memset(blk, 0, size);
-                                }
-
-                                if (mpur == _MM_PROG) {
-                                         cast(res_header_t*, blk)->next = NULL;
-                                         cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
-                                }
-
-                                *mem = blk;
-
-                                err = ESUCC;
-                                break;
-                        } else {
+                        if (!blk) {
                                 err = ENOMEM;
 
                                 if (mpur == _MM_CACHE) {
                                         break;
 
                                 } else {
-                                        if (i == 0) {
+                                        if (try == 0) {
                                                 _cache_reduce(size);
                                         }
                                 }
@@ -533,6 +535,7 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                 }
         }
 
+        finish:
         return err;
 }
 

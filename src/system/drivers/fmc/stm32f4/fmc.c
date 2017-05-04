@@ -30,6 +30,7 @@ Brief    Flexible Memory Controller
 #include "drivers/driver.h"
 #include "stm32f4/fmc_cfg.h"
 #include "stm32f4/stm32f4xx.h"
+#include "stm32f4/lib/stm32f4xx_rcc.h"
 #include "../fmc_ioctl.h"
 
 /*==============================================================================
@@ -455,19 +456,21 @@ static int SDRAM_init(void)
         int err2 = ESUCC;
 
 #if __FMC_SDRAM_1_ENABLE__ > 0
-        err1 = sys_memory_register(&sdram1, 0xC0000000, (2 << (__FMC_SDRAM_1_NR__ + 10)) // Row bits (0 - 11 bits: A10)
-                                                      * (2 << (__FMC_SDRAM_1_NC__ +  7)) // Col bits (0 - 8 bits:  A7)
-                                                      * (2 << (__FMC_SDRAM_1_NB__     )) // Banks (2 or 4)
-                                                      * (8 << (__FMC_SDRAM_1_MWID__   )) // Bus width
-                                                      / (8));                            // Bits per byte
+        err1 = sys_memory_register(&sdram1, (void*)0xC0000000,
+                                     (2 << (__FMC_SDRAM_1_NR__ + 10)) // Row bits (0 - 11 bits: A10)
+                                   * (2 << (__FMC_SDRAM_1_NC__ +  7)) // Col bits (0 - 8 bits:  A7)
+                                   * (2 << (__FMC_SDRAM_1_NB__     )) // Banks (2 or 4)
+                                   * (8 << (__FMC_SDRAM_1_MWID__   )) // Bus width
+                                   / (8));                            // Bits per byte
 #endif
 
 #if __FMC_SDRAM_2_ENABLE__ > 0
-        err2 = sys_memory_register(&sdram2, 0xD0000000, (2 << (__FMC_SDRAM_2_NR__ + 10)) // Row bits (0 - 11 bits: A10)
-                                                      * (2 << (__FMC_SDRAM_2_NC__ +  7)) // Col bits (0 - 8 bits:  A7)
-                                                      * (2 << (__FMC_SDRAM_2_NB__     )) // Banks (2 or 4)
-                                                      * (8 << (__FMC_SDRAM_2_MWID__   )) // Bus width
-                                                      / (8));                            // Bits per byte
+        err2 = sys_memory_register(&sdram2, (void*)0xD0000000,
+                                     (2 << (__FMC_SDRAM_2_NR__ + 10)) // Row bits (0 - 11 bits: A10)
+                                   * (2 << (__FMC_SDRAM_2_NC__ +  7)) // Col bits (0 - 8 bits:  A7)
+                                   * (2 << (__FMC_SDRAM_2_NB__     )) // Banks (2 or 4)
+                                   * (8 << (__FMC_SDRAM_2_MWID__   )) // Bus width
+                                   / (8));                            // Bits per byte
 #endif
 
         return err1 ? err1 : (err2 ? err2 : ESUCC);
