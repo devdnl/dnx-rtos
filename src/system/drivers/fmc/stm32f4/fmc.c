@@ -61,7 +61,13 @@ static int SDRAM_init(void);
 ==============================================================================*/
 MODULE_NAME(FMC);
 
+#if __FMC_SDRAM_1_ENABLE__ > 0
+static mem_region_t sdram1;
+#endif
+
+#if __FMC_SDRAM_2_ENABLE__ > 0
 static mem_region_t sdram2;
+#endif
 
 /*==============================================================================
   Exported object
@@ -287,9 +293,6 @@ static int SDRAM_init(void)
          *    The SDRAM clock frequency, RBURST and RPIPE must be programmed
          *    in the FMC_SDCR1 register.
          */
-        FMC_Bank5_6->SDCR[0] = ((__FMC_SDRAM_RPIPE__  & 3) << 13)
-                             | ((__FMC_SDRAM_RBURST__ & 1) << 12);
-
         u8_t TRAS  = __FMC_SDRAM_TRAS__ - 1;
         u8_t TRC   = __FMC_SDRAM_TRC__ - 1;
         u8_t TRP   = __FMC_SDRAM_TRP__ - 1;
@@ -308,27 +311,23 @@ static int SDRAM_init(void)
 
         u8_t TWR = max(TWR1, TWR2);
 
-        if (__FMC_SDRAM_1_ENABLE__) {
-                FMC_Bank5_6->SDCR[0] = ((__FMC_SDRAM_RPIPE__  & 3) << 13)
-                                     | ((__FMC_SDRAM_RBURST__ & 1) << 12)
-                                     | ((__FMC_SDRAM_SDCLK__  & 3) << 10)
-                                     | ((__FMC_SDRAM_1_CAS__  & 3) <<  7)
-                                     | ((__FMC_SDRAM_1_NB__   & 1) <<  6)
-                                     | ((__FMC_SDRAM_1_MWID__ & 3) <<  4)
-                                     | ((__FMC_SDRAM_1_NR__   & 3) <<  2)
-                                     | ((__FMC_SDRAM_1_NC__   & 3) <<  0);
-        }
+        FMC_Bank5_6->SDCR[0] = ((__FMC_SDRAM_RPIPE__  & 3) << 13)
+                             | ((__FMC_SDRAM_RBURST__ & 1) << 12)
+                             | ((__FMC_SDRAM_SDCLK__  & 3) << 10)
+                             | ((__FMC_SDRAM_CAS__    & 3) <<  7)
+                             | ((__FMC_SDRAM_1_NB__   & 1) <<  6)
+                             | ((__FMC_SDRAM_1_MWID__ & 3) <<  4)
+                             | ((__FMC_SDRAM_1_NR__   & 3) <<  2)
+                             | ((__FMC_SDRAM_1_NC__   & 3) <<  0);
 
-        if (__FMC_SDRAM_2_ENABLE__) {
-                FMC_Bank5_6->SDCR[1] = ((__FMC_SDRAM_RPIPE__  & 3) << 13)
-                                     | ((__FMC_SDRAM_RBURST__ & 1) << 12)
-                                     | ((__FMC_SDRAM_SDCLK__  & 3) << 10)
-                                     | ((__FMC_SDRAM_2_CAS__  & 3) <<  7)
-                                     | ((__FMC_SDRAM_2_NB__   & 1) <<  6)
-                                     | ((__FMC_SDRAM_2_MWID__ & 3) <<  4)
-                                     | ((__FMC_SDRAM_2_NR__   & 3) <<  2)
-                                     | ((__FMC_SDRAM_2_NC__   & 3) <<  0);
-        }
+        FMC_Bank5_6->SDCR[1] = ((__FMC_SDRAM_RPIPE__  & 3) << 13)
+                             | ((__FMC_SDRAM_RBURST__ & 1) << 12)
+                             | ((__FMC_SDRAM_SDCLK__  & 3) << 10)
+                             | ((__FMC_SDRAM_CAS__    & 3) <<  7)
+                             | ((__FMC_SDRAM_2_NB__   & 1) <<  6)
+                             | ((__FMC_SDRAM_2_MWID__ & 3) <<  4)
+                             | ((__FMC_SDRAM_2_NR__   & 3) <<  2)
+                             | ((__FMC_SDRAM_2_NC__   & 3) <<  0);
 
         /*
          * 2. Program the memory device timing into the FMC_SDTRx register.
@@ -336,25 +335,21 @@ static int SDRAM_init(void)
          *    register.
          *
          */
-        if (__FMC_SDRAM_1_ENABLE__) {
-                FMC_Bank5_6->SDTR[0] = (((__FMC_SDRAM_1_TRCD__ - 1) & 0xF) << 24)
-                                     | (((__FMC_SDRAM_TRP__    - 1) & 0xF) << 20)
-                                     | (((  TWR                   ) & 0xF) << 16)
-                                     | (((__FMC_SDRAM_TRC__    - 1) & 0xF) << 12)
-                                     | (((__FMC_SDRAM_TRAS__   - 1) & 0xF) <<  8)
-                                     | (((__FMC_SDRAM_TXSR__   - 1) & 0xF) <<  4)
-                                     | (((__FMC_SDRAM_TMRD__   - 1) & 0xF) <<  0);
-        }
+        FMC_Bank5_6->SDTR[0] = (((__FMC_SDRAM_1_TRCD__ - 1) & 0xF) << 24)
+                             | (((__FMC_SDRAM_TRP__    - 1) & 0xF) << 20)
+                             | (((  TWR                   ) & 0xF) << 16)
+                             | (((__FMC_SDRAM_TRC__    - 1) & 0xF) << 12)
+                             | (((__FMC_SDRAM_TRAS__   - 1) & 0xF) <<  8)
+                             | (((__FMC_SDRAM_TXSR__   - 1) & 0xF) <<  4)
+                             | (((__FMC_SDRAM_TMRD__   - 1) & 0xF) <<  0);
 
-        if (__FMC_SDRAM_2_ENABLE__) {
-                FMC_Bank5_6->SDTR[1] = (((__FMC_SDRAM_2_TRCD__ - 1) & 0xF) << 24)
-                                     | (((__FMC_SDRAM_TRP__    - 1) & 0xF) << 20)
-                                     | (((  TWR                   ) & 0xF) << 16)
-                                     | (((__FMC_SDRAM_TRC__    - 1) & 0xF) << 12)
-                                     | (((__FMC_SDRAM_TRAS__   - 1) & 0xF) <<  8)
-                                     | (((__FMC_SDRAM_TXSR__   - 1) & 0xF) <<  4)
-                                     | (((__FMC_SDRAM_TMRD__   - 1) & 0xF) <<  0);
-        }
+        FMC_Bank5_6->SDTR[1] = (((__FMC_SDRAM_2_TRCD__ - 1) & 0xF) << 24)
+                             | (((__FMC_SDRAM_TRP__    - 1) & 0xF) << 20)
+                             | (((  TWR                   ) & 0xF) << 16)
+                             | (((__FMC_SDRAM_TRC__    - 1) & 0xF) << 12)
+                             | (((__FMC_SDRAM_TRAS__   - 1) & 0xF) <<  8)
+                             | (((__FMC_SDRAM_TXSR__   - 1) & 0xF) <<  4)
+                             | (((__FMC_SDRAM_TMRD__   - 1) & 0xF) <<  0);
 
         /*
          * 3. Set MODE bits to '001' and configure the Target Bank bits
@@ -417,11 +412,17 @@ static int SDRAM_init(void)
          */
         while (FMC_Bank5_6->SDSR & FMC_SDSR_BUSY);
 
+        u32_t MRD = (0x1 << 9)                  // Write Burst Mode: 1 - single location access
+                  | (0x0 << 7)                  // Operation Mode  : 0 - standard operation
+                  | (__FMC_SDRAM_CAS__ << 4)    // CAS Latency Mode
+                  | (0x0 << 3)                  // Burst Type      : 0 - sequential
+                  | (0x0 << 0);                 // Burst Length    : 0 - 1 byte
+
         FMC_Bank5_6->SDCMR = (SDRAM_MODE__LOADMODEREG)
                            | (__FMC_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
                            | (__FMC_SDRAM_2_ENABLE__ * FMC_SDCMR_CTB2)
                            | (1 << FMC_SDCMR_NRFS_Pos)
-                           | (0x231 << FMC_SDCMR_MRD_Pos); // FIXME ? o co chodzi?
+                           | (MRD << FMC_SDCMR_MRD_Pos);
 
         /*
          * 8. Program the refresh rate in the FMC_SDRTR register. The refresh
@@ -431,11 +432,45 @@ static int SDRAM_init(void)
          */
         while (FMC_Bank5_6->SDSR & FMC_SDSR_BUSY);
 
-        FMC_Bank5_6->SDRTR |= (683 << 1); // FIXME ? trzeba to policzyc
+        RCC_ClocksTypeDef freq;
+        RCC_GetClocksFreq(&freq);
+
+        i32_t NR  = max((2 << (__FMC_SDRAM_1_NR__ + 10)), (2 << (__FMC_SDRAM_2_NR__ + 10)));
+        i32_t MHz = freq.HCLK_Frequency / __FMC_SDRAM_SDCLK__ / 1000000;
+        i32_t SRR = (((__FMC_SDRAM_REFRESH_RATE_MS__ * 1000) / NR) * MHz) - 20;
+
+        if (SRR < 0) {
+                printk("FMC: incorrect configuration of SDRAM refresh rate.");
+                SRR = 512;
+        }
+
+        FMC_Bank5_6->SDRTR |= (SRR << FMC_SDRTR_COUNT_Pos);
 
         while (FMC_Bank5_6->SDSR & FMC_SDSR_BUSY);
 
-        return sys_memory_register(&sdram2, 0xD0000000, 8192*1024); // FIXME
+        /*
+         * Register memory regions in system
+         */
+        int err1 = ESUCC;
+        int err2 = ESUCC;
+
+#if __FMC_SDRAM_1_ENABLE__ > 0
+        err1 = sys_memory_register(&sdram1, 0xC0000000, (2 << (__FMC_SDRAM_1_NR__ + 10)) // Row bits (0 - 11 bits: A10)
+                                                      * (2 << (__FMC_SDRAM_1_NC__ +  7)) // Col bits (0 - 8 bits:  A7)
+                                                      * (2 << (__FMC_SDRAM_1_NB__     )) // Banks (2 or 4)
+                                                      * (8 << (__FMC_SDRAM_1_MWID__   )) // Bus width
+                                                      / (8));                            // Bits per byte
+#endif
+
+#if __FMC_SDRAM_2_ENABLE__ > 0
+        err2 = sys_memory_register(&sdram2, 0xD0000000, (2 << (__FMC_SDRAM_2_NR__ + 10)) // Row bits (0 - 11 bits: A10)
+                                                      * (2 << (__FMC_SDRAM_2_NC__ +  7)) // Col bits (0 - 8 bits:  A7)
+                                                      * (2 << (__FMC_SDRAM_2_NB__     )) // Banks (2 or 4)
+                                                      * (8 << (__FMC_SDRAM_2_MWID__   )) // Bus width
+                                                      / (8));                            // Bits per byte
+#endif
+
+        return err1 ? err1 : (err2 ? err2 : ESUCC);
 }
 
 /*==============================================================================

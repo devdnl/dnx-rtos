@@ -112,6 +112,11 @@ this:AddWidget("Spinbox", 1, 16, "Row cycle delay")
 #define __FMC_SDRAM_TRC__ 16
 
 /*--
+this:AddWidget("Spinbox", 1, 3, "CAS Latency")
+--*/
+#define __FMC_SDRAM_CAS__ 2
+
+/*--
 this:AddWidget("Spinbox", 1, 16, "Self refresh time")
 --*/
 #define __FMC_SDRAM_TRAS__ 16
@@ -133,6 +138,11 @@ this:AddWidget("Spinbox", 1, 15, "Number of Auto-refresh")
 --*/
 #define __FMC_SDRAM_NRFS__ 8
 
+/*--
+this:AddWidget("Spinbox", 1, 128, "Refresh rate [ms]")
+--*/
+#define __FMC_SDRAM_REFRESH_RATE_MS__ 64
+
 //------------------------------------------------------------------------------
 /*--
 this:AddExtraWidget("Label", "LABEL_SDRAM1", "\nSDRAM 1", -1, "bold")
@@ -144,14 +154,6 @@ this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 --*/
 #define __FMC_SDRAM_1_ENABLE__ 0
-
-/*--
-this:AddWidget("Combobox", "CAS Latency")
-this:AddItem("1 cycle", "1")
-this:AddItem("2 cycles", "2")
-this:AddItem("3 cycles", "3")
---*/
-#define __FMC_SDRAM_1_CAS__ 2
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")
@@ -201,14 +203,6 @@ this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 --*/
 #define __FMC_SDRAM_2_ENABLE__ 1
-
-/*--
-this:AddWidget("Combobox", "CAS Latency")
-this:AddItem("1 cycle", "1")
-this:AddItem("2 cycles", "2")
-this:AddItem("3 cycles", "3")
---*/
-#define __FMC_SDRAM_2_CAS__ 2
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")
