@@ -60,6 +60,7 @@ include ./config/network/network_flags.h
 #*/
 
 #/*--
+# this:SetKeyRegExp("__.*__")
 # this:SetLayout("TitledGridBack", 2, "Home")
 #++*/
 

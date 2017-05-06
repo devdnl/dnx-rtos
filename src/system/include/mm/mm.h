@@ -33,6 +33,7 @@
   Include files
 ==============================================================================*/
 #include "sys/types.h"
+#include "heap.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,6 +69,11 @@ enum _mm_mem {
         _MM_COUNT
 };
 
+typedef struct _mm_region {
+        _heap_t            heap;
+        struct _mm_region *next;
+} _mm_region_t;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -76,15 +82,16 @@ enum _mm_mem {
   Exported functions
 ==============================================================================*/
 extern int    _mm_init(void);
-extern int    _kzalloc(enum _mm_mem, const size_t, void**, ...);
-extern int    _kmalloc(enum _mm_mem, const size_t, void**, ...);
-extern int    _kfree(enum _mm_mem, void**, ...);
+extern int    _mm_register_region(_mm_region_t*, void*, size_t);
 extern int    _mm_get_mem_usage_details(_mm_mem_usage_t*);
 extern int    _mm_get_module_mem_usage(uint module, i32_t *usage);
 extern size_t _mm_get_block_size(void*);
-extern size_t _mm_get_mem_free();
-extern size_t _mm_get_mem_usage();
-extern size_t _mm_get_mem_size();
+extern size_t _mm_get_mem_free(void);
+extern size_t _mm_get_mem_usage(void);
+extern size_t _mm_get_mem_size(void);
+extern int    _kzalloc(enum _mm_mem, const size_t, void**, ...);
+extern int    _kmalloc(enum _mm_mem, const size_t, void**, ...);
+extern int    _kfree(enum _mm_mem, void**, ...);
 
 /*==============================================================================
   Exported inline functions

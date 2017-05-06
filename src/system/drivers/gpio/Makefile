@@ -6,4 +6,8 @@ ifeq ($(__ENABLE_GPIO__), _YES_)
       CSRC_ARCH   += drivers/gpio/$(TARGET)/gpio.c
       CXXSRC_ARCH += 
    endif
+   ifeq ($(TARGET), stm32f4)
+      CSRC_ARCH   += drivers/gpio/$(TARGET)/gpio.c
+      CXXSRC_ARCH += 
+   endif
 endif

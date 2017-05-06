@@ -216,6 +216,11 @@ extern "C" {
 typedef struct {} llist_t;
 #endif
 
+/**
+ * @brief Memory region type used for dynamic memory allocation.
+ */
+typedef _mm_region_t mem_region_t;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -4999,6 +5004,8 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
  *         because regular files are not cached directly. When file is a device
  *         file then cache is synchronized with storage and dropped from memory.
  *
+ * @note Function can be used only by file system code.
+ *
  * @param  file         file to synchronize.
  *
  * @return One of errno value.
@@ -5012,6 +5019,8 @@ extern int sys_cache_drop(FILE *file);
  *        write to the cache. If cache does not exist then new one is created.
  *        Only files that are linked with drivers are cached, other files are
  *        written directly.
+ *
+ * @note Function can be used only by file system code.
  *
  * @param  file         file to write
  * @param  blkpos       block position
@@ -5032,6 +5041,8 @@ extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt
  *        is created. Function does not cache blocks from files that are not
  *        directly connected do drivers.
  *
+ * @note Function can be used only by file system code.
+ *
  * @param  file         file to read
  * @param  blkpos       block position
  * @param  blksz        block size
@@ -5042,6 +5053,41 @@ extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt
  */
 //==============================================================================
 extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, u8_t *buf);
+
+//==============================================================================
+/**
+ * @brief  Function register new memory region. The region object should be
+ *         visible during entire system runtime. There is no possibility to
+ *         remove added region.
+ *
+ * @note Function can be used only by driver code.
+ *
+ * @param  region       region object (initialized by system)
+ * @param  start        region start address
+ * @param  size         region size
+ *
+ * @return One of errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        mem_region_t ram2;
+
+        int err = sys_memory_register(&ram2, 0x20001000, 16384);
+        if (!err) {
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ */
+//==============================================================================
+static inline int sys_memory_register(mem_region_t *region, void *start, size_t size)
+{
+        return _mm_register_region(region, start, size);
+}
 
 #ifdef __cplusplus
 }

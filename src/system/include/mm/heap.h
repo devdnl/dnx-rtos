@@ -77,6 +77,25 @@ extern "C" {
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef struct {
+        /** pointer to the heap (ram_heap): for alignment, ram is now a pointer instead of an array */
+        u8_t *begin;
+
+        /** the last entry, always unused! */
+        struct mem *end;
+
+        /** pointer to the lowest free block, this is used for faster search */
+        struct mem *lfree;
+
+        /** aligned heap size */
+        size_t size;
+
+        /** heap usage */
+        size_t used;
+
+        /** heap amx usage */
+        size_t used_max;
+} _heap_t;
 
 /*==============================================================================
   Exported object declarations
@@ -85,13 +104,13 @@ extern "C" {
 /*==============================================================================
   Exported function prototypes
 ==============================================================================*/
-extern void   _heap_init(void);
-extern void   _heap_free(void*, size_t*);
-extern void  *_heap_alloc(size_t, size_t*);
-extern size_t _heap_get_free(void);
-extern size_t _heap_get_used(void);
-extern size_t _heap_get_size(void);
-extern size_t _heap_get_block_size(void*);
+extern int    _heap_init(_heap_t*, void*, size_t);
+extern void   _heap_free(_heap_t*, void*, size_t*);
+extern void  *_heap_alloc(_heap_t*, size_t, size_t*);
+extern size_t _heap_get_free(_heap_t*);
+extern size_t _heap_get_used(_heap_t*);
+extern size_t _heap_get_size(_heap_t*);
+extern size_t _heap_get_block_size(_heap_t*, void*);
 
 #ifdef __cplusplus
 }

@@ -36,7 +36,7 @@
 #define _CLK_FLAGS_H_
 
 /*--
-this:SetLayout("TitledGridBack", 3, "Home > Microcontroller > PLL",
+this:SetLayout("TitledGridBack", 3, "Home > Microcontroller > CLK",
                function() this:LoadFile("arch/arch_flags.h") end)
 
 this:SetEvent("PostDiscard", function() this:CalculateFreq() end)

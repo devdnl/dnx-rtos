@@ -76,13 +76,17 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 #++*/
 #// Existing architectures
 #define stm32f1 0x16F54349
+#define stm32f2 0x2f31e2fc
+#define stm32f3 0x483962d4
+#define stm32f4 0x8dd787b6
 #/*--
 # this:AddWidget("Combobox", "CPU architecture")
 # this:AddItem("STM32F1 family microcontroller", "stm32f1")
+# this:AddItem("STM32F4 family microcontroller", "stm32f4")
 #--*/
-#define __CPU_ARCH__ stm32f1
+#define __CPU_ARCH__ stm32f4
 #/*
-__CPU_ARCH__=stm32f1
+__CPU_ARCH__=stm32f4
 #*/
 
 #/*--
