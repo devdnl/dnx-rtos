@@ -22,3 +22,13 @@ HDRLOC_ARCH += portable/stm32f4/stm32f4xx
 HDRLOC_ARCH += portable/stm32f4
 HDRLOC_ARCH += portable/lib/CMSIS
 endif
+
+ifeq ($(TARGET), efr32)
+ASRC_ARCH   += portable/efr32/cmx_startup.s
+CSRC_ARCH   += portable/efr32/cpuctl.c
+CSRC_ARCH   += portable/efr32/cpuhooks.c
+CSRC_ARCH   += portable/efr32/efr32xx_vectors.c
+HDRLOC_ARCH += portable/efr32/efr32xx
+HDRLOC_ARCH += portable/efr32
+HDRLOC_ARCH += portable/lib/CMSIS
+endif

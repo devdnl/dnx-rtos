@@ -281,6 +281,44 @@
 #     uC.PERIPH["STM32F479NGxx"] = {GPIO = true, CLK = true, UART = true, FMC = true}
 #     uC.PERIPH["STM32F479NIxx"] = {GPIO = true, CLK = true, UART = true, FMC = true}
 # end
+#
+# if uC.ARCH == "efr32" then
+#     uC.AddPriorityItems = function(this, no_default)
+#         this:AddItem("Priority 0 (the highest)", "0x0F")
+#         for i = 1, 4 do this:AddItem("Priority "..i, "0x"..i.."F") end
+#         this:AddItem("Priority 5 (the lowest)", "0x5F")
+#         if no_default ~= true then
+#             this:AddItem("Default priority", "__CPU_IRQ_USER_PRIORITY__")
+#         end
+#     end
+#
+#     uC.PERIPH["EFR32MG12P132F1024GL125"] = {}
+#     uC.PERIPH["EFR32MG12P132F1024GM48"] = {}
+#     uC.PERIPH["EFR32MG12P232F1024GL125"] = {}
+#     uC.PERIPH["EFR32MG12P232F1024GM48"] = {}
+#     uC.PERIPH["EFR32MG12P332F1024GL125"] = {}
+#     uC.PERIPH["EFR32MG12P332F1024GM48"] = {}
+#     uC.PERIPH["EFR32MG12P432F1024GL125"] = {}
+#     uC.PERIPH["EFR32MG12P432F1024GM48"] = {}
+#     uC.PERIPH["EFR32MG12P433F1024GL125"] = {}
+#     uC.PERIPH["EFR32MG12P433F1024GM48"] = {}
+#     uC.PERIPH["EFR32MG1B132F256GM32"] = {}
+#     uC.PERIPH["EFR32MG1B132F256GM48"] = {}
+#     uC.PERIPH["EFR32MG1B232F256GM32"] = {}
+#     uC.PERIPH["EFR32MG1B232F256GM48"] = {}
+#     uC.PERIPH["EFR32MG1B632F256GM32"] = {}
+#     uC.PERIPH["EFR32MG1B732F256GM32"] = {}
+#     uC.PERIPH["EFR32MG1P132F256GM32"] = {}
+#     uC.PERIPH["EFR32MG1P132F256GM48"] = {}
+#     uC.PERIPH["EFR32MG1P133F256GM48"] = {}
+#     uC.PERIPH["EFR32MG1P232F256GM32"] = {}
+#     uC.PERIPH["EFR32MG1P232F256GM48"] = {}
+#     uC.PERIPH["EFR32MG1P233F256GM48"] = {}
+#     uC.PERIPH["EFR32MG1P632F256GM32"] = {}
+#     uC.PERIPH["EFR32MG1P732F256GM32"] = {}
+#     uC.PERIPH["EFR32MG1V132F256GM32"] = {}
+#     uC.PERIPH["EFR32MG1V132F256GM48"] = {}
+# end
 #++*/
 
 #/* include of CPU mandatory file in Makefile
@@ -314,6 +352,8 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32f4/uart_flags.h"
 #include "stm32f4/clk_flags.h"
 #include "stm32f4/fmc_flags.h"
+#elif (__CPU_ARCH__ == efr32)
+#include "efr32/cpu_flags.h"
 #endif
 
 #/*--
@@ -342,9 +382,9 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #     this:SetFlagValue("__ENABLE_GPIO__", "_NO_")
 # end
 #--*/
-#define __ENABLE_GPIO__ _YES_
+#define __ENABLE_GPIO__ _NO_
 #/*
-__ENABLE_GPIO__=_YES_
+__ENABLE_GPIO__=_NO_
 #*/
 
 #/*--
@@ -370,9 +410,9 @@ __ENABLE_AFM__=_NO_
 #     this:SetFlagValue("__ENABLE_CLK__", "_NO_")
 # end
 #--*/
-#define __ENABLE_CLK__ _YES_
+#define __ENABLE_CLK__ _NO_
 #/*
-__ENABLE_CLK__=_YES_
+__ENABLE_CLK__=_NO_
 #*/
 
 #/*--
@@ -435,9 +475,9 @@ __ENABLE_SPI__=_NO_
 #     this:SetFlagValue("__ENABLE_UART__", "_NO_")
 # end
 #--*/
-#define __ENABLE_UART__ _YES_
+#define __ENABLE_UART__ _NO_
 #/*
-__ENABLE_UART__=_YES_
+__ENABLE_UART__=_NO_
 #*/
 
 #/*--
@@ -559,9 +599,9 @@ __ENABLE_DHT11__=_NO_
 #     this:SetFlagValue("__ENABLE_FMC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_FMC__ _YES_
+#define __ENABLE_FMC__ _NO_
 #/*
-__ENABLE_FMC__=_YES_
+__ENABLE_FMC__=_NO_
 #*/
 
 #// MODULE LIST END
