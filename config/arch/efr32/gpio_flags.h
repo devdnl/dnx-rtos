@@ -65,19 +65,8 @@ if _GPIO_SELECTION_ == nil then
 
     this:Finish()
 else
-    this:SetLayout("TitledGridBack", 5, "Home > Microcontroller > ".._GPIO_SELECTION_,
+    this:SetLayout("TitledGridBack", 4, "Home > Microcontroller > ".._GPIO_SELECTION_,
                    function() Configure(nil) end)
-
-    this:AddExtraWidget("Label", "LabelPin", "Pin")
-    this:AddExtraWidget("Label", "LabelName", "Name")
-    this:AddExtraWidget("Label", "LabelDrive", "Drive strength")
-    this:AddExtraWidget("Label", "LabelMode", "Mode")
-    this:AddExtraWidget("Label", "LabelState", "State")
-
-    this.AddPinDrive = function(this, portLetter, pinNumber)
-        this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
-        this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
-    end
 
     this.AddPinMode = function(this, portLetter, pinNumber)
         this:AddItem("Disabled (state High for Pull-Up)", "_GPIO_MODE_DISABLED")
@@ -134,6 +123,14 @@ else
         end
     end
 
+    this.PortExist = function(this, portLetter)
+        if _GPIO_SELECTION_ ~= "GPIO"..portLetter then
+            return false
+        else
+            return true
+        end
+    end
+
     this.AddProposals = function(this, tab, portLetter, pinNumber)
         for i = 1, #tab do this:AddItem(tab[i].NAME, "") end
         this:SetEvent("clicked",
@@ -143,12 +140,7 @@ else
                 local stateFlag = "__GPIO_P"..portLetter.."_PIN_"..pinNumber.."_STATE__"
                 local selection = this:GetFlagValue(nameFlag)
 
-                print(nameFlag, modeFlag, stateFlag)
-
                 for i = 1, #tab do
-
-                    print(tab[i].NAME)
-
                     if tab[i].NAME == selection then
 
                         this:SetFlagValue(modeFlag, tab[i].MODE)
@@ -170,6 +162,597 @@ end
 
 /*----------------------------------------------------------------------------*/
 /*--
+this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH1")
+++*/
+/*--
+if this:PortExist("A") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PA_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("B") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PB_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("C") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PC_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("D") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PD_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("E") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PE_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("F") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PF_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("G") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PG_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("H") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PH_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("I") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PI_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("J") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PJ_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("K") then
+    this:AddWidget("Combobox", "Drive strength")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH2")
+end
+--*/
+#define __GPIO_PK_DRIVE_STRENGTH__ _GPIO_DRIVE_STRONG
+
+
+/*--
+this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT1")
+++*/
+/*--
+if this:PortExist("A") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PA_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("B") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PB_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("C") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PC_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("D") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PD_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("E") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PE_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("F") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PF_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("G") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PG_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("H") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PH_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("I") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PI_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("J") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PJ_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+/*--
+if this:PortExist("K") then
+    this:AddWidget("Combobox", "Drive strength alternative")
+    this:AddItem("Strong (10 mA)", "_GPIO_DRIVE_STRONG")
+    this:AddItem("Weak (1 mA)", "_GPIO_DRIVE_WEAK")
+    this:AddExtraWidget("Void", "Void_GPIO_DRIVE_STRENGTH_ALT2")
+end
+--*/
+#define __GPIO_PK_DRIVE_STRENGTH_ALT__ _GPIO_DRIVE_STRONG
+
+
+/*--
+this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE1")
+++*/
+/*--
+if this:PortExist("A") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PA_SLEW_RATE__ 5
+/*--
+if this:PortExist("B") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PB_SLEW_RATE__ 5
+/*--
+if this:PortExist("C") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PC_SLEW_RATE__ 5
+/*--
+if this:PortExist("D") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PD_SLEW_RATE__ 5
+/*--
+if this:PortExist("E") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PE_SLEW_RATE__ 5
+/*--
+if this:PortExist("F") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PF_SLEW_RATE__ 5
+/*--
+if this:PortExist("G") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PG_SLEW_RATE__ 5
+/*--
+if this:PortExist("H") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PH_SLEW_RATE__ 5
+/*--
+if this:PortExist("I") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PI_SLEW_RATE__ 5
+/*--
+if this:PortExist("J") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PJ_SLEW_RATE__ 5
+/*--
+if this:PortExist("K") then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE2")
+end
+--*/
+#define __GPIO_PK_SLEW_RATE__ 5
+
+
+/*--
+this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT1")
+++*/
+/*--
+if this:PortExist("A", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PA_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("B", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PB_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("C", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PC_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("D", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PD_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("E", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PE_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("F", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PF_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("G", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PG_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("H", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PH_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("I", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PI_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("J", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PJ_SLEW_RATE_ALT__ 5
+/*--
+if this:PortExist("K", 0) then
+    this:AddWidget("Spinbox", 0, 7, "Slew rate alternative")
+    this:AddExtraWidget("Void", "Void_GPIO_SLEW_RATE_ALT2")
+end
+--*/
+#define __GPIO_PK_SLEW_RATE_ALT__ 5
+
+
+/*--
+this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE1")
+++*/
+/*--
+if this:PortExist("A") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PA_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("B") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PB_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("C") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PC_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("D") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PD_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("E") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PE_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("F") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PF_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("G") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PG_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("H") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PH_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("I") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PI_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("J") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PJ_INPUT_DISABLE__ 0
+/*--
+if this:PortExist("K") then
+    this:AddWidget("Combobox", "Disable inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE2")
+end
+--*/
+#define __GPIO_PK_INPUT_DISABLE__ 0
+
+
+/*--
+this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT1")
+++*/
+/*--
+if this:PortExist("A") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PA_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("B") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PB_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("C") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PC_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("D") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PD_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("E") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PE_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("F") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PF_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("G") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PG_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("H") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PH_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("I") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PI_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("J") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PJ_INPUT_DISABLE_ALT__ 0
+/*--
+if this:PortExist("K") then
+    this:AddWidget("Combobox", "Disable alternative inputs")
+    this:AddItem("No", "0")
+    this:AddItem("Yes", "1")
+    this:AddExtraWidget("Void", "Void_GPIO_IN_DISABLE_ALT2")
+end
+--*/
+#define __GPIO_PK_INPUT_DISABLE_ALT__ 0
+
+
+/*----------------------------------------------------------------------------*/
+/*--
+this:AddExtraWidget("Label", "LabelPin", "\nPin")
+this:AddExtraWidget("Label", "LabelName", "\nName")
+this:AddExtraWidget("Label", "LabelMode", "\nMode")
+this:AddExtraWidget("Label", "LabelState", "\nState")
+++*/
+
+
+
+/*------------------------------------------------------------------------------
+/*--
 if this:PinExist("A", 0) then
     local PA0 = {}
     PA0[#PA0 + 1] = {NAME = "PA0_NC", MODE = "_GPIO_MODE_DISABLED", STATE = "_LOW"}
@@ -190,14 +773,6 @@ if this:PinExist("A", 0) then
 end
 --*/
 #define __GPIO_PA_PIN_0_NAME__ PA0_NC
-
-/*--
-if this:PinExist("A", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("A", 0)
-end
---*/
-#define __GPIO_PA_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("A", 0) then
@@ -240,14 +815,6 @@ end
 /*--
 if this:PinExist("A", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("A", 1)
-end
---*/
-#define __GPIO_PA_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("A", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("A", 1)
 end
 --*/
@@ -282,14 +849,6 @@ if this:PinExist("A", 2) then
 end
 --*/
 #define __GPIO_PA_PIN_2_NAME__ PA2_NC
-
-/*--
-if this:PinExist("A", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("A", 2)
-end
---*/
-#define __GPIO_PA_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("A", 2) then
@@ -332,14 +891,6 @@ end
 /*--
 if this:PinExist("A", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("A", 3)
-end
---*/
-#define __GPIO_PA_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("A", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("A", 3)
 end
 --*/
@@ -374,14 +925,6 @@ if this:PinExist("A", 4) then
 end
 --*/
 #define __GPIO_PA_PIN_4_NAME__ PA4_NC
-
-/*--
-if this:PinExist("A", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("A", 4)
-end
---*/
-#define __GPIO_PA_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("A", 4) then
@@ -424,14 +967,6 @@ end
 /*--
 if this:PinExist("A", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("A", 5)
-end
---*/
-#define __GPIO_PA_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("A", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("A", 5)
 end
 --*/
@@ -466,14 +1001,6 @@ if this:PinExist("A", 6) then
 end
 --*/
 #define __GPIO_PA_PIN_6_NAME__ PA6_NC
-
-/*--
-if this:PinExist("A", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("A", 6)
-end
---*/
-#define __GPIO_PA_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("A", 6) then
@@ -516,14 +1043,6 @@ end
 /*--
 if this:PinExist("A", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("A", 7)
-end
---*/
-#define __GPIO_PA_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("A", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("A", 7)
 end
 --*/
@@ -558,14 +1077,6 @@ if this:PinExist("A", 8) then
 end
 --*/
 #define __GPIO_PA_PIN_8_NAME__ PA8_NC
-
-/*--
-if this:PinExist("A", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("A", 8)
-end
---*/
-#define __GPIO_PA_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("A", 8) then
@@ -608,14 +1119,6 @@ end
 /*--
 if this:PinExist("A", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("A", 9)
-end
---*/
-#define __GPIO_PA_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("A", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("A", 9)
 end
 --*/
@@ -650,14 +1153,6 @@ if this:PinExist("A", 10) then
 end
 --*/
 #define __GPIO_PA_PIN_10_NAME__ PA10_NC
-
-/*--
-if this:PinExist("A", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("A", 10)
-end
---*/
-#define __GPIO_PA_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("A", 10) then
@@ -700,14 +1195,6 @@ end
 /*--
 if this:PinExist("A", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("A", 11)
-end
---*/
-#define __GPIO_PA_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("A", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("A", 11)
 end
 --*/
@@ -742,14 +1229,6 @@ if this:PinExist("A", 12) then
 end
 --*/
 #define __GPIO_PA_PIN_12_NAME__ PA12_NC
-
-/*--
-if this:PinExist("A", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("A", 12)
-end
---*/
-#define __GPIO_PA_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("A", 12) then
@@ -792,14 +1271,6 @@ end
 /*--
 if this:PinExist("A", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("A", 13)
-end
---*/
-#define __GPIO_PA_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("A", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("A", 13)
 end
 --*/
@@ -834,14 +1305,6 @@ if this:PinExist("A", 14) then
 end
 --*/
 #define __GPIO_PA_PIN_14_NAME__ PA14_NC
-
-/*--
-if this:PinExist("A", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("A", 14)
-end
---*/
-#define __GPIO_PA_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("A", 14) then
@@ -884,14 +1347,6 @@ end
 /*--
 if this:PinExist("A", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("A", 15)
-end
---*/
-#define __GPIO_PA_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("A", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("A", 15)
 end
 --*/
@@ -905,7 +1360,7 @@ end
 --*/
 #define __GPIO_PA_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("B", 0) then
     local PB0 = {}
@@ -927,14 +1382,6 @@ if this:PinExist("B", 0) then
 end
 --*/
 #define __GPIO_PB_PIN_0_NAME__ PB0_NC
-
-/*--
-if this:PinExist("B", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("B", 0)
-end
---*/
-#define __GPIO_PB_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("B", 0) then
@@ -977,14 +1424,6 @@ end
 /*--
 if this:PinExist("B", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("B", 1)
-end
---*/
-#define __GPIO_PB_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("B", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("B", 1)
 end
 --*/
@@ -1019,14 +1458,6 @@ if this:PinExist("B", 2) then
 end
 --*/
 #define __GPIO_PB_PIN_2_NAME__ PB2_NC
-
-/*--
-if this:PinExist("B", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("B", 2)
-end
---*/
-#define __GPIO_PB_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("B", 2) then
@@ -1069,14 +1500,6 @@ end
 /*--
 if this:PinExist("B", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("B", 3)
-end
---*/
-#define __GPIO_PB_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("B", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("B", 3)
 end
 --*/
@@ -1111,14 +1534,6 @@ if this:PinExist("B", 4) then
 end
 --*/
 #define __GPIO_PB_PIN_4_NAME__ PB4_NC
-
-/*--
-if this:PinExist("B", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("B", 4)
-end
---*/
-#define __GPIO_PB_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("B", 4) then
@@ -1161,14 +1576,6 @@ end
 /*--
 if this:PinExist("B", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("B", 5)
-end
---*/
-#define __GPIO_PB_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("B", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("B", 5)
 end
 --*/
@@ -1203,14 +1610,6 @@ if this:PinExist("B", 6) then
 end
 --*/
 #define __GPIO_PB_PIN_6_NAME__ PB6_NC
-
-/*--
-if this:PinExist("B", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("B", 6)
-end
---*/
-#define __GPIO_PB_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("B", 6) then
@@ -1253,14 +1652,6 @@ end
 /*--
 if this:PinExist("B", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("B", 7)
-end
---*/
-#define __GPIO_PB_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("B", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("B", 7)
 end
 --*/
@@ -1295,14 +1686,6 @@ if this:PinExist("B", 8) then
 end
 --*/
 #define __GPIO_PB_PIN_8_NAME__ PB8_NC
-
-/*--
-if this:PinExist("B", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("B", 8)
-end
---*/
-#define __GPIO_PB_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("B", 8) then
@@ -1345,14 +1728,6 @@ end
 /*--
 if this:PinExist("B", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("B", 9)
-end
---*/
-#define __GPIO_PB_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("B", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("B", 9)
 end
 --*/
@@ -1387,14 +1762,6 @@ if this:PinExist("B", 10) then
 end
 --*/
 #define __GPIO_PB_PIN_10_NAME__ PB10_NC
-
-/*--
-if this:PinExist("B", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("B", 10)
-end
---*/
-#define __GPIO_PB_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("B", 10) then
@@ -1437,14 +1804,6 @@ end
 /*--
 if this:PinExist("B", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("B", 11)
-end
---*/
-#define __GPIO_PB_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("B", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("B", 11)
 end
 --*/
@@ -1479,14 +1838,6 @@ if this:PinExist("B", 12) then
 end
 --*/
 #define __GPIO_PB_PIN_12_NAME__ PB12_NC
-
-/*--
-if this:PinExist("B", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("B", 12)
-end
---*/
-#define __GPIO_PB_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("B", 12) then
@@ -1529,14 +1880,6 @@ end
 /*--
 if this:PinExist("B", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("B", 13)
-end
---*/
-#define __GPIO_PB_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("B", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("B", 13)
 end
 --*/
@@ -1571,14 +1914,6 @@ if this:PinExist("B", 14) then
 end
 --*/
 #define __GPIO_PB_PIN_14_NAME__ PB14_NC
-
-/*--
-if this:PinExist("B", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("B", 14)
-end
---*/
-#define __GPIO_PB_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("B", 14) then
@@ -1621,14 +1956,6 @@ end
 /*--
 if this:PinExist("B", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("B", 15)
-end
---*/
-#define __GPIO_PB_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("B", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("B", 15)
 end
 --*/
@@ -1642,7 +1969,7 @@ end
 --*/
 #define __GPIO_PB_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("C", 0) then
     local PC0 = {}
@@ -1664,14 +1991,6 @@ if this:PinExist("C", 0) then
 end
 --*/
 #define __GPIO_PC_PIN_0_NAME__ PC0_NC
-
-/*--
-if this:PinExist("C", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("C", 0)
-end
---*/
-#define __GPIO_PC_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("C", 0) then
@@ -1714,14 +2033,6 @@ end
 /*--
 if this:PinExist("C", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("C", 1)
-end
---*/
-#define __GPIO_PC_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("C", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("C", 1)
 end
 --*/
@@ -1756,14 +2067,6 @@ if this:PinExist("C", 2) then
 end
 --*/
 #define __GPIO_PC_PIN_2_NAME__ PC2_NC
-
-/*--
-if this:PinExist("C", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("C", 2)
-end
---*/
-#define __GPIO_PC_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("C", 2) then
@@ -1806,14 +2109,6 @@ end
 /*--
 if this:PinExist("C", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("C", 3)
-end
---*/
-#define __GPIO_PC_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("C", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("C", 3)
 end
 --*/
@@ -1848,14 +2143,6 @@ if this:PinExist("C", 4) then
 end
 --*/
 #define __GPIO_PC_PIN_4_NAME__ PC4_NC
-
-/*--
-if this:PinExist("C", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("C", 4)
-end
---*/
-#define __GPIO_PC_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("C", 4) then
@@ -1898,14 +2185,6 @@ end
 /*--
 if this:PinExist("C", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("C", 5)
-end
---*/
-#define __GPIO_PC_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("C", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("C", 5)
 end
 --*/
@@ -1940,14 +2219,6 @@ if this:PinExist("C", 6) then
 end
 --*/
 #define __GPIO_PC_PIN_6_NAME__ PC6_NC
-
-/*--
-if this:PinExist("C", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("C", 6)
-end
---*/
-#define __GPIO_PC_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("C", 6) then
@@ -1990,14 +2261,6 @@ end
 /*--
 if this:PinExist("C", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("C", 7)
-end
---*/
-#define __GPIO_PC_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("C", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("C", 7)
 end
 --*/
@@ -2032,14 +2295,6 @@ if this:PinExist("C", 8) then
 end
 --*/
 #define __GPIO_PC_PIN_8_NAME__ PC8_NC
-
-/*--
-if this:PinExist("C", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("C", 8)
-end
---*/
-#define __GPIO_PC_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("C", 8) then
@@ -2082,14 +2337,6 @@ end
 /*--
 if this:PinExist("C", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("C", 9)
-end
---*/
-#define __GPIO_PC_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("C", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("C", 9)
 end
 --*/
@@ -2124,14 +2371,6 @@ if this:PinExist("C", 10) then
 end
 --*/
 #define __GPIO_PC_PIN_10_NAME__ PC10_NC
-
-/*--
-if this:PinExist("C", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("C", 10)
-end
---*/
-#define __GPIO_PC_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("C", 10) then
@@ -2174,14 +2413,6 @@ end
 /*--
 if this:PinExist("C", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("C", 11)
-end
---*/
-#define __GPIO_PC_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("C", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("C", 11)
 end
 --*/
@@ -2216,14 +2447,6 @@ if this:PinExist("C", 12) then
 end
 --*/
 #define __GPIO_PC_PIN_12_NAME__ PC12_NC
-
-/*--
-if this:PinExist("C", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("C", 12)
-end
---*/
-#define __GPIO_PC_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("C", 12) then
@@ -2266,14 +2489,6 @@ end
 /*--
 if this:PinExist("C", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("C", 13)
-end
---*/
-#define __GPIO_PC_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("C", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("C", 13)
 end
 --*/
@@ -2308,14 +2523,6 @@ if this:PinExist("C", 14) then
 end
 --*/
 #define __GPIO_PC_PIN_14_NAME__ PC14_NC
-
-/*--
-if this:PinExist("C", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("C", 14)
-end
---*/
-#define __GPIO_PC_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("C", 14) then
@@ -2358,14 +2565,6 @@ end
 /*--
 if this:PinExist("C", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("C", 15)
-end
---*/
-#define __GPIO_PC_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("C", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("C", 15)
 end
 --*/
@@ -2379,7 +2578,7 @@ end
 --*/
 #define __GPIO_PC_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("D", 0) then
     local PD0 = {}
@@ -2401,14 +2600,6 @@ if this:PinExist("D", 0) then
 end
 --*/
 #define __GPIO_PD_PIN_0_NAME__ PD0_NC
-
-/*--
-if this:PinExist("D", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("D", 0)
-end
---*/
-#define __GPIO_PD_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("D", 0) then
@@ -2451,14 +2642,6 @@ end
 /*--
 if this:PinExist("D", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("D", 1)
-end
---*/
-#define __GPIO_PD_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("D", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("D", 1)
 end
 --*/
@@ -2493,14 +2676,6 @@ if this:PinExist("D", 2) then
 end
 --*/
 #define __GPIO_PD_PIN_2_NAME__ PD2_NC
-
-/*--
-if this:PinExist("D", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("D", 2)
-end
---*/
-#define __GPIO_PD_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("D", 2) then
@@ -2543,14 +2718,6 @@ end
 /*--
 if this:PinExist("D", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("D", 3)
-end
---*/
-#define __GPIO_PD_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("D", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("D", 3)
 end
 --*/
@@ -2585,14 +2752,6 @@ if this:PinExist("D", 4) then
 end
 --*/
 #define __GPIO_PD_PIN_4_NAME__ PD4_NC
-
-/*--
-if this:PinExist("D", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("D", 4)
-end
---*/
-#define __GPIO_PD_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("D", 4) then
@@ -2635,14 +2794,6 @@ end
 /*--
 if this:PinExist("D", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("D", 5)
-end
---*/
-#define __GPIO_PD_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("D", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("D", 5)
 end
 --*/
@@ -2677,14 +2828,6 @@ if this:PinExist("D", 6) then
 end
 --*/
 #define __GPIO_PD_PIN_6_NAME__ PD6_NC
-
-/*--
-if this:PinExist("D", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("D", 6)
-end
---*/
-#define __GPIO_PD_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("D", 6) then
@@ -2727,14 +2870,6 @@ end
 /*--
 if this:PinExist("D", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("D", 7)
-end
---*/
-#define __GPIO_PD_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("D", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("D", 7)
 end
 --*/
@@ -2769,14 +2904,6 @@ if this:PinExist("D", 8) then
 end
 --*/
 #define __GPIO_PD_PIN_8_NAME__ PD8_NC
-
-/*--
-if this:PinExist("D", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("D", 8)
-end
---*/
-#define __GPIO_PD_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("D", 8) then
@@ -2819,14 +2946,6 @@ end
 /*--
 if this:PinExist("D", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("D", 9)
-end
---*/
-#define __GPIO_PD_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("D", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("D", 9)
 end
 --*/
@@ -2861,14 +2980,6 @@ if this:PinExist("D", 10) then
 end
 --*/
 #define __GPIO_PD_PIN_10_NAME__ PD10_NC
-
-/*--
-if this:PinExist("D", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("D", 10)
-end
---*/
-#define __GPIO_PD_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("D", 10) then
@@ -2911,14 +3022,6 @@ end
 /*--
 if this:PinExist("D", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("D", 11)
-end
---*/
-#define __GPIO_PD_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("D", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("D", 11)
 end
 --*/
@@ -2953,14 +3056,6 @@ if this:PinExist("D", 12) then
 end
 --*/
 #define __GPIO_PD_PIN_12_NAME__ PD12_NC
-
-/*--
-if this:PinExist("D", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("D", 12)
-end
---*/
-#define __GPIO_PD_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("D", 12) then
@@ -3003,14 +3098,6 @@ end
 /*--
 if this:PinExist("D", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("D", 13)
-end
---*/
-#define __GPIO_PD_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("D", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("D", 13)
 end
 --*/
@@ -3045,14 +3132,6 @@ if this:PinExist("D", 14) then
 end
 --*/
 #define __GPIO_PD_PIN_14_NAME__ PD14_NC
-
-/*--
-if this:PinExist("D", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("D", 14)
-end
---*/
-#define __GPIO_PD_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("D", 14) then
@@ -3095,14 +3174,6 @@ end
 /*--
 if this:PinExist("D", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("D", 15)
-end
---*/
-#define __GPIO_PD_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("D", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("D", 15)
 end
 --*/
@@ -3116,7 +3187,7 @@ end
 --*/
 #define __GPIO_PD_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("E", 0) then
     local PE0 = {}
@@ -3138,14 +3209,6 @@ if this:PinExist("E", 0) then
 end
 --*/
 #define __GPIO_PE_PIN_0_NAME__ PE0_NC
-
-/*--
-if this:PinExist("E", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("E", 0)
-end
---*/
-#define __GPIO_PE_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("E", 0) then
@@ -3188,14 +3251,6 @@ end
 /*--
 if this:PinExist("E", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("E", 1)
-end
---*/
-#define __GPIO_PE_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("E", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("E", 1)
 end
 --*/
@@ -3230,14 +3285,6 @@ if this:PinExist("E", 2) then
 end
 --*/
 #define __GPIO_PE_PIN_2_NAME__ PE2_NC
-
-/*--
-if this:PinExist("E", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("E", 2)
-end
---*/
-#define __GPIO_PE_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("E", 2) then
@@ -3280,14 +3327,6 @@ end
 /*--
 if this:PinExist("E", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("E", 3)
-end
---*/
-#define __GPIO_PE_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("E", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("E", 3)
 end
 --*/
@@ -3322,14 +3361,6 @@ if this:PinExist("E", 4) then
 end
 --*/
 #define __GPIO_PE_PIN_4_NAME__ PE4_NC
-
-/*--
-if this:PinExist("E", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("E", 4)
-end
---*/
-#define __GPIO_PE_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("E", 4) then
@@ -3372,14 +3403,6 @@ end
 /*--
 if this:PinExist("E", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("E", 5)
-end
---*/
-#define __GPIO_PE_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("E", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("E", 5)
 end
 --*/
@@ -3414,14 +3437,6 @@ if this:PinExist("E", 6) then
 end
 --*/
 #define __GPIO_PE_PIN_6_NAME__ PE6_NC
-
-/*--
-if this:PinExist("E", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("E", 6)
-end
---*/
-#define __GPIO_PE_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("E", 6) then
@@ -3464,14 +3479,6 @@ end
 /*--
 if this:PinExist("E", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("E", 7)
-end
---*/
-#define __GPIO_PE_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("E", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("E", 7)
 end
 --*/
@@ -3506,14 +3513,6 @@ if this:PinExist("E", 8) then
 end
 --*/
 #define __GPIO_PE_PIN_8_NAME__ PE8_NC
-
-/*--
-if this:PinExist("E", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("E", 8)
-end
---*/
-#define __GPIO_PE_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("E", 8) then
@@ -3556,14 +3555,6 @@ end
 /*--
 if this:PinExist("E", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("E", 9)
-end
---*/
-#define __GPIO_PE_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("E", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("E", 9)
 end
 --*/
@@ -3598,14 +3589,6 @@ if this:PinExist("E", 10) then
 end
 --*/
 #define __GPIO_PE_PIN_10_NAME__ PE10_NC
-
-/*--
-if this:PinExist("E", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("E", 10)
-end
---*/
-#define __GPIO_PE_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("E", 10) then
@@ -3648,14 +3631,6 @@ end
 /*--
 if this:PinExist("E", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("E", 11)
-end
---*/
-#define __GPIO_PE_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("E", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("E", 11)
 end
 --*/
@@ -3690,14 +3665,6 @@ if this:PinExist("E", 12) then
 end
 --*/
 #define __GPIO_PE_PIN_12_NAME__ PE12_NC
-
-/*--
-if this:PinExist("E", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("E", 12)
-end
---*/
-#define __GPIO_PE_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("E", 12) then
@@ -3740,14 +3707,6 @@ end
 /*--
 if this:PinExist("E", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("E", 13)
-end
---*/
-#define __GPIO_PE_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("E", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("E", 13)
 end
 --*/
@@ -3782,14 +3741,6 @@ if this:PinExist("E", 14) then
 end
 --*/
 #define __GPIO_PE_PIN_14_NAME__ PE14_NC
-
-/*--
-if this:PinExist("E", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("E", 14)
-end
---*/
-#define __GPIO_PE_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("E", 14) then
@@ -3832,14 +3783,6 @@ end
 /*--
 if this:PinExist("E", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("E", 15)
-end
---*/
-#define __GPIO_PE_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("E", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("E", 15)
 end
 --*/
@@ -3853,7 +3796,7 @@ end
 --*/
 #define __GPIO_PE_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("F", 0) then
     local PF0 = {}
@@ -3875,14 +3818,6 @@ if this:PinExist("F", 0) then
 end
 --*/
 #define __GPIO_PF_PIN_0_NAME__ PF0_NC
-
-/*--
-if this:PinExist("F", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("F", 0)
-end
---*/
-#define __GPIO_PF_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("F", 0) then
@@ -3925,14 +3860,6 @@ end
 /*--
 if this:PinExist("F", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("F", 1)
-end
---*/
-#define __GPIO_PF_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("F", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("F", 1)
 end
 --*/
@@ -3967,14 +3894,6 @@ if this:PinExist("F", 2) then
 end
 --*/
 #define __GPIO_PF_PIN_2_NAME__ PF2_NC
-
-/*--
-if this:PinExist("F", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("F", 2)
-end
---*/
-#define __GPIO_PF_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("F", 2) then
@@ -4017,14 +3936,6 @@ end
 /*--
 if this:PinExist("F", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("F", 3)
-end
---*/
-#define __GPIO_PF_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("F", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("F", 3)
 end
 --*/
@@ -4059,14 +3970,6 @@ if this:PinExist("F", 4) then
 end
 --*/
 #define __GPIO_PF_PIN_4_NAME__ PF4_NC
-
-/*--
-if this:PinExist("F", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("F", 4)
-end
---*/
-#define __GPIO_PF_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("F", 4) then
@@ -4109,14 +4012,6 @@ end
 /*--
 if this:PinExist("F", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("F", 5)
-end
---*/
-#define __GPIO_PF_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("F", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("F", 5)
 end
 --*/
@@ -4151,14 +4046,6 @@ if this:PinExist("F", 6) then
 end
 --*/
 #define __GPIO_PF_PIN_6_NAME__ PF6_NC
-
-/*--
-if this:PinExist("F", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("F", 6)
-end
---*/
-#define __GPIO_PF_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("F", 6) then
@@ -4201,14 +4088,6 @@ end
 /*--
 if this:PinExist("F", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("F", 7)
-end
---*/
-#define __GPIO_PF_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("F", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("F", 7)
 end
 --*/
@@ -4243,14 +4122,6 @@ if this:PinExist("F", 8) then
 end
 --*/
 #define __GPIO_PF_PIN_8_NAME__ PF8_NC
-
-/*--
-if this:PinExist("F", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("F", 8)
-end
---*/
-#define __GPIO_PF_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("F", 8) then
@@ -4293,14 +4164,6 @@ end
 /*--
 if this:PinExist("F", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("F", 9)
-end
---*/
-#define __GPIO_PF_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("F", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("F", 9)
 end
 --*/
@@ -4335,14 +4198,6 @@ if this:PinExist("F", 10) then
 end
 --*/
 #define __GPIO_PF_PIN_10_NAME__ PF10_NC
-
-/*--
-if this:PinExist("F", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("F", 10)
-end
---*/
-#define __GPIO_PF_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("F", 10) then
@@ -4385,14 +4240,6 @@ end
 /*--
 if this:PinExist("F", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("F", 11)
-end
---*/
-#define __GPIO_PF_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("F", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("F", 11)
 end
 --*/
@@ -4427,14 +4274,6 @@ if this:PinExist("F", 12) then
 end
 --*/
 #define __GPIO_PF_PIN_12_NAME__ PF12_NC
-
-/*--
-if this:PinExist("F", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("F", 12)
-end
---*/
-#define __GPIO_PF_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("F", 12) then
@@ -4477,14 +4316,6 @@ end
 /*--
 if this:PinExist("F", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("F", 13)
-end
---*/
-#define __GPIO_PF_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("F", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("F", 13)
 end
 --*/
@@ -4519,14 +4350,6 @@ if this:PinExist("F", 14) then
 end
 --*/
 #define __GPIO_PF_PIN_14_NAME__ PF14_NC
-
-/*--
-if this:PinExist("F", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("F", 14)
-end
---*/
-#define __GPIO_PF_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("F", 14) then
@@ -4569,14 +4392,6 @@ end
 /*--
 if this:PinExist("F", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("F", 15)
-end
---*/
-#define __GPIO_PF_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("F", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("F", 15)
 end
 --*/
@@ -4590,7 +4405,7 @@ end
 --*/
 #define __GPIO_PF_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("G", 0) then
     local PG0 = {}
@@ -4612,14 +4427,6 @@ if this:PinExist("G", 0) then
 end
 --*/
 #define __GPIO_PG_PIN_0_NAME__ PG0_NC
-
-/*--
-if this:PinExist("G", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("G", 0)
-end
---*/
-#define __GPIO_PG_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("G", 0) then
@@ -4662,14 +4469,6 @@ end
 /*--
 if this:PinExist("G", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("G", 1)
-end
---*/
-#define __GPIO_PG_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("G", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("G", 1)
 end
 --*/
@@ -4704,14 +4503,6 @@ if this:PinExist("G", 2) then
 end
 --*/
 #define __GPIO_PG_PIN_2_NAME__ PG2_NC
-
-/*--
-if this:PinExist("G", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("G", 2)
-end
---*/
-#define __GPIO_PG_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("G", 2) then
@@ -4754,14 +4545,6 @@ end
 /*--
 if this:PinExist("G", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("G", 3)
-end
---*/
-#define __GPIO_PG_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("G", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("G", 3)
 end
 --*/
@@ -4796,14 +4579,6 @@ if this:PinExist("G", 4) then
 end
 --*/
 #define __GPIO_PG_PIN_4_NAME__ PG4_NC
-
-/*--
-if this:PinExist("G", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("G", 4)
-end
---*/
-#define __GPIO_PG_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("G", 4) then
@@ -4846,14 +4621,6 @@ end
 /*--
 if this:PinExist("G", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("G", 5)
-end
---*/
-#define __GPIO_PG_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("G", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("G", 5)
 end
 --*/
@@ -4888,14 +4655,6 @@ if this:PinExist("G", 6) then
 end
 --*/
 #define __GPIO_PG_PIN_6_NAME__ PG6_NC
-
-/*--
-if this:PinExist("G", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("G", 6)
-end
---*/
-#define __GPIO_PG_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("G", 6) then
@@ -4938,14 +4697,6 @@ end
 /*--
 if this:PinExist("G", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("G", 7)
-end
---*/
-#define __GPIO_PG_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("G", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("G", 7)
 end
 --*/
@@ -4980,14 +4731,6 @@ if this:PinExist("G", 8) then
 end
 --*/
 #define __GPIO_PG_PIN_8_NAME__ PG8_NC
-
-/*--
-if this:PinExist("G", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("G", 8)
-end
---*/
-#define __GPIO_PG_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("G", 8) then
@@ -5030,14 +4773,6 @@ end
 /*--
 if this:PinExist("G", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("G", 9)
-end
---*/
-#define __GPIO_PG_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("G", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("G", 9)
 end
 --*/
@@ -5072,14 +4807,6 @@ if this:PinExist("G", 10) then
 end
 --*/
 #define __GPIO_PG_PIN_10_NAME__ PG10_NC
-
-/*--
-if this:PinExist("G", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("G", 10)
-end
---*/
-#define __GPIO_PG_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("G", 10) then
@@ -5122,14 +4849,6 @@ end
 /*--
 if this:PinExist("G", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("G", 11)
-end
---*/
-#define __GPIO_PG_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("G", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("G", 11)
 end
 --*/
@@ -5164,14 +4883,6 @@ if this:PinExist("G", 12) then
 end
 --*/
 #define __GPIO_PG_PIN_12_NAME__ PG12_NC
-
-/*--
-if this:PinExist("G", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("G", 12)
-end
---*/
-#define __GPIO_PG_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("G", 12) then
@@ -5214,14 +4925,6 @@ end
 /*--
 if this:PinExist("G", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("G", 13)
-end
---*/
-#define __GPIO_PG_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("G", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("G", 13)
 end
 --*/
@@ -5256,14 +4959,6 @@ if this:PinExist("G", 14) then
 end
 --*/
 #define __GPIO_PG_PIN_14_NAME__ PG14_NC
-
-/*--
-if this:PinExist("G", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("G", 14)
-end
---*/
-#define __GPIO_PG_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("G", 14) then
@@ -5306,14 +5001,6 @@ end
 /*--
 if this:PinExist("G", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("G", 15)
-end
---*/
-#define __GPIO_PG_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("G", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("G", 15)
 end
 --*/
@@ -5327,7 +5014,7 @@ end
 --*/
 #define __GPIO_PG_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("H", 0) then
     local PH0 = {}
@@ -5349,14 +5036,6 @@ if this:PinExist("H", 0) then
 end
 --*/
 #define __GPIO_PH_PIN_0_NAME__ PH0_NC
-
-/*--
-if this:PinExist("H", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("H", 0)
-end
---*/
-#define __GPIO_PH_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("H", 0) then
@@ -5399,14 +5078,6 @@ end
 /*--
 if this:PinExist("H", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("H", 1)
-end
---*/
-#define __GPIO_PH_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("H", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("H", 1)
 end
 --*/
@@ -5441,14 +5112,6 @@ if this:PinExist("H", 2) then
 end
 --*/
 #define __GPIO_PH_PIN_2_NAME__ PH2_NC
-
-/*--
-if this:PinExist("H", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("H", 2)
-end
---*/
-#define __GPIO_PH_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("H", 2) then
@@ -5491,14 +5154,6 @@ end
 /*--
 if this:PinExist("H", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("H", 3)
-end
---*/
-#define __GPIO_PH_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("H", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("H", 3)
 end
 --*/
@@ -5533,14 +5188,6 @@ if this:PinExist("H", 4) then
 end
 --*/
 #define __GPIO_PH_PIN_4_NAME__ PH4_NC
-
-/*--
-if this:PinExist("H", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("H", 4)
-end
---*/
-#define __GPIO_PH_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("H", 4) then
@@ -5583,14 +5230,6 @@ end
 /*--
 if this:PinExist("H", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("H", 5)
-end
---*/
-#define __GPIO_PH_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("H", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("H", 5)
 end
 --*/
@@ -5625,14 +5264,6 @@ if this:PinExist("H", 6) then
 end
 --*/
 #define __GPIO_PH_PIN_6_NAME__ PH6_NC
-
-/*--
-if this:PinExist("H", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("H", 6)
-end
---*/
-#define __GPIO_PH_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("H", 6) then
@@ -5675,14 +5306,6 @@ end
 /*--
 if this:PinExist("H", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("H", 7)
-end
---*/
-#define __GPIO_PH_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("H", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("H", 7)
 end
 --*/
@@ -5717,14 +5340,6 @@ if this:PinExist("H", 8) then
 end
 --*/
 #define __GPIO_PH_PIN_8_NAME__ PH8_NC
-
-/*--
-if this:PinExist("H", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("H", 8)
-end
---*/
-#define __GPIO_PH_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("H", 8) then
@@ -5767,14 +5382,6 @@ end
 /*--
 if this:PinExist("H", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("H", 9)
-end
---*/
-#define __GPIO_PH_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("H", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("H", 9)
 end
 --*/
@@ -5809,14 +5416,6 @@ if this:PinExist("H", 10) then
 end
 --*/
 #define __GPIO_PH_PIN_10_NAME__ PH10_NC
-
-/*--
-if this:PinExist("H", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("H", 10)
-end
---*/
-#define __GPIO_PH_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("H", 10) then
@@ -5859,14 +5458,6 @@ end
 /*--
 if this:PinExist("H", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("H", 11)
-end
---*/
-#define __GPIO_PH_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("H", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("H", 11)
 end
 --*/
@@ -5901,14 +5492,6 @@ if this:PinExist("H", 12) then
 end
 --*/
 #define __GPIO_PH_PIN_12_NAME__ PH12_NC
-
-/*--
-if this:PinExist("H", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("H", 12)
-end
---*/
-#define __GPIO_PH_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("H", 12) then
@@ -5951,14 +5534,6 @@ end
 /*--
 if this:PinExist("H", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("H", 13)
-end
---*/
-#define __GPIO_PH_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("H", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("H", 13)
 end
 --*/
@@ -5993,14 +5568,6 @@ if this:PinExist("H", 14) then
 end
 --*/
 #define __GPIO_PH_PIN_14_NAME__ PH14_NC
-
-/*--
-if this:PinExist("H", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("H", 14)
-end
---*/
-#define __GPIO_PH_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("H", 14) then
@@ -6043,14 +5610,6 @@ end
 /*--
 if this:PinExist("H", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("H", 15)
-end
---*/
-#define __GPIO_PH_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("H", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("H", 15)
 end
 --*/
@@ -6064,7 +5623,7 @@ end
 --*/
 #define __GPIO_PH_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("I", 0) then
     local PI0 = {}
@@ -6086,14 +5645,6 @@ if this:PinExist("I", 0) then
 end
 --*/
 #define __GPIO_PI_PIN_0_NAME__ PI0_NC
-
-/*--
-if this:PinExist("I", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("I", 0)
-end
---*/
-#define __GPIO_PI_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("I", 0) then
@@ -6136,14 +5687,6 @@ end
 /*--
 if this:PinExist("I", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("I", 1)
-end
---*/
-#define __GPIO_PI_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("I", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("I", 1)
 end
 --*/
@@ -6178,14 +5721,6 @@ if this:PinExist("I", 2) then
 end
 --*/
 #define __GPIO_PI_PIN_2_NAME__ PI2_NC
-
-/*--
-if this:PinExist("I", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("I", 2)
-end
---*/
-#define __GPIO_PI_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("I", 2) then
@@ -6228,14 +5763,6 @@ end
 /*--
 if this:PinExist("I", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("I", 3)
-end
---*/
-#define __GPIO_PI_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("I", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("I", 3)
 end
 --*/
@@ -6270,14 +5797,6 @@ if this:PinExist("I", 4) then
 end
 --*/
 #define __GPIO_PI_PIN_4_NAME__ PI4_NC
-
-/*--
-if this:PinExist("I", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("I", 4)
-end
---*/
-#define __GPIO_PI_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("I", 4) then
@@ -6320,14 +5839,6 @@ end
 /*--
 if this:PinExist("I", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("I", 5)
-end
---*/
-#define __GPIO_PI_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("I", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("I", 5)
 end
 --*/
@@ -6362,14 +5873,6 @@ if this:PinExist("I", 6) then
 end
 --*/
 #define __GPIO_PI_PIN_6_NAME__ PI6_NC
-
-/*--
-if this:PinExist("I", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("I", 6)
-end
---*/
-#define __GPIO_PI_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("I", 6) then
@@ -6412,14 +5915,6 @@ end
 /*--
 if this:PinExist("I", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("I", 7)
-end
---*/
-#define __GPIO_PI_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("I", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("I", 7)
 end
 --*/
@@ -6454,14 +5949,6 @@ if this:PinExist("I", 8) then
 end
 --*/
 #define __GPIO_PI_PIN_8_NAME__ PI8_NC
-
-/*--
-if this:PinExist("I", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("I", 8)
-end
---*/
-#define __GPIO_PI_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("I", 8) then
@@ -6504,14 +5991,6 @@ end
 /*--
 if this:PinExist("I", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("I", 9)
-end
---*/
-#define __GPIO_PI_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("I", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("I", 9)
 end
 --*/
@@ -6546,14 +6025,6 @@ if this:PinExist("I", 10) then
 end
 --*/
 #define __GPIO_PI_PIN_10_NAME__ PI10_NC
-
-/*--
-if this:PinExist("I", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("I", 10)
-end
---*/
-#define __GPIO_PI_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("I", 10) then
@@ -6596,14 +6067,6 @@ end
 /*--
 if this:PinExist("I", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("I", 11)
-end
---*/
-#define __GPIO_PI_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("I", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("I", 11)
 end
 --*/
@@ -6638,14 +6101,6 @@ if this:PinExist("I", 12) then
 end
 --*/
 #define __GPIO_PI_PIN_12_NAME__ PI12_NC
-
-/*--
-if this:PinExist("I", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("I", 12)
-end
---*/
-#define __GPIO_PI_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("I", 12) then
@@ -6688,14 +6143,6 @@ end
 /*--
 if this:PinExist("I", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("I", 13)
-end
---*/
-#define __GPIO_PI_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("I", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("I", 13)
 end
 --*/
@@ -6730,14 +6177,6 @@ if this:PinExist("I", 14) then
 end
 --*/
 #define __GPIO_PI_PIN_14_NAME__ PI14_NC
-
-/*--
-if this:PinExist("I", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("I", 14)
-end
---*/
-#define __GPIO_PI_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("I", 14) then
@@ -6780,14 +6219,6 @@ end
 /*--
 if this:PinExist("I", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("I", 15)
-end
---*/
-#define __GPIO_PI_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("I", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("I", 15)
 end
 --*/
@@ -6801,7 +6232,7 @@ end
 --*/
 #define __GPIO_PI_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("J", 0) then
     local PJ0 = {}
@@ -6823,14 +6254,6 @@ if this:PinExist("J", 0) then
 end
 --*/
 #define __GPIO_PJ_PIN_0_NAME__ PJ0_NC
-
-/*--
-if this:PinExist("J", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("J", 0)
-end
---*/
-#define __GPIO_PJ_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("J", 0) then
@@ -6873,14 +6296,6 @@ end
 /*--
 if this:PinExist("J", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("J", 1)
-end
---*/
-#define __GPIO_PJ_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("J", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("J", 1)
 end
 --*/
@@ -6915,14 +6330,6 @@ if this:PinExist("J", 2) then
 end
 --*/
 #define __GPIO_PJ_PIN_2_NAME__ PJ2_NC
-
-/*--
-if this:PinExist("J", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("J", 2)
-end
---*/
-#define __GPIO_PJ_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("J", 2) then
@@ -6965,14 +6372,6 @@ end
 /*--
 if this:PinExist("J", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("J", 3)
-end
---*/
-#define __GPIO_PJ_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("J", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("J", 3)
 end
 --*/
@@ -7007,14 +6406,6 @@ if this:PinExist("J", 4) then
 end
 --*/
 #define __GPIO_PJ_PIN_4_NAME__ PJ4_NC
-
-/*--
-if this:PinExist("J", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("J", 4)
-end
---*/
-#define __GPIO_PJ_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("J", 4) then
@@ -7057,14 +6448,6 @@ end
 /*--
 if this:PinExist("J", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("J", 5)
-end
---*/
-#define __GPIO_PJ_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("J", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("J", 5)
 end
 --*/
@@ -7099,14 +6482,6 @@ if this:PinExist("J", 6) then
 end
 --*/
 #define __GPIO_PJ_PIN_6_NAME__ PJ6_NC
-
-/*--
-if this:PinExist("J", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("J", 6)
-end
---*/
-#define __GPIO_PJ_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("J", 6) then
@@ -7149,14 +6524,6 @@ end
 /*--
 if this:PinExist("J", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("J", 7)
-end
---*/
-#define __GPIO_PJ_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("J", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("J", 7)
 end
 --*/
@@ -7191,14 +6558,6 @@ if this:PinExist("J", 8) then
 end
 --*/
 #define __GPIO_PJ_PIN_8_NAME__ PJ8_NC
-
-/*--
-if this:PinExist("J", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("J", 8)
-end
---*/
-#define __GPIO_PJ_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("J", 8) then
@@ -7241,14 +6600,6 @@ end
 /*--
 if this:PinExist("J", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("J", 9)
-end
---*/
-#define __GPIO_PJ_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("J", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("J", 9)
 end
 --*/
@@ -7283,14 +6634,6 @@ if this:PinExist("J", 10) then
 end
 --*/
 #define __GPIO_PJ_PIN_10_NAME__ PJ10_NC
-
-/*--
-if this:PinExist("J", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("J", 10)
-end
---*/
-#define __GPIO_PJ_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("J", 10) then
@@ -7333,14 +6676,6 @@ end
 /*--
 if this:PinExist("J", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("J", 11)
-end
---*/
-#define __GPIO_PJ_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("J", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("J", 11)
 end
 --*/
@@ -7375,14 +6710,6 @@ if this:PinExist("J", 12) then
 end
 --*/
 #define __GPIO_PJ_PIN_12_NAME__ PJ12_NC
-
-/*--
-if this:PinExist("J", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("J", 12)
-end
---*/
-#define __GPIO_PJ_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("J", 12) then
@@ -7425,14 +6752,6 @@ end
 /*--
 if this:PinExist("J", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("J", 13)
-end
---*/
-#define __GPIO_PJ_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("J", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("J", 13)
 end
 --*/
@@ -7467,14 +6786,6 @@ if this:PinExist("J", 14) then
 end
 --*/
 #define __GPIO_PJ_PIN_14_NAME__ PJ14_NC
-
-/*--
-if this:PinExist("J", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("J", 14)
-end
---*/
-#define __GPIO_PJ_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("J", 14) then
@@ -7517,14 +6828,6 @@ end
 /*--
 if this:PinExist("J", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("J", 15)
-end
---*/
-#define __GPIO_PJ_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("J", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("J", 15)
 end
 --*/
@@ -7538,7 +6841,7 @@ end
 --*/
 #define __GPIO_PJ_PIN_15_STATE__ _LOW
 
-/*----------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------
 /*--
 if this:PinExist("K", 0) then
     local PK0 = {}
@@ -7560,14 +6863,6 @@ if this:PinExist("K", 0) then
 end
 --*/
 #define __GPIO_PK_PIN_0_NAME__ PK0_NC
-
-/*--
-if this:PinExist("K", 0) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("K", 0)
-end
---*/
-#define __GPIO_PK_PIN_0_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("K", 0) then
@@ -7610,14 +6905,6 @@ end
 /*--
 if this:PinExist("K", 1) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("K", 1)
-end
---*/
-#define __GPIO_PK_PIN_1_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("K", 1) then
-    this:AddWidget("Combobox")
     this:AddPinMode("K", 1)
 end
 --*/
@@ -7652,14 +6939,6 @@ if this:PinExist("K", 2) then
 end
 --*/
 #define __GPIO_PK_PIN_2_NAME__ PK2_NC
-
-/*--
-if this:PinExist("K", 2) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("K", 2)
-end
---*/
-#define __GPIO_PK_PIN_2_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("K", 2) then
@@ -7702,14 +6981,6 @@ end
 /*--
 if this:PinExist("K", 3) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("K", 3)
-end
---*/
-#define __GPIO_PK_PIN_3_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("K", 3) then
-    this:AddWidget("Combobox")
     this:AddPinMode("K", 3)
 end
 --*/
@@ -7744,14 +7015,6 @@ if this:PinExist("K", 4) then
 end
 --*/
 #define __GPIO_PK_PIN_4_NAME__ PK4_NC
-
-/*--
-if this:PinExist("K", 4) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("K", 4)
-end
---*/
-#define __GPIO_PK_PIN_4_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("K", 4) then
@@ -7794,14 +7057,6 @@ end
 /*--
 if this:PinExist("K", 5) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("K", 5)
-end
---*/
-#define __GPIO_PK_PIN_5_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("K", 5) then
-    this:AddWidget("Combobox")
     this:AddPinMode("K", 5)
 end
 --*/
@@ -7836,14 +7091,6 @@ if this:PinExist("K", 6) then
 end
 --*/
 #define __GPIO_PK_PIN_6_NAME__ PK6_NC
-
-/*--
-if this:PinExist("K", 6) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("K", 6)
-end
---*/
-#define __GPIO_PK_PIN_6_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("K", 6) then
@@ -7886,14 +7133,6 @@ end
 /*--
 if this:PinExist("K", 7) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("K", 7)
-end
---*/
-#define __GPIO_PK_PIN_7_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("K", 7) then
-    this:AddWidget("Combobox")
     this:AddPinMode("K", 7)
 end
 --*/
@@ -7928,14 +7167,6 @@ if this:PinExist("K", 8) then
 end
 --*/
 #define __GPIO_PK_PIN_8_NAME__ PK8_NC
-
-/*--
-if this:PinExist("K", 8) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("K", 8)
-end
---*/
-#define __GPIO_PK_PIN_8_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("K", 8) then
@@ -7978,14 +7209,6 @@ end
 /*--
 if this:PinExist("K", 9) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("K", 9)
-end
---*/
-#define __GPIO_PK_PIN_9_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("K", 9) then
-    this:AddWidget("Combobox")
     this:AddPinMode("K", 9)
 end
 --*/
@@ -8020,14 +7243,6 @@ if this:PinExist("K", 10) then
 end
 --*/
 #define __GPIO_PK_PIN_10_NAME__ PK10_NC
-
-/*--
-if this:PinExist("K", 10) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("K", 10)
-end
---*/
-#define __GPIO_PK_PIN_10_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("K", 10) then
@@ -8070,14 +7285,6 @@ end
 /*--
 if this:PinExist("K", 11) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("K", 11)
-end
---*/
-#define __GPIO_PK_PIN_11_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("K", 11) then
-    this:AddWidget("Combobox")
     this:AddPinMode("K", 11)
 end
 --*/
@@ -8112,14 +7319,6 @@ if this:PinExist("K", 12) then
 end
 --*/
 #define __GPIO_PK_PIN_12_NAME__ PK12_NC
-
-/*--
-if this:PinExist("K", 12) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("K", 12)
-end
---*/
-#define __GPIO_PK_PIN_12_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("K", 12) then
@@ -8162,14 +7361,6 @@ end
 /*--
 if this:PinExist("K", 13) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("K", 13)
-end
---*/
-#define __GPIO_PK_PIN_13_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("K", 13) then
-    this:AddWidget("Combobox")
     this:AddPinMode("K", 13)
 end
 --*/
@@ -8204,14 +7395,6 @@ if this:PinExist("K", 14) then
 end
 --*/
 #define __GPIO_PK_PIN_14_NAME__ PK14_NC
-
-/*--
-if this:PinExist("K", 14) then
-    this:AddWidget("Combobox")
-    this:AddPinDrive("K", 14)
-end
---*/
-#define __GPIO_PK_PIN_14_DRIVE__ _GPIO_DRIVE_STRONG
 
 /*--
 if this:PinExist("K", 14) then
@@ -8254,14 +7437,6 @@ end
 /*--
 if this:PinExist("K", 15) then
     this:AddWidget("Combobox")
-    this:AddPinDrive("K", 15)
-end
---*/
-#define __GPIO_PK_PIN_15_DRIVE__ _GPIO_DRIVE_STRONG
-
-/*--
-if this:PinExist("K", 15) then
-    this:AddWidget("Combobox")
     this:AddPinMode("K", 15)
 end
 --*/
@@ -8274,6 +7449,8 @@ if this:PinExist("K", 15) then
 end
 --*/
 #define __GPIO_PK_PIN_15_STATE__ _LOW
+
+
 
 
 #endif /* _GPIO_FLAGS_H_ */
