@@ -383,9 +383,9 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #     this:SetFlagValue("__ENABLE_GPIO__", "_NO_")
 # end
 #--*/
-#define __ENABLE_GPIO__ _NO_
+#define __ENABLE_GPIO__ _YES_
 #/*
-__ENABLE_GPIO__=_NO_
+__ENABLE_GPIO__=_YES_
 #*/
 
 #/*--

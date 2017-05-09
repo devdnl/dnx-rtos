@@ -50,8 +50,8 @@ enum port##_##number##_CFG {\
         _CONCAT(IOCTL_GPIO_PORT_IDX__, pin_name) = port_idx,\
         _CONCAT(_BP_, pin_name) = (number),\
         _CONCAT(_BM_, pin_name) = (1 << (number)),\
-        _##port##_PIN_##number##_MODE  = (mode),\
-        _##port##_PIN_##number##_STATE = (state),\
+        _##port##_PIN_##number##_MODE  = (mode) & 0xF,\
+        _##port##_PIN_##number##_STATE = (state) & 1,\
 }
 
 /** GPIO pin NONE definition */
