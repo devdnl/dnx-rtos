@@ -292,32 +292,32 @@
 #         end
 #     end
 #
-#     uC.PERIPH["EFR32MG12P132F1024GL125"] = {GPIO = true}
-#     uC.PERIPH["EFR32MG12P132F1024GM48"]  = {GPIO = true}
-#     uC.PERIPH["EFR32MG12P232F1024GL125"] = {GPIO = true}
-#     uC.PERIPH["EFR32MG12P232F1024GM48"]  = {GPIO = true}
-#     uC.PERIPH["EFR32MG12P332F1024GL125"] = {GPIO = true}
-#     uC.PERIPH["EFR32MG12P332F1024GM48"]  = {GPIO = true}
-#     uC.PERIPH["EFR32MG12P432F1024GL125"] = {GPIO = true}
-#     uC.PERIPH["EFR32MG12P432F1024GM48"]  = {GPIO = true}
-#     uC.PERIPH["EFR32MG12P433F1024GL125"] = {GPIO = true}
-#     uC.PERIPH["EFR32MG12P433F1024GM48"]  = {GPIO = true}
-#     uC.PERIPH["EFR32MG1B132F256GM32"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1B132F256GM48"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1B232F256GM32"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1B232F256GM48"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1B632F256GM32"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1B732F256GM32"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1P132F256GM32"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1P132F256GM48"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1P133F256GM48"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1P232F256GM32"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1P232F256GM48"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1P233F256GM48"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1P632F256GM32"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1P732F256GM32"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1V132F256GM32"]    = {GPIO = true}
-#     uC.PERIPH["EFR32MG1V132F256GM48"]    = {GPIO = true}
+#     uC.PERIPH["EFR32MG12P132F1024GL125"] = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG12P132F1024GM48"]  = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG12P232F1024GL125"] = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG12P232F1024GM48"]  = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG12P332F1024GL125"] = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG12P332F1024GM48"]  = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG12P432F1024GL125"] = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG12P432F1024GM48"]  = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG12P433F1024GL125"] = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG12P433F1024GM48"]  = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1B132F256GM32"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1B132F256GM48"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1B232F256GM32"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1B232F256GM48"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1B632F256GM32"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1B732F256GM32"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1P132F256GM32"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1P132F256GM48"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1P133F256GM48"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1P232F256GM32"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1P232F256GM48"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1P233F256GM48"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1P632F256GM32"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1P732F256GM32"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1V132F256GM32"]    = {GPIO = true, UART = true}
+#     uC.PERIPH["EFR32MG1V132F256GM48"]    = {GPIO = true, UART = true}
 # end
 #++*/
 
@@ -355,6 +355,7 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #elif (__CPU_ARCH__ == efr32)
 #include "efr32/cpu_flags.h"
 #include "efr32/gpio_flags.h"
+#include "efr32/uart_flags.h"
 #endif
 
 #/*--

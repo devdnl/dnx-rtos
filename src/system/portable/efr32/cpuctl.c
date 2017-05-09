@@ -32,6 +32,7 @@
 #include "config.h"
 #include "efr32/cpuctl.h"
 #include "efr32/efr32xx.h"
+#include "efr32/lib/em_cmu.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
@@ -187,9 +188,8 @@ void _cpuctl_update_system_clocks(void)
 
         /* update context switch counter frequency */
         _critical_section_begin();
-//        RCC_ClocksTypeDef freq;
-//        RCC_GetClocksFreq(&freq);
-//        SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
+        CMU_HFRCOFreq_TypeDef freq = CMU_HFRCOBandGet();
+        SysTick_Config((freq / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
         _critical_section_end();
 }
 

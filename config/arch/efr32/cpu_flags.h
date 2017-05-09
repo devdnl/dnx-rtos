@@ -45,9 +45,9 @@
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __CPU_CODE__ _EFR32MG1P632F256GM32
+#define __CPU_CODE__ _EFR32MG1V132F256GM32
 #/*
-__CPU_CODE__=_EFR32MG1P632F256GM32
+__CPU_CODE__=_EFR32MG1V132F256GM32
 #*/
 
 #/*-- Flag is set in __CPU_NAME__ event
@@ -112,9 +112,9 @@ __LD_SCRIPT__=EFR32_256_32
 #    end
 # )
 #--*/
-#define __CPU_NAME__ EFR32MG1P632F256GM32
+#define __CPU_NAME__ EFR32MG1V132F256GM32
 #/*
-__CPU_NAME__=EFR32MG1P632F256GM32
+__CPU_NAME__=EFR32MG1V132F256GM32
 #*/
 
 #/*--

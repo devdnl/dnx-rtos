@@ -28,7 +28,11 @@ ASRC_ARCH   += portable/efr32/cmx_startup.s
 CSRC_ARCH   += portable/efr32/cpuctl.c
 CSRC_ARCH   += portable/efr32/cpuhooks.c
 CSRC_ARCH   += portable/efr32/efr32xx_vectors.c
+CSRC_ARCH   += portable/efr32/lib/em_cmu.c
+CSRC_ARCH   += portable/efr32/lib/em_assert.c
+CSRC_ARCH   += portable/efr32/lib/em_system.c
 HDRLOC_ARCH += portable/efr32/efr32xx
 HDRLOC_ARCH += portable/efr32
+HDRLOC_ARCH += portable/efr32/lib
 HDRLOC_ARCH += portable/lib/CMSIS
 endif
