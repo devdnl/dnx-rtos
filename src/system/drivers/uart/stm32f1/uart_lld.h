@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    usart_cfg.h
+@file    uart_lld.h
 
 @author  Daniel Zorychta
 
-@brief   This file support configuration of USART peripherals
+@brief   This file support UART peripheral.
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -26,66 +26,63 @@
 
 *//*==========================================================================*/
 
-#ifndef _UART_CFG_H_
-#define _UART_CFG_H_
+#if !defined(_UART_LLD_H_) && defined(ARCH_stm32f1)
+#define _UART_LLD_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "../uart.h"
+#include "stm32f1/stm32f10x.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
 ==============================================================================*/
-/* UART1 IRQ priority */
-#define _UART1_IRQ_PRIORITY                     __UART_UART1_IRQ_PRIORITY__
-
-/* UART2 IRQ priority */
-#define _UART2_IRQ_PRIORITY                     __UART_UART2_IRQ_PRIORITY__
-
-/* UART3 IRQ priority */
-#define _UART3_IRQ_PRIORITY                     __UART_UART3_IRQ_PRIORITY__
-
-/* UART4 IRQ priority */
-#define _UART4_IRQ_PRIORITY                     __UART_UART4_IRQ_PRIORITY__
-
-/* UART5 IRQ priority */
-#define _UART5_IRQ_PRIORITY                     __UART_UART5_IRQ_PRIORITY__
-
-/* RX buffer size [B] */
-#define _UART_RX_BUFFER_SIZE                    __UART_RX_BUFFER_LEN__
-
-/* UART default configuration */
-#define _UART_DEFAULT_PARITY                    __UART_DEFAULT_PARITY__
-#define _UART_DEFAULT_STOP_BITS                 __UART_DEFAULT_STOP_BITS__
-#define _UART_DEFAULT_LIN_BREAK_LEN             __UART_DEFAULT_LIN_BREAK_LEN__
-#define _UART_DEFAULT_TX_ENABLE                 __UART_DEFAULT_TX_ENABLE__
-#define _UART_DEFAULT_RX_ENABLE                 __UART_DEFAULT_RX_ENABLE__
-#define _UART_DEFAULT_LIN_MODE_ENABLE           __UART_DEFAULT_LIN_MODE_ENABLE__
-#define _UART_DEFAULT_HW_FLOW_CTRL              __UART_DEFAULT_HW_FLOW_CTRL__
-#define _UART_DEFAULT_SINGLE_WIRE_MODE          __UART_DEFAULT_SINGLE_WIRE_MODE__
-#define _UART_DEFAULT_BAUD                      __UART_DEFAULT_BAUD__
+/* UARTs */
+enum {
+        #if defined(RCC_APB2ENR_USART1EN)
+        _UART1,
+        #endif
+        #if defined(RCC_APB1ENR_USART2EN)
+        _UART2,
+        #endif
+        #if defined(RCC_APB1ENR_USART3EN)
+        _UART3,
+        #endif
+        #if defined(RCC_APB1ENR_UART4EN)
+        _UART4,
+        #endif
+        #if defined(RCC_APB1ENR_UART5EN)
+        _UART5,
+        #endif
+        _UART_COUNT
+};
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object declarations
+  Exported functions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _UART_CFG_H_ */
+#endif /* _UART_LLD_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

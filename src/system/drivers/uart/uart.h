@@ -1,9 +1,9 @@
 /*=========================================================================*//**
-@file    usart_cfg.h
+@file    uart.h
 
 @author  Daniel Zorychta
 
-@brief   This file support configuration of USART peripherals
+@brief   This file support UART peripheral.
 
 @note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -26,81 +26,93 @@
 
 *//*==========================================================================*/
 
-#ifndef _UART_CFG_H_
-#define _UART_CFG_H_
+#ifndef _UART_H_
+#define _UART_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "uart_ioctl.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f1/uart_lld.h"
+#include "stm32f1/uart_cfg.h"
+#include "stm32f1/stm32f10x.h"
+#include "stm32f1/lib/stm32f10x_rcc.h"
+#elif defined(ARCH_stm32f4)
+#include "stm32f4/uart_lld.h"
+#include "stm32f4/uart_cfg.h"
+#include "stm32f4/stm32f4xx.h"
+#include "stm32f4/lib/stm32f4xx_rcc.h"
+#elif defined(ARCH_efr32)
+#include "efr32/uart_lld.h"
+#include "efr32/uart_cfg.h"
+#include "efr32/efr32xx.h"
+#include "efr32/lib/em_cmu.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported object types
 ==============================================================================*/
-/* UART1 IRQ priority */
-#define _UART1_IRQ_PRIORITY                     __UART_UART1_IRQ_PRIORITY__
+/* USART handling structure */
+struct UART_mem {
+        // Rx FIFO
+        struct Rx_FIFO {
+                u8_t            buffer[_UART_RX_BUFFER_SIZE];
+                u16_t           buffer_level;
+                u16_t           read_index;
+                u16_t           write_index;
+        } Rx_FIFO;
 
-/* UART2 IRQ priority */
-#define _UART2_IRQ_PRIORITY                     __UART_UART2_IRQ_PRIORITY__
+        // Tx FIFO
+        struct Tx_buffer {
+                const u8_t     *src_ptr;
+                size_t          data_size;
+        } Tx_buffer;
 
-/* UART3 IRQ priority */
-#define _UART3_IRQ_PRIORITY                     __UART_UART3_IRQ_PRIORITY__
-
-/* UART4 IRQ priority */
-#define _UART4_IRQ_PRIORITY                     __UART_UART4_IRQ_PRIORITY__
-
-/* UART5 IRQ priority */
-#define _UART5_IRQ_PRIORITY                     __UART_UART5_IRQ_PRIORITY__
-
-/* UART6 IRQ priority */
-#define _UART6_IRQ_PRIORITY                     __UART_UART6_IRQ_PRIORITY__
-
-/* UART7 IRQ priority */
-#define _UART7_IRQ_PRIORITY                     __UART_UART7_IRQ_PRIORITY__
-
-/* UART8 IRQ priority */
-#define _UART8_IRQ_PRIORITY                     __UART_UART8_IRQ_PRIORITY__
-
-/* UART9 IRQ priority */
-#define _UART9_IRQ_PRIORITY                     __UART_UART9_IRQ_PRIORITY__
-
-/* UART10 IRQ priority */
-#define _UART10_IRQ_PRIORITY                    __UART_UART10_IRQ_PRIORITY__
-
-/* RX buffer size [B] */
-#define _UART_RX_BUFFER_SIZE                    __UART_RX_BUFFER_LEN__
-
-/* UART default configuration */
-#define _UART_DEFAULT_PARITY                    __UART_DEFAULT_PARITY__
-#define _UART_DEFAULT_STOP_BITS                 __UART_DEFAULT_STOP_BITS__
-#define _UART_DEFAULT_LIN_BREAK_LEN             __UART_DEFAULT_LIN_BREAK_LEN__
-#define _UART_DEFAULT_TX_ENABLE                 __UART_DEFAULT_TX_ENABLE__
-#define _UART_DEFAULT_RX_ENABLE                 __UART_DEFAULT_RX_ENABLE__
-#define _UART_DEFAULT_LIN_MODE_ENABLE           __UART_DEFAULT_LIN_MODE_ENABLE__
-#define _UART_DEFAULT_HW_FLOW_CTRL              __UART_DEFAULT_HW_FLOW_CTRL__
-#define _UART_DEFAULT_SINGLE_WIRE_MODE          __UART_DEFAULT_SINGLE_WIRE_MODE__
-#define _UART_DEFAULT_BAUD                      __UART_DEFAULT_BAUD__
+        // UART control
+        sem_t                  *write_ready_sem;
+        sem_t                  *data_read_sem;
+        mutex_t                *port_lock_rx_mtx;
+        mutex_t                *port_lock_tx_mtx;
+        u8_t                    major;
+        struct UART_config      config;
+};
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported objects
 ==============================================================================*/
+extern struct UART_mem *_UART_mem[];
 
 /*==============================================================================
-  Exported object declarations
+  Exported functions
 ==============================================================================*/
+extern int  _UART_LLD__turn_on(u8_t major);
+extern int  _UART_LLD__turn_off(u8_t major);
+extern void _UART_LLD__start_write(u8_t major);
+extern void _UART_LLD__stop_write(u8_t major);
+extern void _UART_LLD__start_read(u8_t major);
+extern void _UART_LLD__stop_read(u8_t major);
+extern void _UART_LLD__configure(u8_t major, const struct UART_config *config);
+extern bool _UART_FIFO__write(struct Rx_FIFO *fifo, u8_t *data);
 
 /*==============================================================================
-  Exported function prototypes
+  Exported inline functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _UART_CFG_H_ */
+#endif /* _UART_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

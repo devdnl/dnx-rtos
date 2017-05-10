@@ -477,9 +477,9 @@ __ENABLE_SPI__=_NO_
 #     this:SetFlagValue("__ENABLE_UART__", "_NO_")
 # end
 #--*/
-#define __ENABLE_UART__ _NO_
+#define __ENABLE_UART__ _YES_
 #/*
-__ENABLE_UART__=_NO_
+__ENABLE_UART__=_YES_
 #*/
 
 #/*--

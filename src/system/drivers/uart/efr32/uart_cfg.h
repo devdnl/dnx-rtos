@@ -5,7 +5,7 @@
 
 @brief   This file support configuration of USART peripherals
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -51,9 +51,6 @@ extern "C" {
 
 /* UART4 IRQ priority */
 #define _UART4_IRQ_PRIORITY                     __UART_UART4_IRQ_PRIORITY__
-
-/* UART5 IRQ priority */
-#define _UART5_IRQ_PRIORITY                     __UART_UART5_IRQ_PRIORITY__
 
 /* RX buffer size [B] */
 #define _UART_RX_BUFFER_SIZE                    __UART_RX_BUFFER_LEN__
