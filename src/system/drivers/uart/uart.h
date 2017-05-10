@@ -97,10 +97,10 @@ extern struct UART_mem *_UART_mem[];
 ==============================================================================*/
 extern int  _UART_LLD__turn_on(u8_t major);
 extern int  _UART_LLD__turn_off(u8_t major);
-extern void _UART_LLD__start_write(u8_t major);
-extern void _UART_LLD__stop_write(u8_t major);
-extern void _UART_LLD__start_read(u8_t major);
-extern void _UART_LLD__stop_read(u8_t major);
+extern void _UART_LLD__transmit(u8_t major);
+extern void _UART_LLD__abort_trasmission(u8_t major);
+extern void _UART_LLD__rx_resume(u8_t major);
+extern void _UART_LLD__rx_hold(u8_t major);
 extern void _UART_LLD__configure(u8_t major, const struct UART_config *config);
 extern bool _UART_FIFO__write(struct Rx_FIFO *fifo, u8_t *data);
 

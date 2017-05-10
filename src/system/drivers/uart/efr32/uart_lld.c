@@ -141,46 +141,45 @@ int _UART_LLD__turn_off(u8_t major) // TODO
 
 //==============================================================================
 /**
- * @brief Function start write buffer to UART. The buffer is already set in
- *        memory handler.
+ * @brief Function transmit currently setup buffer.
  *
  * @param major         UART number
  */
 //==============================================================================
-void _UART_LLD__start_write(u8_t major) // TODO
+void _UART_LLD__transmit(u8_t major) // TODO
 {
 }
 
 //==============================================================================
 /**
- * @brief Function stop writing to UART peripheral.
+ * @brief Function abort pending transmission.
  *
  * @param major         UART number
  */
 //==============================================================================
-void _UART_LLD__stop_write(u8_t major) // TODO
+void _UART_LLD__abort_trasmission(u8_t major) // TODO
 {
 }
 
 //==============================================================================
 /**
- * @brief Function start (enable) reading from UART peripheral.
+ * @brief Function resume byte receiving.
  *
  * @param major         UART number
  */
 //==============================================================================
-void _UART_LLD__start_read(u8_t major) // TODO
+void _UART_LLD__rx_resume(u8_t major) // TODO
 {
 }
 
 //==============================================================================
 /**
- * @brief Function stop reading from UART peripheral.
+ * @brief Function hold byte receiving.
  *
  * @param major         UART number
  */
 //==============================================================================
-void _UART_LLD__stop_read(u8_t major) // TODO
+void _UART_LLD__rx_hold(u8_t major) // TODO
 {
 }
 

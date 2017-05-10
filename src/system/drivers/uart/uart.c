@@ -243,11 +243,11 @@ API_MOD_WRITE(UART,
 
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = count;
-                _UART_LLD__start_write(hdl->major);
+                _UART_LLD__transmit(hdl->major);
 
                 err = sys_semaphore_wait(hdl->write_ready_sem, timeout);
                 if (err) {
-                        _UART_LLD__stop_write(hdl->major);
+                        _UART_LLD__abort_trasmission(hdl->major);
 
                         if (hdl->Tx_buffer.data_size == 0) {
                                 *wrcnt = count;
@@ -305,12 +305,12 @@ API_MOD_READ(UART,
                 while (count--) {
                         err = sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT);
                         if (!err) {
-                                _UART_LLD__stop_read(hdl->major);
+                                _UART_LLD__rx_hold(hdl->major);
                                 if (_UART_FIFO__read(&hdl->Rx_FIFO, dst)) {
                                         dst++;
                                         (*rdcnt)++;
                                 }
-                                _UART_LLD__start_read(hdl->major);
+                                _UART_LLD__rx_resume(hdl->major);
                         }
                 }
 
@@ -396,9 +396,9 @@ API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         struct UART_mem *hdl = device_handle;
 
-        _UART_LLD__stop_read(hdl->major);
+        _UART_LLD__rx_hold(hdl->major);
         device_stat->st_size = hdl->Rx_FIFO.buffer_level;
-        _UART_LLD__start_read(hdl->major);
+        _UART_LLD__rx_resume(hdl->major);
 
         return ESUCC;
 }
