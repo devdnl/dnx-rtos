@@ -116,7 +116,6 @@ static const UART_regs_t UART[] = {
 int _UART_LLD__turn_on(u8_t major)
 {
         if (!(CMU->HFPERCLKEN0 & UART[major].enable_mask)) {
-//                CMU->HFPERCLKEN0 |= UART[major].enable_mask;
 
                 CMU_ClockEnable(cmuClock_HFPER, true);
                 CMU_ClockEnable(cmuClock_USART0, true);
@@ -163,21 +162,11 @@ int _UART_LLD__turn_off(u8_t major)
 //==============================================================================
 void _UART_LLD__transmit(u8_t major)
 {
-//        u8_t data = *_UART_mem[major]->Tx_buffer.src_ptr++;
-//        _UART_mem[major]->Tx_buffer.data_size--;
-//        UART[major].usart->TXDATA = data;
-//
-//        UART[major].usart->IEN |= USART_IEN_TXC;
+        u8_t data = *_UART_mem[major]->Tx_buffer.src_ptr++;
+        _UART_mem[major]->Tx_buffer.data_size--;
+        UART[major].usart->TXDATA = data;
 
-        /* Check that transmit buffer is empty */
-        while (_UART_mem[major]->Tx_buffer.data_size--) {
-
-                while (!(UART[major].usart->STATUS & USART_STATUS_TXBL))
-                  ;
-                UART[major].usart->TXDATA = *_UART_mem[major]->Tx_buffer.src_ptr++;
-        }
-
-        sys_semaphore_signal(_UART_mem[major]->write_ready_sem);
+        UART[major].usart->IEN |= USART_IEN_TXC;
 }
 
 //==============================================================================
@@ -255,7 +244,7 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config) // TODO
          * integer division error, which consequently results in a higher baudrate
          * than desired. */
         u32_t       clkdiv     = 0;
-        const u32_t oversample = 4;
+        const u32_t oversample = 16;
 
 #if defined(_USART_CLKDIV_DIV_MASK) && (_USART_CLKDIV_DIV_MASK >= 0x7FFFF8UL)
         clkdiv = 32 * freq + (oversample * config->baud) / 2;
@@ -373,8 +362,6 @@ static void IRQ_Rx_handle(u8_t major)
 {
         USART_TypeDef *usart = UART[major].usart;
 
-        bool yield = false;
-
         /* receiver interrupt handler */
         int received = 0;
         while (usart->STATUS & USART_STATUS_RXDATAV) {
@@ -383,6 +370,13 @@ static void IRQ_Rx_handle(u8_t major)
                 if (_UART_FIFO__write(&_UART_mem[major]->Rx_FIFO, &data)) {
                         received++;
                 }
+        }
+
+        // set receive semaphore to number of received bytes
+        bool yield = received > 0;
+
+        while (received--) {
+                sys_semaphore_signal_from_ISR(_UART_mem[major]->data_read_sem, NULL);
         }
 
         /* yield thread if data received */
@@ -402,7 +396,6 @@ static void IRQ_Tx_handle(u8_t major)
 
         /* transmitter interrupt handler */
         if (usart->STATUS & USART_STATUS_TXC) {
-                usart->IFC = USART_IF_TXC;
 
                 if (_UART_mem[major]->Tx_buffer.data_size && _UART_mem[major]->Tx_buffer.src_ptr) {
                         usart->TXDATA = *(_UART_mem[major]->Tx_buffer.src_ptr++);

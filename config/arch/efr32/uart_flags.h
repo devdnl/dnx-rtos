@@ -168,12 +168,12 @@ this:AddExtraWidget("Void", "VoidPinLoc")
 /*--
 this:AddWidget("Spinbox", 0, 31, "Tx pin")
 --*/
-#define __UART_TX_LOC__ 21
+#define __UART_TX_LOC__ 0
 
 /*--
 this:AddWidget("Spinbox", 0, 31, "Rx pin")
 --*/
-#define __UART_RX_LOC__ 21
+#define __UART_RX_LOC__ 0
 
 /*--
 this:AddWidget("Spinbox", 0, 31, "CTS pin")
