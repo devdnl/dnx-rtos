@@ -37,6 +37,7 @@
 #include "efr32/gpio_cfg.h"
 #include "efr32/gpio_macros.h"
 #include "efr32/efr32xx.h"
+#include "efr32/lib/em_cmu.h"
 #include "../gpio_ioctl.h"
 
 /*==============================================================================
@@ -135,7 +136,7 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor)
 {
         if (major < ARRAY_SIZE(GPIOx) && minor == 0) {
 
-                CMU->HFBUSCLKEN0 |= CMU_HFBUSCLKEN0_GPIO;
+                CMU_ClockEnable(cmuClock_GPIO, true);
 
                 GPIO->P[major].CTRL  = GPIOx[major].CTRL;
                 GPIO->P[major].DOUT  = GPIOx[major].DOUT;
