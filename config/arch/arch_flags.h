@@ -72,11 +72,11 @@
 #
 # if uC.ARCH == "stm32f1" then
 #     uC.AddPriorityItems = function(this, no_default)
-#         this:AddItem("Priority 0 (the highest)", "0x0F")
-#         for i = 1, 12 do this:AddItem("Priority "..i, "0x"..i.."F") end
-#         this:AddItem("Priority 13 (the lowest)", "0xDF")
+#         this:AddItem("Priority 0 (the highest)", "0")
+#         for i = 1, 12 do this:AddItem("Priority "..i, tostring(i)) end
+#         this:AddItem("Priority 13 (the lowest)", "13")
 #         if no_default ~= true then
-#             this:AddItem("Default priority", "__CPU_IRQ_USER_PRIORITY__")
+#             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
 #         end
 #     end
 #
@@ -123,11 +123,11 @@
 #
 # if uC.ARCH == "stm32f4" then
 #     uC.AddPriorityItems = function(this, no_default)
-#         this:AddItem("Priority 0 (the highest)", "0x0F")
-#         for i = 1, 12 do this:AddItem("Priority "..i, "0x"..i.."F") end
-#         this:AddItem("Priority 13 (the lowest)", "0xDF")
+#         this:AddItem("Priority 0 (the highest)", "0")
+#         for i = 1, 12 do this:AddItem("Priority "..i, tostring(i)) end
+#         this:AddItem("Priority 13 (the lowest)", "13")
 #         if no_default ~= true then
-#             this:AddItem("Default priority", "__CPU_IRQ_USER_PRIORITY__")
+#             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
 #         end
 #     end
 #
@@ -284,12 +284,11 @@
 #
 # if uC.ARCH == "efr32" then
 #     uC.AddPriorityItems = function(this, no_default)
-#         print("arch_flags.h: EFR32 port, FIXME priorities."
-#         this:AddItem("Priority 0 (the highest)", "0x0F")
-#         for i = 1, 4 do this:AddItem("Priority "..i, "0x"..i.."F") end
-#         this:AddItem("Priority 5 (the lowest)", "0x5F")
+#         this:AddItem("Priority 0 (the highest)", "0")
+#         for i = 1, 4 do this:AddItem("Priority "..i, tostring(i)) end
+#         this:AddItem("Priority 5 (the lowest)", "5")
 #         if no_default ~= true then
-#             this:AddItem("Default priority", "__CPU_IRQ_USER_PRIORITY__")
+#             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
 #         end
 #     end
 #

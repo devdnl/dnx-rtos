@@ -104,7 +104,7 @@ if this:PortExist(1) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __I2C1_IRQ_PRIO__ __CPU_IRQ_USER_PRIORITY__
+#define __I2C1_IRQ_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(1) then
@@ -133,7 +133,7 @@ if this:PortExist(2) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __I2C2_IRQ_PRIO__ __CPU_IRQ_USER_PRIORITY__
+#define __I2C2_IRQ_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(2) then

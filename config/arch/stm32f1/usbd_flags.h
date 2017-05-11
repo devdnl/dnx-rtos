@@ -81,7 +81,7 @@ uC.AddPriorityItems(this)
 this:AddExtraWidget("Void", "VoidPrio1")
 this:AddExtraWidget("Void", "VoidPrio2")
 --*/
-#define __USBD_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __USBD_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 #endif /* _USBD_FLAGS_H_ */
 /*==============================================================================

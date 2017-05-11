@@ -58,7 +58,7 @@ this:AddItem("Yes", "_YES_")
 this:AddWidget("Combobox", "Interrupt priority")
 uC.AddPriorityItems(this)
 --*/
-#define __ETHMAC_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __ETHMAC_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 this:AddWidget("Combobox", "Link speed")
