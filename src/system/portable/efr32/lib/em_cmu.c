@@ -107,8 +107,6 @@ static CMU_AUXHFRCOFreq_TypeDef auxHfrcoFreq = cmuAUXHFRCOFreq_19M0Hz;
 #define HFXO_INVALID_TRIM   (~_CMU_HFXOTRIMSTATUS_MASK)
 #endif
 
-uint32_t SystemHfrcoFreq = cmuHFRCOFreq_19M0Hz;
-
 /** @endcond */
 
 /*******************************************************************************

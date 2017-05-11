@@ -31,6 +31,7 @@ CSRC_ARCH   += portable/efr32/efr32xx_vectors.c
 CSRC_ARCH   += portable/efr32/lib/em_cmu.c
 CSRC_ARCH   += portable/efr32/lib/em_assert.c
 CSRC_ARCH   += portable/efr32/lib/em_system.c
+CSRC_ARCH   += portable/efr32/lib/system_efr32mg.c
 HDRLOC_ARCH += portable/efr32/efr32xx
 HDRLOC_ARCH += portable/efr32
 HDRLOC_ARCH += portable/efr32/lib

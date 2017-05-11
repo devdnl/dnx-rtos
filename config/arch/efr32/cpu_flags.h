@@ -129,8 +129,8 @@ __CPU_NAME__=EFR32MG1V132F256GM32
 #//-----------------------------------------------------------------------------
 #define _CPU_START_FREQUENCY_           (19000000UL)
 #define _CPU_HEAP_ALIGN_                (4)
-#define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (0x7F)
-#define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (0x6F)
+#define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (0xFF)
+#define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (0xDF)
 #define ARCH_efr32
 #/*
 CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4

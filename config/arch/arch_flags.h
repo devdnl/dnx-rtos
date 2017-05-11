@@ -284,6 +284,7 @@
 #
 # if uC.ARCH == "efr32" then
 #     uC.AddPriorityItems = function(this, no_default)
+#         print("arch_flags.h: EFR32 port, FIXME priorities."
 #         this:AddItem("Priority 0 (the highest)", "0x0F")
 #         for i = 1, 4 do this:AddItem("Priority "..i, "0x"..i.."F") end
 #         this:AddItem("Priority 5 (the lowest)", "0x5F")

@@ -41,16 +41,16 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /* UART1 IRQ priority */
-#define _UART1_IRQ_PRIORITY                     __UART_UART1_IRQ_PRIORITY__
+#define _UART0_IRQ_PRIORITY                     __UART_UART0_IRQ_PRIORITY__
 
 /* UART2 IRQ priority */
-#define _UART2_IRQ_PRIORITY                     __UART_UART2_IRQ_PRIORITY__
+#define _UART1_IRQ_PRIORITY                     __UART_UART1_IRQ_PRIORITY__
 
 /* UART3 IRQ priority */
-#define _UART3_IRQ_PRIORITY                     __UART_UART3_IRQ_PRIORITY__
+#define _UART2_IRQ_PRIORITY                     __UART_UART2_IRQ_PRIORITY__
 
 /* UART4 IRQ priority */
-#define _UART4_IRQ_PRIORITY                     __UART_UART4_IRQ_PRIORITY__
+#define _UART3_IRQ_PRIORITY                     __UART_UART3_IRQ_PRIORITY__
 
 /* RX buffer size [B] */
 #define _UART_RX_BUFFER_SIZE                    __UART_RX_BUFFER_LEN__
@@ -65,6 +65,12 @@ extern "C" {
 #define _UART_DEFAULT_HW_FLOW_CTRL              __UART_DEFAULT_HW_FLOW_CTRL__
 #define _UART_DEFAULT_SINGLE_WIRE_MODE          __UART_DEFAULT_SINGLE_WIRE_MODE__
 #define _UART_DEFAULT_BAUD                      __UART_DEFAULT_BAUD__
+
+/* UART pin locations */
+#define _UART_TX_PIN_LOC                        __UART_TX_LOC__
+#define _UART_RX_PIN_LOC                        __UART_RX_LOC__
+#define _UART_CTS_PIN_LOC                       __UART_CTS_LOC__
+#define _UART_RTS_PIN_LOC                       __UART_RTS_LOC__
 
 /*==============================================================================
   Exported types, enums definitions

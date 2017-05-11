@@ -3093,7 +3093,7 @@ if this:PinExist("D", 13) then
     this:AddProposals(PD13, "D", 13)
 end
 --*/
-#define __GPIO_PD_PIN_13_NAME__ PD13_NC
+#define __GPIO_PD_PIN_13_NAME__ US0_TX
 
 /*--
 if this:PinExist("D", 13) then
@@ -3101,7 +3101,7 @@ if this:PinExist("D", 13) then
     this:AddPinMode("D", 13)
 end
 --*/
-#define __GPIO_PD_PIN_13_MODE__ _GPIO_MODE_DISABLED
+#define __GPIO_PD_PIN_13_MODE__ _GPIO_MODE_PUSHPULLALT
 
 /*--
 if this:PinExist("D", 13) then
@@ -3109,7 +3109,7 @@ if this:PinExist("D", 13) then
     this:AddPinState("D", 13)
 end
 --*/
-#define __GPIO_PD_PIN_13_STATE__ _LOW
+#define __GPIO_PD_PIN_13_STATE__ _HIGH
 
 /*--
 if this:PinExist("D", 14) then
@@ -3131,7 +3131,7 @@ if this:PinExist("D", 14) then
     this:AddProposals(PD14, "D", 14)
 end
 --*/
-#define __GPIO_PD_PIN_14_NAME__ PD14_NC
+#define __GPIO_PD_PIN_14_NAME__ US0_RX
 
 /*--
 if this:PinExist("D", 14) then
@@ -3139,7 +3139,7 @@ if this:PinExist("D", 14) then
     this:AddPinMode("D", 14)
 end
 --*/
-#define __GPIO_PD_PIN_14_MODE__ _GPIO_MODE_DISABLED
+#define __GPIO_PD_PIN_14_MODE__ _GPIO_MODE_INPUTPULLFILTER
 
 /*--
 if this:PinExist("D", 14) then
@@ -3147,7 +3147,7 @@ if this:PinExist("D", 14) then
     this:AddPinState("D", 14)
 end
 --*/
-#define __GPIO_PD_PIN_14_STATE__ _LOW
+#define __GPIO_PD_PIN_14_STATE__ _HIGH
 
 /*--
 if this:PinExist("D", 15) then

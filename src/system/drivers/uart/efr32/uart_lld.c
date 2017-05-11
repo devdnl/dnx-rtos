@@ -45,67 +45,58 @@
   Local types, enums definitions
 ==============================================================================*/
 /* UART registers */
-typedef struct { // FIXME
-        USART_TypeDef  *UART;
-        __IO uint32_t  *APBENR;
-        __IO uint32_t  *APBRSTR;
-        const uint32_t  APBENR_UARTEN;
-        const uint32_t  APBRSTR_UARTRST;
-        const IRQn_Type IRQn;
+typedef struct {
+        USART_TypeDef  *usart;
+        uint32_t        enable_mask;
+        const IRQn_Type rx_IRQn;
+        const IRQn_Type tx_IRQn;
         const u32_t     PRIORITY;
 } UART_regs_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static void USART_Reset(USART_TypeDef *usart);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 // all registers which are need to control particular UART peripheral
-static const UART_regs_t UART[] = { // FIXME
+static const UART_regs_t UART[] = {
         #if USART_COUNT >= 1
         {
-                .UART            = USART1,
-                .APBENR          = &RCC->APB2ENR,
-                .APBRSTR         = &RCC->APB2RSTR,
-                .APBENR_UARTEN   = RCC_APB2ENR_USART1EN,
-                .APBRSTR_UARTRST = RCC_APB2RSTR_USART1RST,
-                .IRQn            = USART1_IRQn,
-                .PRIORITY        = _UART1_IRQ_PRIORITY
+                .usart           = USART0,
+                .enable_mask     = CMU_HFPERCLKEN0_USART0,
+                .rx_IRQn         = USART0_RX_IRQn,
+                .tx_IRQn         = USART0_TX_IRQn,
+                .PRIORITY        = _UART0_IRQ_PRIORITY
         },
         #endif
         #if USART_COUNT >= 2
         {
-                .UART            = USART2,
-                .APBENR          = &RCC->APB1ENR,
-                .APBRSTR         = &RCC->APB1RSTR,
-                .APBENR_UARTEN   = RCC_APB1ENR_USART2EN,
-                .APBRSTR_UARTRST = RCC_APB1RSTR_USART2RST,
-                .IRQn            = USART2_IRQn,
-                .PRIORITY        = _UART2_IRQ_PRIORITY
+                .usart           = USART1,
+                .enable_mask     = CMU_HFPERCLKEN0_USART1,
+                .rx_IRQn         = USART1_RX_IRQn,
+                .tx_IRQn         = USART1_TX_IRQn,
+                .PRIORITY        = _UART1_IRQ_PRIORITY
         },
         #endif
         #if USART_COUNT >= 3
         {
-                .UART            = USART3,
-                .APBENR          = &RCC->APB1ENR,
-                .APBRSTR         = &RCC->APB1RSTR,
-                .APBENR_UARTEN   = RCC_APB1ENR_USART3EN,
-                .APBRSTR_UARTRST = RCC_APB1RSTR_USART3RST,
-                .IRQn            = USART3_IRQn,
-                .PRIORITY        = _UART3_IRQ_PRIORITY
+                .usart           = USART2,
+                .enable_mask     = CMU_HFPERCLKEN0_USART2,
+                .rx_IRQn         = USART2_RX_IRQn,
+                .tx_IRQn         = USART2_TX_IRQn,
+                .PRIORITY        = _UART2_IRQ_PRIORITY
         },
         #endif
         #if USART_COUNT >= 4
         {
-                .UART            = UART4,
-                .APBENR          = &RCC->APB1ENR,
-                .APBRSTR         = &RCC->APB1RSTR,
-                .APBENR_UARTEN   = RCC_APB1ENR_UART4EN,
-                .APBRSTR_UARTRST = RCC_APB1RSTR_UART4RST,
-                .IRQn            = UART4_IRQn,
-                .PRIORITY        = _UART4_IRQ_PRIORITY
+                .usart           = USART3,
+                .enable_mask     = CMU_HFPERCLKEN0_USART3,
+                .rx_IRQn         = USART3_RX_IRQn,
+                .tx_IRQn         = USART3_TX_IRQn,
+                .PRIORITY        = _UART3_IRQ_PRIORITY
         },
         #endif
 };
@@ -122,8 +113,25 @@ static const UART_regs_t UART[] = { // FIXME
  * @return One of errno value
  */
 //==============================================================================
-int _UART_LLD__turn_on(u8_t major) // TODO
+int _UART_LLD__turn_on(u8_t major)
 {
+        if (!(CMU->HFPERCLKEN0 & UART[major].enable_mask)) {
+//                CMU->HFPERCLKEN0 |= UART[major].enable_mask;
+
+                CMU_ClockEnable(cmuClock_HFPER, true);
+                CMU_ClockEnable(cmuClock_USART0, true);
+
+                USART_Reset(UART[major].usart);
+
+                NVIC_EnableIRQ(UART[major].rx_IRQn);
+                NVIC_EnableIRQ(UART[major].tx_IRQn);
+                NVIC_SetPriority(UART[major].rx_IRQn, UART[major].PRIORITY);
+                NVIC_SetPriority(UART[major].tx_IRQn, UART[major].PRIORITY);
+
+                return ESUCC;
+        } else {
+                return EADDRINUSE;
+        }
 }
 
 //==============================================================================
@@ -135,8 +143,15 @@ int _UART_LLD__turn_on(u8_t major) // TODO
  * @return One of errno value.
  */
 //==============================================================================
-int _UART_LLD__turn_off(u8_t major) // TODO
+int _UART_LLD__turn_off(u8_t major)
 {
+        NVIC_DisableIRQ(UART[major].rx_IRQn);
+        NVIC_DisableIRQ(UART[major].tx_IRQn);
+
+        USART_Reset(UART[major].usart);
+        CMU->HFPERCLKEN0 &= ~UART[major].enable_mask;
+
+        return ESUCC;
 }
 
 //==============================================================================
@@ -146,8 +161,23 @@ int _UART_LLD__turn_off(u8_t major) // TODO
  * @param major         UART number
  */
 //==============================================================================
-void _UART_LLD__transmit(u8_t major) // TODO
+void _UART_LLD__transmit(u8_t major)
 {
+//        u8_t data = *_UART_mem[major]->Tx_buffer.src_ptr++;
+//        _UART_mem[major]->Tx_buffer.data_size--;
+//        UART[major].usart->TXDATA = data;
+//
+//        UART[major].usart->IEN |= USART_IEN_TXC;
+
+        /* Check that transmit buffer is empty */
+        while (_UART_mem[major]->Tx_buffer.data_size--) {
+
+                while (!(UART[major].usart->STATUS & USART_STATUS_TXBL))
+                  ;
+                UART[major].usart->TXDATA = *_UART_mem[major]->Tx_buffer.src_ptr++;
+        }
+
+        sys_semaphore_signal(_UART_mem[major]->write_ready_sem);
 }
 
 //==============================================================================
@@ -157,8 +187,9 @@ void _UART_LLD__transmit(u8_t major) // TODO
  * @param major         UART number
  */
 //==============================================================================
-void _UART_LLD__abort_trasmission(u8_t major) // TODO
+void _UART_LLD__abort_trasmission(u8_t major)
 {
+        UART[major].usart->IEN &= ~USART_IEN_TXC;
 }
 
 //==============================================================================
@@ -168,8 +199,9 @@ void _UART_LLD__abort_trasmission(u8_t major) // TODO
  * @param major         UART number
  */
 //==============================================================================
-void _UART_LLD__rx_resume(u8_t major) // TODO
+void _UART_LLD__rx_resume(u8_t major)
 {
+        UART[major].usart->IEN |= USART_IEN_RXDATAV;
 }
 
 //==============================================================================
@@ -179,8 +211,9 @@ void _UART_LLD__rx_resume(u8_t major) // TODO
  * @param major         UART number
  */
 //==============================================================================
-void _UART_LLD__rx_hold(u8_t major) // TODO
+void _UART_LLD__rx_hold(u8_t major)
 {
+        UART[major].usart->IEN &= ~USART_IEN_RXDATAV;
 }
 
 //==============================================================================
@@ -193,6 +226,140 @@ void _UART_LLD__rx_hold(u8_t major) // TODO
 //==============================================================================
 void _UART_LLD__configure(u8_t major, const struct UART_config *config) // TODO
 {
+        USART_TypeDef *usart = UART[major].usart;
+
+        /* set 8 bit word length, parity and stop bits*/
+        u32_t FRAME = USART_FRAME_DATABITS_EIGHT;
+
+        switch (config->parity) {
+        default:
+        case UART_PARITY__OFF:  FRAME |= USART_FRAME_PARITY_NONE; break;
+        case UART_PARITY__EVEN: FRAME |= USART_FRAME_PARITY_EVEN; break;
+        case UART_PARITY__ODD:  FRAME |= USART_FRAME_PARITY_ODD;  break;
+        }
+
+        switch (config->stop_bits) {
+        default:
+        case UART_STOP_BIT__1: FRAME |= USART_FRAME_STOPBITS_ONE; break;
+        case UART_STOP_BIT__2: FRAME |= USART_FRAME_STOPBITS_TWO; break;
+        }
+
+        usart->FRAME = FRAME;
+
+        /* set baud */
+        u32_t freq = CMU_ClockFreqGet(cmuClock_HFPER);
+
+        /* Calculate and set CLKDIV with fractional bits.
+         * The addend (oversample*baudrate)/2 in the first line is to round the
+         * divisor up by half the divisor before the division in order to reduce the
+         * integer division error, which consequently results in a higher baudrate
+         * than desired. */
+        u32_t       clkdiv     = 0;
+        const u32_t oversample = 4;
+
+#if defined(_USART_CLKDIV_DIV_MASK) && (_USART_CLKDIV_DIV_MASK >= 0x7FFFF8UL)
+        clkdiv = 32 * freq + (oversample * config->baud) / 2;
+        clkdiv /= (oversample * config->baud);
+        clkdiv -= 32;
+        clkdiv *= 8;
+#else
+        clkdiv = 4 * freq + (oversample * config->baud) / 2;
+        clkdiv /= (oversample * config->baud);
+        clkdiv -= 4;
+        clkdiv *= 64;
+#endif
+
+        clkdiv &= _USART_CLKDIV_DIV_MASK;
+
+        usart->CTRL  &= ~_USART_CTRL_OVS_MASK;
+        usart->CTRL  |= oversample << _USART_CTRL_OVS_SHIFT;
+        usart->CLKDIV = clkdiv;
+
+        /* single wire mode */
+        if (config->single_wire_mode) {
+                usart->CTRL |= USART_CTRL_LOOPBK;
+        } else {
+                usart->CTRL &= USART_CTRL_LOOPBK;
+        }
+
+        /* transmitter enable */
+        if (config->tx_enable) {
+                usart->ROUTEPEN  |= USART_ROUTEPEN_TXPEN;
+                usart->ROUTELOC0 &= _USART_ROUTELOC0_TXLOC_MASK;
+                usart->ROUTELOC0 |= ((_UART_TX_PIN_LOC & 0x3F) << _USART_ROUTELOC0_TXLOC_SHIFT);
+        } else {
+                usart->ROUTEPEN  &= ~USART_ROUTEPEN_TXPEN;
+        }
+
+        /* receiver enable */
+        if (config->rx_enable) {
+                usart->ROUTEPEN  |= USART_ROUTEPEN_RXPEN;
+                usart->ROUTELOC0 &= _USART_ROUTELOC0_RXLOC_MASK;
+                usart->ROUTELOC0 |= ((_UART_RX_PIN_LOC & 0x3F) << _USART_ROUTELOC0_RXLOC_SHIFT);
+        } else {
+                usart->ROUTEPEN  &= ~USART_ROUTEPEN_RXPEN;
+        }
+
+        /* hardware flow control */
+        if (config->hardware_flow_ctrl) {
+                usart->ROUTELOC1 &= _USART_ROUTELOC1_RTSLOC_MASK | _USART_ROUTELOC1_CTSLOC_MASK;
+
+                usart->ROUTELOC1 |= ((_UART_RTS_PIN_LOC & 0x3F) << _USART_ROUTELOC1_RTSLOC_SHIFT);
+                usart->ROUTELOC1 |= ((_UART_CTS_PIN_LOC & 0x3F) << _USART_ROUTELOC1_CTSLOC_SHIFT);
+
+                usart->ROUTEPEN  |= USART_ROUTEPEN_RTSPEN | USART_ROUTEPEN_CTSPEN;
+
+        } else {
+                usart->ROUTEPEN  &= ~(USART_ROUTEPEN_RTSPEN | USART_ROUTEPEN_CTSPEN);
+        }
+
+        _UART_LLD__rx_resume(major);
+
+        usart->CMD |= (config->tx_enable ? USART_CMD_TXEN : 0)
+                    | (config->rx_enable ? USART_CMD_RXEN : 0);
+}
+
+//==============================================================================
+/**
+ * @brief Function configure selected UART.
+ *
+ * @param major         major device number
+ * @param config        configuration structure
+ */
+//==============================================================================
+static void USART_Reset(USART_TypeDef *usart)
+{
+        /* Make sure disabled first, before resetting other registers */
+        usart->CMD = USART_CMD_RXDIS
+                   | USART_CMD_TXDIS
+                   | USART_CMD_MASTERDIS
+                   | USART_CMD_RXBLOCKDIS
+                   | USART_CMD_TXTRIDIS
+                   | USART_CMD_CLEARTX
+                   | USART_CMD_CLEARRX;
+
+        usart->CTRL      = _USART_CTRL_RESETVALUE;
+        usart->FRAME     = _USART_FRAME_RESETVALUE;
+        usart->TRIGCTRL  = _USART_TRIGCTRL_RESETVALUE;
+        usart->CLKDIV    = _USART_CLKDIV_RESETVALUE;
+        usart->IEN       = _USART_IEN_RESETVALUE;
+        usart->IFC       = _USART_IFC_MASK;
+
+#if defined(_USART_ROUTEPEN_MASK) || defined(_UART_ROUTEPEN_MASK)
+        usart->ROUTEPEN  = _USART_ROUTEPEN_RESETVALUE;
+        usart->ROUTELOC0 = _USART_ROUTELOC0_RESETVALUE;
+        usart->ROUTELOC1 = _USART_ROUTELOC1_RESETVALUE;
+#else
+        usart->ROUTE     = _USART_ROUTE_RESETVALUE;
+#endif
+
+#if defined(_USART_INPUT_RESETVALUE)
+        usart->INPUT     = _USART_INPUT_RESETVALUE;
+#endif
+
+#if defined(_USART_I2SCTRL_RESETVALUE)
+        usart->I2SCTRL   = _USART_I2SCTRL_RESETVALUE;
+#endif
 }
 
 //==============================================================================
@@ -202,9 +369,24 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config) // TODO
  * @param major         major device number
  */
 //==============================================================================
-static void IRQ_Rx_handle(u8_t major) // TODO
+static void IRQ_Rx_handle(u8_t major)
 {
+        USART_TypeDef *usart = UART[major].usart;
 
+        bool yield = false;
+
+        /* receiver interrupt handler */
+        int received = 0;
+        while (usart->STATUS & USART_STATUS_RXDATAV) {
+                u8_t data = usart->RXDATA;
+
+                if (_UART_FIFO__write(&_UART_mem[major]->Rx_FIFO, &data)) {
+                        received++;
+                }
+        }
+
+        /* yield thread if data received */
+        sys_thread_yield_from_ISR(yield);
 }
 
 //==============================================================================
@@ -214,128 +396,123 @@ static void IRQ_Rx_handle(u8_t major) // TODO
  * @param major         major device number
  */
 //==============================================================================
-static void IRQ_Tx_handle(u8_t major) // TODO
+static void IRQ_Tx_handle(u8_t major)
 {
+        USART_TypeDef *usart = UART[major].usart;
 
+        /* transmitter interrupt handler */
+        if (usart->STATUS & USART_STATUS_TXC) {
+                usart->IFC = USART_IF_TXC;
+
+                if (_UART_mem[major]->Tx_buffer.data_size && _UART_mem[major]->Tx_buffer.src_ptr) {
+                        usart->TXDATA = *(_UART_mem[major]->Tx_buffer.src_ptr++);
+
+                        if (--_UART_mem[major]->Tx_buffer.data_size == 0) {
+                                _UART_mem[major]->Tx_buffer.src_ptr = NULL;
+                        }
+                } else {
+                        usart->IEN &= ~USART_IEN_TXC;
+                        sys_semaphore_signal_from_ISR(_UART_mem[major]->write_ready_sem, NULL);
+                }
+
+                /* yield thread if data send */
+                sys_thread_yield_from_ISR(true);
+        }
 }
 
+#if USART_COUNT >= 1
 //==============================================================================
 /**
- * @brief USART1 Interrupt
+ * @brief USART0 Rx Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB2ENR_USART1EN)
-void USART1_IRQHandler(void)
+void USART0_RX_Handler(void)
 {
-        IRQ_handle(_UART1);
-}
-#endif
-
-//==============================================================================
-/**
- * @brief USART2 Interrupt
- */
-//==============================================================================
-#if defined(RCC_APB1ENR_USART2EN)
-void USART2_IRQHandler(void)
-{
-        IRQ_handle(_UART2);
-}
-#endif
-
-//==============================================================================
-/**
- * @brief USART3 Interrupt
- */
-//==============================================================================
-#if defined(RCC_APB1ENR_USART3EN)
-void USART3_IRQHandler(void)
-{
-        IRQ_handle(_UART3);
+        IRQ_Rx_handle(0);
 }
 #endif
 
+#if USART_COUNT >= 1
 //==============================================================================
 /**
- * @brief UART4 Interrupt
+ * @brief USART0 Tx Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART4EN)
-void UART4_IRQHandler(void)
+void USART0_TX_Handler(void)
 {
-        IRQ_handle(_UART4);
+        IRQ_Tx_handle(0);
 }
 #endif
 
+#if USART_COUNT >= 2
 //==============================================================================
 /**
- * @brief UART5 Interrupt
+ * @brief USART1 Rx Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART5EN)
-void UART5_IRQHandler(void)
+void USART1_RX_Handler(void)
 {
-        IRQ_handle(_UART5);
+        IRQ_Rx_handle(1);
 }
 #endif
 
+#if USART_COUNT >= 2
 //==============================================================================
 /**
- * @brief UART6 Interrupt
+ * @brief USART1 Tx Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB2ENR_USART6EN)
-void USART6_IRQHandler(void)
+void USART1_TX_Handler(void)
 {
-        IRQ_handle(_UART6);
+        IRQ_Tx_handle(1);
 }
 #endif
 
+#if USART_COUNT >= 3
 //==============================================================================
 /**
- * @brief UART7 Interrupt
+ * @brief USART2 Rx Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART7EN)
-void UART7_IRQHandler(void)
+void USART2_RX_Handler(void)
 {
-        IRQ_handle(_UART7);
+        IRQ_Rx_handle(2);
 }
 #endif
 
+#if USART_COUNT >= 3
 //==============================================================================
 /**
- * @brief UART8 Interrupt
+ * @brief USART2 Tx Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART8EN)
-void UART8_IRQHandler(void)
+void USART2_TX_Handler(void)
 {
-        IRQ_handle(_UART8);
+        IRQ_Tx_handle(2);
 }
 #endif
 
+#if USART_COUNT >= 4
 //==============================================================================
 /**
- * @brief UART9 Interrupt
+ * @brief USART3 Rx Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB2ENR_UART9EN)
-void UART9_IRQHandler(void)
+void USART3_RX_Handler(void)
 {
-        IRQ_handle(_UART9);
+        IRQ_Rx_handle(3);
 }
 #endif
 
+#if USART_COUNT >= 4
 //==============================================================================
 /**
- * @brief UART10 Interrupt
+ * @brief USART3 Tx Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB2ENR_UART10EN)
-void UART10_IRQHandler(void)
+void USART3_TX_Handler(void)
 {
-        IRQ_handle(_UART10);
+        IRQ_Tx_handle(3);
 }
 #endif
 

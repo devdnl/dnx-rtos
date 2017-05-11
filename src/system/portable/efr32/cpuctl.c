@@ -188,7 +188,7 @@ void _cpuctl_update_system_clocks(void)
 
         /* update context switch counter frequency */
         _critical_section_begin();
-        CMU_HFRCOFreq_TypeDef freq = CMU_HFRCOBandGet();
+        CMU_HFRCOFreq_TypeDef freq = CMU_ClockFreqGet(cmuClock_CORE);
         SysTick_Config((freq / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
         _critical_section_end();
 }
