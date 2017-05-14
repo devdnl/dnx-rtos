@@ -147,9 +147,9 @@ else
                         this:SetFlagValue(stateFlag, tab[i].STATE)
 
                         if tab[i].MODE:match("_GPIO_MODE_INPUT$") or tab[i].MODE:match("ALT") then
-                            this:Enable(false, statFlag)
+                            this:Enable(false, stateFlag)
                         else
-                            this:Enable(true, statFlag)
+                            this:Enable(true, stateFlag)
                         end
                     end
                 end
