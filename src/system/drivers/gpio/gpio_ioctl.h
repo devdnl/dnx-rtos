@@ -34,6 +34,8 @@ Driver handles GPIO peripheral.
 
 \section drv-gpio-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
+\li efr32
 
 \section drv-gpio-ddesc Details
 \subsection drv-gpio-ddesc-num Meaning of major and minor numbers
@@ -131,8 +133,12 @@ not initialized then pin behavior is undefined (depends on microcontroller).
 #include "drivers/ioctl_macros.h"
 
 // PIN names definitions (IOCTL_GPIO_PIN__name and IOCTL_GPIO_PIN_MASK__name)
-#ifdef ARCH_stm32f1
+#if defined(ARCH_stm32f1)
         #include "stm32f1/gpio_cfg.h"
+#elif defined(ARCH_stm32f4)
+        #include "stm32f4/gpio_cfg.h"
+#elif defined(ARCH_efr32)
+        #include "efr32/gpio_cfg.h"
 #endif
 
 #ifdef __cplusplus

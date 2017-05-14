@@ -239,7 +239,7 @@ __CPU_NAME__=STM32F429ZIxx
 # this:AddWidget("Combobox", "Default IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_IRQ_USER_PRIORITY__ 0xDF
+#define __CPU_DEFAULT_IRQ_PRIORITY__ 13
 
 
 #//-----------------------------------------------------------------------------
@@ -247,8 +247,8 @@ __CPU_NAME__=STM32F429ZIxx
 #//-----------------------------------------------------------------------------
 #define _CPU_START_FREQUENCY_           (16000000UL)
 #define _CPU_HEAP_ALIGN_                (4)
-#define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (0xFF)
-#define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (0xEF)
+#define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (15 << 4)
+#define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (14 << 4)
 #define ARCH_stm32f4
 #/*
 CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4

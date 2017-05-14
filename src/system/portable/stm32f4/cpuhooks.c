@@ -31,7 +31,6 @@
 ==============================================================================*/
 #include "kernel/kwrapper.h"
 #include "kernel/kpanic.h"
-#include "stm32f4/stm32f4xx.h"
 
 /*==============================================================================
   Local symbolic constants/macros

@@ -298,7 +298,7 @@ if this:PortExist(1) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART1_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(2) then
@@ -306,7 +306,7 @@ if this:PortExist(2) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART2_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART2_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(3) then
@@ -314,7 +314,7 @@ if this:PortExist(3) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART3_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART3_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(4) then
@@ -322,7 +322,7 @@ if this:PortExist(4) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART4_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART4_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(5) then
@@ -330,7 +330,7 @@ if this:PortExist(5) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART5_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART5_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(6) then
@@ -338,7 +338,7 @@ if this:PortExist(6) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART6_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART6_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(7) then
@@ -346,7 +346,7 @@ if this:PortExist(7) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART7_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART7_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(8) then
@@ -354,7 +354,7 @@ if this:PortExist(8) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART8_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART8_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(9) then
@@ -362,7 +362,7 @@ if this:PortExist(9) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART9_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART9_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 if this:PortExist(10) then
@@ -370,7 +370,7 @@ if this:PortExist(10) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __UART_UART10_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __UART_UART10_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 #endif /* _UART_FLAGS_H_ */
 /*==============================================================================

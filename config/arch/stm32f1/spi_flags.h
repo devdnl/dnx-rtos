@@ -144,7 +144,7 @@ if this:PortExist(1) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __SPI_SPI1_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __SPI_SPI1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 
 
@@ -166,7 +166,7 @@ if this:PortExist(2) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __SPI_SPI2_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __SPI_SPI2_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 
 
@@ -188,7 +188,7 @@ if this:PortExist(3) then
     uC.AddPriorityItems(this)
 end
 --*/
-#define __SPI_SPI3_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __SPI_SPI3_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 #endif /* _SPI_FLAGS_H_ */
 /*==============================================================================
