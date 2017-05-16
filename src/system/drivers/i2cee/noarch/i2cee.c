@@ -290,7 +290,7 @@ API_MOD_IOCTL(I2CEE, void *device_handle, int request, void *arg)
                                 if (!err) {
                                         hdl->memory_size       = cfg->memory_size;
                                         hdl->page_size         = cfg->page_size;
-                                        hdl->page_prog_time_ms = cfg->page_prog_time_ms;
+                                        hdl->page_prog_time_ms = cfg->page_prog_time_ms + 1;
                                 }
                         }
 
