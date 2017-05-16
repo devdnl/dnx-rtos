@@ -206,7 +206,7 @@ if this:PortExist(1) then
     this:AddItem("Yes", "_YES_")
 end
 --*/
-#define __I2C1_USE_DMA__ _YES_
+#define __I2C1_USE_DMA__ _NO_
 
 /*--
 if this:PortExist(1) then
@@ -235,7 +235,7 @@ if this:PortExist(2) then
     this:AddItem("Yes", "_YES_")
 end
 --*/
-#define __I2C2_USE_DMA__ _YES_
+#define __I2C2_USE_DMA__ _NO_
 
 /*--
 if this:PortExist(2) then
@@ -264,7 +264,7 @@ if this:PortExist(3) then
     this:AddItem("Yes", "_YES_")
 end
 --*/
-#define __I2C3_USE_DMA__ _YES_
+#define __I2C3_USE_DMA__ _NO_
 
 /*--
 if this:PortExist(3) then
@@ -281,35 +281,6 @@ if this:PortExist(3) then
 end
 --*/
 #define __I2C3_SCL_FREQ__ 100000
-
-
-/*--
-if this:PortExist(4) then
-    this:AddExtraWidget("Label", "Label4", "\nI2C4", -1, "bold")
-    this:AddExtraWidget("Void", "Void4")
-
-    this:AddWidget("Combobox", "Use DMA")
-    this:AddItem("No", "_NO_")
-    this:AddItem("Yes", "_YES_")
-end
---*/
-#define __I2C4_USE_DMA__ _YES_
-
-/*--
-if this:PortExist(4) then
-    this:AddWidget("Combobox", "IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __I2C4_IRQ_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
-if this:PortExist(4) then
-    this:AddWidget("Spinbox", 1e3, 100e3, "SCL frequency [Hz]")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __I2C4_SCL_FREQ__ 100000
 
 #endif /* _I2C_FLAGS_H_ */
 /*==============================================================================

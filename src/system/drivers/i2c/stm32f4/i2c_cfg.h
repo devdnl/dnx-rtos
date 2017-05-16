@@ -52,10 +52,6 @@ extern "C" {
 #define _I2C3_IRQ_PRIO          __I2C3_IRQ_PRIO__
 #define _I2C3_FREQUENCY         __I2C3_SCL_FREQ__
 
-#define _I2C4_USE_DMA           __I2C4_USE_DMA__
-#define _I2C4_IRQ_PRIO          __I2C4_IRQ_PRIO__
-#define _I2C4_FREQUENCY         __I2C4_SCL_FREQ__
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
