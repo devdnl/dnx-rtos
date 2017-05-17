@@ -67,7 +67,6 @@ struct SPI_info {
         __IO u32_t              *APBENR;                //!< APB enable register
         u32_t                    APBRSTRENR;            //!< APB reset/enable bit
         IRQn_Type                IRQn;                  //!< SPI IRQ number
-        u32_t                    IRQ_priority;          //!< SPI IRQ priority
         DMA_t                   *DMA;                   //!< SPI DMA peripheral
     #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)
         DMA_Channel_t           *DMA_Tx_channel;        //!< DMA Tx channel address
@@ -122,7 +121,6 @@ static const struct SPI_info SPI_INFO[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .APBRSTR               = &RCC->APB2RSTR,
                 .APBRSTRENR            = RCC_APB2ENR_SPI1EN,
                 .IRQn                  = SPI1_IRQn,
-                .IRQ_priority          = _SPI1_IRQ_PRIORITY,
                 .SPI                   = SPI1,
                 .DMA                   = _SPI1_USE_DMA ? DMA1 : NULL,
                 #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)
@@ -140,7 +138,6 @@ static const struct SPI_info SPI_INFO[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .APBRSTR               = &RCC->APB1RSTR,
                 .APBRSTRENR            = RCC_APB1ENR_SPI2EN,
                 .IRQn                  = SPI2_IRQn,
-                .IRQ_priority          = _SPI2_IRQ_PRIORITY,
                 .SPI                   = SPI2,
                 .DMA                   = _SPI2_USE_DMA ? DMA1 : NULL,
                 #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)
@@ -158,7 +155,6 @@ static const struct SPI_info SPI_INFO[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .APBRSTR               = &RCC->APB1RSTR,
                 .APBRSTRENR            = RCC_APB1ENR_SPI3EN,
                 .IRQn                  = SPI3_IRQn,
-                .IRQ_priority          = _SPI3_IRQ_PRIORITY,
                 .SPI                   = SPI3,
                 .DMA                   = _SPI3_USE_DMA ? DMA2 : NULL,
                 #if  (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0)
@@ -609,12 +605,12 @@ static int turn_on_SPI(u8_t major)
                         SPI_INFO[major].DMA->ISR |= (DMA_IRQ_mask << ch_position);
 
                         NVIC_EnableIRQ(SPI_INFO[major].DMA_Rx_IRQn);
-                        NVIC_SetPriority(SPI_INFO[major].DMA_Rx_IRQn, SPI_INFO[major].IRQ_priority);
+                        NVIC_SetPriority(SPI_INFO[major].DMA_Rx_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
                         #endif
                 } else {
                         #if (_SPI1_USE_DMA == 0) || (_SPI2_USE_DMA == 0) || (_SPI3_USE_DMA == 0)
                         NVIC_EnableIRQ(SPI_INFO[major].IRQn);
-                        NVIC_SetPriority(SPI_INFO[major].IRQn, SPI_INFO[major].IRQ_priority);
+                        NVIC_SetPriority(SPI_INFO[major].IRQn, _CPU_IRQ_SAFE_PRIORITY_);
                         #endif
                 }
 

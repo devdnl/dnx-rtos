@@ -47,7 +47,6 @@ typedef struct {
 } IRQ_t;
 
 typedef struct {
-        u8_t           priority;
         enum _IRQ_MODE mode;
 } default_cfg_t;
 
@@ -55,7 +54,7 @@ typedef struct {
   Local function prototypes
 ==============================================================================*/
 static enum IRQn IRQ_minor_to_NVIC_IRQn (u8_t minor);
-static int       IRQ_configure          (u8_t minor, enum _IRQ_MODE mode, int priority);
+static int       IRQ_configure          (u8_t minor, enum _IRQ_MODE mode, u8_t priority);
 static bool      IRQ_handler            (u8_t minor);
 
 /*==============================================================================
@@ -64,22 +63,22 @@ static bool      IRQ_handler            (u8_t minor);
 MODULE_NAME(IRQ);
 
 static const default_cfg_t DEFAULT_CONFIG[NUMBER_OF_IRQs] = {
-        {.priority = _IRQ_LINE_0_PRIO,  .mode = _IRQ_LINE_0_MODE },
-        {.priority = _IRQ_LINE_1_PRIO,  .mode = _IRQ_LINE_1_MODE },
-        {.priority = _IRQ_LINE_2_PRIO,  .mode = _IRQ_LINE_2_MODE },
-        {.priority = _IRQ_LINE_3_PRIO,  .mode = _IRQ_LINE_3_MODE },
-        {.priority = _IRQ_LINE_4_PRIO,  .mode = _IRQ_LINE_4_MODE },
-        {.priority = _IRQ_LINE_5_PRIO,  .mode = _IRQ_LINE_5_MODE },
-        {.priority = _IRQ_LINE_6_PRIO,  .mode = _IRQ_LINE_6_MODE },
-        {.priority = _IRQ_LINE_7_PRIO,  .mode = _IRQ_LINE_7_MODE },
-        {.priority = _IRQ_LINE_8_PRIO,  .mode = _IRQ_LINE_8_MODE },
-        {.priority = _IRQ_LINE_9_PRIO,  .mode = _IRQ_LINE_9_MODE },
-        {.priority = _IRQ_LINE_10_PRIO, .mode = _IRQ_LINE_10_MODE},
-        {.priority = _IRQ_LINE_11_PRIO, .mode = _IRQ_LINE_11_MODE},
-        {.priority = _IRQ_LINE_12_PRIO, .mode = _IRQ_LINE_12_MODE},
-        {.priority = _IRQ_LINE_13_PRIO, .mode = _IRQ_LINE_13_MODE},
-        {.priority = _IRQ_LINE_14_PRIO, .mode = _IRQ_LINE_14_MODE},
-        {.priority = _IRQ_LINE_15_PRIO, .mode = _IRQ_LINE_15_MODE}
+        {.mode = _IRQ_LINE_0_MODE },
+        {.mode = _IRQ_LINE_1_MODE },
+        {.mode = _IRQ_LINE_2_MODE },
+        {.mode = _IRQ_LINE_3_MODE },
+        {.mode = _IRQ_LINE_4_MODE },
+        {.mode = _IRQ_LINE_5_MODE },
+        {.mode = _IRQ_LINE_6_MODE },
+        {.mode = _IRQ_LINE_7_MODE },
+        {.mode = _IRQ_LINE_8_MODE },
+        {.mode = _IRQ_LINE_9_MODE },
+        {.mode = _IRQ_LINE_10_MODE},
+        {.mode = _IRQ_LINE_11_MODE},
+        {.mode = _IRQ_LINE_12_MODE},
+        {.mode = _IRQ_LINE_13_MODE},
+        {.mode = _IRQ_LINE_14_MODE},
+        {.mode = _IRQ_LINE_15_MODE}
 };
 
 static IRQ_t *IRQ;
@@ -120,7 +119,7 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
 
                                 IRQ_configure(minor,
                                               DEFAULT_CONFIG[minor].mode,
-                                              DEFAULT_CONFIG[minor].priority);
+                                              _CPU_IRQ_SAFE_PRIORITY_);
                         }
                 }
         }
@@ -359,7 +358,7 @@ static enum IRQn IRQ_minor_to_NVIC_IRQn(u8_t minor)
  * @return None
  */
 //==============================================================================
-static int IRQ_configure(u8_t minor, enum _IRQ_MODE mode, int priority)
+static int IRQ_configure(u8_t minor, enum _IRQ_MODE mode, u8_t priority)
 {
         enum IRQn IRQn = IRQ_minor_to_NVIC_IRQn(minor);
         int       err  = ENODEV;
@@ -433,10 +432,7 @@ static int IRQ_configure(u8_t minor, enum _IRQ_MODE mode, int priority)
                                 SET_BIT(EXTI->EMR, EXTI_EMR_MR0 << minor);
 
                                 NVIC_EnableIRQ(IRQn);
-
-                                if (priority >= 0) {
-                                        NVIC_SetPriority(IRQn, priority);
-                                }
+                                NVIC_SetPriority(IRQn, priority);
                         }
                 }
         }

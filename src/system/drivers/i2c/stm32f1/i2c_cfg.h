@@ -42,11 +42,9 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 #define _I2C1_USE_DMA           __I2C1_USE_DMA__
-#define _I2C1_IRQ_PRIO          __I2C1_IRQ_PRIO__
 #define _I2C1_FREQUENCY         __I2C1_SCL_FREQ__
 
 #define _I2C2_USE_DMA           __I2C2_USE_DMA__
-#define _I2C2_IRQ_PRIO          __I2C2_IRQ_PRIO__
 #define _I2C2_FREQUENCY         __I2C2_SCL_FREQ__
 
 /*==============================================================================

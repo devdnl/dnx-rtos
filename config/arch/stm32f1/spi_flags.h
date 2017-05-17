@@ -138,14 +138,6 @@ end
 --*/
 #define __SPI_SPI1_USE_DMA__ _YES_
 
-/*--
-if this:PortExist(1) then
-    this:AddWidget("Combobox", "IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __SPI_SPI1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
-
 
 
 /*--
@@ -160,14 +152,6 @@ end
 --*/
 #define __SPI_SPI2_USE_DMA__ _NO_
 
-/*--
-if this:PortExist(2) then
-    this:AddWidget("Combobox", "IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __SPI_SPI2_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
-
 
 
 /*--
@@ -181,14 +165,6 @@ if this:PortExist(3) then
 end
 --*/
 #define __SPI_SPI3_USE_DMA__ _YES_
-
-/*--
-if this:PortExist(3) then
-    this:AddWidget("Combobox", "IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __SPI_SPI3_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 #endif /* _SPI_FLAGS_H_ */
 /*==============================================================================

@@ -238,7 +238,7 @@ API_MOD_INIT(USBD, void **device_handle, u8_t major, u8_t minor)
                                         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_USBEN);
 
                                         /* enable USB interrupts in NVIC */
-                                        NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, _USBD_IRQ_PRIORITY);
+                                        NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
                                         NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
 
                                         /* set allocated memory */

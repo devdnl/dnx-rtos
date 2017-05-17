@@ -142,7 +142,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 SET_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
 
                 NVIC_EnableIRQ(ETH_IRQn);
-                NVIC_SetPriority(ETH_IRQn, ETHMAC_IRQ_PRIORITY);
+                NVIC_SetPriority(ETH_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
                 /* MAC configuration */
                 /*

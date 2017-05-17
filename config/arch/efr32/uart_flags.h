@@ -185,42 +185,6 @@ this:AddWidget("Spinbox", 0, 31, "RTS pin")
 --*/
 #define __UART_RTS_LOC__ 0
 
-/*--
-this:AddExtraWidget("Label", "LabelPrio", "\nPriorities", -1, "bold")
-this:AddExtraWidget("Void", "VoidPrio")
-++*/
-/*--
-if this:PortExist(1) then
-    this:AddWidget("Combobox", "USART0 IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __UART_UART0_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
-if this:PortExist(2) then
-    this:AddWidget("Combobox", "USART1 IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __UART_UART1_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
-if this:PortExist(3) then
-    this:AddWidget("Combobox", "USART2 IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __UART_UART2_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
-if this:PortExist(4) then
-    this:AddWidget("Combobox", "USART3 IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __UART_UART3_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
-
 #endif /* _UART_FLAGS_H_ */
 /*==============================================================================
   End of file

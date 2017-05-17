@@ -80,7 +80,6 @@ typedef struct {
         const I2C_TypeDef        *const I2C;            //!< pointer to the I2C peripheral
         const u32_t               freq;                 //!< peripheral SCL frequency [Hz]
         const u32_t               APB1ENR_clk_mask;     //!< mask used to enable I2C clock in the APB1ENR register
-        const u8_t                IRQ_prio;             //!< priority of IRQ (event, error, and DMA)
         const IRQn_Type           IRQ_EV_n;             //!< number of event IRQ vector
         const IRQn_Type           IRQ_ER_n;             //!< number of error IRQ vector
 } I2C_info_t;
@@ -147,7 +146,6 @@ static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .I2C              = I2C1,
                 .freq             = _I2C1_FREQUENCY,
                 .APB1ENR_clk_mask = RCC_APB1ENR_I2C1EN,
-                .IRQ_prio         = _I2C1_IRQ_PRIO,
                 .IRQ_EV_n         = I2C1_EV_IRQn,
                 .IRQ_ER_n         = I2C1_ER_IRQn,
         },
@@ -167,7 +165,6 @@ static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .I2C              = I2C2,
                 .freq             = _I2C2_FREQUENCY,
                 .APB1ENR_clk_mask = RCC_APB1ENR_I2C2EN,
-                .IRQ_prio         = _I2C2_IRQ_PRIO,
                 .IRQ_EV_n         = I2C2_EV_IRQn,
                 .IRQ_ER_n         = I2C2_ER_IRQn,
         },
@@ -187,7 +184,6 @@ static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .I2C              = I2C3,
                 .freq             = _I2C3_FREQUENCY,
                 .APB1ENR_clk_mask = RCC_APB1ENR_I2C3EN,
-                .IRQ_prio         = _I2C3_IRQ_PRIO,
                 .IRQ_EV_n         = I2C3_EV_IRQn,
                 .IRQ_ER_n         = I2C3_ER_IRQn,
         },
@@ -369,8 +365,6 @@ API_MOD_WRITE(I2C,
                 err = _I2C_LLD__send_address(hdl, true);
                 if (err) {
                         goto error;
-                } else {
-                        clear_send_address_event(hdl);
                 }
 
                 if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
@@ -642,8 +636,8 @@ static int _I2C_LLD__init(u8_t major)
 
                         NVIC_EnableIRQ(cfg->DMA_tx_IRQ_n);
                         NVIC_EnableIRQ(cfg->DMA_rx_IRQ_n);
-                        NVIC_SetPriority(cfg->DMA_tx_IRQ_n, cfg->IRQ_prio);
-                        NVIC_SetPriority(cfg->DMA_rx_IRQ_n, cfg->IRQ_prio);
+                        NVIC_SetPriority(cfg->DMA_tx_IRQ_n, _CPU_IRQ_SAFE_PRIORITY_);
+                        NVIC_SetPriority(cfg->DMA_rx_IRQ_n, _CPU_IRQ_SAFE_PRIORITY_);
 
                         I2C[major]->use_DMA = true;
                 }
@@ -652,8 +646,8 @@ static int _I2C_LLD__init(u8_t major)
 
         NVIC_EnableIRQ(cfg->IRQ_EV_n);
         NVIC_EnableIRQ(cfg->IRQ_ER_n);
-        NVIC_SetPriority(cfg->IRQ_EV_n, cfg->IRQ_prio);
-        NVIC_SetPriority(cfg->IRQ_ER_n, cfg->IRQ_prio);
+        NVIC_SetPriority(cfg->IRQ_EV_n, _CPU_IRQ_SAFE_PRIORITY_);
+        NVIC_SetPriority(cfg->IRQ_ER_n, _CPU_IRQ_SAFE_PRIORITY_);
 
         u16_t CCR;
         if (cfg->freq <= 100000) {
@@ -888,20 +882,20 @@ static int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
                 // send header + 2 most significant bits of 10-bit address
                 i2c->DR = HEADER_ADDR_10BIT | ((hdl->config.address & 0xFE) >> 7);
                 err = wait_for_I2C_event(hdl, I2C_SR1_ADD10);
-                if (err) return err;
+                if (err) goto finish;
 
                 // send rest 8 bits of 10-bit address
                 u8_t  addr = hdl->config.address & 0xFF;
                 u16_t tmp  = i2c->SR1;
                 (void)tmp;   i2c->DR = addr;
                 err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
-                if (err) return err;
+                if (err) goto finish;
 
                 clear_send_address_event(hdl);
 
                 // send repeat start
                 err = _I2C_LLD__start(hdl);
-                if (err) return err;
+                if (err) goto finish;
 
                 // send header
                 i2c->DR = write ? hdr : hdr | 0x01;
@@ -909,8 +903,14 @@ static int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
 
         } else {
                 u16_t tmp = i2c->SR1;
+                      tmp = i2c->SR2;
                 (void)tmp;  i2c->DR = write ? hdl->config.address & 0xFE : hdl->config.address | 0x01;
                 err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
+        }
+
+        finish:
+        if (!err) {
+                clear_send_address_event(hdl);
         }
 
         return err;
@@ -1183,7 +1183,7 @@ static int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
 //==============================================================================
 static void IRQ_EV_handler(u8_t major)
 {
-//        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2);
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
 
         bool woken = false;
 
@@ -1211,7 +1211,7 @@ static void IRQ_EV_handler(u8_t major)
 
         sys_thread_yield_from_ISR(woken);
 
-//        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2);
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
 }
 
 //==============================================================================
@@ -1224,11 +1224,14 @@ static void IRQ_EV_handler(u8_t major)
 static void IRQ_ER_handler(u8_t major)
 {
         I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_INFO[major].I2C);
+        u16_t SR1 = i2c->SR1;
+        u16_t SR2 = i2c->SR2;
+        UNUSED_ARG1(SR2);
 
-        if (i2c->SR1 & I2C_SR1_ARLO) {
+        if (SR1 & I2C_SR1_ARLO) {
                 I2C[major]->error = EAGAIN;
 
-        } else if (i2c->SR1 & I2C_SR1_AF) {
+        } else if (SR1 & I2C_SR1_AF) {
                 if (I2C[major]->SR1_mask & (I2C_SR1_ADDR | I2C_SR1_ADD10))
                         I2C[major]->error = ENXIO;
                 else
@@ -1242,6 +1245,7 @@ static void IRQ_ER_handler(u8_t major)
 
         bool woken = false;
         sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
+
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
         sys_thread_yield_from_ISR(woken);
 }

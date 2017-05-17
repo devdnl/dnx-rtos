@@ -257,6 +257,7 @@ __CPU_NAME__=STM32F429ZIxx
 #define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (15 << 4)
 #define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (14 << 4)
 #define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (13 << 4)
+#define _CPU_IRQ_SAFE_PRIORITY_         (15)
 #define ARCH_stm32f4
 #/*
 CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4

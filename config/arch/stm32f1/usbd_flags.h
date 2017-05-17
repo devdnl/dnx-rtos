@@ -75,14 +75,6 @@ this:AddExtraWidget("Void", "VoidEP0SZ2")
 --*/
 #define __USBD_ENDPOINT0_SIZE__ 8
 
-/*--
-this:AddWidget("Combobox", "IRQ priority")
-uC.AddPriorityItems(this)
-this:AddExtraWidget("Void", "VoidPrio1")
-this:AddExtraWidget("Void", "VoidPrio2")
---*/
-#define __USBD_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
-
 #endif /* _USBD_FLAGS_H_ */
 /*==============================================================================
   End of file

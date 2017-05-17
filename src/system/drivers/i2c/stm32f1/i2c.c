@@ -71,7 +71,6 @@ typedef struct {
         const I2C_t              *const I2C;            //!< pointer to the I2C peripheral
         const u32_t               freq;                 //!< peripheral SCL frequency [Hz]
         const u32_t               APB1ENR_clk_mask;     //!< mask used to enable I2C clock in the APB1ENR register
-        const u8_t                IRQ_prio;             //!< priority of IRQ (event, error, and DMA)
         const IRQn_Type           IRQ_EV_n;             //!< number of event IRQ vector
         const IRQn_Type           IRQ_ER_n;             //!< number of error IRQ vector
 } I2C_info_t;
@@ -136,7 +135,6 @@ static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .I2C              = I2C1,
                 .freq             = _I2C1_FREQUENCY,
                 .APB1ENR_clk_mask = RCC_APB1ENR_I2C1EN,
-                .IRQ_prio         = _I2C1_IRQ_PRIO,
                 .IRQ_EV_n         = I2C1_EV_IRQn,
                 .IRQ_ER_n         = I2C1_ER_IRQn,
         },
@@ -155,7 +153,6 @@ static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .I2C              = I2C2,
                 .freq             = _I2C2_FREQUENCY,
                 .APB1ENR_clk_mask = RCC_APB1ENR_I2C2EN,
-                .IRQ_prio         = _I2C2_IRQ_PRIO,
                 .IRQ_EV_n         = I2C2_EV_IRQn,
                 .IRQ_ER_n         = I2C2_ER_IRQn,
         },
@@ -606,8 +603,8 @@ static int enable_I2C(u8_t major)
 
                         NVIC_EnableIRQ(cfg->DMA_tx_IRQ_n);
                         NVIC_EnableIRQ(cfg->DMA_rx_IRQ_n);
-                        NVIC_SetPriority(cfg->DMA_tx_IRQ_n, cfg->IRQ_prio);
-                        NVIC_SetPriority(cfg->DMA_rx_IRQ_n, cfg->IRQ_prio);
+                        NVIC_SetPriority(cfg->DMA_tx_IRQ_n, _CPU_IRQ_SAFE_PRIORITY_);
+                        NVIC_SetPriority(cfg->DMA_rx_IRQ_n, _CPU_IRQ_SAFE_PRIORITY_);
 
                         I2C[major]->use_DMA = true;
                 }
@@ -616,8 +613,8 @@ static int enable_I2C(u8_t major)
 
         NVIC_EnableIRQ(cfg->IRQ_EV_n);
         NVIC_EnableIRQ(cfg->IRQ_ER_n);
-        NVIC_SetPriority(cfg->IRQ_EV_n, cfg->IRQ_prio);
-        NVIC_SetPriority(cfg->IRQ_ER_n, cfg->IRQ_prio);
+        NVIC_SetPriority(cfg->IRQ_EV_n, _CPU_IRQ_SAFE_PRIORITY_);
+        NVIC_SetPriority(cfg->IRQ_ER_n, _CPU_IRQ_SAFE_PRIORITY_);
 
         u16_t CCR;
         if (cfg->freq <= 100000) {

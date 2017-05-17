@@ -139,6 +139,7 @@ __CPU_NAME__=EFR32MG1V132F256GM32
 #define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (7 << 5)
 #define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (6 << 5)
 #define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (5 << 5)
+#define _CPU_IRQ_SAFE_PRIORITY_         (7)
 #define ARCH_efr32
 #/*
 CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4

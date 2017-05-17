@@ -66,22 +66,10 @@ this:AddIrqMode()
 #define __IRQ_LINE_0_MODE__ _IRQ_MODE_DISABLED
 
 /*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_0_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "IRQ 1")
 this:AddIrqMode()
 --*/
 #define __IRQ_LINE_1_MODE__ _IRQ_MODE_DISABLED
-
-/*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_1_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 this:AddWidget("Combobox", "IRQ 2")
@@ -90,22 +78,10 @@ this:AddIrqMode()
 #define __IRQ_LINE_2_MODE__ _IRQ_MODE_DISABLED
 
 /*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_2_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "IRQ 3")
 this:AddIrqMode()
 --*/
 #define __IRQ_LINE_3_MODE__ _IRQ_MODE_DISABLED
-
-/*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_3_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 this:AddWidget("Combobox", "IRQ 4")
@@ -114,22 +90,10 @@ this:AddIrqMode()
 #define __IRQ_LINE_4_MODE__ _IRQ_MODE_DISABLED
 
 /*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_4_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "IRQ 5")
 this:AddIrqMode()
 --*/
 #define __IRQ_LINE_5_MODE__ _IRQ_MODE_DISABLED
-
-/*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_5_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 this:AddWidget("Combobox", "IRQ 6")
@@ -138,22 +102,10 @@ this:AddIrqMode()
 #define __IRQ_LINE_6_MODE__ _IRQ_MODE_DISABLED
 
 /*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_6_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "IRQ 7")
 this:AddIrqMode()
 --*/
 #define __IRQ_LINE_7_MODE__ _IRQ_MODE_DISABLED
-
-/*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_7_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 this:AddWidget("Combobox", "IRQ 8")
@@ -162,22 +114,10 @@ this:AddIrqMode()
 #define __IRQ_LINE_8_MODE__ _IRQ_MODE_DISABLED
 
 /*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_8_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "IRQ 9")
 this:AddIrqMode()
 --*/
 #define __IRQ_LINE_9_MODE__ _IRQ_MODE_DISABLED
-
-/*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_9_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 this:AddWidget("Combobox", "IRQ 10")
@@ -186,22 +126,10 @@ this:AddIrqMode()
 #define __IRQ_LINE_10_MODE__ _IRQ_MODE_DISABLED
 
 /*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_10_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "IRQ 11")
 this:AddIrqMode()
 --*/
 #define __IRQ_LINE_11_MODE__ _IRQ_MODE_DISABLED
-
-/*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_11_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 this:AddWidget("Combobox", "IRQ 12")
@@ -210,22 +138,10 @@ this:AddIrqMode()
 #define __IRQ_LINE_12_MODE__ _IRQ_MODE_DISABLED
 
 /*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_12_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "IRQ 13")
 this:AddIrqMode()
 --*/
 #define __IRQ_LINE_13_MODE__ _IRQ_MODE_DISABLED
-
-/*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_13_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 /*--
 this:AddWidget("Combobox", "IRQ 14")
@@ -234,22 +150,10 @@ this:AddIrqMode()
 #define __IRQ_LINE_14_MODE__ _IRQ_MODE_DISABLED
 
 /*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_14_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "IRQ 15")
 this:AddIrqMode()
 --*/
 #define __IRQ_LINE_15_MODE__ _IRQ_MODE_DISABLED
-
-/*--
-this:AddWidget("Combobox")
-uC.AddPriorityItems(this)
---*/
-#define __IRQ_LINE_15_PRIO__ __CPU_DEFAULT_IRQ_PRIORITY__
 
 #endif /* _IRQ_FLAGS_H_ */
 /*==============================================================================

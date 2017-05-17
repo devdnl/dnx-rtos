@@ -56,11 +56,6 @@ extern "C" {
 #define _USBD_CONFIG_PULLUP_NEGATIVE    __USBD_PULLUP_NEGATIVE__
 
 /**
- * Interrupt priority
- */
-#define _USBD_IRQ_PRIORITY              __USBD_IRQ_PRIORITY__
-
-/**
  * Endpoint 0 size
  * Possible values: 8, 16, 32, 64
  * If value is out of this range then enpoint is disabled.
