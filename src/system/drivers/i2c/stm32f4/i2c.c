@@ -728,13 +728,13 @@ static void reset(I2C_dev_t *hdl, bool reinit)
 
         i2c->SR1 = 0;
 
-        _I2C_LLD__stop(hdl);
-
         sys_sleep_ms(1);
 
         if (reinit) {
                 _I2C_LLD__init(hdl->major);
         }
+
+        _I2C_LLD__stop(hdl);
 
         _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
 }
@@ -820,7 +820,7 @@ static int _I2C_LLD__start(I2C_dev_t *hdl)
         _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1);
 
         CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
-        SET_BIT(i2c->CR1, I2C_CR1_START);
+        SET_BIT(i2c->CR1, I2C_CR1_START | I2C_CR1_ACK);
 
         _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1);
 
@@ -839,7 +839,7 @@ static int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
         I2C_TypeDef *i2c = get_I2C(hdl);
 
         CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
-        SET_BIT(i2c->CR1, I2C_CR1_START);
+        SET_BIT(i2c->CR1, I2C_CR1_START | I2C_CR1_ACK);
 
         u32_t tref = sys_time_get_reference();
 
@@ -1008,8 +1008,10 @@ static void set_ACK_according_to_reception_size(I2C_dev_t *hdl, size_t count)
         I2C_TypeDef *i2c = get_I2C(hdl);
 
         if (count == 2) {
-                SET_BIT(i2c->CR1, I2C_CR1_POS | I2C_CR1_ACK);
+                CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
+                SET_BIT(i2c->CR1, I2C_CR1_POS);
         } else {
+                CLEAR_BIT(i2c->CR1, I2C_CR1_POS);
                 SET_BIT(i2c->CR1, I2C_CR1_ACK);
         }
 }
