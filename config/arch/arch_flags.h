@@ -73,8 +73,8 @@
 # if uC.ARCH == "stm32f1" then
 #     uC.AddPriorityItems = function(this, no_default)
 #         this:AddItem("Priority 0 (the highest)", "0")
-#         for i = 1, 12 do this:AddItem("Priority "..i, tostring(i)) end
-#         this:AddItem("Priority 13 (the lowest)", "13")
+#         for i = 1, 14 do this:AddItem("Priority "..i, tostring(i)) end
+#         this:AddItem("Priority 15 (the lowest, safe for kernel API)", "15")
 #         if no_default ~= true then
 #             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
 #         end
@@ -124,8 +124,8 @@
 # if uC.ARCH == "stm32f4" then
 #     uC.AddPriorityItems = function(this, no_default)
 #         this:AddItem("Priority 0 (the highest)", "0")
-#         for i = 1, 12 do this:AddItem("Priority "..i, tostring(i)) end
-#         this:AddItem("Priority 13 (the lowest)", "13")
+#         for i = 1, 14 do this:AddItem("Priority "..i, tostring(i)) end
+#         this:AddItem("Priority 15 (the lowest, safe for kernel API)", "15")
 #         if no_default ~= true then
 #             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
 #         end
@@ -285,8 +285,8 @@
 # if uC.ARCH == "efr32" then
 #     uC.AddPriorityItems = function(this, no_default)
 #         this:AddItem("Priority 0 (the highest)", "0")
-#         for i = 1, 4 do this:AddItem("Priority "..i, tostring(i)) end
-#         this:AddItem("Priority 5 (the lowest)", "5")
+#         for i = 1, 6 do this:AddItem("Priority "..i, tostring(i)) end
+#         this:AddItem("Priority 7 (the lowest, safe for kernel API)", "7")
 #         if no_default ~= true then
 #             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
 #         end
@@ -560,9 +560,9 @@ __ENABLE_LOOP__=_NO_
 # this:PutWidgets("I2CEE")
 # this:SetToolTip("I2C EEPROM driver for 24Cxx devices.")
 #--*/
-#define __ENABLE_I2CEE__ _NO_
+#define __ENABLE_I2CEE__ _YES_
 #/*
-__ENABLE_I2CEE__=_NO_
+__ENABLE_I2CEE__=_YES_
 #*/
 
 #/*--

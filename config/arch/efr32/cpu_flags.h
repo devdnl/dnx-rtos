@@ -117,11 +117,18 @@ __LD_SCRIPT__=EFR32_256_32
 __CPU_NAME__=EFR32MG1V132F256GM32
 #*/
 
+#/*
+# * NOTE!
+# * Any interrupt that uses the FreeRTOS API must be set to the same priority as the
+# * RTOS kernel (as configured by the _CPU_IRQ_RTOS_KERNEL_PRIORITY_ macro), or at
+# * or below _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ for ports that include this functionality.
+# */
+
 #/*--
 # this:AddWidget("Combobox", "Default IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_DEFAULT_IRQ_PRIORITY__ 5
+#define __CPU_DEFAULT_IRQ_PRIORITY__ 7
 
 
 #//-----------------------------------------------------------------------------
@@ -131,6 +138,7 @@ __CPU_NAME__=EFR32MG1V132F256GM32
 #define _CPU_HEAP_ALIGN_                (4)
 #define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (7 << 5)
 #define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (6 << 5)
+#define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (5 << 5)
 #define ARCH_efr32
 #/*
 CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4
