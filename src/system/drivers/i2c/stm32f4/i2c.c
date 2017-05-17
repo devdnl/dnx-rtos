@@ -408,18 +408,14 @@ API_MOD_READ(I2C,
         I2C_dev_t *hdl = device_handle;
 
         int err = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
-        if (err == ESUCC) {
+        if (!err) {
 
                 if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                         err = _I2C_LLD__start(hdl);
                         if (err) goto error;
 
                         err = _I2C_LLD__send_address(hdl, true);
-                        if (err) {
-                                goto error;
-                        } else {
-                                clear_send_address_event(hdl);
-                        }
+                        if (err) goto error;
 
                         err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
                         if (err) goto error;
@@ -717,6 +713,8 @@ static void _I2C_LLD__release(u8_t major)
 //==============================================================================
 static void reset(I2C_dev_t *hdl, bool reinit)
 {
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
+
         I2C_TypeDef *i2c = get_I2C(hdl);
 
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
@@ -737,6 +735,8 @@ static void reset(I2C_dev_t *hdl, bool reinit)
         if (reinit) {
                 _I2C_LLD__init(hdl->major);
         }
+
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
 }
 
 //==============================================================================
@@ -819,6 +819,7 @@ static int _I2C_LLD__start(I2C_dev_t *hdl)
 
         _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1);
 
+        CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
         SET_BIT(i2c->CR1, I2C_CR1_START);
 
         _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1);
@@ -837,13 +838,20 @@ static int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
 {
         I2C_TypeDef *i2c = get_I2C(hdl);
 
-        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1);
-
+        CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
         SET_BIT(i2c->CR1, I2C_CR1_START);
 
-        while (!(i2c->SR1 & I2C_SR1_SB)); // FIXME timeout i ARLO
+        u32_t tref = sys_time_get_reference();
 
-        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1);
+        while (!(i2c->SR1 & I2C_SR1_SB)) {
+                if (sys_time_is_expired(tref, DEVICE_TIMEOUT)) {
+                        return EIO;
+                }
+
+                if (i2c->SR1 & (I2C_SR1_ARLO | I2C_SR1_BERR)) {
+                        return EIO;
+                }
+        }
 
         return ESUCC;
 }
@@ -902,10 +910,15 @@ static int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
                 err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
 
         } else {
-                u16_t tmp = i2c->SR1;
-                      tmp = i2c->SR2;
-                (void)tmp;  i2c->DR = write ? hdl->config.address & 0xFE : hdl->config.address | 0x01;
+                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST3, IOCTL_GPIO_PIN_IDX__TEST3); // TEST
+
+                        u16_t tmp = i2c->SR1;
+                              tmp = i2c->SR2;
+                        (void)tmp;
+                        i2c->DR = write ? (hdl->config.address & 0xFE) : (hdl->config.address | 0x01);
                 err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
+
+                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST3, IOCTL_GPIO_PIN_IDX__TEST3); // TEST
         }
 
         finish:
@@ -1223,6 +1236,10 @@ static void IRQ_EV_handler(u8_t major)
 //==============================================================================
 static void IRQ_ER_handler(u8_t major)
 {
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
+
         I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_INFO[major].I2C);
         u16_t SR1 = i2c->SR1;
         u16_t SR2 = i2c->SR2;
@@ -1248,6 +1265,8 @@ static void IRQ_ER_handler(u8_t major)
 
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
         sys_thread_yield_from_ISR(woken);
+
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
 }
 
 //==============================================================================
