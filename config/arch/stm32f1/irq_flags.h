@@ -37,12 +37,11 @@
 #define _IRQ_FLAGS_H_
 
 /*--
-this:SetLayout("TitledGridBack", 3, "Home > Microcontroller > IRQ",
+this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > IRQ",
                function() this:LoadFile("arch/arch_flags.h") end)
 
 this:AddExtraWidget("Label", "LabelLine", "Line")
 this:AddExtraWidget("Label", "LabelMode", "Trigger")
-this:AddExtraWidget("Label", "LabelPrio", "Priority")
 
 this.AddIrqMode = function(this)
     this:AddItem("Disabled", "_IRQ_MODE_DISABLED")
