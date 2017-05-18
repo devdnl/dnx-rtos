@@ -210,7 +210,7 @@ int _vfs_mount(const struct vfs_path   *src_path,
 
                                         err = base_fs->interface->fs_closedir(base_fs->handle, &dir);
                                         if (!err) {
-                                                err = new_FS_entry(NULL, cwd_mount_point,
+                                                err = new_FS_entry(base_fs, cwd_mount_point,
                                                                    cwd_src_path, fsif,
                                                                    opts, &new_fs);
                                         }
