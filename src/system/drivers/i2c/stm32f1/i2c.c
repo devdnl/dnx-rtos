@@ -5,7 +5,7 @@
 
 @brief   This driver support I2C peripherals.
 
-@note    Copyright (C) 2014-2015  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -44,6 +44,8 @@
 #define DEVICE_TIMEOUT         2000
 #define HEADER_ADDR_10BIT      0xF0
 
+#define USE_DMA ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -59,7 +61,7 @@ enum _I2C_major {
 
 /// type defines configuration of single I2C peripheral
 typedef struct {
-    #if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+    #if USE_DMA > 0
         const bool                use_DMA;              //!< peripheral uses DMA and IRQ (true), or only IRQ (false)
         const DMA_Channel_t      *const DMA_tx;         //!< pointer to the DMA Tx channel peripheral
         const DMA_Channel_t      *const DMA_rx;         //!< pointer to the DMA Rx channel peripheral
@@ -101,16 +103,16 @@ typedef struct {
 ==============================================================================*/
 static void release_resources(u8_t major);
 static inline I2C_t *get_I2C(I2C_dev_t *hdl);
-static int enable_I2C(u8_t major);
-static void disable_I2C(u8_t major);
-static bool start(I2C_dev_t *hdl);
-static void stop(I2C_dev_t *hdl);
-static bool send_address(I2C_dev_t *hdl, bool write);
+static int _I2C_LLD__init(u8_t major);
+static void _I2C_LLD__release(u8_t major);
+static int _I2C_LLD__start(I2C_dev_t *hdl);
+static int _I2C_LLD__repeat_start(I2C_dev_t *hdl);
+static void _I2C_LLD__stop(I2C_dev_t *hdl);
+static int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write);
 static void clear_send_address_event(I2C_dev_t *hdl);
-static bool send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode);
-static void set_ACK_according_to_reception_size(I2C_dev_t *hdl, size_t count);
-static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count);
-static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count);
+static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode);
+static int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt);
+static int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt);
 static void IRQ_EV_handler(u8_t major);
 static void IRQ_ER_handler(u8_t major);
 
@@ -123,7 +125,7 @@ MODULE_NAME(I2C);
 static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
         #if defined(RCC_APB1ENR_I2C1EN)
         {
-                #if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+                #if USE_DMA > 0
                 .use_DMA          = _I2C1_USE_DMA,
                 .DMA_tx           = DMA1_Channel6,
                 .DMA_rx           = DMA1_Channel7,
@@ -141,7 +143,7 @@ static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
         #endif
         #if defined(RCC_APB1ENR_I2C2EN)
         {
-                #if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+                #if USE_DMA > 0
                 .use_DMA          = _I2C2_USE_DMA,
                 .DMA_tx           = DMA1_Channel4,
                 .DMA_rx           = DMA1_Channel5,
@@ -199,29 +201,29 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         /* creates basic module structures */
         if (I2C[major] == NULL) {
                 err = sys_zalloc(sizeof(I2C_mem_t), cast(void**, &I2C[major]));
-                if (err != ESUCC) {
+                if (err) {
                         goto finish;
                 }
 
                 err = sys_mutex_create(MUTEX_TYPE_NORMAL, &I2C[major]->lock);
-                if (err != ESUCC) {
+                if (err) {
                         goto finish;
                 }
 
                 err = sys_semaphore_create(1, 0, &I2C[major]->event);
-                if (err != ESUCC) {
+                if (err) {
                         goto finish;
                 }
 
-                err = enable_I2C(major);
-                if (err != ESUCC) {
+                err = _I2C_LLD__init(major);
+                if (err) {
                         goto finish;
                 }
         }
 
         /* creates device structure */
         err = sys_zalloc(sizeof(I2C_dev_t), device_handle);
-        if (err == ESUCC) {
+        if (!err) {
                 I2C_dev_t *hdl = *device_handle;
                 hdl->config    = I2C_DEFAULT_CFG;
                 hdl->major     = major;
@@ -233,7 +235,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         }
 
         finish:
-        if (err != ESUCC) {
+        if (err) {
                 release_resources(major);
         }
 
@@ -326,29 +328,22 @@ API_MOD_WRITE(I2C,
         I2C_dev_t *hdl = device_handle;
 
         int err = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
-        if (err == ESUCC) {
+        if (!err) {
 
-                if (!start(hdl)) {
-                        err = EIO;
-                        goto error;
-                }
+                err = _I2C_LLD__start(hdl);
+                if (err) goto error;
 
-                if (!send_address(hdl, true)) {
-                        err = ENXIO;
+                err = _I2C_LLD__send_address(hdl, true);
+                if (err) {
                         goto error;
-                } else {
-                        clear_send_address_event(hdl);
                 }
 
                 if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
-                        if (!send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode)) {
-                                err = EIO;
-                                goto error;
-                        }
+                        err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
+                        if (err) goto error;
                 }
 
-                *wrcnt = transmit(hdl, src, count);
-                err    = I2C[hdl->major]->error;
+                err = _I2C_LLD__transmit(hdl, src, count, wrcnt);
 
                 error:
                 sys_mutex_unlock(I2C[hdl->major]->lock);
@@ -384,40 +379,26 @@ API_MOD_READ(I2C,
         I2C_dev_t *hdl = device_handle;
 
         int err = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
-        if (err == ESUCC) {
+        if (!err) {
 
                 if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
-                        if (!start(hdl)) {
-                                err = EIO;
-                                goto error;
-                        }
+                        err = _I2C_LLD__start(hdl);
+                        if (err) goto error;
 
-                        if (!send_address(hdl, true)) {
-                                err = ENXIO;
-                                goto error;
-                        } else {
-                                clear_send_address_event(hdl);
-                        }
+                        err = _I2C_LLD__send_address(hdl, true);
+                        if (err) goto error;
 
-                        if (!send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode)) {
-                                err = EIO;
-                                goto error;
-                        }
+                        err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
+                        if (err) goto error;
                 }
 
-                if (!start(hdl)) {
-                        err = EIO;
-                        goto error;
-                }
+                err = _I2C_LLD__repeat_start(hdl);
+                if (err) goto error;
 
-                set_ACK_according_to_reception_size(hdl, count);
-                if (!send_address(hdl,  false)) {
-                        err = ENXIO;
-                        goto error;
-                }
+                err = _I2C_LLD__send_address(hdl, false);
+                if (err) goto error;
 
-                *rdcnt = receive(hdl, dst, count);
-                err    = I2C[hdl->major]->error;
+                err = _I2C_LLD__receive(hdl, dst, count, rdcnt);
 
                 error:
                 sys_mutex_unlock(I2C[hdl->major]->lock);
@@ -518,7 +499,7 @@ static void release_resources(u8_t major)
                 }
 
                 if (I2C[major]->initialized) {
-                        disable_I2C(major);
+                        _I2C_LLD__release(major);
                 }
 
                 sys_free(cast(void**, &I2C[major]));
@@ -544,7 +525,7 @@ static inline I2C_t *get_I2C(I2C_dev_t *hdl)
  * @return None
  */
 //==============================================================================
-#if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+#if USE_DMA > 0
 static void clear_DMA_IRQ_flags(u8_t major)
 {
         I2C_info_t    *cfg    = const_cast(I2C_info_t*, &I2C_INFO[major]);
@@ -572,7 +553,7 @@ static void clear_DMA_IRQ_flags(u8_t major)
  * @return One of errno value.
  */
 //==============================================================================
-static int enable_I2C(u8_t major)
+static int _I2C_LLD__init(u8_t major)
 {
         const I2C_info_t *cfg = &I2C_INFO[major];
         I2C_t            *i2c = const_cast(I2C_t*, I2C_INFO[major].I2C);
@@ -594,7 +575,7 @@ static int enable_I2C(u8_t major)
 
         I2C[major]->use_DMA = false;
 
-#if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+#if USE_DMA > 0
         if (cfg->use_DMA) {
                 if (!(cfg->DMA_rx->CCR & DMA_CCR1_EN) && !(cfg->DMA_tx->CCR & DMA_CCR1_EN)) {
                         SET_BIT(RCC->AHBENR, RCC_AHBENR_DMA1EN);
@@ -646,12 +627,12 @@ static int enable_I2C(u8_t major)
  * @return None
  */
 //==============================================================================
-static void disable_I2C(u8_t major)
+static void _I2C_LLD__release(u8_t major)
 {
         const I2C_info_t *cfg = &I2C_INFO[major];
         I2C_t            *i2c = const_cast(I2C_t*, I2C_INFO[major].I2C);
 
-#if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+#if USE_DMA > 0
         if (I2C[major]->use_DMA) {
                 NVIC_DisableIRQ(cfg->DMA_tx_IRQ_n);
                 NVIC_DisableIRQ(cfg->DMA_rx_IRQ_n);
@@ -682,11 +663,9 @@ static void disable_I2C(u8_t major)
  * @return None
  */
 //==============================================================================
-static void error(I2C_dev_t *hdl)
+static void reset(I2C_dev_t *hdl, bool reinit)
 {
         I2C_t *i2c = get_I2C(hdl);
-
-//        errno = I2C->periph[hdl->config->major].error;
 
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
 
@@ -694,16 +673,18 @@ static void error(I2C_dev_t *hdl)
              tmp = i2c->SR2;
              tmp = i2c->DR;
              tmp = i2c->DR;
-        (void) tmp;
+
+        UNUSED_ARG1(tmp);
 
         i2c->SR1 = 0;
 
-        stop(hdl);
         sys_sleep_ms(1);
 
-        if (I2C[hdl->major]->error == EIO) {
-                enable_I2C(hdl->major);
+        if (reinit) {
+                _I2C_LLD__init(hdl->major);
         }
+
+        _I2C_LLD__stop(hdl);
 }
 
 //==============================================================================
@@ -714,27 +695,31 @@ static void error(I2C_dev_t *hdl)
  * @return On success true is returned, otherwise false
  */
 //==============================================================================
-static bool wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
+static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
 {
-        I2C[hdl->major]->SR1_mask = SR1_event_mask & 0xDF;
+        I2C_t *i2c = get_I2C(hdl);
+
+        I2C[hdl->major]->SR1_mask = SR1_event_mask;
         I2C[hdl->major]->error    = 0;
 
         u16_t CR2 = I2C_CR2_ITEVTEN | I2C_CR2_ITERREN;
+
         if (SR1_event_mask & (I2C_SR1_RXNE | I2C_SR1_TXE)) {
                 CR2 |= I2C_CR2_ITBUFEN;
         }
-        SET_BIT(get_I2C(hdl)->CR2, CR2);
 
-        if (sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT) == ESUCC) {
-                if (I2C[hdl->major]->error == 0) {
-                        return true;
+        SET_BIT(i2c->CR2, CR2);
+
+        int err = sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT);
+        if (!err && I2C[hdl->major]->error) {
+                err = EIO;
                 }
-        } else {
-                I2C[hdl->major]->error = EIO;
+
+        if (err) {
+                reset(hdl, true);
         }
 
-        error(hdl);
-        return false;
+        return err;
 }
 
 //==============================================================================
@@ -745,7 +730,7 @@ static bool wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
  * @return On success true is returned, otherwise false
  */
 //==============================================================================
-#if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+#if USE_DMA > 0
 static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
 {
         I2C[hdl->major]->error = 0;
@@ -756,15 +741,15 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
         SET_BIT(i2c->CR2, I2C_CR2_LAST);
         SET_BIT(DMA->CCR, DMA_CCR1_EN);
 
-        if (sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT) == ESUCC) {
-                if (I2C[hdl->major]->error == 0) {
-                        return true;
+        int err = sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT);
+        if (!err && I2C[hdl->major]->error) {
+                err = EIO;
                 }
-        } else {
-                I2C[hdl->major]->error = EIO;
+
+        if (err) {
+                reset(hdl, true);
         }
 
-        error(hdl);
         return false;
 }
 #endif
@@ -776,14 +761,43 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
  * @return On success true is returned, otherwise false
  */
 //==============================================================================
-static bool start(I2C_dev_t *hdl)
+static int _I2C_LLD__start(I2C_dev_t *hdl)
 {
         I2C_t *i2c = get_I2C(hdl);
 
         CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
-        SET_BIT(i2c->CR1, I2C_CR1_START);
+        SET_BIT(i2c->CR1, I2C_CR1_START | I2C_CR1_ACK);
 
         return wait_for_I2C_event(hdl, I2C_SR1_SB);
+}
+
+//==============================================================================
+/**
+ * @brief  Function generate REPEAT START sequence on I2C bus
+ * @param  hdl                  device handle
+ * @return One of errno value.
+ */
+//==============================================================================
+static int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
+{
+        I2C_t *i2c = get_I2C(hdl);
+
+        CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
+        SET_BIT(i2c->CR1, I2C_CR1_START | I2C_CR1_ACK);
+
+        u32_t tref = sys_time_get_reference();
+
+        while (!(i2c->SR1 & I2C_SR1_SB)) {
+                if (sys_time_is_expired(tref, DEVICE_TIMEOUT)) {
+                        return EIO;
+                }
+
+                if (i2c->SR1 & (I2C_SR1_ARLO | I2C_SR1_BERR)) {
+                        return EIO;
+                }
+        }
+
+        return ESUCC;
 }
 
 //==============================================================================
@@ -793,11 +807,10 @@ static bool start(I2C_dev_t *hdl)
  * @return On success true is returned, otherwise false
  */
 //==============================================================================
-static void stop(I2C_dev_t *hdl)
+static void _I2C_LLD__stop(I2C_dev_t *hdl)
 {
         I2C_t *i2c = get_I2C(hdl);
 
-        CLEAR_BIT(i2c->CR1, I2C_CR1_START);
         SET_BIT(i2c->CR1, I2C_CR1_STOP);
 }
 
@@ -809,8 +822,10 @@ static void stop(I2C_dev_t *hdl)
  * @return On success true is returned, otherwise false
  */
 //==============================================================================
-static bool send_address(I2C_dev_t *hdl, bool write)
+static int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
 {
+        int err = EIO;
+
         I2C_t *i2c = get_I2C(hdl);
 
         if (hdl->config.addr_10bit) {
@@ -818,34 +833,40 @@ static bool send_address(I2C_dev_t *hdl, bool write)
 
                 // send header + 2 most significant bits of 10-bit address
                 i2c->DR = HEADER_ADDR_10BIT | ((hdl->config.address & 0xFE) >> 7);
-                if (!wait_for_I2C_event(hdl, I2C_SR1_ADD10)) {
-                        return false;
-                }
+                err = wait_for_I2C_event(hdl, I2C_SR1_ADD10);
+                if (err) goto finish;
 
                 // send rest 8 bits of 10-bit address
                 u8_t  addr = hdl->config.address & 0xFF;
                 u16_t tmp  = i2c->SR1;
                 (void)tmp;   i2c->DR = addr;
-                if (!wait_for_I2C_event(hdl, I2C_SR1_ADDR)) {
-                        return false;
-                }
+                err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
+                if (err) goto finish;
 
                 clear_send_address_event(hdl);
 
                 // send repeat start
-                if (!start(hdl)) {
-                        return false;
-                }
+                err = _I2C_LLD__start(hdl);
+                if (err) goto finish;
 
                 // send header
                 i2c->DR = write ? hdr : hdr | 0x01;
-                return wait_for_I2C_event(hdl, I2C_SR1_ADDR);
+                err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
 
         } else {
                 u16_t tmp = i2c->SR1;
-                (void)tmp;  i2c->DR = write ? hdl->config.address & 0xFE : hdl->config.address | 0x01;
-                return wait_for_I2C_event(hdl, I2C_SR1_ADDR);
+                      tmp = i2c->SR2;
+                (void)tmp;
+                i2c->DR = write ? (hdl->config.address & 0xFE) : (hdl->config.address | 0x01);
+                err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
         }
+
+        finish:
+        if (!err) {
+                clear_send_address_event(hdl);
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -878,14 +899,16 @@ static void clear_send_address_event(I2C_dev_t *hdl)
  * @return On success true is returned, otherwise false
  */
 //==============================================================================
-static bool send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode)
+static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode)
 {
+        int    err = EIO;
         I2C_t *i2c = get_I2C(hdl);
 
         switch (mode) {
         case I2C_SUB_ADDR_MODE__3_BYTES:
                 i2c->DR = address >> 16;
-                if (!wait_for_I2C_event(hdl, I2C_SR1_BTF)) {
+                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
+                if (err) {
                         break;
                 } else {
                         // if there is no error then send next bytes
@@ -893,7 +916,8 @@ static bool send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t m
 
         case I2C_SUB_ADDR_MODE__2_BYTES:
                 i2c->DR = address >> 8;
-                if (!wait_for_I2C_event(hdl, I2C_SR1_BTF)) {
+                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
+                if (err) {
                         break;
                 } else {
                         // if there is no error then send next bytes
@@ -901,32 +925,13 @@ static bool send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t m
 
         case I2C_SUB_ADDR_MODE__1_BYTE:
                 i2c->DR = address & 0xFF;
-                return wait_for_I2C_event(hdl, I2C_SR1_BTF);
+                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
 
         default:
-                return false;
+                break;
         }
 
-        return true;
-}
-
-//==============================================================================
-/**
- * @brief  Function set ACK/NACK status according to transfer size
- * @param  hdl                  device handle
- * @param  count                transfer size (bytes)
- * @return None
- */
-//==============================================================================
-static void set_ACK_according_to_reception_size(I2C_dev_t *hdl, size_t count)
-{
-        I2C_t *i2c = get_I2C(hdl);
-
-        if (count == 2) {
-                SET_BIT(i2c->CR1, I2C_CR1_POS | I2C_CR1_ACK);
-        } else {
-                SET_BIT(i2c->CR1, I2C_CR1_ACK);
-        }
+        return err;
 }
 
 //==============================================================================
@@ -938,15 +943,24 @@ static void set_ACK_according_to_reception_size(I2C_dev_t *hdl, size_t count)
  * @return Number of received bytes
  */
 //==============================================================================
-static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
+static int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
 {
-        ssize_t n   = 0;
-        I2C_t  *i2c = get_I2C(hdl);
+        int      err = EIO;
+        ssize_t  n   = 0;
+        I2C_t   *i2c = get_I2C(hdl);
+
+        if (count == 2) {
+                CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
+                SET_BIT(i2c->CR1, I2C_CR1_POS);
+        } else {
+                CLEAR_BIT(i2c->CR1, I2C_CR1_POS);
+                SET_BIT(i2c->CR1, I2C_CR1_ACK);
+        }
 
         if (count >= 3) {
                 clear_send_address_event(hdl);
 
-#if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+#if USE_DMA > 0
                 if (I2C[hdl->major]->use_DMA) {
                         DMA_Channel_t *DMA = const_cast(DMA_Channel_t*, I2C_INFO[hdl->major].DMA_rx);
 
@@ -955,41 +969,39 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
                         DMA->CNDTR = count;
                         DMA->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_TEIE;
 
-                        if (wait_for_DMA_event(hdl, DMA)) {
+                        err = wait_for_DMA_event(hdl, DMA);
+                        if (!err) {
                                 n = count;
                         }
-                } else {
-#else
-                {
+                } else
 #endif
+                {
                         while (count) {
                                 if (count == 3) {
-                                        if (!wait_for_I2C_event(hdl, I2C_SR1_BTF)) {
-                                                break;
-                                        }
+                                        err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
+                                        if (err) break;
 
                                         CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
                                         *dst++ = i2c->DR;
                                         n++;
 
-                                        if (!wait_for_I2C_event(hdl, I2C_SR1_RXNE)) {
-                                                break;
-                                        }
+                                        err = wait_for_I2C_event(hdl, I2C_SR1_RXNE);
+                                        if (err) break;
 
-                                        stop(hdl);
+                                        _I2C_LLD__stop(hdl);
                                         *dst++ = i2c->DR;
                                         n++;
 
-                                        if (!wait_for_I2C_event(hdl, I2C_SR1_RXNE)) {
-                                                break;
-                                        }
+                                        err = wait_for_I2C_event(hdl, I2C_SR1_RXNE);
+                                        if (err) break;
 
                                         *dst++ = i2c->DR;
                                         n++;
 
                                         count = 0;
                                 } else {
-                                        if (wait_for_I2C_event(hdl, I2C_SR1_RXNE)) {
+                                        err = wait_for_I2C_event(hdl, I2C_SR1_RXNE);
+                                        if (!err) {
                                                 *dst++ = i2c->DR;
                                                 count--;
                                                 n++;
@@ -1008,8 +1020,9 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
                 }
                 sys_critical_section_end();
 
-                if (wait_for_I2C_event(hdl, I2C_SR1_BTF)) {
-                        stop(hdl);
+                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
+                if (!err) {
+                        _I2C_LLD__stop(hdl);
 
                         *dst++ = i2c->DR;
                         *dst++ = i2c->DR;
@@ -1019,17 +1032,20 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
         } else if (count == 1) {
                 CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
                 clear_send_address_event(hdl);
-                stop(hdl);
+                _I2C_LLD__stop(hdl);
 
-                if (wait_for_I2C_event(hdl, I2C_SR1_RXNE)) {
+                err = wait_for_I2C_event(hdl, I2C_SR1_RXNE);
+                if (!err) {
                         *dst++ = i2c->DR;
                         n     += 1;
                 }
         }
 
-        stop(hdl);
+        _I2C_LLD__stop(hdl);
 
-        return n;
+        *rdcnt = n;
+
+        return err;
 }
 
 //==============================================================================
@@ -1041,15 +1057,15 @@ static ssize_t receive(I2C_dev_t *hdl, u8_t *dst, size_t count)
  * @return Number of written bytes
  */
 //==============================================================================
-static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
+static int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt)
 {
+        int     err  = EIO;
         ssize_t n    = 0;
         I2C_t  *i2c  = get_I2C(hdl);
-        bool    succ = false;
 
         clear_send_address_event(hdl);
 
-#if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+#if USE_DMA > 0
         if (count >= 3 && I2C[hdl->major]->use_DMA) {
                 DMA_Channel_t *DMA = const_cast(DMA_Channel_t*, I2C_INFO[hdl->major].DMA_tx);
 
@@ -1058,20 +1074,18 @@ static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
                 DMA->CNDTR = count;
                 DMA->CCR   = DMA_CCR1_MINC | DMA_CCR1_TCIE | DMA_CCR1_TEIE | DMA_CCR1_DIR;
 
-                if (wait_for_DMA_event(hdl, DMA)) {
-                        n    = count;
-                        succ = true;
+                err = wait_for_DMA_event(hdl, DMA);
+                if (!err) {
+                        n = count;
                 }
-        } else {
-#else
-        {
+        } else
 #endif
-                succ = true;
+        {
                 while (count) {
-                        if (wait_for_I2C_event(hdl, I2C_SR1_TXE)) {
+                        err = wait_for_I2C_event(hdl, I2C_SR1_TXE);
+                        if (!err) {
                                 i2c->DR = *src++;
                         } else {
-                                succ = false;
                                 break;
                         }
 
@@ -1080,14 +1094,18 @@ static ssize_t transmit(I2C_dev_t *hdl, const u8_t *src, size_t count)
                 }
         }
 
-        if (n && succ) {
-                if (!wait_for_I2C_event(hdl, I2C_SR1_BTF))
-                        return n - 1;
+        if (n && !err) {
+                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
+                if (err) {
+                        n = n - 1;
+                }
         }
 
-        stop(hdl);
+        _I2C_LLD__stop(hdl);
 
-        return n;
+        *wrcnt = n;
+
+        return err;
 }
 
 //==============================================================================
@@ -1101,9 +1119,14 @@ static void IRQ_EV_handler(u8_t major)
 {
         bool woken = false;
 
-        if (I2C1->SR1 & I2C[major]->SR1_mask) {
+        I2C_t *i2c = const_cast(I2C_t*, I2C_INFO[major].I2C);
+        u16_t  SR1 = i2c->SR1;
+        u16_t  SR2 = i2c->SR2;
+        UNUSED_ARG1(SR2);
+
+        if (SR1 & I2C[major]->SR1_mask) {
                 sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
-                CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
+                CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
                 I2C[major]->unexp_event_cnt = 0;
         } else {
                 /*
@@ -1111,7 +1134,7 @@ static void IRQ_EV_handler(u8_t major)
                  * not handled IRQ. If counter reach specified value then
                  * the error flag is set.
                  */
-                if (++I2C[major]->unexp_event_cnt >= 10) {
+                if (++I2C[major]->unexp_event_cnt >= 16) {
                         I2C[major]->error = EIO;
                         sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
                         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
@@ -1131,11 +1154,14 @@ static void IRQ_EV_handler(u8_t major)
 static void IRQ_ER_handler(u8_t major)
 {
         I2C_t *i2c = const_cast(I2C_t*, I2C_INFO[major].I2C);
+        u16_t  SR1 = i2c->SR1;
+        u16_t  SR2 = i2c->SR2;
+        UNUSED_ARG1(SR2);
 
-        if (i2c->SR1 & I2C_SR1_ARLO) {
+        if (SR1 & I2C_SR1_ARLO) {
                 I2C[major]->error = EAGAIN;
 
-        } else if (i2c->SR1 & I2C_SR1_AF) {
+        } else if (SR1 & I2C_SR1_AF) {
                 if (I2C[major]->SR1_mask & (I2C_SR1_ADDR | I2C_SR1_ADD10))
                         I2C[major]->error = ENXIO;
                 else
@@ -1149,7 +1175,8 @@ static void IRQ_ER_handler(u8_t major)
 
         bool woken = false;
         sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
-        CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
+
+        CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
         sys_thread_yield_from_ISR(woken);
 }
 
@@ -1161,7 +1188,7 @@ static void IRQ_ER_handler(u8_t major)
  * @return If IRQ was woken then true is returned, otherwise false
  */
 //==============================================================================
-#if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+#if USE_DMA > 0
 static void IRQ_DMA_handler(const int DMA_ch_no, u8_t major)
 {
         if (DMA1->ISR & (DMA_ISR_TEIF1 << (4 * (DMA_ch_no - 1)))) {
@@ -1170,7 +1197,9 @@ static void IRQ_DMA_handler(const int DMA_ch_no, u8_t major)
 
         bool woken = false;
         sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
+
         clear_DMA_IRQ_flags(major);
+
         sys_thread_yield_from_ISR(woken);
 }
 #endif

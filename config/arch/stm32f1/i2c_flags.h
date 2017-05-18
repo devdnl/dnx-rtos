@@ -100,7 +100,7 @@ end
 
 /*--
 if this:PortExist(1) then
-    this:AddWidget("Spinbox", 1e3, 100e3, "SCL frequency [Hz]")
+    this:AddWidget("Spinbox", 1e3, 400e3, "SCL frequency [Hz]")
     uC.AddPriorityItems(this)
 end
 --*/
@@ -121,7 +121,7 @@ end
 
 /*--
 if this:PortExist(2) then
-    this:AddWidget("Spinbox", 1e3, 100e3, "SCL frequency [Hz]")
+    this:AddWidget("Spinbox", 1e3, 400e3, "SCL frequency [Hz]")
     uC.AddPriorityItems(this)
 end
 --*/
