@@ -248,7 +248,7 @@ if this:PortExist(3) then
     this:AddItem("Yes", "_YES_")
 end
 --*/
-#define __I2C3_USE_DMA__ _NO_
+#define __I2C3_USE_DMA__ _YES_
 
 /*--
 if this:PortExist(3) then
