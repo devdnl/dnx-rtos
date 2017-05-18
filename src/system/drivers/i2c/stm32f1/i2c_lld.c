@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    i2c.c
+@file    i2c_lld.c
 
 @author  Daniel Zorychta
 
@@ -34,31 +34,18 @@
 #include "drivers/driver.h"
 #include "stm32f1/i2c_cfg.h"
 #include "stm32f1/stm32f10x.h"
-#include "../i2c_ioctl.h"
+#include "i2c_ioctl.h"
+#include "i2c.h"
 #include "lib/stm32f10x_rcc.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define ACCESS_TIMEOUT         30000
-#define DEVICE_TIMEOUT         2000
-#define HEADER_ADDR_10BIT      0xF0
-
 #define USE_DMA ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-enum _I2C_major {
-        #if defined(RCC_APB1ENR_I2C1EN)
-        _I2C1,
-        #endif
-        #if defined(RCC_APB1ENR_I2C2EN)
-        _I2C2,
-        #endif
-        _I2C_NUMBER_OF_PERIPHERALS
-};
-
 /// type defines configuration of single I2C peripheral
 typedef struct {
     #if USE_DMA > 0
@@ -77,50 +64,17 @@ typedef struct {
         const IRQn_Type           IRQ_ER_n;             //!< number of error IRQ vector
 } I2C_info_t;
 
-/// type defines I2C device in the runtime environment
-typedef struct {
-        I2C_config_t              config;               //!< pointer to the device configuration
-        dev_lock_t                lock;                 //!< object used to lock access to opened device
-        u8_t                      major;                //!< major number of the device (I2C peripheral number)
-        u8_t                      minor;                //!< minor number of the device (device identifier)
-} I2C_dev_t;
-
-/// type defines main memory of this module
-typedef struct {
-        mutex_t                  *lock;                 //!< mutex used to lock access to the particular peripheral
-        sem_t                    *event;                //!< semaphore used to indicate event (operation finished)
-        u16_t                     SR1_mask;             //!< SR1 register mask (to catch specified event in IRQ)
-        bool                      use_DMA:1;            //!< true if peripheral use DMA channels
-        bool                      initialized:1;        //!< indicates that module for this peripheral is initialized
-        u8_t                      dev_cnt;              //!< number of initialized devices
-        u8_t                      error;                //!< error number (errno)
-        u8_t                      unexp_event_cnt;      //!< number of unexpected events
-} I2C_mem_t;
-
-
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void release_resources(u8_t major);
 static inline I2C_t *get_I2C(I2C_dev_t *hdl);
-static int _I2C_LLD__init(u8_t major);
-static void _I2C_LLD__release(u8_t major);
-static int _I2C_LLD__start(I2C_dev_t *hdl);
-static int _I2C_LLD__repeat_start(I2C_dev_t *hdl);
-static void _I2C_LLD__stop(I2C_dev_t *hdl);
-static int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write);
 static void clear_send_address_event(I2C_dev_t *hdl);
-static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode);
-static int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt);
-static int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt);
 static void IRQ_EV_handler(u8_t major);
 static void IRQ_ER_handler(u8_t major);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-MODULE_NAME(I2C);
-
 /// peripherals configuration
 static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
         #if defined(RCC_APB1ENR_I2C1EN)
@@ -161,16 +115,6 @@ static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
         #endif
 };
 
-/// default peripheral configuration
-static const I2C_config_t I2C_DEFAULT_CFG = {
-        .address       = 0x00,
-        .addr_10bit    = false,
-        .sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED,
-};
-
-/// main memory of module
-static I2C_mem_t *I2C[_I2C_NUMBER_OF_PERIPHERALS];
-
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -178,338 +122,6 @@ static I2C_mem_t *I2C[_I2C_NUMBER_OF_PERIPHERALS];
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief Initialize device
- *
- * @param[out]          **device_handle        device allocated memory
- * @param[in ]            major                major device number
- * @param[in ]            minor                minor device number
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
-{
-        int err = ENODEV;
-
-        if (major >= _I2C_NUMBER_OF_PERIPHERALS) {
-                return err;
-        }
-
-        /* creates basic module structures */
-        if (I2C[major] == NULL) {
-                err = sys_zalloc(sizeof(I2C_mem_t), cast(void**, &I2C[major]));
-                if (err) {
-                        goto finish;
-                }
-
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &I2C[major]->lock);
-                if (err) {
-                        goto finish;
-                }
-
-                err = sys_semaphore_create(1, 0, &I2C[major]->event);
-                if (err) {
-                        goto finish;
-                }
-
-                err = _I2C_LLD__init(major);
-                if (err) {
-                        goto finish;
-                }
-        }
-
-        /* creates device structure */
-        err = sys_zalloc(sizeof(I2C_dev_t), device_handle);
-        if (!err) {
-                I2C_dev_t *hdl = *device_handle;
-                hdl->config    = I2C_DEFAULT_CFG;
-                hdl->major     = major;
-                hdl->minor     = minor;
-
-                sys_device_unlock(&hdl->lock, true);
-
-                I2C[major]->dev_cnt++;
-        }
-
-        finish:
-        if (err) {
-                release_resources(major);
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief Release device
- *
- * @param[in ]          *device_handle          device allocated memory
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_MOD_RELEASE(I2C, void *device_handle)
-{
-        I2C_dev_t *hdl = device_handle;
-
-        int err = sys_device_lock(&hdl->lock);
-        if (!err) {
-                I2C[hdl->major]->dev_cnt--;
-                release_resources(hdl->major);
-                sys_free(device_handle);
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief Open device
- *
- * @param[in ]          *device_handle          device allocated memory
- * @param[in ]           flags                  file operation flags (O_RDONLY, O_WRONLY, O_RDWR)
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_MOD_OPEN(I2C, void *device_handle, u32_t flags)
-{
-        UNUSED_ARG1(flags);
-
-        I2C_dev_t *hdl = device_handle;
-
-        return sys_device_lock(&hdl->lock);
-}
-
-//==============================================================================
-/**
- * @brief Close device
- *
- * @param[in ]          *device_handle          device allocated memory
- * @param[in ]           force                  device force close (true)
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_MOD_CLOSE(I2C, void *device_handle, bool force)
-{
-        I2C_dev_t *hdl = device_handle;
-
-        return sys_device_unlock(&hdl->lock, force);
-}
-
-//==============================================================================
-/**
- * @brief Write data to device
- *
- * @param[in ]          *device_handle          device allocated memory
- * @param[in ]          *src                    data source
- * @param[in ]           count                  number of bytes to write
- * @param[in ][out]     *fpos                   file position
- * @param[out]          *wrcnt                  number of written bytes
- * @param[in ]           fattr                  file attributes
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_MOD_WRITE(I2C,
-              void             *device_handle,
-              const u8_t       *src,
-              size_t            count,
-              fpos_t           *fpos,
-              size_t           *wrcnt,
-              struct vfs_fattr  fattr)
-{
-        UNUSED_ARG1(fattr);
-
-        I2C_dev_t *hdl = device_handle;
-
-        int err = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
-        if (!err) {
-
-                err = _I2C_LLD__start(hdl);
-                if (err) goto error;
-
-                err = _I2C_LLD__send_address(hdl, true);
-                if (err) {
-                        goto error;
-                }
-
-                if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
-                        err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
-                        if (err) goto error;
-                }
-
-                err = _I2C_LLD__transmit(hdl, src, count, wrcnt);
-
-                error:
-                _I2C_LLD__stop(hdl);
-
-                sys_mutex_unlock(I2C[hdl->major]->lock);
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief Read data from device
- *
- * @param[in ]          *device_handle          device allocated memory
- * @param[out]          *dst                    data destination
- * @param[in ]           count                  number of bytes to read
- * @param[in ][out]     *fpos                   file position
- * @param[out]          *rdcnt                  number of read bytes
- * @param[in ]           fattr                  file attributes
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_MOD_READ(I2C,
-             void            *device_handle,
-             u8_t            *dst,
-             size_t           count,
-             fpos_t          *fpos,
-             size_t          *rdcnt,
-             struct vfs_fattr fattr)
-{
-        UNUSED_ARG1(fattr);
-
-        I2C_dev_t *hdl = device_handle;
-
-        int err = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
-        if (!err) {
-
-                if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
-                        err = _I2C_LLD__start(hdl);
-                        if (err) goto error;
-
-                        err = _I2C_LLD__send_address(hdl, true);
-                        if (err) goto error;
-
-                        err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
-                        if (err) goto error;
-                }
-
-                err = _I2C_LLD__repeat_start(hdl);
-                if (err) goto error;
-
-                err = _I2C_LLD__send_address(hdl, false);
-                if (err) goto error;
-
-                err = _I2C_LLD__receive(hdl, dst, count, rdcnt);
-
-                error:
-                _I2C_LLD__stop(hdl);
-
-                sys_mutex_unlock(I2C[hdl->major]->lock);
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief IO control
- *
- * @param[in ]          *device_handle          device allocated memory
- * @param[in ]           request                request
- * @param[in ][out]     *arg                    request's argument
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
-{
-        I2C_dev_t *hdl = device_handle;
-        int        err = EINVAL;
-
-        if (arg) {
-                switch (request) {
-                case IOCTL_I2C__CONFIGURE: {
-                        const I2C_config_t *cfg   = arg;
-                        hdl->config = *cfg;
-                        err = ESUCC;
-                        break;
-                }
-
-                default:
-                        err = EBADRQC;
-                        break;
-                }
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief Flush device
- *
- * @param[in ]          *device_handle          device allocated memory
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_MOD_FLUSH(I2C, void *device_handle)
-{
-        UNUSED_ARG1(device_handle);
-
-        return ESUCC;
-}
-
-//==============================================================================
-/**
- * @brief Device information
- *
- * @param[in ]          *device_handle          device allocated memory
- * @param[out]          *device_stat            device status
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_MOD_STAT(I2C, void *device_handle, struct vfs_dev_stat *device_stat)
-{
-        I2C_dev_t *hdl = device_handle;
-
-        device_stat->st_size  = 0;
-        device_stat->st_major = hdl->major;
-        device_stat->st_minor = hdl->minor;
-
-        return ESUCC;
-}
-
-//==============================================================================
-/**
- * @brief  Function release all resource allocated during initialization phase
- * @param  major         major device number
- * @return None
- */
-//==============================================================================
-static void release_resources(u8_t major)
-{
-        if (I2C[major] && I2C[major]->dev_cnt == 0) {
-                if (I2C[major]->lock) {
-                        sys_mutex_destroy(I2C[major]->lock);
-                        I2C[major]->lock = NULL;
-                }
-
-                if (I2C[major]->event) {
-                        sys_semaphore_destroy(I2C[major]->event);
-                        I2C[major]->event = NULL;
-                }
-
-                if (I2C[major]->initialized) {
-                        _I2C_LLD__release(major);
-                }
-
-                sys_free(cast(void**, &I2C[major]));
-        }
-}
-
 //==============================================================================
 /**
  * @brief  Returns I2C address of current device
@@ -552,12 +164,131 @@ static void clear_DMA_IRQ_flags(u8_t major)
 
 //==============================================================================
 /**
+ * @brief  Function handle error (try make the interface working)
+ * @param  hdl          device handle
+ * @return None
+ */
+//==============================================================================
+static void reset(I2C_dev_t *hdl, bool reinit)
+{
+        I2C_t *i2c = get_I2C(hdl);
+
+        CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
+
+        u8_t tmp = i2c->SR1;
+             tmp = i2c->SR2;
+             tmp = i2c->DR;
+             tmp = i2c->DR;
+
+        UNUSED_ARG1(tmp);
+
+        i2c->SR1 = 0;
+
+        sys_sleep_ms(1);
+
+        if (reinit) {
+                _I2C_LLD__init(hdl->major);
+        }
+
+        _I2C_LLD__stop(hdl);
+}
+
+//==============================================================================
+/**
+ * @brief  Function wait for selected event (IRQ)
+ * @param  hdl                  device handle
+ * @param  SR1_event_mask       event mask (bits from SR1 register)
+ * @return On success true is returned, otherwise false
+ */
+//==============================================================================
+static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
+{
+        I2C_t *i2c = get_I2C(hdl);
+
+        I2C[hdl->major]->SR1_mask = SR1_event_mask;
+        I2C[hdl->major]->error    = 0;
+
+        u16_t CR2 = I2C_CR2_ITEVTEN | I2C_CR2_ITERREN;
+
+        if (SR1_event_mask & (I2C_SR1_RXNE | I2C_SR1_TXE)) {
+                CR2 |= I2C_CR2_ITBUFEN;
+        }
+
+        SET_BIT(i2c->CR2, CR2);
+
+        int err = sys_semaphore_wait(I2C[hdl->major]->event, _I2C_DEVICE_TIMEOUT);
+        if (!err && I2C[hdl->major]->error) {
+                err = EIO;
+                }
+
+        if (err) {
+                reset(hdl, true);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function wait for DMA event (IRQ)
+ * @param  hdl                  device handle
+ * @param  DMA                  DMA channel
+ * @return On success true is returned, otherwise false
+ */
+//==============================================================================
+#if USE_DMA > 0
+static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
+{
+        I2C[hdl->major]->error = 0;
+
+        I2C_t *i2c = get_I2C(hdl);
+        CLEAR_BIT(i2c->CR2, I2C_CR2_ITBUFEN | I2C_CR2_ITERREN | I2C_CR2_ITEVTEN);
+        SET_BIT(i2c->CR2, I2C_CR2_DMAEN);
+        SET_BIT(i2c->CR2, I2C_CR2_LAST);
+        SET_BIT(DMA->CCR, DMA_CCR1_EN);
+
+        int err = sys_semaphore_wait(I2C[hdl->major]->event, _I2C_DEVICE_TIMEOUT);
+        if (!err && I2C[hdl->major]->error) {
+                err = EIO;
+                }
+
+        if (err) {
+                reset(hdl, true);
+        }
+
+        return false;
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief  Clear event of send address
+ * @param  hdl                  device handle
+ * @return None
+ */
+//==============================================================================
+static void clear_send_address_event(I2C_dev_t *hdl)
+{
+        I2C_t *i2c = get_I2C(hdl);
+
+        sys_critical_section_begin();
+        {
+                u16_t tmp;
+                tmp = i2c->SR1;
+                tmp = i2c->SR2;
+                (void)tmp;
+        }
+        sys_critical_section_end();
+}
+
+//==============================================================================
+/**
  * @brief  Enables selected I2C peripheral according with configuration
  * @param  major        peripheral number
  * @return One of errno value.
  */
 //==============================================================================
-static int _I2C_LLD__init(u8_t major)
+int _I2C_LLD__init(u8_t major)
 {
         const I2C_info_t *cfg = &I2C_INFO[major];
         I2C_t            *i2c = const_cast(I2C_t*, I2C_INFO[major].I2C);
@@ -631,7 +362,7 @@ static int _I2C_LLD__init(u8_t major)
  * @return None
  */
 //==============================================================================
-static void _I2C_LLD__release(u8_t major)
+void _I2C_LLD__release(u8_t major)
 {
         const I2C_info_t *cfg = &I2C_INFO[major];
         I2C_t            *i2c = const_cast(I2C_t*, I2C_INFO[major].I2C);
@@ -660,103 +391,7 @@ static void _I2C_LLD__release(u8_t major)
         I2C[major]->initialized = false;
 }
 
-//==============================================================================
-/**
- * @brief  Function handle error (try make the interface working)
- * @param  hdl          device handle
- * @return None
- */
-//==============================================================================
-static void reset(I2C_dev_t *hdl, bool reinit)
-{
-        I2C_t *i2c = get_I2C(hdl);
 
-        CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
-
-        u8_t tmp = i2c->SR1;
-             tmp = i2c->SR2;
-             tmp = i2c->DR;
-             tmp = i2c->DR;
-
-        UNUSED_ARG1(tmp);
-
-        i2c->SR1 = 0;
-
-        sys_sleep_ms(1);
-
-        if (reinit) {
-                _I2C_LLD__init(hdl->major);
-        }
-
-        _I2C_LLD__stop(hdl);
-}
-
-//==============================================================================
-/**
- * @brief  Function wait for selected event (IRQ)
- * @param  hdl                  device handle
- * @param  SR1_event_mask       event mask (bits from SR1 register)
- * @return On success true is returned, otherwise false
- */
-//==============================================================================
-static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
-{
-        I2C_t *i2c = get_I2C(hdl);
-
-        I2C[hdl->major]->SR1_mask = SR1_event_mask;
-        I2C[hdl->major]->error    = 0;
-
-        u16_t CR2 = I2C_CR2_ITEVTEN | I2C_CR2_ITERREN;
-
-        if (SR1_event_mask & (I2C_SR1_RXNE | I2C_SR1_TXE)) {
-                CR2 |= I2C_CR2_ITBUFEN;
-        }
-
-        SET_BIT(i2c->CR2, CR2);
-
-        int err = sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT);
-        if (!err && I2C[hdl->major]->error) {
-                err = EIO;
-                }
-
-        if (err) {
-                reset(hdl, true);
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief  Function wait for DMA event (IRQ)
- * @param  hdl                  device handle
- * @param  DMA                  DMA channel
- * @return On success true is returned, otherwise false
- */
-//==============================================================================
-#if USE_DMA > 0
-static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
-{
-        I2C[hdl->major]->error = 0;
-
-        I2C_t *i2c = get_I2C(hdl);
-        CLEAR_BIT(i2c->CR2, I2C_CR2_ITBUFEN | I2C_CR2_ITERREN | I2C_CR2_ITEVTEN);
-        SET_BIT(i2c->CR2, I2C_CR2_DMAEN);
-        SET_BIT(i2c->CR2, I2C_CR2_LAST);
-        SET_BIT(DMA->CCR, DMA_CCR1_EN);
-
-        int err = sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT);
-        if (!err && I2C[hdl->major]->error) {
-                err = EIO;
-                }
-
-        if (err) {
-                reset(hdl, true);
-        }
-
-        return false;
-}
-#endif
 
 //==============================================================================
 /**
@@ -765,7 +400,7 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Channel_t *DMA)
  * @return On success true is returned, otherwise false
  */
 //==============================================================================
-static int _I2C_LLD__start(I2C_dev_t *hdl)
+int _I2C_LLD__start(I2C_dev_t *hdl)
 {
         I2C_t *i2c = get_I2C(hdl);
 
@@ -782,7 +417,7 @@ static int _I2C_LLD__start(I2C_dev_t *hdl)
  * @return One of errno value.
  */
 //==============================================================================
-static int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
+int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
 {
         I2C_t *i2c = get_I2C(hdl);
 
@@ -792,7 +427,7 @@ static int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
         u32_t tref = sys_time_get_reference();
 
         while (!(i2c->SR1 & I2C_SR1_SB)) {
-                if (sys_time_is_expired(tref, DEVICE_TIMEOUT)) {
+                if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
                         return EIO;
                 }
 
@@ -811,7 +446,7 @@ static int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
  * @return On success true is returned, otherwise false
  */
 //==============================================================================
-static void _I2C_LLD__stop(I2C_dev_t *hdl)
+void _I2C_LLD__stop(I2C_dev_t *hdl)
 {
         I2C_t *i2c = get_I2C(hdl);
 
@@ -826,17 +461,17 @@ static void _I2C_LLD__stop(I2C_dev_t *hdl)
  * @return On success true is returned, otherwise false
  */
 //==============================================================================
-static int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
+int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
 {
         int err = EIO;
 
         I2C_t *i2c = get_I2C(hdl);
 
         if (hdl->config.addr_10bit) {
-                u8_t hdr = HEADER_ADDR_10BIT | ((hdl->config.address >> 7) & 0x6);
+                u8_t hdr = _I2C_HEADER_ADDR_10BIT | ((hdl->config.address >> 7) & 0x6);
 
                 // send header + 2 most significant bits of 10-bit address
-                i2c->DR = HEADER_ADDR_10BIT | ((hdl->config.address & 0xFE) >> 7);
+                i2c->DR = _I2C_HEADER_ADDR_10BIT | ((hdl->config.address & 0xFE) >> 7);
                 err = wait_for_I2C_event(hdl, I2C_SR1_ADD10);
                 if (err) goto finish;
 
@@ -873,56 +508,6 @@ static int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
         return err;
 }
 
-//==============================================================================
-/**
- * @brief  Clear event of send address
- * @param  hdl                  device handle
- * @return None
- */
-//==============================================================================
-static void clear_send_address_event(I2C_dev_t *hdl)
-{
-        I2C_t *i2c = get_I2C(hdl);
-
-        sys_critical_section_begin();
-        {
-                u16_t tmp;
-                tmp = i2c->SR1;
-                tmp = i2c->SR2;
-                (void)tmp;
-        }
-        sys_critical_section_end();
-}
-
-//==============================================================================
-/**
- * @brief  Function send subaddress to I2C device
- * @param  hdl                  device handle
- * @param  address              subaddress
- * @param  mode                 size of subaddress
- * @return On success true is returned, otherwise false
- */
-//==============================================================================
-static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode)
-{
-        int    err = EIO;
-        u8_t   n   = 0;
-        u8_t   addr[4];
-
-        switch (mode) {
-        case I2C_SUB_ADDR_MODE__3_BYTES: addr[n++] = address >> 16;
-        case I2C_SUB_ADDR_MODE__2_BYTES: addr[n++] = address >> 8;
-        case I2C_SUB_ADDR_MODE__1_BYTE : addr[n++] = address & 0xFF;
-                size_t wrcnt = 0;
-                err = _I2C_LLD__transmit(hdl, addr, n, &wrcnt);
-                break;
-
-        default:
-                break;
-        }
-
-        return err;
-}
 
 //==============================================================================
 /**
@@ -933,7 +518,7 @@ static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mo
  * @return Number of received bytes
  */
 //==============================================================================
-static int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
+int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
 {
         int      err = EIO;
         ssize_t  n   = 0;
@@ -1047,7 +632,7 @@ static int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
  * @return Number of written bytes
  */
 //==============================================================================
-static int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt)
+int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt)
 {
         int     err  = EIO;
         ssize_t n    = 0;
