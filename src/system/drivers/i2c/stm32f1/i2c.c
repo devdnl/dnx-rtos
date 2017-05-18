@@ -346,6 +346,8 @@ API_MOD_WRITE(I2C,
                 err = _I2C_LLD__transmit(hdl, src, count, wrcnt);
 
                 error:
+                _I2C_LLD__stop(hdl);
+
                 sys_mutex_unlock(I2C[hdl->major]->lock);
         }
 
@@ -401,6 +403,8 @@ API_MOD_READ(I2C,
                 err = _I2C_LLD__receive(hdl, dst, count, rdcnt);
 
                 error:
+                _I2C_LLD__stop(hdl);
+
                 sys_mutex_unlock(I2C[hdl->major]->lock);
         }
 
@@ -902,30 +906,16 @@ static void clear_send_address_event(I2C_dev_t *hdl)
 static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode)
 {
         int    err = EIO;
-        I2C_t *i2c = get_I2C(hdl);
+        u8_t   n   = 0;
+        u8_t   addr[4];
 
         switch (mode) {
-        case I2C_SUB_ADDR_MODE__3_BYTES:
-                i2c->DR = address >> 16;
-                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
-                if (err) {
-                        break;
-                } else {
-                        // if there is no error then send next bytes
-                }
-
-        case I2C_SUB_ADDR_MODE__2_BYTES:
-                i2c->DR = address >> 8;
-                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
-                if (err) {
-                        break;
-                } else {
-                        // if there is no error then send next bytes
-                }
-
-        case I2C_SUB_ADDR_MODE__1_BYTE:
-                i2c->DR = address & 0xFF;
-                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
+        case I2C_SUB_ADDR_MODE__3_BYTES: addr[n++] = address >> 16;
+        case I2C_SUB_ADDR_MODE__2_BYTES: addr[n++] = address >> 8;
+        case I2C_SUB_ADDR_MODE__1_BYTE : addr[n++] = address & 0xFF;
+                size_t wrcnt = 0;
+                err = _I2C_LLD__transmit(hdl, addr, n, &wrcnt);
+                break;
 
         default:
                 break;
@@ -1100,8 +1090,6 @@ static int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                         n = n - 1;
                 }
         }
-
-        _I2C_LLD__stop(hdl);
 
         *wrcnt = n;
 
