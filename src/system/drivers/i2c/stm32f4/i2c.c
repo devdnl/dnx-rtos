@@ -553,38 +553,29 @@ static inline I2C_TypeDef *get_I2C(I2C_dev_t *hdl)
  * @return None
  */
 //==============================================================================
-#if ((_I2C1_USE_DMA > 0) || (_I2C2_USE_DMA > 0))
+#if USE_DMA > 0
 static void clear_DMA_IRQ_flags(u8_t major)
 {
         I2C_info_t         *cfg    = const_cast(I2C_info_t*, &I2C_INFO[major]);
         DMA_Stream_TypeDef *DMA_tx = const_cast(DMA_Stream_TypeDef*, cfg->DMA_tx);
         DMA_Stream_TypeDef *DMA_rx = const_cast(DMA_Stream_TypeDef*, cfg->DMA_rx);
 
-        if (cfg->DMA_tx_number < 2) {
-                DMA1->LIFCR = ( DMA_LIFCR_CFEIF0
-                              | DMA_LIFCR_CDMEIF0
-                              | DMA_LIFCR_CTEIF0
-                              | DMA_LIFCR_CHTIF0
-                              | DMA_LIFCR_CTCIF0 ) << (6 * (cfg->DMA_tx_number - 0));
-        } else if (cfg->DMA_tx_number < 4) {
-                DMA1->LIFCR = ( DMA_LIFCR_CFEIF2
-                              | DMA_LIFCR_CDMEIF2
-                              | DMA_LIFCR_CTEIF2
-                              | DMA_LIFCR_CHTIF2
-                              | DMA_LIFCR_CTCIF2 ) << (6 * (cfg->DMA_tx_number - 2));
-        } else if (cfg->DMA_tx_number < 6) {
-                DMA1->HIFCR = ( DMA_HIFCR_CFEIF4
-                              | DMA_HIFCR_CDMEIF4
-                              | DMA_HIFCR_CTEIF4
-                              | DMA_HIFCR_CHTIF4
-                              | DMA_HIFCR_CTCIF4 ) << (6 * (cfg->DMA_tx_number - 4));
-        } else if (cfg->DMA_tx_number < 8) {
-                DMA1->HIFCR = ( DMA_HIFCR_CFEIF6
-                              | DMA_HIFCR_CDMEIF6
-                              | DMA_HIFCR_CTEIF6
-                              | DMA_HIFCR_CHTIF6
-                              | DMA_HIFCR_CTCIF6 ) << (6 * (cfg->DMA_tx_number - 6));
-        }
+        static const struct {
+                __IO u32_t *IFCR;
+                u32_t       mask;
+        } flag[] = {
+                    {.IFCR = &DMA1->LIFCR, .mask = (DMA_LIFCR_CFEIF0 | DMA_LIFCR_CDMEIF0 | DMA_LIFCR_CTEIF0 | DMA_LIFCR_CHTIF0 | DMA_LIFCR_CTCIF0)},
+                    {.IFCR = &DMA1->LIFCR, .mask = (DMA_LIFCR_CFEIF1 | DMA_LIFCR_CDMEIF1 | DMA_LIFCR_CTEIF1 | DMA_LIFCR_CHTIF1 | DMA_LIFCR_CTCIF1)},
+                    {.IFCR = &DMA1->LIFCR, .mask = (DMA_LIFCR_CFEIF2 | DMA_LIFCR_CDMEIF2 | DMA_LIFCR_CTEIF2 | DMA_LIFCR_CHTIF2 | DMA_LIFCR_CTCIF2)},
+                    {.IFCR = &DMA1->LIFCR, .mask = (DMA_LIFCR_CFEIF3 | DMA_LIFCR_CDMEIF3 | DMA_LIFCR_CTEIF3 | DMA_LIFCR_CHTIF3 | DMA_LIFCR_CTCIF3)},
+                    {.IFCR = &DMA1->HIFCR, .mask = (DMA_HIFCR_CFEIF4 | DMA_HIFCR_CDMEIF4 | DMA_HIFCR_CTEIF4 | DMA_HIFCR_CHTIF4 | DMA_HIFCR_CTCIF4)},
+                    {.IFCR = &DMA1->HIFCR, .mask = (DMA_HIFCR_CFEIF5 | DMA_HIFCR_CDMEIF5 | DMA_HIFCR_CTEIF5 | DMA_HIFCR_CHTIF5 | DMA_HIFCR_CTCIF5)},
+                    {.IFCR = &DMA1->HIFCR, .mask = (DMA_HIFCR_CFEIF6 | DMA_HIFCR_CDMEIF6 | DMA_HIFCR_CTEIF6 | DMA_HIFCR_CHTIF6 | DMA_HIFCR_CTCIF6)},
+                    {.IFCR = &DMA1->HIFCR, .mask = (DMA_HIFCR_CFEIF7 | DMA_HIFCR_CDMEIF7 | DMA_HIFCR_CTEIF7 | DMA_HIFCR_CHTIF7 | DMA_HIFCR_CTCIF7)},
+        };
+
+        *flag[cfg->DMA_tx_number].IFCR = flag[cfg->DMA_tx_number].mask;
+        *flag[cfg->DMA_rx_number].IFCR = flag[cfg->DMA_rx_number].mask;
 
         CLEAR_BIT(DMA_tx->CR, DMA_SxCR_EN);
         CLEAR_BIT(DMA_rx->CR, DMA_SxCR_EN);
@@ -790,15 +781,15 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Stream_TypeDef *DMA)
         SET_BIT(i2c->CR2, I2C_CR2_LAST);
         SET_BIT(DMA->CR, DMA_SxCR_EN);
 
-        if (sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT) == ESUCC) {
-                if (I2C[hdl->major]->error == 0) {
-                        return true;
-                }
-        } else {
-                I2C[hdl->major]->error = EIO;
+        int err = sys_semaphore_wait(I2C[hdl->major]->event, DEVICE_TIMEOUT);
+        if (!err && I2C[hdl->major]->error) {
+                err = EIO;
         }
 
-        reset(hdl);
+        if (err) {
+                reset(hdl, true);
+        }
+
         return false;
 }
 #endif
@@ -1027,10 +1018,13 @@ static int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                         DMA->M0AR = cast(u32_t, dst);
                         DMA->NDTR = count;
 
+                        clear_DMA_IRQ_flags(hdl->major);
+
                         DMA->CR = ((I2C_INFO[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
                                 | DMA_SxCR_MINC | DMA_SxCR_TCIE | DMA_SxCR_TEIE;
 
-                        if (wait_for_DMA_event(hdl, DMA)) {
+                        err = wait_for_DMA_event(hdl, DMA);
+                        if (!err) {
                                 n = count;
                         }
                 } else {
@@ -1138,9 +1132,9 @@ static int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                 DMA->CR = ((I2C_INFO[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
                         | DMA_SxCR_MINC | DMA_SxCR_TCIE | DMA_SxCR_TEIE | DMA_SxCR_DIR_0;
 
-                if (wait_for_DMA_event(hdl, DMA)) {
-                        n    = count;
-                        err  = ESUCC;
+                err = wait_for_DMA_event(hdl, DMA);
+                if (!err) {
+                        n = count;
                 }
         } else {
 #else
@@ -1266,25 +1260,33 @@ static void IRQ_ER_handler(u8_t major)
 #if USE_DMA > 0
 static void IRQ_DMA_handler(const int DMA_ch_no, u8_t major)
 {
-        bool is_error = false;
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
 
-        if (DMA_ch_no < 2) {
-                is_error = (DMA1->LISR & DMA_LISR_TEIF0) << (6 * (DMA_ch_no - 0));
-        } else if (DMA_ch_no < 4) {
-                is_error = (DMA1->LISR & DMA_LISR_TEIF2) << (6 * (DMA_ch_no - 2));
-        } else if (DMA_ch_no < 6) {
-                is_error = (DMA1->HISR & DMA_HISR_TEIF4) << (6 * (DMA_ch_no - 4));
-        } else if (DMA_ch_no < 8) {
-                is_error = (DMA1->HISR & DMA_HISR_TEIF6) << (6 * (DMA_ch_no - 6));
-        }
+        static const struct {
+                __IO u32_t *IFSR;
+                u32_t       mask;
+        } flag[] = {
+                    {.IFSR = &DMA1->LISR, .mask = DMA_LISR_TEIF0},
+                    {.IFSR = &DMA1->LISR, .mask = DMA_LISR_TEIF1},
+                    {.IFSR = &DMA1->LISR, .mask = DMA_LISR_TEIF2},
+                    {.IFSR = &DMA1->LISR, .mask = DMA_LISR_TEIF3},
+                    {.IFSR = &DMA1->HISR, .mask = DMA_HISR_TEIF4},
+                    {.IFSR = &DMA1->HISR, .mask = DMA_HISR_TEIF5},
+                    {.IFSR = &DMA1->HISR, .mask = DMA_HISR_TEIF6},
+                    {.IFSR = &DMA1->HISR, .mask = DMA_HISR_TEIF7},
+        };
 
-        if (is_error) {
-                I2C[major]->error = EIO;
-        }
+        I2C[major]->error = (*flag[DMA_ch_no].IFSR & flag[DMA_ch_no].mask) ? EIO : ESUCC;
 
         bool woken = false;
         sys_semaphore_signal_from_ISR(I2C[major]->event, &woken);
+
         clear_DMA_IRQ_flags(major);
+
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
+
         sys_thread_yield_from_ISR(woken);
 }
 #endif
