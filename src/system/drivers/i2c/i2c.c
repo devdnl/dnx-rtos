@@ -63,7 +63,7 @@ static const I2C_config_t I2C_DEFAULT_CFG = {
 };
 
 /// main memory of module
-I2C_mem_t *I2C[_I2C_NUMBER_OF_PERIPHERALS];
+I2C_mem_t *_I2C[_I2C_NUMBER_OF_PERIPHERALS];
 
 /*==============================================================================
   Exported object definitions
@@ -93,18 +93,18 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
         }
 
         /* creates basic module structures */
-        if (I2C[major] == NULL) {
-                err = sys_zalloc(sizeof(I2C_mem_t), cast(void**, &I2C[major]));
+        if (_I2C[major] == NULL) {
+                err = sys_zalloc(sizeof(I2C_mem_t), cast(void**, &_I2C[major]));
                 if (err) {
                         goto finish;
                 }
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &I2C[major]->lock);
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &_I2C[major]->lock);
                 if (err) {
                         goto finish;
                 }
 
-                err = sys_semaphore_create(1, 0, &I2C[major]->event);
+                err = sys_semaphore_create(1, 0, &_I2C[major]->event);
                 if (err) {
                         goto finish;
                 }
@@ -125,7 +125,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
 
                 sys_device_unlock(&hdl->lock, true);
 
-                I2C[major]->dev_cnt++;
+                _I2C[major]->dev_cnt++;
         }
 
         finish:
@@ -151,7 +151,7 @@ API_MOD_RELEASE(I2C, void *device_handle)
 
         int err = sys_device_lock(&hdl->lock);
         if (!err) {
-                I2C[hdl->major]->dev_cnt--;
+                _I2C[hdl->major]->dev_cnt--;
                 release_resources(hdl->major);
                 sys_free(device_handle);
         }
@@ -221,7 +221,7 @@ API_MOD_WRITE(I2C,
 
         I2C_dev_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+        int err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
         if (!err) {
 
                 err = _I2C_LLD__start(hdl);
@@ -242,7 +242,7 @@ API_MOD_WRITE(I2C,
                 error:
                 _I2C_LLD__stop(hdl);
 
-                sys_mutex_unlock(I2C[hdl->major]->lock);
+                sys_mutex_unlock(_I2C[hdl->major]->lock);
         }
 
         return err;
@@ -274,7 +274,7 @@ API_MOD_READ(I2C,
 
         I2C_dev_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+        int err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
         if (!err) {
 
                 if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
@@ -299,7 +299,7 @@ API_MOD_READ(I2C,
                 error:
                 _I2C_LLD__stop(hdl);
 
-                sys_mutex_unlock(I2C[hdl->major]->lock);
+                sys_mutex_unlock(_I2C[hdl->major]->lock);
         }
 
         return err;
@@ -385,22 +385,22 @@ API_MOD_STAT(I2C, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static void release_resources(u8_t major)
 {
-        if (I2C[major] && I2C[major]->dev_cnt == 0) {
-                if (I2C[major]->lock) {
-                        sys_mutex_destroy(I2C[major]->lock);
-                        I2C[major]->lock = NULL;
+        if (_I2C[major] && _I2C[major]->dev_cnt == 0) {
+                if (_I2C[major]->lock) {
+                        sys_mutex_destroy(_I2C[major]->lock);
+                        _I2C[major]->lock = NULL;
                 }
 
-                if (I2C[major]->event) {
-                        sys_semaphore_destroy(I2C[major]->event);
-                        I2C[major]->event = NULL;
+                if (_I2C[major]->event) {
+                        sys_semaphore_destroy(_I2C[major]->event);
+                        _I2C[major]->event = NULL;
                 }
 
-                if (I2C[major]->initialized) {
+                if (_I2C[major]->initialized) {
                         _I2C_LLD__release(major);
                 }
 
-                sys_free(cast(void**, &I2C[major]));
+                sys_free(cast(void**, &_I2C[major]));
         }
 }
 
