@@ -31,11 +31,11 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #if defined(ARCH_stm32f1)
-#include "stm32f1/uart_lld.h"
+#include "uart.h"
+#include "uart_ioctl.h"
 #include "stm32f1/uart_cfg.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
-#include "../uart_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros

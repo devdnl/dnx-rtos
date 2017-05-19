@@ -31,11 +31,11 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #if defined(ARCH_efr32)
-#include "efr32/uart_lld.h"
+#include "uart.h"
+#include "uart_ioctl.h"
 #include "efr32/uart_cfg.h"
 #include "efr32/efr32xx.h"
 #include "efr32/lib/em_cmu.h"
-#include "../uart_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros

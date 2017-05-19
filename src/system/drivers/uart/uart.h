@@ -35,17 +35,14 @@
 #include "uart_ioctl.h"
 
 #if defined(ARCH_stm32f1)
-#include "stm32f1/uart_lld.h"
 #include "stm32f1/uart_cfg.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #elif defined(ARCH_stm32f4)
-#include "stm32f4/uart_lld.h"
 #include "stm32f4/uart_cfg.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
 #elif defined(ARCH_efr32)
-#include "efr32/uart_lld.h"
 #include "efr32/uart_cfg.h"
 #include "efr32/efr32xx.h"
 #include "efr32/lib/em_cmu.h"
@@ -62,6 +59,65 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+//* UARTs */
+#if defined(ARCH_stm32f1)
+enum {
+        #if defined(RCC_APB2ENR_USART1EN)
+        _UART1,
+        #endif
+        #if defined(RCC_APB1ENR_USART2EN)
+        _UART2,
+        #endif
+        #if defined(RCC_APB1ENR_USART3EN)
+        _UART3,
+        #endif
+        #if defined(RCC_APB1ENR_UART4EN)
+        _UART4,
+        #endif
+        #if defined(RCC_APB1ENR_UART5EN)
+        _UART5,
+        #endif
+        _UART_COUNT
+};
+#elif defined(ARCH_stm32f4)
+enum {
+        #if defined(RCC_APB2ENR_USART1EN)
+        _UART1,
+        #endif
+        #if defined(RCC_APB1ENR_USART2EN)
+        _UART2,
+        #endif
+        #if defined(RCC_APB1ENR_USART3EN)
+        _UART3,
+        #endif
+        #if defined(RCC_APB1ENR_UART4EN)
+        _UART4,
+        #endif
+        #if defined(RCC_APB1ENR_UART5EN)
+        _UART5,
+        #endif
+        #if defined(RCC_APB2ENR_USART6EN)
+        _UART6,
+        #endif
+        #if defined(RCC_APB1ENR_UART7EN)
+        _UART7,
+        #endif
+        #if defined(RCC_APB1ENR_UART8EN)
+        _UART8,
+        #endif
+        #if defined(RCC_APB2ENR_UART9EN)
+        _UART9,
+        #endif
+        #if defined(RCC_APB2ENR_UART10EN)
+        _UART10,
+        #endif
+        _UART_COUNT
+};
+#elif defined(ARCH_efr32)
+#define _UART_COUNT USART_COUNT
+#endif
+
+
 /* USART handling structure */
 struct UART_mem {
         // Rx FIFO
