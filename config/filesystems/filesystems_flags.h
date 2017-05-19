@@ -47,28 +47,13 @@
 # this:SetToolTip("The ramfs is a general purpose RAM file system, that can be\n"..
 #                 "used to store files, device-files, and pipes. The file system\n"..
 #                 "is the best choice if you want to use only one file system for\n"..
-#                 "each file operations. The ramfs is not fast as devfs, because\n"..
-#                 "provides greater functionality.")
+#                 "each file operations.")
 # this:AddExtraWidget("Hyperlink", "RAMFS_CONFIGURE", "")
 # this:SetEvent("clicked", "RAMFS_CONFIGURE", function() end)
 #--*/
 #define __ENABLE_RAMFS__ _YES_
 #/*
 __ENABLE_RAMFS__=_YES_
-#*/
-
-#/*--
-# this:AddWidget("Checkbox", "Enable devfs")
-# this:SetToolTip("The devfs is a small file system, that can be used to store\n"..
-#                 "device and pipe files only. This file system is minimalistic\n"..
-#                 "and thus is ideal for devices-files, because is fast. A data\n"..
-#                 "of this file system is stored in the RAM.")
-# this:AddExtraWidget("Hyperlink", "DEVFS_CONFIGURE", "")
-# this:SetEvent("clicked", "DEVFS_CONFIGURE", function() end)
-#--*/
-#define __ENABLE_DEVFS__ _NO_
-#/*
-__ENABLE_DEVFS__=_NO_
 #*/
 
 #/*--
@@ -83,9 +68,9 @@ __ENABLE_DEVFS__=_NO_
 # this:AddExtraWidget("Hyperlink", "PROCFS_CONFIGURE", "")
 # this:SetEvent("clicked", "PROCFS_CONFIGURE", function() end)
 #--*/
-#define __ENABLE_PROCFS__ _NO_
+#define __ENABLE_PROCFS__ _YES_
 #/*
-__ENABLE_PROCFS__=_NO_
+__ENABLE_PROCFS__=_YES_
 #*/
 
 #/*--
@@ -112,13 +97,15 @@ __ENABLE_FATFS__=_NO_
 # this:SetEvent("clicked", "EEFS_CONFIGURE", function() this:LoadFile("filesystems/eefs_flags.h") end)
 #--*/
 #include "../filesystems/eefs_flags.h"
-#define __ENABLE_EEFS__ _NO_
+#define __ENABLE_EEFS__ _YES_
 #/*
-__ENABLE_EEFS__=_NO_
+__ENABLE_EEFS__=_YES_
 #*/
 
 #/*--
 # this:AddWidget("Checkbox", "Enable ext4fs")
+# this:SetToolTip("The EXT4FS is a file system that support Linux file systems\n "..
+#                 "like EXT2, EXT3, and EXT4.")
 # this:SetToolTip("EXT2,3,4 file systems.")
 # this:AddExtraWidget("Hyperlink", "EXT4FS_CONFIGURE", "Configure")
 # this:SetEvent("clicked", "EXT4FS_CONFIGURE", function() this:LoadFile("filesystems/ext4fs_flags.h") end)
