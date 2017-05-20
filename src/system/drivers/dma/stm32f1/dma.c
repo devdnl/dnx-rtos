@@ -28,19 +28,24 @@ Brief    General usage DMA driver.
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f4/dma_ddi.h"
-#include "stm32f4/stm32f4xx.h"
+#include "stm32f1/dma_ddi.h"
+#include "stm32f1/stm32f10x.h"
 #include "../dma_ioctl.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define DMA_COUNT                       2
-#define STREAM_COUNT                    8
+enum {
+        DMA1_CHANNELS = 7,
+      #if defined(RCC_AHBENR_DMA2EN)
+        DMA2_CHANNELS = 5,
+      #endif
+        DMA_COUNT
+};
 
-#define DMAD(major, stream, ID)         (((ID) << 4) | (((stream) & 7) << 1) | ((major) & 1))
+#define DMAD(major, channel, ID)        (((ID) << 4) | (((channel) & 7) << 1) | ((major) & 1))
 #define GETMAJOR(DMAD)                  (((DMAD) >> 0) & 1)
-#define GETSTREAM(DMAD)                 (((DMAD) >> 1) & 7)
+#define GETCHANNEL(DMAD)                (((DMAD) >> 1) & 7)
 
 #define M2M_TRANSFER_TIMEOUT            5000
 
@@ -48,9 +53,10 @@ Brief    General usage DMA driver.
   Local object types
 ==============================================================================*/
 typedef struct {
-        DMA_TypeDef        *DMA;
-        DMA_Stream_TypeDef *stream[STREAM_COUNT];
-        IRQn_Type           IRQn[STREAM_COUNT];
+        DMA_t         *DMA;
+        DMA_Channel_t *channel[DMA1_CHANNELS];
+        IRQn_Type      IRQn[DMA1_CHANNELS];
+        u8_t           chcnt;
 } DMA_HW_t;
 
 typedef struct {
@@ -58,19 +64,19 @@ typedef struct {
         _DMA_cb_t       callback;
         u32_t           dmad;
         bool            release;
-} DMA_RT_stream_t;
+} DMA_RT_channel_t;
 
 typedef struct {
-        DMA_RT_stream_t stream[STREAM_COUNT];
-        queue_t       **queue;
-        u32_t           ID_cnt;
-        u8_t            major;
+        DMA_RT_channel_t channel[DMA1_CHANNELS];
+        queue_t        **queue;
+        u32_t            ID_cnt;
+        u8_t             major;
 } DMA_RT_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void clear_DMA_IRQ_flags(u8_t major, u8_t stream);
+static void clear_DMA_IRQ_flags(u8_t major, u8_t channel);
 static bool M2M_callback(u8_t SR, void *arg);
 
 /*==============================================================================
@@ -80,43 +86,39 @@ MODULE_NAME(DMA);
 
 static const DMA_HW_t DMA_HW[] = {
         {
-                .DMA       = DMA1,
-                .stream[0] = DMA1_Stream0,
-                .stream[1] = DMA1_Stream1,
-                .stream[2] = DMA1_Stream2,
-                .stream[3] = DMA1_Stream3,
-                .stream[4] = DMA1_Stream4,
-                .stream[5] = DMA1_Stream5,
-                .stream[6] = DMA1_Stream6,
-                .stream[7] = DMA1_Stream7,
-                .IRQn[0]   = DMA1_Stream0_IRQn,
-                .IRQn[1]   = DMA1_Stream1_IRQn,
-                .IRQn[2]   = DMA1_Stream2_IRQn,
-                .IRQn[3]   = DMA1_Stream3_IRQn,
-                .IRQn[4]   = DMA1_Stream4_IRQn,
-                .IRQn[5]   = DMA1_Stream5_IRQn,
-                .IRQn[6]   = DMA1_Stream6_IRQn,
-                .IRQn[7]   = DMA1_Stream7_IRQn,
+                .DMA        = DMA1,
+                .chcnt      = DMA1_CHANNELS,
+                .channel[0] = DMA1_Channel1,
+                .channel[1] = DMA1_Channel2,
+                .channel[2] = DMA1_Channel3,
+                .channel[3] = DMA1_Channel4,
+                .channel[4] = DMA1_Channel5,
+                .channel[5] = DMA1_Channel6,
+                .channel[6] = DMA1_Channel7,
+                .IRQn[0]    = DMA1_Channel1_IRQn,
+                .IRQn[1]    = DMA1_Channel2_IRQn,
+                .IRQn[2]    = DMA1_Channel3_IRQn,
+                .IRQn[3]    = DMA1_Channel4_IRQn,
+                .IRQn[4]    = DMA1_Channel5_IRQn,
+                .IRQn[5]    = DMA1_Channel6_IRQn,
+                .IRQn[6]    = DMA1_Channel7_IRQn,
         },
+        #if defined(RCC_AHBENR_DMA2EN)
         {
-                .DMA       = DMA2,
-                .stream[0] = DMA2_Stream0,
-                .stream[1] = DMA2_Stream1,
-                .stream[2] = DMA2_Stream2,
-                .stream[3] = DMA2_Stream3,
-                .stream[4] = DMA2_Stream4,
-                .stream[5] = DMA2_Stream5,
-                .stream[6] = DMA2_Stream6,
-                .stream[7] = DMA2_Stream7,
-                .IRQn[0]   = DMA2_Stream0_IRQn,
-                .IRQn[1]   = DMA2_Stream1_IRQn,
-                .IRQn[2]   = DMA2_Stream2_IRQn,
-                .IRQn[3]   = DMA2_Stream3_IRQn,
-                .IRQn[4]   = DMA2_Stream4_IRQn,
-                .IRQn[5]   = DMA2_Stream5_IRQn,
-                .IRQn[6]   = DMA2_Stream6_IRQn,
-                .IRQn[7]   = DMA2_Stream7_IRQn,
-        },
+                .DMA        = DMA2,
+                .chcnt      = DMA2_CHANNELS,
+                .channel[0] = DMA2_Channel1,
+                .channel[1] = DMA2_Channel2,
+                .channel[2] = DMA2_Channel3,
+                .channel[3] = DMA2_Channel4,
+                .channel[4] = DMA2_Channel5,
+                .IRQn[0]    = DMA2_Channel1_IRQn,
+                .IRQn[1]    = DMA2_Channel2_IRQn,
+                .IRQn[2]    = DMA2_Channel3_IRQn,
+                .IRQn[3]    = DMA2_Channel4_IRQn,
+                .IRQn[4]    = DMA2_Channel5_IRQn,
+        }
+        #endif
 };
 
 static DMA_RT_t *DMA_RT[DMA_COUNT];
@@ -147,27 +149,20 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor)
         if (major < DMA_COUNT && minor == 0) {
                 err = sys_zalloc(sizeof(DMA_RT_t), device_handle);
                 if (!err) {
-                        /*
-                         * Only the DMA2 controller is able to perform
-                         * memory-to-memory transfers. It is a peripheral limitation.
-                         * Allocating memory for memory-to-memory semaphores.
-                         */
-                        if (major == 1) {
-                                DMA_RT_t *hdl = *device_handle;
-                                err = sys_zalloc(sizeof(queue_t*) * STREAM_COUNT,
-                                                 cast(void*, &hdl->queue));
-                                if (err) {
-                                        sys_free(device_handle);
-                                }
+                        DMA_RT_t *hdl = *device_handle;
+                        err = sys_zalloc(sizeof(queue_t*) * DMA_HW[major].chcnt,
+                                         cast(void*, &hdl->queue));
+                        if (err) {
+                                sys_free(device_handle);
                         }
 
                         if (!err) {
                                 /*
                                  * NOTE: DMA1EN and DMA2EN are localized in this same
-                                 *       register and DMA2EN is shifted by 1 bit relative
-                                 *       to DMA1EN.
+                                 *       register and DMA2EN is shifted left by
+                                 *       1 bit relative to DMA1EN.
                                  */
-                                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA1EN << major);
+                                RCC->AHBENR |= (RCC_AHBENR_DMA1EN << major);
 
                                 DMA_RT[major] = *device_handle;
                                 DMA_RT[major]->major = major;
@@ -308,16 +303,16 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                 case IOCTL_DMA__TRANSFER: {
                         err = EBUSY;
 
-                        u32_t dmad   = 0;
-                        u8_t  stream = 0;
+                        u32_t dmad    = 0;
+                        u8_t  channel = 0;
 
-                        for (; stream < STREAM_COUNT; stream++) {
-                                dmad = _DMA_DDI_reserve(1, stream);
+                        for (; channel < DMA_HW[hdl->major].chcnt; channel++) {
+                                dmad = _DMA_DDI_reserve(1, channel);
                                 if (dmad) break;
                         }
 
-                        if (dmad && (hdl->queue[stream] == NULL)) {
-                                err = sys_queue_create(1, sizeof(int), &hdl->queue[stream]);
+                        if (dmad && (hdl->queue[channel] == NULL)) {
+                                err = sys_queue_create(1, sizeof(int), &hdl->queue[channel]);
                                 if (err) {
                                         _DMA_DDI_release(dmad);
                                         dmad = 0;
@@ -334,8 +329,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                    && ((cast(u32_t, transfer->src) & 3) == 0)
                                    && ((cast(u32_t, transfer->dst) & 3) == 0) ) {
 
-                                        PMSIZE = (2 << DMA_SxCR_PSIZE_Pos)
-                                               | (2 << DMA_SxCR_MSIZE_Pos);
+                                        PMSIZE = (2 << 10) | (2 << 8);
 
                                         NDT = transfer->size / 4;
 
@@ -343,8 +337,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                           && ((cast(u32_t, transfer->src) & 1) == 0)
                                           && ((cast(u32_t, transfer->dst) & 1) == 0) ) {
 
-                                        PMSIZE = (1 << DMA_SxCR_PSIZE_Pos)
-                                               | (1 << DMA_SxCR_MSIZE_Pos);
+                                        PMSIZE = (1 << 10) | (1 << 8);
 
                                         NDT = transfer->size / 2;
 
@@ -354,19 +347,19 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                 }
 
                                 _DMA_DDI_config_t config;
-                                config.arg      = hdl->queue[stream];
+                                config.arg      = hdl->queue[channel];
                                 config.callback = M2M_callback;
                                 config.release  = true;
                                 config.PA       = cast(u32_t, transfer->src);
-                                config.MA[0]    = cast(u32_t, transfer->dst);
+                                config.MA       = cast(u32_t, transfer->dst);
                                 config.NDT      = NDT;
-                                config.CR       = PMSIZE | (2 << DMA_SxCR_DIR_Pos)
-                                                 | DMA_SxCR_MINC | DMA_SxCR_PINC;
+                                config.CR       = PMSIZE | DMA_CCR1_MEM2MEM
+                                                 | DMA_CCR1_MINC | DMA_CCR1_PINC;
 
                                 err = _DMA_DDI_transfer(dmad, &config);
                                 if (!err) {
                                         int ferr = EIO;
-                                        err = sys_queue_receive(hdl->queue[stream],
+                                        err = sys_queue_receive(hdl->queue[channel],
                                                                 &ferr,
                                                                 M2M_TRANSFER_TIMEOUT);
 
@@ -427,24 +420,25 @@ API_MOD_STAT(DMA, void *device_handle, struct vfs_dev_stat *device_stat)
  * @brief Function allocate selected stream.
  *
  * @param [in]  major         DMA peripheral number.
- * @param [in]  stream        stream number.
+ * @param [in]  channel       channel number [1..7].
  *
  * @return On success DMA descriptor number, otherwise 0.
  */
 //==============================================================================
-u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
+u32_t _DMA_DDI_reserve(u8_t major, u8_t channel)
 {
         int dmad = 0;
+        channel--;
 
-        if (major < DMA_COUNT && stream < STREAM_COUNT && DMA_RT[major]) {
+        if (major < DMA_COUNT && (channel < DMA_HW[major].chcnt) && DMA_RT[major]) {
                 sys_critical_section_begin();
                 {
-                        if (DMA_RT[major]->stream[stream].dmad == 0) {
+                        if (DMA_RT[major]->channel[channel].dmad == 0) {
                                 u32_t ID = DMA_RT[major]->ID_cnt++;
 
-                                dmad = DMAD(major, stream, ID);
+                                dmad = DMAD(major, channel, ID);
 
-                                DMA_RT[major]->stream[stream].dmad = dmad;
+                                DMA_RT[major]->channel[channel].dmad = dmad;
 
                                 if (DMA_RT[major]->ID_cnt == 0) {
                                         DMA_RT[major]->ID_cnt++;
@@ -467,23 +461,22 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
 void _DMA_DDI_release(u32_t dmad)
 {
         if (dmad && DMA_RT[GETMAJOR(dmad)]) {
-                DMA_RT_stream_t *RT_stream = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
+                DMA_RT_channel_t *RT_channel = &DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
 
-                if (RT_stream->dmad == dmad) {
+                if (RT_channel->dmad == dmad) {
 
-                        DMA_Stream_TypeDef *DMA_Stream = DMA_HW[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
+                        DMA_Channel_t *DMA_channel = DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
 
-                        RT_stream->callback = NULL;
-                        DMA_Stream->CR      = 0;
+                        RT_channel->callback = NULL;
+                        DMA_channel->CCR     = 0;
 
-                        clear_DMA_IRQ_flags(GETMAJOR(dmad), GETSTREAM(dmad));
+                        clear_DMA_IRQ_flags(GETMAJOR(dmad), GETCHANNEL(dmad));
 
-                        DMA_Stream->M0AR = 0;
-                        DMA_Stream->M1AR = 0;
-                        DMA_Stream->NDTR = 0;
-                        DMA_Stream->PAR  = 0;
+                        DMA_channel->CMAR  = 0;
+                        DMA_channel->CNDTR = 0;
+                        DMA_channel->CPAR  = 0;
 
-                        memset(RT_stream, 0, sizeof(DMA_RT_stream_t));
+                        memset(RT_channel, 0, sizeof(DMA_RT_channel_t));
                 }
         }
 }
@@ -509,29 +502,28 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
            && config->callback
            && config->NDT
            && config->PA
-           && (config->MA[0] || config->MA[1])) {
+           && config->MA) {
 
-                DMA_RT_stream_t    *RT_stream  = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
-                DMA_Stream_TypeDef *DMA_Stream =  DMA_HW[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
-                IRQn_Type           IRQn       =  DMA_HW[GETMAJOR(dmad)].IRQn[GETSTREAM(dmad)];
+                DMA_RT_channel_t *RT_channel  = &DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
+                DMA_Channel_t    *DMA_Stream =  DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
+                IRQn_Type         IRQn       =  DMA_HW[GETMAJOR(dmad)].IRQn[GETCHANNEL(dmad)];
 
-                if (RT_stream->dmad == dmad) {
-                        DMA_Stream->M0AR = config->MA[0];
-                        DMA_Stream->M1AR = config->MA[1];
-                        DMA_Stream->NDTR = config->NDT;
-                        DMA_Stream->PAR  = config->PA;
-                        DMA_Stream->CR   = config->CR & ~DMA_SxCR_EN;
+                if (RT_channel->dmad == dmad) {
+                        DMA_Stream->CMAR  = config->MA;
+                        DMA_Stream->CNDTR = config->NDT;
+                        DMA_Stream->CPAR  = config->PA;
+                        DMA_Stream->CCR   = config->CR & ~DMA_CCR1_EN;
 
-                        RT_stream->arg      = config->arg;
-                        RT_stream->callback = config->callback;
-                        RT_stream->release  = config->release;
+                        RT_channel->arg      = config->arg;
+                        RT_channel->callback = config->callback;
+                        RT_channel->release  = config->release;
 
-                        clear_DMA_IRQ_flags(GETMAJOR(dmad), GETSTREAM(dmad));
+                        clear_DMA_IRQ_flags(GETMAJOR(dmad), GETCHANNEL(dmad));
                         NVIC_SetPriority(IRQn, _CPU_IRQ_SAFE_PRIORITY_);
                         NVIC_EnableIRQ(IRQn);
 
-                        SET_BIT(DMA_Stream->CR, DMA_SxCR_TCIE | DMA_SxCR_TEIE);
-                        SET_BIT(DMA_Stream->CR, DMA_SxCR_EN);
+                        SET_BIT(DMA_Stream->CCR, DMA_CCR1_TCIE | DMA_CCR1_TEIE);
+                        SET_BIT(DMA_Stream->CCR, DMA_CCR1_EN);
 
                         err = ESUCC;
                 }
@@ -545,30 +537,14 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
  * @brief  Function clear flags for selected DMA and stream.
  *
  * @param  major        DMA number
- * @param  stream       stream number
+ * @param  channel      stream number
  */
 //==============================================================================
-static void clear_DMA_IRQ_flags(u8_t major, u8_t stream)
+static void clear_DMA_IRQ_flags(u8_t major, u8_t channel)
 {
-        static const struct {
-                char  reg;
-                u32_t mask;
-        } flag[] = {
-                    {.reg = 'L', .mask = (DMA_LIFCR_CFEIF0 | DMA_LIFCR_CDMEIF0 | DMA_LIFCR_CTEIF0 | DMA_LIFCR_CHTIF0 | DMA_LIFCR_CTCIF0)},
-                    {.reg = 'L', .mask = (DMA_LIFCR_CFEIF1 | DMA_LIFCR_CDMEIF1 | DMA_LIFCR_CTEIF1 | DMA_LIFCR_CHTIF1 | DMA_LIFCR_CTCIF1)},
-                    {.reg = 'L', .mask = (DMA_LIFCR_CFEIF2 | DMA_LIFCR_CDMEIF2 | DMA_LIFCR_CTEIF2 | DMA_LIFCR_CHTIF2 | DMA_LIFCR_CTCIF2)},
-                    {.reg = 'L', .mask = (DMA_LIFCR_CFEIF3 | DMA_LIFCR_CDMEIF3 | DMA_LIFCR_CTEIF3 | DMA_LIFCR_CHTIF3 | DMA_LIFCR_CTCIF3)},
-                    {.reg = 'H', .mask = (DMA_HIFCR_CFEIF4 | DMA_HIFCR_CDMEIF4 | DMA_HIFCR_CTEIF4 | DMA_HIFCR_CHTIF4 | DMA_HIFCR_CTCIF4)},
-                    {.reg = 'H', .mask = (DMA_HIFCR_CFEIF5 | DMA_HIFCR_CDMEIF5 | DMA_HIFCR_CTEIF5 | DMA_HIFCR_CHTIF5 | DMA_HIFCR_CTCIF5)},
-                    {.reg = 'H', .mask = (DMA_HIFCR_CFEIF6 | DMA_HIFCR_CDMEIF6 | DMA_HIFCR_CTEIF6 | DMA_HIFCR_CHTIF6 | DMA_HIFCR_CTCIF6)},
-                    {.reg = 'H', .mask = (DMA_HIFCR_CFEIF7 | DMA_HIFCR_CDMEIF7 | DMA_HIFCR_CTEIF7 | DMA_HIFCR_CHTIF7 | DMA_HIFCR_CTCIF7)},
-        };
-
-        if (flag[stream].reg == 'L') {
-                DMA_HW[major].DMA->LIFCR = flag[stream].mask;
-        } else {
-                DMA_HW[major].DMA->HIFCR = flag[stream].mask;
-        }
+        DMA_HW[major].DMA->IFCR = ( DMA_IFCR_CGIF1  | DMA_IFCR_CTCIF1
+                                  | DMA_IFCR_CHTIF1 | DMA_IFCR_CTEIF1 )
+                                  << (4 * channel);
 }
 
 //==============================================================================
@@ -596,40 +572,31 @@ static bool M2M_callback(u8_t SR, void *arg)
  * @brief Function handle DMA IRQ.
  *
  * @param  major        DMA number
- * @param  stream       stream number
+ * @param  channel      stream number
  */
 //==============================================================================
-static void IRQ_handle(u8_t major, u8_t stream)
+static void IRQ_handle(u8_t major, u8_t channel)
 {
-        DMA_Stream_TypeDef *DMA_Stream = DMA_HW[major].stream[stream];
-        DMA_RT_stream_t    *RT_stream  = &DMA_RT[major]->stream[stream];
+        DMA_Channel_t    *DMA_channel = DMA_HW[major].channel[channel];
+        DMA_RT_channel_t *RT_channel  = &DMA_RT[major]->channel[channel];
 
         bool  yield = false;
-        u32_t LISR  = DMA_HW[major].DMA->LISR;
-        u32_t HISR  = DMA_HW[major].DMA->HISR;
 
-        u32_t SR = stream < 4 ? LISR : HISR;
+        u32_t SR = DMA_HW[major].DMA->ISR >> (4 * channel);
 
-        switch (stream) {
-        case 0: SR >>=  0; break;
-        case 1: SR >>=  6; break;
-        case 2: SR >>= 16; break;
-        case 3: SR >>= 22; break;
+        if (RT_channel->callback) {
+                yield = RT_channel->callback(SR & 0xF, RT_channel->arg);
         }
 
-        if (RT_stream->callback) {
-                yield = RT_stream->callback(SR & 0x3F, RT_stream->arg);
-        }
+        if (!(DMA_channel->CCR & DMA_CCR1_CIRC)) {
+                CLEAR_BIT(DMA_channel->CCR, DMA_CCR1_EN);
 
-        if (!(DMA_Stream->CR & DMA_SxCR_CIRC)) {
-                CLEAR_BIT(DMA_Stream->CR, DMA_SxCR_EN);
+                RT_channel->callback = NULL;
+                RT_channel->arg      = NULL;
 
-                RT_stream->callback = NULL;
-                RT_stream->arg      = NULL;
-
-                if (RT_stream->release) {
-                        RT_stream->dmad    = 0;
-                        RT_stream->release = false;
+                if (RT_channel->release) {
+                        RT_channel->dmad    = 0;
+                        RT_channel->release = false;
                 }
 
                 /*
@@ -639,173 +606,135 @@ static void IRQ_handle(u8_t major, u8_t stream)
                  * ready to be configured. It is therefore necessary to wait for
                  * the EN bit to be  cleared before starting any stream configuration.
                  */
-                while (DMA_Stream->CR & DMA_SxCR_EN);
+                while (DMA_channel->CCR & DMA_CCR1_EN);
         }
 
-        clear_DMA_IRQ_flags(major, stream);
+        clear_DMA_IRQ_flags(major, channel);
 
         sys_thread_yield_from_ISR(yield);
 }
 
 //==============================================================================
 /**
- * @brief DMA1 Stream 0 IRQ.
+ * @brief DMA1 Channel 1 IRQ.
  */
 //==============================================================================
-void DMA1_Stream0_IRQHandler(void)
+void DMA1_Channel1_IRQHandler(void)
 {
         IRQ_handle(0, 0);
 }
 
 //==============================================================================
 /**
- * @brief DMA1 Stream 1 IRQ.
+ * @brief DMA1 Channel 2 IRQ.
  */
 //==============================================================================
-void DMA1_Stream1_IRQHandler(void)
+void DMA1_Channel2_IRQHandler(void)
 {
         IRQ_handle(0, 1);
 }
 
 //==============================================================================
 /**
- * @brief DMA1 Stream 2 IRQ.
+ * @brief DMA1 Channel 3 IRQ.
  */
 //==============================================================================
-void DMA1_Stream2_IRQHandler(void)
+void DMA1_Channel3_IRQHandler(void)
 {
         IRQ_handle(0, 2);
 }
 
 //==============================================================================
 /**
- * @brief DMA1 Stream 3 IRQ.
+ * @brief DMA1 Channel 4 IRQ.
  */
 //==============================================================================
-void DMA1_Stream3_IRQHandler(void)
+void DMA1_Channel4_IRQHandler(void)
 {
         IRQ_handle(0, 3);
 }
 
 //==============================================================================
 /**
- * @brief DMA1 Stream 4 IRQ.
+ * @brief DMA1 Channel 5 IRQ.
  */
 //==============================================================================
-void DMA1_Stream4_IRQHandler(void)
+void DMA1_Channel5_IRQHandler(void)
 {
         IRQ_handle(0, 4);
 }
 
 //==============================================================================
 /**
- * @brief DMA1 Stream 5 IRQ.
+ * @brief DMA1 Channel 6 IRQ.
  */
 //==============================================================================
-void DMA1_Stream5_IRQHandler(void)
+void DMA1_Channel6_IRQHandler(void)
 {
         IRQ_handle(0, 5);
 }
 
 //==============================================================================
 /**
- * @brief DMA1 Stream 6 IRQ.
+ * @brief DMA1 Channel 7 IRQ.
  */
 //==============================================================================
-void DMA1_Stream6_IRQHandler(void)
+void DMA1_Channel7_IRQHandler(void)
 {
         IRQ_handle(0, 6);
 }
 
+#if defined(RCC_AHBENR_DMA2EN)
 //==============================================================================
 /**
- * @brief DMA1 Stream 7 IRQ.
+ * @brief DMA2 Channel 1 IRQ.
  */
 //==============================================================================
-void DMA1_Stream7_IRQHandler(void)
-{
-        IRQ_handle(0, 7);
-}
-
-//==============================================================================
-/**
- * @brief DMA2 Stream 0 IRQ.
- */
-//==============================================================================
-void DMA2_Stream0_IRQHandler(void)
+void DMA2_Channel1_IRQHandler(void)
 {
         IRQ_handle(1, 0);
 }
 
 //==============================================================================
 /**
- * @brief DMA2 Stream 1 IRQ.
+ * @brief DMA2 Channel 2 IRQ.
  */
 //==============================================================================
-void DMA2_Stream1_IRQHandler(void)
+void DMA2_Channel2_IRQHandler(void)
 {
         IRQ_handle(1, 1);
 }
 
 //==============================================================================
 /**
- * @brief DMA2 Stream 2 IRQ.
+ * @brief DMA2 Channel 3 IRQ.
  */
 //==============================================================================
-void DMA2_Stream2_IRQHandler(void)
+void DMA2_Channel3_IRQHandler(void)
 {
         IRQ_handle(1, 2);
 }
 
 //==============================================================================
 /**
- * @brief DMA2 Stream 3 IRQ.
+ * @brief DMA2 Channel 4 IRQ.
  */
 //==============================================================================
-void DMA2_Stream3_IRQHandler(void)
+void DMA2_Channel4_IRQHandler(void)
 {
         IRQ_handle(1, 3);
 }
 
 //==============================================================================
 /**
- * @brief DMA2 Stream 4 IRQ.
+ * @brief DMA2 Channel 5 IRQ.
  */
 //==============================================================================
-void DMA2_Stream4_IRQHandler(void)
+void DMA2_Channel5_IRQHandler(void)
 {
         IRQ_handle(1, 4);
 }
-
-//==============================================================================
-/**
- * @brief DMA2 Stream 5 IRQ.
- */
-//==============================================================================
-void DMA2_Stream5_IRQHandler(void)
-{
-        IRQ_handle(1, 5);
-}
-
-//==============================================================================
-/**
- * @brief DMA2 Stream 6 IRQ.
- */
-//==============================================================================
-void DMA2_Stream6_IRQHandler(void)
-{
-        IRQ_handle(1, 6);
-}
-
-//==============================================================================
-/**
- * @brief DMA2 Stream 7 IRQ.
- */
-//==============================================================================
-void DMA2_Stream7_IRQHandler(void)
-{
-        IRQ_handle(1, 7);
-}
+#endif
 
 /*==============================================================================
   End of file

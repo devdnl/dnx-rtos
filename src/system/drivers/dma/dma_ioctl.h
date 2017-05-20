@@ -39,6 +39,7 @@ The stm32f4 microcontroller accepts memory-to-memory transfers only on DMA2. Thi
 is a hardware limitation.
 
 \section drv-dma-sup-arch Supported architectures
+\li stm32f1
 \li stm32f4
 
 \section drv-dma-ddesc Details
