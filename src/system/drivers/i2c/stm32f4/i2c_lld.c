@@ -507,7 +507,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                 config.MA[0]    = cast(u32_t, dst);
                                 config.NDT      = count;
                                 config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
-                                                | DMA_SxCR_MINC | DMA_SxCR_TCIE | DMA_SxCR_TEIE;
+                                                | DMA_SxCR_MINC;
 
                                 if (_DMA_DDI_transfer(dmad, &config) == ESUCC) {
                                         err = wait_for_DMA_event(hdl);
@@ -629,7 +629,7 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                         config.MA[0]    = cast(u32_t, src);
                         config.NDT      = count;
                         config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
-                                        | DMA_SxCR_MINC | DMA_SxCR_TCIE | DMA_SxCR_TEIE | DMA_SxCR_DIR_0;
+                                        | DMA_SxCR_MINC | DMA_SxCR_DIR_0;
 
                         if (_DMA_DDI_transfer(dmad, &config) == ESUCC) {
                                 err = wait_for_DMA_event(hdl);

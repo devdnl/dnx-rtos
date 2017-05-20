@@ -43,6 +43,8 @@ Brief    General usage DMA driver.
 #define GETMAJOR(DMAD)                  (((DMAD) >> 0) & 1)
 #define GETSTREAM(DMAD)                 (((DMAD) >> 1) & 7)
 
+#define M2M_TRANSFER_TIMEOUT            5000
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -61,6 +63,7 @@ typedef struct {
 
 typedef struct {
         DMA_RT_stream_t stream[STREAM_COUNT];
+        queue_t       **queue;
         u32_t           ID_cnt;
         u8_t            major;
 } DMA_RT_t;
@@ -146,14 +149,31 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor)
                 err = sys_zalloc(sizeof(DMA_RT_t), device_handle);
                 if (!err) {
                         /*
-                         * NOTE: DMA1EN and DMA2EN are localized in this same
-                         *       register and DMA2EN is shifted by 1 bit relative
-                         *       to DMA1EN.
+                         * Only the DMA2 controller is able to perform
+                         * memory-to-memory transfers. It is a peripheral limitation.
+                         * Allocating memory for memory-to-memory semaphores.
                          */
-                        RCC->AHB1ENR |= (RCC_AHB1ENR_DMA1EN << major);
+                        if (major == 1) {
+                                DMA_RT_t *hdl = *device_handle;
+                                err = sys_zalloc(sizeof(queue_t*) * STREAM_COUNT,
+                                                 cast(void*, &hdl->queue));
+                                if (err) {
+                                        sys_free(device_handle);
+                                }
+                        }
 
-                        DMA_RT[major] = *device_handle;
-                        DMA_RT[major]->ID_cnt++;
+                        if (!err) {
+                                /*
+                                 * NOTE: DMA1EN and DMA2EN are localized in this same
+                                 *       register and DMA2EN is shifted by 1 bit relative
+                                 *       to DMA1EN.
+                                 */
+                                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA1EN << major);
+
+                                DMA_RT[major] = *device_handle;
+                                DMA_RT[major]->major = major;
+                                DMA_RT[major]->ID_cnt++;
+                        }
                 }
         }
 
@@ -287,24 +307,75 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
         if (hdl->major == 1 && arg) {
                 switch (request) {
                 case IOCTL_DMA__TRANSFER: {
-                        u32_t dmad = 0;
+                        err = EBUSY;
 
-                        for (u8_t stream = 0; stream < STREAM_COUNT; stream++) {
+                        u32_t dmad   = 0;
+                        u8_t  stream = 0;
+
+                        for (; stream < STREAM_COUNT; stream++) {
                                 dmad = _DMA_DDI_reserve(1, stream);
                                 if (dmad) break;
                         }
 
-                        if (dmad) {
-                                DMA_transfer_t *transfer = arg;
-
-                                _DMA_DDI_config_t *config;
-//                                config->MA = transfer->src;
-//                                config->PA =
-
-                        } else {
-                                err = EBUSY;
+                        if (dmad && (hdl->queue[stream] == NULL)) {
+                                err = sys_queue_create(1, sizeof(int), &hdl->queue[stream]);
+                                if (err) {
+                                        _DMA_DDI_release(dmad);
+                                        dmad = 0;
+                                }
                         }
 
+                        if (dmad) {
+                                const DMA_transfer_t *transfer = arg;
+
+                                u32_t PMSIZE;
+                                u32_t NDT;
+
+                                if (  ((transfer->size & 3) == 0)
+                                   && ((cast(u32_t, transfer->src) & 3) == 0)
+                                   && ((cast(u32_t, transfer->dst) & 3) == 0) ) {
+
+                                        PMSIZE = (2 << DMA_SxCR_PSIZE_Pos)
+                                               | (2 << DMA_SxCR_MSIZE_Pos);
+
+                                        NDT = transfer->size / 4;
+
+                                } else if (  ((transfer->size & 1) == 0)
+                                          && ((cast(u32_t, transfer->src) & 1) == 0)
+                                          && ((cast(u32_t, transfer->dst) & 1) == 0) ) {
+
+                                        PMSIZE = (1 << DMA_SxCR_PSIZE_Pos)
+                                               | (1 << DMA_SxCR_MSIZE_Pos);
+
+                                        NDT = transfer->size / 2;
+
+                                } else {
+                                        PMSIZE = 0;
+                                        NDT   = transfer->size;
+                                }
+
+                                _DMA_DDI_config_t config;
+                                config.arg      = hdl->queue[stream];
+                                config.callback = M2M_callback;
+                                config.release  = true;
+                                config.PA       = cast(u32_t, transfer->src);
+                                config.MA[0]    = cast(u32_t, transfer->dst);
+                                config.NDT      = NDT;
+                                config.CR       = PMSIZE | (2 << DMA_SxCR_DIR_Pos)
+                                                 | DMA_SxCR_MINC | DMA_SxCR_PINC;
+
+                                err = _DMA_DDI_transfer(dmad, &config);
+                                if (!err) {
+                                        int ferr = EIO;
+                                        err = sys_queue_receive(hdl->queue[stream],
+                                                                &ferr,
+                                                                M2M_TRANSFER_TIMEOUT);
+
+                                        if (!err) {
+                                                err = ferr;
+                                        }
+                                }
+                        }
                         break;
                 }
 
@@ -313,7 +384,6 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                         break;
                 }
         }
-
 
         return err;
 }
@@ -421,7 +491,8 @@ void _DMA_DDI_release(u32_t dmad)
 
 //==============================================================================
 /**
- * @brief Function start transfer.
+ * @brief Function start transfer. The IRQ flags (TCIE, TEIE) are added
+ *        automatically.
  *
  * @param dmad                  DMA descriptor.
  * @param config                DMA configuration.
@@ -460,6 +531,7 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                         NVIC_SetPriority(IRQn, _CPU_IRQ_SAFE_PRIORITY_);
                         NVIC_EnableIRQ(IRQn);
 
+                        SET_BIT(DMA_Stream->CR, DMA_SxCR_TCIE | DMA_SxCR_TEIE);
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_EN);
 
                         err = ESUCC;
@@ -513,8 +585,9 @@ static void clear_DMA_IRQ_flags(u8_t major, u8_t stream)
 static bool M2M_callback(u8_t SR, void *arg)
 {
         bool yield = false;
+        int  err   = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
 
-
+        sys_queue_send_from_ISR(arg, &err, &yield);
 
         return yield;
 }

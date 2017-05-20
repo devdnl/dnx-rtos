@@ -110,7 +110,8 @@ extern void _DMA_DDI_release(u32_t dmad);
 
 //==============================================================================
 /**
- * @brief Function start transfer.
+ * @brief Function start transfer. The IRQ flags (TCIE, TEIE) are added
+ *        automatically.
  *
  * @param dmad                  DMA descriptor.
  * @param config                DMA configuration.
