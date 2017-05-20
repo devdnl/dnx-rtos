@@ -158,7 +158,6 @@ static inline I2C_TypeDef *get_I2C(I2C_dev_t *hdl)
 /**
  * @brief  Function handle error (try make the interface working)
  * @param  hdl          device handle
- * @return None
  */
 //==============================================================================
 static void reset(I2C_dev_t *hdl, bool reinit)
@@ -190,7 +189,7 @@ static void reset(I2C_dev_t *hdl, bool reinit)
  * @brief  Function wait for selected event (IRQ)
  * @param  hdl                  device handle
  * @param  SR1_event_mask       event mask (bits from SR1 register)
- * @return On success true is returned, otherwise false
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
@@ -225,7 +224,7 @@ static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
  * @brief  Function wait for DMA event (IRQ)
  * @param  hdl                  device handle
  * @param  DMA                  DMA channel
- * @return On success true is returned, otherwise false
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 #if USE_DMA > 0
@@ -253,7 +252,6 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl)
 /**
  * @brief  Clear event of send address
  * @param  hdl                  device handle
- * @return None
  */
 //==============================================================================
 static void clear_send_address_event(I2C_dev_t *hdl)
@@ -274,7 +272,7 @@ static void clear_send_address_event(I2C_dev_t *hdl)
 /**
  * @brief  Enables selected I2C peripheral according with configuration
  * @param  major        peripheral number
- * @return One of errno value.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 int _I2C_LLD__init(u8_t major)
@@ -329,7 +327,6 @@ int _I2C_LLD__init(u8_t major)
 /**
  * @brief  Disables selected I2C peripheral
  * @param  major        I2C peripheral number
- * @return None
  */
 //==============================================================================
 void _I2C_LLD__release(u8_t major)
@@ -352,7 +349,7 @@ void _I2C_LLD__release(u8_t major)
 /**
  * @brief  Function generate START sequence on I2C bus
  * @param  hdl                  device handle
- * @return On success true is returned, otherwise false
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 int _I2C_LLD__start(I2C_dev_t *hdl)
@@ -369,7 +366,7 @@ int _I2C_LLD__start(I2C_dev_t *hdl)
 /**
  * @brief  Function generate REPEAT START sequence on I2C bus
  * @param  hdl                  device handle
- * @return One of errno value.
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
@@ -398,7 +395,6 @@ int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
 /**
  * @brief  Function generate STOP sequence on I2C bus
  * @param  hdl                  device handle
- * @return On success true is returned, otherwise false
  */
 //==============================================================================
 void _I2C_LLD__stop(I2C_dev_t *hdl)
@@ -413,7 +409,7 @@ void _I2C_LLD__stop(I2C_dev_t *hdl)
  * @brief  Function send I2C address sequence
  * @param  hdl                  device handle
  * @param  write                true: compose write address
- * @return On success true is returned, otherwise false
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
@@ -469,7 +465,8 @@ int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
  * @param  hdl                  device handle
  * @param  dst                  destination buffer
  * @param  count                number of bytes to receive
- * @return Number of received bytes
+ * @param  rdcnt                number of read bytes
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
@@ -599,7 +596,8 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
  * @param  hdl                  device handle
  * @param  src                  data source
  * @param  count                number of bytes to transfer
- * @return Number of written bytes
+ * @param  wrcnt                number of written bytes
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt)
@@ -683,19 +681,15 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
 
         return err;
 }
-#include "gpio_ddi.h" //TEST
-#include "stm32f4/gpio_cfg.h" //TEST
+
 //==============================================================================
 /**
  * @brief  Event IRQ handler (transaction state machine)
  * @param  major        number of peripheral
- * @return If IRQ was woken then true is returned, otherwise false
  */
 //==============================================================================
 static void IRQ_EV_handler(u8_t major)
 {
-        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
-
         bool woken = false;
 
         I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
@@ -720,8 +714,6 @@ static void IRQ_EV_handler(u8_t major)
                 }
         }
 
-        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
-
         sys_thread_yield_from_ISR(woken);
 }
 
@@ -729,13 +721,10 @@ static void IRQ_EV_handler(u8_t major)
 /**
  * @brief  Error IRQ handler
  * @param  major        number of peripheral
- * @return If IRQ was woken then true is returned, otherwise false
  */
 //==============================================================================
 static void IRQ_ER_handler(u8_t major)
 {
-        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST3, IOCTL_GPIO_PIN_IDX__TEST3); //TEST
-
         I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
         u16_t SR1 = i2c->SR1;
         u16_t SR2 = i2c->SR2;
@@ -760,33 +749,26 @@ static void IRQ_ER_handler(u8_t major)
         sys_semaphore_signal_from_ISR(_I2C[major]->event, &woken);
 
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
-
-        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST3, IOCTL_GPIO_PIN_IDX__TEST3); //TEST
-
         sys_thread_yield_from_ISR(woken);
 }
 
 //==============================================================================
 /**
- * @brief  DMA IRQ handler
- * @param  DMA_ch_no    DMA channel number
- * @param  major        number of peripheral
- * @return If IRQ was woken then true is returned, otherwise false
+ * @brief  DMA callback.
+ * @param  SR           DMA transaction status (DMA_SR_*)
+ * @param  arg          user's object
+ * @return If IRQ should yield then true is returned, false otherwise.
  */
 //==============================================================================
 #if USE_DMA > 0
 static bool DMA_callback(u8_t SR, void *arg)
 {
-        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
-
         I2C_mem_t *I2C = arg;
 
         I2C->error = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
 
         bool yield = false;
         sys_semaphore_signal_from_ISR(I2C->event, &yield);
-
-        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
 
         return yield;
 }
@@ -795,8 +777,6 @@ static bool DMA_callback(u8_t SR, void *arg)
 //==============================================================================
 /**
  * @brief  I2C1 Event IRQ handler
- * @param  None
- * @return None
  */
 //==============================================================================
 #if defined(RCC_APB1ENR_I2C1EN)
@@ -809,8 +789,6 @@ void I2C1_EV_IRQHandler(void)
 //==============================================================================
 /**
  * @brief  I2C1 Error IRQ handler
- * @param  None
- * @return None
  */
 //==============================================================================
 #if defined(RCC_APB1ENR_I2C1EN)
@@ -823,8 +801,6 @@ void I2C1_ER_IRQHandler(void)
 //==============================================================================
 /**
  * @brief  I2C2 Event IRQ handler
- * @param  None
- * @return None
  */
 //==============================================================================
 #if defined(RCC_APB1ENR_I2C2EN)
@@ -837,8 +813,6 @@ void I2C2_EV_IRQHandler(void)
 //==============================================================================
 /**
  * @brief  I2C2 Error IRQ handler
- * @param  None
- * @return None
  */
 //==============================================================================
 #if defined(RCC_APB1ENR_I2C2EN)
@@ -851,8 +825,6 @@ void I2C2_ER_IRQHandler(void)
 //==============================================================================
 /**
  * @brief  I2C3 Event IRQ handler
- * @param  None
- * @return None
  */
 //==============================================================================
 #if defined(RCC_APB1ENR_I2C3EN)
@@ -865,8 +837,6 @@ void I2C3_EV_IRQHandler(void)
 //==============================================================================
 /**
  * @brief  I2C3 Error IRQ handler
- * @param  None
- * @return None
  */
 //==============================================================================
 #if defined(RCC_APB1ENR_I2C3EN)

@@ -379,8 +379,8 @@ API_MOD_STAT(I2C, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 /**
  * @brief  Function release all resource allocated during initialization phase
+ *
  * @param  major         major device number
- * @return None
  */
 //==============================================================================
 static void release_resources(u8_t major)
@@ -407,17 +407,19 @@ static void release_resources(u8_t major)
 //==============================================================================
 /**
  * @brief  Function send subaddress to I2C device
+ *
  * @param  hdl                  device handle
  * @param  address              subaddress
  * @param  mode                 size of subaddress
- * @return On success true is returned, otherwise false
+ *
+ * @return One of errno value (errno.h)
  */
 //==============================================================================
 static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode)
 {
-        int err = EIO;
-        u8_t   n   = 0;
-        u8_t   addr[4];
+        int  err = EIO;
+        u8_t n   = 0;
+        u8_t addr[4];
 
         switch (mode) {
         case I2C_SUB_ADDR_MODE__3_BYTES: addr[n++] = address >> 16;
