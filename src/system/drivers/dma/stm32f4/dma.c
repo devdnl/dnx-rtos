@@ -57,17 +57,19 @@ typedef struct {
         _DMA_cb_t       callback;
         u32_t           dmad;
         bool            release;
-} DMA_stream_t;
+} DMA_RT_stream_t;
 
 typedef struct {
-        DMA_stream_t    stream[STREAM_COUNT];
+        DMA_RT_stream_t stream[STREAM_COUNT];
         u32_t           ID_cnt;
+        u8_t            major;
 } DMA_RT_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
 static void clear_DMA_IRQ_flags(u8_t major, u8_t stream);
+static bool M2M_callback(u8_t SR, void *arg);
 
 /*==============================================================================
   Local object
@@ -76,7 +78,7 @@ MODULE_NAME(DMA);
 
 static const DMA_HW_t DMA_HW[] = {
         {
-                .DMA = DMA1,
+                .DMA       = DMA1,
                 .stream[0] = DMA1_Stream0,
                 .stream[1] = DMA1_Stream1,
                 .stream[2] = DMA1_Stream2,
@@ -95,7 +97,7 @@ static const DMA_HW_t DMA_HW[] = {
                 .IRQn[7]   = DMA1_Stream7_IRQn,
         },
         {
-                .DMA = DMA2,
+                .DMA       = DMA2,
                 .stream[0] = DMA2_Stream0,
                 .stream[1] = DMA2_Stream1,
                 .stream[2] = DMA2_Stream2,
@@ -185,13 +187,9 @@ API_MOD_RELEASE(DMA, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(DMA, void *device_handle, u32_t flags)
 {
-        DMA_RT_t *hdl = device_handle;
+        UNUSED_ARG2(device_handle, flags);
 
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -206,13 +204,8 @@ API_MOD_OPEN(DMA, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(DMA, void *device_handle, bool force)
 {
-        DMA_RT_t *hdl = device_handle;
-
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        UNUSED_ARG2(device_handle, force);
+        return ESUCC;
 }
 
 //==============================================================================
@@ -237,13 +230,9 @@ API_MOD_WRITE(DMA,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        DMA_RT_t *hdl = device_handle;
+        UNUSED_ARG6(device_handle, src, count, fpos, wrcnt, fattr);
 
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        return EPERM;
 }
 
 //==============================================================================
@@ -268,13 +257,9 @@ API_MOD_READ(DMA,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        DMA_RT_t *hdl = device_handle;
+        UNUSED_ARG6(device_handle, dst, count, fpos, rdcnt, fattr);
 
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        return EPERM;
 }
 
 //==============================================================================
@@ -292,15 +277,43 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
 {
         DMA_RT_t *hdl = device_handle;
 
-        int err = ESUCC;
+        int err = EPERM;
 
-        // ...
         /*
          * Note:
-         * When memory-to-memory mode is used, the Circular and direct modes are not allowed.
          * Only the DMA2 controller is able to perform memory-to-memory transfers.
-         *
+         * It is peripheral limitation.
          */
+        if (hdl->major == 1 && arg) {
+                switch (request) {
+                case IOCTL_DMA__TRANSFER: {
+                        u32_t dmad = 0;
+
+                        for (u8_t stream = 0; stream < STREAM_COUNT; stream++) {
+                                dmad = _DMA_DDI_reserve(1, stream);
+                                if (dmad) break;
+                        }
+
+                        if (dmad) {
+                                DMA_transfer_t *transfer = arg;
+
+                                _DMA_DDI_config_t *config;
+//                                config->MA = transfer->src;
+//                                config->PA =
+
+                        } else {
+                                err = EBUSY;
+                        }
+
+                        break;
+                }
+
+                default:
+                        err = EBADRQC;
+                        break;
+                }
+        }
+
 
         return err;
 }
@@ -354,7 +367,7 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
 {
         int dmad = 0;
 
-        if (major < DMA_COUNT && stream < STREAM_COUNT) {
+        if (major < DMA_COUNT && stream < STREAM_COUNT && DMA_RT[major]) {
                 sys_critical_section_begin();
                 {
                         if (DMA_RT[major]->stream[stream].dmad == 0) {
@@ -384,8 +397,8 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
 //==============================================================================
 void _DMA_DDI_release(u32_t dmad)
 {
-        if (dmad) {
-                DMA_stream_t *RT_stream = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
+        if (dmad && DMA_RT[GETMAJOR(dmad)]) {
+                DMA_RT_stream_t *RT_stream = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
 
                 if (RT_stream->dmad == dmad) {
 
@@ -401,7 +414,7 @@ void _DMA_DDI_release(u32_t dmad)
                         DMA_Stream->NDTR = 0;
                         DMA_Stream->PAR  = 0;
 
-                        memset(RT_stream, 0, sizeof(DMA_stream_t));
+                        memset(RT_stream, 0, sizeof(DMA_RT_stream_t));
                 }
         }
 }
@@ -421,27 +434,29 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
         int err = EINVAL;
 
         if (  dmad
+           && DMA_RT[GETMAJOR(dmad)]
            && config
            && config->callback
            && config->NDT
            && config->PA
            && (config->MA[0] || config->MA[1])) {
 
-                DMA_stream_t       *stream     = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
-                DMA_Stream_TypeDef *DMA_Stream = DMA_HW[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
-                IRQn_Type           IRQn       = DMA_HW[GETMAJOR(dmad)].IRQn[GETSTREAM(dmad)];
+                DMA_RT_stream_t    *RT_stream  = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
+                DMA_Stream_TypeDef *DMA_Stream =  DMA_HW[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
+                IRQn_Type           IRQn       =  DMA_HW[GETMAJOR(dmad)].IRQn[GETSTREAM(dmad)];
 
-                if (stream->dmad == dmad) {
+                if (RT_stream->dmad == dmad) {
                         DMA_Stream->M0AR = config->MA[0];
                         DMA_Stream->M1AR = config->MA[1];
                         DMA_Stream->NDTR = config->NDT;
                         DMA_Stream->PAR  = config->PA;
                         DMA_Stream->CR   = config->CR & ~DMA_SxCR_EN;
 
-                        stream->arg      = config->arg;
-                        stream->callback = config->callback;
-                        stream->release  = config->release;
+                        RT_stream->arg      = config->arg;
+                        RT_stream->callback = config->callback;
+                        RT_stream->release  = config->release;
 
+                        clear_DMA_IRQ_flags(GETMAJOR(dmad), GETSTREAM(dmad));
                         NVIC_SetPriority(IRQn, _CPU_IRQ_SAFE_PRIORITY_);
                         NVIC_EnableIRQ(IRQn);
 
@@ -456,11 +471,10 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function clear flags for selected DMA and stream.
  *
- * @param  ?
- *
- * @return ?
+ * @param  major        DMA number
+ * @param  stream       stream number
  */
 //==============================================================================
 static void clear_DMA_IRQ_flags(u8_t major, u8_t stream)
@@ -488,6 +502,25 @@ static void clear_DMA_IRQ_flags(u8_t major, u8_t stream)
 
 //==============================================================================
 /**
+ * @brief  Memory to memory callback.
+ *
+ * @param  SR           status
+ * @param  arg          argument
+ *
+ * @return True if yield needed, false otherwise.
+ */
+//==============================================================================
+static bool M2M_callback(u8_t SR, void *arg)
+{
+        bool yield = false;
+
+
+
+        return yield;
+}
+
+//==============================================================================
+/**
  * @brief Function handle DMA IRQ.
  *
  * @param  major        DMA number
@@ -497,7 +530,7 @@ static void clear_DMA_IRQ_flags(u8_t major, u8_t stream)
 static void IRQ_handle(u8_t major, u8_t stream)
 {
         DMA_Stream_TypeDef *DMA_Stream = DMA_HW[major].stream[stream];
-        DMA_stream_t       *RT_stream  = &DMA_RT[major]->stream[stream];
+        DMA_RT_stream_t    *RT_stream  = &DMA_RT[major]->stream[stream];
 
         bool  yield = false;
         u32_t LISR  = DMA_HW[major].DMA->LISR;
@@ -512,8 +545,6 @@ static void IRQ_handle(u8_t major, u8_t stream)
         case 3: SR >>= 22; break;
         }
 
-        clear_DMA_IRQ_flags(major, stream);
-
         if (RT_stream->callback) {
                 yield = RT_stream->callback(SR & 0x3F, RT_stream->arg);
         }
@@ -525,10 +556,21 @@ static void IRQ_handle(u8_t major, u8_t stream)
                 RT_stream->arg      = NULL;
 
                 if (RT_stream->release) {
-                        RT_stream->dmad = 0;
+                        RT_stream->dmad    = 0;
                         RT_stream->release = false;
                 }
+
+                /*
+                 * Writing EN bit to 0 is not immediately effective since it is
+                 * actually written to 0 once all the current transfers have finished.
+                 * When the EN bit is read as 0, this means that the stream is
+                 * ready to be configured. It is therefore necessary to wait for
+                 * the EN bit to be  cleared before starting any stream configuration.
+                 */
+                while (DMA_Stream->CR & DMA_SxCR_EN);
         }
+
+        clear_DMA_IRQ_flags(major, stream);
 
         sys_thread_yield_from_ISR(yield);
 }

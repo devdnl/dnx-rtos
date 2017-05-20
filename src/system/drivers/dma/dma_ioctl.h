@@ -88,26 +88,20 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
- *  @brief  Example IOCTL request.
- *  @param  [WR,RD] ioctl() params...
+ *  @brief  Request copy selected memory by using DMA.
+ *  @param  [WR,RD] @ref DMA_transfer_t*        DMA transfer descriptor
  *  @return On success 0 is returned, otherwise -1.
- *
- *  @b Example
- *  @code
-    #include <sys/ioctl.h>
-
-    //...
-
-
-
-    //...
-    @endcode
  */
-#define IOCTL_DMA__EXAMPLE     _IO(DMA, 0x00)
+#define IOCTL_DMA__TRANSFER             _IOWR(DMA, 0x00, DMA_transfer_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct {
+        u8_t  *src;
+        u8_t  *dst;
+        size_t count;
+} DMA_transfer_t;
 
 /*==============================================================================
   Exported objects
