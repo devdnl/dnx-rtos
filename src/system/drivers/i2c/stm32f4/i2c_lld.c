@@ -236,6 +236,9 @@ static bool wait_for_DMA_event(I2C_dev_t *hdl)
         SET_BIT(i2c->CR2, I2C_CR2_LAST | I2C_CR2_DMAEN);
 
         int err = sys_semaphore_wait(_I2C[hdl->major]->event, _I2C_DEVICE_TIMEOUT);
+
+        CLEAR_BIT(i2c->CR2, I2C_CR2_LAST | I2C_CR2_DMAEN);
+
         if (!err && _I2C[hdl->major]->error) {
                 err = EIO;
         }
