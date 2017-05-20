@@ -31,6 +31,7 @@ Brief    General usage DMA driver.
 #include "stm32f1/dma_ddi.h"
 #include "stm32f1/stm32f10x.h"
 #include "../dma_ioctl.h"
+#include "kernel/khooks.h"
 
 /*==============================================================================
   Local macros
@@ -67,10 +68,10 @@ typedef struct {
 } DMA_RT_channel_t;
 
 typedef struct {
-        DMA_RT_channel_t channel[DMA1_CHANNELS];
-        queue_t        **queue;
-        u32_t            ID_cnt;
-        u8_t             major;
+        DMA_RT_channel_t **channel;
+        queue_t          **queue;
+        u32_t              ID_cnt;
+        u8_t               major;
 } DMA_RT_t;
 
 /*==============================================================================
@@ -150,23 +151,37 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor)
                 err = sys_zalloc(sizeof(DMA_RT_t), device_handle);
                 if (!err) {
                         DMA_RT_t *hdl = *device_handle;
+
                         err = sys_zalloc(sizeof(queue_t*) * DMA_HW[major].chcnt,
                                          cast(void*, &hdl->queue));
+                        if (err) goto finish;
+
+                        err = sys_zalloc(sizeof(DMA_RT_channel_t*) * DMA_HW[major].chcnt,
+                                         cast(void*, &hdl->channel));
+                        if (err) goto finish;
+
+                        /*
+                         * NOTE: DMA1EN and DMA2EN are localized in this same
+                         *       register and DMA2EN is shifted left by
+                         *       1 bit relative to DMA1EN.
+                         */
+                        RCC->AHBENR |= (RCC_AHBENR_DMA1EN << major);
+
+                        DMA_RT[major] = *device_handle;
+                        DMA_RT[major]->major = major;
+                        DMA_RT[major]->ID_cnt++;
+
+                        finish:
                         if (err) {
+                                if (hdl->queue) {
+                                        sys_free(cast(void **, &hdl->queue));
+                                }
+
+                                if (hdl->channel) {
+                                        sys_free(cast(void **, &hdl->channel));
+                                }
+
                                 sys_free(device_handle);
-                        }
-
-                        if (!err) {
-                                /*
-                                 * NOTE: DMA1EN and DMA2EN are localized in this same
-                                 *       register and DMA2EN is shifted left by
-                                 *       1 bit relative to DMA1EN.
-                                 */
-                                RCC->AHBENR |= (RCC_AHBENR_DMA1EN << major);
-
-                                DMA_RT[major] = *device_handle;
-                                DMA_RT[major]->major = major;
-                                DMA_RT[major]->ID_cnt++;
                         }
                 }
         }
@@ -433,12 +448,12 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t channel)
         if (major < DMA_COUNT && (channel < DMA_HW[major].chcnt) && DMA_RT[major]) {
                 sys_critical_section_begin();
                 {
-                        if (DMA_RT[major]->channel[channel].dmad == 0) {
+                        if (DMA_RT[major]->channel[channel]->dmad == 0) {
                                 u32_t ID = DMA_RT[major]->ID_cnt++;
 
                                 dmad = DMAD(major, channel, ID);
 
-                                DMA_RT[major]->channel[channel].dmad = dmad;
+                                DMA_RT[major]->channel[channel]->dmad = dmad;
 
                                 if (DMA_RT[major]->ID_cnt == 0) {
                                         DMA_RT[major]->ID_cnt++;
@@ -461,7 +476,7 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t channel)
 void _DMA_DDI_release(u32_t dmad)
 {
         if (dmad && DMA_RT[GETMAJOR(dmad)]) {
-                DMA_RT_channel_t *RT_channel = &DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
+                DMA_RT_channel_t *RT_channel = DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
 
                 if (RT_channel->dmad == dmad) {
 
@@ -504,9 +519,9 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
            && config->PA
            && config->MA) {
 
-                DMA_RT_channel_t *RT_channel  = &DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
-                DMA_Channel_t    *DMA_Stream =  DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
-                IRQn_Type         IRQn       =  DMA_HW[GETMAJOR(dmad)].IRQn[GETCHANNEL(dmad)];
+                DMA_RT_channel_t *RT_channel = DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
+                DMA_Channel_t    *DMA_Stream = DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
+                IRQn_Type         IRQn       = DMA_HW[GETMAJOR(dmad)].IRQn[GETCHANNEL(dmad)];
 
                 if (RT_channel->dmad == dmad) {
                         DMA_Stream->CMAR  = config->MA;
@@ -578,7 +593,7 @@ static bool M2M_callback(u8_t SR, void *arg)
 static void IRQ_handle(u8_t major, u8_t channel)
 {
         DMA_Channel_t    *DMA_channel = DMA_HW[major].channel[channel];
-        DMA_RT_channel_t *RT_channel  = &DMA_RT[major]->channel[channel];
+        DMA_RT_channel_t *RT_channel  = DMA_RT[major]->channel[channel];
 
         bool  yield = false;
 
@@ -733,6 +748,22 @@ void DMA2_Channel4_IRQHandler(void)
 void DMA2_Channel5_IRQHandler(void)
 {
         IRQ_handle(1, 4);
+}
+
+//==============================================================================
+/**
+ * @brief DMA2 Channel 4 & 5 IRQ.
+ */
+//==============================================================================
+void DMA2_Channel4_5_IRQHandler(void)
+{
+        if (DMA2->ISR & (DMA_ISR_GIF4 | DMA_ISR_TCIF4 | DMA_ISR_HTIF4 | DMA_ISR_TEIF4)) {
+                IRQ_handle(1, 3);
+        } else if (DMA2->ISR & (DMA_ISR_GIF5 | DMA_ISR_TCIF5 | DMA_ISR_HTIF5 | DMA_ISR_TEIF5)) {
+                IRQ_handle(1, 4);
+        } else {
+                _assert(false);
+        }
 }
 #endif
 
