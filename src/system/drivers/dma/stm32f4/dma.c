@@ -295,6 +295,12 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
         int err = ESUCC;
 
         // ...
+        /*
+         * Note:
+         * When memory-to-memory mode is used, the Circular and direct modes are not allowed.
+         * Only the DMA2 controller is able to perform memory-to-memory transfers.
+         *
+         */
 
         return err;
 }

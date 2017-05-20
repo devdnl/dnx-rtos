@@ -34,6 +34,7 @@
 #include "drivers/driver.h"
 #include "stm32f4/i2c_cfg.h"
 #include "stm32f4/stm32f4xx.h"
+#include "stm32f4/dma_ddi.h"
 #include "i2c_ioctl.h"
 #include "i2c.h"
 #include "lib/stm32f4xx_rcc.h"
@@ -50,13 +51,11 @@
 typedef struct {
     #if USE_DMA > 0
         const bool                use_DMA;              //!< peripheral uses DMA and IRQ (true), or only IRQ (false)
-        const DMA_Stream_TypeDef *const DMA_tx;         //!< pointer to the DMA Tx channel peripheral
-        const DMA_Stream_TypeDef *const DMA_rx;         //!< pointer to the DMA Rx channel peripheral
-        const u8_t                DMA_tx_number;        //!< number of channel of DMA Tx
-        const u8_t                DMA_rx_number;        //!< number of channel of DMA Rx
-        const u8_t                DMA_channel;          //!< DMA channel number
-        const IRQn_Type           DMA_tx_IRQ_n;         //!< number of interrupt in the vector table
-        const IRQn_Type           DMA_rx_IRQ_n;         //!< number of interrupt in the vector table
+        const u8_t                DMA_tx_stream_pri;    //!< primary Tx stream number
+        const u8_t                DMA_tx_stream_alt;    //!< alternative Tx stream number
+        const u8_t                DMA_rx_stream_pri;    //!< primary Rx stream number
+        const u8_t                DMA_rx_stream_alt;    //!< alternative Rx stream number
+        const u8_t                DMA_channel;          //!< DMA peripheral request channel number
     #endif
         const I2C_TypeDef        *const I2C;            //!< pointer to the I2C peripheral
         const u32_t               freq;                 //!< peripheral SCL frequency [Hz]
@@ -73,66 +72,65 @@ static void clear_send_address_event(I2C_dev_t *hdl);
 static void IRQ_EV_handler(u8_t major);
 static void IRQ_ER_handler(u8_t major);
 
+#if USE_DMA > 0
+static bool DMA_callback(u8_t SR, void *arg);
+static bool wait_for_DMA_event(I2C_dev_t *hdl);
+#endif
+
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 /// peripherals configuration
-static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
+static const I2C_info_t I2C_HW[_I2C_NUMBER_OF_PERIPHERALS] = {
         #if defined(RCC_APB1ENR_I2C1EN)
         {
                 #if USE_DMA > 0
-                .use_DMA          = _I2C1_USE_DMA,
-                .DMA_tx           = DMA1_Stream6,
-                .DMA_rx           = DMA1_Stream7,
-                .DMA_tx_number    = 6,
-                .DMA_rx_number    = 5,
-                .DMA_channel      = 1,
-                .DMA_tx_IRQ_n     = DMA1_Stream6_IRQn,
-                .DMA_rx_IRQ_n     = DMA1_Stream5_IRQn,
+                .use_DMA           = _I2C1_USE_DMA,
+                .DMA_tx_stream_pri = 6,
+                .DMA_tx_stream_alt = 7,
+                .DMA_rx_stream_pri = 0,
+                .DMA_rx_stream_alt = 5,
+                .DMA_channel       = 1,
                 #endif
-                .I2C              = I2C1,
-                .freq             = _I2C1_FREQUENCY,
-                .APB1ENR_clk_mask = RCC_APB1ENR_I2C1EN,
-                .IRQ_EV_n         = I2C1_EV_IRQn,
-                .IRQ_ER_n         = I2C1_ER_IRQn,
+                .I2C               = I2C1,
+                .freq              = _I2C1_FREQUENCY,
+                .APB1ENR_clk_mask  = RCC_APB1ENR_I2C1EN,
+                .IRQ_EV_n          = I2C1_EV_IRQn,
+                .IRQ_ER_n          = I2C1_ER_IRQn,
         },
         #endif
         #if defined(RCC_APB1ENR_I2C2EN)
         {
                 #if USE_DMA > 0
-                .use_DMA          = _I2C2_USE_DMA,
-                .DMA_tx           = DMA1_Stream7,
-                .DMA_rx           = DMA1_Stream3,
-                .DMA_tx_number    = 7,
-                .DMA_rx_number    = 3,
-                .DMA_channel      = 7,
-                .DMA_tx_IRQ_n     = DMA1_Stream7_IRQn,
-                .DMA_rx_IRQ_n     = DMA1_Stream3_IRQn,
+                .use_DMA           = _I2C2_USE_DMA,
+                .DMA_tx_stream_pri = 7,
+                .DMA_tx_stream_alt = 7,
+                .DMA_rx_stream_pri = 2,
+                .DMA_rx_stream_alt = 3,
+                .DMA_channel       = 7,
                 #endif
-                .I2C              = I2C2,
-                .freq             = _I2C2_FREQUENCY,
-                .APB1ENR_clk_mask = RCC_APB1ENR_I2C2EN,
-                .IRQ_EV_n         = I2C2_EV_IRQn,
-                .IRQ_ER_n         = I2C2_ER_IRQn,
+                .I2C               = I2C2,
+                .freq              = _I2C2_FREQUENCY,
+                .APB1ENR_clk_mask  = RCC_APB1ENR_I2C2EN,
+                .IRQ_EV_n          = I2C2_EV_IRQn,
+                .IRQ_ER_n          = I2C2_ER_IRQn,
         },
         #endif
         #if defined(RCC_APB1ENR_I2C3EN)
         {
                 #if USE_DMA > 0
-                .use_DMA          = _I2C3_USE_DMA,
-                .DMA_tx           = DMA1_Stream4,
-                .DMA_rx           = DMA1_Stream2,
-                .DMA_tx_number    = 4,
-                .DMA_rx_number    = 2,
-                .DMA_channel      = 3,
-                .DMA_tx_IRQ_n     = DMA1_Stream4_IRQn,
-                .DMA_rx_IRQ_n     = DMA1_Stream2_IRQn,
+                .use_DMA           = _I2C3_USE_DMA,
+                .DMA_tx_stream_pri = 4,
+                .DMA_tx_stream_alt = 4,
+                .DMA_rx_stream_pri = 2,
+                .DMA_rx_stream_alt = 2,
+                .DMA_channel       = 3,
                 #endif
-                .I2C              = I2C3,
-                .freq             = _I2C3_FREQUENCY,
-                .APB1ENR_clk_mask = RCC_APB1ENR_I2C3EN,
-                .IRQ_EV_n         = I2C3_EV_IRQn,
-                .IRQ_ER_n         = I2C3_ER_IRQn,
+                .I2C               = I2C3,
+                .freq              = _I2C3_FREQUENCY,
+                .APB1ENR_clk_mask  = RCC_APB1ENR_I2C3EN,
+                .IRQ_EV_n          = I2C3_EV_IRQn,
+                .IRQ_ER_n          = I2C3_ER_IRQn,
         },
         #endif
 };
@@ -153,44 +151,8 @@ static const I2C_info_t I2C_INFO[_I2C_NUMBER_OF_PERIPHERALS] = {
 //==============================================================================
 static inline I2C_TypeDef *get_I2C(I2C_dev_t *hdl)
 {
-        return const_cast(I2C_TypeDef*, I2C_INFO[hdl->major].I2C);
+        return const_cast(I2C_TypeDef*, I2C_HW[hdl->major].I2C);
 }
-
-//==============================================================================
-/**
- * @brief  Clear all DMA IRQ flags (of tx and rx)
- * @param  major        peripheral major number
- * @return None
- */
-//==============================================================================
-#if USE_DMA > 0
-static void clear_DMA_IRQ_flags(u8_t major)
-{
-        I2C_info_t         *cfg    = const_cast(I2C_info_t*, &I2C_INFO[major]);
-        DMA_Stream_TypeDef *DMA_tx = const_cast(DMA_Stream_TypeDef*, cfg->DMA_tx);
-        DMA_Stream_TypeDef *DMA_rx = const_cast(DMA_Stream_TypeDef*, cfg->DMA_rx);
-
-        static const struct {
-                __IO u32_t *IFCR;
-                u32_t       mask;
-        } flag[] = {
-                    {.IFCR = &DMA1->LIFCR, .mask = (DMA_LIFCR_CFEIF0 | DMA_LIFCR_CDMEIF0 | DMA_LIFCR_CTEIF0 | DMA_LIFCR_CHTIF0 | DMA_LIFCR_CTCIF0)},
-                    {.IFCR = &DMA1->LIFCR, .mask = (DMA_LIFCR_CFEIF1 | DMA_LIFCR_CDMEIF1 | DMA_LIFCR_CTEIF1 | DMA_LIFCR_CHTIF1 | DMA_LIFCR_CTCIF1)},
-                    {.IFCR = &DMA1->LIFCR, .mask = (DMA_LIFCR_CFEIF2 | DMA_LIFCR_CDMEIF2 | DMA_LIFCR_CTEIF2 | DMA_LIFCR_CHTIF2 | DMA_LIFCR_CTCIF2)},
-                    {.IFCR = &DMA1->LIFCR, .mask = (DMA_LIFCR_CFEIF3 | DMA_LIFCR_CDMEIF3 | DMA_LIFCR_CTEIF3 | DMA_LIFCR_CHTIF3 | DMA_LIFCR_CTCIF3)},
-                    {.IFCR = &DMA1->HIFCR, .mask = (DMA_HIFCR_CFEIF4 | DMA_HIFCR_CDMEIF4 | DMA_HIFCR_CTEIF4 | DMA_HIFCR_CHTIF4 | DMA_HIFCR_CTCIF4)},
-                    {.IFCR = &DMA1->HIFCR, .mask = (DMA_HIFCR_CFEIF5 | DMA_HIFCR_CDMEIF5 | DMA_HIFCR_CTEIF5 | DMA_HIFCR_CHTIF5 | DMA_HIFCR_CTCIF5)},
-                    {.IFCR = &DMA1->HIFCR, .mask = (DMA_HIFCR_CFEIF6 | DMA_HIFCR_CDMEIF6 | DMA_HIFCR_CTEIF6 | DMA_HIFCR_CHTIF6 | DMA_HIFCR_CTCIF6)},
-                    {.IFCR = &DMA1->HIFCR, .mask = (DMA_HIFCR_CFEIF7 | DMA_HIFCR_CDMEIF7 | DMA_HIFCR_CTEIF7 | DMA_HIFCR_CHTIF7 | DMA_HIFCR_CTCIF7)},
-        };
-
-        *flag[cfg->DMA_tx_number].IFCR = flag[cfg->DMA_tx_number].mask;
-        *flag[cfg->DMA_rx_number].IFCR = flag[cfg->DMA_rx_number].mask;
-
-        CLEAR_BIT(DMA_tx->CR, DMA_SxCR_EN);
-        CLEAR_BIT(DMA_rx->CR, DMA_SxCR_EN);
-}
-#endif
 
 //==============================================================================
 /**
@@ -267,15 +229,12 @@ static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
  */
 //==============================================================================
 #if USE_DMA > 0
-static bool wait_for_DMA_event(I2C_dev_t *hdl, DMA_Stream_TypeDef *DMA)
+static bool wait_for_DMA_event(I2C_dev_t *hdl)
 {
         _I2C[hdl->major]->error = 0;
 
         I2C_TypeDef *i2c = get_I2C(hdl);
-        CLEAR_BIT(i2c->CR2, I2C_CR2_ITBUFEN | I2C_CR2_ITERREN | I2C_CR2_ITEVTEN);
-        SET_BIT(i2c->CR2, I2C_CR2_DMAEN);
-        SET_BIT(i2c->CR2, I2C_CR2_LAST);
-        SET_BIT(DMA->CR, DMA_SxCR_EN);
+        SET_BIT(i2c->CR2, I2C_CR2_LAST | I2C_CR2_DMAEN);
 
         int err = sys_semaphore_wait(_I2C[hdl->major]->event, _I2C_DEVICE_TIMEOUT);
         if (!err && _I2C[hdl->major]->error) {
@@ -320,8 +279,8 @@ static void clear_send_address_event(I2C_dev_t *hdl)
 //==============================================================================
 int _I2C_LLD__init(u8_t major)
 {
-        const I2C_info_t *cfg = &I2C_INFO[major];
-        I2C_TypeDef      *i2c = const_cast(I2C_TypeDef*, I2C_INFO[major].I2C);
+        const I2C_info_t *cfg = &I2C_HW[major];
+        I2C_TypeDef      *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
 
         SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
         CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
@@ -337,25 +296,6 @@ int _I2C_LLD__init(u8_t major)
         if (clocks.PCLK1_Frequency < 2) {
                 return EIO;
         }
-
-        _I2C[major]->use_DMA = false;
-
-#if USE_DMA > 0
-        if (cfg->use_DMA) {
-                if (!(cfg->DMA_rx->CR & DMA_SxCR_EN) && !(cfg->DMA_tx->CR & DMA_SxCR_EN)) {
-                        SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_DMA1EN);
-
-                        clear_DMA_IRQ_flags(major);
-
-                        NVIC_EnableIRQ(cfg->DMA_tx_IRQ_n);
-                        NVIC_EnableIRQ(cfg->DMA_rx_IRQ_n);
-                        NVIC_SetPriority(cfg->DMA_tx_IRQ_n, _CPU_IRQ_SAFE_PRIORITY_);
-                        NVIC_SetPriority(cfg->DMA_rx_IRQ_n, _CPU_IRQ_SAFE_PRIORITY_);
-
-                        _I2C[major]->use_DMA = true;
-                }
-        }
-#endif
 
         NVIC_EnableIRQ(cfg->IRQ_EV_n);
         NVIC_EnableIRQ(cfg->IRQ_ER_n);
@@ -394,21 +334,8 @@ int _I2C_LLD__init(u8_t major)
 //==============================================================================
 void _I2C_LLD__release(u8_t major)
 {
-        const I2C_info_t *cfg = &I2C_INFO[major];
-        I2C_TypeDef            *i2c = const_cast(I2C_TypeDef*, I2C_INFO[major].I2C);
-
-#if USE_DMA > 0
-        if (_I2C[major]->use_DMA) {
-                NVIC_DisableIRQ(cfg->DMA_tx_IRQ_n);
-                NVIC_DisableIRQ(cfg->DMA_rx_IRQ_n);
-
-                DMA_Stream_TypeDef *DMA_tx = const_cast(DMA_Stream_TypeDef*, cfg->DMA_tx);
-                DMA_Stream_TypeDef *DMA_rx = const_cast(DMA_Stream_TypeDef*, cfg->DMA_rx);
-
-                DMA_rx->CR = 0;
-                DMA_tx->CR = 0;
-        }
-#endif
+        const I2C_info_t *cfg = &I2C_HW[major];
+        I2C_TypeDef            *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
 
         NVIC_DisableIRQ(cfg->IRQ_EV_n);
         NVIC_DisableIRQ(cfg->IRQ_ER_n);
@@ -563,24 +490,36 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                 clear_send_address_event(hdl);
 
 #if USE_DMA > 0
-                if (_I2C[hdl->major]->use_DMA) {
-                        DMA_Stream_TypeDef *DMA = const_cast(DMA_Stream_TypeDef*,
-                                                             I2C_INFO[hdl->major].DMA_rx);
-
-                        DMA->PAR  = cast(u32_t, &i2c->DR);
-                        DMA->M0AR = cast(u32_t, dst);
-                        DMA->NDTR = count;
-
-                        clear_DMA_IRQ_flags(hdl->major);
-
-                        DMA->CR = ((I2C_INFO[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
-                                | DMA_SxCR_MINC | DMA_SxCR_TCIE | DMA_SxCR_TEIE;
-
-                        err = wait_for_DMA_event(hdl, DMA);
-                        if (!err) {
-                                n = count;
+                if (I2C_HW[hdl->major].use_DMA) {
+                        u32_t dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_rx_stream_pri);
+                        if (dmad == 0) {
+                                dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_rx_stream_alt);
                         }
-                } else
+
+                        if (dmad) {
+                                CLEAR_BIT(i2c->CR2, I2C_CR2_ITBUFEN | I2C_CR2_ITERREN | I2C_CR2_ITEVTEN);
+
+                                _DMA_DDI_config_t config;
+                                config.arg      = _I2C[hdl->major];
+                                config.callback = DMA_callback;
+                                config.release  = true;
+                                config.PA       = cast(u32_t, &i2c->DR);
+                                config.MA[0]    = cast(u32_t, dst);
+                                config.NDT      = count;
+                                config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
+                                                | DMA_SxCR_MINC | DMA_SxCR_TCIE | DMA_SxCR_TEIE;
+
+                                if (_DMA_DDI_transfer(dmad, &config) == ESUCC) {
+                                        err = wait_for_DMA_event(hdl);
+                                        if (!err) {
+                                                n = count;
+                                                goto finish;
+                                        }
+                                }
+
+                                _DMA_DDI_release(dmad);
+                        }
+                }
 #endif
                 {
                         while (count) {
@@ -648,8 +587,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                 }
         }
 
-        _I2C_LLD__stop(hdl);
-
+        finish:
         *rdcnt = n;
 
         return err;
@@ -673,22 +611,51 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
         clear_send_address_event(hdl);
 
 #if USE_DMA > 0
-        if (count >= 3 && _I2C[hdl->major]->use_DMA) {
-                DMA_Stream_TypeDef *DMA = const_cast(DMA_Stream_TypeDef*,
-                                                     I2C_INFO[hdl->major].DMA_tx);
-
-                DMA->PAR  = cast(u32_t, &i2c->DR);
-                DMA->M0AR = cast(u32_t, src);
-                DMA->NDTR = count;
-
-                DMA->CR = ((I2C_INFO[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
-                        | DMA_SxCR_MINC | DMA_SxCR_TCIE | DMA_SxCR_TEIE | DMA_SxCR_DIR_0;
-
-                err = wait_for_DMA_event(hdl, DMA);
-                if (!err) {
-                        n = count;
+        if (count >= 3 && I2C_HW[hdl->major].use_DMA) {
+                u32_t dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_tx_stream_pri);
+                if (dmad == 0) {
+                        dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_tx_stream_alt);
                 }
-        } else
+
+                if (dmad) {
+                        CLEAR_BIT(i2c->CR2, I2C_CR2_ITBUFEN | I2C_CR2_ITERREN | I2C_CR2_ITEVTEN);
+
+                        _DMA_DDI_config_t config;
+                        config.arg      = _I2C[hdl->major];
+                        config.callback = DMA_callback;
+                        config.release  = true;
+                        config.PA       = cast(u32_t, &i2c->DR);
+                        config.MA[0]    = cast(u32_t, src);
+                        config.NDT      = count;
+                        config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
+                                        | DMA_SxCR_MINC | DMA_SxCR_TCIE | DMA_SxCR_TEIE | DMA_SxCR_DIR_0;
+
+                        if (_DMA_DDI_transfer(dmad, &config) == ESUCC) {
+                                err = wait_for_DMA_event(hdl);
+                                if (!err) {
+
+                                        /*
+                                         *  Master transmitter: In the interrupt routine after the EOT
+                                         *  interrupt, disable DMA requests then wait for a BTF event
+                                         *  before programming the Stop condition.
+                                         */
+                                        u32_t tref = sys_time_get_reference();
+
+                                        while (!(i2c->SR1 & I2C_SR1_BTF)) {
+                                                if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
+                                                        err = EIO;
+                                                        goto finish;
+                                                }
+                                        }
+
+                                        n = count;
+                                        goto finish;
+                                }
+                        }
+
+                        _DMA_DDI_release(dmad);
+                }
+        }
 #endif
         {
                 while (count) {
@@ -711,11 +678,13 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                 }
         }
 
+        finish:
         *wrcnt = n;
 
         return err;
 }
-
+#include "gpio_ddi.h" //TEST
+#include "stm32f4/gpio_cfg.h" //TEST
 //==============================================================================
 /**
  * @brief  Event IRQ handler (transaction state machine)
@@ -725,9 +694,11 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
 //==============================================================================
 static void IRQ_EV_handler(u8_t major)
 {
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
+
         bool woken = false;
 
-        I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_INFO[major].I2C);
+        I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
         u16_t SR1 = i2c->SR1;
         u16_t SR2 = i2c->SR2;
         UNUSED_ARG1(SR2);
@@ -749,6 +720,8 @@ static void IRQ_EV_handler(u8_t major)
                 }
         }
 
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); //TEST
+
         sys_thread_yield_from_ISR(woken);
 }
 
@@ -761,7 +734,9 @@ static void IRQ_EV_handler(u8_t major)
 //==============================================================================
 static void IRQ_ER_handler(u8_t major)
 {
-        I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_INFO[major].I2C);
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST3, IOCTL_GPIO_PIN_IDX__TEST3); //TEST
+
+        I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
         u16_t SR1 = i2c->SR1;
         u16_t SR2 = i2c->SR2;
         UNUSED_ARG1(SR2);
@@ -785,6 +760,9 @@ static void IRQ_ER_handler(u8_t major)
         sys_semaphore_signal_from_ISR(_I2C[major]->event, &woken);
 
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
+
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST3, IOCTL_GPIO_PIN_IDX__TEST3); //TEST
+
         sys_thread_yield_from_ISR(woken);
 }
 
@@ -797,29 +775,20 @@ static void IRQ_ER_handler(u8_t major)
  */
 //==============================================================================
 #if USE_DMA > 0
-static void IRQ_DMA_handler(const int DMA_ch_no, u8_t major)
+static bool DMA_callback(u8_t SR, void *arg)
 {
-        static const struct {
-                __IO u32_t *IFSR;
-                u32_t       mask;
-        } flag[] = {
-                    {.IFSR = &DMA1->LISR, .mask = DMA_LISR_TEIF0},
-                    {.IFSR = &DMA1->LISR, .mask = DMA_LISR_TEIF1},
-                    {.IFSR = &DMA1->LISR, .mask = DMA_LISR_TEIF2},
-                    {.IFSR = &DMA1->LISR, .mask = DMA_LISR_TEIF3},
-                    {.IFSR = &DMA1->HISR, .mask = DMA_HISR_TEIF4},
-                    {.IFSR = &DMA1->HISR, .mask = DMA_HISR_TEIF5},
-                    {.IFSR = &DMA1->HISR, .mask = DMA_HISR_TEIF6},
-                    {.IFSR = &DMA1->HISR, .mask = DMA_HISR_TEIF7},
-        };
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
 
-        _I2C[major]->error = (*flag[DMA_ch_no].IFSR & flag[DMA_ch_no].mask) ? EIO : ESUCC;
+        I2C_mem_t *I2C = arg;
 
-        bool woken = false;
-        sys_semaphore_signal_from_ISR(_I2C[major]->event, &woken);
+        I2C->error = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
 
-        clear_DMA_IRQ_flags(major);
-        sys_thread_yield_from_ISR(woken);
+        bool yield = false;
+        sys_semaphore_signal_from_ISR(I2C->event, &yield);
+
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST4, IOCTL_GPIO_PIN_IDX__TEST4); //TEST
+
+        return yield;
 }
 #endif
 
@@ -904,84 +873,6 @@ void I2C3_EV_IRQHandler(void)
 void I2C3_ER_IRQHandler(void)
 {
         IRQ_ER_handler(_I2C3);
-}
-#endif
-
-#if defined(RCC_APB1ENR_I2C1EN) && (_I2C1_USE_DMA > 0)
-//==============================================================================
-/**
- * @brief  I2C1 DMA Tx Complete IRQ handler
- * @param  None
- * @return None
- */
-//==============================================================================
-void DMA1_Stream6_IRQHandler(void)
-{
-        IRQ_DMA_handler(I2C_INFO[_I2C1].DMA_tx_number, _I2C1);
-}
-
-//==============================================================================
-/**
- * @brief  I2C1 DMA Rx Complete IRQ handler
- * @param  None
- * @return None
- */
-//==============================================================================
-void DMA1_Stream5_IRQHandler(void)
-{
-        IRQ_DMA_handler(I2C_INFO[_I2C1].DMA_rx_number, _I2C1);
-}
-#endif
-
-#if defined(RCC_APB1ENR_I2C2EN) && (_I2C2_USE_DMA > 0)
-//==============================================================================
-/**
- * @brief  I2C2 DMA Tx Complete IRQ handler
- * @param  None
- * @return None
- */
-//==============================================================================
-void DMA1_Stream7_IRQHandler(void)
-{
-        IRQ_DMA_handler(I2C_INFO[_I2C2].DMA_tx_number, _I2C2);
-}
-
-//==============================================================================
-/**
- * @brief  I2C2 DMA Rx Complete IRQ handler
- * @param  None
- * @return None
- */
-//==============================================================================
-void DMA1_Stream3_IRQHandler(void)
-{
-        IRQ_DMA_handler(I2C_INFO[_I2C2].DMA_rx_number, _I2C2);
-}
-#endif
-
-#if defined(RCC_APB1ENR_I2C3EN) && (_I2C3_USE_DMA > 0)
-//==============================================================================
-/**
- * @brief  I2C2 DMA Tx Complete IRQ handler
- * @param  None
- * @return None
- */
-//==============================================================================
-void DMA1_Stream4_IRQHandler(void)
-{
-        IRQ_DMA_handler(I2C_INFO[_I2C3].DMA_tx_number, _I2C3);
-}
-
-//==============================================================================
-/**
- * @brief  I2C2 DMA Rx Complete IRQ handler
- * @param  None
- * @return None
- */
-//==============================================================================
-void DMA1_Stream2_IRQHandler(void)
-{
-        IRQ_DMA_handler(I2C_INFO[_I2C3].DMA_rx_number, _I2C3);
 }
 #endif
 

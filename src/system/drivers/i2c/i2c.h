@@ -96,7 +96,6 @@ typedef struct {
         mutex_t                  *lock;                 //!< mutex used to lock access to the particular peripheral
         sem_t                    *event;                //!< semaphore used to indicate event (operation finished)
         u16_t                     SR1_mask;             //!< SR1 register mask (to catch specified event in IRQ)
-        bool                      use_DMA:1;            //!< true if peripheral use DMA channels
         bool                      initialized:1;        //!< indicates that module for this peripheral is initialized
         u8_t                      dev_cnt;              //!< number of initialized devices
         u8_t                      error;                //!< error number (errno)
