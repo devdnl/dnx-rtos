@@ -20,7 +20,7 @@ stacks sizes
  * Thread mode can use main stack (default) or process stack - selected in
  * CONTROL special register
  */
-__main_stack_size    = 256;
+__main_stack_size    = 4096;
 __process_stack_size = 0;
 
 PROVIDE(__main_stack_size    = __main_stack_size);

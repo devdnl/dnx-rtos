@@ -484,7 +484,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                         err = wait_for_DMA_event(hdl);
                         if (!err) {
                                 n = count;
-                                                goto finish;
+                                goto finish;
                         }
                                 }
 
@@ -600,7 +600,7 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
 
                         if (_DMA_DDI_transfer(dmad, &config) == ESUCC) {
                                 err = wait_for_DMA_event(hdl);
-                if (!err) {
+                                if (!err) {
 
                                         /*
                                          *  Master transmitter: In the interrupt routine after the EOT
@@ -616,9 +616,9 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                                                 }
                                         }
 
-                        n = count;
+                                        n = count;
                                         goto finish;
-                }
+                                }
                         }
 
                         _DMA_DDI_release(dmad);
