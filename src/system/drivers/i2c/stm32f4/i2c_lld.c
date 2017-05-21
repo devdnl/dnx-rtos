@@ -197,7 +197,6 @@ static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
         I2C_TypeDef *i2c = get_I2C(hdl);
 
         _I2C[hdl->major]->SR1_mask = SR1_event_mask;
-        _I2C[hdl->major]->error    = 0;
 
         u16_t CR2 = I2C_CR2_ITEVTEN | I2C_CR2_ITERREN;
 
@@ -207,9 +206,10 @@ static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
 
         SET_BIT(i2c->CR2, CR2);
 
-        int err = sys_semaphore_wait(_I2C[hdl->major]->event, _I2C_DEVICE_TIMEOUT);
-        if (!err && _I2C[hdl->major]->error) {
-                err = EIO;
+        int ferr = EIO;
+        int err  = sys_queue_receive(_I2C[hdl->major]->event, &ferr, _I2C_DEVICE_TIMEOUT);
+        if (!err) {
+                err = ferr;
         }
 
         if (err) {
@@ -230,17 +230,16 @@ static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
 #if USE_DMA > 0
 static bool wait_for_DMA_event(I2C_dev_t *hdl)
 {
-        _I2C[hdl->major]->error = 0;
-
         I2C_TypeDef *i2c = get_I2C(hdl);
         SET_BIT(i2c->CR2, I2C_CR2_LAST | I2C_CR2_DMAEN);
 
-        int err = sys_semaphore_wait(_I2C[hdl->major]->event, _I2C_DEVICE_TIMEOUT);
+        int ferr = EIO;
+        int err  = sys_queue_receive(_I2C[hdl->major]->event, &ferr, _I2C_DEVICE_TIMEOUT);
 
         CLEAR_BIT(i2c->CR2, I2C_CR2_LAST | I2C_CR2_DMAEN);
 
-        if (!err && _I2C[hdl->major]->error) {
-                err = EIO;
+        if (!err) {
+                err = ferr;
         }
 
         if (err) {
@@ -701,7 +700,8 @@ static void IRQ_EV_handler(u8_t major)
         UNUSED_ARG1(SR2);
 
         if (SR1 & _I2C[major]->SR1_mask) {
-                sys_semaphore_signal_from_ISR(_I2C[major]->event, &woken);
+                int err = ESUCC;
+                sys_queue_send_from_ISR(_I2C[major]->event, &err, &woken);
                 CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
                 _I2C[major]->unexp_event_cnt = 0;
         } else {
@@ -711,8 +711,8 @@ static void IRQ_EV_handler(u8_t major)
                  * the error flag is set.
                  */
                 if (++_I2C[major]->unexp_event_cnt >= 16) {
-                        _I2C[major]->error = EIO;
-                        sys_semaphore_signal_from_ISR(_I2C[major]->event, &woken);
+                        int err = EIO;
+                        sys_queue_send_from_ISR(_I2C[major]->event, &err, &woken);
                         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
                 }
         }
@@ -733,23 +733,25 @@ static void IRQ_ER_handler(u8_t major)
         u16_t SR2 = i2c->SR2;
         UNUSED_ARG1(SR2);
 
+        int err = ESUCC;
+
         if (SR1 & I2C_SR1_ARLO) {
-                _I2C[major]->error = EAGAIN;
+                err = EAGAIN;
 
         } else if (SR1 & I2C_SR1_AF) {
                 if (_I2C[major]->SR1_mask & (I2C_SR1_ADDR | I2C_SR1_ADD10))
-                        _I2C[major]->error = ENXIO;
+                        err = ENXIO;
                 else
-                        _I2C[major]->error = EIO;
+                        err = EIO;
         } else {
-                _I2C[major]->error = EIO;
+                err = EIO;
         }
 
         // clear error flags
         i2c->SR1 = 0;
 
         bool woken = false;
-        sys_semaphore_signal_from_ISR(_I2C[major]->event, &woken);
+        sys_queue_send_from_ISR(_I2C[major]->event, &err, &woken);
 
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
         sys_thread_yield_from_ISR(woken);
@@ -768,10 +770,9 @@ static bool DMA_callback(u8_t SR, void *arg)
 {
         I2C_mem_t *I2C = arg;
 
-        I2C->error = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
-
         bool yield = false;
-        sys_semaphore_signal_from_ISR(I2C->event, &yield);
+        int  err   = (SR & DMA_SR_TCIF) ? ESUCC : EIO;;
+        sys_queue_send_from_ISR(I2C->event, &err, &yield);
 
         return yield;
 }
