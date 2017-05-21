@@ -104,7 +104,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
                         goto finish;
                 }
 
-                err = sys_semaphore_create(1, 0, &_I2C[major]->event);
+                err = sys_queue_create(1, sizeof(int), &_I2C[major]->event);
                 if (err) {
                         goto finish;
                 }
@@ -392,7 +392,7 @@ static void release_resources(u8_t major)
                 }
 
                 if (_I2C[major]->event) {
-                        sys_semaphore_destroy(_I2C[major]->event);
+                        sys_queue_destroy(_I2C[major]->event);
                         _I2C[major]->event = NULL;
                 }
 

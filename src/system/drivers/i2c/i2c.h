@@ -94,11 +94,10 @@ typedef struct {
 /// type defines main memory of this module
 typedef struct {
         mutex_t                  *lock;                 //!< mutex used to lock access to the particular peripheral
-        sem_t                    *event;                //!< semaphore used to indicate event (operation finished)
+        queue_t                  *event;                //!< queue used to indicate event (operation finished)
         u16_t                     SR1_mask;             //!< SR1 register mask (to catch specified event in IRQ)
         bool                      initialized:1;        //!< indicates that module for this peripheral is initialized
         u8_t                      dev_cnt;              //!< number of initialized devices
-        u8_t                      error;                //!< error number (errno)
         u8_t                      unexp_event_cnt;      //!< number of unexpected events
 } I2C_mem_t;
 

@@ -258,7 +258,7 @@ int sys_mutex_destroy(mutex_t *mutex)
  * @return One of errno values.
  */
 //==============================================================================
-int sys_queue_create(const uint length, const uint item_size, queue_t **queue)
+int sys_queue_create(size_t length, size_t item_size, queue_t **queue)
 {
         int r = _queue_create(length, item_size, queue);
         if (r == ESUCC) {
