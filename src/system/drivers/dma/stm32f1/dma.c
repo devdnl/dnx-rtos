@@ -313,7 +313,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
 
         if (arg) {
                 switch (request) {
-                case IOCTL_DMA__TRANSFER:
+                case IOCTL_DMA__TRANSFER: {
                         err = EBUSY;
 
                         u32_t dmad    = 0;
@@ -328,15 +328,14 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                 err = sys_queue_create(1, sizeof(int), &hdl->queue[channel]);
                                 if (err) {
                                         _DMA_DDI_release(dmad);
-                                        dmad = 0;
+                                        break;
                                 }
                         }
 
                         if (dmad) {
                                 const DMA_transfer_t *transfer = arg;
 
-                                u32_t PMSIZE;
-                                u32_t NDT;
+                                u32_t PMSIZE, NDT;
 
                                 if (  ((transfer->size & 3) == 0)
                                    && ((cast(u32_t, transfer->src) & 3) == 0)
@@ -359,29 +358,35 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                         NDT   = transfer->size;
                                 }
 
-                                _DMA_DDI_config_t config;
-                                config.arg      = hdl->queue[channel];
-                                config.callback = M2M_callback;
-                                config.release  = true;
-                                config.PA       = cast(u32_t, transfer->src);
-                                config.MA       = cast(u32_t, transfer->dst);
-                                config.NDT      = NDT;
-                                config.CR       = PMSIZE | DMA_CCR1_MEM2MEM
-                                                 | DMA_CCR1_MINC | DMA_CCR1_PINC;
+                                if (NDT <= UINT16_MAX) {
+                                        _DMA_DDI_config_t config;
+                                        config.arg      = hdl->queue[channel];
+                                        config.callback = M2M_callback;
+                                        config.release  = true;
+                                        config.PA       = cast(u32_t, transfer->src);
+                                        config.MA       = cast(u32_t, transfer->dst);
+                                        config.NDT      = NDT;
+                                        config.CR       = PMSIZE | DMA_CCR1_MEM2MEM
+                                                         | DMA_CCR1_MINC | DMA_CCR1_PINC;
 
-                                err = _DMA_DDI_transfer(dmad, &config);
-                                if (!err) {
-                                        int ferr = EIO;
-                                        err = sys_queue_receive(hdl->queue[channel],
-                                                                &ferr,
-                                                                M2M_TRANSFER_TIMEOUT);
-
+                                        err = _DMA_DDI_transfer(dmad, &config);
                                         if (!err) {
-                                                err = ferr;
+                                                int ferr = EIO;
+                                                err = sys_queue_receive(hdl->queue[channel],
+                                                                        &ferr,
+                                                                        M2M_TRANSFER_TIMEOUT);
+                                                if (!err) {
+                                                        err = ferr;
+                                                }
                                         }
+                                } else {
+                                        err = EFBIG;
                                 }
+
+                                _DMA_DDI_release(dmad);
                         }
                         break;
+                }
 
                 default:
                         err = EBADRQC;

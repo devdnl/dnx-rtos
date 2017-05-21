@@ -114,7 +114,7 @@ this:AddWidget("Spinbox", 1, 16, "Row cycle delay")
 /*--
 this:AddWidget("Spinbox", 1, 3, "CAS Latency")
 --*/
-#define __FMC_SDRAM_CAS__ 2
+#define __FMC_SDRAM_CAS__ 3
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Self refresh time")
@@ -152,6 +152,7 @@ this:AddExtraWidget("Void", "Void_SDRAM1")
 this:AddWidget("Combobox", "Memory bank")
 this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
+this:SetEvent("clicked", function() this:SDRAMEn(1) end)
 --*/
 #define __FMC_SDRAM_1_ENABLE__ 0
 
@@ -201,6 +202,7 @@ this:AddExtraWidget("Void", "Void_SDRAM2")
 this:AddWidget("Combobox", "Memory bank")
 this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
+this:SetEvent("clicked", function() this:SDRAMEn(2) end)
 --*/
 #define __FMC_SDRAM_2_ENABLE__ 1
 
@@ -240,6 +242,28 @@ this:AddItem("11 bits", "3")
 this:AddWidget("Spinbox", 1, 16, "Row to column delay")
 --*/
 #define __FMC_SDRAM_2_TRCD__ 16
+
+
+//------------------------------------------------------------------------------
+// FUNCTIONS
+//------------------------------------------------------------------------------
+/*--
+this.SDRAMEn = function(self, SDRAM)
+    local en = false
+    if this:GetFlagValue("__FMC_SDRAM_"..SDRAM.."_ENABLE__") ~= "0" then
+        en = true
+    end
+
+    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_NB__")
+    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_MWID__")
+    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_NR__")
+    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_NC__")
+    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_TRCD__")
+end
+
+this:SDRAMEn(1)
+this:SDRAMEn(2)
+++*/
 
 #endif /* _FMC_FLAGS_H_ */
 /*==============================================================================
