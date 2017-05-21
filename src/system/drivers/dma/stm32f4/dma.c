@@ -312,7 +312,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                         u8_t  stream = 0;
 
                         for (; stream < STREAM_COUNT; stream++) {
-                                dmad = _DMA_DDI_reserve(1, stream);
+                                dmad = _DMA_DDI_reserve(hdl->major, stream);
                                 if (dmad) break;
                         }
 

@@ -37,12 +37,15 @@ Brief    General usage DMA driver.
   Local macros
 ==============================================================================*/
 enum {
-        DMA1_CHANNELS = 7,
+        _DMA1,
       #if defined(RCC_AHBENR_DMA2EN)
-        DMA2_CHANNELS = 5,
+        _DMA2,
       #endif
         DMA_COUNT
 };
+
+#define DMA1_CHANNELS                   7
+#define DMA2_CHANNELS                   5
 
 #define DMAD(major, channel, ID)        (((ID) << 4) | (((channel) & 7) << 1) | ((major) & 1))
 #define GETMAJOR(DMAD)                  (((DMAD) >> 0) & 1)
@@ -68,7 +71,7 @@ typedef struct {
 } DMA_RT_channel_t;
 
 typedef struct {
-        DMA_RT_channel_t **channel;
+        DMA_RT_channel_t  *channel;
         queue_t          **queue;
         u32_t              ID_cnt;
         u8_t               major;
@@ -156,7 +159,7 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor)
                                          cast(void*, &hdl->queue));
                         if (err) goto finish;
 
-                        err = sys_zalloc(sizeof(DMA_RT_channel_t*) * DMA_HW[major].chcnt,
+                        err = sys_zalloc(sizeof(DMA_RT_channel_t) * DMA_HW[major].chcnt,
                                          cast(void*, &hdl->channel));
                         if (err) goto finish;
 
@@ -308,21 +311,16 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
 
         int err = EPERM;
 
-        /*
-         * Note:
-         * Only the DMA2 controller is able to perform memory-to-memory transfers.
-         * It is peripheral limitation.
-         */
-        if (hdl->major == 1 && arg) {
+        if (arg) {
                 switch (request) {
-                case IOCTL_DMA__TRANSFER: {
+                case IOCTL_DMA__TRANSFER:
                         err = EBUSY;
 
                         u32_t dmad    = 0;
                         u8_t  channel = 0;
 
                         for (; channel < DMA_HW[hdl->major].chcnt; channel++) {
-                                dmad = _DMA_DDI_reserve(1, channel);
+                                dmad = _DMA_DDI_reserve(hdl->major, channel + 1);
                                 if (dmad) break;
                         }
 
@@ -384,7 +382,6 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                 }
                         }
                         break;
-                }
 
                 default:
                         err = EBADRQC;
@@ -448,12 +445,12 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t channel)
         if (major < DMA_COUNT && (channel < DMA_HW[major].chcnt) && DMA_RT[major]) {
                 sys_critical_section_begin();
                 {
-                        if (DMA_RT[major]->channel[channel]->dmad == 0) {
+                        if (DMA_RT[major]->channel[channel].dmad == 0) {
                                 u32_t ID = DMA_RT[major]->ID_cnt++;
 
                                 dmad = DMAD(major, channel, ID);
 
-                                DMA_RT[major]->channel[channel]->dmad = dmad;
+                                DMA_RT[major]->channel[channel].dmad = dmad;
 
                                 if (DMA_RT[major]->ID_cnt == 0) {
                                         DMA_RT[major]->ID_cnt++;
@@ -476,7 +473,7 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t channel)
 void _DMA_DDI_release(u32_t dmad)
 {
         if (dmad && DMA_RT[GETMAJOR(dmad)]) {
-                DMA_RT_channel_t *RT_channel = DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
+                DMA_RT_channel_t *RT_channel = &DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
 
                 if (RT_channel->dmad == dmad) {
 
@@ -519,7 +516,7 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
            && config->PA
            && config->MA) {
 
-                DMA_RT_channel_t *RT_channel = DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
+                DMA_RT_channel_t *RT_channel = &DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
                 DMA_Channel_t    *DMA_Stream = DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
                 IRQn_Type         IRQn       = DMA_HW[GETMAJOR(dmad)].IRQn[GETCHANNEL(dmad)];
 
@@ -593,7 +590,7 @@ static bool M2M_callback(u8_t SR, void *arg)
 static void IRQ_handle(u8_t major, u8_t channel)
 {
         DMA_Channel_t    *DMA_channel = DMA_HW[major].channel[channel];
-        DMA_RT_channel_t *RT_channel  = DMA_RT[major]->channel[channel];
+        DMA_RT_channel_t *RT_channel  = &DMA_RT[major]->channel[channel];
 
         bool  yield = false;
 
