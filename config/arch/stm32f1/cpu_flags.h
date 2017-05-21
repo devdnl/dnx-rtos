@@ -108,11 +108,18 @@
 __CPU_NAME__=STM32F103TBxx
 #*/
 
+#/*
+# * NOTE!
+# * Any interrupt that uses the FreeRTOS API must be set to the same priority as the
+# * RTOS kernel (as configured by the _CPU_IRQ_RTOS_KERNEL_PRIORITY_ macro), or at
+# * or below _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ for ports that include this functionality.
+# */
+
 #/*--
 # this:AddWidget("Combobox", "Default IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_DEFAULT_IRQ_PRIORITY__ 13
+#define __CPU_DEFAULT_IRQ_PRIORITY__ 15
 
 
 #//-----------------------------------------------------------------------------
@@ -122,6 +129,8 @@ __CPU_NAME__=STM32F103TBxx
 #define _CPU_HEAP_ALIGN_                (4)
 #define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (15 << 4)
 #define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (14 << 4)
+#define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (13 << 4)
+#define _CPU_IRQ_SAFE_PRIORITY_         (15)
 #define ARCH_stm32f1
 #/*
 CPUCONFIG_AFLAGS=-mcpu=cortex-m3 -mthumb -mthumb-interwork -DGCC_ARMCM3

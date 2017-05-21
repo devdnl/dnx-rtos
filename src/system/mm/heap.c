@@ -403,7 +403,7 @@ size_t _heap_get_used(_heap_t *heap)
 //==============================================================================
 size_t _heap_get_size(_heap_t *heap)
 {
-        return heap->size;
+        return heap->size + SIZEOF_STRUCT_MEM;
 }
 
 //==============================================================================

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    uart_lld.h
+@file    i2c_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   This file support UART peripheral.
+@brief   This driver support I2C peripherals.
 
-@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2014  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -26,46 +26,46 @@
 
 *//*==========================================================================*/
 
-#if !defined(_UART_LLD_H_) && defined(ARCH_efr32)
-#define _UART_LLD_H_
-
-/*==============================================================================
-  Include files
-==============================================================================*/
-#include "../uart.h"
-#include "efr32/efr32xx.h"
+#ifndef _I2C_CFG_H_
+#define _I2C_CFG_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Exported macros
+  Include files
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
+  Exported symbolic constants/macros
 ==============================================================================*/
-//* UARTs */
-#define _UART_COUNT USART_COUNT
+#define _I2C1_USE_DMA           __I2C1_USE_DMA__
+#define _I2C1_FREQUENCY         __I2C1_SCL_FREQ__
+
+#define _I2C2_USE_DMA           __I2C2_USE_DMA__
+#define _I2C2_FREQUENCY         __I2C2_SCL_FREQ__
+
+#define _I2C3_USE_DMA           __I2C3_USE_DMA__
+#define _I2C3_FREQUENCY         __I2C3_SCL_FREQ__
 
 /*==============================================================================
-  Exported objects
+  Exported types, enums definitions
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
-  Exported inline functions
+  Exported function prototypes
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _UART_LLD_H_ */
+#endif /* _I2C_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -55,12 +55,6 @@ this:AddItem("Yes", "_YES_")
 #define __ETHMAC_CHECKSUM_BY_HARDWARE__ _YES_
 
 /*--
-this:AddWidget("Combobox", "Interrupt priority")
-uC.AddPriorityItems(this)
---*/
-#define __ETHMAC_IRQ_PRIORITY__ __CPU_DEFAULT_IRQ_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "Link speed")
 this:AddItem("10 Mbps", "ETH_Speed_10M")
 this:AddItem("100 Mbps", "ETH_Speed_100M")

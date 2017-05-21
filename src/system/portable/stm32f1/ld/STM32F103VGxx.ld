@@ -7,4 +7,4 @@ MEMORY
    ram (rwx) : org = 0x20000000, len = 96k
 }
 
-INCLUDE stm32_common.ld
+INCLUDE common.ld

@@ -31,11 +31,11 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #if defined(ARCH_efr32)
-#include "efr32/uart_lld.h"
+#include "uart.h"
+#include "uart_ioctl.h"
 #include "efr32/uart_cfg.h"
 #include "efr32/efr32xx.h"
 #include "efr32/lib/em_cmu.h"
-#include "../uart_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -50,7 +50,6 @@ typedef struct {
         uint32_t        enable_mask;
         const IRQn_Type rx_IRQn;
         const IRQn_Type tx_IRQn;
-        const u32_t     PRIORITY;
 } UART_regs_t;
 
 /*==============================================================================
@@ -69,7 +68,6 @@ static const UART_regs_t UART[] = {
                 .enable_mask     = CMU_HFPERCLKEN0_USART0,
                 .rx_IRQn         = USART0_RX_IRQn,
                 .tx_IRQn         = USART0_TX_IRQn,
-                .PRIORITY        = _UART0_IRQ_PRIORITY
         },
         #endif
         #if USART_COUNT >= 2
@@ -78,7 +76,6 @@ static const UART_regs_t UART[] = {
                 .enable_mask     = CMU_HFPERCLKEN0_USART1,
                 .rx_IRQn         = USART1_RX_IRQn,
                 .tx_IRQn         = USART1_TX_IRQn,
-                .PRIORITY        = _UART1_IRQ_PRIORITY
         },
         #endif
         #if USART_COUNT >= 3
@@ -87,7 +84,6 @@ static const UART_regs_t UART[] = {
                 .enable_mask     = CMU_HFPERCLKEN0_USART2,
                 .rx_IRQn         = USART2_RX_IRQn,
                 .tx_IRQn         = USART2_TX_IRQn,
-                .PRIORITY        = _UART2_IRQ_PRIORITY
         },
         #endif
         #if USART_COUNT >= 4
@@ -96,7 +92,6 @@ static const UART_regs_t UART[] = {
                 .enable_mask     = CMU_HFPERCLKEN0_USART3,
                 .rx_IRQn         = USART3_RX_IRQn,
                 .tx_IRQn         = USART3_TX_IRQn,
-                .PRIORITY        = _UART3_IRQ_PRIORITY
         },
         #endif
 };
@@ -124,8 +119,8 @@ int _UART_LLD__turn_on(u8_t major)
 
                 NVIC_EnableIRQ(UART[major].rx_IRQn);
                 NVIC_EnableIRQ(UART[major].tx_IRQn);
-                NVIC_SetPriority(UART[major].rx_IRQn, UART[major].PRIORITY);
-                NVIC_SetPriority(UART[major].tx_IRQn, UART[major].PRIORITY);
+                NVIC_SetPriority(UART[major].rx_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                NVIC_SetPriority(UART[major].tx_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
                 return ESUCC;
         } else {

@@ -4101,7 +4101,7 @@ static inline int sys_mutex_unlock(mutex_t *mutex)
  * @return One of @ref errno value.
  */
 //==============================================================================
-extern int sys_queue_create(const uint length, const uint item_size, queue_t **queue);
+extern int sys_queue_create(const size_t length, const size_t item_size, queue_t **queue);
 
 //==============================================================================
 /**

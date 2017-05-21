@@ -43,14 +43,6 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/*----------------------------------------------------------------------------*/
-/*
- * IRQ priority
- */
-#define _SPI1_IRQ_PRIORITY                      __SPI_SPI1_IRQ_PRIORITY__
-#define _SPI2_IRQ_PRIORITY                      __SPI_SPI2_IRQ_PRIORITY__
-#define _SPI3_IRQ_PRIORITY                      __SPI_SPI3_IRQ_PRIORITY__
-
 /*
  *  SPI default configuration (for all devices)
  */

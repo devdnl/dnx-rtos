@@ -42,11 +42,6 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /*
- * Ethernet MAC IRQ priority
- */
-#define ETHMAC_IRQ_PRIORITY             __ETHMAC_IRQ_PRIORITY__
-
-/*
  * Enable (1) or disable (0) hardware checksum calculation
  */
 #define ETHMAC_CHECKSUM_BY_HARDWARE     __ETHMAC_CHECKSUM_BY_HARDWARE__

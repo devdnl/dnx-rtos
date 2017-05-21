@@ -194,22 +194,26 @@ API_MOD_WRITE(I2CEE,
         int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
         if (!err) {
 
-                u32_t addr = *fpos;
-                err = sys_fseek(hdl->i2c_dev, addr, VFS_SEEK_SET);
+                if (*fpos < hdl->memory_size) {
+                        u32_t addr = *fpos;
+                        err = sys_fseek(hdl->i2c_dev, addr, VFS_SEEK_SET);
 
-                while (!err && count) {
-                        size_t pbleft = (((addr / hdl->page_size) + 1) * hdl->page_size) - addr;
-                        size_t wrsz   = min(count, pbleft);
-                        size_t wrb    = 0;
+                        while (!err && count) {
+                                size_t pbleft = (((addr / hdl->page_size) + 1) * hdl->page_size) - addr;
+                                size_t wrsz   = min(count, pbleft);
+                                size_t wrb    = 0;
 
-                        err = sys_fwrite(src, wrsz, &wrb, hdl->i2c_dev);
-                        if (!err) {
-                                sys_sleep_ms(hdl->page_prog_time_ms);
-                                addr   += wrsz;
-                                src    += wrsz;
-                                count  -= wrsz;
-                                *wrcnt += wrb;
+                                err = sys_fwrite(src, wrsz, &wrb, hdl->i2c_dev);
+                                if (!err) {
+                                        sys_sleep_ms(hdl->page_prog_time_ms);
+                                        addr   += wrsz;
+                                        src    += wrsz;
+                                        count  -= wrsz;
+                                        *wrcnt += wrb;
+                                }
                         }
+                } else {
+                        *wrcnt = 0;
                 }
 
                 sys_mutex_unlock(hdl->mtx);
@@ -247,9 +251,13 @@ API_MOD_READ(I2CEE,
         int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
         if (!err) {
 
-                err = sys_fseek(hdl->i2c_dev, *fpos, VFS_SEEK_SET);
-                if (!err) {
-                        err = sys_fread(dst, count, rdcnt, hdl->i2c_dev);
+                if (*fpos < hdl->memory_size) {
+                        err = sys_fseek(hdl->i2c_dev, *fpos, VFS_SEEK_SET);
+                        if (!err) {
+                                err = sys_fread(dst, count, rdcnt, hdl->i2c_dev);
+                        }
+                } else {
+                        *rdcnt = 0;
                 }
 
                 sys_mutex_unlock(hdl->mtx);
@@ -290,7 +298,7 @@ API_MOD_IOCTL(I2CEE, void *device_handle, int request, void *arg)
                                 if (!err) {
                                         hdl->memory_size       = cfg->memory_size;
                                         hdl->page_size         = cfg->page_size;
-                                        hdl->page_prog_time_ms = cfg->page_prog_time_ms;
+                                        hdl->page_prog_time_ms = cfg->page_prog_time_ms + 1;
                                 }
                         }
 

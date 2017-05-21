@@ -58,9 +58,14 @@
 #define HEAP_START                      ((void *)&__heap_start)
 
 /**
- * RAM size defined in linker script
+ * Stack start declared by linker script
  */
-#define RAM_SIZE                        ((size_t)&__ram_size)
+#define STACK_START                     ((void *)&__stack_start)
+
+/**
+ * RAM start declared by linker script
+ */
+#define RAM_START                       ((void *)&__ram_start)
 
 /**
  * Calculate memory size for an aligned buffer - returns the next highest
@@ -97,14 +102,17 @@ static i32_t       *module_memory_usage;
 /*==============================================================================
   External objects
 ==============================================================================*/
+/** pointer to stack start */
+extern void *__stack_start;
+
 /** pointer to heap start */
 extern void *__heap_start;
 
 /** pointer to heap size value */
 extern void *__heap_size;
 
-/** basic RAM size */
-extern void *__ram_size;
+/** basic RAM start */
+extern void *__ram_start;
 
 /** number of drivers */
 extern const uint _drvreg_number_of_modules;
@@ -307,7 +315,7 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
 int _mm_get_mem_usage_details(_mm_mem_usage_t *mem_usage)
 {
         if (mem_usage) {
-                mem_usage->static_memory_usage      = RAM_SIZE - HEAP_SIZE;
+                mem_usage->static_memory_usage      = STACK_START - RAM_START;
                 mem_usage->kernel_memory_usage      = memory_usage[_MM_KRN];
                 mem_usage->filesystems_memory_usage = memory_usage[_MM_FS];
                 mem_usage->network_memory_usage     = memory_usage[_MM_NET];
@@ -393,7 +401,7 @@ size_t _mm_get_mem_free(void)
 //==============================================================================
 size_t _mm_get_mem_usage(void)
 {
-        size_t memusage = RAM_SIZE - _heap_get_size(&memory_region.heap);
+        size_t memusage = STACK_START - RAM_START;
 
         for (_mm_region_t *r = &memory_region; r; r = r->next) {
                 memusage += _heap_get_used(&r->heap);
@@ -411,9 +419,9 @@ size_t _mm_get_mem_usage(void)
 //==============================================================================
 size_t _mm_get_mem_size(void)
 {
-        size_t ramsize = RAM_SIZE;
+        size_t ramsize = STACK_START - RAM_START;
 
-        for (_mm_region_t *r = memory_region.next; r; r = r->next) {
+        for (_mm_region_t *r = &memory_region; r; r = r->next) {
                 ramsize += _heap_get_size(&r->heap);
         }
 

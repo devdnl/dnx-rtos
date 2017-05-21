@@ -72,23 +72,6 @@ enum _IRQ_MODE {
 #define _IRQ_LINE_14_MODE               __IRQ_LINE_14_MODE__
 #define _IRQ_LINE_15_MODE               __IRQ_LINE_15_MODE__
 
-#define _IRQ_LINE_0_PRIO                __IRQ_LINE_0_PRIO__
-#define _IRQ_LINE_1_PRIO                __IRQ_LINE_1_PRIO__
-#define _IRQ_LINE_2_PRIO                __IRQ_LINE_2_PRIO__
-#define _IRQ_LINE_3_PRIO                __IRQ_LINE_3_PRIO__
-#define _IRQ_LINE_4_PRIO                __IRQ_LINE_4_PRIO__
-#define _IRQ_LINE_5_PRIO                __IRQ_LINE_5_PRIO__
-#define _IRQ_LINE_6_PRIO                __IRQ_LINE_6_PRIO__
-#define _IRQ_LINE_7_PRIO                __IRQ_LINE_7_PRIO__
-#define _IRQ_LINE_8_PRIO                __IRQ_LINE_8_PRIO__
-#define _IRQ_LINE_9_PRIO                __IRQ_LINE_9_PRIO__
-#define _IRQ_LINE_10_PRIO               __IRQ_LINE_10_PRIO__
-#define _IRQ_LINE_11_PRIO               __IRQ_LINE_11_PRIO__
-#define _IRQ_LINE_12_PRIO               __IRQ_LINE_12_PRIO__
-#define _IRQ_LINE_13_PRIO               __IRQ_LINE_13_PRIO__
-#define _IRQ_LINE_14_PRIO               __IRQ_LINE_14_PRIO__
-#define _IRQ_LINE_15_PRIO               __IRQ_LINE_15_PRIO__
-
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

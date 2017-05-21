@@ -31,11 +31,11 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #if defined(ARCH_stm32f4)
-#include "stm32f4/uart_lld.h"
+#include "uart.h"
+#include "uart_ioctl.h"
 #include "stm32f4/uart_cfg.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
-#include "../uart_ioctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -52,7 +52,6 @@ typedef struct {
         const uint32_t  APBENR_UARTEN;
         const uint32_t  APBRSTR_UARTRST;
         const IRQn_Type IRQn;
-        const u32_t     PRIORITY;
 } UART_regs_t;
 
 /*==============================================================================
@@ -72,7 +71,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_USART1EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART1RST,
                 .IRQn            = USART1_IRQn,
-                .PRIORITY        = _UART1_IRQ_PRIORITY
         },
         #endif
         #if defined(RCC_APB1ENR_USART2EN)
@@ -83,7 +81,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_USART2EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART2RST,
                 .IRQn            = USART2_IRQn,
-                .PRIORITY        = _UART2_IRQ_PRIORITY
         },
         #endif
         #if defined(RCC_APB1ENR_USART3EN)
@@ -94,7 +91,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_USART3EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART3RST,
                 .IRQn            = USART3_IRQn,
-                .PRIORITY        = _UART3_IRQ_PRIORITY
         },
         #endif
         #if defined(RCC_APB1ENR_UART4EN)
@@ -105,7 +101,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART4EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART4RST,
                 .IRQn            = UART4_IRQn,
-                .PRIORITY        = _UART4_IRQ_PRIORITY
         },
         #endif
         #if defined(RCC_APB1ENR_UART5EN)
@@ -116,7 +111,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART5EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART5RST,
                 .IRQn            = UART5_IRQn,
-                .PRIORITY        = _UART5_IRQ_PRIORITY
         },
         #endif
         #if defined(RCC_APB2ENR_USART6EN)
@@ -127,7 +121,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_USART6EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART6RST,
                 .IRQn            = USART6_IRQn,
-                .PRIORITY        = _UART6_IRQ_PRIORITY
         },
         #endif
         #if defined(RCC_APB1ENR_UART7EN)
@@ -138,7 +131,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART7EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART7RST,
                 .IRQn            = UART7_IRQn,
-                .PRIORITY        = _UART7_IRQ_PRIORITY
         },
         #endif
         #if defined(RCC_APB1ENR_UART8EN)
@@ -149,7 +141,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART8EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART8RST,
                 .IRQn            = UART8_IRQn,
-                .PRIORITY        = _UART8_IRQ_PRIORITY
         },
         #endif
         #if defined(RCC_APB2ENR_UART9EN)
@@ -160,7 +151,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_UART9EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_UART9RST,
                 .IRQn            = UART9_IRQn,
-                .PRIORITY        = _UART9_IRQ_PRIORITY
         },
         #endif
         #if defined(RCC_APB2ENR_UART10EN)
@@ -171,7 +161,6 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_UART10EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_UART10RST,
                 .IRQn            = UART10_IRQn,
-                .PRIORITY        = _UART10_IRQ_PRIORITY
         }
         #endif
 };
@@ -196,7 +185,7 @@ int _UART_LLD__turn_on(u8_t major)
                 SET_BIT(*UART[major].APBENR, UART[major].APBENR_UARTEN);
 
                 NVIC_EnableIRQ(UART[major].IRQn);
-                NVIC_SetPriority(UART[major].IRQn, UART[major].PRIORITY);
+                NVIC_SetPriority(UART[major].IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
                 return ESUCC;
         } else {
