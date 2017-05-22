@@ -402,9 +402,9 @@ __ENABLE_GPIO__=_YES_
 #     this:SetFlagValue("__ENABLE_AFM__", "_NO_")
 # end
 #--*/
-#define __ENABLE_AFM__ _YES_
+#define __ENABLE_AFM__ _NO_
 #/*
-__ENABLE_AFM__=_YES_
+__ENABLE_AFM__=_NO_
 #*/
 
 #/*--
@@ -415,9 +415,9 @@ __ENABLE_AFM__=_YES_
 #     this:SetFlagValue("__ENABLE_CLK__", "_NO_")
 # end
 #--*/
-#define __ENABLE_CLK__ _YES_
+#define __ENABLE_CLK__ _NO_
 #/*
-__ENABLE_CLK__=_YES_
+__ENABLE_CLK__=_NO_
 #*/
 
 #/*--
@@ -454,9 +454,9 @@ __ENABLE_CRC__=_NO_
 #     this:SetFlagValue("__ENABLE_ETHMAC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_ETHMAC__ _YES_
+#define __ENABLE_ETHMAC__ _NO_
 #/*
-__ENABLE_ETHMAC__=_YES_
+__ENABLE_ETHMAC__=_NO_
 #*/
 
 #/*--
@@ -519,9 +519,9 @@ __ENABLE_USBD__=_NO_
 #     this:SetFlagValue("__ENABLE_I2C__", "_NO_")
 # end
 #--*/
-#define __ENABLE_I2C__ _YES_
+#define __ENABLE_I2C__ _NO_
 #/*
-__ENABLE_I2C__=_YES_
+__ENABLE_I2C__=_NO_
 #*/
 
 #/*--
@@ -562,9 +562,9 @@ __ENABLE_LOOP__=_NO_
 # this:PutWidgets("I2CEE")
 # this:SetToolTip("I2C EEPROM driver for 24Cxx devices.")
 #--*/
-#define __ENABLE_I2CEE__ _YES_
+#define __ENABLE_I2CEE__ _NO_
 #/*
-__ENABLE_I2CEE__=_YES_
+__ENABLE_I2CEE__=_NO_
 #*/
 
 #/*--
@@ -618,9 +618,9 @@ __ENABLE_FMC__=_NO_
 #     this:SetFlagValue("__ENABLE_DMA__", "_NO_")
 # end
 #--*/
-#define __ENABLE_DMA__ _YES_
+#define __ENABLE_DMA__ _NO_
 #/*
-__ENABLE_DMA__=_YES_
+__ENABLE_DMA__=_NO_
 #*/
 
 #// MODULE LIST END
