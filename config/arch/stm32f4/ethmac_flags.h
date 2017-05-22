@@ -5,7 +5,7 @@
 
 @brief   ETHMAC module configuration flags.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -65,13 +65,13 @@ this:AddItem("100 Mbps", "ETH_Speed_100M")
 this:AddWidget("Spinbox", 3, 256, "Number of RX buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
-#define __ETHMAC_RXBUFNB__ 3
+#define __ETHMAC_RXBUFNB__ 10
 
 /*--
 this:AddWidget("Spinbox", 2, 256, "Number of Tx buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
-#define __ETHMAC_TXBUFNB__ 2
+#define __ETHMAC_TXBUFNB__ 10
 
 /*--
 this:AddExtraWidget("Label", "LabelPHY", "\nPHY", -1, "bold")

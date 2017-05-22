@@ -5,7 +5,7 @@
 
 @brief   This driver support Ethernet interface.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -32,8 +32,8 @@
 #include "drivers/driver.h"
 #include "ethmac_cfg.h"
 #include "ethmac_ioctl.h"
-#include "stm32f10x.h"
-#include "stm32f1x7_eth.h"
+#include "stm32f4xx.h"
+#include "stm32f4x7_eth.h"
 
 /*==============================================================================
   Local macros
@@ -137,7 +137,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 }
 
                 // enable interrupts
-                SET_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
+                SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETHMACRXEN | RCC_AHB1ENR_ETHMACTXEN | RCC_AHB1ENR_ETHMACEN);
 
                 NVIC_EnableIRQ(ETH_IRQn);
                 NVIC_SetPriority(ETH_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
@@ -241,7 +241,9 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
         if (!err) {
                 ETH_DeInit();
                 NVIC_DisableIRQ(ETH_IRQn);
-                CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
+                CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETHMACRXEN
+                                      | RCC_AHB1ENR_ETHMACTXEN
+                                      | RCC_AHB1ENR_ETHMACEN);
                 sys_semaphore_destroy(hdl->rx_data_ready);
                 sys_mutex_destroy(hdl->rx_access);
                 sys_mutex_destroy(hdl->tx_access);
@@ -515,7 +517,7 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                         if (is_buffer_owned_by_DMA(DMARxDescToGet)) {
                                                 pkt->total_size = 0;
 
-                                        } else if (ETH_GetRxPktSize() > 0) {
+                                        } else if (ETH_GetRxPktSize(DMARxDescToGet) > 0) {
 
                                                 u8_t  *buffer = get_buffer_address(DMARxDescToGet);
                                                 size_t offset = 0;
@@ -679,12 +681,12 @@ static size_t wait_for_packet(struct ethmac *hdl, uint32_t timeout)
 
         if (!is_buffer_owned_by_DMA(DMARxDescToGet)) {
                 sys_semaphore_wait(hdl->rx_data_ready, 0);
-                size = ETH_GetRxPktSize();
+                size = ETH_GetRxPktSize(DMARxDescToGet);
 
         } else {
                 if (sys_semaphore_wait(hdl->rx_data_ready, timeout) == ESUCC) {
                         if (!is_buffer_owned_by_DMA(DMARxDescToGet)) {
-                                size = ETH_GetRxPktSize();
+                                size = ETH_GetRxPktSize(DMARxDescToGet);
                         }
                 }
         }

@@ -122,8 +122,6 @@ WEAK_DEFAULT void DMA2_Stream1_IRQHandler(void);
 WEAK_DEFAULT void DMA2_Stream2_IRQHandler(void);
 WEAK_DEFAULT void DMA2_Stream3_IRQHandler(void);
 WEAK_DEFAULT void DMA2_Stream4_IRQHandler(void);
-WEAK_DEFAULT void DFSDM1_FLT0_ETH_IRQHandler(void);
-WEAK_DEFAULT void DFSDM1_FLT1_ETH_WKUP_IRQHandler(void);
 WEAK_DEFAULT void CAN2_TX_IRQHandler(void);
 WEAK_DEFAULT void CAN2_RX0_IRQHandler(void);
 WEAK_DEFAULT void CAN2_RX1_IRQHandler(void);
@@ -164,10 +162,18 @@ WEAK_DEFAULT void DFSDM2_FLT1_IRQn(void);
 WEAK_DEFAULT void DFSDM2_FLT2_IRQn(void);
 WEAK_DEFAULT void DFSDM2_FLT3_IRQn(void);
 
-#define ETH_IRQHandler                  DFSDM1_FLT0_ETH_IRQHandler
-#define DFSDM1_FLT0_IRQHandler          DFSDM1_FLT0_ETH_IRQHandler
-#define ETH_WKUP_IRQHandler             DFSDM1_FLT1_ETH_WKUP_IRQHandler
-#define DFSDM1_FLT1_IRQHandler          DFSDM1_FLT1_ETH_WKUP_IRQHandler
+#if defined(STM32F407xx) || defined(STM32F417xx) || defined(STM32F427xx)\
+ || defined(STM32F429xx) || defined(STM32F437xx) || defined(STM32F439xx)\
+ || defined(STM32F469xx) || defined(STM32F479xx)
+WEAK_DEFAULT void ETH_IRQHandler(void);
+WEAK_DEFAULT void ETH_WKUP_IRQHandler(void);
+#endif
+
+#if defined(STM32F412xx) || defined(STM32F413xx) || defined(STM32F423xx)
+WEAK_DEFAULT void DFSDM1_FLT0_IRQHandler(void);
+WEAK_DEFAULT void DFSDM1_FLT1_IRQHandler(void);
+#endif
+
 #define OTG_HS_EP1_OUT_IRQHandler       CAN3_TX_OTG_HS_EP1_OUT_IRQHandler
 #define CAN3_TX_IRQHandler              CAN3_TX_OTG_HS_EP1_OUT_IRQHandler
 #define OTG_HS_EP1_IN_IRQHandler        CAN3_RX0_OTG_HS_EP1_IN_IRQHandler
@@ -279,8 +285,15 @@ void (*const vectors[])(void) __attribute__ ((section(".vectors"))) =
         DMA2_Stream2_IRQHandler,                // 58:DMA2 Stream 2
         DMA2_Stream3_IRQHandler,                // 59:DMA2 Stream 3
         DMA2_Stream4_IRQHandler,                // 60:DMA2 Stream 4
-        DFSDM1_FLT0_ETH_IRQHandler,             // 61:Ethernet, DFSM_FLT0
-        DFSDM1_FLT1_ETH_WKUP_IRQHandler,        // 62:Ethernet Wakeup through EXTI line, DFSM_FLT
+#if defined(STM32F407xx) || defined(STM32F417xx) || defined(STM32F427xx)\
+ || defined(STM32F429xx) || defined(STM32F437xx) || defined(STM32F439xx)\
+ || defined(STM32F469xx) || defined(STM32F479xx)
+        ETH_IRQHandler,                         // 61:Ethernet
+        ETH_WKUP_IRQHandler,                    // 62:Ethernet Wakeup through EXTI line
+#elif defined(STM32F412xx) || defined(STM32F413xx) || defined(STM32F423xx)
+        DFSDM1_FLT0_IRQHandler,                 // 61:DFSM_FLT0
+        DFSDM1_FLT1_IRQHandler,                 // 62:DFSM_FLT
+#endif
         CAN2_TX_IRQHandler,                     // 63:CAN2 TX
         CAN2_RX0_IRQHandler,                    // 64:CAN2 RX0
         CAN2_RX1_IRQHandler,                    // 65:CAN2 RX1

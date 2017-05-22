@@ -29,7 +29,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x.h"
-#include "../ethmac_cfg.h"
+#include "ethmac_cfg.h"
 
 /** @addtogroup STM32_ETH_Driver
   * @{
