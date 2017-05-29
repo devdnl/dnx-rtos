@@ -98,7 +98,11 @@ extern "C" {
 
 /*
  * MCO1 clock divider
- * RCC_MCO1Div_1..5
+ * RCC_MCO1Div_1
+ * RCC_MCO1Div_2
+ * RCC_MCO1Div_3
+ * RCC_MCO1Div_4
+ * RCC_MCO1Div_5
  */
 #define _CLK_CFG__MCO1_DIV              __CLK_MC01_CLK_DIV__
 

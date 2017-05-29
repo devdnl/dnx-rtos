@@ -89,6 +89,12 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         int err = ESUCC;
 
         //----------------------------------------------------------------------
+        // MCOx clock sources and prescalers
+        //----------------------------------------------------------------------
+        RCC_MCO1Config(_CLK_CFG__MCO1_SRC, _CLK_CFG__MCO1_DIV);
+        RCC_MCO2Config(_CLK_CFG__MCO2_SRC, _CLK_CFG__MCO2_DIV);
+
+        //----------------------------------------------------------------------
         // LSI OSCILLATOR
         //----------------------------------------------------------------------
         if (_CLK_CFG__LSI_ON) {
@@ -326,17 +332,6 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
 
 #if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE) || defined(STM32F469_479xx)
         RCC_I2SCLKConfig(_CLK_CFG__I2S_CLK_SRC);
-#endif
-
-        //----------------------------------------------------------------------
-        // MCOx clock sources and prescalers
-        //----------------------------------------------------------------------
-        RCC_MCO1Config(_CLK_CFG__MCO1_SRC, _CLK_CFG__MCO1_DIV);
-        RCC_MCO2Config(_CLK_CFG__MCO2_SRC, _CLK_CFG__MCO2_DIV);
-
-#if defined(STM32F410xx)
-        RCC_MCO1Cmd(_CLK_CFG__MCO1_SRC == 0 ? DISABLE : ENABLE);
-        RCC_MCO2Cmd(_CLK_CFG__MCO2_SRC == 0 ? DISABLE : ENABLE);
 #endif
 
         sys_update_system_clocks();

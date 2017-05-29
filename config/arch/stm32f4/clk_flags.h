@@ -348,11 +348,11 @@ this:AddExtraWidget("Label", "LABEL_MCO1_SRC", "")
 
 /*--
 this:AddWidget("Combobox", "MCO1 Clock divisor (output)")
-for i = 1, 5 do this:AddItem("MCO divided by "..i, tostring(i)) end
+for i = 1, 5 do this:AddItem("MCO divided by "..i, "RCC_MCO1Div_"..tostring(i)) end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO1_DIV", "")
 --*/
-#define __CLK_MC01_CLK_DIV__ 1
+#define __CLK_MC01_CLK_DIV__ RCC_MCO1Div_1
 
 /*--
 this:AddWidget("Combobox", "MCO2 Clock source")
@@ -369,11 +369,11 @@ this:AddExtraWidget("Label", "LABEL_MCO2_SRC", "")
 
 /*--
 this:AddWidget("Combobox", "MCO2 Clock divisor (output)")
-for i = 1, 5 do this:AddItem("MCO divided by "..i, tostring(i)) end
+for i = 1, 5 do this:AddItem("MCO divided by "..i, "RCC_MCO2Div_"..tostring(i)) end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO2_DIV", "")
 --*/
-#define __CLK_MC02_CLK_DIV__ 1
+#define __CLK_MC02_CLK_DIV__ RCC_MCO2Div_1
 
 /*--
 if   uC.NAME:match("STM32F412") or uC.NAME:match("STM32F413")
@@ -801,9 +801,9 @@ this.CalculateFreq = function(self)
     local APB2PRE       = this:GetFlagValue("__CLK_APB2_PRE__")
 
     local MCO1SRC       = this:GetFlagValue("__CLK_MC01_CLK_SRC__")
-    local MCO1DIV       = this:GetFlagValue("__CLK_MC01_CLK_DIV__")
+    local MCO1DIV       = this:GetFlagValue("__CLK_MC01_CLK_DIV__"):gsub("RCC_MCO1Div_", "")
     local MCO2SRC       = this:GetFlagValue("__CLK_MC02_CLK_SRC__")
-    local MCO2DIV       = this:GetFlagValue("__CLK_MC02_CLK_DIV__")
+    local MCO2DIV       = this:GetFlagValue("__CLK_MC02_CLK_DIV__"):gsub("RCC_MCO2Div_", "")
     local CPUVOLTAGE    = this:GetFlagValue("__CLK_CPU_VOLTAGE__")
 
     local I2S1SRC       = this:GetFlagValue("__CLK_I2SAPB1_CLK_SRC__")

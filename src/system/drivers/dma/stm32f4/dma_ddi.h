@@ -51,6 +51,7 @@
   Include files
 ==============================================================================*/
 #include <sys/types.h>
+#include "stm32f4/stm32f4xx.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,7 +69,7 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef bool (*_DMA_cb_t)(u8_t SR, void *arg);
+typedef bool (*_DMA_cb_t)(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 
 typedef struct {
         void     *arg;          /*! user configuration: callback argument */
@@ -77,6 +78,7 @@ typedef struct {
         u32_t     NDT;          /*! user configuration: data number */
         u32_t     PA;           /*! user configuration: peripheral address */
         u32_t     MA[2];        /*! user configuration: memory address */
+        u32_t     FCR;          /*! user configuration: FIFO control */
         bool      release;      /*! user configuration: automatically release stream */
 } _DMA_DDI_config_t;
 

@@ -71,7 +71,7 @@ typedef struct {
   Local function prototypes
 ==============================================================================*/
 static void clear_DMA_IRQ_flags(u8_t major, u8_t stream);
-static bool M2M_callback(u8_t SR, void *arg);
+static bool M2M_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 
 /*==============================================================================
   Local object
@@ -360,6 +360,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                         config.PA       = cast(u32_t, transfer->src);
                                         config.MA[0]    = cast(u32_t, transfer->dst);
                                         config.NDT      = NDT;
+                                        config.FCR      = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
                                         config.CR       = PMSIZE | (2 << DMA_SxCR_DIR_Pos)
                                                          | DMA_SxCR_MINC | DMA_SxCR_PINC;
 
@@ -585,7 +586,7 @@ static void clear_DMA_IRQ_flags(u8_t major, u8_t stream)
  * @return True if yield needed, false otherwise.
  */
 //==============================================================================
-static bool M2M_callback(u8_t SR, void *arg)
+static bool M2M_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 {
         bool yield = false;
         int  err   = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
@@ -622,7 +623,8 @@ static void IRQ_handle(u8_t major, u8_t stream)
         }
 
         if (RT_stream->callback) {
-                yield = RT_stream->callback(SR & 0x3F, RT_stream->arg);
+                yield = RT_stream->callback(DMA_HW[major].stream[stream],
+                                            SR & 0x3F, RT_stream->arg);
         }
 
         if (!(DMA_Stream->CR & DMA_SxCR_CIRC)) {
