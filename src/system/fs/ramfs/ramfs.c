@@ -38,7 +38,7 @@
 #define PIPE_LENGTH                     __OS_STREAM_BUFFER_LENGTH__
 #define PIPE_WRITE_TIMEOUT              1
 #define PIPE_READ_TIMEOUT               MAX_DELAY
-#define DATA_CHAIN_SIZE                 64
+#define DATA_CHAIN_SIZE                 __RAMFS_FILE_CHAIN_SIZE__
 
 /*==============================================================================
   Local types, enums definitions
@@ -1471,6 +1471,9 @@ static int write_regular_file(node_t *node, const u8_t *src,
 
         if (chain == NULL) {
                 err = sys_zalloc(sizeof(data_chain_t), cast(void**, &chain));
+                if (!err) {
+                        node->data.data_chain_t = chain;
+                }
         }
 
         // travel to selected chain

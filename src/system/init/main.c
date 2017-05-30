@@ -47,7 +47,7 @@
   Local symbolic constants/macros
 ==============================================================================*/
 /* Stack size declared by linker script */
-#define STACK_SIZE                      ((size_t)&__stack_size)
+#define STACK_SIZE                      (((size_t)&__stack_size) - 8)
 
 /* Stack start declared by linker script */
 #define STACK_START                     ((void *)&__stack_start)

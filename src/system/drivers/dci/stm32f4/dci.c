@@ -40,7 +40,7 @@ Brief    Digital Camera Interface Driver
 #define DMA_STREAM_PRI          1
 #define DMA_STREAM_AUX          7
 #define DMA_MAX_TRANSFER        65535
-#define DMA_TIMEOUT             5000
+#define DMA_TIMEOUT             2000
 
 /*==============================================================================
   Local object types
@@ -316,6 +316,9 @@ API_MOD_READ(DCI,
                 err = sys_semaphore_wait(hdl->event, DMA_TIMEOUT);
                 if (!err) {
                         *rdcnt = frame_size;
+                } else {
+                        CLEAR_BIT(DCMI->CR, DCMI_CR_CAPTURE | DCMI_CR_ENABLE);
+                        SET_BIT(DCMI->CR, DCMI_CR_ENABLE);
                 }
                 _DMA_DDI_release(dmad);
         }

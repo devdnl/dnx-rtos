@@ -1,9 +1,9 @@
 /*==============================================================================
-@file    eefs_flags.h
+@file    ramfs_flags.h
 
 @author  Daniel Zorychta
 
-@brief   EEFS file system configuration.
+@brief   RAM file system configuration.
 
 @note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -31,20 +31,20 @@
  *       All other flag definitions and statements are ignored.
  */
 
-#ifndef _EEFS_FLAGS_H_
-#define _EEFS_FLAGS_H_
+#ifndef _RAMFS_FLAGS_H_
+#define _RAMFS_FLAGS_H_
 
 /*--
-this:SetLayout("TitledGridBack", 2, "Home > File Systems > eefs",
+this:SetLayout("TitledGridBack", 2, "Home > File Systems > ramfs",
                function() this:LoadFile("filesystems/filesystems_flags.h") end)
 ++*/
 
 /*--
-this:AddWidget("Checkbox", "Enable file system debug")
+this:AddWidget("Spinbox", 8, 2048, "File chain size (bytes)")
 --*/
-#define __EEFS_LOG_ENABLE__ _NO_
+#define __RAMFS_FILE_CHAIN_SIZE__ 32
 
-#endif /* _EEFS_FLAGS_H_ */
+#endif /* _RAMFS_FLAGS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

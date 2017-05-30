@@ -48,9 +48,10 @@
 #                 "used to store files, device-files, and pipes. The file system\n"..
 #                 "is the best choice if you want to use only one file system for\n"..
 #                 "each file operations.")
-# this:AddExtraWidget("Hyperlink", "RAMFS_CONFIGURE", "")
-# this:SetEvent("clicked", "RAMFS_CONFIGURE", function() end)
+# this:AddExtraWidget("Hyperlink", "RAMFS_CONFIGURE", "Configure")
+# this:SetEvent("clicked", "RAMFS_CONFIGURE", function() this:LoadFile("filesystems/ramfs_flags.h") end)
 #--*/
+#include "../filesystems/ramfs_flags.h"
 #define __ENABLE_RAMFS__ _YES_
 #/*
 __ENABLE_RAMFS__=_YES_
