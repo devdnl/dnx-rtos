@@ -1530,27 +1530,24 @@ static int read_regular_file(node_t *node, u8_t *dst,
 {
         int err = ESUCC;
 
-        if (fpos >= node->size) {
-                *rdcnt = 0;
+        data_chain_t *chain = node->data.data_chain_t;
+        size_t        depth = fpos / DATA_CHAIN_SIZE;
+        size_t        seek  = fpos - (depth * DATA_CHAIN_SIZE);
 
-        } else {
-                data_chain_t *chain = node->data.data_chain_t;
-                size_t        depth = fpos / DATA_CHAIN_SIZE;
-                size_t        seek  = fpos - (depth * DATA_CHAIN_SIZE);
+        for (; chain && depth; chain = chain->next, depth--);
 
-                for (; chain && depth; chain = chain->next, depth--);
+        while (chain && count && fpos < node->size) {
+                size_t tocpy = min(DATA_CHAIN_SIZE - seek, count);
+                       tocpy = min(tocpy, node->size - fpos);
 
-                while (chain && count) {
-                        size_t tocpy = min(DATA_CHAIN_SIZE - seek, count);
-                        memcpy(dst, &chain->buf[seek], tocpy);
-                        dst    += tocpy;
-                        fpos   += tocpy;
-                        *rdcnt += tocpy;
-                        count  -= tocpy;
-                        seek    = 0;
+                memcpy(dst, &chain->buf[seek], tocpy);
+                dst    += tocpy;
+                fpos   += tocpy;
+                *rdcnt += tocpy;
+                count  -= tocpy;
+                seek    = 0;
 
-                        chain = chain->next;
-                }
+                chain = chain->next;
         }
 
         return err;
