@@ -475,6 +475,7 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                                 usage = &memory_usage[mpur];
                         } else if (memory_usage[_MM_NET] >= __OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__) {
                                 err = ENOMEM;
+                                goto finish;
                         } else {
                                 usage = &memory_usage[mpur];
                         }
