@@ -511,7 +511,6 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
         if (  dmad
            && DMA_RT[GETMAJOR(dmad)]
            && config
-           && config->callback
            && config->NDT
            && config->PA
            && (config->MA[0] || config->MA[1])) {
@@ -588,6 +587,8 @@ static void clear_DMA_IRQ_flags(u8_t major, u8_t stream)
 //==============================================================================
 static bool M2M_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 {
+        UNUSED_ARG1(stream);
+
         bool yield = false;
         int  err   = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
 

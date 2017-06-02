@@ -314,8 +314,8 @@ void _SPI_LLD__halt(u8_t major)
 /**
  * @brief  Transceive data by using IRQs or DMA
  * @param  hdl          virtual SPI handler
- * @param  tx           source buffer
- * @param  rx           destination buffer
+ * @param  txbuf        source buffer (can be NULL for RX only)
+ * @param  rxbuf        destination buffer (can be NULL for TX only)
  * @param  count        number of bytes to transfer
  * @return One of errno value
  */
@@ -326,6 +326,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
         _SPI[hdl->major]->slave = hdl;
 
 #if USE_DMA > 0
+        // try to send/receive buffers by using DMA
         if (SPI_HW[hdl->major].use_DMA) {
                 // reserve TX stream
                 u32_t dmadtx = _DMA_DDI_reserve(SPI_HW[hdl->major].DMA_major,
@@ -357,10 +358,12 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         config_tx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
                         config_tx.MA[0]    = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
                         config_tx.NDT      = count;
-                        config_tx.FC       = DMA_SxFCR_FTH_1_2 | DMA_SxFCR_FS_EMPTY;
+                        config_tx.FC       = 0;
                         config_tx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
                                            | (txbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)
-                                           | DMA_SxCR_DIR_M2P;
+                                           | DMA_SxCR_DIR_M2P
+                                           | DMA_SxCR_MSIZE_BYTE
+                                           | DMA_SxCR_PSIZE_BYTE;
 
                         _DMA_DDI_config_t config_rx;
                         config_rx.arg      = hdl;
@@ -369,18 +372,22 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         config_rx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
                         config_rx.MA[0]    = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
                         config_rx.NDT      = count;
-                        config_rx.FC       = DMA_SxFCR_FTH_1_2 | DMA_SxFCR_FS_EMPTY;
+                        config_rx.FC       = 0;
                         config_rx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
                                            | (rxbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)
-                                           | DMA_SxCR_DIR_M2P;
+                                           | DMA_SxCR_DIR_P2M
+                                           | DMA_SxCR_MSIZE_BYTE
+                                           | DMA_SxCR_PSIZE_BYTE;
 
                         err = _DMA_DDI_transfer(dmadrx, &config_rx);
                         if (!err) {
-                                err = _DMA_DDI_transfer(dmadrx, &config_tx);
+                                err = _DMA_DDI_transfer(dmadtx, &config_tx);
                                 if (!err) {
                                         SET_BIT(SPI_HW[hdl->major].SPI->CR2, SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN);
+
                                         err = sys_semaphore_wait(_SPI[hdl->major]->wait_irq_sem,
                                                                  _SPI_IRQ_WAIT_TIMEOUT);
+
                                         _DMA_DDI_release(dmadtx);
                                         _DMA_DDI_release(dmadrx);
                                 }
@@ -391,32 +398,19 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         _DMA_DDI_release(dmadtx);
                         _DMA_DDI_release(dmadrx);
                 }
-
-//                _SPI[hdl->major]->flush_byte = hdl->config.flush_byte;
-//                _SPI[hdl->major]->count      = count;
-//
-//                SPI_HW[hdl->major].DMA_Tx_channel->CPAR  = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
-//                SPI_HW[hdl->major].DMA_Tx_channel->CMAR  = tx ? cast(u32_t, tx) : cast(u32_t, &SPI[hdl->major]->flush_byte);
-//                SPI_HW[hdl->major].DMA_Tx_channel->CNDTR = count;
-//                SPI_HW[hdl->major].DMA_Tx_channel->CCR   = (tx ? DMA_CCR1_MINC : 0) | DMA_CCR1_DIR;
-//
-//                SPI_HW[hdl->major].DMA_Rx_channel->CPAR  = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
-//                SPI_HW[hdl->major].DMA_Rx_channel->CMAR  = rx ? cast(u32_t, rx) : cast(u32_t, &SPI[hdl->major]->flush_byte);
-//                SPI_HW[hdl->major].DMA_Rx_channel->CNDTR = count;
-//                SPI_HW[hdl->major].DMA_Rx_channel->CCR   = (rx ? DMA_CCR1_MINC : 0) | DMA_CCR1_TEIE | DMA_CCR1_TCIE;
-//
-//                SET_BIT(SPI_HW[hdl->major].SPI->CR2, SPI_CR2_RXDMAEN | SPI_CR2_TXDMAEN);
-//                SET_BIT(SPI_HW[hdl->major].DMA_Rx_channel->CCR, DMA_CCR1_EN);
-//                SET_BIT(SPI_HW[hdl->major].DMA_Tx_channel->CCR, DMA_CCR1_EN);
         }
 #endif
+
+        // send/receive buffers by using IRQs
         _SPI[hdl->major]->tx_buffer  = txbuf;
         _SPI[hdl->major]->rx_buffer  = rxbuf;
         _SPI[hdl->major]->count      = count;
         _SPI[hdl->major]->flush_byte = hdl->config.flush_byte;
 
         SET_BIT(SPI_HW[hdl->major].SPI->CR2, SPI_CR2_TXEIE);
+
         err = sys_semaphore_wait(_SPI[hdl->major]->wait_irq_sem, _SPI_IRQ_WAIT_TIMEOUT);
+
         return err;
 }
 
@@ -432,56 +426,42 @@ static void handle_SPI_IRQ(u8_t major)
         bool         woken = false;
         SPI_TypeDef *spi   = SPI_HW[major].SPI;
 
-        /* receive data from RX register */
-        void receive()
-        {
-                if ((spi->SR & SPI_SR_RXNE) && (spi->CR2 & SPI_CR2_RXNEIE)) {
-                        u8_t byte = spi->DR;
+        /* transmit data by using Tx register */
+        if ((spi->SR & SPI_SR_TXE) && (spi->CR2 & SPI_CR2_TXEIE)) {
 
-                        if (_SPI[major]->count > 0) {
-                                if (_SPI[major]->rx_buffer) {
-                                        *(_SPI[major]->rx_buffer++) = byte;
-                                }
-
-                                _SPI[major]->count--;
+                if (_SPI[major]->count > 0) {
+                        if (_SPI[major]->tx_buffer) {
+                                spi->DR = *(_SPI[major]->tx_buffer++);
+                        } else {
+                                spi->DR = _SPI[major]->flush_byte;
                         }
-
-                        SET_BIT(spi->CR2, SPI_CR2_TXEIE);
                 }
+
+                SET_BIT(spi->CR2, SPI_CR2_RXNEIE);
+                CLEAR_BIT(spi->CR2, SPI_CR2_TXEIE);
         }
 
-        /* transmit data by using Tx register */
-        void transmit()
-        {
-                if ((spi->SR & SPI_SR_TXE) && (spi->CR2 & SPI_CR2_TXEIE)) {
+        /* receive data from RX register */
+        if ((spi->SR & SPI_SR_RXNE) && (spi->CR2 & SPI_CR2_RXNEIE)) {
+                u8_t byte = spi->DR;
 
-                        if (_SPI[major]->count > 0) {
-                                if (_SPI[major]->tx_buffer) {
-                                        spi->DR = *(_SPI[major]->tx_buffer++);
-                                } else {
-                                        spi->DR = _SPI[major]->flush_byte;
-                                }
+                if (_SPI[major]->count > 0) {
+                        if (_SPI[major]->rx_buffer) {
+                                *(_SPI[major]->rx_buffer++) = byte;
                         }
 
-                        SET_BIT(spi->CR2, SPI_CR2_RXNEIE);
-                        CLEAR_BIT(spi->CR2, SPI_CR2_TXEIE);
+                        _SPI[major]->count--;
                 }
+
+                SET_BIT(spi->CR2, SPI_CR2_TXEIE);
         }
 
         /* finish transmission if all frames are received and transmitted */
-        void check_finish()
-        {
-                if (_SPI[major]->count == 0) {
-                        CLEAR_BIT(spi->CR2, SPI_CR2_RXNEIE);
-                        CLEAR_BIT(spi->CR2, SPI_CR2_TXEIE);
-                        sys_semaphore_signal_from_ISR(_SPI[major]->wait_irq_sem, &woken);
-                }
+        if (_SPI[major]->count == 0) {
+                CLEAR_BIT(spi->CR2, SPI_CR2_RXNEIE);
+                CLEAR_BIT(spi->CR2, SPI_CR2_TXEIE);
+                sys_semaphore_signal_from_ISR(_SPI[major]->wait_irq_sem, &woken);
         }
-
-        /* IRQ operations */
-        transmit();
-        receive();
-        check_finish();
 
         sys_thread_yield_from_ISR(woken);
 }

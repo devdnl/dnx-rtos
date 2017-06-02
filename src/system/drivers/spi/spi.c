@@ -87,6 +87,8 @@ struct SPI *_SPI[_NUMBER_OF_SPI_PERIPHERALS];
 //==============================================================================
 API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
 {
+        UNUSED_ARG1(minor);
+
         int err = ENXIO;
 
         if (major >= _NUMBER_OF_SPI_PERIPHERALS) {
@@ -122,7 +124,6 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
                 struct SPI_slave *hdl = *device_handle;
                 hdl->config           = SPI_DEFAULT_CFG;
                 hdl->major            = major;
-                hdl->minor            = minor;
 
                 sys_device_unlock(&hdl->lock, true);
 

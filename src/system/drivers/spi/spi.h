@@ -96,7 +96,6 @@ enum {
 struct SPI_slave {
         dev_lock_t               lock;                  //!< SPI slave lock
         u8_t                     major;                 //!< SPI major number
-        u8_t                     minor;                 //!< SPI minor number
         SPI_config_t             config;                //!< SPI configuration
 };
 

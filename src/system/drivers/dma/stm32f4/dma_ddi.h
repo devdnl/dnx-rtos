@@ -109,7 +109,7 @@ extern "C" {
 #define DMA_SxCR_CIRC_DISABLE           (0 * DMA_SxCR_CIRC)
 #define DMA_SxCR_CIRC_ENABLE            (1 * DMA_SxCR_CIRC)
 
-#define DMA_SxCR_DIR_P2P                ((0 * DMA_SxCR_DIR_1) | (0 * DMA_SxCR_DIR_0))
+#define DMA_SxCR_DIR_P2M                ((0 * DMA_SxCR_DIR_1) | (0 * DMA_SxCR_DIR_0))
 #define DMA_SxCR_DIR_M2P                ((0 * DMA_SxCR_DIR_1) | (1 * DMA_SxCR_DIR_0))
 #define DMA_SxCR_DIR_M2M                ((1 * DMA_SxCR_DIR_1) | (0 * DMA_SxCR_DIR_0))
 
