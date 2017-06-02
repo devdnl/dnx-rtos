@@ -60,11 +60,76 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define DMA_SR_FEIF     DMA_LISR_FEIF0
-#define DMA_SR_DMEIF    DMA_LISR_DMEIF0
-#define DMA_SR_TEIF     DMA_LISR_TEIF0
-#define DMA_SR_HTIF     DMA_LISR_HTIF0
-#define DMA_SR_TCIF     DMA_LISR_TCIF0
+#define DMA_SR_FEIF                     DMA_LISR_FEIF0
+#define DMA_SR_DMEIF                    DMA_LISR_DMEIF0
+#define DMA_SR_TEIF                     DMA_LISR_TEIF0
+#define DMA_SR_HTIF                     DMA_LISR_HTIF0
+#define DMA_SR_TCIF                     DMA_LISR_TCIF0
+
+#define DMA_SxCR_CHSEL_SEL(c)           (((c) &7) << DMA_SxCR_CHSEL_Pos)
+
+#define DMA_SxCR_MBURST_SINGLE          ((0 * DMA_SxCR_MBURST_1) | (0 * DMA_SxCR_MBURST_0))
+#define DMA_SxCR_MBURST_INCR4           ((0 * DMA_SxCR_MBURST_1) | (1 * DMA_SxCR_MBURST_0))
+#define DMA_SxCR_MBURST_INCR8           ((1 * DMA_SxCR_MBURST_1) | (0 * DMA_SxCR_MBURST_0))
+#define DMA_SxCR_MBURST_INCR16          ((1 * DMA_SxCR_MBURST_1) | (1 * DMA_SxCR_MBURST_0))
+
+#define DMA_SxCR_PBURST_SINGLE          ((0 * DMA_SxCR_PBURST_1) | (0 * DMA_SxCR_PBURST_0))
+#define DMA_SxCR_PBURST_INCR4           ((0 * DMA_SxCR_PBURST_1) | (1 * DMA_SxCR_PBURST_0))
+#define DMA_SxCR_PBURST_INCR8           ((1 * DMA_SxCR_PBURST_1) | (0 * DMA_SxCR_PBURST_0))
+#define DMA_SxCR_PBURST_INCR16          ((1 * DMA_SxCR_PBURST_1) | (1 * DMA_SxCR_PBURST_0))
+
+#define DMA_SxCR_CT_M0AR                (0 * DMA_SxCR_CT)
+#define DMA_SxCR_CT_M1AR                (1 * DMA_SxCR_CT)
+
+#define DMA_SxCR_DBM_DISABLE            (0 * DMA_SxCR_DBM)
+#define DMA_SxCR_DBM_ENABLE             (1 * DMA_SxCR_DBM)
+
+#define DMA_SxCR_PL_LOW                 ((0 * DMA_SxCR_PL_1) | (0 * DMA_SxCR_PL_0))
+#define DMA_SxCR_PL_MEDIUM              ((0 * DMA_SxCR_PL_1) | (1 * DMA_SxCR_PL_0))
+#define DMA_SxCR_PL_HIGH                ((1 * DMA_SxCR_PL_1) | (0 * DMA_SxCR_PL_0))
+#define DMA_SxCR_PL_VERY_HIGH           ((1 * DMA_SxCR_PL_1) | (1 * DMA_SxCR_PL_0))
+
+#define DMA_SxCR_PINCOS_PSIZE           (0 * DMA_SxCR_PINCOS)
+#define DMA_SxCR_PINCOS_FIXED           (1 * DMA_SxCR_PINCOS)
+
+#define DMA_SxCR_MSIZE_BYTE             ((0 * DMA_SxCR_MSIZE_1) | (0 * DMA_SxCR_MSIZE_0))
+#define DMA_SxCR_MSIZE_HALFWORD         ((0 * DMA_SxCR_MSIZE_1) | (1 * DMA_SxCR_MSIZE_0))
+#define DMA_SxCR_MSIZE_WORD             ((1 * DMA_SxCR_MSIZE_1) | (0 * DMA_SxCR_MSIZE_0))
+
+#define DMA_SxCR_PSIZE_BYTE             ((0 * DMA_SxCR_PSIZE_1) | (0 * DMA_SxCR_PSIZE_0))
+#define DMA_SxCR_PSIZE_HALFWORD         ((0 * DMA_SxCR_PSIZE_1) | (1 * DMA_SxCR_PSIZE_0))
+#define DMA_SxCR_PSIZE_WORD             ((1 * DMA_SxCR_PSIZE_1) | (0 * DMA_SxCR_PSIZE_0))
+
+#define DMA_SxCR_MINC_FIXED             (0 * DMA_SxCR_MINC)
+#define DMA_SxCR_MINC_ENABLE            (1 * DMA_SxCR_MINC)
+
+#define DMA_SxCR_PINC_FIXED             (0 * DMA_SxCR_PINC)
+#define DMA_SxCR_PINC_ENABLE            (1 * DMA_SxCR_PINC)
+
+#define DMA_SxCR_CIRC_DISABLE           (0 * DMA_SxCR_CIRC)
+#define DMA_SxCR_CIRC_ENABLE            (1 * DMA_SxCR_CIRC)
+
+#define DMA_SxCR_DIR_P2P                ((0 * DMA_SxCR_DIR_1) | (0 * DMA_SxCR_DIR_0))
+#define DMA_SxCR_DIR_M2P                ((0 * DMA_SxCR_DIR_1) | (1 * DMA_SxCR_DIR_0))
+#define DMA_SxCR_DIR_M2M                ((1 * DMA_SxCR_DIR_1) | (0 * DMA_SxCR_DIR_0))
+
+#define DMA_SxCR_PFCTRL_DMA             (0 * DMA_SxCR_PFCTRL)
+#define DMA_SxCR_PFCTRL_PER             (1 * DMA_SxCR_PFCTRL)
+
+#define DMA_SxFCR_FS_0_FL_1_4           ((0 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (0 * DMA_SxFCR_FS_0))
+#define DMA_SxFCR_FS_1_4_FL_1_2         ((0 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (1 * DMA_SxFCR_FS_0))
+#define DMA_SxFCR_FS_1_2_FL_3_4         ((0 * DMA_SxFCR_FS_2) | (1 * DMA_SxFCR_FS_1) | (0 * DMA_SxFCR_FS_0))
+#define DMA_SxFCR_FS_3_4_FL_FULL        ((0 * DMA_SxFCR_FS_2) | (1 * DMA_SxFCR_FS_1) | (1 * DMA_SxFCR_FS_0))
+#define DMA_SxFCR_FS_EMPTY              ((1 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (0 * DMA_SxFCR_FS_0))
+#define DMA_SxFCR_FS_FULL               ((1 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (1 * DMA_SxFCR_FS_0))
+
+#define DMA_SxFCR_DMDIS_DISABLE         (0  * DMA_SxFCR_DMDIS)
+#define DMA_SxFCR_DMDIS_ENABLE          (1  * DMA_SxFCR_DMDIS)
+
+#define DMA_SxFCR_FTH_1_4               ((0 * DMA_SxFCR_FTH_1) | (0 * DMA_SxFCR_FTH_0))
+#define DMA_SxFCR_FTH_1_2               ((0 * DMA_SxFCR_FTH_1) | (1 * DMA_SxFCR_FTH_0))
+#define DMA_SxFCR_FTH_3_4               ((1 * DMA_SxFCR_FTH_1) | (0 * DMA_SxFCR_FTH_0))
+#define DMA_SxFCR_FTH_FULL              ((1 * DMA_SxFCR_FTH_1) | (1 * DMA_SxFCR_FTH_0))
 
 /*==============================================================================
   Exported object types
@@ -78,7 +143,7 @@ typedef struct {
         u32_t     NDT;          /*! user configuration: data number */
         u32_t     PA;           /*! user configuration: peripheral address */
         u32_t     MA[2];        /*! user configuration: memory address */
-        u32_t     FCR;          /*! user configuration: FIFO control */
+        u32_t     FC;           /*! user configuration: FIFO control */
         bool      release;      /*! user configuration: automatically release stream */
 } _DMA_DDI_config_t;
 

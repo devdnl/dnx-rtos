@@ -505,7 +505,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                 config.PA       = cast(u32_t, &i2c->DR);
                                 config.MA[0]    = cast(u32_t, dst);
                                 config.NDT      = count;
-                                config.FCR      = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
+                                config.FC       = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
                                 config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
                                                 | DMA_SxCR_MINC;
 
@@ -628,7 +628,7 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                         config.PA       = cast(u32_t, &i2c->DR);
                         config.MA[0]    = cast(u32_t, src);
                         config.NDT      = count;
-                        config.FCR      = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
+                        config.FC       = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
                         config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
                                         | DMA_SxCR_MINC | DMA_SxCR_DIR_0;
 

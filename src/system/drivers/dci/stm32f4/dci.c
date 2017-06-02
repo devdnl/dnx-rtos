@@ -299,7 +299,7 @@ API_MOD_READ(DCI,
         config.arg      = DCI;
         config.callback = DMA_callback;
         config.release  = false;
-        config.FCR      = DMA_SxFCR_FTH_1 | DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2 | DMA_SxFCR_DMDIS;
+        config.FC       = DMA_SxFCR_FTH_1 | DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2 | DMA_SxFCR_DMDIS;
         config.CR       = DMA_CHANNEL << DMA_SxCR_CHSEL_Pos
                         | DMA_SxCR_PL_1
                         | DMA_SxCR_MSIZE_0

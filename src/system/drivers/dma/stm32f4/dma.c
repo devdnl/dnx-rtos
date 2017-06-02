@@ -360,7 +360,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                         config.PA       = cast(u32_t, transfer->src);
                                         config.MA[0]    = cast(u32_t, transfer->dst);
                                         config.NDT      = NDT;
-                                        config.FCR      = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
+                                        config.FC       = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
                                         config.CR       = PMSIZE | (2 << DMA_SxCR_DIR_Pos)
                                                          | DMA_SxCR_MINC | DMA_SxCR_PINC;
 
