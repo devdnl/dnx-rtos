@@ -516,7 +516,6 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
         if (  dmad
            && DMA_RT[GETMAJOR(dmad)]
            && config
-           && config->callback
            && config->NDT
            && config->PA
            && config->MA) {
