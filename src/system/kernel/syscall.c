@@ -481,6 +481,7 @@ int _syscall_kworker_process(int argc, char *argv[])
 
                                 // destroy top process to get free memory
                                 case ENOMEM:
+                                        _assert(false);
                                         _process_clean_up_killed_processes();
                                         _kernel_release_resources();
                                         _vfs_sync();

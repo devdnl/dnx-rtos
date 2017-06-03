@@ -360,7 +360,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                         config.PA       = cast(u32_t, transfer->src);
                                         config.MA[0]    = cast(u32_t, transfer->dst);
                                         config.NDT      = NDT;
-                                        config.FCR      = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
+                                        config.FC       = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
                                         config.CR       = PMSIZE | (2 << DMA_SxCR_DIR_Pos)
                                                          | DMA_SxCR_MINC | DMA_SxCR_PINC;
 
@@ -511,7 +511,6 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
         if (  dmad
            && DMA_RT[GETMAJOR(dmad)]
            && config
-           && config->callback
            && config->NDT
            && config->PA
            && (config->MA[0] || config->MA[1])) {
@@ -588,6 +587,8 @@ static void clear_DMA_IRQ_flags(u8_t major, u8_t stream)
 //==============================================================================
 static bool M2M_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 {
+        UNUSED_ARG1(stream);
+
         bool yield = false;
         int  err   = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
 

@@ -59,10 +59,36 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define DMA_SR_GIF      DMA_ISR_GIF1
-#define DMA_SR_TCIF     DMA_ISR_TCIF1
-#define DMA_SR_HTIF     DMA_ISR_HTIF1
-#define DMA_SR_TEIF     DMA_ISR_TEIF1
+#define DMA_SR_GIF                      DMA_ISR_GIF1
+#define DMA_SR_TCIF                     DMA_ISR_TCIF1
+#define DMA_SR_HTIF                     DMA_ISR_HTIF1
+#define DMA_SR_TEIF                     DMA_ISR_TEIF1
+
+#define DMA_CCRx_PL_LOW                 ((0 * DMA_CCR1_PL_1) | (0 * DMA_CCR1_PL_0))
+#define DMA_CCRx_PL_MEDIUM              ((0 * DMA_CCR1_PL_1) | (1 * DMA_CCR1_PL_0))
+#define DMA_CCRx_PL_HIGH                ((1 * DMA_CCR1_PL_1) | (0 * DMA_CCR1_PL_0))
+#define DMA_CCRx_PL_VERY_HIGH           ((1 * DMA_CCR1_PL_1) | (1 * DMA_CCR1_PL_0))
+
+#define DMA_CCRx_MSIZE_BYTE             ((0 * DMA_CCR1_MSIZE_1) | (0 * DMA_CCR1_MSIZE_0))
+#define DMA_CCRx_MSIZE_HALFWORD         ((0 * DMA_CCR1_MSIZE_1) | (1 * DMA_CCR1_MSIZE_0))
+#define DMA_CCRx_MSIZE_WORD             ((1 * DMA_CCR1_MSIZE_1) | (0 * DMA_CCR1_MSIZE_0))
+
+#define DMA_CCRx_PSIZE_BYTE             ((0 * DMA_CCR1_PSIZE_1) | (0 * DMA_CCR1_PSIZE_0))
+#define DMA_CCRx_PSIZE_HALFWORD         ((0 * DMA_CCR1_PSIZE_1) | (1 * DMA_CCR1_PSIZE_0))
+#define DMA_CCRx_PSIZE_WORD             ((1 * DMA_CCR1_PSIZE_1) | (0 * DMA_CCR1_PSIZE_0))
+
+#define DMA_CCRx_MINC_FIXED             (0 * DMA_CCR1_MINC)
+#define DMA_CCRx_MINC_ENABLE            (1 * DMA_CCR1_MINC)
+
+#define DMA_CCRx_PINC_FIXED             (0 * DMA_CCR1_PINC)
+#define DMA_CCRx_PINC_ENABLE            (1 * DMA_CCR1_PINC)
+
+#define DMA_CCRx_CIRC_DISABLE           (0 * DMA_CCR1_CIRC)
+#define DMA_CCRx_CIRC_ENABLE            (1 * DMA_CCR1_CIRC)
+
+#define DMA_CCRx_DIR_P2M                ((0 * DMA_CCR1_MEM2MEM) | (0 * DMA_CCR1_DIR))
+#define DMA_CCRx_DIR_M2P                ((0 * DMA_CCR1_MEM2MEM) | (1 * DMA_CCR1_DIR))
+#define DMA_CCRx_DIR_M2M                ((1 * DMA_CCR1_MEM2MEM) | (0 * DMA_CCR1_DIR))
 
 /*==============================================================================
   Exported object types
