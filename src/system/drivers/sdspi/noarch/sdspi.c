@@ -385,8 +385,6 @@ API_MOD_READ(SDSPI,
 //==============================================================================
 API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 {
-        UNUSED_ARG1(arg);
-
         SDSPI_t *hdl = device_handle;
 
         int err = EBADRQC;
@@ -394,7 +392,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
         switch (request) {
         case IOCTL_SDSPI__CONFIGURE: {
                 SDSPI_config_t *sdspi_cfg = arg;
-                
+
                 if (hdl->stg->SPI_file) {
                         err = sys_fclose(hdl->stg->SPI_file);
                         if (err) {
