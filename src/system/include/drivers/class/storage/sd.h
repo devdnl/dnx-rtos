@@ -1,11 +1,9 @@
 /*==============================================================================
-File    sdio_cfg.h
+File    sd.h
 
 Author  Daniel Zorychta
 
-Brief   SD Card Interface Driver
-
-        Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+Brief   SD Card definitions.
 
         This program is free software; you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -25,26 +23,27 @@ Brief   SD Card Interface Driver
 
 ==============================================================================*/
 
-#ifndef _SDIO_CFG_H_
-#define _SDIO_CFG_H_
+/**
+@defgroup SD_H_ SD_H_
+
+Detailed Doxygen description.
+*/
+/**@{*/
+
+#ifndef _SD_H_
+#define _SD_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include "config.h"
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _SDIO_CFG_NEGEDGE       __SDIO_CFG_NEGEDGE__
-#define _SDIO_CFG_BUS_WIDE      __SDIO_CFG_BUS_WIDE__
-#define _SDIO_CFG_CLKDIV        __SDIO_CFG_CLKDIV__
-#define _SDIO_CFG_PWRSAVE       __SDIO_CFG_PWRSAVE__
-#define _SDIO_CFG_USEDMA        __SDIO_CFG_USEDMA__
 
 /*==============================================================================
   Exported object types
@@ -66,7 +65,9 @@ extern "C" {
 }
 #endif
 
-#endif /* _SDIO_CFG_H_ */
+#endif /* _SD_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

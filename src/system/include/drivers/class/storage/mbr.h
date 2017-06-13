@@ -1,11 +1,9 @@
 /*==============================================================================
-File    sdio_cfg.h
+File    mbr.h
 
 Author  Daniel Zorychta
 
-Brief   SD Card Interface Driver
-
-        Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+Brief   MBR definitions.
 
         This program is free software; you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -25,26 +23,42 @@ Brief   SD Card Interface Driver
 
 ==============================================================================*/
 
-#ifndef _SDIO_CFG_H_
-#define _SDIO_CFG_H_
+/**
+@defgroup MBR_H_ MBR_H_
+
+Detailed Doxygen description.
+*/
+/**@{*/
+
+#ifndef _MBR_H_
+#define _MBR_H_
+
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "drivers/driver.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
-  Include files
-==============================================================================*/
-#include "config.h"
-
-/*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _SDIO_CFG_NEGEDGE       __SDIO_CFG_NEGEDGE__
-#define _SDIO_CFG_BUS_WIDE      __SDIO_CFG_BUS_WIDE__
-#define _SDIO_CFG_CLKDIV        __SDIO_CFG_CLKDIV__
-#define _SDIO_CFG_PWRSAVE       __SDIO_CFG_PWRSAVE__
-#define _SDIO_CFG_USEDMA        __SDIO_CFG_USEDMA__
+#define MBR_BOOTSTRAP_CODE_OFFSET                       0x000
+#define MBR_PARTITION_1_ENTRY_OFFSET                    0x1BE
+#define MBR_PARTITION_2_ENTRY_OFFSET                    0x1CE
+#define MBR_PARTITION_3_ENTRY_OFFSET                    0x1DE
+#define MBR_PARTITION_4_ENTRY_OFFSET                    0x1EE
+#define MBR_BOOT_SIGNATURE_OFFSET                       0x1FE
+#define MBR_PARTITION_ENTRY_SIZE                        0x10
+
+#define MBR_PARITION_ENTRY_STATUS_OFFSET                0x00
+#define MBR_PARITION_ENTRY_CHS_FIRST_ADDR_OFFSET        0x01
+#define MBR_PARITION_ENTRY_PARTITION_TYPE_OFFSET        0x04
+#define MBR_PARITION_ENTRY_CHS_LAST_ADDR_OFFSET         0x05
+#define MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET        0x08
+#define MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET        0x0C
 
 /*==============================================================================
   Exported object types
@@ -57,6 +71,9 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+extern u16_t MBR_get_boot_signature(u8_t *sector);
+extern u32_t MBR_get_partition_first_LBA_sector(int partition, u8_t *sector);
+extern u32_t MBR_get_partition_number_of_sectors(int partition, u8_t *sector);
 
 /*==============================================================================
   Exported inline functions
@@ -66,7 +83,9 @@ extern "C" {
 }
 #endif
 
-#endif /* _SDIO_CFG_H_ */
+#endif /* _MBR_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/
