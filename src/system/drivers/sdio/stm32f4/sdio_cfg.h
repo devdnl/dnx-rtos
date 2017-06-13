@@ -42,9 +42,10 @@ extern "C" {
 ==============================================================================*/
 #define _SDIO_CFG_NEGEDGE       __SDIO_CFG_NEGEDGE__
 #define _SDIO_CFG_BUS_WIDE      __SDIO_CFG_BUS_WIDE__
-#define _SDIO_CFG_CLKDIV        __SDIO_CFG_CLKDIV__
 #define _SDIO_CFG_PWRSAVE       __SDIO_CFG_PWRSAVE__
 #define _SDIO_CFG_USEDMA        __SDIO_CFG_USEDMA__
+#define _SDIO_CFG_CLKDIV        (((__SDIO_CFG_CKDIV__) < 2) ? 0 : ((__SDIO_CFG_CKDIV__) - 2))
+#define _SDIO_CFG_BYPASS        (((__SDIO_CFG_CKDIV__) < 2) ? SDIO_CLKCR_BYPASS : 0)
 
 /*==============================================================================
   Exported object types

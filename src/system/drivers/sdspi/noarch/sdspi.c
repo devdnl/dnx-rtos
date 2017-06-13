@@ -563,6 +563,8 @@ static u8_t card_wait_ready(SDSPI_t *hdl)
  * @param[in] hdl       partition handler
  * @param[in] cmd       card command
  * @param[in] arg       command's argument
+ *
+ * @return Response byte.
  */
 //==============================================================================
 static u8_t card_send_cmd(SDSPI_t *hdl, SD_cmd_t cmd, u32_t arg)
@@ -597,7 +599,7 @@ static u8_t card_send_cmd(SDSPI_t *hdl, SD_cmd_t cmd, u32_t arg)
         switch (cmd) {
         case SD_CMD__CMD0: buf[len++] = 0x95; break;
         case SD_CMD__CMD8: buf[len++] = 0x87; break;
-        default  : buf[len++] = 0x01; break;
+        default          : buf[len++] = 0x01; break;
         }
 
         if (cmd == SD_CMD__CMD12)

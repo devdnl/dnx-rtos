@@ -52,6 +52,8 @@ extern "C" {
 typedef enum {
         SD_CMD__CMD0   = (0x40+0 ),             /* GO_IDLE_STATE */
         SD_CMD__CMD1   = (0x40+1 ),             /* SEND_OP_COND (MMC) */
+        SD_CMD__CMD2   = (0xC0+2 ),             /* GET_CID (SDC) */
+        SD_CMD__CMD3   = (0x40+3 ),             /* GET_RCA (SDC) */
         SD_CMD__ACMD41 = (0xC0+41),             /* SEND_OP_COND (SDC) */
         SD_CMD__CMD8   = (0x40+8 ),             /* SEND_IF_COND */
         SD_CMD__CMD9   = (0x40+9 ),             /* SEND_CSD */
