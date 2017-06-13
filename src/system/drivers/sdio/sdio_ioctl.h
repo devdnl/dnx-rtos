@@ -3,7 +3,7 @@ File    sdio_ioctl.h
 
 Author  Daniel Zorychta
 
-Brief   SD Card Interface Driver
+Brief   SD Card Interface Driver.
 
         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 

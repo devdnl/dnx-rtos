@@ -51,14 +51,16 @@ extern "C" {
 #define MBR_PARTITION_3_ENTRY_OFFSET                    0x1DE
 #define MBR_PARTITION_4_ENTRY_OFFSET                    0x1EE
 #define MBR_BOOT_SIGNATURE_OFFSET                       0x1FE
+
+#define MBR_PARTITION_ENTRY_STATUS_OFFSET               0x00
+#define MBR_PARTITION_ENTRY_CHS_FIRST_ADDR_OFFSET       0x01
+#define MBR_PARTITION_ENTRY_PARTITION_TYPE_OFFSET       0x04
+#define MBR_PARTITION_ENTRY_CHS_LAST_ADDR_OFFSET        0x05
+#define MBR_PARTITION_ENTRY_LBA_FIRST_ADDR_OFFSET       0x08
+#define MBR_PARTITION_ENTRY_NUM_OF_SECTORS_OFFSET       0x0C
 #define MBR_PARTITION_ENTRY_SIZE                        0x10
 
-#define MBR_PARITION_ENTRY_STATUS_OFFSET                0x00
-#define MBR_PARITION_ENTRY_CHS_FIRST_ADDR_OFFSET        0x01
-#define MBR_PARITION_ENTRY_PARTITION_TYPE_OFFSET        0x04
-#define MBR_PARITION_ENTRY_CHS_LAST_ADDR_OFFSET         0x05
-#define MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET        0x08
-#define MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET        0x0C
+#define MBR_SIGNATURE                                   0xAA55
 
 /*==============================================================================
   Exported object types

@@ -48,6 +48,38 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/** card command definitions */
+typedef enum {
+        SD_CMD__CMD0   = (0x40+0 ),             /* GO_IDLE_STATE */
+        SD_CMD__CMD1   = (0x40+1 ),             /* SEND_OP_COND (MMC) */
+        SD_CMD__ACMD41 = (0xC0+41),             /* SEND_OP_COND (SDC) */
+        SD_CMD__CMD8   = (0x40+8 ),             /* SEND_IF_COND */
+        SD_CMD__CMD9   = (0x40+9 ),             /* SEND_CSD */
+        SD_CMD__CMD10  = (0x40+10),             /* SEND_CID */
+        SD_CMD__CMD12  = (0x40+12),             /* STOP_TRANSMISSION */
+        SD_CMD__ACMD13 = (0xC0+13),             /* SD_STATUS (SDC) */
+        SD_CMD__CMD16  = (0x40+16),             /* SET_BLOCKLEN */
+        SD_CMD__CMD17  = (0x40+17),             /* READ_SINGLE_BLOCK */
+        SD_CMD__CMD18  = (0x40+18),             /* READ_MULTIPLE_BLOCK */
+        SD_CMD__CMD23  = (0x40+23),             /* SET_BLOCK_COUNT (MMC) */
+        SD_CMD__ACMD23 = (0xC0+23),             /* SET_WR_BLK_ERASE_COUNT (SDC) */
+        SD_CMD__CMD24  = (0x40+24),             /* WRITE_BLOCK */
+        SD_CMD__CMD25  = (0x40+25),             /* WRITE_MULTIPLE_BLOCK */
+        SD_CMD__CMD55  = (0x40+55),             /* APP_CMD */
+        SD_CMD__CMD58  = (0x40+58)              /* READ_OCR */
+} SD_cmd_t;
+
+/** card types */
+typedef struct {
+        enum {
+                SD_TYPE__UNKNOWN,
+                SD_TYPE__MMC,
+                SD_TYPE__SD1,
+                SD_TYPE__SD2
+        } type;
+
+        bool block;
+} SD_type_t;
 
 /*==============================================================================
   Exported objects

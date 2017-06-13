@@ -122,17 +122,9 @@ u32_t MBR_get_partition_first_LBA_sector(int partition, u8_t *sector)
 
                 return load_u32(sector, ((partition - 1) * MBR_PARTITION_ENTRY_SIZE)
                                         + MBR_PARTITION_1_ENTRY_OFFSET
-                                        + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET);
+                                        + MBR_PARTITION_ENTRY_LBA_FIRST_ADDR_OFFSET);
         } else {
                 return 0;
-        }
-
-        switch (partition) {
-        case 1 : return load_u32(sector, MBR_PARTITION_1_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET);
-        case 2 : return load_u32(sector, MBR_PARTITION_2_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET);
-        case 3 : return load_u32(sector, MBR_PARTITION_3_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET);
-        case 4 : return load_u32(sector, MBR_PARTITION_4_ENTRY_OFFSET + MBR_PARITION_ENTRY_LBA_FIRST_ADDR_OFFSET);
-        default: return 0;
         }
 }
 
@@ -148,15 +140,14 @@ u32_t MBR_get_partition_first_LBA_sector(int partition, u8_t *sector)
 //==============================================================================
 u32_t MBR_get_partition_number_of_sectors(int partition, u8_t *sector)
 {
-        switch (partition) {
-        case 1 : return load_u32(sector, MBR_PARTITION_1_ENTRY_OFFSET + MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET);
-        case 2 : return load_u32(sector, MBR_PARTITION_2_ENTRY_OFFSET + MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET);
-        case 3 : return load_u32(sector, MBR_PARTITION_3_ENTRY_OFFSET + MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET);
-        case 4 : return load_u32(sector, MBR_PARTITION_4_ENTRY_OFFSET + MBR_PARITION_ENTRY_NUM_OF_SECTORS_OFFSET);
-        default: return 0;
+        if ((partition >= 1) && (partition <= 4) && sector) {
+
+                return load_u32(sector, ((partition - 1) * MBR_PARTITION_ENTRY_SIZE)
+                                        + MBR_PARTITION_1_ENTRY_OFFSET
+                                        + MBR_PARTITION_ENTRY_NUM_OF_SECTORS_OFFSET);
+        } else {
+                return 0;
         }
-
-
 }
 
 /*==============================================================================
