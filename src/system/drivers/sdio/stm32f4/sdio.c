@@ -598,7 +598,7 @@ static int card_initialize(SDIO_t *hdl)
 
                 u8_t CSD_ver = SD_CSD_get_version(resp);
                 if (CSD_ver == 2) {
-                        size = (SD_CSD_get_C_SIZE_HC(resp) + 1) * 1024;
+                        size = (SD_CSD_get_C_SIZE_HC(resp) + 1) * 512 * 1024;
 
                 if (CSD_ver == 1) {
                         size = (SD_CSD_get_C_SIZE_SC(resp) + 1)
