@@ -565,7 +565,7 @@ extern "C" {
  *        user-defined label.
  */
 //==============================================================================
-#define catcherr(op, errlabel) if ((op) != 0) goto errlabel
+#define catcherr(op, errlabel) if ((op) != 0) {goto errlabel;}
 
 /*==============================================================================
   Exported object types

@@ -95,9 +95,9 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int   card_read(SDIO_t *hdl, u8_t *dst, size_t count, u64_t lseek, size_t *rdcnt);
-static int   card_write(SDIO_t *hdl, const u8_t *src, size_t count, u64_t lseek, size_t *wrcnt);
-static int   card_initialize(SDIO_t *hdl);
+static int card_read(SDIO_t *hdl, u8_t *dst, size_t count, u64_t lseek, size_t *rdcnt);
+static int card_write(SDIO_t *hdl, const u8_t *src, size_t count, u64_t lseek, size_t *wrcnt);
+static int card_initialize(SDIO_t *hdl);
 static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg);
 static int card_get_response(SD_response_t *resp, resp_t type);
 
@@ -526,8 +526,8 @@ static int card_write(SDIO_t *hdl, const u8_t *src, size_t count, u64_t lseek, s
 //==============================================================================
 static int card_initialize(SDIO_t *hdl)
 {
-        int           err = EIO;
-        SD_response_t resp[4];
+        int err = EIO;
+        SD_response_t resp;
 
         hdl->stg->type.type   = SD_TYPE__UNKNOWN;
         hdl->stg->type.block  = false;
@@ -538,20 +538,20 @@ static int card_initialize(SDIO_t *hdl)
         catcherr(err = card_send_cmd(SD_CMD__CMD0, CMD_RESP_NONE, 0), finish);
 
         catcherr(err = card_send_cmd(SD_CMD__CMD8, CMD_RESP_SHORT, 0x1AA), finish);
-        catcherr(err = card_get_response(resp, RESP_R7), finish);
+        catcherr(err = card_get_response(&resp, RESP_R7), finish);
 
-        if (resp[0] == 0x1AA) {
+        if (resp.RESPONSE[0] == 0x1AA) {
                 while (!sys_time_is_expired(timer, CARD_INIT_TIMEOUT)) {
 
                         catcherr(err = card_send_cmd(SD_CMD__CMD55, CMD_RESP_SHORT, 0), finish);
-                        catcherr(err = card_get_response(resp, RESP_R1), finish);
+                        catcherr(err = card_get_response(&resp, RESP_R1), finish);
 
                         catcherr(err = card_send_cmd(SD_CMD__ACMD41, CMD_RESP_R3, 0x80100000 | 0x40000000), finish);
-                        catcherr(err = card_get_response(resp, RESP_R3), finish);
+                        catcherr(err = card_get_response(&resp, RESP_R3), finish);
 
-                        if ((resp[0] >> 31) == 1) {
+                        if ((resp.RESPONSE[0] >> 31) == 1) {
 
-                                if (resp[0] & 0x40000000) {
+                                if (resp.RESPONSE[0] & 0x40000000) {
                                         hdl->stg->type.type  = SD_TYPE__SD2;
                                         hdl->stg->type.block = true;
                                 } else {
@@ -569,67 +569,55 @@ static int card_initialize(SDIO_t *hdl)
                         }
                 }
 
-                printk("CMD2");
                 catcherr(err = card_send_cmd(SD_CMD__CMD2, CMD_RESP_LONG, 0), finish);
 
-                printk("CMD3");
                 catcherr(err = card_send_cmd(SD_CMD__CMD3, CMD_RESP_SHORT, 0), finish);
-                catcherr(err = card_get_response(resp, RESP_R6), finish);
+                catcherr(err = card_get_response(&resp, RESP_R6), finish);
 
-                hdl->stg->RCA = resp[0] >> 16;
+                hdl->stg->RCA = resp.RESPONSE[0] >> 16;
 
-                printk("CMD9");
-                memset(resp, 0, sizeof(resp));
                 catcherr(err = card_send_cmd(SD_CMD__CMD9, CMD_RESP_LONG, hdl->stg->RCA << 16), finish);
-                catcherr(err = card_get_response(resp, RESP_R2), finish);
+                catcherr(err = card_get_response(&resp, RESP_R2), finish);
 
-                for (int i = 0; i < 4; i++) {printk("RESP%d: 0x%08X", i+1, resp[i]);} // TEST
-
-                /* SDC version 2.00 */
-                u32_t size = 0;
-//                if ((csd[0] >> 6) == 1) {
-//                        u32_t csize = csd[9] + ((u16_t)csd[8] << 8) + 1;
-//                        size        = csize << 10;
-//                } else { /* SDC version 1.XX or MMC*/
-//                        u32_t n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
-//                        u32_t csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
-//                        size        = csize << (n - 9);
-//                }
-
-                u8_t CSD_ver = SD_CSD_get_version(resp);
-                if (CSD_ver == 2) {
-                        size = (SD_CSD_get_C_SIZE_HC(resp) + 1) * 512 * 1024;
-
+                u32_t blks = 0;
+                u8_t CSD_ver = SD_CSD_get_version(&resp);
                 if (CSD_ver == 1) {
-                        size = (SD_CSD_get_C_SIZE_SC(resp) + 1)
-                             * (1 << SD_CSD_get_C_SIZE_MULT(resp) + 2)
-                             * (1 << SD_CSD_get_READ_BL_LEN(resp));
+                        blks = (SD_CSD_get_C_SIZE_HC(&resp) + 1) * 1024;
+
+                } else if (CSD_ver == 0) {
+                        blks = (SD_CSD_get_C_SIZE_SC(&resp) + 1)
+                             * (1 << (SD_CSD_get_C_SIZE_MULT(&resp) + 2))
+                             * (1 << SD_CSD_get_READ_BL_LEN(&resp))
+                             / 512;
                 } else {
                         printk("SDIO: unknown CSD version");
-                        hdl->stg->type.type  = SD_TYPE__UNKNOWN;
+                        hdl->stg->type.type = SD_TYPE__UNKNOWN;
                         err = EIO;
                         goto finish;
                 }
 
-                hdl->stg->part[VOLUME].size = size;
+                printk("SDIO: %d 512-byte logical blocks", blks);
+                hdl->stg->part[VOLUME].size = blks;
 
-                printk("Volume size: %d", size);
-
-
-                printk("CMD7");
                 catcherr(err = card_send_cmd(SD_CMD__CMD7, CMD_RESP_SHORT, hdl->stg->RCA << 16), finish);
-                catcherr(err = card_get_response(resp, RESP_R1), finish);
+                catcherr(err = card_get_response(&resp, RESP_R1), finish);
 
                 if (hdl->stg->type.type == SD_TYPE__SD1) {
                         catcherr(err = card_send_cmd(SD_CMD__CMD16, CMD_RESP_SHORT, SECTOR_SIZE), finish);
-                        catcherr(err = card_get_response(resp, RESP_R1), finish);
+                        catcherr(err = card_get_response(&resp, RESP_R1), finish);
                 }
 
                 catcherr(err = card_send_cmd(SD_CMD__CMD55, CMD_RESP_SHORT, hdl->stg->RCA << 16), finish);
-                catcherr(err = card_get_response(resp, RESP_R1), finish);
+                catcherr(err = card_get_response(&resp, RESP_R1), finish);
 
                 catcherr(err = card_send_cmd(SD_CMD__ACMD6, CMD_RESP_SHORT, _SDIO_CFG_ACMD6_BUS_WIDE), finish);
-                catcherr(err = card_get_response(resp, RESP_R1), finish);
+                catcherr(err = card_get_response(&resp, RESP_R1), finish);
+
+                SDIO->CLKCR = _SDIO_CFG_NEGEDGE
+                            | _SDIO_CFG_BUS_WIDE
+                            | _SDIO_CFG_PWRSAVE
+                            | SDIO_CLKCR_CLKEN
+                            | _SDIO_CFG_CLKDIV;
 
                 hdl->stg->initialized = true;
         }
@@ -649,36 +637,28 @@ static int card_initialize(SDIO_t *hdl)
 //==============================================================================
 static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg)
 {
-        //Response must be:
-        //0,2:No response (expect cmdsent) ->NORESP
-        //1:Short Response  (expect cmdrend and ccrcfail) ->SHRESP
-        //3:Long Response   (expect cmdrend and ccrcfail) ->LNRESP
-
-        //Clear the Command Flags
+        // clear the Command Flags
         SDIO->ICR = SDIO_STA_CCRCFAIL
                   | SDIO_STA_CTIMEOUT
                   | SDIO_STA_CMDREND
                   | SDIO_STA_CMDSENT;
 
-        SDIO->ARG = arg; //First adjust the argument (because I will immediately enable CPSM next)
+        SDIO->ARG = arg;
 
         SDIO->CMD = (cmd  & SDIO_CMD_CMDINDEX)
                   | (resp & SDIO_CMD_WAITRESP)
-                  | (0x0400); //The last argument is to enable CSPM
+                  | SDIO_CMD_CPSMEN;
 
-        //Block till we get a response
         if (resp == CMD_RESP_NONE) {
-                //We should wait for CMDSENT
                 while (!(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDSENT)));
 
-        } else { //SHRESP or LNRESP or R3RESP
-                 //We should wait for CMDREND or CCRCFAIL
+        } else {
                 while (!(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDREND | SDIO_STA_CCRCFAIL)));
         }
 
         //Check to see if the response is valid
         //We consider all R3 responses without a timeout as a valid response
-        //It seems CMDSENT and CMDREND are mutually exclusive. (though I am not sure. Check this later)
+        //It seems CMDSENT and CMDREND are mutually exclusive.
         if (SDIO->STA & SDIO_STA_CTIMEOUT) {
                 printk("SDIO: Command Timeout Error");
                 return ETIME;
@@ -702,52 +682,46 @@ static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg)
 //==============================================================================
 static int card_get_response(SD_response_t *resp, resp_t type)
 {
-        //I mainly use this to block the execution in case an unexpected response is received.
-        //Actually I don't need this at all. However, just for the sake of extra information I keep this. All I reall need is for this function to return SDIO->RESP1
-        //In the main code, I don't use the return values at all. Perhaps I ought to have used void.
-
-        //R1 Responses
         if ((type == RESP_R1) || (type == RESP_R1b)) {
                 resp->RESPONSE[0] = SDIO->RESP1;
-                if (SDIO->RESP1 & (uint32_t) 0xFDFFE008) { //All error bits must be zero
+                if (SDIO->RESP1 & (uint32_t) 0xFDFFE008) {
                         printk("SDIO: Response Error");
                         return EIO;
                 }
-//                return (response[0] & 0x1F00) >> 8; //Return the card status
 
-        } else if (type == RESP_R2) { //CSD or CSI register. 128 bit
+        } else if (type == RESP_R2) {
                 resp->RESPONSE[0] = SDIO->RESP1;
                 resp->RESPONSE[1] = SDIO->RESP2;
                 resp->RESPONSE[2] = SDIO->RESP3;
                 resp->RESPONSE[3] = SDIO->RESP4;
 
-        } else if (type == RESP_R3) { //OCR
+        } else if (type == RESP_R3) {
                 if (SDIO->RESPCMD != 0x3F) {
                         printk("SDIO: Unexpected command index");
                         return EIO;
-                } //CMD index for R3 must be 0x3F
-                resp->RESPONSE[0] = SDIO->RESP1; //Equals to OCR
-//                return 0;
+                }
 
-        } else if (type == RESP_R6) { //RCA Response
+                resp->RESPONSE[0] = SDIO->RESP1;
+
+        } else if (type == RESP_R6) {
                 if (SDIO->RESPCMD != 0x03) {
                         printk("SDIO: Unexpected command index");
                         return EIO;
-                } //Only cmd3 generates R6 response
-                resp->RESPONSE[0] = SDIO->RESP1; //Equals to OCR
+                }
 
-//                return response[0] >> 16; //Return is equal to RCA. (The first 16 bit is equal to status)
+                resp->RESPONSE[0] = SDIO->RESP1;
 
-        } else { //RESP_R7:Card Interface condition. Obtained after CMD8
+        } else {
                 if (SDIO->RESPCMD != 0x08) {
                         printk("SDIO: Unexpected command index");
-                } //Only cmd8 generates R7 response
+                }
+
                 resp->RESPONSE[0] = SDIO->RESP1;
+
                 if ((resp->RESPONSE[0] & 0xFF) != 0xAA) {
                         printk("SDIO: Pattern did not match");
                         return EIO;
-                } //Only cmd8 generates R7 response
-//                return (response[0] & 0xFF00) >> 8; //Echo back value
+                }
         }
 
         return ESUCC;

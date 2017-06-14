@@ -358,6 +358,7 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32f4/dci_flags.h"
 #include "stm32f4/spi_flags.h"
 #include "stm32f4/wdg_flags.h"
+#include "stm32f4/sdio_flags.h"
 #elif (__CPU_ARCH__ == efr32)
 #include "efr32/cpu_flags.h"
 #include "efr32/gpio_flags.h"
@@ -571,6 +572,20 @@ __ENABLE_I2CEE__=_NO_
 #*/
 
 #/*--
+# if uC.PERIPH[uC.NAME].SDIO ~= nil then
+#     this:PutWidgets("SDIO", "arch/"..uC.ARCH.."/sdio_flags.h")
+#     this:SetToolTip("SD Card Interface Driver")
+# else
+#     this:AddWidget("Value")
+#     this:SetFlagValue("__ENABLE_SDIO__", "_NO_")
+# end
+#--*/
+#define __ENABLE_SDIO__ _YES_
+#/*
+__ENABLE_SDIO__=_YES_
+#*/
+
+#/*--
 # this:PutWidgets("SDSPI")
 # this:SetToolTip("SD Card driver for SPI interface.\n"..
 #                 "Note: make sure that the MISO pin is set to input\n"..
@@ -638,20 +653,6 @@ __ENABLE_DMA__=_YES_
 #define __ENABLE_DCI__ _NO_
 #/*
 __ENABLE_DCI__=_NO_
-#*/
-
-#/*--
-# if uC.PERIPH[uC.NAME].SDIO ~= nil then
-#     this:PutWidgets("SDIO", "arch/"..uC.ARCH.."/sdio_flags.h")
-#     this:SetToolTip("SD Card Interface Driver")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_SDIO__", "_NO_")
-# end
-#--*/
-#define __ENABLE_SDIO__ _YES_
-#/*
-__ENABLE_SDIO__=_YES_
 #*/
 
 #// MODULE LIST END
