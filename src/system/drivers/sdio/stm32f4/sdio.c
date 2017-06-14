@@ -540,7 +540,6 @@ static int card_initialize(SDIO_t *hdl)
 
         err = card_send_cmd(SD_CMD__CMD8, CMD_RESP_SHORT, 0x1AA);
         if (err) goto finish;
-
         err = card_get_response(resp, RESP_R7);
         if (err) goto finish;
 
@@ -549,13 +548,11 @@ static int card_initialize(SDIO_t *hdl)
 
                         err = card_send_cmd(SD_CMD__CMD55, CMD_RESP_SHORT, 0);
                         if (err) goto finish;
-
                         err = card_get_response(resp, RESP_R1);
                         if (err) goto finish;
 
                         err = card_send_cmd(SD_CMD__ACMD41, CMD_RESP_R3, 0x80100000 | 0x40000000);
                         if (err) goto finish;
-
                         err = card_get_response(resp, RESP_R3);
                         if (err) goto finish;
 
@@ -581,21 +578,68 @@ static int card_initialize(SDIO_t *hdl)
                         }
                 }
 
+                printk("CMD2");
                 err = card_send_cmd(SD_CMD__CMD2, CMD_RESP_LONG, 0);
                 if (err) goto finish;
 
+                printk("CMD3");
                 err = card_send_cmd(SD_CMD__CMD3, CMD_RESP_SHORT, 0);
                 if (err) goto finish;
-
                 err = card_get_response(resp, RESP_R6);
                 if (err) goto finish;
 
                 hdl->stg->RCA = resp[0] >> 16;
 
+                printk("CMD9");
+                memset(resp, 0, sizeof(resp));
+                err = card_send_cmd(SD_CMD__CMD9, CMD_RESP_LONG, hdl->stg->RCA << 16);
+                if (err) goto finish;
+                err = card_get_response(resp, RESP_R2);
+                if (err) goto finish;
 
+                for (int i = 0; i < 4; i++) {printk("RESP%d: 0x%08X", i+1, resp[i]);} // TEST
+
+                u8_t *csd = (u8_t*)resp;
+
+                /* SDC version 2.00 */
+                u32_t size;
+                if ((csd[0] >> 6) == 1) {
+                        u32_t csize = csd[9] + ((u16_t)csd[8] << 8) + 1;
+                        size        = csize << 10;
+                } else { /* SDC version 1.XX or MMC*/
+                        u32_t n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
+                        u32_t csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
+                        size        = csize << (n - 9);
+                }
+
+                hdl->stg->part[VOLUME].size = size;
+
+                printk("Volume size: %d", size);
+
+
+                printk("CMD7");
+                err = card_send_cmd(SD_CMD__CMD7, CMD_RESP_SHORT, hdl->stg->RCA << 16);
+                if (err) goto finish;
+                err = card_get_response(resp, RESP_R1);
+                if (err) goto finish;
+
+                if (hdl->stg->type.type == SD_TYPE__SD1) {
+                        err = card_send_cmd(SD_CMD__CMD16, CMD_RESP_SHORT, SECTOR_SIZE);
+                        if (err) goto finish;
+                        err = card_get_response(resp, RESP_R1);
+                        if (err) goto finish;
+                }
+
+                err = card_send_cmd(SD_CMD__CMD55, CMD_RESP_SHORT, hdl->stg->RCA << 16);
+                if (err) goto finish;
+                err = card_get_response(resp, RESP_R1);
+                if (err) goto finish;
+
+                err = card_send_cmd(SD_CMD__ACMD6, CMD_RESP_SHORT, _SDIO_CFG_ACMD6_BUS_WIDE);
+                if (err) goto finish;
+                err = card_get_response(resp, RESP_R1);
+                if (err) goto finish;
         }
-
-
 
         finish:
         return err;
