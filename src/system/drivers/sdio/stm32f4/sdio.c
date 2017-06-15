@@ -122,6 +122,7 @@ static int card_initialize(SDIO_t *hdl);
 static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg);
 static int card_get_response(SD_response_t *resp, resp_t type);
 static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address, size_t *rdsec);
+static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t address, size_t *wrsec);
 static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir);
 static int MBR_detect_partitions(SDIO_t *hdl);
 static bool DMA_finished(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
@@ -507,28 +508,25 @@ static int card_read(SDIO_t *hdl, u8_t *dst, size_t count, u64_t lseek, size_t *
 //==============================================================================
 static int card_write(SDIO_t *hdl, const u8_t *src, size_t count, u64_t lseek, size_t *wrcnt)
 {
-        ssize_t n = 0;
+        int err = EIO;
 
-        if (hdl->ctrl->initialized == false) {
-                return EIO;
-
-        } else {
+        if (hdl->ctrl->initialized) {
                 if ((count % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
-//                        n  = card_write_entire_sectors(hdl, src, count / SECTOR_SIZE, lseek); // TODO
-                        n *= SECTOR_SIZE;
+
+                        count /= SECTOR_SIZE;
+                        lseek /= SECTOR_SIZE;
+
+                        size_t rdsec = 0;
+                        err = card_write_sectors(hdl, src, count, lseek, &rdsec);
+
+                        *wrcnt = rdsec * SECTOR_SIZE;
+
                 } else {
-//                        n  = card_write_partial_sectors(hdl, src, count, lseek); TODO
+                        err = ESPIPE;
                 }
-
-//                SPI_deselect_card(hdl); TODO
         }
 
-        if (n >= 0) {
-                *wrcnt = n;
-                return ESUCC;
-        } else {
-                return EIO;
-        }
+        return err;
 }
 
 //==============================================================================
@@ -761,7 +759,7 @@ static int card_get_response(SD_response_t *resp, resp_t type)
 //==============================================================================
 static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address, size_t *rdsec)
 {
-        int err = ESUCC;
+        int err = EIO;
         SD_response_t resp;
 
         if (hdl->ctrl->card.type == SD_TYPE__SD1) {
@@ -779,13 +777,61 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
 
                 catcherr(err = card_transfer_block(hdl, dst, count, DIR_IN), exit);
 
-                catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_NONE, 0), exit);
+                catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
                 catcherr(err = card_get_response(&resp, RESP_R1b), exit);
         }
 
         *rdsec = count;
 
         exit:
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief
+ *
+ * @param  ?
+ *
+ * @return ?
+ */
+//==============================================================================
+static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t address, size_t *wrsec)
+{
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+
+        int err = EIO;
+        SD_response_t resp;
+
+        if (hdl->ctrl->card.type == SD_TYPE__SD1) {
+                address *= SECTOR_SIZE;
+        }
+
+        if (count == 1) {
+                catcherr(err = card_send_cmd(SD_CMD__CMD24, CMD_RESP_SHORT, address), exit);
+                catcherr(err = card_get_response(&resp, RESP_R1), exit);
+                catcherr(err = card_transfer_block(hdl, const_cast(u8_t *, src), count, DIR_OUT), exit);
+
+        } else {
+                catcherr(err = card_send_cmd(SD_CMD__CMD25, CMD_RESP_SHORT, address), exit);
+                catcherr(err = card_get_response(&resp, RESP_R1), exit);
+
+                catcherr(err = card_transfer_block(hdl, const_cast(u8_t *, src), count, DIR_OUT), exit);
+
+                catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
+                catcherr(err = card_get_response(&resp, RESP_R1b), exit);
+
+                while (!(resp.RESPONSE[0] & 0x100)) {
+                        catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
+                        catcherr(err = card_get_response(&resp, RESP_R1b), exit);
+                        sys_sleep_ms(1);
+                }
+        }
+
+        *wrsec = count;
+
+        exit:
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
         return err;
 }
 
@@ -831,7 +877,7 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                                 | DMA_SxCR_PFCTRL_PER;
                 config.FC       = DMA_SxFCR_FEIE_DISABLE
                                 | DMA_SxFCR_DMDIS_YES
-                                | DMA_SxFCR_FTH_FULL | 0x27;
+                                | DMA_SxFCR_FTH_FULL;
 
                 err = _DMA_DDI_transfer(dmad, &config);
                 if (!err) {
@@ -855,7 +901,16 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                         err = sys_queue_receive(hdl->ctrl->event, &err_ev, MAX_DELAY_MS);
                         if (!err) {
                                 err = err_ev;
-                                SDIO->DCTRL = 0;
+
+                                // TODO timeout
+                                while (SDIO->STA & (SDIO_STA_RXACT | SDIO_STA_TXACT));
+
+                                // TODO timeout
+                                while (!(SDIO->STA & (SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT | SDIO_STA_DBCKEND | SDIO_STA_STBITERR)));
+
+                                if (!(SDIO->STA & SDIO_STA_DBCKEND)) {
+                                        printk("SDIO:Data Transmission Error");
+                                }
                         }
                 }
 
