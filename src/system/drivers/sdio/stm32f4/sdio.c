@@ -42,7 +42,7 @@ Brief   SD Card Interface Driver.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define CARD_INIT_TIMEOUT               500
+#define USE_DMA                         _SDIO_CFG_USEDMA
 #define CARD_DT_CK_TIMEOUT              0xFFFFFF
 
 #define DMA_MAJOR                       1
@@ -125,14 +125,17 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
 static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t address, size_t *wrsec);
 static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir);
 static int MBR_detect_partitions(SDIO_t *hdl);
+
+#if USE_DMA > 0
 static bool DMA_finished(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
+#endif
 
 /*==============================================================================
   Local object
 ==============================================================================*/
 MODULE_NAME(SDIO);
 
-static SDIO_ctrl_t *sdio_ctrl;
+static SDIO_ctrl_t *SDIO_CTRL;
 static const u16_t  SECTOR_SIZE = 512;
 
 /*==============================================================================
@@ -180,7 +183,7 @@ API_MOD_INIT(SDIO, void **device_handle, u8_t major, u8_t minor)
 
                 SDIO->POWER = (1 * SDIO_POWER_PWRCTRL_1) | (1 * SDIO_POWER_PWRCTRL_0);
 
-                sdio_ctrl = hdl->ctrl;
+                SDIO_CTRL = hdl->ctrl;
 
                 finish:
                 if (err && hdl) {
@@ -236,6 +239,7 @@ API_MOD_RELEASE(SDIO, void *device_handle)
                                 // TODO SDIO deinit
 
                                 sys_mutex_destroy(hdl->ctrl->protect);
+                                sys_queue_destroy(hdl->ctrl->event);
                                 sys_free(cast(void**, &hdl->ctrl));
                                 sys_free(cast(void**, &hdl));
                                 err = ESUCC;
@@ -383,6 +387,8 @@ API_MOD_READ(SDIO,
 //==============================================================================
 API_MOD_IOCTL(SDIO, void *device_handle, int request, void *arg)
 {
+        UNUSED_ARG1(arg);
+
         SDIO_t *hdl = device_handle;
 
         int err = EBADRQC;
@@ -561,7 +567,7 @@ static int card_initialize(SDIO_t *hdl)
         catcherr(err = card_get_response(&resp, RESP_R7), finish);
 
         if (resp.RESPONSE[0] == 0x1AA) {
-                while (!sys_time_is_expired(timer, CARD_INIT_TIMEOUT)) {
+                while (!sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)) {
 
                         catcherr(err = card_send_cmd(SD_CMD__CMD55, CMD_RESP_SHORT, 0), finish);
                         catcherr(err = card_get_response(&resp, RESP_R1), finish);
@@ -677,9 +683,6 @@ static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg)
                 while (!(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDREND | SDIO_STA_CCRCFAIL)));
         }
 
-        //Check to see if the response is valid
-        //We consider all R3 responses without a timeout as a valid response
-        //It seems CMDSENT and CMDREND are mutually exclusive.
         if (SDIO->STA & SDIO_STA_CTIMEOUT) {
                 printk("SDIO: Command Timeout Error");
                 return ETIME;
@@ -821,6 +824,7 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
                 catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
                 catcherr(err = card_get_response(&resp, RESP_R1b), exit);
 
+                // TODO timeout?
                 while (!(resp.RESPONSE[0] & 0x100)) {
                         catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
                         catcherr(err = card_get_response(&resp, RESP_R1b), exit);
@@ -848,6 +852,7 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
 {
         int err = ESUCC;
 
+#if USE_DMA > 0
         u32_t dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_PRI);
         if (!dmad) {
                 dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_ALT);
@@ -857,7 +862,7 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                 _DMA_DDI_config_t config;
                 config.callback = DMA_finished;
                 config.arg      = hdl;
-                config.release  = false;
+                config.release  = true;
                 config.PA       = cast(u32_t, &SDIO->FIFO);
                 config.MA[0]    = cast(u32_t, buf);
                 config.MA[1]    = 0;
@@ -912,11 +917,15 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                                         printk("SDIO:Data Transmission Error");
                                 }
                         }
+
+                        return err;
                 }
 
                 _DMA_DDI_release(dmad);
-
-        } else {
+        }
+#endif
+        {
+                printk("SDIO: IRQ mode");
                 // TODO IRQ mode
         }
 
@@ -945,10 +954,7 @@ static int MBR_detect_partitions(SDIO_t *hdl)
                         goto error;
                 }
 
-                u16_t sig = MBR_get_boot_signature(MBR);
-
                 if (MBR_get_boot_signature(MBR) != MBR_SIGNATURE) {
-                        printk("SDIO: no MBR 0x%04X", sig);
                         err = EMEDIUMTYPE;
                         goto error;
                 }
@@ -985,6 +991,7 @@ void SDIO_IRQHandler(void)
  * @brief DMA finish callback.
  */
 //==============================================================================
+#if USE_DMA > 0
 static bool DMA_finished(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 {
         _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
@@ -1001,6 +1008,7 @@ static bool DMA_finished(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 
         return yield;
 }
+#endif
 
 /*==============================================================================
   End of file

@@ -61,6 +61,11 @@ this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 #define __SDIO_CFG_CKDIV__ 16
 
 /*--
+this:AddWidget("Spinbox", 100, 2000, "Card operation timeout [ms]")
+--*/
+#define __SDIO_CFG_CARD_TIMEOUT__ 500
+
+/*--
 this:AddWidget("Combobox", "Power save")
 this:AddItem("Disable", "0")
 this:AddItem("Enable", "SDIO_CLKCR_PWRSAV")
@@ -72,7 +77,7 @@ this:AddWidget("Combobox", "Use DMA")
 this:AddItem("No", "_NO_")
 this:AddItem("Yes", "_YES_")
 --*/
-#define __SDIO_CFG_USEDMA__ _NO_
+#define __SDIO_CFG_USEDMA__ _YES_
 
 #endif /* _SDIO_FLAGS_H_ */
 /*==============================================================================
