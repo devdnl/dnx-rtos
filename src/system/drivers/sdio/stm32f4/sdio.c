@@ -122,7 +122,7 @@ static int card_initialize(SDIO_t *hdl);
 static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg);
 static int card_get_response(SD_response_t *resp, resp_t type);
 static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address, size_t *rdsec);
-static int card_transfer_block(SDIO_t *hdl, u8_t *buf, dir_t dir);
+static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir);
 static int MBR_detect_partitions(SDIO_t *hdl);
 static bool DMA_finished(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 
@@ -750,178 +750,6 @@ static int card_get_response(SD_response_t *resp, resp_t type)
         return ESUCC;
 }
 
-
-
-
-
-
-
-
-
-static bool SDIOTxRx;
-#define UM2SD         (0x00)  //Transfer Direction
-#define SD2UM (0x02)
-
-
-
-
-
-
-
-
-
-
-static void SD_StartBlockTransfer(uint8_t *buf, uint32_t cnt, uint32_t dir){
-  //cnt must be integer multiple of 512!!! I will enforce this inside this function
-  //Starts the actual data tranfer using the DMA.
-  //Prior to calling this command. The SDCard must have been adjusted using commands
-  uint32_t tempreg;
-
-  //Make cnt an integer multiple of 512
-  //Then mask it with the maximum value allowed (2^24)
-  cnt=0x01FFFFFF & ((cnt>>8) << 8);
-
-
-
-  u32_t dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_PRI);
-  _DMA_DDI_config_t config;
-  config.callback = NULL;
-  config.arg      = NULL;
-  config.release  = true;
-  config.PA       = ((uint32_t) 0x40012C80);
-  config.MA[0]    = cast(u32_t, buf);
-  config.MA[1]    = 0;
-  config.NDT      = 0;
-  config.CR       = 0x8A35420;
-  config.FC       = 0x27;
-
-
-  _DMA_DDI_transfer(dmad, &config);
-
-//  //Reset the control register (0x00 is the default value. this also disables the dma. When EN=0, it stops any ongoing DMA transfer)
-//  DMA2_Stream3->CR=0;
-//
-//  //Clear all the flags
-  DMA2->LIFCR=DMA_LIFCR_CTCIF3 | DMA_LIFCR_CTEIF3 | DMA_LIFCR_CDMEIF3 | DMA_LIFCR_CFEIF3 | DMA_LIFCR_CHTIF3;
-//
-//  //Set the DMA Addresses
-//  DMA2_Stream3->PAR=((uint32_t) 0x40012C80);  //SDIO FIFO Address (=SDIO Base+0x80)
-//  DMA2_Stream3->M0AR=(uint32_t) buf;    //Memory address
-//
-//  //Set the number of data to transfer
-//  DMA2_Stream3->NDTR=0;   //Peripheral controls, therefore we don't need to indicate a size
-
-
-//  //Set the DMA CR
-//  tempreg=0;
-//  tempreg|=(0x04<<25) & DMA_SxCR_CHSEL;  //Select Channel 4
-//  tempreg|=(0x01<<23) & DMA_SxCR_MBURST;  //4 beat memory burst (memory is 32word. Therefore, each time dma access memory, it reads 4*32 bits) (FIFO size must be integer multiple of memory burst)(FIFO is 4byte. Therefore we can only use 4 beat in this case)
-//  //Note: Ref manual (p173 (the node at the end of 8.3.11) says that burst mode is not allowed when Pinc=0. However, it appears that this is not true at all. Furthermore. when I set pBurst=0, the SDIO's dma control does not work at all.)
-//  tempreg|=(0x01<<21) & DMA_SxCR_PBURST;  //4 beat memory burst Mode ([Burst Size*Psize] must be equal to [FIFO size] to prevent FIFO underrun and overrun errors) (burst also does not work in direct mode).
-//  tempreg|=(0x00<<18) & DMA_SxCR_DBM;   //Disable double buffer mode (when this is set, circluar mode is also automatically set. (the actual value is don't care)
-//  tempreg|=(0x03<<16) & DMA_SxCR_PL;     //Priority is very_high
-//  tempreg|=(0x00<<15) & DMA_SxCR_PINCOS;  //Peripheral increment offset (if this is 1 and Pinc=1, then Peripheral will be incremented by 4 regardless of Psize)
-//  tempreg|=(0x02<<13) & DMA_SxCR_MSIZE;  //Memory data size is 32bit (word)
-//  tempreg|=(0x02<<11) & DMA_SxCR_PSIZE;  //Peripheral data size is 32bit (word)
-//  tempreg|=(0x01<<10) & DMA_SxCR_MINC;  //Enable Memory Increment
-//  tempreg|=(0x00<<9) & DMA_SxCR_MINC;  //Disable Peripheral Increment
-//  tempreg|=(0x00<<8) & DMA_SxCR_CIRC;   //Disable Circular mode
-//  //tempreg|=(0x00<<6) & DMA_SxCR_DIR;  //Direction 0:P2M, 1:M2P
-//  tempreg|=(0x01<<5) & DMA_SxCR_PFCTRL; //Peripheral controls the flow control. (The DMA tranfer ends when the data issues end of transfer signal regardless of ndtr value)
-//  //Bit [4..1] is for interupt mask. I don't use interrupts here
-//  //Bit 0 is EN. I will set it after I set the FIFO CR. (FIFO CR cannot be modified when EN=1)
-//
-//  printk("DMA.CR = 0x%X", tempreg);
-//  DMA2_Stream3->CR=tempreg;
-
-//  //Set the FIFO CR
-//  tempreg=0x21; //Reset value
-//  tempreg|=(0<<7); //FEIE is disabled
-//  tempreg|=(1<<2); //Fifo is enabled (Direct mode is disabled);
-//  tempreg|=3;   //Full fifo (Fifo threshold selection)
-//  printk("DMA.FCR = 0x%X", tempreg);
-//  DMA2_Stream3->FCR=tempreg;
-
-  //Set the Direction of transfer
-//  if (dir==UM2SD) {
-//    DMA2_Stream3->CR|=(0x01<<6) & DMA_SxCR_DIR;
-//  } else if (dir==SD2UM) {
-//    DMA2_Stream3->CR|=(0x00<<6) & DMA_SxCR_DIR;
-//  }
-
-  //Enable the DMA (When it is enabled, it starts to respond dma requests)
-  DMA2_Stream3->CR|=DMA_SxCR_EN;
-  //END of PART I
-
-
-//  _DMA_DDI_transfer(dmad, &config);
-
-
-
-
-
-
-
-
-  ////PART II::::Adjust and enable SDIO Peripheral
-  //Clear the Data status flags
-  SDIO->ICR=(SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR | SDIO_STA_DATAEND | SDIO_STA_STBITERR | SDIO_STA_DBCKEND);
-
-  //First adjust the Dtimer and Data length
-  SDIO->DTIMER=(uint32_t) CARD_DT_CK_TIMEOUT;
-  SDIO->DLEN=cnt;
-
-  //Now adjust DCTRL (and enable it at the same time)
-  tempreg=0;  //Reset value
-  tempreg|=(uint32_t) 9 << 4;  //Block size is 512 Compute log2(BlockSize) and shift 4bit
-  tempreg|= 1<<3; //Enable the DMA
-  tempreg|= 0<<2; //DTMode=Block Transfer (Actualy this is the reset value. Just a remainder)
-  tempreg|=(dir & SDIO_DCTRL_DTDIR);  //Direction. 0=Controller to card, 1=Card to Controller
-  tempreg|=1; //DPSM is enabled
-  //Keep the rest at 0 => OTher SDIO functions is disabled(we don't need them)
-
-  printk("SDIO.DCTRL = 0x%X", tempreg);
-  SDIO->DCTRL=tempreg;
-  //End of PART II
-
-  //Warn everyone that there may be a transfer in progress
-  SDIOTxRx=1;
-}
-
-
-void SD_WaitTransmissionEnd(void) {
-  //This function first checks if there is an ogoing tranmission and block till it ends.
-  //It then checks the data flags to see if there is an error. In case of an error it blocks
-  //Before the start of data transmission the data flags are all cleared. Therefore, calling this fucntion after a real transmission works as expected.
-
-  ////Check if there is an ongoing transmission
-  //Check if the DMA is disabled (SDIO disables the DMA after it is done with it)
-  while (DMA2_Stream3->CR & DMA_SxCR_EN) {};
-  //Wait for the DMA Interrupt flags if there exist a previous SDIO transfer.
-  if (SDIOTxRx) {
-    if (DMA2->LISR & (DMA_LISR_TCIF3 | DMA_LISR_TEIF3 | DMA_LISR_DMEIF3 | DMA_LISR_FEIF3)) {
-      if (!(DMA2->LISR & DMA_LISR_TCIF3)) {//A DMA error has occured. Panic!
-        printk("SDIO:DMA Error");
-      }
-    }
-  }
-
-  //Wait till SDIO is not active
-  while (SDIO->STA & (SDIO_STA_RXACT | SDIO_STA_TXACT)) {};
-
-  //if there exist a previous transmission, check if the transmission has been completed without error
-  if (SDIOTxRx) {
-    //I will block here till I get a data response
-    while (!(SDIO->STA & (SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT | SDIO_STA_DBCKEND | SDIO_STA_STBITERR))) {};
-    if (!(SDIO->STA & SDIO_STA_DBCKEND)) {  //An Error has occured.
-            printk("SDIO:Data Transmission Error\n");
-    }
-  }
-
-  //If we are here, we can be sure that there is no ongoing transmission any more
-  SDIOTxRx=0;
-}
-
 //==============================================================================
 /**
  * @brief
@@ -940,21 +768,22 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
                 address *= SECTOR_SIZE;
         }
 
-        while (!err && count) {
+        if (count == 1) {
                 catcherr(err = card_send_cmd(SD_CMD__CMD17, CMD_RESP_SHORT, address), exit);
                 catcherr(err = card_get_response(&resp, RESP_R1), exit);
-                catcherr(err = card_transfer_block(hdl, dst, DIR_IN), exit);
+                catcherr(err = card_transfer_block(hdl, dst, count, DIR_IN), exit);
 
-                //Card is now ready to send some data from the Data lines. Start actual data transmission
-//                SD_StartBlockTransfer(dst, 512, SD2UM);
-//                SDIOTxRx = 1;
-                //Wait for transmission to end
-//                SD_WaitTransmissionEnd();
+        } else {
+                catcherr(err = card_send_cmd(SD_CMD__CMD18, CMD_RESP_SHORT, address), exit);
+                catcherr(err = card_get_response(&resp, RESP_R1), exit);
 
-                dst += SECTOR_SIZE;
-                (*rdsec)++;
-                count--;
+                catcherr(err = card_transfer_block(hdl, dst, count, DIR_IN), exit);
+
+                catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_NONE, 0), exit);
+                catcherr(err = card_get_response(&resp, RESP_R1b), exit);
         }
+
+        *rdsec = count;
 
         exit:
         return err;
@@ -969,7 +798,7 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
  * @return ?
  */
 //==============================================================================
-static int card_transfer_block(SDIO_t *hdl, u8_t *buf, dir_t dir)
+static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
 {
         int err = ESUCC;
 
@@ -986,7 +815,7 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, dir_t dir)
                 config.PA       = cast(u32_t, &SDIO->FIFO);
                 config.MA[0]    = cast(u32_t, buf);
                 config.MA[1]    = 0;
-                config.NDT      = SECTOR_SIZE / sizeof(SDIO->FIFO);
+                config.NDT      = count * SECTOR_SIZE / sizeof(SDIO->FIFO);
                 config.CR       = ((dir == DIR_IN) ? DMA_SxCR_DIR_P2M : DMA_SxCR_DIR_M2P)
                                 | DMA_SxCR_CHSEL_SEL(DMA_CHANNEL)
                                 | DMA_SxCR_MBURST_INCR4
@@ -1014,7 +843,7 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, dir_t dir)
 
                         SDIO->DTIMER = CARD_DT_CK_TIMEOUT;
 
-                        SDIO->DLEN   = SECTOR_SIZE;
+                        SDIO->DLEN   = count * SECTOR_SIZE;
 
                         SDIO->DCTRL  = SDIO_DCTRL_DBLOCKSIZE_512
                                      | SDIO_DCTRL_DMAEN
