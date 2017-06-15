@@ -47,6 +47,8 @@
 #ifndef _DMA_DDI_H_
 #define _DMA_DDI_H_
 
+#ifdef ARCH_stm32f4
+
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -116,6 +118,9 @@ extern "C" {
 #define DMA_SxCR_PFCTRL_DMA             (0 * DMA_SxCR_PFCTRL)
 #define DMA_SxCR_PFCTRL_PER             (1 * DMA_SxCR_PFCTRL)
 
+#define DMA_SxFCR_FEIE_DISABLE          (0 * DMA_SxFCR_FEIE)
+#define DMA_SxFCR_FEIE_ENABLE           (1 * DMA_SxFCR_FEIE)
+
 #define DMA_SxFCR_FS_0_FL_1_4           ((0 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (0 * DMA_SxFCR_FS_0))
 #define DMA_SxFCR_FS_1_4_FL_1_2         ((0 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (1 * DMA_SxFCR_FS_0))
 #define DMA_SxFCR_FS_1_2_FL_3_4         ((0 * DMA_SxFCR_FS_2) | (1 * DMA_SxFCR_FS_1) | (0 * DMA_SxFCR_FS_0))
@@ -123,13 +128,15 @@ extern "C" {
 #define DMA_SxFCR_FS_EMPTY              ((1 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (0 * DMA_SxFCR_FS_0))
 #define DMA_SxFCR_FS_FULL               ((1 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (1 * DMA_SxFCR_FS_0))
 
-#define DMA_SxFCR_DMDIS_DISABLE         (0  * DMA_SxFCR_DMDIS)
-#define DMA_SxFCR_DMDIS_ENABLE          (1  * DMA_SxFCR_DMDIS)
+#define DMA_SxFCR_DMDIS_NO              (0  * DMA_SxFCR_DMDIS)
+#define DMA_SxFCR_DMDIS_YES             (1  * DMA_SxFCR_DMDIS)
 
 #define DMA_SxFCR_FTH_1_4               ((0 * DMA_SxFCR_FTH_1) | (0 * DMA_SxFCR_FTH_0))
 #define DMA_SxFCR_FTH_1_2               ((0 * DMA_SxFCR_FTH_1) | (1 * DMA_SxFCR_FTH_0))
 #define DMA_SxFCR_FTH_3_4               ((1 * DMA_SxFCR_FTH_1) | (0 * DMA_SxFCR_FTH_0))
 #define DMA_SxFCR_FTH_FULL              ((1 * DMA_SxFCR_FTH_1) | (1 * DMA_SxFCR_FTH_0))
+
+#define DMA_SxFCR_RESET_VALUE           0x21
 
 /*==============================================================================
   Exported object types
@@ -196,6 +203,7 @@ extern int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config);
 }
 #endif
 
+#endif /* ARCH_stm32f4 */
 #endif /* _DMA_DDI_H_ */
 /**@}*/
 /*==============================================================================

@@ -47,6 +47,7 @@ extern "C" {
 #define _SDIO_CFG_CLKDIV                (((__SDIO_CFG_CKDIV__) < 2) ? 0 : ((__SDIO_CFG_CKDIV__) - 2))
 #define _SDIO_CFG_BYPASS                (((__SDIO_CFG_CKDIV__) < 2) ? SDIO_CLKCR_BYPASS : 0)
 #define _SDIO_CFG_ACMD6_BUS_WIDE        ((_SDIO_CFG_BUS_WIDE) >> SDIO_CLKCR_WIDBUS_Pos)
+#define _SDIO_CFG_INIT_CLKDIV           158
 
 /*==============================================================================
   Exported object types

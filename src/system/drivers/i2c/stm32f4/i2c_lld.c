@@ -775,7 +775,7 @@ static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
         I2C_mem_t *I2C = arg;
 
         bool yield = false;
-        int  err   = (SR & DMA_SR_TCIF) ? ESUCC : EIO;;
+        int  err   = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
         sys_queue_send_from_ISR(I2C->event, &err, &yield);
 
         return yield;

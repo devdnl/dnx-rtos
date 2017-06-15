@@ -1033,6 +1033,7 @@ static int card_initialize(SDSPI_t *hdl)
                                         size        = csize << (n - 9);
                                 }
 
+                                printk("SDSPI: %d 512-byte logical blocks", size);
                                 hdl->stg->part[VOLUME].size = size;
                         }
                 }
@@ -1137,29 +1138,34 @@ static int MBR_detect_partitions(SDSPI_t *hdl)
         int err = EIO;
 
         u8_t *MBR;
-        err = sys_malloc(SECTOR_SIZE, cast(void**, &MBR));
-        if (err == ESUCC) {
+        err = sys_zalloc(SECTOR_SIZE, cast(void**, &MBR));
+        if (!err) {
                 size_t rdcnt;
                 err = card_read(hdl, MBR, SECTOR_SIZE, 0, &rdcnt);
-                if (!err && (rdcnt != SECTOR_SIZE)) {
+                if (err || (rdcnt != SECTOR_SIZE)) {
                         goto error;
                 }
 
+                u16_t sig = MBR_get_boot_signature(MBR);
+
                 if (MBR_get_boot_signature(MBR) != MBR_SIGNATURE) {
+                        printk("SDSPI: no MBR 0x%04X", sig);
                         err = EMEDIUMTYPE;
                         goto error;
                 }
 
                 for (int i = PARTITION_1; i <= PARTITION_4; i++) {
-                        u32_t size = MBR_get_partition_number_of_sectors(i, MBR);
-                        hdl->stg->part[i].size   = size;
+                        hdl->stg->part[i].size   = MBR_get_partition_number_of_sectors(i, MBR);
                         hdl->stg->part[i].offset = MBR_get_partition_first_LBA_sector(i, MBR);
+
+                        if (hdl->stg->part[i].size && hdl->stg->part[i].offset) {
+                                printk("SDSPI: partition %d size %d blocks", i,
+                                       hdl->stg->part[i].size);
+                        }
                 }
 
                 error:
                 sys_free(cast(void**, &MBR));
-        } else {
-                err = ENOMEM;
         }
 
         return err;
