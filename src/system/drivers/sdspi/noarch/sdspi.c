@@ -224,7 +224,12 @@ API_MOD_OPEN(SDSPI, void *device_handle, u32_t flags)
 
         SDSPI_t *hdl = device_handle;
 
-        return hdl->stg->part[hdl->minor].used ? EBUSY : ESUCC;
+        if (hdl->stg->part[hdl->minor].used) {
+                return EBUSY;
+        } else {
+                hdl->stg->part[hdl->minor].used = true;
+                return ESUCC;
+        }
 }
 
 //==============================================================================
@@ -1008,28 +1013,28 @@ static int card_initialize(SDSPI_t *hdl)
 
                 // read size
                 if (card_send_cmd(hdl, SD_CMD__CMD9, 0) == 0) {
-                        u8_t csd[16];
                         u8_t token;
 
-                        memset(csd, 0, sizeof(csd));
-
-                        uint timer = sys_time_get_reference();
+                        u32_t timer = sys_time_get_reference();
                         while ( (token = SPI_transive(hdl, 0xFF)) == 0xFF
                               && !sys_time_is_expired(timer, hdl->stg->timeout_ms));
 
                         if (token == 0xFE) {
-                                SPI_receive_block(hdl, csd, sizeof(csd));
+                                u8_t CSD[16];
+                                memset(CSD, 0, sizeof(CSD));
+
+                                SPI_receive_block(hdl, CSD, sizeof(CSD));
                                 SPI_transive(hdl, 0xFF);
                                 SPI_transive(hdl, 0xFF);
 
                                 /* SDC version 2.00 */
                                 u32_t size;
-                                if ((csd[0] >> 6) == 1) {
-                                        u32_t csize = csd[9] + ((u16_t)csd[8] << 8) + 1;
+                                if ((CSD[0] >> 6) == 1) {
+                                        u32_t csize = CSD[9] + ((u16_t)CSD[8] << 8) + 1;
                                         size        = csize << 10;
                                 } else { /* SDC version 1.XX or MMC*/
-                                        u32_t n     = (csd[5] & 15) + ((csd[10] & 128) >> 7) + ((csd[9] & 3) << 1) + 2;
-                                        u32_t csize = (csd[8] >> 6) + ((u16_t)csd[7] << 2) + ((u16_t)(csd[6] & 3) << 10) + 1;
+                                        u32_t n     = (CSD[5] & 15) + ((CSD[10] & 128) >> 7) + ((CSD[9] & 3) << 1) + 2;
+                                        u32_t csize = (CSD[8] >> 6) + ((u16_t)CSD[7] << 2) + ((u16_t)(CSD[6] & 3) << 10) + 1;
                                         size        = csize << (n - 9);
                                 }
 

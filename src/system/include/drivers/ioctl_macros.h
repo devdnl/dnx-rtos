@@ -46,23 +46,6 @@ extern "C" {
 #define _IOW(g, n, t)           (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
 #define _IOWR(g, n, t)          (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
 
-/* predefined requests*/
-/**
- *  @brief  Initialize storage device
- *  @param  None
- *  @return On success (device initialized) 0 is returned.
- *          On error (device not initialized) -1 is returned and errno is set.
- */
-#define IOCTL_STORAGE__INITIALIZE       _IO(STORAGE, 0x00)
-
-/**
- *  @brief  Read storage's MBR sector and detect partitions
- *  @param  None
- *  @return On success (MBR detected) 0 is returned.
- *          On error (MBR not exist or IO error) -1 is returned and errno is set.
- */
-#define IOCTL_STORAGE__READ_MBR         _IO(STORAGE, 0x01)
-
 /*==============================================================================
   Exported object types
 ==============================================================================*/

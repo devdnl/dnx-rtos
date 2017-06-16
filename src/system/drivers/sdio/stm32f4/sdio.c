@@ -93,7 +93,7 @@ typedef enum {
 typedef struct {
         u32_t      offset;              /* partition offset sector    */
         u32_t      size;                /* partition size in sectors  */
-        bool       used;                /* true if part used          */
+        bool       used;                /* true if partition used     */
 } part_t;
 
 /** main control structure */
@@ -231,24 +231,36 @@ API_MOD_RELEASE(SDIO, void *device_handle)
 {
         SDIO_t *hdl = device_handle;
 
-        int err = EBUSY;
+        int err = sys_mutex_lock(hdl->ctrl->protect, _SDIO_CFG_CARD_TIMEOUT);
+        if (!err) {
+                if (!hdl->ctrl->part[hdl->minor].used) {
+                        if (hdl->minor == 0) {
+                                if (hdl->ctrl->part_init == 0) {
 
-        if (!hdl->ctrl->part[hdl->minor].used) {
-                if (hdl->minor == 0) {
-                        if (hdl->ctrl->part_init == 0) {
-                                // TODO SDIO deinit
+                                        SDIO->POWER = 0;
+                                        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_SDIORST);
+                                        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_SDIORST);
+                                        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_SDIOEN);
 
-                                sys_mutex_destroy(hdl->ctrl->protect);
-                                sys_queue_destroy(hdl->ctrl->event);
-                                sys_free(cast(void**, &hdl->ctrl));
-                                sys_free(cast(void**, &hdl));
-                                err = ESUCC;
+                                        sys_mutex_unlock(hdl->ctrl->protect);
+                                        sys_mutex_destroy(hdl->ctrl->protect);
+                                        sys_queue_destroy(hdl->ctrl->event);
+                                        sys_free(cast(void**, &hdl->ctrl));
+                                        sys_free(cast(void**, &hdl));
+                                        err = ESUCC;
+                                }
+
+                        } else {
+                                hdl->ctrl->part[hdl->minor].size   = 0;
+                                hdl->ctrl->part[hdl->minor].offset = 0;
+                                hdl->ctrl->part_init--;
+                                err = sys_free(cast(void**, &hdl));
                         }
-
                 } else {
-                        err = sys_free(cast(void**, &hdl));
-                        hdl->ctrl->part_init--;
+                        err = EBUSY;
                 }
+
+                sys_mutex_unlock(hdl->ctrl->protect);
         }
 
         return err;
@@ -270,7 +282,12 @@ API_MOD_OPEN(SDIO, void *device_handle, u32_t flags)
 
         SDIO_t *hdl = device_handle;
 
-        return hdl->ctrl->part[hdl->minor].used ? EBUSY : ESUCC;
+        if (hdl->ctrl->part[hdl->minor].used) {
+                return EBUSY;
+        } else {
+                hdl->ctrl->part[hdl->minor].used = true;
+                return ESUCC;
+        }
 }
 
 //==============================================================================
@@ -320,15 +337,17 @@ API_MOD_WRITE(SDIO,
 
         SDIO_t *hdl  = device_handle;
         part_t *part = &hdl->ctrl->part[hdl->minor];
-        int      err = ENOMEDIUM;
 
-        if (part->size > 0) {
-                err = sys_mutex_lock(hdl->ctrl->protect, MAX_DELAY_MS);
-                if (!err) {
+        int err = sys_mutex_lock(hdl->ctrl->protect, MAX_DELAY_MS);
+        if (!err) {
+                if (part->size > 0) {
                         u64_t lseek = *fpos + (cast(u64_t, part->offset) * SECTOR_SIZE);
                         err = card_write(hdl, src, count, lseek, wrcnt);
-                        sys_mutex_unlock(hdl->ctrl->protect);
+                } else {
+                        err = ENOMEDIUM;
                 }
+
+                sys_mutex_unlock(hdl->ctrl->protect);
         }
 
         return err;
@@ -360,15 +379,17 @@ API_MOD_READ(SDIO,
 
         SDIO_t *hdl  = device_handle;
         part_t *part = &hdl->ctrl->part[hdl->minor];
-        int      err = ENOMEDIUM;
 
-        if (part->size > 0) {
-                err = sys_mutex_lock(hdl->ctrl->protect, MAX_DELAY_MS);
-                if (!err) {
+        int err = sys_mutex_lock(hdl->ctrl->protect, MAX_DELAY_MS);
+        if (!err) {
+                if (part->size > 0) {
                         u64_t lseek = *fpos + (cast(u64_t, part->offset) * SECTOR_SIZE);
                         err = card_read(hdl, dst, count, lseek, rdcnt);
-                        sys_mutex_unlock(hdl->ctrl->protect);
+                } else {
+                        err = ENOMEDIUM;
                 }
+
+                sys_mutex_unlock(hdl->ctrl->protect);
         }
 
         return err;
@@ -541,7 +562,7 @@ static int card_write(SDIO_t *hdl, const u8_t *src, size_t count, u64_t lseek, s
  *
  * @param[in]  hdl      SD module data
  *
- * @return One of errno value (errno.h)
+ * @return One of errno value (errno.h).
  */
 //==============================================================================
 static int card_initialize(SDIO_t *hdl)
@@ -654,11 +675,13 @@ static int card_initialize(SDIO_t *hdl)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function sent command to card.
  *
- * @param  ?
+ * @param  cmd          command to send
+ * @param  resp         response type
+ * @param  arg          command's argument
  *
- * @return ?
+ * @return One of errno value (errno.h).
  */
 //==============================================================================
 static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg)
@@ -697,11 +720,12 @@ static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function get command response (analyze).
  *
- * @param  ?
+ * @param  resp         response object
+ * @param  type         response type
  *
- * @return ?
+ * @return One of errno value (errno.h).
  */
 //==============================================================================
 static int card_get_response(SD_response_t *resp, resp_t type)
@@ -753,11 +777,15 @@ static int card_get_response(SD_response_t *resp, resp_t type)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function read selected amount of sectors from card.
  *
- * @param  ?
+ * @param  hdl          module handle
+ * @param  dst          destination buffer
+ * @param  count        number of sectors to read
+ * @param  address      start sector address
+ * @param  rdsec        number of read sectors
  *
- * @return ?
+ * @return One of errno value (errno.h).
  */
 //==============================================================================
 static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address, size_t *rdsec)
@@ -792,11 +820,15 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function write selected amount of sectors to card.
  *
- * @param  ?
+ * @param  hdl          module handle
+ * @param  src          buffer to write
+ * @param  count        number of sectors to write
+ * @param  address      start sector address
+ * @param  wrsec        number of written sectors
  *
- * @return ?
+ * @return One of errno value (errno.h).
  */
 //==============================================================================
 static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t address, size_t *wrsec)
@@ -841,11 +873,13 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function transfer block to or from card.
  *
- * @param  ?
+ * @param  hdl          module handle
+ * @param  buf          source/destination buffer (selected by dir)
+ * @param  dir          operation direction (relative to uC)
  *
- * @return ?
+ * @return One of errno value (errno.h).
  */
 //==============================================================================
 static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
@@ -938,7 +972,7 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
  *
  * @param[in]  hdl      SD module data
  *
- * @return One of errno value (errno.h)
+ * @return One of errno value (errno.h).
  */
 //==============================================================================
 static int MBR_detect_partitions(SDIO_t *hdl)
@@ -964,8 +998,8 @@ static int MBR_detect_partitions(SDIO_t *hdl)
                         hdl->ctrl->part[i].offset = MBR_get_partition_first_LBA_sector(i, MBR);
 
                         if (hdl->ctrl->part[i].size && hdl->ctrl->part[i].offset) {
-                                printk("SDIO: partition %d size %d blocks", i,
-                                       hdl->ctrl->part[i].size);
+                                printk("SDIO: partition %d size %d blocks",
+                                       i, hdl->ctrl->part[i].size);
                         }
                 }
 
@@ -989,6 +1023,12 @@ void SDIO_IRQHandler(void)
 //==============================================================================
 /**
  * @brief DMA finish callback.
+ *
+ * @param stream        DMA stream
+ * @param SR            status register
+ * @param arg           argument
+ *
+ * @return Return true if IRQ should yield, false otherwise.
  */
 //==============================================================================
 #if USE_DMA > 0
