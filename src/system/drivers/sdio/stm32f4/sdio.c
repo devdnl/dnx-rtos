@@ -698,15 +698,19 @@ static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg)
                   | (resp & SDIO_CMD_WAITRESP)
                   | SDIO_CMD_CPSMEN;
 
-        // TODO timeout
+        u32_t timer = sys_time_get_reference();
+
         if (resp == CMD_RESP_NONE) {
-                while (!(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDSENT)));
+                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                      && !(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDSENT)));
 
         } else {
-                while (!(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDREND | SDIO_STA_CCRCFAIL)));
+                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                      && !(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDREND | SDIO_STA_CCRCFAIL)));
         }
 
-        if (SDIO->STA & SDIO_STA_CTIMEOUT) {
+        if (  sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+           || (SDIO->STA & SDIO_STA_CTIMEOUT) ) {
                 printk("SDIO: Command Timeout Error");
                 return ETIME;
 
@@ -856,7 +860,6 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
                 catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
                 catcherr(err = card_get_response(&resp, RESP_R1b), exit);
 
-                // TODO timeout?
                 while (!(resp.RESPONSE[0] & 0x100)) {
                         catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
                         catcherr(err = card_get_response(&resp, RESP_R1b), exit);
@@ -941,14 +944,24 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                         if (!err) {
                                 err = err_ev;
 
-                                // TODO timeout
-                                while (SDIO->STA & (SDIO_STA_RXACT | SDIO_STA_TXACT));
+                                u32_t timer = sys_time_get_reference();
 
-                                // TODO timeout
-                                while (!(SDIO->STA & (SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT | SDIO_STA_DBCKEND | SDIO_STA_STBITERR)));
+                                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                                      && (SDIO->STA & (SDIO_STA_RXACT | SDIO_STA_TXACT)) );
 
-                                if (!(SDIO->STA & SDIO_STA_DBCKEND)) {
-                                        printk("SDIO:Data Transmission Error");
+                                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                                      && !(SDIO->STA & ( SDIO_STA_DCRCFAIL
+                                                       | SDIO_STA_DTIMEOUT
+                                                       | SDIO_STA_DBCKEND
+                                                       | SDIO_STA_STBITERR)) );
+
+                                if (sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)) {
+                                        printk("SDIO: timeout");
+                                        err = ETIME;
+
+                                } else if (!(SDIO->STA & SDIO_STA_DBCKEND)) {
+                                        printk("SDIO: Data Transmission Error");
+                                        err = EIO;
                                 }
                         }
 
