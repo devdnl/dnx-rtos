@@ -55,6 +55,20 @@ Brief   SD Card Interface Driver.
 #define SDIO_DCTRL_DTDIR_TO_CARD        (0 * SDIO_DCTRL_DTDIR)
 #define SDIO_DCTRL_DTDIR_FROM_CARD      (1 * SDIO_DCTRL_DTDIR)
 
+#define SDIO_CLKCR_INIT_CFG             (_SDIO_CFG_NEGEDGE\
+                                        |_SDIO_CFG_BUS_WIDE\
+                                        |_SDIO_CFG_PWRSAVE\
+                                        |_SDIO_CFG_INIT_CLKDIV\
+                                        | SDIO_CLKCR_HWFC_EN\
+                                        | SDIO_CLKCR_CLKEN)
+
+#define SDIO_CLKCR_RUN_CFG              (_SDIO_CFG_NEGEDGE\
+                                        |_SDIO_CFG_BUS_WIDE\
+                                        |_SDIO_CFG_PWRSAVE\
+                                        |_SDIO_CFG_CLKDIV\
+                                        | SDIO_CLKCR_HWFC_EN\
+                                        | SDIO_CLKCR_CLKEN)
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -177,11 +191,7 @@ API_MOD_INIT(SDIO, void **device_handle, u8_t major, u8_t minor)
 
                 SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SDIOEN);
 
-                SDIO->CLKCR = _SDIO_CFG_NEGEDGE
-                            | _SDIO_CFG_BUS_WIDE
-                            | _SDIO_CFG_PWRSAVE
-                            | _SDIO_CFG_INIT_CLKDIV
-                            | SDIO_CLKCR_CLKEN;
+                SDIO->CLKCR = SDIO_CLKCR_INIT_CFG;
 
                 SDIO->POWER = (1 * SDIO_POWER_PWRCTRL_1) | (1 * SDIO_POWER_PWRCTRL_0);
 
@@ -569,11 +579,7 @@ static int card_write(SDIO_t *hdl, const u8_t *src, size_t count, u64_t lseek, s
 //==============================================================================
 static int card_initialize(SDIO_t *hdl)
 {
-        SDIO->CLKCR = _SDIO_CFG_NEGEDGE
-                    | _SDIO_CFG_BUS_WIDE
-                    | _SDIO_CFG_PWRSAVE
-                    | _SDIO_CFG_INIT_CLKDIV
-                    | SDIO_CLKCR_CLKEN;
+        SDIO->CLKCR = SDIO_CLKCR_INIT_CFG;
 
         int err = EIO;
         SD_response_t resp;
@@ -662,11 +668,7 @@ static int card_initialize(SDIO_t *hdl)
                 catcherr(err = card_send_cmd(SD_CMD__ACMD6, CMD_RESP_SHORT, _SDIO_CFG_ACMD6_BUS_WIDE), finish);
                 catcherr(err = card_get_response(&resp, RESP_R1), finish);
 
-                SDIO->CLKCR = _SDIO_CFG_NEGEDGE
-                            | _SDIO_CFG_BUS_WIDE
-                            | _SDIO_CFG_PWRSAVE
-                            | _SDIO_CFG_CLKDIV
-                            | SDIO_CLKCR_CLKEN;
+                SDIO->CLKCR = SDIO_CLKCR_RUN_CFG;
 
                 hdl->ctrl->initialized = true;
         }
