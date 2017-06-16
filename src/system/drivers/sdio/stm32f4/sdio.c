@@ -105,6 +105,8 @@ typedef struct {
         bool       initialized;
         u8_t       part_init;
         part_t     part[TOTAL_VOLUMES];
+        u32_t     *buf;
+        size_t     count;
 } SDIO_ctrl_t;
 
 /** driver instance associated with partition */
@@ -887,7 +889,7 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
 //==============================================================================
 static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
 {
-        int err = ESUCC;
+        int err = EIO;
 
 #if USE_DMA > 0
         u32_t dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_PRI);
@@ -974,6 +976,58 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
         {
                 printk("SDIO: IRQ mode");
                 // TODO IRQ mode
+
+                hdl->ctrl->buf   = cast(u32_t*, buf);
+                hdl->ctrl->count = count * SECTOR_SIZE;
+
+                SDIO->MASK = 0;
+                SDIO->ICR  = UINT32_MAX;
+
+                NVIC_SetPriority(SDIO_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                NVIC_EnableIRQ(SDIO_IRQn);
+
+                SDIO->MASK = SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT
+                           | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR
+                           | SDIO_STA_DATAEND  | SDIO_STA_STBITERR
+                           | SDIO_STA_DBCKEND
+                           | ((dir == DIR_IN) ? SDIO_STA_RXFIFOHF : SDIO_STA_TXFIFOHE);
+
+                SDIO->DTIMER = CARD_DT_CK_TIMEOUT;
+
+                SDIO->DLEN   = count * SECTOR_SIZE / sizeof(SDIO->FIFO);
+
+                SDIO->DCTRL  = SDIO_DCTRL_DBLOCKSIZE_512
+                             | SDIO_DCTRL_DTMODE_BLOCK
+                             | ((dir == DIR_IN) ? SDIO_DCTRL_DTDIR_FROM_CARD : SDIO_DCTRL_DTDIR_TO_CARD)
+                             | SDIO_DCTRL_DTEN;
+
+                int err_ev = EIO;
+                err = sys_queue_receive(hdl->ctrl->event, &err_ev, MAX_DELAY_MS);
+                if (!err) {
+                        err = err_ev;
+
+                        NVIC_DisableIRQ(SDIO_IRQn);
+
+                        u32_t timer = sys_time_get_reference();
+
+                        while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                              && (SDIO->STA & (SDIO_STA_RXACT | SDIO_STA_TXACT)) );
+
+                        while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                              && !(SDIO->STA & ( SDIO_STA_DCRCFAIL
+                                               | SDIO_STA_DTIMEOUT
+                                               | SDIO_STA_DBCKEND
+                                               | SDIO_STA_STBITERR)) );
+
+                        if (sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)) {
+                                printk("SDIO: timeout");
+                                err = ETIME;
+
+                        } else if (!(SDIO->STA & SDIO_STA_DBCKEND)) {
+                                printk("SDIO: Data Transmission Error");
+                                err = EIO;
+                        }
+                }
         }
 
         return err;
@@ -1030,7 +1084,91 @@ static int MBR_detect_partitions(SDIO_t *hdl)
 //==============================================================================
 void SDIO_IRQHandler(void)
 {
+        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
 
+        bool  yield = false;
+        u32_t STA   = SDIO->STA;
+
+        if (STA & (SDIO_STA_TXFIFOHE | SDIO_STA_TXFIFOE)) {
+                while (!(SDIO->STA & SDIO_STA_TXFIFOF)) {
+                        if (SDIO_CTRL->count) {
+                                SDIO->FIFO = *SDIO_CTRL->buf++;
+                                SDIO_CTRL->count--;
+                        }
+
+                        if (SDIO_CTRL->count == 0) {
+                                SDIO->MASK = 0;
+                                int err = ESUCC;
+                                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+                        }
+                }
+        }
+        if (STA & (SDIO_STA_RXFIFOHF | SDIO_STA_RXFIFOF)) {
+                while (!(SDIO->STA & SDIO_STA_RXFIFOE)) {
+                        if (SDIO_CTRL->count) {
+                                *SDIO_CTRL->buf++ = SDIO->FIFO;
+                                SDIO_CTRL->count--;
+                        }
+
+                        if (SDIO_CTRL->count == 0) {
+                                SDIO->MASK = 0;
+                                int err = ESUCC;
+                                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+                        }
+                }
+        }
+        if (STA & SDIO_STA_STBITERR) {
+                int err = EIO;
+                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+        }
+        if (STA & SDIO_STA_DATAEND) {
+                //
+        }
+        if (STA & SDIO_STA_RXOVERR) {
+                //
+        }
+        if (STA & SDIO_STA_TXUNDERR) {
+                //
+        }
+        if (STA & SDIO_STA_DCRCFAIL) {
+                //
+        }
+        if (STA & SDIO_STA_CCRCFAIL) {
+                //
+        }
+        if (STA & SDIO_STA_DTIMEOUT) {
+                //
+        }
+        if (STA & SDIO_STA_CEATAEND) {
+        }
+        if (STA & SDIO_STA_SDIOIT) {
+        }
+        if (STA & SDIO_STA_RXDAVL) {
+        }
+        if (STA & SDIO_STA_TXDAVL) {
+        }
+//        if (STA & SDIO_STA_RXFIFOE) {
+//        }
+//        if (STA & SDIO_STA_TXFIFOF) {
+//        }
+        if (STA & SDIO_STA_RXACT) {
+        }
+        if (STA & SDIO_STA_TXACT) {
+        }
+        if (STA & SDIO_STA_CMDACT) {
+        }
+        if (STA & SDIO_STA_DBCKEND) {
+        }
+        if (STA & SDIO_STA_CMDSENT) {
+        }
+        if (STA & SDIO_STA_CMDREND) {
+        }
+        if (STA & SDIO_STA_CTIMEOUT) {
+        }
+
+        sys_thread_yield_from_ISR(yield);
+
+        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
 }
 
 //==============================================================================
