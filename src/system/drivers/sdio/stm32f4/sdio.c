@@ -985,18 +985,20 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                 hdl->ctrl->buf   = cast(u32_t*, buf);
                 hdl->ctrl->count = (count * SECTOR_SIZE) / sizeof(SDIO->FIFO);
 
-                SDIO->MASK = 0;
-                SDIO->ICR  = UINT32_MAX;
+                SDIO->MASK   = 0;
+                SDIO->ICR    = UINT32_MAX;
 
                 NVIC_SetPriority(SDIO_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
                 NVIC_ClearPendingIRQ(SDIO_IRQn);
                 NVIC_EnableIRQ(SDIO_IRQn);
 
-                SDIO->MASK = SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT
-                           | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR
-                           | SDIO_STA_DATAEND  | SDIO_STA_STBITERR
-                           | SDIO_STA_DBCKEND
-                           | ((dir == DIR_IN) ? SDIO_STA_RXFIFOHF : SDIO_STA_TXFIFOHE);
+                SDIO->ICR    = UINT32_MAX;
+
+                SDIO->MASK   = SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT
+                             | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR
+                             | SDIO_STA_DATAEND  | SDIO_STA_STBITERR
+                             | SDIO_STA_DBCKEND
+                             | ((dir == DIR_IN) ? SDIO_STA_RXFIFOHF : SDIO_STA_TXFIFOHE);
 
                 SDIO->DTIMER = CARD_DT_CK_TIMEOUT;
 
@@ -1008,32 +1010,18 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                              | SDIO_DCTRL_DTEN;
 
                 int err_ev = EIO;
-                err = sys_queue_receive(hdl->ctrl->event, &err_ev, /*MAX_DELAY_MS*/50000);
+                err = sys_queue_receive(hdl->ctrl->event, &err_ev, /*MAX_DELAY_MS*/20000);
                 if (!err) {
                         err = err_ev;
 
-                        NVIC_DisableIRQ(SDIO_IRQn);
-                        NVIC_ClearPendingIRQ(SDIO_IRQn);
+                        printk("%d, SDIO_STA_RXDAVL: %d", err, (bool)(SDIO->STA & SDIO_STA_RXDAVL)); // TEST
 
-//                        u32_t timer = sys_time_get_reference();
-//
-//                        while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
-//                              && (SDIO->STA & (SDIO_STA_RXACT | SDIO_STA_TXACT)) );
-//
-//                        while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
-//                              && !(SDIO->STA & ( SDIO_STA_DCRCFAIL
-//                                               | SDIO_STA_DTIMEOUT
-//                                               | SDIO_STA_DBCKEND
-//                                               | SDIO_STA_STBITERR)) );
-//
-//                        if (sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)) {
-//                                printk("SDIO: Data Transmission Timeout");
-//                                err = ETIME;
-//
-//                        } else if (!(SDIO->STA & SDIO_STA_DBCKEND)) {
-//                                printk("SDIO: Data Transmission Error");
-//                                err = EIO;
-//                        }
+                        while ((SDIO->STA & SDIO_STA_RXDAVL) && (SDIO_CTRL->count > 0)) {
+                                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+                                *SDIO_CTRL->buf++ = SDIO->FIFO;
+                                SDIO_CTRL->count--;
+                                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+                        }
                 }
 
                 printk("SDIO: IRQ %d", err); // TEST
@@ -1096,46 +1084,64 @@ void SDIO_IRQHandler(void)
         _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
 
         bool yield = false;
+        int  err   = ESUCC;
 
-        if (  ((SDIO->DCTRL & SDIO_DCTRL_DTDIR_TO_CARD) == 0)
-           && (SDIO->STA & (SDIO_STA_TXFIFOHE | SDIO_STA_TXFIFOE | SDIO_STA_DATAEND | SDIO_STA_DBCKEND)) ) {
-                while (!(SDIO->STA & SDIO_STA_TXFIFOF)) {
-                        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
-                        if (SDIO_CTRL->count) {
-                                SDIO->FIFO = *SDIO_CTRL->buf++;
-                                SDIO_CTRL->count--;
-                        }
-                        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
+//        SDIO->MASK = SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT
+//                   | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR
+//                   | SDIO_STA_DATAEND  | SDIO_STA_STBITERR
+//                   | SDIO_STA_DBCKEND
+//                   | ((dir == DIR_IN) ? SDIO_STA_RXFIFOHF : SDIO_STA_TXFIFOHE);
 
-                        if (SDIO_CTRL->count == 0) {
-                                SDIO->MASK = 0;
-                                SDIO->ICR  = SDIO_STA_TXFIFOHE | SDIO_STA_TXFIFOE | SDIO_STA_DATAEND | SDIO_STA_DBCKEND;
-                                int err    = ESUCC;
-                                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
-                                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
-                                break;
-                        }
-                }
-        }
-        if (  ((SDIO->DCTRL & SDIO_DCTRL_DTDIR_FROM_CARD) != 0)
-           && (SDIO->STA & (SDIO_STA_RXFIFOHF | SDIO_STA_RXFIFOF | SDIO_STA_DATAEND | SDIO_STA_DBCKEND)) ) {
-                while (!(SDIO->STA & SDIO_STA_RXFIFOE)) {
+
+        if (SDIO->STA & (SDIO_STA_DCRCFAIL | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR | SDIO_STA_STBITERR)) {
+                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+                err = EIO;
+                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+                SDIO->MASK = 0;
+                SDIO->ICR  = UINT32_MAX;
+                NVIC_DisableIRQ(SDIO_IRQn);
+                NVIC_ClearPendingIRQ(SDIO_IRQn);
+                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+
+        } else if (SDIO->STA & (SDIO_STA_DTIMEOUT)) {
+                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+                err = ETIME;
+                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+                SDIO->MASK = 0;
+                SDIO->ICR  = UINT32_MAX;
+                NVIC_DisableIRQ(SDIO_IRQn);
+                NVIC_ClearPendingIRQ(SDIO_IRQn);
+                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+
+        } else if (SDIO->STA & (SDIO_STA_DBCKEND | SDIO_STA_DATAEND)) {
+                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+                err = ESUCC;
+                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+                SDIO->MASK = 0;
+                SDIO->ICR  = UINT32_MAX;
+                NVIC_DisableIRQ(SDIO_IRQn);
+                NVIC_ClearPendingIRQ(SDIO_IRQn);
+                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+
+        } else if (SDIO->STA & (SDIO_STA_RXFIFOHF | SDIO_STA_RXFIFOF)) {
+                while (SDIO->STA & SDIO_STA_RXDAVL) {
                         _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
-                        if (SDIO_CTRL->count) {
+                        if (SDIO_CTRL->count > 0) {
                                 *SDIO_CTRL->buf++ = SDIO->FIFO;
                                 SDIO_CTRL->count--;
                         }
                         _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
 
                         if (SDIO_CTRL->count == 0) {
-                                SDIO->ICR  = SDIO_STA_RXFIFOHF | SDIO_STA_RXFIFOF | SDIO_STA_DATAEND | SDIO_STA_DBCKEND;
+                                SDIO->ICR  = SDIO_STA_RXFIFOHF | SDIO_STA_RXFIFOF;
                                 SDIO->MASK = 0;
-                                int err    = ESUCC;
+                                err        = ESUCC;
                                 _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
                                 sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+                                SDIO->MASK = 0;
+                                SDIO->ICR  = UINT32_MAX;
                                 NVIC_DisableIRQ(SDIO_IRQn);
+                                NVIC_ClearPendingIRQ(SDIO_IRQn);
                                 _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
 
                                 _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
@@ -1143,109 +1149,164 @@ void SDIO_IRQHandler(void)
                                 break;
                         }
                 }
-        }
-        if (SDIO->STA & SDIO_STA_STBITERR) {
-                int err = 1;
-                SDIO->MASK = 0;
+        } else {
                 _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
                 _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
         }
-//        if (SDIO->STA & (SDIO_STA_DATAEND | SDIO_STA_DBCKEND)) {
+
+
+
+//        if (  ((SDIO->DCTRL & SDIO_DCTRL_DTDIR_TO_CARD) == 0)
+//           && (SDIO->STA & (SDIO_STA_TXFIFOHE | SDIO_STA_TXFIFOE | SDIO_STA_DATAEND | SDIO_STA_DBCKEND)) ) {
+//                while (!(SDIO->STA & SDIO_STA_TXFIFOF)) {
+//                        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
+//                        if (SDIO_CTRL->count) {
+//                                SDIO->FIFO = *SDIO_CTRL->buf++;
+//                                SDIO_CTRL->count--;
+//                        }
+//                        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
 //
-//                if ((SDIO->DCTRL & SDIO_DCTRL_DTDIR_FROM_CARD) != 0) {
-//                        while (!(SDIO->STA & SDIO_STA_RXFIFOE)) {
+//                        if (SDIO_CTRL->count == 0) {
+//                                SDIO->MASK = 0;
+//                                SDIO->ICR  = SDIO_STA_TXFIFOHE | SDIO_STA_TXFIFOE | SDIO_STA_DATAEND | SDIO_STA_DBCKEND;
+//                                int err    = ESUCC;
+//                                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+//                                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
 //                                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
-//                                if (SDIO_CTRL->count) {
-//                                        *SDIO_CTRL->buf++ = SDIO->FIFO;
-//                                        SDIO_CTRL->count--;
-//                                }
-//                                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
-//
-//                                if (SDIO_CTRL->count == 0) {
-//                                        SDIO->MASK = 0;
-//                                        SDIO->ICR  = SDIO_STA_DATAEND | SDIO_STA_DBCKEND;
-//                                        int err    = ESUCC;
-//                                        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-//                                        sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
-//                                        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-//
-//                                        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
-//
-//                                        break;
-//                                }
+//                                break;
 //                        }
 //                }
-//
-//
 //        }
-        if (SDIO->STA & SDIO_STA_RXOVERR) {
+//        if (  ((SDIO->DCTRL & SDIO_DCTRL_DTDIR_FROM_CARD) != 0)
+//           && (SDIO->STA & (SDIO_STA_RXFIFOHF | SDIO_STA_RXFIFOF | SDIO_STA_DATAEND | SDIO_STA_DBCKEND)) ) {
+//                while (!(SDIO->STA & SDIO_STA_RXFIFOE)) {
+//                        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
+//                        if (SDIO_CTRL->count) {
+//                                *SDIO_CTRL->buf++ = SDIO->FIFO;
+//                                SDIO_CTRL->count--;
+//                        }
+//                        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
+//
+//                        if (SDIO_CTRL->count == 0) {
+//                                SDIO->ICR  = SDIO_STA_RXFIFOHF | SDIO_STA_RXFIFOF | SDIO_STA_DATAEND | SDIO_STA_DBCKEND;
+//                                SDIO->MASK = 0;
+//                                int err    = ESUCC;
+//                                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+//                                NVIC_DisableIRQ(SDIO_IRQn);
+//                                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//
+//                                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
+//
+//                                break;
+//                        }
+//                }
+//        }
+//        if (SDIO->STA & SDIO_STA_STBITERR) {
+//                int err = 1;
+//                SDIO->MASK = 0;
+//                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+////        if (SDIO->STA & (SDIO_STA_DATAEND | SDIO_STA_DBCKEND)) {
+////
+////                if ((SDIO->DCTRL & SDIO_DCTRL_DTDIR_FROM_CARD) != 0) {
+////                        while (!(SDIO->STA & SDIO_STA_RXFIFOE)) {
+////                                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
+////                                if (SDIO_CTRL->count) {
+////                                        *SDIO_CTRL->buf++ = SDIO->FIFO;
+////                                        SDIO_CTRL->count--;
+////                                }
+////                                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
+////
+////                                if (SDIO_CTRL->count == 0) {
+////                                        SDIO->MASK = 0;
+////                                        SDIO->ICR  = SDIO_STA_DATAEND | SDIO_STA_DBCKEND;
+////                                        int err    = ESUCC;
+////                                        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+////                                        sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+////                                        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+////
+////                                        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST1, IOCTL_GPIO_PIN_IDX__TEST1); // TEST
+////
+////                                        break;
+////                                }
+////                        }
+////                }
+////
+////
+////        }
+//        if (SDIO->STA & SDIO_STA_RXOVERR) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+////                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                //
+//        }
+//        if (SDIO->STA & SDIO_STA_TXUNDERR) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+////                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+//        if (SDIO->STA & SDIO_STA_DCRCFAIL) {
+//                SDIO->MASK = 0;
+//                SDIO->ICR  = SDIO_STA_DCRCFAIL;
+//                int err    = 2;
+//                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+//        if (SDIO->STA & SDIO_STA_CCRCFAIL) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                //
+//        }
+//        if (SDIO->STA & SDIO_STA_DTIMEOUT) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                //
+//        }
+//        if (SDIO->STA & SDIO_STA_CEATAEND) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+//        if (SDIO->STA & SDIO_STA_SDIOIT) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+//        if (SDIO->STA & SDIO_STA_RXDAVL) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+//        if (SDIO->STA & SDIO_STA_TXDAVL) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+//        if (SDIO->STA & SDIO_STA_RXACT) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+//        if (SDIO->STA & SDIO_STA_TXACT) {
+////                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+//        if (SDIO->STA & SDIO_STA_CMDACT) {
 //                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
 //                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                //
-        }
-        if (SDIO->STA & SDIO_STA_TXUNDERR) {
+//        }
+//        if (SDIO->STA & SDIO_STA_CMDSENT) {
 //                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
 //                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_DCRCFAIL) {
-                SDIO->MASK = 0;
-                SDIO->ICR  = SDIO_STA_DCRCFAIL;
-                int err    = 2;
-                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                sys_queue_send_from_ISR(SDIO_CTRL->event, &err, &yield);
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_CCRCFAIL) {
+//        }
+//        if (SDIO->STA & SDIO_STA_CMDREND) {
 //                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                //
-        }
-        if (SDIO->STA & SDIO_STA_DTIMEOUT) {
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
+//        if (SDIO->STA & SDIO_STA_CTIMEOUT) {
 //                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                //
-        }
-        if (SDIO->STA & SDIO_STA_CEATAEND) {
-//                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_SDIOIT) {
-//                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_RXDAVL) {
-//                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_TXDAVL) {
-//                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_RXACT) {
-//                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_TXACT) {
-//                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_CMDACT) {
-                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_CMDSENT) {
-                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_CMDREND) {
-                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
-        if (SDIO->STA & SDIO_STA_CTIMEOUT) {
-                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-        }
+//                _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        }
 
         sys_thread_yield_from_ISR(yield);
 
