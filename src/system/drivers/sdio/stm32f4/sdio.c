@@ -59,14 +59,14 @@ Brief   SD Card Interface Driver.
                                         |_SDIO_CFG_BUS_WIDE\
                                         |_SDIO_CFG_PWRSAVE\
                                         |_SDIO_CFG_INIT_CLKDIV\
-                                        | SDIO_CLKCR_HWFC_EN\
+                                        | 0*SDIO_CLKCR_HWFC_EN\
                                         | SDIO_CLKCR_CLKEN)
 
 #define SDIO_CLKCR_RUN_CFG              (_SDIO_CFG_NEGEDGE\
                                         |_SDIO_CFG_BUS_WIDE\
                                         |_SDIO_CFG_PWRSAVE\
                                         |_SDIO_CFG_CLKDIV\
-                                        | SDIO_CLKCR_HWFC_EN\
+                                        | 0*SDIO_CLKCR_HWFC_EN\
                                         | SDIO_CLKCR_CLKEN)
 
 /*==============================================================================
@@ -806,6 +806,8 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
         u32_t dmad = 0;
         SD_response_t resp;
 
+        *rdsec = 0;
+
         if (hdl->ctrl->card.type == SD_TYPE__SD1) {
                 address *= SECTOR_SIZE;
         }
@@ -832,13 +834,13 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
                 catcherr(err = card_get_response(&resp, RESP_R1b), exit);
         }
 
+        *rdsec = count;
+
+        exit:
 #if USE_DMA > 0
         _DMA_DDI_release(dmad);
 #endif
 
-        *rdsec = count;
-
-        exit:
         return err;
 }
 
@@ -857,14 +859,16 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
 //==============================================================================
 static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t address, size_t *wrsec)
 {
-        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+//        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
 
         int   err  = EIO;
         u32_t dmad = 0;
         SD_response_t resp;
 
+        *wrsec = 0;
+
         if (hdl->ctrl->card.type == SD_TYPE__SD1) {
-                address *= SECTOR_SIZE;
+                address   *= SECTOR_SIZE;
         }
 
 #if USE_DMA > 0
@@ -872,27 +876,23 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
         if (!dmad) dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_ALT);
 #endif
 
-        /*
-         * Transfer single block in DMA mode or many block by using IRQ mode
-         */
-        if (count == 1 || !dmad) {
-                while (count--) {
-                        catcherr(err = card_send_cmd(SD_CMD__CMD24, CMD_RESP_SHORT, address), exit);
-                        catcherr(err = card_get_response(&resp, RESP_R1), exit);
-                        catcherr(err = card_transfer_block(hdl, dmad, const_cast(u8_t *, src), 1, DIR_OUT), exit);
-                        src += SECTOR_SIZE;
-                }
+        if (count == 1) {
+                catcherr(err = card_send_cmd(SD_CMD__CMD24, CMD_RESP_SHORT, address), exit);
+                catcherr(err = card_get_response(&resp, RESP_R1), exit);
+                catcherr(err = card_transfer_block(hdl, dmad, const_cast(u8_t *, src), 1, DIR_OUT), exit);
 
-        /*
-         * Transfer many block - only DMA mode
-         */
+                do {
+                        catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
+                        catcherr(err = card_get_response(&resp, RESP_R1b), exit);
+                } while (!(resp.RESPONSE[0] & 0x100));
+
         } else {
                 printk("CMD25: %d", count); // TEST
 
                 catcherr(err = card_send_cmd(SD_CMD__CMD25, CMD_RESP_SHORT, address), exit);
                 catcherr(err = card_get_response(&resp, RESP_R1), exit);
 
-                catcherr(err = card_transfer_block(hdl, const_cast(u8_t *, src), count, DIR_OUT), exit);
+                catcherr(err = card_transfer_block(hdl, dmad, const_cast(u8_t *, src), count, DIR_OUT), exit);
 
                 catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
                 catcherr(err = card_get_response(&resp, RESP_R1b), exit);
@@ -900,18 +900,18 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
                 while (!(resp.RESPONSE[0] & 0x100)) {
                         catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
                         catcherr(err = card_get_response(&resp, RESP_R1b), exit);
-                        sys_sleep_ms(1);
                 }
-        }
 
-#if USE_DMA > 0
-        _DMA_DDI_release(dmad);
-#endif
+        }
 
         *wrsec = count;
 
         exit:
-        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
+#if USE_DMA > 0
+        _DMA_DDI_release(dmad);
+#endif
+
+//        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
         return err;
 }
 
@@ -929,6 +929,8 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
 //==============================================================================
 static int card_transfer_block(SDIO_t *hdl, u32_t dmad, u8_t *buf, size_t count, dir_t dir)
 {
+        UNUSED_ARG1(dmad);
+
         int err = EIO;
 
 #if USE_DMA > 0
@@ -988,19 +990,19 @@ static int card_transfer_block(SDIO_t *hdl, u32_t dmad, u8_t *buf, size_t count,
                                 while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
                                       && (SDIO->STA & (SDIO_STA_RXACT | SDIO_STA_TXACT)) );
 
-                                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
-                                      && !(SDIO->STA & ( SDIO_STA_DCRCFAIL
-                                                       | SDIO_STA_DTIMEOUT
-                                                       | SDIO_STA_DBCKEND
-                                                       | SDIO_STA_STBITERR)) );
+//                                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+//                                      && !(SDIO->STA & ( SDIO_STA_DCRCFAIL
+//                                                       | SDIO_STA_DTIMEOUT
+//                                                       | SDIO_STA_DBCKEND
+//                                                       | SDIO_STA_STBITERR)) );
 
                                 if (sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)) {
                                         printk("SDIO: timeout");
                                         err = ETIME;
 
-                                } else if (!(SDIO->STA & SDIO_STA_DBCKEND)) {
-                                        printk("SDIO: Data Transmission Error");
-                                        err = EIO;
+//                                } else if (!(SDIO->STA & SDIO_STA_DBCKEND)) {
+//                                        printk("SDIO: Data Transmission Error");
+//                                        err = EIO;
                                 }
                         }
 
@@ -1026,9 +1028,9 @@ static int card_transfer_block(SDIO_t *hdl, u32_t dmad, u8_t *buf, size_t count,
 
                 SDIO->MASK   = SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT
                              | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR
-                             | SDIO_STA_DATAEND  | SDIO_STA_STBITERR
-                             | SDIO_STA_DBCKEND
-                             | ((dir == DIR_IN) ? SDIO_STA_RXFIFOHF : SDIO_STA_TXFIFOHE);
+                             /*| SDIO_STA_DATAEND TEST */  | SDIO_STA_STBITERR
+                             /*| SDIO_STA_DBCKEND TEST*/
+                             | ((dir == DIR_IN) ? (SDIO_STA_RXFIFOHF | SDIO_STA_DATAEND | SDIO_STA_DBCKEND) : SDIO_STA_TXFIFOHE);
 
                 SDIO->DTIMER = CARD_DT_CK_TIMEOUT;
 
@@ -1255,7 +1257,6 @@ void SDIO_IRQHandler(void)
                 _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
                 _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
                 _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
-                _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
         }
 
         sys_thread_yield_from_ISR(yield);
