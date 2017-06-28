@@ -139,7 +139,7 @@ static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg);
 static int card_get_response(SD_response_t *resp, resp_t type);
 static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address, size_t *rdsec);
 static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t address, size_t *wrsec);
-static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir);
+static int card_transfer_block(SDIO_t *hdl, u32_t dmad, u8_t *buf, size_t count, dir_t dir);
 static int MBR_detect_partitions(SDIO_t *hdl);
 
 #if USE_DMA > 0
@@ -802,18 +802,23 @@ static int card_get_response(SD_response_t *resp, resp_t type)
 //==============================================================================
 static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address, size_t *rdsec)
 {
-        int err = EIO;
+        int   err  = EIO;
+        u32_t dmad = 0;
         SD_response_t resp;
 
         if (hdl->ctrl->card.type == SD_TYPE__SD1) {
                 address *= SECTOR_SIZE;
         }
 
+#if USE_DMA > 0
+        if (!dmad) dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_PRI);
+        if (!dmad) dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_ALT);
+#endif
+
         if (count == 1) {
                 catcherr(err = card_send_cmd(SD_CMD__CMD17, CMD_RESP_SHORT, address), exit);
                 catcherr(err = card_get_response(&resp, RESP_R1), exit);
-
-                catcherr(err = card_transfer_block(hdl, dst, count, DIR_IN), exit);
+                catcherr(err = card_transfer_block(hdl, dmad, dst, 1, DIR_IN), exit);
 
         } else {
                 printk("CMD18: %d", count); // TEST
@@ -821,11 +826,15 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
                 catcherr(err = card_send_cmd(SD_CMD__CMD18, CMD_RESP_SHORT, address), exit);
                 catcherr(err = card_get_response(&resp, RESP_R1), exit);
 
-                catcherr(err = card_transfer_block(hdl, dst, count, DIR_IN), exit);
+                catcherr(err = card_transfer_block(hdl, dmad, dst, count, DIR_IN), exit);
 
                 catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
                 catcherr(err = card_get_response(&resp, RESP_R1b), exit);
         }
+
+#if USE_DMA > 0
+        _DMA_DDI_release(dmad);
+#endif
 
         *rdsec = count;
 
@@ -850,18 +859,33 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
 {
         _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__TEST2, IOCTL_GPIO_PIN_IDX__TEST2); // TEST
 
-        int err = EIO;
+        int   err  = EIO;
+        u32_t dmad = 0;
         SD_response_t resp;
 
         if (hdl->ctrl->card.type == SD_TYPE__SD1) {
                 address *= SECTOR_SIZE;
         }
 
-        if (count == 1) {
-                catcherr(err = card_send_cmd(SD_CMD__CMD24, CMD_RESP_SHORT, address), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1), exit);
-                catcherr(err = card_transfer_block(hdl, const_cast(u8_t *, src), count, DIR_OUT), exit);
+#if USE_DMA > 0
+        if (!dmad) dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_PRI);
+        if (!dmad) dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_ALT);
+#endif
 
+        /*
+         * Transfer single block in DMA mode or many block by using IRQ mode
+         */
+        if (count == 1 || !dmad) {
+                while (count--) {
+                        catcherr(err = card_send_cmd(SD_CMD__CMD24, CMD_RESP_SHORT, address), exit);
+                        catcherr(err = card_get_response(&resp, RESP_R1), exit);
+                        catcherr(err = card_transfer_block(hdl, dmad, const_cast(u8_t *, src), 1, DIR_OUT), exit);
+                        src += SECTOR_SIZE;
+                }
+
+        /*
+         * Transfer many block - only DMA mode
+         */
         } else {
                 printk("CMD25: %d", count); // TEST
 
@@ -880,6 +904,10 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
                 }
         }
 
+#if USE_DMA > 0
+        _DMA_DDI_release(dmad);
+#endif
+
         *wrsec = count;
 
         exit:
@@ -892,27 +920,23 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
  * @brief  Function transfer block to or from card.
  *
  * @param  hdl          module handle
+ * @param  dmad         DMA descriptor
  * @param  buf          source/destination buffer (selected by dir)
  * @param  dir          operation direction (relative to uC)
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
+static int card_transfer_block(SDIO_t *hdl, u32_t dmad, u8_t *buf, size_t count, dir_t dir)
 {
         int err = EIO;
 
 #if USE_DMA > 0
-        u32_t dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_PRI);
-        if (!dmad) {
-                dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_ALT);
-        }
-
         if (dmad) {
                 _DMA_DDI_config_t config;
                 config.callback = DMA_finished;
                 config.arg      = hdl;
-                config.release  = true;
+                config.release  = false;
                 config.PA       = cast(u32_t, &SDIO->FIFO);
                 config.MA[0]    = cast(u32_t, buf);
                 config.MA[1]    = 0;
@@ -937,12 +961,12 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                 err = _DMA_DDI_transfer(dmad, &config);
                 if (!err) {
 
-                        SDIO->MASK = 0;
+                        SDIO->MASK   = 0;
 
-                        SDIO->ICR = SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT
-                                  | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR
-                                  | SDIO_STA_DATAEND  | SDIO_STA_STBITERR
-                                  | SDIO_STA_DBCKEND;
+                        SDIO->ICR    = SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT
+                                     | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR
+                                     | SDIO_STA_DATAEND  | SDIO_STA_STBITERR
+                                     | SDIO_STA_DBCKEND;
 
                         SDIO->DTIMER = CARD_DT_CK_TIMEOUT;
 
@@ -982,8 +1006,6 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
 
                         return err;
                 }
-
-                _DMA_DDI_release(dmad);
         }
 #endif
         {
