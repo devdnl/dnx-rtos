@@ -58,7 +58,7 @@ this:AddItem("8-bit wide bus", "(2 << SDIO_CLKCR_WIDBUS_Pos)")
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 --*/
-#define __SDIO_CFG_CKDIV__ 16
+#define __SDIO_CFG_CKDIV__ 2
 
 /*--
 this:AddWidget("Spinbox", 100, 2000, "Card operation timeout [ms]")
@@ -74,10 +74,11 @@ this:AddItem("Enable", "SDIO_CLKCR_PWRSAV")
 
 /*--
 this:AddWidget("Combobox", "Use DMA")
-this:AddItem("No", "_NO_")
-this:AddItem("Yes", "_YES_")
+this:AddItem("Never", "_SDIO_USE_DMA_NEVER")
+this:AddItem("If available", "_SDIO_USE_DMA_IFAVAILABLE")
+this:AddItem("Always", "_SDIO_USE_DMA_ALWAYS")
 --*/
-#define __SDIO_CFG_USEDMA__ _YES_
+#define __SDIO_CFG_USEDMA__ _SDIO_USE_DMA_IFAVAILABLE
 
 #endif /* _SDIO_FLAGS_H_ */
 /*==============================================================================
