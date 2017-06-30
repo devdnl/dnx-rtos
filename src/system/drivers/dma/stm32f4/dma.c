@@ -441,7 +441,12 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
 {
         int dmad = 0;
 
-        if (major < DMA_COUNT && stream < STREAM_COUNT && DMA_RT[major]) {
+        if (DMA_RT[major] == NULL) {
+                printk("DMA%d: not initialized", major + 1);
+                return dmad;
+        }
+
+        if (major < DMA_COUNT && stream < STREAM_COUNT) {
                 sys_critical_section_begin();
                 {
                         if (DMA_RT[major]->stream[stream].dmad == 0) {
@@ -520,11 +525,15 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                 IRQn_Type           IRQn       =  DMA_HW[GETMAJOR(dmad)].IRQn[GETSTREAM(dmad)];
 
                 if (RT_stream->dmad == dmad) {
+                        DMA_Stream->CR = 0;
+                        clear_DMA_IRQ_flags(GETMAJOR(dmad), GETSTREAM(dmad));
+
                         DMA_Stream->M0AR = config->MA[0];
                         DMA_Stream->M1AR = config->MA[1];
                         DMA_Stream->NDTR = config->NDT;
                         DMA_Stream->PAR  = config->PA;
                         DMA_Stream->CR   = config->CR & ~DMA_SxCR_EN;
+                        DMA_Stream->FCR  = config->FC;
 
                         RT_stream->arg      = config->arg;
                         RT_stream->callback = config->callback;
@@ -629,7 +638,7 @@ static void IRQ_handle(u8_t major, u8_t stream)
         }
 
         if (!(DMA_Stream->CR & DMA_SxCR_CIRC)) {
-                CLEAR_BIT(DMA_Stream->CR, DMA_SxCR_EN);
+                DMA_Stream->CR = 0;
 
                 RT_stream->callback = NULL;
                 RT_stream->arg      = NULL;

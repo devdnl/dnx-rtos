@@ -447,7 +447,12 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t channel)
         int dmad = 0;
         channel--;
 
-        if (major < DMA_COUNT && (channel < DMA_HW[major].chcnt) && DMA_RT[major]) {
+        if (DMA_RT[major] == NULL) {
+                printk("DMA%d: not initialized", major + 1);
+                return dmad;
+        }
+
+        if (major < DMA_COUNT && (channel < DMA_HW[major].chcnt)) {
                 sys_critical_section_begin();
                 {
                         if (DMA_RT[major]->channel[channel].dmad == 0) {

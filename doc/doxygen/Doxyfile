@@ -745,7 +745,8 @@ WARN_LOGFILE           =
 
 INPUT                  = " ." \
                          manual.h \
-                         ../../src/system/drivers/dci/dcmi_ioctl.h \
+                         ../../src/system/drivers/sdio/sdio_ioctl.h \
+                         ../../src/system/drivers/dci/dci_ioctl.h \
                          ../../src/system/drivers/dma/dma_ioctl.h \
                          ../../src/system/drivers/fmc/fmc_ioctl.h \
                          ../../src/system/include/libc/dnx/os.h \
