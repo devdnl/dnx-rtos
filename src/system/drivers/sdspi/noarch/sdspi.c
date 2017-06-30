@@ -1151,10 +1151,7 @@ static int MBR_detect_partitions(SDSPI_t *hdl)
                         goto error;
                 }
 
-                u16_t sig = MBR_get_boot_signature(MBR);
-
                 if (MBR_get_boot_signature(MBR) != MBR_SIGNATURE) {
-                        printk("SDSPI: no MBR 0x%04X", sig);
                         err = EMEDIUMTYPE;
                         goto error;
                 }

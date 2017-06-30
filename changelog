@@ -4,9 +4,11 @@ New Features, Improvements:
 - Added DMA drivers for STM32F1 and STM32F4 ports
 - Added ETH, AFM  drivers for STM32F4 ports
 - Redesigned UART and I2C drivers
-- System reuse abandoned main stack as heap region 
+- System reuse abandoned main stack as heap region
+- Added SDIO driver for STM32F4 port
 
 Fixed Bugs:
+- Fixed stack sizes for system threads (take into account IRQ stack size)
 - 
 
 dnx RTOS 2.0.0 Cheetah
