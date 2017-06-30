@@ -29,7 +29,7 @@ Brief   SD Card Interface Driver.
 @defgroup drv-sdio SDIO Driver
 
 \section drv-sdio-desc Description
-Driver handles ...
+Driver handles SD Cards in native mode (SDIO).
 
 \section drv-sdio-sup-arch Supported architectures
 \li stm32f4
