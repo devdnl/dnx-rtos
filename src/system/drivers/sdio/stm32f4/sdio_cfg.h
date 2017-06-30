@@ -40,6 +40,10 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define _SDIO_USE_DMA_NEVER             0
+#define _SDIO_USE_DMA_IFAVAILABLE       1
+#define _SDIO_USE_DMA_ALWAYS            2
+
 #define _SDIO_CFG_NEGEDGE               __SDIO_CFG_NEGEDGE__
 #define _SDIO_CFG_BUS_WIDE              __SDIO_CFG_BUS_WIDE__
 #define _SDIO_CFG_PWRSAVE               __SDIO_CFG_PWRSAVE__
@@ -50,9 +54,6 @@ extern "C" {
 #define _SDIO_CFG_ACMD6_BUS_WIDE        ((2 * ((_SDIO_CFG_BUS_WIDE) >> SDIO_CLKCR_WIDBUS_Pos)) & 0x3)
 #define _SDIO_CFG_INIT_CLKDIV           158
 
-#define _SDIO_USE_DMA_NEVER             0
-#define _SDIO_USE_DMA_IFAVAILABLE       1
-#define _SDIO_USE_DMA_ALWAYS            2
 
 /*==============================================================================
   Exported object types

@@ -58,7 +58,7 @@ this:AddItem("8-bit wide bus", "(2 << SDIO_CLKCR_WIDBUS_Pos)")
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
 --*/
-#define __SDIO_CFG_CKDIV__ 2
+#define __SDIO_CFG_CKDIV__ 48
 
 /*--
 this:AddWidget("Spinbox", 100, 2000, "Card operation timeout [ms]")
