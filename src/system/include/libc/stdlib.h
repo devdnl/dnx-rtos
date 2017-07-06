@@ -429,7 +429,7 @@ extern int rand(void);
    @endcode
  */
 //==============================================================================
-extern void srand(unsigned seed);
+extern void srand(int seed);
 
 /*==============================================================================
   Exported inline functions

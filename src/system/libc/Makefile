@@ -20,4 +20,5 @@ CSRC_CORE   += libc/strlcat.c
 CSRC_CORE   += libc/strlcpy.c
 CSRC_CORE   += libc/strcasecmp.c
 CSRC_CORE   += libc/strncasecmp.c
+CSRC_CORE   += libc/rand.c
 HDRLOC_CORE += libc
