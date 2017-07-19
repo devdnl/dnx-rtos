@@ -62,6 +62,7 @@ function create_makefile_programs()
     echo ''
 
     echo 'CSRC_PROGRAMS += ../program_registration.c'
+    echo 'HDRLOC_PROGRAMS += ../programs'
     for prog in $program_list; do
         echo '-include $(APP_PRG_LOC)/'"$prog"'/Makefile'
     done
@@ -76,6 +77,7 @@ function create_makefile_libs()
 {
     echo ""
     echo '# libraries'
+    echo 'HDRLOC_LIB += ../libs'
 
     for lib in $library_list; do
         echo '-include $(APP_LIB_LOC)/'"$lib"'/Makefile'

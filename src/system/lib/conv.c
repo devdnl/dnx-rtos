@@ -451,7 +451,7 @@ double _strtod(const char *str, char **end)
                         }
                         i++;
                         continue;
-                } else if (strchr(" \n\t+", num) == NULL) {
+                } else if (strchr(" \n\t+", num) != NULL) {
                         break;
                 }
 
@@ -474,6 +474,72 @@ double _strtod(const char *str, char **end)
         return sign * (number / div);
 }
 
+//==============================================================================
+/**
+ * @brief Function convert string to float
+ *
+ * @param[in]  str             string
+ * @param[out] end             the pointer to the character when conversion was finished
+ *
+ * @return converted value
+ */
+//==============================================================================
+float _strtof(const char *str, char **end)
+{
+        float  sign    = 1;
+        float  div     = 1;
+        float  number  = 0;
+        int    i       = 0;
+        int    decimal = 0;
+        bool   point   = false;
+
+        while (str[i] != '\0') {
+                char num = str[i];
+
+                if (num >= '0' && num <= '9') {
+                        number *= 10;
+                        number += (double) (num - '0');
+                } else if (num == '.' && !point) {
+                        point = true;
+                        i++;
+                        continue;
+                } else if (num == '-') {
+                        sign = -1;
+                        if (!isdigit((int)str[i + 1])) {
+                                i = 0;
+                                break;
+                        }
+                        i++;
+                        continue;
+                } else if (num == '+') {
+                        if (!isdigit((int)str[i + 1])) {
+                                i = 0;
+                                break;
+                        }
+                        i++;
+                        continue;
+                } else if (strchr(" \n\t+", num) != NULL) {
+                        break;
+                }
+
+                if (point) {
+                        decimal++;
+                }
+
+                i++;
+        }
+
+        if (point) {
+                for (int j = 0; j < decimal; j++) {
+                        div *= 10;
+                }
+        }
+
+        if (end)
+                *end = (char *) &str[i];
+
+        return sign * (number / div);
+}
 
 //==============================================================================
 /**

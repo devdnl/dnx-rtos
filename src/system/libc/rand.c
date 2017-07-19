@@ -112,7 +112,7 @@ int rand(void)
    @endcode
  */
 //==============================================================================
-void srand(int s)
+void srand(unsigned int s)
 {
         seed = s;
 }

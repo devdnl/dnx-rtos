@@ -39,7 +39,7 @@
 #include <errno.h>
 
 #ifdef __cplusplus
-static inline "C" {
+extern "C" {
 #endif
 
 /*==============================================================================
