@@ -392,6 +392,11 @@ int _btree_predecessor(btree_t *tree, void *key, void *ret)
 //==============================================================================
 int _btree_insert(btree_t *tree, void *data)
 {
+        btnode_t *enode = node_search(tree, root(tree), data);
+        if (enode) {
+                return EEXIST;
+        }
+
         btnode_t *newnode = node_make(tree, data);
         if (!newnode) {
                 return ENOMEM;
@@ -434,7 +439,7 @@ int _btree_insert(btree_t *tree, void *data)
  * @return One of errno value.
  */
 //==============================================================================
-int _btree_delete(btree_t *tree, void *key)
+int _btree_remove(btree_t *tree, void *key)
 {
         if (!root(tree)) {
                 return ENOENT;

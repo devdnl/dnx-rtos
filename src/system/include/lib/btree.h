@@ -95,7 +95,7 @@ extern bool _btree_is_empty(btree_t *tree);
 extern int  _btree_successor(btree_t *tree, void *key, void *ret);
 extern int  _btree_predecessor(btree_t *tree, void *key, void *ret);
 extern int  _btree_insert(btree_t *tree, void *data);
-extern int  _btree_delete(btree_t *tree, void *data);
+extern int  _btree_remove(btree_t *tree, void *data);
 extern void _btree_destroy(btree_t *tree);
 
 /*==============================================================================

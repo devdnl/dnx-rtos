@@ -1975,9 +1975,9 @@ static inline int sys_btree_insert(btree_t *tree, void *data)
    @endcode
  */
 //==============================================================================
-static inline int sys_btree_delete(btree_t *tree, void *data)
+static inline int sys_btree_remove(btree_t *tree, void *data)
 {
-        return _btree_delete(tree, data);
+        return _btree_remove(tree, data);
 }
 
 //==============================================================================
