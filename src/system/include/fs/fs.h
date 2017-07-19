@@ -661,6 +661,21 @@ static inline int sys_llist_create(llist_cmp_functor_t functor, llist_obj_dtor_t
         return _llist_create_krn(_MM_FS, functor, obj_dtor, list);
 }
 
+//==============================================================================
+/**
+ * @brief  BTree constructor (for FS only)
+ *
+ * @param  size                 object size
+ * @param  cmp_functor          compare functor (can be NULL)
+ * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_btree_create(size_t size, btree_cmp_functor_t functor, btree_obj_dtor_t obj_dtor, btree_t **btree)
+{
+        return _btree_create_krn(_MM_FS, size, functor, obj_dtor, btree);
+}
 #endif /* DOXYGEN */
 
 //==============================================================================

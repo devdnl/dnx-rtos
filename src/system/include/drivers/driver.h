@@ -76,6 +76,10 @@ extern "C" {
 #undef  sys_llist_create
 #define sys_llist_create(llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist)\
         _llist_create_mod(_get_module_number(_module_name_), llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist);
+
+#undef sys_btree_create
+#define sys_btree_create(size_t__size, btree_cmp_functor_t__functor, btree_obj_dtor_t__obj_dtor, btree_t__pptree)\
+        _btree_create_mod(_get_module_number(_module_name_), size_t__size, btree_cmp_functor_t__functor, btree_obj_dtor_t__obj_dtor, btree_t__pptree)
 #endif /* DOXYGEN */
 
 #ifndef DOXYGEN
