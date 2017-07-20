@@ -52,6 +52,15 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define _btree_foreach(_type, _val, _btree) \
+        for (int _err = 0; !_err;)\
+                for (_type _val; !_err;)\
+                        for (_err = _btree_minimum(_btree, &_val); !_err; _err = _btree_successor(_btree, &_val, &_val))
+
+#define _btree_foreach_reverse(_type, _val, _btree) \
+        for (int _err = 0; !_err;)\
+                for (_type _val; !_err;)\
+                        for (_err = _btree_maximum(_btree, &_val); !_err; _err = _btree_predecessor(_btree, &_val, &_val))
 
 /*==============================================================================
   Exported object types
