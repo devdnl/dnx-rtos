@@ -622,15 +622,10 @@ static void service_out(void *arg)
                                                 while ((str = ttybfr_get_fresh_line(tty->screen))) {
                                                         size_t wrcnt;
 
-                                                        sys_fwrite(VT100_CLEAR_LINE,
-                                                                    strlen(VT100_CLEAR_LINE),
-                                                                    &wrcnt,
-                                                                    tty_module->outfile);
-
                                                         sys_fwrite(str,
-                                                                    strlen(str),
-                                                                    &wrcnt,
-                                                                    tty_module->outfile);
+                                                                   strlen(str),
+                                                                   &wrcnt,
+                                                                   tty_module->outfile);
                                                 }
 
                                                 sys_mutex_unlock(tty->secure_mtx);
