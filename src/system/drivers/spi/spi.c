@@ -227,9 +227,28 @@ API_MOD_WRITE(SPI,
 
         struct SPI_slave *hdl = device_handle;
 
+        // check if device is switched to RAW mode
+        u32_t tref     = sys_time_get_reference();
+        bool  RAW_mode = false;
+
+        while (sys_device_is_locked(&_SPI[hdl->major]->RAW_mode)) {
+
+                RAW_mode = true;
+
+                if (sys_device_get_access(&_SPI[hdl->major]->RAW_mode) == ESUCC) {
+                        break;
+                } else {
+                        if (sys_time_is_expired(tref, DEV_LOCK_TIMEOUT)) {
+                                return ETIME;
+                        } else {
+                                sys_sleep_ms(10);
+                        }
+                }
+        }
+
         int err = sys_mutex_lock(_SPI[hdl->major]->periph_protect_mtx, DEV_LOCK_TIMEOUT);
         if (!err) {
-                if (not _SPI[hdl->major]->RAW) {
+                if (not RAW_mode) {
                         slave_deselect(hdl);
                         _SPI_LLD__apply_config(hdl);
                         slave_select(hdl);
@@ -240,7 +259,7 @@ API_MOD_WRITE(SPI,
                         *wrcnt = count;
                 }
 
-                if (not _SPI[hdl->major]->RAW) {
+                if (not RAW_mode) {
                         slave_deselect(hdl);
                 }
 
@@ -276,9 +295,28 @@ API_MOD_READ(SPI,
 
         struct SPI_slave *hdl = device_handle;
 
+        // check if device is switched to RAW mode
+        u32_t tref     = sys_time_get_reference();
+        bool  RAW_mode = false;
+
+        while (sys_device_is_locked(&_SPI[hdl->major]->RAW_mode)) {
+
+                RAW_mode = true;
+
+                if (sys_device_get_access(&_SPI[hdl->major]->RAW_mode) == ESUCC) {
+                        break;
+                } else {
+                        if (sys_time_is_expired(tref, DEV_LOCK_TIMEOUT)) {
+                                return ETIME;
+                        } else {
+                                sys_sleep_ms(10);
+                        }
+                }
+        }
+
         int err = sys_mutex_lock(_SPI[hdl->major]->periph_protect_mtx, DEV_LOCK_TIMEOUT);
         if (!err) {
-                if (not _SPI[hdl->major]->RAW) {
+                if (not RAW_mode) {
                         slave_deselect(hdl);
                         _SPI_LLD__apply_config(hdl);
                         slave_select(hdl);
@@ -289,7 +327,7 @@ API_MOD_READ(SPI,
                         *rdcnt = count;
                 }
 
-                if (not _SPI[hdl->major]->RAW) {
+                if (not RAW_mode) {
                         slave_deselect(hdl);
                 }
 
@@ -341,10 +379,14 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
         case IOCTL_SPI__SELECT:
                 err = sys_mutex_trylock(_SPI[hdl->major]->periph_protect_mtx);
                 if (!err) {
-                        _SPI[hdl->major]->RAW = true;
-                        _SPI_LLD__apply_config(hdl);
-                        slave_deselect(hdl);
-                        slave_select(hdl);
+                        err = sys_device_lock(&_SPI[hdl->major]->RAW_mode);
+                        if (!err) {
+                                _SPI_LLD__apply_config(hdl);
+                                slave_deselect(hdl);
+                                slave_select(hdl);
+                        }
+
+                        sys_mutex_unlock(_SPI[hdl->major]->periph_protect_mtx);
                 } else {
                         err = EBUSY;
                 }
@@ -353,11 +395,13 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
         case IOCTL_SPI__DESELECT:
                 err = sys_mutex_trylock(_SPI[hdl->major]->periph_protect_mtx);
                 if (!err) {
-                        slave_deselect(hdl);
-                        _SPI_LLD__halt(hdl->major);
-                        _SPI[hdl->major]->RAW = false;
-                        sys_mutex_unlock(_SPI[hdl->major]->periph_protect_mtx); // DESELECT unlock
-                        sys_mutex_unlock(_SPI[hdl->major]->periph_protect_mtx); // SELECT unlock
+                        err = sys_device_unlock(&_SPI[hdl->major]->RAW_mode, false);
+                        if (!err) {
+                                slave_deselect(hdl);
+                                _SPI_LLD__halt(hdl->major);
+                        }
+
+                        sys_mutex_unlock(_SPI[hdl->major]->periph_protect_mtx);
                 } else {
                         err = EBUSY;
                 }
@@ -367,17 +411,41 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                 if (arg) {
                         SPI_transceive_t *tr = arg;
                         if (tr->count) {
+                                // check if device is switched to RAW mode
+                                u32_t tref     = sys_time_get_reference();
+                                bool  RAW_mode = false;
+
+                                while (sys_device_is_locked(&_SPI[hdl->major]->RAW_mode)) {
+
+                                        RAW_mode = true;
+
+                                        if (sys_device_get_access(&_SPI[hdl->major]->RAW_mode) == ESUCC) {
+                                                break;
+                                        } else {
+                                                if (sys_time_is_expired(tref, DEV_LOCK_TIMEOUT)) {
+                                                        return ETIME;
+                                                } else {
+                                                        sys_sleep_ms(10);
+                                                }
+                                        }
+                                }
+
                                 err = sys_mutex_trylock(_SPI[hdl->major]->periph_protect_mtx);
                                 if (!err) {
-                                        if (not _SPI[hdl->major]->RAW) {
+                                        if (not RAW_mode) {
                                                 slave_deselect(hdl);
                                                 _SPI_LLD__apply_config(hdl);
                                                 slave_select(hdl);
                                         }
 
-                                        err = _SPI_LLD__transceive(hdl, tr->tx_buffer, tr->rx_buffer, tr->count);
+                                        for (SPI_transceive_t *t = tr; !err && t && t->count; t = t->next) {
+                                                err = _SPI_LLD__transceive(hdl,
+                                                                           t->tx_buffer,
+                                                                           t->rx_buffer,
+                                                                           t->count);
+                                        }
 
-                                        if (not _SPI[hdl->major]->RAW) {
+                                        if (not RAW_mode) {
                                                 slave_deselect(hdl);
                                         }
 
@@ -398,7 +466,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         const u8_t *byte = arg;
 
                         err = sys_mutex_trylock(_SPI[hdl->major]->periph_protect_mtx);
-                        if (err) {
+                        if (!err) {
                                 slave_deselect(hdl);
                                 _SPI_LLD__apply_config(hdl);
 

@@ -277,7 +277,8 @@ int_main(spi_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
             SPI_transceive_t t = {
                   .tx_buffer = global->tx,      // bytes to send
                   .rx_buffer = global->rx,      // buffer to received data
-                  .count     = ARRAY_SIZE(tx)   // buffer size
+                  .count     = ARRAY_SIZE(tx),  // buffer size
+                  .next      = NULL
             };
 
             ioctl(dev, IOCTL_SPI__TRANSCEIVE, &t);
@@ -401,10 +402,11 @@ typedef struct {
 /**
  * SPI transmit and receive type.
  */
-typedef struct {
-        const u8_t      *tx_buffer;      /*!< TX buffer pointer.*/
-        u8_t            *rx_buffer;      /*!< RX buffer pointer.*/
-        size_t           count;          /*!< RX and TX buffer size.*/
+typedef struct SPI_transceive {
+        const u8_t            *tx_buffer;       /*!< TX buffer pointer.*/
+        u8_t                  *rx_buffer;       /*!< RX buffer pointer.*/
+        size_t                 count;           /*!< RX and TX buffer size.*/
+        struct SPI_transceive *next;            /*!< Next transceive buffer.*/
 } SPI_transceive_t;
 
 /*==============================================================================

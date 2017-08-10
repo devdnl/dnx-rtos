@@ -96,13 +96,13 @@ static const int    SERVICE_OUT_PRIORITY = PRIORITY_NORMAL;
 static const size_t QUEUE_CMD_LEN        = _TTY_TERMINAL_ROWS;
 
 static const thread_attr_t SERVICE_IN_ATTR = {
-        .stack_depth = STACK_DEPTH_MINIMAL,
+        .stack_depth = STACK_DEPTH_LOW,
         .priority    = PRIORITY_NORMAL,
         .detached    = true
 };
 
 static const thread_attr_t SERVICE_OUT_ATTR = {
-        .stack_depth = STACK_DEPTH_MINIMAL,
+        .stack_depth = STACK_DEPTH_LOW,
         .priority    = PRIORITY_NORMAL,
         .detached    = true
 };

@@ -107,7 +107,7 @@ struct SPI {
         const u8_t              *tx_buffer;             //!< Tx buffer
         u8_t                    *rx_buffer;             //!< Rx buffer
         size_t                   count;                 //!< transaction length
-        bool                     RAW;                   //!< RAW mode
+        dev_lock_t               RAW_mode;              //!< RAW mode (locked for specified process)
         u8_t                     flush_byte;            //!< flush byte (read transaction)
         u8_t                     slave_count;           //!< number of slaves
 };
