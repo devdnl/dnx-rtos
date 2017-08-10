@@ -132,13 +132,8 @@ API_MOD_RELEASE(FMC, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(FMC, void *device_handle, u32_t flags)
 {
-        FMC_t *hdl = device_handle;
-
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        UNUSED_ARG2(device_handle, flags);
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -153,13 +148,8 @@ API_MOD_OPEN(FMC, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(FMC, void *device_handle, bool force)
 {
-        FMC_t *hdl = device_handle;
-
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        UNUSED_ARG2(device_handle, force);
+        return ESUCC;
 }
 
 //==============================================================================
@@ -184,13 +174,8 @@ API_MOD_WRITE(FMC,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        FMC_t *hdl = device_handle;
-
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        UNUSED_ARG6(device_handle, src, count, fpos, wrcnt, fattr);
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -215,13 +200,8 @@ API_MOD_READ(FMC,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
-        FMC_t *hdl = device_handle;
-
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        UNUSED_ARG6(device_handle, dst, count, fpos, rdcnt, fattr);
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -237,13 +217,8 @@ API_MOD_READ(FMC,
 //==============================================================================
 API_MOD_IOCTL(FMC, void *device_handle, int request, void *arg)
 {
-        FMC_t *hdl = device_handle;
-
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        UNUSED_ARG3(device_handle, request, arg);
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -257,13 +232,8 @@ API_MOD_IOCTL(FMC, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(FMC, void *device_handle)
 {
-        FMC_t *hdl = device_handle;
-
-        int err = ESUCC;
-
-        // ...
-
-        return err;
+        UNUSED_ARG1(device_handle);
+        return ESUCC;
 }
 
 //==============================================================================
@@ -285,6 +255,13 @@ API_MOD_STAT(FMC, void *device_handle, struct vfs_dev_stat *device_stat)
         return ESUCC;
 }
 
+//==============================================================================
+/**
+ * @brief Function initialize SDRAM controller.
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
 static int SDRAM_init(void)
 {
         RCC->AHB3ENR |= RCC_AHB3ENR_FMCEN;

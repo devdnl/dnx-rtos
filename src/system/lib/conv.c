@@ -424,39 +424,59 @@ double _strtod(const char *str, char **end)
         double number  = 0;
         int    i       = 0;
         int    decimal = 0;
+        int    base    = 10;
+        bool   isnum   = false;
         bool   point   = false;
 
         while (str[i] != '\0') {
-                char num = str[i];
-
-                if (num >= '0' && num <= '9') {
-                        number *= 10;
-                        number += (double) (num - '0');
-                } else if (num == '.' && !point) {
-                        point = true;
-                        i++;
-                        continue;
-                } else if (num == '-') {
-                        sign = -1;
-                        if (!isdigit((int)str[i + 1])) {
-                                i = 0;
+                if (isspace(str[i])) {
+                        if (isnum) {
                                 break;
                         }
-                        i++;
-                        continue;
-                } else if (num == '+') {
-                        if (!isdigit((int)str[i + 1])) {
-                                i = 0;
+                } else {
+                        isnum = true;
+
+                        if ((str[i] == '0') && (tolower(str[i+1]) == 'x')) {
+                                base = 16;
+                                i   += 2;
+                                continue;
+                        }
+
+                        char num = tolower(str[i]);
+
+                        if ((num >= '0') && (num <= '9')) {
+                                number *= base;
+                                number += (double) (num - '0');
+                        } else if ((num >= 'a') && (num <= 'f')) {
+                                number *= base;
+                                number += (double) (num - 'a') + 10;
+                        } else if (num == '.' && !point) {
+                                point = true;
+                                i++;
+                                continue;
+                        } else if (num == '-') {
+                                if (!isdigit((int)str[i + 1])) {
+                                        i = 0;
+                                        break;
+                                } else {
+                                        sign = -1;
+                                }
+                                i++;
+                                continue;
+                        } else if (num == '+') {
+                                if (!isdigit((int)str[i + 1])) {
+                                        i = 0;
+                                        break;
+                                }
+                                i++;
+                                continue;
+                        } else if (isspace(num)) {
                                 break;
                         }
-                        i++;
-                        continue;
-                } else if (strchr(" \n\t+", num) != NULL) {
-                        break;
-                }
 
-                if (point) {
-                        decimal++;
+                        if (point) {
+                                decimal++;
+                        }
                 }
 
                 i++;
@@ -464,12 +484,13 @@ double _strtod(const char *str, char **end)
 
         if (point) {
                 for (int j = 0; j < decimal; j++) {
-                        div *= 10;
+                        div *= base;
                 }
         }
 
-        if (end)
+        if (end) {
                 *end = (char *) &str[i];
+        }
 
         return sign * (number / div);
 }
@@ -491,39 +512,59 @@ float _strtof(const char *str, char **end)
         float  number  = 0;
         int    i       = 0;
         int    decimal = 0;
+        int    base    = 10;
+        bool   isnum   = false;
         bool   point   = false;
 
         while (str[i] != '\0') {
-                char num = str[i];
-
-                if (num >= '0' && num <= '9') {
-                        number *= 10;
-                        number += (double) (num - '0');
-                } else if (num == '.' && !point) {
-                        point = true;
-                        i++;
-                        continue;
-                } else if (num == '-') {
-                        sign = -1;
-                        if (!isdigit((int)str[i + 1])) {
-                                i = 0;
+                if (isspace(str[i])) {
+                        if (isnum) {
                                 break;
                         }
-                        i++;
-                        continue;
-                } else if (num == '+') {
-                        if (!isdigit((int)str[i + 1])) {
-                                i = 0;
+                } else {
+                        isnum = true;
+
+                        if ((str[i] == '0') && (tolower(str[i+1]) == 'x')) {
+                                base = 16;
+                                i   += 2;
+                                continue;
+                        }
+
+                        char num = tolower(str[i]);
+
+                        if ((num >= '0') && (num <= '9')) {
+                                number *= base;
+                                number += (float) (num - '0');
+                        } else if ((num >= 'a') && (num <= 'f')) {
+                                number *= base;
+                                number += (float) (num - 'a') + 10;
+                        } else if (num == '.' && !point) {
+                                point = true;
+                                i++;
+                                continue;
+                        } else if (num == '-') {
+                                if (!isdigit((int)str[i + 1])) {
+                                        i = 0;
+                                        break;
+                                } else {
+                                        sign = -1;
+                                }
+                                i++;
+                                continue;
+                        } else if (num == '+') {
+                                if (!isdigit((int)str[i + 1])) {
+                                        i = 0;
+                                        break;
+                                }
+                                i++;
+                                continue;
+                        } else if (isspace(num)) {
                                 break;
                         }
-                        i++;
-                        continue;
-                } else if (strchr(" \n\t+", num) != NULL) {
-                        break;
-                }
 
-                if (point) {
-                        decimal++;
+                        if (point) {
+                                decimal++;
+                        }
                 }
 
                 i++;
@@ -531,12 +572,13 @@ float _strtof(const char *str, char **end)
 
         if (point) {
                 for (int j = 0; j < decimal; j++) {
-                        div *= 10;
+                        div *= base;
                 }
         }
 
-        if (end)
+        if (end) {
                 *end = (char *) &str[i];
+        }
 
         return sign * (number / div);
 }
