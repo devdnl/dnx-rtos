@@ -9,7 +9,8 @@ New Features, Improvements:
 
 Fixed Bugs:
 - Fixed stack sizes for system threads (take into account IRQ stack size)
-- 
+- Fixed strtof() and strtod() functions
+- Removed line clean VT100 command at beginning of line in TTY driver
 
 dnx RTOS 2.0.0 Cheetah
 ======================
