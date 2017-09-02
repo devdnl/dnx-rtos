@@ -419,9 +419,9 @@ __ENABLE_AFM__=_NO_
 #     this:SetFlagValue("__ENABLE_CLK__", "_NO_")
 # end
 #--*/
-#define __ENABLE_CLK__ _YES_
+#define __ENABLE_CLK__ _NO_
 #/*
-__ENABLE_CLK__=_YES_
+__ENABLE_CLK__=_NO_
 #*/
 
 #/*--
@@ -580,9 +580,9 @@ __ENABLE_I2CEE__=_NO_
 #     this:SetFlagValue("__ENABLE_SDIO__", "_NO_")
 # end
 #--*/
-#define __ENABLE_SDIO__ _YES_
+#define __ENABLE_SDIO__ _NO_
 #/*
-__ENABLE_SDIO__=_YES_
+__ENABLE_SDIO__=_NO_
 #*/
 
 #/*--
@@ -622,9 +622,9 @@ __ENABLE_DHT11__=_NO_
 #     this:SetFlagValue("__ENABLE_FMC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_FMC__ _YES_
+#define __ENABLE_FMC__ _NO_
 #/*
-__ENABLE_FMC__=_YES_
+__ENABLE_FMC__=_NO_
 #*/
 
 #/*--
@@ -636,9 +636,9 @@ __ENABLE_FMC__=_YES_
 #     this:SetFlagValue("__ENABLE_DMA__", "_NO_")
 # end
 #--*/
-#define __ENABLE_DMA__ _YES_
+#define __ENABLE_DMA__ _NO_
 #/*
-__ENABLE_DMA__=_YES_
+__ENABLE_DMA__=_NO_
 #*/
 
 #/*--

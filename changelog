@@ -6,6 +6,7 @@ New Features, Improvements:
 - Redesigned UART and I2C drivers
 - System reuse abandoned main stack as heap region
 - Added SDIO driver for STM32F4 port
+- Added btree library (for system and user space)
 
 Fixed Bugs:
 - Fixed stack sizes for system threads (take into account IRQ stack size)

@@ -206,7 +206,7 @@ if this:PortExist(1) then
     this:AddItem("Yes", "_YES_")
 end
 --*/
-#define __I2C1_USE_DMA__ _YES_
+#define __I2C1_USE_DMA__ _NO_
 
 /*--
 if this:PortExist(1) then
@@ -227,7 +227,7 @@ if this:PortExist(2) then
     this:AddItem("Yes", "_YES_")
 end
 --*/
-#define __I2C2_USE_DMA__ _YES_
+#define __I2C2_USE_DMA__ _NO_
 
 /*--
 if this:PortExist(2) then
