@@ -1,5 +1,5 @@
-dnx RTOS 2.1.0 --
-======================
+dnx RTOS 2.1.0 Dingo
+====================
 New Features, Improvements:
 - Added DMA drivers for STM32F1 and STM32F4 ports
 - Added ETH, AFM  drivers for STM32F4 ports
