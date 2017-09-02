@@ -473,7 +473,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "2.0.1 Develop";
+        return "2.1.0";
 }
 
 //==============================================================================
@@ -499,7 +499,7 @@ static inline const char *get_OS_version(void)
 //==============================================================================
 static inline const char *get_OS_codename(void)
 {
-        return "Cheetah";
+        return "Dingo";
 }
 
 //==============================================================================
