@@ -46,6 +46,11 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+/* Stack size declared by linker script */
+#define STACK_SIZE                      (((size_t)&__stack_size) - 8)
+
+/* Stack start declared by linker script */
+#define STACK_START                     ((void *)&__stack_start)
 
 /*==============================================================================
   Local types, enums definitions
@@ -62,6 +67,11 @@
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+/** pointer to stack size value */
+extern void *__stack_size;
+
+/** pointer to stack start */
+extern void *__stack_start;
 
 /*==============================================================================
   Function definitions
@@ -82,6 +92,13 @@ void dnxinit(void *arg)
 
         printk("Welcome to dnx RTOS %s!", get_OS_version());
         printk("Running on platform %s", get_platform_name());
+
+        /*
+         * This code reuse the main() stack that after kernel start is abandoned.
+         * The stack region is reused for HEAP purposes.
+         */
+        static _mm_region_t main_stack;
+        _mm_register_region(&main_stack, STACK_START, STACK_SIZE);
 
         _task_exit();
 }

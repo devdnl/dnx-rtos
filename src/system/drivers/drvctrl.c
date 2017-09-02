@@ -315,7 +315,7 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
         } else {
                 switch (err) {
                 case EADDRINUSE: printk(DRIVER_NAME" already initialized", DRIVER_NAME_ARGS); break;
-                default        : printk(DRIVER_NAME" module does not exist", DRIVER_NAME_ARGS); break;
+                default        : printk(DRIVER_NAME" does not exist", DRIVER_NAME_ARGS); break;
                 }
         }
 
@@ -523,6 +523,7 @@ int _driver_stat(dev_t id, struct vfs_dev_stat *stat)
         if (!err) {
                 stat->st_major = _dev_t__extract_major(id);
                 stat->st_minor = _dev_t__extract_minor(id);
+                stat->st_size  = 0;
                 err = _drvreg_module_table[modno].IF.drv_stat(mem, stat);
         }
 

@@ -36,26 +36,10 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "stm32f1/stm32f10x.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
-/* UART1 IRQ priority */
-#define _UART1_IRQ_PRIORITY                     __UART_UART1_IRQ_PRIORITY__
-
-/* UART2 IRQ priority */
-#define _UART2_IRQ_PRIORITY                     __UART_UART2_IRQ_PRIORITY__
-
-/* UART3 IRQ priority */
-#define _UART3_IRQ_PRIORITY                     __UART_UART3_IRQ_PRIORITY__
-
-/* UART4 IRQ priority */
-#define _UART4_IRQ_PRIORITY                     __UART_UART4_IRQ_PRIORITY__
-
-/* UART5 IRQ priority */
-#define _UART5_IRQ_PRIORITY                     __UART_UART5_IRQ_PRIORITY__
-
 /* RX buffer size [B] */
 #define _UART_RX_BUFFER_SIZE                    __UART_RX_BUFFER_LEN__
 

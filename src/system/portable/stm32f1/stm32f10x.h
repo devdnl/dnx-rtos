@@ -56,6 +56,8 @@
  extern "C" {
 #endif
 
+#ifdef ARCH_stm32f1
+
 #undef RESET
 #undef SET
 
@@ -8339,6 +8341,8 @@ typedef struct
 /**
   * @}
   */
+
+#endif /* ARCH_stm32f4 */
 
 #ifdef __cplusplus
 }

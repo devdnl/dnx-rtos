@@ -1,3 +1,18 @@
+dnx RTOS 2.1.0 --
+======================
+New Features, Improvements:
+- Added DMA drivers for STM32F1 and STM32F4 ports
+- Added ETH, AFM  drivers for STM32F4 ports
+- Redesigned UART and I2C drivers
+- System reuse abandoned main stack as heap region
+- Added SDIO driver for STM32F4 port
+- Added btree library (for system and user space)
+
+Fixed Bugs:
+- Fixed stack sizes for system threads (take into account IRQ stack size)
+- Fixed strtof() and strtod() functions
+- Removed line clean VT100 command at beginning of line in TTY driver
+
 dnx RTOS 2.0.0 Cheetah
 ======================
 New Features, Improvements:

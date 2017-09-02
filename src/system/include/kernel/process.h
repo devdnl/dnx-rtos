@@ -51,7 +51,7 @@ extern "C" {
 #define STACK_DEPTH_VERY_LARGE          ((32  * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
 #define STACK_DEPTH_HUGE                ((64  * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
 #define STACK_DEPTH_VERY_HUGE           ((128 * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__))
-#define STACK_DEPTH_CUSTOM(depth)       (depth)
+#define STACK_DEPTH_CUSTOM(depth)       ((depth) + (__OS_IRQ_STACK_DEPTH__))
 
 #define _PROCESS_SYSCALL_FLAG(tid)      (1 << (tid))
 #define _PROCESS_EXIT_FLAG(tid)         (1 << ((tid) + 12))

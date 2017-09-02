@@ -64,39 +64,22 @@
 #include "config.h"
 #include "mm/heap.h"
 #include "kernel/kwrapper.h"
+#include "kernel/errno.h"
 #include <string.h>
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
 /**
- * Heap size declared by linker script
- */
-#define HEAP_SIZE                      ((size_t)&__heap_size)
-
-/**
- * Heap start declared by linker script
- */
-#define HEAP_START                     ((void *)&__heap_start)
-
-/**
- * MEM_ALIGNMENT: should be set to the alignment of the CPU for which
- * program is compiled. 4 byte alignment -> define MEM_ALIGNMENT to 4, 2
- * byte alignment -> define MEM_ALIGNMENT to 2.
- */
-#define MEM_ALIGNMENT                   _HEAP_ALIGN_
-
-/**
  * Calculate memory size for an aligned buffer - returns the next highest
  * multiple of MEM_ALIGNMENT (e.g. MEM_ALIGN_SIZE(3) and
  * MEM_ALIGN_SIZE(4) will both yield 4 for MEM_ALIGNMENT == 4).
  */
-#define MEM_ALIGN_SIZE(size)            (((size) + MEM_ALIGNMENT - 1) & ~(MEM_ALIGNMENT-1))
+#define MEM_ALIGN_SIZE(size)            (((size) + _HEAP_ALIGN_ - 1) & ~(_HEAP_ALIGN_-1))
 
 /** some alignment macros: we define them here for better source code layout */
 #define BLOCK_MIN_SIZE_ALIGNED          MEM_ALIGN_SIZE(__HEAP_BLOCK_SIZE__)
 #define SIZEOF_STRUCT_MEM               MEM_ALIGN_SIZE(sizeof(struct mem))
-#define MEM_SIZE_ALIGNED                MEM_ALIGN_SIZE(HEAP_SIZE - SIZEOF_STRUCT_MEM)
 
 /*==============================================================================
   Local types, enums definitions
@@ -115,32 +98,15 @@ struct mem {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void plug_holes(struct mem *mem);
+static void plug_holes(_heap_t *heap, struct mem *mem);
 
 /*==============================================================================
-                                      Local object definitions
+  Local object definitions
 ==============================================================================*/
-/** pointer to the heap (ram_heap): for alignment, ram is now a pointer instead of an array */
-static u8_t *heap;
-
-/** the last entry, always unused! */
-static struct mem *heap_end;
-
-/** pointer to the lowest free block, this is used for faster search */
-static struct mem *lfree;
-
-/** heap usage */
-static size_t heap_used;
-static size_t heap_used_max;
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-/** pointer to heap size value */
-extern void *__heap_size;
-
-/** pointer to heap start */
-extern void *__heap_start;
 
 /*==============================================================================
   Function definitions
@@ -154,42 +120,38 @@ extern void *__heap_start;
  *         This assumes access to the heap is protected by the calling function
  *         already.
  *
+ * @param  heap       heap object
  * @param  mem        this points to a struct mem which just has been freed
- *
- * @return None
  */
 //==============================================================================
-static void plug_holes(struct mem *mem)
+static void plug_holes(_heap_t *heap, struct mem *mem)
 {
-        struct mem *nmem;
-        struct mem *pmem;
-
         /* plug hole forward */
-        nmem = (struct mem *)(void *)&heap[mem->next];
+        struct mem *nmem = (struct mem *)(void *)&heap->begin[mem->next];
 
-        if (mem != nmem && nmem->used == 0 && (u8_t *)nmem != (u8_t *)heap_end) {
+        if (mem != nmem && nmem->used == 0 && (u8_t *)nmem != (u8_t *)heap->end) {
                 /* if mem->next is unused and not end of ram, combine mem and mem->next */
-                if (lfree == nmem) {
-                        lfree = mem;
+                if (heap->lfree == nmem) {
+                        heap->lfree = mem;
                 }
 
                 mem->next = nmem->next;
 
-                ((struct mem*)(void*)&heap[nmem->next])->prev = (size_t)((u8_t*)mem - heap);
+                ((struct mem*)(void*)&heap->begin[nmem->next])->prev = (size_t)((u8_t*)mem - heap->begin);
         }
 
         /* plug hole backward */
-        pmem = (struct mem *)(void *)&heap[mem->prev];
+        struct mem *pmem = (struct mem *)(void *)&heap->begin[mem->prev];
 
         if (pmem != mem && pmem->used == 0) {
                 /* if mem->prev is unused, combine mem and mem->prev */
-                if (lfree == mem) {
-                        lfree = pmem;
+                if (heap->lfree == mem) {
+                        heap->lfree = pmem;
                 }
 
                 pmem->next = mem->next;
 
-                ((struct mem *)(void *)&heap[mem->next])->prev = (size_t)((u8_t *)pmem - heap);
+                ((struct mem *)(void *)&heap->begin[mem->next])->prev = (size_t)((u8_t *)pmem - heap->begin);
         }
 }
 
@@ -197,46 +159,61 @@ static void plug_holes(struct mem *mem)
 /**
 * @brief  Zero the heap and initialize start, end and lowest-free
 *
-* @param  None
+* @param  heap          heap object
+* @param  start         memory start address
+* @param  size          memory size
 *
-* @return None
+* @return One of errno value.
 */
 //==============================================================================
-void _heap_init(void)
+int _heap_init(_heap_t *heap, void *start, size_t size)
 {
-        /* align the heap */
-        heap = (u8_t*)HEAP_START;
+        int err = EINVAL;
 
-        /* initialize the start of the heap */
-        struct mem *mem = (struct mem *)heap;
-        mem->next = MEM_SIZE_ALIGNED;
-        mem->prev = 0;
-        mem->used = 0;
+        if (heap && start && size) {
+                heap->used     = 0;
+                heap->used_max = 0;
 
-        /* initialize the end of the heap */
-        heap_end = (struct mem *)&heap[MEM_SIZE_ALIGNED];
-        heap_end->used = 1;
-        heap_end->next = MEM_SIZE_ALIGNED;
-        heap_end->prev = MEM_SIZE_ALIGNED;
+                /* align the heap */
+                heap->begin = start;
 
-        /* initialize the lowest-free pointer to the start of the heap */
-        lfree = (struct mem *)heap;
+                /* aligned memory size */
+                heap->size = MEM_ALIGN_SIZE(size - SIZEOF_STRUCT_MEM);
+
+                /* initialize the start of the heap */
+                struct mem *mem = (struct mem *)heap->begin;
+                mem->next = heap->size;
+                mem->prev = 0;
+                mem->used = 0;
+
+                /* initialize the end of the heap */
+                heap->end = (struct mem *)&heap->begin[heap->size];
+                heap->end->used = 1;
+                heap->end->next = heap->size;
+                heap->end->prev = heap->size;
+
+                /* initialize the lowest-free pointer to the start of the heap */
+                heap->lfree = (struct mem *)heap->begin;
+
+                err = ESUCC;
+        }
+
+        return err;
 }
 
 //==============================================================================
 /**
  * @brief  Put a struct mem back on the heap
  *
+ * @param  heap         heap object
  * @param  rmem         is the data portion of a struct mem as returned by a previous
  *                      call to _heap_alloc()
  * @param  freed        freed block size (can be NULL)
- *
- * @return None
  */
 //==============================================================================
-void _heap_free(void *rmem, size_t *freed)
+void _heap_free(_heap_t *heap, void *rmem, size_t *freed)
 {
-        if ((u8_t *)rmem >= (u8_t *)heap && (u8_t *)rmem < (u8_t *)heap_end) {
+        if (heap && (u8_t *)rmem >= (u8_t *)heap->begin && (u8_t *)rmem < (u8_t *)heap->end) {
 
                 _kernel_scheduler_lock();
 
@@ -245,19 +222,19 @@ void _heap_free(void *rmem, size_t *freed)
                 /* ... which has to be in a used state and is now unused. */
                 mem->used = 0;
 
-                if (mem < lfree) {
+                if (mem < heap->lfree) {
                         /* the newly freed struct is now the lowest */
-                        lfree = mem;
+                        heap->lfree = mem;
                 }
 
-                size_t blksize = (mem->next - (size_t)(((u8_t *)mem - heap)));
-                heap_used -= blksize;
+                size_t blksize = (mem->next - (size_t)(((u8_t *)mem - heap->begin)));
+                heap->used -= blksize;
 
                 if (freed) {
                         *freed = blksize;
                 }
 
-                plug_holes(mem);
+                plug_holes(heap, mem);
 
                 _kernel_scheduler_unlock();
         }
@@ -268,19 +245,20 @@ void _heap_free(void *rmem, size_t *freed)
  * @brief  Allocate a block of memory with a minimum of 'size' bytes.
  *         Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
  *
+ * @param  heap         heap object
  * @param  size         is the minimum size of the requested block in bytes.
  * @param  allocated    real size of allocated block (it can be bigger than size)
 
  * @return Pointer to allocated memory or NULL if no free memory was found.
  */
 //==============================================================================
-void *_heap_alloc(size_t size, size_t *allocated)
+void *_heap_alloc(_heap_t *heap, size_t size, size_t *allocated)
 {
         size_t ptr, ptr2;
         struct mem *mem, *mem2;
         size_t used;
 
-        if (size == 0) {
+        if (!heap || size == 0) {
                 return NULL;
         }
 
@@ -292,7 +270,7 @@ void *_heap_alloc(size_t size, size_t *allocated)
                 size = BLOCK_MIN_SIZE_ALIGNED;
         }
 
-        if (size > MEM_SIZE_ALIGNED) {
+        if (size > heap->size) {
                 return NULL;
         }
 
@@ -303,11 +281,11 @@ void *_heap_alloc(size_t size, size_t *allocated)
          * Scan through the heap searching for a free block that is big enough,
          * beginning with the lowest free block.
          */
-        for (ptr = (size_t)((u8_t *)lfree - heap);
-             ptr < MEM_SIZE_ALIGNED - size;
-             ptr = ((struct mem *)(void *)&heap[ptr])->next) {
+        for (ptr = (size_t)((u8_t *)heap->lfree - heap->begin);
+             ptr < heap->size - size;
+             ptr = ((struct mem *)(void *)&heap->begin[ptr])->next) {
 
-                mem = (struct mem *)(void *)&heap[ptr];
+                mem = (struct mem *)(void *)&heap->begin[ptr];
 
                 if ((!mem->used) && (mem->next - (ptr + SIZEOF_STRUCT_MEM)) >= size) {
                         /*
@@ -332,7 +310,7 @@ void *_heap_alloc(size_t size, size_t *allocated)
                                 ptr2 = ptr + SIZEOF_STRUCT_MEM + size;
 
                                 /* create mem2 struct */
-                                mem2 = (struct mem *)(void *)&heap[ptr2];
+                                mem2 = (struct mem *)(void *)&heap->begin[ptr2];
                                 mem2->used = 0;
                                 mem2->next = mem->next;
                                 mem2->prev = ptr;
@@ -341,8 +319,8 @@ void *_heap_alloc(size_t size, size_t *allocated)
                                 mem->next = ptr2;
                                 mem->used = 1;
 
-                                if (mem2->next != MEM_SIZE_ALIGNED) {
-                                        ((struct mem *)(void *)&heap[mem2->next])->prev = ptr2;
+                                if (mem2->next != heap->size) {
+                                        ((struct mem *)(void *)&heap->begin[mem2->next])->prev = ptr2;
                                 }
 
                                 used = (size + SIZEOF_STRUCT_MEM);
@@ -358,18 +336,18 @@ void *_heap_alloc(size_t size, size_t *allocated)
                                  */
                                 mem->used = 1;
 
-                                used = (mem->next - (size_t)((u8_t *)mem - heap));
+                                used = (mem->next - (size_t)((u8_t *)mem - heap->begin));
                         }
 
-                        if (mem == lfree) {
+                        if (mem == heap->lfree) {
                                 /* Find next free block after mem and update lowest free pointer */
-                                while (lfree->used && lfree != heap_end) {
-                                        lfree = (struct mem *)(void *)&heap[lfree->next];
+                                while (heap->lfree->used && heap->lfree != heap->end) {
+                                        heap->lfree = (struct mem *)(void *)&heap->begin[heap->lfree->next];
                                 }
                         }
 
-                        heap_used    += used;
-                        heap_used_max = heap_used_max < heap_used ? heap_used : heap_used_max;
+                        heap->used    += used;
+                        heap->used_max = heap->used_max < heap->used ? heap->used : heap->used_max;
 
                         if (allocated) {
                                 *allocated = used;
@@ -390,65 +368,66 @@ void *_heap_alloc(size_t size, size_t *allocated)
 /**
  * @brief  Function return free heap
  *
- * @param  None
+ * @param  heap         heap object
  *
  * @return Free heap value
  */
 //==============================================================================
-size_t _heap_get_free(void)
+size_t _heap_get_free(_heap_t *heap)
 {
-        return (HEAP_SIZE - heap_used);
+        return (heap->size - heap->used);
 }
 
 //==============================================================================
 /**
  * @brief  Function return used heap
  *
- * @param  None
+ * @param  heap         heap object
  *
  * @return Use heap value
  */
 //==============================================================================
-size_t _heap_get_used(void)
+size_t _heap_get_used(_heap_t *heap)
 {
-        return heap_used;
+        return heap->used;
 }
 
 //==============================================================================
 /**
  * @brief  Function return heap size
  *
- * @param  None
+ * @param  heap         heap object
  *
  * @return Heap size
  */
 //==============================================================================
-size_t _heap_get_size(void)
+size_t _heap_get_size(_heap_t *heap)
 {
-        return HEAP_SIZE;
+        return heap->size + SIZEOF_STRUCT_MEM;
 }
 
 //==============================================================================
 /**
  * @brief  Function return size of selected block
  *
+ * @param  heap     heap object
  * @param  rmem     memory block
  *
  * @return Block size, 0 on error
  */
 //==============================================================================
-size_t _heap_get_block_size(void *rmem)
+size_t _heap_get_block_size(_heap_t *heap, void *rmem)
 {
     size_t blksize = 0;
 
-    if ((u8_t *)rmem >= (u8_t *)heap && (u8_t *)rmem < (u8_t *)heap_end) {
+    if (heap && (u8_t *)rmem >= (u8_t *)heap->begin && (u8_t *)rmem < (u8_t *)heap->end) {
 
             _kernel_scheduler_lock();
 
             /* get the corresponding struct mem */
             struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
 
-            blksize = (mem->next - (size_t)(((u8_t *)mem - heap)));
+            blksize = (mem->next - (size_t)(((u8_t *)mem - heap->begin)));
 
             _kernel_scheduler_unlock();
     }

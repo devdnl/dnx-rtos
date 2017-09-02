@@ -429,7 +429,7 @@ extern int rand(void);
    @endcode
  */
 //==============================================================================
-extern void srand(unsigned seed);
+extern void srand(unsigned int seed);
 
 /*==============================================================================
   Exported inline functions
@@ -962,7 +962,7 @@ static inline double strtod(const char *nptr, char **endptr)
 //==============================================================================
 static inline float strtof(const char *nptr, char **endptr)
 {
-        return (float)_builtinfunc(strtod, nptr, endptr);
+        return (float)_builtinfunc(strtof, nptr, endptr);
 }
 
 #ifdef __cplusplus

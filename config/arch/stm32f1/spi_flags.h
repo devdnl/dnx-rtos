@@ -127,11 +127,12 @@ this:AddItem("MSb first", "_YES_")
 
 
 /*--
+this:AddExtraWidget("Label", "LabelDMA", "\nDMA Configuration", -1, "bold")
+this:AddExtraWidget("Void", "VoidDMA")
+++*/
+/*--
 if this:PortExist(1) then
-    this:AddExtraWidget("Label", "LabelSPI1", "\nSPI1", -1, "bold")
-    this:AddExtraWidget("Void", "VoidSPI1")
-
-    this:AddWidget("Combobox", "Use DMA")
+    this:AddWidget("Combobox", "SPI1 DMA")
     this:AddItem("No", "_NO_")
     this:AddItem("Yes", "_YES_")
 end
@@ -139,21 +140,8 @@ end
 #define __SPI_SPI1_USE_DMA__ _YES_
 
 /*--
-if this:PortExist(1) then
-    this:AddWidget("Combobox", "IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __SPI_SPI1_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
-
-
-
-/*--
 if this:PortExist(2) then
-    this:AddExtraWidget("Label", "LabelSPI2", "\nSPI2", -1, "bold")
-    this:AddExtraWidget("Void", "VoidSPI2")
-
-    this:AddWidget("Combobox", "Use DMA")
+    this:AddWidget("Combobox", "SPI2 DMA")
     this:AddItem("No", "_NO_")
     this:AddItem("Yes", "_YES_")
 end
@@ -161,34 +149,13 @@ end
 #define __SPI_SPI2_USE_DMA__ _NO_
 
 /*--
-if this:PortExist(2) then
-    this:AddWidget("Combobox", "IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __SPI_SPI2_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
-
-
-
-/*--
 if this:PortExist(3) then
-    this:AddExtraWidget("Label", "LabelSPI3", "\nSPI3", -1, "bold")
-    this:AddExtraWidget("Void", "VoidSPI3")
-
-    this:AddWidget("Combobox", "Use DMA")
+    this:AddWidget("Combobox", "SPI3 DMA")
     this:AddItem("No", "_NO_")
     this:AddItem("Yes", "_YES_")
 end
 --*/
-#define __SPI_SPI3_USE_DMA__ _YES_
-
-/*--
-if this:PortExist(3) then
-    this:AddWidget("Combobox", "IRQ priority")
-    uC.AddPriorityItems(this)
-end
---*/
-#define __SPI_SPI3_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
+#define __SPI_SPI3_USE_DMA__ _NO_
 
 #endif /* _SPI_FLAGS_H_ */
 /*==============================================================================

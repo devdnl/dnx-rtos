@@ -2,8 +2,7 @@
 HDRLOC_ARCH += drivers/uart
 
 ifeq ($(__ENABLE_UART__), _YES_)
-   ifeq ($(TARGET), stm32f1)
-      CSRC_ARCH   += drivers/uart/$(TARGET)/uart.c
-      CXXSRC_ARCH += 
-   endif
+    CSRC_ARCH   += drivers/uart/uart.c
+    CSRC_ARCH   += drivers/uart/$(TARGET)/uart_lld.c
+    CXXSRC_ARCH += 
 endif

@@ -481,6 +481,7 @@ int _syscall_kworker_process(int argc, char *argv[])
 
                                 // destroy top process to get free memory
                                 case ENOMEM:
+                                        _assert(false);
                                         _process_clean_up_killed_processes();
                                         _kernel_release_resources();
                                         _vfs_sync();
@@ -532,7 +533,7 @@ static void syscall_do(void *rq)
         _syscall_client_PID[tid] = 0;
 
         if (_flag_set(flags, _PROCESS_SYSCALL_FLAG(sysrq->client_thread)) != ESUCC) {
-                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                _assert(false);
         }
 
         // If there is lack of memory and FS sync is required then thread

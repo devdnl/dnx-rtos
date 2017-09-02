@@ -76,9 +76,15 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 #++*/
 #// Existing architectures
 #define stm32f1 0x16F54349
+#define stm32f2 0x2f31e2fc
+#define stm32f3 0x483962d4
+#define stm32f4 0x8dd787b6
+#define efr32   0xcd975039
 #/*--
 # this:AddWidget("Combobox", "CPU architecture")
-# this:AddItem("STM32F1 family microcontroller", "stm32f1")
+# this:AddItem("STMicroelectronics STM32F1", "stm32f1")
+# this:AddItem("STMicroelectronics STM32F4", "stm32f4")
+# this:AddItem("Silicon Labs EFR32 Mighty Gecko (experimental)", "efr32")
 #--*/
 #define __CPU_ARCH__ stm32f1
 #/*

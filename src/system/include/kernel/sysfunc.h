@@ -48,6 +48,7 @@
 #include "lib/unarg.h"
 #include "lib/conv.h"
 #include "lib/llist.h"
+#include "lib/btree.h"
 #include "lib/vsnprintf.h"
 #include "lib/vfprintf.h"
 #include "lib/vsscanf.h"
@@ -215,6 +216,11 @@ extern "C" {
  */
 typedef struct {} llist_t;
 #endif
+
+/**
+ * @brief Memory region type used for dynamic memory allocation.
+ */
+typedef _mm_region_t mem_region_t;
 
 /*==============================================================================
   Exported objects
@@ -1347,6 +1353,697 @@ static inline int sys_llist_functor_cmp_pointers(const void *a, const void *b)
 static inline int sys_llist_functor_cmp_strings(const void *a, const void *b)
 {
         return _llist_functor_cmp_strings(a, b);
+}
+
+#ifdef DOXYGEN /* function documentation only */
+//==============================================================================
+/**
+ * @brief  BTree constructor.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param
+ * @param  cmp_functor          compare functor (can be NULL)
+ * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ *
+ * @return One of @ref errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int sys_btree_create(size_t size, btree_cmp_functor_t functor, btree_obj_dtor_t obj_dtor, btree_t **btree);
+#endif
+
+//==============================================================================
+/**
+ * @brief  Function search selected object in BTree.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  tree         BTree object
+ * @param  key          object to find
+ * @param  ret          found object
+ *
+ * @return One of errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int sys_btree_search(btree_t *tree, void *key, void *ret)
+{
+        return _btree_search(tree, key, ret);
+}
+
+//==============================================================================
+/**
+ * @brief  Function get object with minimum value.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  tree         BTree object
+ * @param  ret          return object
+ *
+ * @return One of errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int sys_btree_minimum(btree_t *tree, void *ret)
+{
+        return _btree_minimum(tree, ret);
+}
+
+//==============================================================================
+/**
+ * @brief  Function get object with maximum value.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  tree         BTree object
+ * @param  ret          return object
+ *
+ * @return One of errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int sys_btree_maximum(btree_t *tree, void *ret)
+{
+        return _btree_maximum(tree, ret);
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if BTree is empty.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  tree         BTree object
+ *
+ * @return Return true if BTree is empty, otherwise NULL.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline bool sys_btree_is_empty(btree_t *tree)
+{
+        return _btree_is_empty(tree);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return successor object relative to given key.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  tree         BTree object
+ * @param  key          key to find
+ * @param  ret          successor object relative to key
+ *
+ * @return One of errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int sys_btree_successor(btree_t *tree, void *key, void *ret)
+{
+        return _btree_successor(tree, key, ret);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return predecessor object relative to given key.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  tree         BTree object
+ * @param  key          key to find
+ * @param  ret          predecessor object relative to key
+ *
+ * @return One of errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int sys_btree_predecessor(btree_t *tree, void *key, void *ret)
+{
+        return _btree_predecessor(tree, key, ret);
+}
+
+//==============================================================================
+/**
+ * @brief  Function insert object to BTree.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  tree         BTree object
+ * @param  data         object to insert to
+ *
+ * @return One of errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int sys_btree_insert(btree_t *tree, void *data)
+{
+        return _btree_insert(tree, data);
+}
+
+//==============================================================================
+/**
+ * @brief  Function delete object from BTree selected by key.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  tree         BTree object
+ * @param  key          object to delete
+ *
+ * @return One of errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int sys_btree_remove(btree_t *tree, void *data)
+{
+        return _btree_remove(tree, data);
+}
+
+//==============================================================================
+/**
+ * @brief  Function destroy BTree.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param  tree         BTree object
+ *
+ * @b Example
+ * @code
+        // ...
+
+        typedef struct {
+                int value;
+                ...
+        } bt_obj_t;
+
+        static int cmp(const void *a, const void *b)
+        {
+                if (a->value > b->value) {
+                        return 1;
+                } else if (a->value > b->value) {
+                        return -1;
+                } else {
+                        return 0;
+                }
+        }
+
+        btree_t *bt = NULL;
+        int err = sys_btree_create(sizeof(bt_obj_t), cmp, NULL, &bt);
+        if (!err) {
+
+                bt_obj_t obj1 = {.value = 3};
+                err = sys_btree_insert(bt, &obj1);
+                if (!err) {
+                        ...
+                }
+
+                bt_obj_t obj2 = {.value = 5};
+                err = sys_btree_insert(bt, &obj2);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                bt_obj_t obj;
+                err = sys_btree_search(bt, &obj1, &obj);
+                if (!err) {
+                        ...
+                }
+
+                ...
+
+                sys_btree_destroy(bt);
+        }
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline void sys_btree_destroy(btree_t *tree)
+{
+        return _btree_destroy(tree);
 }
 
 //==============================================================================
@@ -4096,7 +4793,7 @@ static inline int sys_mutex_unlock(mutex_t *mutex)
  * @return One of @ref errno value.
  */
 //==============================================================================
-extern int sys_queue_create(const uint length, const uint item_size, queue_t **queue);
+extern int sys_queue_create(const size_t length, const size_t item_size, queue_t **queue);
 
 //==============================================================================
 /**
@@ -4999,6 +5696,8 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
  *         because regular files are not cached directly. When file is a device
  *         file then cache is synchronized with storage and dropped from memory.
  *
+ * @note Function can be used only by file system code.
+ *
  * @param  file         file to synchronize.
  *
  * @return One of errno value.
@@ -5012,6 +5711,8 @@ extern int sys_cache_drop(FILE *file);
  *        write to the cache. If cache does not exist then new one is created.
  *        Only files that are linked with drivers are cached, other files are
  *        written directly.
+ *
+ * @note Function can be used only by file system code.
  *
  * @param  file         file to write
  * @param  blkpos       block position
@@ -5032,6 +5733,8 @@ extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt
  *        is created. Function does not cache blocks from files that are not
  *        directly connected do drivers.
  *
+ * @note Function can be used only by file system code.
+ *
  * @param  file         file to read
  * @param  blkpos       block position
  * @param  blksz        block size
@@ -5042,6 +5745,41 @@ extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt
  */
 //==============================================================================
 extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, u8_t *buf);
+
+//==============================================================================
+/**
+ * @brief  Function register new memory region. The region object should be
+ *         visible during entire system runtime. There is no possibility to
+ *         remove added region.
+ *
+ * @note Function can be used only by driver code.
+ *
+ * @param  region       region object (initialized by system)
+ * @param  start        region start address
+ * @param  size         region size
+ *
+ * @return One of errno value.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        mem_region_t ram2;
+
+        int err = sys_memory_register(&ram2, 0x20001000, 16384);
+        if (!err) {
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ */
+//==============================================================================
+static inline int sys_memory_register(mem_region_t *region, void *start, size_t size)
+{
+        return _mm_register_region(region, start, size);
+}
 
 #ifdef __cplusplus
 }

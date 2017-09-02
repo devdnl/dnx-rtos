@@ -33,13 +33,11 @@
 #include "ethmac_cfg.h"
 #include "ethmac_ioctl.h"
 #include "stm32f10x.h"
-#include "stm32_eth_driver/stm32_eth.h"
+#include "stm32f1x7_eth.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define NUMBER_OF_RX_BUFFERS    3
-#define NUMBER_OF_TX_BUFFERS    2
 #define INIT_TIMEOUT            2000
 #define PHY_BSR_LINK_STATUS     (1 << 2)
 
@@ -51,23 +49,23 @@ struct ethmac {
         mutex_t            *rx_access;
         mutex_t            *tx_access;
         dev_lock_t          dev_lock;
-        ETH_DMADESCTypeDef  DMA_tx_descriptor[NUMBER_OF_TX_BUFFERS];
-        ETH_DMADESCTypeDef  DMA_rx_descriptor[NUMBER_OF_RX_BUFFERS];
-        u8_t                tx_buffer[NUMBER_OF_TX_BUFFERS][ETH_MAX_PACKET_SIZE];
-        u8_t                rx_buffer[NUMBER_OF_RX_BUFFERS][ETH_MAX_PACKET_SIZE];
+        ETH_DMADESCTypeDef  DMA_tx_descriptor[ETHMAC_TXBUFNB];
+        ETH_DMADESCTypeDef  DMA_rx_descriptor[ETHMAC_RXBUFNB];
+        u8_t                tx_buffer[ETHMAC_TXBUFNB][ETH_MAX_PACKET_SIZE];
+        u8_t                rx_buffer[ETHMAC_RXBUFNB][ETH_MAX_PACKET_SIZE];
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static bool   is_Ethernet_started       ();
+static bool   is_Ethernet_started       (void);
 static void   send_packet               (size_t size);
 static size_t wait_for_packet           (struct ethmac *hdl, uint32_t timeout);
-static void   give_Rx_buffer_to_DMA     ();
+static void   give_Rx_buffer_to_DMA     (void);
 static bool   is_buffer_owned_by_DMA    (ETH_DMADESCTypeDef *DMA_descriptor);
-static void   make_Rx_buffer_available  ();
+static void   make_Rx_buffer_available  (void);
 static u8_t  *get_buffer_address        (ETH_DMADESCTypeDef *DMA_descriptor);
-static void   ETH_Stop                  ();
+static void   ETH_Stop                  (void);
 
 /*==============================================================================
   Local objects
@@ -110,7 +108,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
         }
 
         int err = sys_zalloc(sizeof(struct ethmac), device_handle);
-        if (err == ESUCC) {
+        if (!err) {
                 struct ethmac *hdl = *device_handle;
 
                 err = sys_semaphore_create(1, 0, &hdl->rx_data_ready);
@@ -142,7 +140,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 SET_BIT(RCC->AHBENR, RCC_AHBENR_ETHMACRXEN | RCC_AHBENR_ETHMACTXEN | RCC_AHBENR_ETHMACEN);
 
                 NVIC_EnableIRQ(ETH_IRQn);
-                NVIC_SetPriority(ETH_IRQn, ETHMAC_IRQ_PRIORITY);
+                NVIC_SetPriority(ETH_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
                 /* MAC configuration */
                 /*
@@ -185,20 +183,20 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
 
                         ETH_DMATxDescChainInit(ethmac->DMA_tx_descriptor,
                                                &ethmac->tx_buffer[0][0],
-                                               NUMBER_OF_TX_BUFFERS);
+                                               ETHMAC_TXBUFNB);
 
                         ETH_DMARxDescChainInit(ethmac->DMA_rx_descriptor,
                                                &ethmac->rx_buffer[0][0],
-                                               NUMBER_OF_RX_BUFFERS);
+                                               ETHMAC_RXBUFNB);
 
                         if (__ETHMAC_CHECKSUM_BY_HARDWARE__ != 0) {
-                                for (uint i = 0; i < NUMBER_OF_TX_BUFFERS; i++) {
+                                for (uint i = 0; i < ETHMAC_TXBUFNB; i++) {
                                         ETH_DMATxDescChecksumInsertionConfig(&ethmac->DMA_tx_descriptor[i],
                                                                              ETH_DMATxDesc_ChecksumTCPUDPICMPFull);
                                 }
                         }
 
-                        for (uint i = 0; i < NUMBER_OF_RX_BUFFERS; i++) {
+                        for (uint i = 0; i < ETHMAC_RXBUFNB; i++) {
                                 ETH_DMARxDescReceiveITConfig(&ethmac->DMA_rx_descriptor[i], ENABLE);
                         }
 
@@ -289,7 +287,7 @@ API_MOD_CLOSE(ETHMAC, void *device_handle, bool force)
 
         int err = sys_device_get_access(&hdl->dev_lock);
 
-        if (err == ESUCC) {
+        if (!err) {
                 err = sys_device_unlock(&hdl->dev_lock, force);
         }
 
@@ -629,7 +627,7 @@ API_MOD_STAT(ETHMAC, void *device_handle, struct vfs_dev_stat *device_stat)
  * @return If started then true is returned, otherwise false
  */
 //==============================================================================
-static bool is_Ethernet_started()
+static bool is_Ethernet_started(void)
 {
         return (ETH->MACCR & ETH_MACCR_TE) && (ETH->MACCR & ETH_MACCR_RE);
 }
@@ -701,7 +699,7 @@ static size_t wait_for_packet(struct ethmac *hdl, uint32_t timeout)
  * @return None
  */
 //==============================================================================
-static void give_Rx_buffer_to_DMA()
+static void give_Rx_buffer_to_DMA(void)
 {
         /* Set Own bit of the Rx descriptor Status: gives the buffer back to ETHERNET DMA */
         DMARxDescToGet->Status = ETH_DMARxDesc_OWN;
@@ -730,7 +728,7 @@ static bool is_buffer_owned_by_DMA(ETH_DMADESCTypeDef *DMA_descriptor)
  * @return None
  */
 //==============================================================================
-static void make_Rx_buffer_available()
+static void make_Rx_buffer_available(void)
 {
         if (ETH->DMASR & ETH_DMASR_RBUS) {
                 ETH_DMAClearFlag(ETH_DMA_FLAG_RBU);
@@ -757,7 +755,7 @@ static u8_t *get_buffer_address(ETH_DMADESCTypeDef *DMA_descriptor)
  * @return None
  */
 //==============================================================================
-static void ETH_Stop()
+static void ETH_Stop(void)
 {
         /* Enable transmit state machine of the MAC for transmission on the MII */
         ETH_MACTransmissionCmd(DISABLE);

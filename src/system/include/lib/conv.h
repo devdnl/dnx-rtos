@@ -60,6 +60,7 @@ extern int       _ltimeoff;
 extern char      *_itoa          (i32_t, char*, u8_t, bool, u8_t);
 extern int        _dtoa          (double, char*, int, int);
 extern double     _strtod        (const char*, char**);
+extern float      _strtof        (const char*, char**);
 extern i32_t      _atoi          (const char*);
 extern char      *_strtoi        (const char*, int, i32_t*);
 extern double     _atof          (const char*);

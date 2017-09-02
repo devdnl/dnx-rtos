@@ -1,5 +1,5 @@
 /*==============================================================================
-File     stm32f10x_vect.c
+File     stm32f10x_vectors.c
 
 Author   Daniel Zorychta
 

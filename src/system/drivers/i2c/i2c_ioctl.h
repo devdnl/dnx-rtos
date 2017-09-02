@@ -34,6 +34,7 @@ Driver handles I2C peripheral.
 
 \section drv-i2c-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
 
 \section drv-i2c-ddesc Details
 \subsection drv-i2c-ddesc-num Meaning of major and minor numbers
@@ -41,7 +42,7 @@ Some manufactures enumerate devices starting from 1 instead of 0 (e.g. ST).
 In this case major number starts from 0 and is connected to the first device
 e.g. I2C1.
 \arg major number selects I2C peripheral e.g.:@n
-     major = 0 -> I2C0 (or I2C1 if numerated from 1)
+     major = 0 -> I2C0 (or I2C1 if numbered from 1)
 \arg minor number selects particular device e.g.:@n
      major = 0 and minor = 0 -> device 0 on I2C0,@n
      major = 0 and minor = 1 -> device 1 on I2C0,@n

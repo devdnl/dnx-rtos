@@ -1,30 +1,28 @@
-/*=========================================================================*//**
+/*==============================================================================
 @file    eefs_flags.h
 
 @author  Daniel Zorychta
 
-@brief   This file include driver configurations for this architecture
+@brief   EEFS file system configuration.
 
 @note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
-
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         Full license text is available on the following file: doc/license.txt.
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*
  * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix

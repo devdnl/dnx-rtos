@@ -55,18 +55,23 @@ this:AddItem("Yes", "_YES_")
 #define __ETHMAC_CHECKSUM_BY_HARDWARE__ _YES_
 
 /*--
-this:AddWidget("Combobox", "Interrupt priority")
-uC.AddPriorityItems(this)
---*/
-#define __ETHMAC_IRQ_PRIORITY__ __CPU_IRQ_USER_PRIORITY__
-
-/*--
 this:AddWidget("Combobox", "Link speed")
 this:AddItem("10 Mbps", "ETH_Speed_10M")
 this:AddItem("100 Mbps", "ETH_Speed_100M")
 --*/
 #define __ETHMAC_SPEED__ ETH_Speed_100M
 
+/*--
+this:AddWidget("Spinbox", 3, 256, "Number of RX buffers")
+this:SetToolTip("Each buffer is 1524 B long.")
+--*/
+#define __ETHMAC_RXBUFNB__ 3
+
+/*--
+this:AddWidget("Spinbox", 2, 256, "Number of Tx buffers")
+this:SetToolTip("Each buffer is 1524 B long.")
+--*/
+#define __ETHMAC_TXBUFNB__ 2
 
 /*--
 this:AddExtraWidget("Label", "LabelPHY", "\nPHY", -1, "bold")

@@ -1,30 +1,29 @@
-/*=========================================================================*//**
-@file    spi_ioctl.h
+/*==============================================================================
+File    spi_ioctl.h
 
-@author  Daniel Zorychta
+Author  Daniel Zorychta
 
-@brief   SPI module ioctl request codes.
+Brief   SPI module ioctl request codes.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+        Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
-         This program is free software; you can redistribute it and/or modify
-         it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+        This program is free software; you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation and modified by the dnx RTOS exception.
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
+        NOTE: The modification  to the GPL is  included to allow you to
+              distribute a combined work that includes dnx RTOS without
+              being obliged to provide the source  code for proprietary
+              components outside of the dnx RTOS.
 
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-         MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-         GNU General Public License for more details.
+        The dnx RTOS  is  distributed  in the hope  that  it will be useful,
+        but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
+        MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
+        GNU General Public License for more details.
 
-         Full license text is available on the following file: doc/license.txt.
+        Full license text is available on the following file: doc/license.txt.
 
-
-*//*==========================================================================*/
+==============================================================================*/
 
 /**
 @defgroup drv-spi SPI Driver
@@ -34,6 +33,7 @@ Driver handles SPI peripheral.
 
 \section drv-spi-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
 
 \section drv-spi-ddesc Details
 \subsection drv-spi-ddesc-num Meaning of major and minor numbers
@@ -277,7 +277,8 @@ int_main(spi_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
             SPI_transceive_t t = {
                   .tx_buffer = global->tx,      // bytes to send
                   .rx_buffer = global->rx,      // buffer to received data
-                  .count     = ARRAY_SIZE(tx)   // buffer size
+                  .count     = ARRAY_SIZE(tx),  // buffer size
+                  .next      = NULL
             };
 
             ioctl(dev, IOCTL_SPI__TRANSCEIVE, &t);
@@ -390,17 +391,10 @@ enum SPI_mode {
  *  SPI configuration type.
  */
 typedef struct {
-#ifndef DOXYGEN
-        u8_t             flush_byte  : 8;       /*!< Flush byte in read transmission.*/
-        enum SPI_clk_div clk_divider : 3;       /*!< Peripheral clock divider.*/
-        enum SPI_mode    mode        : 2;       /*!< SPI mode.*/
-        bool             msb_first   : 1;       /*!< MSb first (@b true).*/
-#else
         u8_t             flush_byte;            /*!< Flush byte in read transmission.*/
         enum SPI_clk_div clk_divider;           /*!< Peripheral clock divider.*/
         enum SPI_mode    mode;                  /*!< SPI mode.*/
         bool             msb_first;             /*!< MSb first (@b true).*/
-#endif
         u8_t             CS_port_idx;           /*!< Chip Select port index.*/
         u8_t             CS_pin_idx;            /*!< Chip Select pin index.*/
 } SPI_config_t;
@@ -408,10 +402,11 @@ typedef struct {
 /**
  * SPI transmit and receive type.
  */
-typedef struct {
-        const u8_t      *tx_buffer;      /*!< TX buffer pointer.*/
-        u8_t            *rx_buffer;      /*!< RX buffer pointer.*/
-        size_t           count;          /*!< RX and TX buffer size.*/
+typedef struct SPI_transceive {
+        const u8_t            *tx_buffer;       /*!< TX buffer pointer.*/
+        u8_t                  *rx_buffer;       /*!< RX buffer pointer.*/
+        size_t                 count;           /*!< RX and TX buffer size.*/
+        struct SPI_transceive *next;            /*!< Next transceive buffer.*/
 } SPI_transceive_t;
 
 /*==============================================================================
