@@ -1362,9 +1362,10 @@ static inline int sys_llist_functor_cmp_strings(const void *a, const void *b)
  *
  * @note Function can be used only by file system or driver code.
  *
- * @param
+ * @param  size                 object size (element size)
  * @param  cmp_functor          compare functor (can be NULL)
  * @param  obj_dtor             object destructor (can be NULL, then free() is destructor)
+ * @param  btree                created b-tree object
  *
  * @return One of @ref errno value.
  *
@@ -1422,7 +1423,7 @@ static inline int sys_llist_functor_cmp_strings(const void *a, const void *b)
    @endcode
  */
 //==============================================================================
-static inline int sys_btree_create(size_t size, btree_cmp_functor_t functor, btree_obj_dtor_t obj_dtor, btree_t **btree);
+static inline int sys_btree_create(size_t size, btree_cmp_functor_t cmp_functor, btree_obj_dtor_t obj_dtor, btree_t **btree);
 #endif
 
 //==============================================================================
@@ -1918,7 +1919,7 @@ static inline int sys_btree_insert(btree_t *tree, void *data)
  * @note Function can be used only by file system or driver code.
  *
  * @param  tree         BTree object
- * @param  key          object to delete
+ * @param  data         object to delete
  *
  * @return One of errno value.
  *

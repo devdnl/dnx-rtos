@@ -27,7 +27,7 @@
 *//*==========================================================================*/
 
 /**
-@defgroup drv-sdspi SDSPI Driver
+@defgroup drv-sdspi SDSPI Driver (SPI SD Card mode driver)
 
 \section drv-sdspi-desc Description
 Driver handles SD Card by using SPI interface (mode). The SPI interface is handled

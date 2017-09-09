@@ -153,7 +153,9 @@ static void reset(I2C_dev_t *hdl, bool reinit)
         sys_sleep_ms(1);
 
         if (reinit) {
+                u16_t OAR1 = i2c->OAR1;
                 _I2C_LLD__init(hdl->major);
+                i2c->OAR1 = OAR1;
         }
 
         _I2C_LLD__stop(hdl);
@@ -164,10 +166,11 @@ static void reset(I2C_dev_t *hdl, bool reinit)
  * @brief  Function wait for selected event (IRQ)
  * @param  hdl                  device handle
  * @param  SR1_event_mask       event mask (bits from SR1 register)
+ * @param  timeout_ms           timeout in milliseconds
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
+static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask, u32_t timeout_ms)
 {
         I2C_t *i2c = get_I2C(hdl);
 
@@ -182,7 +185,7 @@ static int wait_for_I2C_event(I2C_dev_t *hdl, u16_t SR1_event_mask)
         SET_BIT(i2c->CR2, CR2);
 
         int ferr = EIO;
-        int err  = sys_queue_receive(_I2C[hdl->major]->event, &ferr, _I2C_DEVICE_TIMEOUT);
+        int err  = sys_queue_receive(_I2C[hdl->major]->event, &ferr, timeout_ms);
         if (!err) {
                 err = ferr;
         }
@@ -290,7 +293,7 @@ int _I2C_LLD__init(u8_t major)
 
         i2c->CR1   = I2C_CR1_SWRST;
         i2c->CR1   = 0;
-        i2c->CR2   = clocks.PCLK1_Frequency & I2C_CR2_FREQ;;
+        i2c->CR2   = clocks.PCLK1_Frequency & I2C_CR2_FREQ;
         i2c->CCR   = CCR;
         i2c->TRISE = clocks.PCLK1_Frequency + 1;
         i2c->CR1   = I2C_CR1_PE;
@@ -336,7 +339,7 @@ int _I2C_LLD__start(I2C_dev_t *hdl)
         CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
         SET_BIT(i2c->CR1, I2C_CR1_START | I2C_CR1_ACK);
 
-        return wait_for_I2C_event(hdl, I2C_SR1_SB);
+        return wait_for_I2C_event(hdl, I2C_SR1_SB, _I2C_DEVICE_TIMEOUT);
 }
 
 //==============================================================================
@@ -400,14 +403,14 @@ int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
 
                 // send header + 2 most significant bits of 10-bit address
                 i2c->DR = _I2C_HEADER_ADDR_10BIT | ((hdl->config.address & 0xFE) >> 7);
-                err = wait_for_I2C_event(hdl, I2C_SR1_ADD10);
+                err = wait_for_I2C_event(hdl, I2C_SR1_ADD10, _I2C_DEVICE_TIMEOUT);
                 if (err) goto finish;
 
                 // send rest 8 bits of 10-bit address
                 u8_t  addr = hdl->config.address & 0xFF;
                 u16_t tmp  = i2c->SR1;
                 (void)tmp;   i2c->DR = addr;
-                err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
+                err = wait_for_I2C_event(hdl, I2C_SR1_ADDR, _I2C_DEVICE_TIMEOUT);
                 if (err) goto finish;
 
                 clear_send_address_event(hdl);
@@ -418,14 +421,14 @@ int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write)
 
                 // send header
                 i2c->DR = write ? hdr : hdr | 0x01;
-                err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
+                err = wait_for_I2C_event(hdl, I2C_SR1_ADDR, _I2C_DEVICE_TIMEOUT);
 
         } else {
                 u16_t tmp = i2c->SR1;
                       tmp = i2c->SR2;
                 (void)tmp;
                 i2c->DR = write ? (hdl->config.address & 0xFE) : (hdl->config.address | 0x01);
-                err = wait_for_I2C_event(hdl, I2C_SR1_ADDR);
+                err = wait_for_I2C_event(hdl, I2C_SR1_ADDR, _I2C_DEVICE_TIMEOUT);
         }
 
         finish:
@@ -494,21 +497,21 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                 {
                         while (count) {
                                 if (count == 3) {
-                                        err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
+                                        err = wait_for_I2C_event(hdl, I2C_SR1_BTF, _I2C_DEVICE_TIMEOUT);
                                         if (err) break;
 
                                         CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
                                         *dst++ = i2c->DR;
                                         n++;
 
-                                        err = wait_for_I2C_event(hdl, I2C_SR1_RXNE);
+                                        err = wait_for_I2C_event(hdl, I2C_SR1_RXNE, _I2C_DEVICE_TIMEOUT);
                                         if (err) break;
 
                                         _I2C_LLD__stop(hdl);
                                         *dst++ = i2c->DR;
                                         n++;
 
-                                        err = wait_for_I2C_event(hdl, I2C_SR1_RXNE);
+                                        err = wait_for_I2C_event(hdl, I2C_SR1_RXNE, _I2C_DEVICE_TIMEOUT);
                                         if (err) break;
 
                                         *dst++ = i2c->DR;
@@ -516,7 +519,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
 
                                         count = 0;
                                 } else {
-                                        err = wait_for_I2C_event(hdl, I2C_SR1_RXNE);
+                                        err = wait_for_I2C_event(hdl, I2C_SR1_RXNE, _I2C_DEVICE_TIMEOUT);
                                         if (!err) {
                                                 *dst++ = i2c->DR;
                                                 count--;
@@ -536,7 +539,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                 }
                 sys_critical_section_end();
 
-                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
+                err = wait_for_I2C_event(hdl, I2C_SR1_BTF, _I2C_DEVICE_TIMEOUT);
                 if (!err) {
                         _I2C_LLD__stop(hdl);
 
@@ -550,14 +553,17 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                 clear_send_address_event(hdl);
                 _I2C_LLD__stop(hdl);
 
-                err = wait_for_I2C_event(hdl, I2C_SR1_RXNE);
+                err = wait_for_I2C_event(hdl, I2C_SR1_RXNE, _I2C_DEVICE_TIMEOUT);
                 if (!err) {
                         *dst++ = i2c->DR;
                         n     += 1;
                 }
         }
 
+#if USE_DMA > 0
         finish:
+#endif
+
         *rdcnt = n;
 
         return err;
@@ -626,7 +632,7 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
 #endif
         {
                 while (count) {
-                        err = wait_for_I2C_event(hdl, I2C_SR1_TXE);
+                        err = wait_for_I2C_event(hdl, I2C_SR1_TXE, _I2C_DEVICE_TIMEOUT);
                         if (!err) {
                                 i2c->DR = *src++;
                         } else {
@@ -639,14 +645,181 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
         }
 
         if (n && !err) {
-                err = wait_for_I2C_event(hdl, I2C_SR1_BTF);
+                err = wait_for_I2C_event(hdl, I2C_SR1_BTF, _I2C_DEVICE_TIMEOUT);
                 if (err) {
                         n = n - 1;
                 }
         }
 
+#if USE_DMA > 0
         finish:
+#endif
+
         *wrcnt = n;
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function enable peripheral in slave mode.
+ * @param  hdl                  device handle
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+int _I2C_LLD__slave_mode_setup(I2C_dev_t *hdl)
+{
+        I2C_t *i2c = get_I2C(hdl);
+
+        if (hdl->config.slave_mode) {
+
+                i2c->OAR1 = (1 << 14) // not used but documentation say to set this bit...
+                          | (hdl->config.address & 0x3FF)
+                          | (hdl->config.addr_10bit ? I2C_OAR1_ADDMODE : 0);
+
+                i2c->OAR2 = 0;
+
+        } else {
+
+                CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
+
+                i2c->OAR1 = 0;
+                i2c->OAR2 = 0;
+        }
+
+        return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief  Function wait for I2C start/address condition event.
+ * @param  hdl                  device handle
+ * @param  event                event type and timeout
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+int _I2C_LLD__slave_wait_for_selection(I2C_dev_t *hdl, I2C_selection_t *event)
+{
+        I2C_t *i2c = get_I2C(hdl);
+
+        CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
+        SET_BIT(i2c->CR1, I2C_CR1_ACK);
+
+        int err = wait_for_I2C_event(hdl, I2C_SR1_ADDR, event->timeout_ms);
+        if (!err) {
+                event->RD_addr = (i2c->SR2 & I2C_SR2_TRA);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function transmit bytes to master device.
+ * @param  hdl                  device handle
+ * @param  src                  source buffer
+ * @param  count                number of bytes to transfer
+ * @param  wrctr                write counter
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrctr)
+{
+        I2C_t *i2c = get_I2C(hdl);
+        int    err = ESUCC;
+
+        *wrctr = 0;
+
+        u32_t tref = sys_time_get_reference();
+
+        while (true) {
+                if ((i2c->SR1 & I2C_SR1_TXE)) {
+                        if (count > 0) {
+                                i2c->DR = *src++;
+                                count--;
+                                (*wrctr)++;
+                        } else {
+                                i2c->DR = 0;
+                        }
+
+                } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
+                        printk("I2C%d: slave transmit timeout", hdl->major);
+                        _I2C_LLD__stop(hdl);
+                        err = ETIME;
+                        break;
+
+                } else {
+                        if (i2c->SR1 & I2C_SR1_AF) {
+                                /*
+                                 * TXE flag is set always when shift buffer is
+                                 * empty. In this case CPU write next byte but
+                                 * there is possibility that there is a stop
+                                 * condition so written byte is not send to
+                                 * master device. In this case the number of
+                                 * sent bytes should be corrected by 1 byte.
+                                 */
+                                if (!(i2c->SR1 & I2C_SR1_TXE)) {
+                                        (*wrctr)--;
+                                }
+
+                                break;
+                        }
+                }
+        }
+
+        // clear AF flag
+        i2c->SR1 = 0;
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function receive bytes from master device.
+ * @param  hdl                  device handle
+ * @param  dst                  destination buffer
+ * @param  count                number of bytes to transfer
+ * @param  rdctr                read counter
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+int _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdctr)
+{
+        I2C_t *i2c = get_I2C(hdl);
+        int    err = ESUCC;
+
+        *rdctr = 0;
+
+        u32_t tref = sys_time_get_reference();
+
+        while (true) {
+                if (i2c->SR1 & I2C_SR1_RXNE) {
+                        if (count > 0) {
+                                *dst++ = i2c->DR;
+                                count--;
+                                (*rdctr)++;
+                        } else {
+                                u8_t tmp = i2c->DR;
+                                (void)tmp;
+                        }
+
+                } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
+                        printk("I2C%d: slave receive timeout", hdl->major);
+                        _I2C_LLD__stop(hdl);
+                        err = ETIME;
+                        break;
+
+                } else {
+                        if (i2c->SR1 & (I2C_SR1_ADDR | I2C_SR1_STOPF)) {
+                                break;
+                        }
+                }
+        }
+
+        // clear STOPF flag
+        u8_t tmp = i2c->SR1;
+        (void)tmp;
+        SET_BIT(i2c->CR1, I2C_CR1_PE);
 
         return err;
 }
@@ -681,6 +854,11 @@ static void IRQ_EV_handler(u8_t major)
                         int err = EIO;
                         sys_queue_send_from_ISR(_I2C[major]->event, &err, &woken);
                         CLEAR_BIT(I2C1->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
+                        i2c->SR1 = 0;
+                        NVIC_DisableIRQ(I2C_HW[major].IRQ_ER_n);
+                        NVIC_DisableIRQ(I2C_HW[major].IRQ_EV_n);
+                        NVIC_ClearPendingIRQ(I2C_HW[major].IRQ_ER_n);
+                        NVIC_ClearPendingIRQ(I2C_HW[major].IRQ_EV_n);
                 }
         }
 

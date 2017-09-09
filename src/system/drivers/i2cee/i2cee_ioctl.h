@@ -27,7 +27,7 @@
 *//*==========================================================================*/
 
 /**
-@defgroup drv-i2cee I2CEE Driver
+@defgroup drv-i2cee I2CEE Driver (I2C EEPROM)
 
 \section drv-i2cee-desc Description
 Driver handles 24Cxx devices. The role of driver is handling memory paging and

@@ -1,3 +1,11 @@
+dnx RTOS 2.1.1 Dingo
+====================
+New Features, Improvements:
+- Added I2C slave mode
+
+Fixed Bugs:
+- Fixed invalid vector table for stm32f40x devices 
+
 dnx RTOS 2.1.0 Dingo
 ====================
 New Features, Improvements:

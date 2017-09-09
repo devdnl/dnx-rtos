@@ -26,7 +26,7 @@ Brief   Flexible Memory Controller
 ==============================================================================*/
 
 /**
-@defgroup drv-fmc FMC Driver
+@defgroup drv-fmc FMC Driver (Flexible Memory Controller)
 
 \section drv-fmc-desc Description
 Driver handles ...
