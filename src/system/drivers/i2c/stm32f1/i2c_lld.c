@@ -759,7 +759,9 @@ int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size
                                  * sent bytes should be corrected by 1 byte.
                                  */
                                 if (!(i2c->SR1 & I2C_SR1_TXE)) {
-                                        (*wrctr)--;
+                                        if (*wrctr > 1) {
+                                                (*wrctr)--;
+                                        }
                                 }
 
                                 break;
