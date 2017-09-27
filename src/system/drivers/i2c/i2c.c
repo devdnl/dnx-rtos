@@ -60,6 +60,7 @@ static const I2C_config_t I2C_DEFAULT_CFG = {
         .address       = 0x00,
         .addr_10bit    = false,
         .sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED,
+        .slave_mode    = false
 };
 
 /// main memory of module
@@ -223,24 +224,28 @@ API_MOD_WRITE(I2C,
 
         int err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
         if (!err) {
+                if (hdl->config.slave_mode) {
+                        err = _I2C_LLD__slave_transmit(hdl, src, count, wrcnt);
 
-                err = _I2C_LLD__start(hdl);
-                if (err) goto error;
-
-                err = _I2C_LLD__send_address(hdl, true);
-                if (err) {
-                        goto error;
-                }
-
-                if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
-                        err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
+                } else {
+                        err = _I2C_LLD__start(hdl);
                         if (err) goto error;
+
+                        err = _I2C_LLD__send_address(hdl, true);
+                        if (err) {
+                                goto error;
+                        }
+
+                        if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
+                                err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
+                                if (err) goto error;
+                        }
+
+                        err = _I2C_LLD__transmit(hdl, src, count, wrcnt);
+
+                        error:
+                        _I2C_LLD__stop(hdl);
                 }
-
-                err = _I2C_LLD__transmit(hdl, src, count, wrcnt);
-
-                error:
-                _I2C_LLD__stop(hdl);
 
                 sys_mutex_unlock(_I2C[hdl->major]->lock);
         }
@@ -276,28 +281,32 @@ API_MOD_READ(I2C,
 
         int err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
         if (!err) {
+                if (hdl->config.slave_mode) {
+                        err = _I2C_LLD__slave_receive(hdl, dst, count, rdcnt);
 
-                if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
-                        err = _I2C_LLD__start(hdl);
+                } else {
+                        if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
+                                err = _I2C_LLD__start(hdl);
+                                if (err) goto error;
+
+                                err = _I2C_LLD__send_address(hdl, true);
+                                if (err) goto error;
+
+                                err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
+                                if (err) goto error;
+                        }
+
+                        err = _I2C_LLD__repeat_start(hdl);
                         if (err) goto error;
 
-                        err = _I2C_LLD__send_address(hdl, true);
+                        err = _I2C_LLD__send_address(hdl, false);
                         if (err) goto error;
 
-                        err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
-                        if (err) goto error;
+                        err = _I2C_LLD__receive(hdl, dst, count, rdcnt);
+
+                        error:
+                        _I2C_LLD__stop(hdl);
                 }
-
-                err = _I2C_LLD__repeat_start(hdl);
-                if (err) goto error;
-
-                err = _I2C_LLD__send_address(hdl, false);
-                if (err) goto error;
-
-                err = _I2C_LLD__receive(hdl, dst, count, rdcnt);
-
-                error:
-                _I2C_LLD__stop(hdl);
 
                 sys_mutex_unlock(_I2C[hdl->major]->lock);
         }
@@ -323,10 +332,22 @@ API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
 
         if (arg) {
                 switch (request) {
-                case IOCTL_I2C__CONFIGURE: {
-                        const I2C_config_t *cfg   = arg;
-                        hdl->config = *cfg;
-                        err = ESUCC;
+                case IOCTL_I2C__CONFIGURE:
+                        err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+                        if (!err) {
+                                hdl->config = *cast(const I2C_config_t*, arg);
+                                err = _I2C_LLD__slave_mode_setup(hdl);
+                                sys_mutex_unlock(_I2C[hdl->major]->lock);
+                        }
+                        break;
+
+                case IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION: {
+                        I2C_selection_t *event = arg;
+                        err = sys_mutex_lock(_I2C[hdl->major]->lock, event->timeout_ms);
+                        if (!err) {
+                                err = _I2C_LLD__slave_wait_for_selection(hdl, event);
+                                sys_mutex_unlock(_I2C[hdl->major]->lock);
+                        }
                         break;
                 }
 

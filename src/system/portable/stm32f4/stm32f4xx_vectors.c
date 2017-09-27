@@ -122,6 +122,8 @@ WEAK_DEFAULT void DMA2_Stream1_IRQHandler(void);
 WEAK_DEFAULT void DMA2_Stream2_IRQHandler(void);
 WEAK_DEFAULT void DMA2_Stream3_IRQHandler(void);
 WEAK_DEFAULT void DMA2_Stream4_IRQHandler(void);
+WEAK_DEFAULT void __Reserved_61_IRQHandler(void);
+WEAK_DEFAULT void __Reserved_62_IRQHandler(void);
 WEAK_DEFAULT void CAN2_TX_IRQHandler(void);
 WEAK_DEFAULT void CAN2_RX0_IRQHandler(void);
 WEAK_DEFAULT void CAN2_RX1_IRQHandler(void);
@@ -293,6 +295,9 @@ void (*const vectors[])(void) __attribute__ ((section(".vectors"))) =
 #elif defined(STM32F412xx) || defined(STM32F413xx) || defined(STM32F423xx)
         DFSDM1_FLT0_IRQHandler,                 // 61:DFSM_FLT0
         DFSDM1_FLT1_IRQHandler,                 // 62:DFSM_FLT
+#else
+        __Reserved_61_IRQHandler,               // 61:Reserved
+        __Reserved_62_IRQHandler,               // 62:Reserved
 #endif
         CAN2_TX_IRQHandler,                     // 63:CAN2 TX
         CAN2_RX0_IRQHandler,                    // 64:CAN2 RX0

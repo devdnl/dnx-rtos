@@ -93,7 +93,9 @@ int _gettime(time_t *timer)
         int err = EINVAL;
 
         if (timer) {
-                if ((time_ref == 0) || sys_time_is_expired(time_ref, 500)) {
+                if (  (time_ref == 0) || (timecache == 0)
+                   || sys_time_is_expired(time_ref, 500)) {
+
                         FILE *rtc;
 
                         struct vfs_path cpath;
@@ -101,7 +103,7 @@ int _gettime(time_t *timer)
                         cpath.PATH = __OS_RTC_FILE_PATH__;
 
                         err = _vfs_fopen(&cpath, "r", &rtc);
-                        if (err == ESUCC) {
+                        if (!err) {
                                 size_t rdcnt;
                                 err = _vfs_fread(timer, sizeof(time_t), &rdcnt, rtc);
                                 timecache = *timer;

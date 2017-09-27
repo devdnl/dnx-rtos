@@ -55,7 +55,8 @@ e.g. I2C1.
 Number of peripherals determines how big the major number can be. If there is
 only one I2C peripheral then the major number is always 0.
 Number of devices (minor number) can be theoretically up to 256 or to limits
-of memory capacity.
+of memory capacity. Minor number concerns communication that dnx RTOS is a master.
+When dnx RTOS is a slave then only one minor device should be used.
 
 \subsection drv-i2c-ddesc-init Driver initialization
 To initialize driver the following code can be used:
@@ -78,8 +79,11 @@ driver_release("I2C", 0, 1);
 
 \subsection drv-i2c-ddesc-cfg Driver configuration
 Driver configuration should be done before usage and after initialization.
-The best place to do this is user application. To configure particular I2C
-device the ioctl() function shall be used as follow (EEPROM example):
+The best place to do this is user application or initialization daemon.
+
+\subsubsection drv-i2c-ddesc-cfg-master Master mode
+To configure particular I2C device as master the ioctl() function shall be used
+as follow (EEPROM example):
 @code
 #include <stdio.h>
 #include <stdbool.h>
@@ -88,7 +92,39 @@ device the ioctl() function shall be used as follow (EEPROM example):
 static const I2C_config_t cfg = {
       .address       = 0xA0,                          // EEPROM address
       .sub_addr_mode = I2C_SUB_ADDR_MODE__2_BYTES,    // EEPROM up to 64KiB
-      .addr_10bit    = false                          // 7-bit address
+      .addr_10bit    = false,                         // 7-bit address
+      .slave_mode    = false                          // master mode
+};
+
+static const char *dev_path = "/dev/I2C0-0";
+
+FILE *dev = fopen(dev_path, "r+");
+if (dev) {
+      if (ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg) != 0) {
+            perror(dev_path);
+      }
+
+      fclose(dev);
+} else {
+      perror(dev_path);
+}
+
+...
+@endcode
+
+\subsubsection drv-i2c-ddesc-cfg-slave Slave mode
+To configure particular I2C device as slave the ioctl() function shall be used
+as follow:
+@code
+#include <stdio.h>
+#include <stdbool.h>
+#include <sys/ioctl.h>
+
+static const I2C_config_t cfg = {
+      .address       = 0xA0,                          // microcontroller address
+      .sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED,   // don't care in slave mode
+      .addr_10bit    = false,                         // 7-bit address
+      .slave_mode    = true                           // slave mode
 };
 
 static const char *dev_path = "/dev/I2C0-0";
@@ -115,6 +151,7 @@ read. EEPROM devices uses also 1-byte sub-address but there is many devices
 that uses 2-byte sub-address mode. Some devices do not use any sub-addressing
 mode. Sub-address mode can be selected in configuration by using particular
 enumeration value. Sub-address value is controlled by fseek() function.
+The sub-address functionality works only in master mode.
 
 \paragraph drv-i2c-ddesc-cfg-subadis Sub-addressing disabled
 When this selection is used then I2C driver does not send any sub-address
@@ -152,6 +189,7 @@ fseek() value and next read data sequence.
 <tt>Read:  [S][ADDR+W][POINTER:2][POINTER:1][POINTER:0][Sr][ADDR+R][DATA1][DATAn]...[P]</tt>
 
 \subsection drv-i2c-ddesc-write Data write
+\subsubsection drv-i2c-ddesc-write-master Master mode
 Data to the I2C device can be written as regular file. Example assumptions:
 - EEPROM device is AT24C32 (4KiB EEPROM)
 - EEPROM address is 0xA0
@@ -170,7 +208,8 @@ static const char *blk2     = "Data block 2 at 0x100";
 static const I2C_config_t cfg = {
       .address       = 0xA0,                          // EEPROM address
       .sub_addr_mode = I2C_SUB_ADDR_MODE__2_BYTES,    // EEPROM up to 64KiB
-      .addr_10bit    = false                          // 7-bit address
+      .addr_10bit    = false,                         // 7-bit address
+      .slave_mode    = false                          // master mode
 };
 
 int_main(ee_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
@@ -200,7 +239,86 @@ int_main(ee_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 }
 @endcode
 
+\subsubsection drv-i2c-ddesc-write-slave Slave mode
+On slave mode, data can be written to the peripheral only when ADDR+RD request
+is received from master device. For master is a read operation but for slave
+device write. In this case the ioctl() function should be used to obtain the
+data direction and selection event.
+
+@code
+#include <stdio.h>
+#include <stdbool.h>
+#include <dnx/misc.h>
+#include <sys/ioctl.h>
+
+static const char *dev_path = "/dev/I2C0";
+
+static const I2C_config_t cfg = {
+      .address       = 0xA0,                          // microcontroller address
+      .sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED,   // don't care in slave mode
+      .addr_10bit    = false,                         // 7-bit address
+      .slave_mode    = true                           // slave mode
+};
+
+int_main(slave, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+{
+      FILE *dev = fopen(dev_path, "r+");
+
+      if (dev) {
+            // set I2C device configuration
+            ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+
+            while (true) {
+                    I2C_selection_t sel = {.timeout_ms = MAX_DELAY_MS};
+
+                    if (ioctl(i2c, IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION, &sel) == 0) {
+
+                        u8_t buf[64];
+                        memset(buf, 0, sizeof(buf));
+
+                        if (sel.RD_addr) {
+                                // slave write data to master device (master read
+                                // request).
+
+                                strncpy(buf, "FROM-SLAVE", sizeof(buf)-1);
+
+                                size_t n = fwrite(buf, 1, strlen(buf), i2c);
+
+                                printf("Written: %d bytes\n", n);
+
+                        } else {
+                                // slave device read data from peripheral sent
+                                // by master device.
+
+                                size_t n = fread(buf, 1, sizeof(buf) - 1, i2c);
+
+                                printf("Received: %d bytes\n", n);
+
+                                // print received data
+                                for (uint i = 0; i < n; i++) {
+                                        printf("%02X ", buf[i]);
+                                }
+                                puts("");
+                        }
+
+                    } else {
+                            perror(dev_path);
+                    }
+            }
+
+            // close I2C device
+            fclose(dev);
+
+      } else {
+            perror(dev_path);
+      }
+
+      return 0;
+}
+@endcode
+
 \subsection drv-i2c-ddesc-read Data read
+\subsubsection drv-i2c-ddesc-read-master Master mode
 Data to the I2C device can be read as regular file. Example assumptions:
 - EEPROM device is AT24C32 (4KiB EEPROM)
 - EEPROM address is 0xA0
@@ -252,6 +370,84 @@ int_main(ee_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 }
 @endcode
 
+\subsubsection drv-i2c-ddesc-read-slave Slave mode
+On slave mode, data can be read from the peripheral only when ADDR+WR request
+is received from master device. For master is a write operation but for slave
+device read. In this case the ioctl() function should be used to obtain the
+data direction and selection event.
+
+@code
+#include <stdio.h>
+#include <stdbool.h>
+#include <dnx/misc.h>
+#include <sys/ioctl.h>
+
+static const char *dev_path = "/dev/I2C0";
+
+static const I2C_config_t cfg = {
+      .address       = 0xA0,                          // microcontroller address
+      .sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED,   // don't care in slave mode
+      .addr_10bit    = false,                         // 7-bit address
+      .slave_mode    = true                           // slave mode
+};
+
+int_main(slave, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+{
+      FILE *dev = fopen(dev_path, "r+");
+
+      if (dev) {
+            // set I2C device configuration
+            ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+
+            while (true) {
+                    I2C_selection_t sel = {.timeout_ms = MAX_DELAY_MS};
+
+                    if (ioctl(i2c, IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION, &sel) == 0) {
+
+                        u8_t buf[64];
+                        memset(buf, 0, sizeof(buf));
+
+                        if (sel.RD_addr) {
+                                // slave write data to master device (master read
+                                // request).
+
+                                strncpy(buf, "FROM-SLAVE", sizeof(buf)-1);
+
+                                size_t n = fwrite(buf, 1, strlen(buf), i2c);
+
+                                printf("Written: %d bytes\n", n);
+
+                        } else {
+                                // slave device read data from peripheral sent
+                                // by master device.
+
+                                size_t n = fread(buf, 1, sizeof(buf) - 1, i2c);
+
+                                printf("Received: %d bytes\n", n);
+
+                                // print received data
+                                for (uint i = 0; i < n; i++) {
+                                        printf("%02X ", buf[i]);
+                                }
+                                puts("");
+                        }
+
+                    } else {
+                            perror(dev_path);
+                    }
+            }
+
+            // close I2C device
+            fclose(dev);
+
+      } else {
+            perror(dev_path);
+      }
+
+      return 0;
+}
+@endcode
+
 @{
 */
 
@@ -281,13 +477,21 @@ typedef enum {
 
 /**
  * Type represents I2C peripheral configuration.
- *
  */
 typedef struct {
         u16_t               address;            /*!< Device address 8 or 10 bit.*/
         I2C_sub_addr_mode_t sub_addr_mode;      /*!< Number of bytes of sub-address (EEPROM, RTC).*/
         bool                addr_10bit;         /*!< @b true: 10 bit addressing enabled.*/
+        bool                slave_mode;         /*!< @b true: slave moce enabled.*/
 } I2C_config_t;
+
+/**
+ * Type used to check I2C slave mode event.
+ */
+typedef struct {
+        u32_t               timeout_ms;         /*!< Timeout of waiting for event.*/
+        bool                RD_addr;            /*!< ADDR+RD received.*/
+} I2C_selection_t;
 
 /*==============================================================================
   Exported macros
@@ -297,7 +501,14 @@ typedef struct {
  * @param  [WR] @ref I2C_config_t*        device configuration
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_I2C__CONFIGURE            _IOW(I2C, 0, const I2C_config_t*)
+#define IOCTL_I2C__CONFIGURE                    _IOW(I2C, 0, const I2C_config_t*)
+
+/**
+ * @brief  Wait for I2C address event.
+ * @param  [WR] @ref I2C_selection_t*     I2C address event (device selection)
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
+ */
+#define IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION     _IOWR(I2C, 1, I2C_selection_t*)
 
 /*==============================================================================
   Exported objects

@@ -27,7 +27,7 @@
 *//*==========================================================================*/
 
 /**
-@defgroup drv-afm AFM Driver
+@defgroup drv-afm AFM Driver (Alternative Function Module)
 
 \section drv-afm-desc Description
 Driver configure alternative functions of microcontroller e.g. JTAG pins disable,

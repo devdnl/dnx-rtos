@@ -26,7 +26,7 @@ Brief   Digital Camera Interface Driver
 ==============================================================================*/
 
 /**
-@defgroup drv-dci DCI Driver
+@defgroup drv-dci DCI Driver (Digital Camera Interface)
 
 \section drv-dci-desc Description
 Driver handles Digital Camera Interface.

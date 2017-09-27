@@ -117,6 +117,10 @@ extern void _I2C_LLD__stop(I2C_dev_t *hdl);
 extern int  _I2C_LLD__send_address(I2C_dev_t *hdl, bool write);
 extern int  _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt);
 extern int  _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt);
+extern int  _I2C_LLD__slave_mode_setup(I2C_dev_t *hdl);
+extern int  _I2C_LLD__slave_wait_for_selection(I2C_dev_t *hdl, I2C_selection_t *event);
+extern int  _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt);
+extern int  _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt);
 
 /*==============================================================================
   Exported inline functions
