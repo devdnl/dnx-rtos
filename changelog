@@ -7,7 +7,8 @@ New Features, Improvements:
 
 Fixed Bugs:
 - Fixed invalid vector table for stm32f40x devices
-- FIxed time cache handling (time() function)
+- Fixed time cache handling (time() function)
+- Fixed float point numbers handling in STM32F4xx port
 
 dnx RTOS 2.1.0 Dingo
 ====================
