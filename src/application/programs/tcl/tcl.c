@@ -34,6 +34,8 @@ Brief   TCL-like language interpreter.
 #include <unistd.h>
 #include <stdbool.h>
 #include <dnx/vt100.h>
+#include <dnx/misc.h>
+#include <sys/ioctl.h>
 #include <utcl.h>
 
 /*==============================================================================
@@ -55,6 +57,7 @@ Brief   TCL-like language interpreter.
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         char  cmd[128];
+        char  history[128];
         bool  run;
         char *args;
 };
@@ -90,10 +93,43 @@ static int tcl_cmd_sleep(struct tcl *tcl, tcl_value_t *args, void *arg)
 
 //==============================================================================
 /**
+ * @brief Function handle history. Check if command line contain AUP, ADN keys
+ *        and set prompt to historical value
+ *
+ * @return true if history got, false is new command inserted
+ */
+//==============================================================================
+static bool is_history_request()
+{
+        if (  strcmp(global->cmd, HISTORY_NEXT_KEY) == 0
+           || strcmp(global->cmd, HISTORY_PREV_KEY) == 0) {
+
+                if (strlch(global->history) == '\n') {
+                        strlch(global->history) = '\0';
+                }
+
+                if (strlen(global->history)) {
+                        ioctl(stdin, IOCTL_TTY__SET_EDITLINE, global->history);
+                }
+
+                return true;
+        } else {
+                if (strlen(global->cmd)) {
+                        if (strfch(global->cmd) != '\033') {
+                                strcpy(global->history, global->cmd);
+                        }
+                }
+
+                return false;
+        }
+}
+
+//==============================================================================
+/**
  * @brief TCL main function
  */
 //==============================================================================
-int_main(tcl, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+int_main(tcl, STACK_DEPTH_LARGE, int argc, char *argv[])
 {
         struct tcl tcl;
 
@@ -136,6 +172,11 @@ int_main(tcl, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
                         do {
                                 fgets(global->cmd, sizeof(global->cmd), stdin);
+
+                                if (is_history_request()) {
+                                        continue;
+                                }
+
                         } while (global->cmd[0] == '\033');
 
                         if (  tcl_eval(&tcl, global->cmd, strlen(global->cmd)) != FNORMAL

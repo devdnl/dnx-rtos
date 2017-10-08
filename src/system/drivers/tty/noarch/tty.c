@@ -60,6 +60,7 @@ typedef struct {
        ttybfr_t        *screen;
        ttyedit_t       *editline;
        ttycmd_t        *vtcmd;
+       bool             flushed;
        u8_t             major;
 } tty_t;
 
@@ -622,6 +623,15 @@ static void service_out(void *arg)
                                                 while ((str = ttybfr_get_fresh_line(tty->screen))) {
                                                         size_t wrcnt;
 
+                                                        if (tty->flushed) {
+                                                                sys_fwrite(VT100_CLEAR_LINE,
+                                                                           strlen(VT100_CLEAR_LINE),
+                                                                           &wrcnt,
+                                                                           tty_module->outfile);
+
+                                                                tty->flushed = false;
+                                                        }
+
                                                         sys_fwrite(str,
                                                                    strlen(str),
                                                                    &wrcnt,
@@ -641,23 +651,24 @@ static void service_out(void *arg)
                                    && sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS) == ESUCC) {
                                         size_t wrcnt;
 
-                                        const char *cmd = VT100_SHIFT_CURSOR_LEFT(999) VT100_ERASE_LINE;
-                                        sys_fwrite(cmd,
-                                                    strlen(cmd),
-                                                    &wrcnt,
-                                                    tty_module->outfile);
+                                        sys_fwrite(VT100_CLEAR_LINE,
+                                                   strlen(VT100_CLEAR_LINE),
+                                                   &wrcnt,
+                                                   tty_module->outfile);
 
                                         const char *last_line = ttybfr_get_line(tty->screen, 0);
                                         sys_fwrite(last_line,
-                                                    strlen(last_line),
-                                                    &wrcnt,
-                                                    tty_module->outfile);
+                                                   strlen(last_line),
+                                                   &wrcnt,
+                                                   tty_module->outfile);
 
                                         const char *editline = ttyedit_get_value(tty->editline);
                                         sys_fwrite(editline,
-                                                    strlen(editline),
-                                                    &wrcnt,
-                                                    tty_module->outfile);
+                                                   strlen(editline),
+                                                   &wrcnt,
+                                                   tty_module->outfile);
+
+                                        tty->flushed = true;
 
                                         sys_mutex_unlock(tty->secure_mtx);
                                 }
