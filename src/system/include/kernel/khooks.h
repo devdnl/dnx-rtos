@@ -42,9 +42,11 @@
   Exported symbolic constants/macros
 ==============================================================================*/
 #if __OS_ENABLE_SYS_ASSERT__ > 0
-#define _assert(x) _assert_hook(x)
+#define _assert(x) _assert_hook(x, NULL)
+#define _assert_msg(x, msg) _assert_hook(x, msg)
 #else
 #define _assert(x) (void)(x)
+#define _assert_msg(x, msg) (void)(x)
 #endif
 
 /*==============================================================================
@@ -63,7 +65,7 @@ extern void  vApplicationTickHook(void);
 extern u32_t _get_uptime_counter(void);
 
 #if __OS_ENABLE_SYS_ASSERT__ > 0
-extern void _assert_hook(bool assert);
+extern void _assert_hook(bool assert, const char *msg);
 #endif
 
 #ifdef __cplusplus

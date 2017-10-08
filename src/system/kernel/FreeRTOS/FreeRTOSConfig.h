@@ -157,8 +157,8 @@ extern void  vApplicationSwitchedOut(void);
 #define traceTASK_SWITCHED_IN()                 _task_switched_in(pxCurrentTCB, pxCurrentTCB->pxTaskTag)
 
 #if __OS_ENABLE_SYS_ASSERT__ > 0
-extern void _assert_hook(bool assert);
-#define configASSERT(x)                         _assert_hook(x)
+extern void _assert_hook(bool assert, const char *msg);
+#define configASSERT(x)                         _assert_hook(x, "kernel")
 #endif
 
 #endif /* FREERTOS_CONFIG_H */
