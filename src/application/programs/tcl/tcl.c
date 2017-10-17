@@ -114,7 +114,7 @@ static bool is_history_request()
 
                 return true;
         } else {
-                if (strlen(global->cmd)) {
+                if (strlen(global->cmd) > 1) {
                         if (strfch(global->cmd) != '\033') {
                                 strcpy(global->history, global->cmd);
                         }
@@ -137,34 +137,54 @@ int_main(tcl, STACK_DEPTH_LARGE, int argc, char *argv[])
         tcl_register_const(&tcl, "sleep", tcl_cmd_sleep, 2, NULL);
 
         if (argc > 1) {
-                size_t arglen = 0;
+                if (isstreq(argv[1], "-c")) {
 
-                for (int i = 2; (i < argc) && (argv[i] != NULL); i++) {
-                        arglen += strlen(argv[i]) + 3;
-                }
+                        if (argv[2]) {
 
-                if (arglen > 0) {
-                        global->args = calloc(arglen + 1, sizeof(char));
-                        if (!global->args) {
-                                goto exit;
+                                strncpy(global->cmd, argv[2], sizeof(global->cmd));
+                                strncat(global->cmd, "\n", sizeof(global->cmd));
+
+                                if (tcl_eval(&tcl, global->cmd, strlen(global->cmd)) != FNORMAL) {
+
+                                        if (!tcl.exit) {
+                                                printf("Error: %s", global->cmd);
+                                        }
+                                }
+                        } else {
+                                puts("Error: command required");
                         }
-
-                        for (int i = 2; (i < argc) && (argv[i] != NULL); i++) {
-                                strcat(global->args, "{");
-                                strcat(global->args, argv[i]);
-                                strcat(global->args, "} ");
-                        }
-
-                        tcl_var(&tcl, "args", tcl_alloc(global->args, strlen(global->args)));
-
-                        free(global->args);
-                        global->args = NULL;
 
                 } else {
-                        tcl_var(&tcl, "args", tcl_alloc(" ", 1));
-                }
 
-                tcl_loadfile(&tcl, argv[1]);
+                        size_t arglen = 0;
+
+                        for (int i = 2; (i < argc) && (argv[i] != NULL); i++) {
+                                arglen += strlen(argv[i]) + 3;
+                        }
+
+                        if (arglen > 0) {
+                                global->args = calloc(arglen + 1, sizeof(char));
+                                if (!global->args) {
+                                        goto exit;
+                                }
+
+                                for (int i = 2; (i < argc) && (argv[i] != NULL); i++) {
+                                        strcat(global->args, "{");
+                                        strcat(global->args, argv[i]);
+                                        strcat(global->args, "} ");
+                                }
+
+                                tcl_var(&tcl, "args", tcl_alloc(global->args, strlen(global->args)));
+
+                                free(global->args);
+                                global->args = NULL;
+
+                        } else {
+                                tcl_var(&tcl, "args", tcl_alloc(" ", 1));
+                        }
+
+                        tcl_loadfile(&tcl, argv[1]);
+                }
         } else {
                 do {
                         printf("TCL> ");
