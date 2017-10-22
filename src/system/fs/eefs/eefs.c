@@ -314,12 +314,12 @@ API_FS_INIT(eefs, void **fs_handle, const char *src_path, const char *opts)
                                 hdl->root_dir_block = 1 + hdl->block.buf.main.bitmap_blocks;
 
                                 if (!isstrempty(opts)) {
-                                        if (strstr(opts, "sync")) {
+                                        if (sys_stropt_is_flag(opts, "sync")) {
                                                 hdl->flag |= FLAG_SYNC;
                                                 DBG("enabled cache write-through");
                                         }
 
-                                        if (strstr(opts, "ro")) {
+                                        if (sys_stropt_is_flag(opts, "ro")) {
                                                 hdl->flag |= FLAG_RDONLY;
                                                 DBG("readonly mount");
                                         }

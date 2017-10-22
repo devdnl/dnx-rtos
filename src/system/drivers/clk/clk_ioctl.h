@@ -79,7 +79,7 @@ if (clk) {
         CLK_info_t clkinf;
         clkinf.iterator = 0;
 
-        while (  (ioctl(clk, IOCTL_CLK__GET_CLK_INFO, &clkinf) == 0)
+        while (  (ioctl(fileno(clk), IOCTL_CLK__GET_CLK_INFO, &clkinf) == 0)
               && (clkinf.name != NULL) ) {
 
                 printf("Clock '%s': %d Hz\n", clkinf.name, clkinf.freq_Hz);

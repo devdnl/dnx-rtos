@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    storinit.c
+/*==============================================================================
+File     stropt.h
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   Storage initialization (SD cards, HDD, etc)
+Brief    String options analyze library.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,75 +24,60 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
+
+/**
+@defgroup STROPT_H_ STROPT_H_
+
+Detailed Doxygen description.
+*/
+/**@{*/
+
+#ifndef _STROPT_H_
+#define _STROPT_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <errno.h>
+#include <string.h>
+#include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*==============================================================================
-  Local symbolic constants/macros
+  Exported macros
 ==============================================================================*/
 
 /*==============================================================================
-  Local types, enums definitions
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Local function prototypes
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Local object definitions
+  Exported functions
 ==============================================================================*/
-GLOBAL_VARIABLES_SECTION {
-};
+extern int _stropt_get_int(const char *opts, const char *var, int defval);
+extern const char *_stropt_get_string_ref(const char *opts, const char *var, size_t *len);
+extern size_t _stropt_get_string_copy(const char *opts, const char *var, char *buf, size_t buflen);
+extern int _stropt_get_bool(const char *opts, const char *var, int defval);
+extern bool _stropt_is_flag(const char *opts, const char *flag);
 
 /*==============================================================================
-  Exported object definitions
+  Exported inline functions
 ==============================================================================*/
 
-/*==============================================================================
-  Function definitions
-==============================================================================*/
-//==============================================================================
-/**
- * @brief Main function
- */
-//==============================================================================
-int_main(storinit, STACK_DEPTH_LOW, int argc, char *argv[])
-{
-        int status = EXIT_FAILURE;
-
-        if (argc == 1) {
-                printf("Usage: %s [file]\n", argv[0]);
-                return EXIT_FAILURE;
-        }
-
-        errno = 0;
-        FILE *storage = fopen(argv[1], "r");
-        if (storage) {
-                if (ioctl(fileno(storage), IOCTL_STORAGE__INITIALIZE) == 0) {
-                        if (ioctl(fileno(storage), IOCTL_STORAGE__READ_MBR) != 0) {
-                                perror(argv[1]);
-                        }
-
-                } else {
-                        perror(argv[1]);
-                }
-
-                fclose(storage);
-        } else {
-                perror(argv[1]);
-        }
-
-        return status;
+#ifdef __cplusplus
 }
+#endif
 
+#endif /* _STROPT_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

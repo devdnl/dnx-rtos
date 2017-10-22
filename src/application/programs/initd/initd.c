@@ -238,7 +238,7 @@ static void mount_SD_card(void)
                 };
 
                 // configuration setup
-                ioctl(f, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+                ioctl(fileno(f), IOCTL_SPI__SET_CONFIGURATION, &cfg);
                 fclose(f);
         }
 
@@ -261,9 +261,9 @@ static void mount_SD_card(void)
                          .timeout  = 1000
                 };
 
-                ioctl(f, IOCTL_SDSPI__CONFIGURE, &cfg);
-                ioctl(f, IOCTL_STORAGE__INITIALIZE);
-                ioctl(f, IOCTL_STORAGE__READ_MBR);
+                ioctl(fileno(f), IOCTL_SDSPI__CONFIGURE, &cfg);
+                ioctl(fileno(f), IOCTL_STORAGE__INITIALIZE);
+                ioctl(fileno(f), IOCTL_STORAGE__READ_MBR);
                 fclose(f);
         }
 

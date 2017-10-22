@@ -130,7 +130,7 @@ extern "C" {
  * The second argument is a device-dependent request code. The third
  * argument is an untyped pointer to memory.
  *
- * @param stream        stream to control
+ * @param fd            file descriptor
  * @param request       request number (each driver has own requests)
  * @param ...           untyped pointer to memory (optional in some requests)
  *
@@ -145,7 +145,7 @@ extern "C" {
 
         FILE *file = fopen("/dev/tty0", "r");
         if (file) {
-                ioctl(file, IOCTL_TTY__CLEAR_SCR);
+                ioctl(fileno(file), IOCTL_TTY__CLEAR_SCR);
 
                 // ...
         } else {
@@ -165,7 +165,7 @@ extern "C" {
         FILE *file = fopen("/dev/tty0", "r");
         if (file) {
                 int row = -1;
-                ioctl(file, IOCTL_TTY__GET_ROW, &row);
+                ioctl(fileno(file), IOCTL_TTY__GET_ROW, &row);
 
                 // ...
         } else {
@@ -182,12 +182,12 @@ extern "C" {
  * The names of all requests are constructed in the same way: @b IOCTL_<MODULE_NAME>__<REQUEST_NAME>.
  */
 //==============================================================================
-static inline int ioctl(FILE *stream, int request, ...)
+static inline int ioctl(fd_t fd, int request, ...)
 {
         va_list arg;
         va_start(arg, request);
         int r = -1;
-        syscall(SYSCALL_IOCTL, &r, stream, &request, &arg);
+        syscall(SYSCALL_IOCTL, &r, (FILE*)fd, &request, &arg);
         va_end(arg);
         return r;
 }

@@ -280,29 +280,56 @@ API_MOD_READ(I2CEE,
 API_MOD_IOCTL(I2CEE, void *device_handle, int request, void *arg)
 {
         I2CEE_t *hdl = device_handle;
+        int      err = EINVAL;
 
-        int err = EBADRQC;
+        if (arg) {
+                char pathbuf[32];
+                I2CEE_config_t cfgstr;
 
-        if (request == IOCTL_I2CEE__CONFIGURE) {
+                switch (request) {
+                case IOCTL_I2CEE__CONFIGURE_STR: {
 
-                err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
-                if (!err) {
-                        I2CEE_config_t *cfg = arg;
+                        size_t pathlen = sys_stropt_get_string_copy(arg, "i2c_path",
+                                                                    pathbuf, sizeof(pathbuf));
 
-                        if (hdl->i2c_dev) {
-                                err = sys_fclose(hdl->i2c_dev);
+                        cfgstr.memory_size = sys_stropt_get_int(arg, "memory_size", 0);
+                        cfgstr.page_prog_time_ms = sys_stropt_get_int(arg, "page_prog_time_ms", 0);
+                        cfgstr.page_size = sys_stropt_get_int(arg, "page_size", 0);
+
+                        if (pathlen == 0 || cfgstr.page_size == 0 || cfgstr.memory_size == 0) {
+                                err = EINVAL;
+                                break;
+                        } else {
+                                arg = &cfgstr;
+                                // go through
                         }
+                }
 
+                case IOCTL_I2CEE__CONFIGURE:
+
+                        err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
                         if (!err) {
-                                err = sys_fopen(cfg->i2c_path, "r+", &hdl->i2c_dev);
-                                if (!err) {
-                                        hdl->memory_size       = cfg->memory_size;
-                                        hdl->page_size         = cfg->page_size;
-                                        hdl->page_prog_time_ms = cfg->page_prog_time_ms + 1;
+                                I2CEE_config_t *cfg = arg;
+
+                                if (hdl->i2c_dev) {
+                                        err = sys_fclose(hdl->i2c_dev);
                                 }
+
+                                if (!err) {
+                                        err = sys_fopen(cfg->i2c_path, "r+", &hdl->i2c_dev);
+                                        if (!err) {
+                                                hdl->memory_size       = cfg->memory_size;
+                                                hdl->page_size         = cfg->page_size;
+                                                hdl->page_prog_time_ms = cfg->page_prog_time_ms + 1;
+                                        }
+                                }
+
+                                sys_mutex_unlock(hdl->mtx);
                         }
 
-                        sys_mutex_unlock(hdl->mtx);
+                default:
+                        err = EBADRQC;
+                        break;
                 }
         }
 

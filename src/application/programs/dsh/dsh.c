@@ -165,7 +165,7 @@ static bool history_request()
 {
         if (strcmp(global->line, HISTORY_NEXT_KEY) == 0 || strcmp(global->line, HISTORY_PREV_KEY) == 0) {
                 if (strlen(global->history)) {
-                        ioctl(global->input, IOCTL_TTY__SET_EDITLINE, global->history);
+                        ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->history);
                 }
 
                 global->prompt_enable = false;
@@ -225,7 +225,7 @@ static bool command_hint()
                                                         if (cnt > 1) {
                                                                 printf("%s ", dirent->name);
                                                         } else  {
-                                                                ioctl(global->input, IOCTL_TTY__SET_EDITLINE, dirent->name);
+                                                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, dirent->name);
                                                                 break;
                                                         }
                                                 }
@@ -236,7 +236,7 @@ static bool command_hint()
                                         if (cnt > 1) {
                                                 puts(" ");
                                                 print_prompt();
-                                                ioctl(global->input, IOCTL_TTY__REFRESH_LAST_LINE);
+                                                ioctl(fileno(global->input), IOCTL_TTY__REFRESH_LAST_LINE);
                                         }
                                 }
                         }
@@ -497,7 +497,7 @@ static bool start_program(char *master, char *slave,
                 }
 
                 process_wait(pidmaster, NULL, MAX_DELAY_MS);
-                ioctl(pipe, IOCTL_PIPE__CLOSE);
+                ioctl(fileno(pipe), IOCTL_PIPE__CLOSE);
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && slave) {
@@ -527,7 +527,7 @@ static bool start_program(char *master, char *slave,
                 }
 
                 process_wait(pidmaster, NULL, MAX_DELAY_MS);
-                ioctl(pipe, IOCTL_PIPE__CLOSE);
+                ioctl(fileno(pipe), IOCTL_PIPE__CLOSE);
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && file) {

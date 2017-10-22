@@ -219,7 +219,7 @@ static void telnet_thread(void *arg)
 
                 // send data from running program
                 do {
-                        ioctl(fout, IOCTL_VFS__NON_BLOCKING_RD_MODE);
+                        ioctl(fileno(fout), IOCTL_VFS__NON_BLOCKING_RD_MODE);
                         len = fread(buf, 1, BUF_SIZE, fout);
                         if (len > 0) {
                                 len = socket_write(sock, buf, len);

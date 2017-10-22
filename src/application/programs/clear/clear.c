@@ -68,7 +68,7 @@ int_main(clear, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        ioctl(stdout, IOCTL_TTY__CLEAR_SCR);
+        ioctl(fileno(stdout), IOCTL_TTY__CLEAR_SCR);
 
         return EXIT_SUCCESS;
 }

@@ -105,7 +105,7 @@ int_main(cat, STACK_DEPTH_LOW, int argc, char *argv[])
         errno = 0;
 
         u32_t col = 80;
-        ioctl(stdout, IOCTL_TTY__GET_COL, &col);
+        ioctl(fileno(stdout), IOCTL_TTY__GET_COL, &col);
 
         char *str = calloc(col + 1, sizeof(char));
         if (str) {

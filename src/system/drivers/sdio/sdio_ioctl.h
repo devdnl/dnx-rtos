@@ -126,11 +126,11 @@ driver_init("SDIO", 0, 1, "/dev/sda1");
 // SD Card initialization
 FILE *f = fopen("/dev/sda", "r+");
 if (f) {
-        if (ioctl(f, IOCTL_STORAGE__INITIALIZE) != 0) {
+        if (ioctl(fileno(f), IOCTL_STORAGE__INITIALIZE) != 0) {
                 puts("SD initialization error");
 
         } else {
-                if (ioctl(f, IOCTL_STORAGE__READ_MBR) != 0) {
+                if (ioctl(fileno(f), IOCTL_STORAGE__READ_MBR) != 0) {
                         puts("SD read MBR error");
                 }
         }

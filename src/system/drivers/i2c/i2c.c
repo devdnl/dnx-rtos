@@ -351,6 +351,20 @@ API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
                         break;
                 }
 
+                case IOCTL_I2C__CONFIGURE_STR:
+                        err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+                        if (!err) {
+                                hdl->config.addr_10bit    = sys_stropt_get_bool(arg, "addr_10bit", false);
+                                hdl->config.address       = sys_stropt_get_int(arg, "address", 0);
+                                hdl->config.slave_mode    = sys_stropt_get_bool(arg, "slave_mode", false);
+                                hdl->config.sub_addr_mode = sys_stropt_get_int(arg, "sub_addr_mode", 0);
+
+                                err = _I2C_LLD__slave_mode_setup(hdl);
+                                sys_mutex_unlock(_I2C[hdl->major]->lock);
+                        }
+                        break;
+                        break;
+
                 default:
                         err = EBADRQC;
                         break;

@@ -109,7 +109,7 @@ static bool is_history_request()
                 }
 
                 if (strlen(global->history)) {
-                        ioctl(stdin, IOCTL_TTY__SET_EDITLINE, global->history);
+                        ioctl(fileno(stdin), IOCTL_TTY__SET_EDITLINE, global->history);
                 }
 
                 return true;

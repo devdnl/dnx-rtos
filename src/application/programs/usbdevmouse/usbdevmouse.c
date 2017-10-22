@@ -264,8 +264,8 @@ start:
                 USBD_setup_container_t setup      = {.timeout = 25};
                 bool                   configured = false;
 
-                ioctl(stdin, IOCTL_VFS__NON_BLOCKING_RD_MODE);
-                ioctl(ep0, IOCTL_USBD__START);
+                ioctl(fileno(stdin), IOCTL_VFS__NON_BLOCKING_RD_MODE);
+                ioctl(fileno(ep0), IOCTL_USBD__START);
 
                 while (true) {
                         ch = getchar();
@@ -299,7 +299,7 @@ start:
                                 }
                         }
 
-                        if (ioctl(ep0, IOCTL_USBD__GET_SETUP_PACKET, &setup) == 0) {
+                        if (ioctl(fileno(ep0), IOCTL_USBD__GET_SETUP_PACKET, &setup) == 0) {
                                 printf("SETUP: ");
                         } else {
                                 continue;
@@ -307,7 +307,7 @@ start:
 
                         /* clears USB reset indicator */
                         bool was_reset = false;
-                        ioctl(ep0, IOCTL_USBD__WAS_RESET, &was_reset);
+                        ioctl(fileno(ep0), IOCTL_USBD__WAS_RESET, &was_reset);
 
                         if (setup.packet.wLength == 0) {
                                 int operation = -1;
@@ -317,8 +317,8 @@ start:
                                         switch (setup.packet.bRequest) {
                                         case SET_ADDRESS:
                                                 printf(tostring(SET_ADDRESS)" (%d):", setup.packet.wValue);
-                                                if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) == 0) {
-                                                        ioctl(ep0, IOCTL_USBD__SET_ADDRESS, &setup.packet.wValue);
+                                                if (ioctl(fileno(ep0), IOCTL_USBD__SEND_ZLP) == 0) {
+                                                        ioctl(fileno(ep0), IOCTL_USBD__SET_ADDRESS, &setup.packet.wValue);
                                                         puts(" OK");
                                                 } else {
                                                         puts(" ERROR");
@@ -327,7 +327,7 @@ start:
 
                                         case SET_CONFIGURATION:
                                                 printf(tostring(SET_CONFIGURATION)" (%d):", setup.packet.wValue);
-                                                operation = ioctl(ep0, IOCTL_USBD__CONFIGURE_EP_1_7, &ep_cfg);
+                                                operation = ioctl(fileno(ep0), IOCTL_USBD__CONFIGURE_EP_1_7, &ep_cfg);
                                                 break;
                                         }
                                         break;
@@ -343,18 +343,18 @@ start:
                                 }
 
                                 if (operation == 0) {
-                                        if (ioctl(ep0, IOCTL_USBD__SEND_ZLP) != 0) {
+                                        if (ioctl(fileno(ep0), IOCTL_USBD__SEND_ZLP) != 0) {
                                                 puts(VT100_FONT_COLOR_RED" ERROR"VT100_RESET_ATTRIBUTES);
                                         } else {
                                                 puts(" OK");
                                         }
                                 } else if (operation == 1) {
                                         puts(" ERROR");
-                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
+                                        ioctl(fileno(ep0), IOCTL_USBD__SET_ERROR_STATUS);
                                 } else {
                                         puts("UNKNOWN REQUEST");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
+                                        ioctl(fileno(ep0), IOCTL_USBD__SET_ERROR_STATUS);
                                 }
 
                         } else if ((setup.packet.bmRequestType & REQUEST_DIRECTION_MASK) == DEVICE_TO_HOST) {
@@ -414,17 +414,17 @@ start:
                                 } else {
                                         puts(" UNKNOWN REQUEST [IN]");
                                         print_setup(&setup.packet);
-                                        ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
+                                        ioctl(fileno(ep0), IOCTL_USBD__SET_ERROR_STATUS);
                                 }
 
                         } else {
                                 puts("UNKNOWN REQUEST [OUT]");
                                 print_setup(&setup.packet);
-                                ioctl(ep0, IOCTL_USBD__SET_ERROR_STATUS);
+                                ioctl(fileno(ep0), IOCTL_USBD__SET_ERROR_STATUS);
                         }
                 }
 
-                ioctl(ep0, IOCTL_USBD__STOP);
+                ioctl(fileno(ep0), IOCTL_USBD__STOP);
         } else {
                 ch = 'q';
         }

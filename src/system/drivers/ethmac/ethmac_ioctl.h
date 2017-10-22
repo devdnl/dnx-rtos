@@ -109,7 +109,7 @@ while (true) {
         // wait for packet to be received
         ETHMAC_packet_wait_t wait = {.timeout  = MAX_DELAY_MS, .pkt_size = 0};
 
-        if (ioctl(eth, IOCTL_ETHMAC__WAIT_FOR_PACKET, &wait) != 0) {
+        if (ioctl(fileno(eth), IOCTL_ETHMAC__WAIT_FOR_PACKET, &wait) != 0) {
                 // ... error handling
         }
 
@@ -120,7 +120,7 @@ while (true) {
         bufch.total_size   = wait.pkt_size;            // total size, packet size
         bufch.payload_size = wait.pkt_size;            // one chain has size the same as total size
 
-        if (ioctl(eth, IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, &bufch) != 0) {
+        if (ioctl(fileno(eth), IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, &bufch) != 0) {
                 // ... error handling
         }
 
@@ -158,7 +158,7 @@ while (true) {
         bufch.total_size   = data_len;    // total size - packet size
         bufch.payload_size = data_len;    // one chain has size the same as total size
 
-        if (ioctl(eth, IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN, &bufch) != 0) {
+        if (ioctl(fileno(eth), IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN, &bufch) != 0) {
                 // ... error handling
         }
 

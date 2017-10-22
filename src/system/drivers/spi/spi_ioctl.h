@@ -98,7 +98,7 @@ if (dev) {
            .CS_pin_idx  = IOCTL_GPIO_PIN_NO__CS0            // pin number of CS0
       };
 
-      if (ioctl(dev, IOCTL_SPI__SET_CONFIGURATION, &cfg) != 0) {
+      if (ioctl(fileno(dev), IOCTL_SPI__SET_CONFIGURATION, &cfg) != 0) {
             perror(dev_path);
       }
 
@@ -153,7 +153,7 @@ int_main(spi_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
       if (f) {
             // set SPI device configuration
-            ioctl(dev, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+            ioctl(fileno(dev), IOCTL_SPI__SET_CONFIGURATION, &cfg);
 
             // write blk
             fwrite(blk, sizeof(char), strsize(blk), dev);
@@ -209,7 +209,7 @@ int_main(spi_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
       if (dev) {
             // set SPI device configuration
-            ioctl(dev, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+            ioctl(fileno(dev), IOCTL_SPI__SET_CONFIGURATION, &cfg);
 
             // write blk
             fread(global->blk, ARRAY_ITEM_SIZE(global->blk), ARRAY_SIZE(global->blk), dev);
@@ -264,7 +264,7 @@ int_main(spi_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
       if (dev) {
             // set SPI device configuration
-            ioctl(dev, IOCTL_SPI__SET_CONFIGURATION, &cfg);
+            ioctl(fileno(dev), IOCTL_SPI__SET_CONFIGURATION, &cfg);
 
             // prepare data to send
             global->tx[0] = 0x10;
@@ -281,7 +281,7 @@ int_main(spi_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                   .next      = NULL
             };
 
-            ioctl(dev, IOCTL_SPI__TRANSCEIVE, &t);
+            ioctl(fileno(dev), IOCTL_SPI__TRANSCEIVE, &t);
 
             ...
 

@@ -1002,6 +1002,41 @@ static inline FILE *tmpfile(void)
 
 //==============================================================================
 /**
+ * @brief Function return file number descriptor.
+ *
+ * This function returns the file descriptor associated with the stream
+ * <i>stream</i>. If an error is detected (for example, if the stream is not
+ * valid) or if stream does not do I/O to a file, fileno returns -1.
+ *
+ * @return The fileno() function returns a file descriptor, or -1 on error.
+ *
+ * @b Example
+ * @code
+        #include <stdio.h>
+
+        // ...
+
+        FILE *file = fopen("file", "r+");
+        if (file) {
+                fd_t fd = fileno(file);
+
+               // ...
+        }
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline fd_t fileno(FILE *fd)
+{
+        if (fd) {
+                return (fd_t)fd;
+        } else {
+                return -1;
+        }
+}
+
+//==============================================================================
+/**
  * @brief Function sets name of temporary file.
  *
  * The routine exist in dnx RTOS only for compatible reasons. Function in this
