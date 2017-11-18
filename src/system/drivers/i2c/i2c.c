@@ -100,7 +100,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
                         goto finish;
                 }
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &_I2C[major]->lock);
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &_I2C[major]->lock_mtx);
                 if (err) {
                         goto finish;
                 }
@@ -114,6 +114,8 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
                 if (err) {
                         goto finish;
                 }
+
+                _I2C[major]->major = major;
         }
 
         /* creates device structure */
@@ -124,7 +126,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor)
                 hdl->major     = major;
                 hdl->minor     = minor;
 
-                sys_device_unlock(&hdl->lock, true);
+                sys_device_unlock(&hdl->lock_dev, true);
 
                 _I2C[major]->dev_cnt++;
         }
@@ -150,7 +152,7 @@ API_MOD_RELEASE(I2C, void *device_handle)
 {
         I2C_dev_t *hdl = device_handle;
 
-        int err = sys_device_lock(&hdl->lock);
+        int err = sys_device_lock(&hdl->lock_dev);
         if (!err) {
                 _I2C[hdl->major]->dev_cnt--;
                 release_resources(hdl->major);
@@ -176,7 +178,7 @@ API_MOD_OPEN(I2C, void *device_handle, u32_t flags)
 
         I2C_dev_t *hdl = device_handle;
 
-        return sys_device_lock(&hdl->lock);
+        return sys_device_lock(&hdl->lock_dev);
 }
 
 //==============================================================================
@@ -193,7 +195,7 @@ API_MOD_CLOSE(I2C, void *device_handle, bool force)
 {
         I2C_dev_t *hdl = device_handle;
 
-        return sys_device_unlock(&hdl->lock, force);
+        return sys_device_unlock(&hdl->lock_dev, force);
 }
 
 //==============================================================================
@@ -222,7 +224,7 @@ API_MOD_WRITE(I2C,
 
         I2C_dev_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+        int err = sys_mutex_lock(_I2C[hdl->major]->lock_mtx, ACCESS_TIMEOUT);
         if (!err) {
                 if (hdl->config.slave_mode) {
                         err = _I2C_LLD__slave_transmit(hdl, src, count, wrcnt);
@@ -231,7 +233,7 @@ API_MOD_WRITE(I2C,
                         err = _I2C_LLD__start(hdl);
                         if (err) goto error;
 
-                        err = _I2C_LLD__send_address(hdl, true);
+                        err = _I2C_LLD__send_address(hdl, true, count);
                         if (err) {
                                 goto error;
                         }
@@ -247,7 +249,7 @@ API_MOD_WRITE(I2C,
                         _I2C_LLD__stop(hdl);
                 }
 
-                sys_mutex_unlock(_I2C[hdl->major]->lock);
+                sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
         }
 
         return err;
@@ -279,7 +281,7 @@ API_MOD_READ(I2C,
 
         I2C_dev_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+        int err = sys_mutex_lock(_I2C[hdl->major]->lock_mtx, ACCESS_TIMEOUT);
         if (!err) {
                 if (hdl->config.slave_mode) {
                         err = _I2C_LLD__slave_receive(hdl, dst, count, rdcnt);
@@ -289,7 +291,7 @@ API_MOD_READ(I2C,
                                 err = _I2C_LLD__start(hdl);
                                 if (err) goto error;
 
-                                err = _I2C_LLD__send_address(hdl, true);
+                                err = _I2C_LLD__send_address(hdl, true, count);
                                 if (err) goto error;
 
                                 err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
@@ -299,7 +301,7 @@ API_MOD_READ(I2C,
                         err = _I2C_LLD__repeat_start(hdl);
                         if (err) goto error;
 
-                        err = _I2C_LLD__send_address(hdl, false);
+                        err = _I2C_LLD__send_address(hdl, false, count);
                         if (err) goto error;
 
                         err = _I2C_LLD__receive(hdl, dst, count, rdcnt);
@@ -308,7 +310,7 @@ API_MOD_READ(I2C,
                         _I2C_LLD__stop(hdl);
                 }
 
-                sys_mutex_unlock(_I2C[hdl->major]->lock);
+                sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
         }
 
         return err;
@@ -333,26 +335,26 @@ API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
         if (arg) {
                 switch (request) {
                 case IOCTL_I2C__CONFIGURE:
-                        err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+                        err = sys_mutex_lock(_I2C[hdl->major]->lock_mtx, ACCESS_TIMEOUT);
                         if (!err) {
                                 hdl->config = *cast(const I2C_config_t*, arg);
                                 err = _I2C_LLD__slave_mode_setup(hdl);
-                                sys_mutex_unlock(_I2C[hdl->major]->lock);
+                                sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
                         }
                         break;
 
                 case IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION: {
                         I2C_selection_t *event = arg;
-                        err = sys_mutex_lock(_I2C[hdl->major]->lock, event->timeout_ms);
+                        err = sys_mutex_lock(_I2C[hdl->major]->lock_mtx, event->timeout_ms);
                         if (!err) {
                                 err = _I2C_LLD__slave_wait_for_selection(hdl, event);
-                                sys_mutex_unlock(_I2C[hdl->major]->lock);
+                                sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
                         }
                         break;
                 }
 
                 case IOCTL_I2C__CONFIGURE_STR:
-                        err = sys_mutex_lock(_I2C[hdl->major]->lock, ACCESS_TIMEOUT);
+                        err = sys_mutex_lock(_I2C[hdl->major]->lock_mtx, ACCESS_TIMEOUT);
                         if (!err) {
                                 hdl->config.addr_10bit    = sys_stropt_get_bool(arg, "addr_10bit", false);
                                 hdl->config.address       = sys_stropt_get_int(arg, "address", 0);
@@ -360,7 +362,7 @@ API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
                                 hdl->config.sub_addr_mode = sys_stropt_get_int(arg, "sub_addr_mode", 0);
 
                                 err = _I2C_LLD__slave_mode_setup(hdl);
-                                sys_mutex_unlock(_I2C[hdl->major]->lock);
+                                sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
                         }
                         break;
                         break;
@@ -421,9 +423,9 @@ API_MOD_STAT(I2C, void *device_handle, struct vfs_dev_stat *device_stat)
 static void release_resources(u8_t major)
 {
         if (_I2C[major] && _I2C[major]->dev_cnt == 0) {
-                if (_I2C[major]->lock) {
-                        sys_mutex_destroy(_I2C[major]->lock);
-                        _I2C[major]->lock = NULL;
+                if (_I2C[major]->lock_mtx) {
+                        sys_mutex_destroy(_I2C[major]->lock_mtx);
+                        _I2C[major]->lock_mtx = NULL;
                 }
 
                 if (_I2C[major]->event) {

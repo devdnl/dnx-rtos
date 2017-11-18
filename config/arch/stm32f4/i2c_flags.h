@@ -216,6 +216,14 @@ end
 --*/
 #define __I2C1_SCL_FREQ__ 100000
 
+/*--
+if this:PortExist(1) then
+    this:AddWidget("Combobox", "SCL duty cycle")
+    this:AddItem("1/2", "_I2C_DUTY_CYCLE_1_2")
+    this:AddItem("16/9", "_I2C_DUTY_CYCLE_16_9")
+end
+--*/
+#define __I2C1_DUTY_CYCLE__ _I2C_DUTY_CYCLE_1_2
 
 /*--
 if this:PortExist(2) then
@@ -237,6 +245,14 @@ end
 --*/
 #define __I2C2_SCL_FREQ__ 100000
 
+/*--
+if this:PortExist(2) then
+    this:AddWidget("Combobox", "SCL duty cycle")
+    this:AddItem("1/2", "_I2C_DUTY_CYCLE_1_2")
+    this:AddItem("16/9", "_I2C_DUTY_CYCLE_16_9")
+end
+--*/
+#define __I2C2_DUTY_CYCLE__ _I2C_DUTY_CYCLE_1_2
 
 /*--
 if this:PortExist(3) then
@@ -257,6 +273,15 @@ if this:PortExist(3) then
 end
 --*/
 #define __I2C3_SCL_FREQ__ 100000
+
+/*--
+if this:PortExist(3) then
+    this:AddWidget("Combobox", "SCL duty cycle")
+    this:AddItem("1/2", "_I2C_DUTY_CYCLE_1_2")
+    this:AddItem("16/9", "_I2C_DUTY_CYCLE_16_9")
+end
+--*/
+#define __I2C3_DUTY_CYCLE__ _I2C_DUTY_CYCLE_1_2
 
 #endif /* _I2C_FLAGS_H_ */
 /*==============================================================================
