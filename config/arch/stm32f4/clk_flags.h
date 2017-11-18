@@ -352,7 +352,7 @@ for i = 1, 5 do this:AddItem("MCO divided by "..i, "RCC_MCO1Div_"..tostring(i)) 
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO1_DIV", "")
 --*/
-#define __CLK_MC01_CLK_DIV__ 1
+#define __CLK_MC01_CLK_DIV__ RCC_MCO1Div_1
 
 /*--
 this:AddWidget("Combobox", "MCO2 Clock source")
@@ -373,7 +373,7 @@ for i = 1, 5 do this:AddItem("MCO divided by "..i, "RCC_MCO2Div_"..tostring(i)) 
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO2_DIV", "")
 --*/
-#define __CLK_MC02_CLK_DIV__ 1
+#define __CLK_MC02_CLK_DIV__ RCC_MCO2Div_1
 
 /*--
 if   uC.NAME:match("STM32F412") or uC.NAME:match("STM32F413")

@@ -542,19 +542,6 @@ __ENABLE_IRQ__=_NO_
 #*/
 
 #/*--
-# if uC.PERIPH[uC.NAME].PWM ~= nil then
-#     this:PutWidgets("PWM")
-# else
-#     this:AddWidget("Value")
-#     this:SetFlagValue("__ENABLE_PWM__", "_NO_")
-# end
-#--*/
-#define __ENABLE_PWM__ _NO_
-#/*
-__ENABLE_PWM__=_NO_
-#*/
-
-#/*--
 # this:PutWidgets("LOOP")
 #--*/
 #define __ENABLE_LOOP__ _NO_
