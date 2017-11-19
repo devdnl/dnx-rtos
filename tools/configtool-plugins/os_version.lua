@@ -43,7 +43,7 @@ local plugin = {}
 --------------------------------------------------------------------------------
 plugin.Loaded = function()
     local PATH  = "../../src/system/include/libc/dnx/os.h"
-    local REGEX = "^%s*return%s+\"(%d+%.%d+%.%d+).*\"%s*;"
+    local REGEX = "^%s*return%s+\"(%d+%.%d+%.%d+).*;"
 
     local line = FindLine(PATH, 1, REGEX)
 

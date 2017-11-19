@@ -6,9 +6,10 @@ New Features, Improvements:
 - Added system library to analyze option strings (var1=val,flag,varn=val)
 
 Fixed Bugs:
+- Fixed I2C driver in master mode
 - 
 
-dnx RTOS 2.1.1 Dingo
+dnx RTOS 2.1.2 Dingo
 ====================
 New Features, Improvements:
 - Added I2C slave mode

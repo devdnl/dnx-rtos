@@ -56,6 +56,7 @@ CFLAGS   = -c \
            -Werror=implicit-function-declaration \
            -include ./config/config.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
+           -D_COMMIT_HASH=\"-g$(shell $(COMMIT_HASH))\" \
            $(CPUCONFIG_CFLAGS)
 
 CXXFLAGS = -c \
@@ -73,6 +74,7 @@ CXXFLAGS = -c \
            -Werror=implicit-function-declaration \
            -include ./config/config.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
+           -D_COMMIT_HASH=\"-g$(shell $(COMMIT_HASH))\" \
            $(CPUCONFIG_CXXFLAGS)
 
 LFLAGS   = -g \
@@ -123,34 +125,35 @@ SYS_LIBC_LOC    = $(SYS_LOC)/libc
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
-SHELL      = /bin/sh
-ECHO       = /bin/echo -e
-RM         = /bin/rm -f
-MKDIR      = /bin/mkdir -p
-DATE       = /bin/date
-CAT        = /bin/cat
-GREP       = /bin/grep
-UNAME      = /bin/uname -s
-SIZEOF     = /usr/bin/stat -c %s
-MKDEP      = /usr/bin/makedepend
-WC         = /usr/bin/wc
-CC         = $(TOOLCHAIN)gcc
-CXX        = $(TOOLCHAIN)g++
-LD         = $(TOOLCHAIN)g++
-AS         = $(TOOLCHAIN)gcc -x assembler-with-cpp
-OBJCOPY    = $(TOOLCHAIN)objcopy
-OBJDUMP    = $(TOOLCHAIN)objdump
-SIZE       = $(TOOLCHAIN)size
-CONFIGTOOL = ./tools/configtool.sh
-CODECHECK  = cppcheck
-ADDAPPS    = ./$(APP_LOC)/addapps.sh
-ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
-ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
-FLASH_CPU  = ./tools/flash.sh
-RESET_CPU  = ./tools/reset.sh
-GIT_HOOKS  = ./tools/apply_git_hooks.sh
-DOXYGEN    = ./tools/doxygen.sh
-RELEASEPKG = ./tools/releasepkg.sh
+SHELL       = /bin/sh
+ECHO        = /bin/echo -e
+RM          = /bin/rm -f
+MKDIR       = /bin/mkdir -p
+DATE        = /bin/date
+CAT         = /bin/cat
+GREP        = /bin/grep
+UNAME       = /bin/uname -s
+SIZEOF      = /usr/bin/stat -c %s
+MKDEP       = /usr/bin/makedepend
+WC          = /usr/bin/wc
+CC          = $(TOOLCHAIN)gcc
+CXX         = $(TOOLCHAIN)g++
+LD          = $(TOOLCHAIN)g++
+AS          = $(TOOLCHAIN)gcc -x assembler-with-cpp
+OBJCOPY     = $(TOOLCHAIN)objcopy
+OBJDUMP     = $(TOOLCHAIN)objdump
+SIZE        = $(TOOLCHAIN)size
+CONFIGTOOL  = ./tools/configtool.sh
+CODECHECK   = cppcheck
+ADDAPPS     = ./$(APP_LOC)/addapps.sh
+ADDFS       = ./$(SYS_FS_LOC)/addfs.sh
+ADDDRIVERS  = ./$(SYS_DRV_LOC)/adddriver.sh
+FLASH_CPU   = ./tools/flash.sh
+RESET_CPU   = ./tools/reset.sh
+GIT_HOOKS   = ./tools/apply_git_hooks.sh
+DOXYGEN     = ./tools/doxygen.sh
+RELEASEPKG  = ./tools/releasepkg.sh
+COMMIT_HASH = git rev-parse --short HEAD
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
