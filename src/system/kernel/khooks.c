@@ -163,12 +163,17 @@ u32_t _get_uptime_counter(void)
  * @brief  Function is called when assertion is not meet.
  *
  * @param  assert       if true then no action
+ * @param  msg          message
  */
 //==============================================================================
-void _assert_hook(bool assert)
+void _assert_hook(bool assert, const char *msg)
 {
         if (!assert) {
-                _printk("System assert occurred!");
+                if (msg) {
+                        _printk("System assert: %s", msg);
+                } else {
+                        _printk("System assert occurred!");
+                }
         }
 }
 #endif

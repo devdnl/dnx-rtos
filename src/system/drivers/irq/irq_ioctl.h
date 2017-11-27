@@ -77,7 +77,7 @@ example:
 FILE *irq = fopen("/dev/button0", "r+");
 if (irq) {
         static const IRQ_config_t cfg = IRQ_CONFIG__TRIGGER_ON_FALLING_EDGE;
-        if (ioctl(irq, IOCTL_IRQ__CONFIGURE, &cfg) == 0) {
+        if (ioctl(fileno(irq), IOCTL_IRQ__CONFIGURE, &cfg) == 0) {
                 puts("Configuration success");
         } else {
                 perror("ioctl()");
@@ -116,7 +116,7 @@ if (!irq) {
 
 // interrupt catch
 u32_t timeout = 2000; // 2s timeout
-if (ioctl(irq, IOCTL_IRQ__CATCH, &timeout) == 0) {
+if (ioctl(fileno(irq), IOCTL_IRQ__CATCH, &timeout) == 0) {
         puts("Interrupt caught!");
 
         // ...
@@ -149,7 +149,7 @@ if (!irq) {
 // ...
 
 // interrupt trigger
-if (ioctl(irq, IOCTL_IRQ__TRIGGER) == 0) {
+if (ioctl(fileno(irq), IOCTL_IRQ__TRIGGER) == 0) {
         puts("Interrupt triggered!");
 
         // ...

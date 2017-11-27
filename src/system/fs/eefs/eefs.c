@@ -52,6 +52,7 @@ Brief    EEPROM File System. File system for small memories 1-64KiB EEPROM.
 #define ENTRY_TYPE_NODE                 0xFC
 
 #define BLOCK_MAGIC_MAIN                0x53464545
+#define BLOCK_MAGIC_BITMAP              0x20504D42
 #define BLOCK_MAGIC_DIR                 0x30524944
 #define BLOCK_MAGIC_DIR_ENTRY           0x45524944
 #define BLOCK_MAGIC_FILE                0x454C4946
@@ -93,20 +94,31 @@ Brief    EEPROM File System. File system for small memories 1-64KiB EEPROM.
  */
 
 /**
+ * Generic checksum block (calculation purposes).
+ */
+typedef struct PACKED {
+        uint8_t  buf[126];
+        uint16_t checksum;
+} block_chsum_t;
+
+/**
  * Main block definition (block 0).
  */
 typedef struct PACKED {
         uint32_t magic;         //!< FS identifier ('EEFS')
         uint16_t blocks;        //!< number of memory 128B blocks
         uint8_t  bitmap_blocks; //!< number of next bitmap blocks
-        uint8_t  bitmap[121];   //!< empty block bitmap
+        uint8_t  bitmap[119];   //!< empty block bitmap
+        uint16_t checksum;      //!< checksum
 } block_main_t;
 
 /**
  * Bitmap block definition.
  */
 typedef struct PACKED {
-        uint8_t  map[128];      //!< bitmap
+        uint32_t magic;         //!< block magic number
+        uint8_t  map[122];      //!< bitmap
+        uint16_t checksum;      //!< checksum
 } block_bitmap_t;
 
 /**
@@ -131,8 +143,9 @@ typedef struct PACKED{
         uint16_t    parent;     //!< parent entry block number
         uint16_t    next;       //!< next directory entries
         uint16_t    all_items;  //!< number of items in all chains
-        uint8_t     _[8];       //!< reserved
+        uint8_t     _[6];       //!< reserved
         dir_entry_t entry[4];   //!< directory entry
+        uint16_t    checksum;   //!< checksum
 } block_dir_t;
 
 /**
@@ -141,8 +154,8 @@ typedef struct PACKED{
 typedef struct PACKED {
         uint32_t    magic;      //!< block magic number
         dir_entry_t entry[5];   //!< directory entries
-        uint8_t     _[2];       //!< reserved
         uint16_t    next;       //!< next directory entries
+        uint16_t    checksum;   //!< checksum
 } block_dir_entry_t;
 
 /**
@@ -156,8 +169,9 @@ typedef struct PACKED {
         uint16_t uid;           //!< user ID
         uint16_t mode;          //!< mode
         uint16_t size;          //!< file size in bytes
-        uint8_t  data[106];     //!< file data
+        uint8_t  data[102];     //!< file data
         uint16_t data_next;     //!< next file data
+        uint16_t checksum;      //!< checksum
 } block_file_t;
 
 /**
@@ -165,8 +179,9 @@ typedef struct PACKED {
  */
 typedef struct PACKED {
         uint32_t magic;         //!< block magic number
-        uint8_t  data[122];     //!< data
+        uint8_t  data[120];     //!< data
         uint16_t data_next;     //!< next data block
+        uint16_t checksum;      //!< checksum
 } block_file_data_t;
 
 /**
@@ -180,7 +195,8 @@ typedef struct PACKED {
         uint16_t gid;           //!< group ID
         uint16_t uid;           //!< user ID
         uint16_t mode;          //!< mode
-        uint8_t  _[106];        //!< reserved
+        uint8_t  _[104];        //!< reserved
+        uint16_t checksum;      //!< checksum
 } block_node_t;
 
 /**
@@ -194,6 +210,7 @@ typedef union {
         block_file_t      file;
         block_file_data_t file_data;
         block_node_t      node;
+        block_chsum_t     chsum;
 } block_t;
 
 /**
@@ -241,8 +258,9 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static uint16_t fletcher16(uint8_t const *data, size_t bytes);
 static int block_read(EEFS_t *hdl, block_buf_t *blk);
-static int block_write(EEFS_t *hdl, const block_buf_t *blk);
+static int block_write(EEFS_t *hdl, block_buf_t *blk);
 static bool is_entry_item_used(dir_entry_t *entry);
 static tfile_t eefs2vfs_file_type(uint8_t eefs_file_type);
 static int block_load(EEFS_t *hdl, const char *path);
@@ -314,12 +332,12 @@ API_FS_INIT(eefs, void **fs_handle, const char *src_path, const char *opts)
                                 hdl->root_dir_block = 1 + hdl->block.buf.main.bitmap_blocks;
 
                                 if (!isstrempty(opts)) {
-                                        if (strstr(opts, "sync")) {
+                                        if (sys_stropt_is_flag(opts, "sync")) {
                                                 hdl->flag |= FLAG_SYNC;
                                                 DBG("enabled cache write-through");
                                         }
 
-                                        if (strstr(opts, "ro")) {
+                                        if (sys_stropt_is_flag(opts, "ro")) {
                                                 hdl->flag |= FLAG_RDONLY;
                                                 DBG("readonly mount");
                                         }
@@ -1368,6 +1386,40 @@ API_FS_SYNC(eefs, void *fs_handle)
 
 //==============================================================================
 /**
+ * @brief  Function calculate fletcher 16 checksum.
+ *
+ * @param  data         buffer
+ * @param  bytes        buffer size
+ *
+ * @return Checksum.
+ */
+//==============================================================================
+static uint16_t fletcher16(uint8_t const *data, size_t bytes)
+{
+        uint16_t sum1 = 0xff, sum2 = 0xff;
+        size_t tlen;
+
+        while (bytes) {
+                tlen = ((bytes >= 20) ? 20 : bytes);
+                bytes -= tlen;
+                do {
+                        sum2 += sum1 += *data++;
+                        tlen--;
+                } while (tlen);
+
+                sum1 = (sum1 & 0xff) + (sum1 >> 8);
+                sum2 = (sum2 & 0xff) + (sum2 >> 8);
+        }
+
+        /* Second reduction step to reduce sums to 8 bits */
+        sum1 = (sum1 & 0xff) + (sum1 >> 8);
+        sum2 = (sum2 & 0xff) + (sum2 >> 8);
+
+        return (sum2 << 8) | sum1;
+}
+
+//==============================================================================
+/**
  * @brief Function read block from memory. Function uses caching subsystem.
  *
  * @param  hdl          FS handle.
@@ -1378,8 +1430,23 @@ API_FS_SYNC(eefs, void *fs_handle)
 //==============================================================================
 static int block_read(EEFS_t *hdl, block_buf_t *blk)
 {
-        return sys_cache_read(hdl->srcdev, blk->num, sizeof(block_t), 1,
-                              cast(u8_t*, &blk->buf));
+        memset(&blk->buf, 0, 128);
+
+        int err = sys_cache_read(hdl->srcdev, blk->num, sizeof(block_t), 1,
+                                 cast(u8_t*, &blk->buf));
+
+        if (!err) {
+                u16_t chsum  = fletcher16(blk->buf.chsum.buf, sizeof(blk->buf.chsum.buf));
+                      chsum ^= blk->num;
+
+                err = (chsum == blk->buf.chsum.checksum) ? ESUCC : EILSEQ;
+
+                if (err) {
+                        DBG("Block %d checksum fail", blk->num);
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -1392,12 +1459,16 @@ static int block_read(EEFS_t *hdl, block_buf_t *blk)
  * @return One of errno value.
  */
 //==============================================================================
-static int block_write(EEFS_t *hdl, const block_buf_t *blk)
+static int block_write(EEFS_t *hdl, block_buf_t *blk)
 {
         if (hdl->flag & FLAG_RDONLY) {
-               return EROFS;
+                return EROFS;
 
         } else {
+                blk->buf.chsum.checksum = fletcher16(blk->buf.chsum.buf,
+                                                     sizeof(blk->buf.chsum.buf))
+                                        ^ blk->num;
+
                 return sys_cache_write(hdl->srcdev, blk->num, sizeof(block_t), 1,
                                        cast(u8_t*, &blk->buf),
                                        hdl->flag & FLAG_SYNC ? CACHE_WRITE_THROUGH
@@ -1521,7 +1592,7 @@ static int block_load(EEFS_t *hdl, const char *path)
 
                 // load next chain
                 if (not found) {
-                        if (blknext) {
+                        if (blknext && (blknext != 0xFFFF)) {
                                 hdl->block.num = blknext;
                         } else {
                                 err = ENOENT;
@@ -1550,7 +1621,7 @@ static int block_load_by_type(EEFS_t *hdl, const char *path, uint32_t type)
         int err = block_load(hdl, path);
         if (!err) {
                 if (hdl->block.buf.dir.magic != type) {
-                        DBG("load_dir_block() invalid block");
+                        DBG("Invalid block type");
                         err = ENOENT;
                 }
         }
@@ -1678,9 +1749,14 @@ static int bmp_block_find_empty(EEFS_t *hdl, uint16_t *blknum)
                                 hdl->tmpblock.num = bmpnext;
                                 err = block_read(hdl, &hdl->tmpblock);
                                 if (!err) {
-                                        bmp = hdl->block.buf.bitmap.map;
-                                        bsz = sizeof(hdl->block.buf.bitmap.map);
-                                        bmpnext++;
+                                        if (hdl->block.buf.bitmap.magic == BLOCK_MAGIC_BITMAP) {
+                                                bmp = hdl->block.buf.bitmap.map;
+                                                bsz = sizeof(hdl->block.buf.bitmap.map);
+                                                bmpnext++;
+                                        } else {
+                                                DBG("Invalid bitmap block");
+                                                err = EILSEQ;
+                                        }
                                 }
                         }
 

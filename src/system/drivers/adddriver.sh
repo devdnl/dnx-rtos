@@ -104,6 +104,7 @@ function create_ioctl_groups_file()
     enum=$enum"\t_IO_GROUP_PIPE,\n"
     enum=$enum"\t_IO_GROUP_STORAGE,\n"
     enum=$enum"\t_IO_GROUP_VFS,\n"
+    enum=$enum"\t_IO_GROUP_DEVICE,\n"
     for module in $module_list; do enum=$enum"\t_IO_GROUP_${module^^},\n"; done
     enum=$enum"};"
 

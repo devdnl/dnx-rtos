@@ -70,9 +70,9 @@ static bool  is_exit_cmd          (const char *cmd);
 static bool  is_detached_cmd      (char *cmd);
 static char *find_arg             (char *cmd);
 static void  change_directory     (char *str);
-static char *remove_leading_spaces(char *str);
+static char *trim_string          (char *str);
 static void  print_fail_message   (char *cmd);
-static bool  start_program        (char *master, char *slave, char *file, char *fmode, bool detached);
+static bool  start_program        (char *master, char *slave, char *std_in, char *file, char *fmode, bool detached);
 static bool  analyze_line         (char *cmd);
 
 /*==============================================================================
@@ -165,7 +165,7 @@ static bool history_request()
 {
         if (strcmp(global->line, HISTORY_NEXT_KEY) == 0 || strcmp(global->line, HISTORY_PREV_KEY) == 0) {
                 if (strlen(global->history)) {
-                        ioctl(global->input, IOCTL_TTY__SET_EDITLINE, global->history);
+                        ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->history);
                 }
 
                 global->prompt_enable = false;
@@ -225,7 +225,7 @@ static bool command_hint()
                                                         if (cnt > 1) {
                                                                 printf("%s ", dirent->name);
                                                         } else  {
-                                                                ioctl(global->input, IOCTL_TTY__SET_EDITLINE, dirent->name);
+                                                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, dirent->name);
                                                                 break;
                                                         }
                                                 }
@@ -236,7 +236,7 @@ static bool command_hint()
                                         if (cnt > 1) {
                                                 puts(" ");
                                                 print_prompt();
-                                                ioctl(global->input, IOCTL_TTY__REFRESH_LAST_LINE);
+                                                ioctl(fileno(global->input), IOCTL_TTY__REFRESH_LAST_LINE);
                                         }
                                 }
                         }
@@ -371,16 +371,26 @@ static void change_directory(char *str)
 
 //==============================================================================
 /**
- * @brief Remove leading spaces
+ * @brief Remove leading and trailing spaces.
  *
- * @param str           string with leading spaces
+ * @param str           string to trim
  *
- * @return string without leading spaces (move pointer to space-free index)
+ * @return New string pointer (basing on the same buffer).
  */
 //==============================================================================
-static char *remove_leading_spaces(char *str)
+static char *trim_string(char *str)
 {
-        return str + strspn(str, " ");
+        str = str + strspn(str, " ");
+
+        for (int i = strlen(str) - 1; i > 0; i--) {
+                if (isspace(str[i])) {
+                        str[i] = '\0';
+                } else {
+                        break;
+                }
+        }
+
+        return str;
 }
 
 //==============================================================================
@@ -392,7 +402,7 @@ static char *remove_leading_spaces(char *str)
 //==============================================================================
 static void print_fail_message(char *cmd)
 {
-        cmd = remove_leading_spaces(cmd);
+        cmd = trim_string(cmd);
 
         if (strchr(cmd, ' '))
                 *strchr(cmd, ' ') = '\0';
@@ -417,7 +427,7 @@ static void print_fail_message(char *cmd)
  * @return true if command executed, false if error
  */
 //==============================================================================
-static bool start_program(char *master, char *slave,
+static bool start_program(char *master, char *slave, char *std_in,
                           char *file,   char *fmode, bool detached)
 {
         errno              = 0;
@@ -429,18 +439,22 @@ static bool start_program(char *master, char *slave,
         pid_t    pidslave  = 0;
 
         if (master) {
-                master = remove_leading_spaces(master);
+                master = trim_string(master);
         }
 
         if (slave) {
-                slave = remove_leading_spaces(slave);
+                slave = trim_string(slave);
         }
 
         if (file) {
-                file = remove_leading_spaces(file);
+                file = trim_string(file);
         }
 
-        if (file) {
+        if (std_in) {
+                std_in = trim_string(std_in);
+        }
+
+        if (std_in == NULL && file) {
                 fout = fopen(file, fmode);
                 if (!fout) {
                         perror(file);
@@ -470,6 +484,8 @@ static bool start_program(char *master, char *slave,
                 }
         }
 
+        memset(&global->pidmaster_attr, 0, sizeof(process_attr_t));
+
         if (master && slave && file) {
                 global->pidmaster_attr.f_stdin    = stdin;
                 global->pidmaster_attr.f_stdout   = pipe;
@@ -497,7 +513,7 @@ static bool start_program(char *master, char *slave,
                 }
 
                 process_wait(pidmaster, NULL, MAX_DELAY_MS);
-                ioctl(pipe, IOCTL_PIPE__CLOSE);
+                ioctl(fileno(pipe), IOCTL_PIPE__CLOSE);
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && slave) {
@@ -527,8 +543,42 @@ static bool start_program(char *master, char *slave,
                 }
 
                 process_wait(pidmaster, NULL, MAX_DELAY_MS);
-                ioctl(pipe, IOCTL_PIPE__CLOSE);
+                ioctl(fileno(pipe), IOCTL_PIPE__CLOSE);
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
+
+        } else if (master && file && std_in) {
+                global->pidmaster_attr.p_stdin    = std_in;
+                global->pidmaster_attr.p_stdout   = file;
+                global->pidmaster_attr.p_stderr   = file;
+                global->pidmaster_attr.cwd        = global->cwd;
+                global->pidmaster_attr.detached   = detached;
+                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                pidmaster = process_create(master, &global->pidmaster_attr);
+                if (pidmaster == 0) {
+                        print_fail_message(master);
+                        goto free_resources;
+                }
+
+                if (not detached) {
+                        process_wait(pidmaster, NULL, MAX_DELAY_MS);
+                }
+
+        } else if (master && std_in) {
+                global->pidmaster_attr.p_stdin    = std_in;
+                global->pidmaster_attr.f_stdout   = stdout;
+                global->pidmaster_attr.f_stderr   = stderr;
+                global->pidmaster_attr.cwd        = global->cwd;
+                global->pidmaster_attr.detached   = detached;
+                global->pidmaster_attr.priority   = PRIORITY_NORMAL;
+                pidmaster = process_create(master, &global->pidmaster_attr);
+                if (pidmaster == 0) {
+                        print_fail_message(master);
+                        goto free_resources;
+                }
+
+                if (not detached) {
+                        process_wait(pidmaster, NULL, MAX_DELAY_MS);
+                }
 
         } else if (master && file) {
                 global->pidmaster_attr.f_stdin    = stdin;
@@ -596,6 +646,7 @@ static bool analyze_line(char *cmd)
 {
         int   pipe_number = 0;
         int   out_number  = 0;
+        int   in_number   = 0;
         bool  detached    = is_detached_cmd(cmd);
         char *fmode       = "";
 
@@ -612,12 +663,39 @@ static bool analyze_line(char *cmd)
                 } else if (cmd[i] == '>') {
                         out_number++;
                         fmode = "w";
+
+                } else if (cmd[i] == '<') {
+                        in_number++;
                 }
         }
 
-        if (pipe_number > 1 || out_number > 1) {
+        if (pipe_number > 1 || out_number > 1 || in_number > 1) {
                 puts("sh: syntax error");
                 return true;
+        }
+
+        if (in_number) {
+                if (pipe_number) {
+                        puts("sh: syntax error");
+                        return true;
+
+                } else if (out_number) {
+                        char *master = cmd;
+
+                        char *std_in = strchr(master, '<');
+                        char *file = strchr(master, '>');
+                        *std_in++ = '\0';
+                        *file++ = '\0';
+
+                        return start_program(master, NULL, std_in, file, fmode, detached);
+                } else {
+                        char *master = cmd;
+
+                        char *std_in = strchr(master, '<');
+                        *std_in++ = '\0';
+
+                        return start_program(master, NULL, std_in, NULL, fmode, detached);
+                }
         }
 
         if (out_number && pipe_number) {
@@ -633,7 +711,7 @@ static bool analyze_line(char *cmd)
                         char *file = strchr(slave, '>');
                         *file++ = '\0';
 
-                        return start_program(master, slave, file, fmode, detached);
+                        return start_program(master, slave, NULL, file, fmode, detached);
                 }
         }
 
@@ -651,7 +729,7 @@ static bool analyze_line(char *cmd)
                                 *file++ = '\0';
                         }
 
-                        return start_program(master, NULL, file, fmode, detached);
+                        return start_program(master, NULL, NULL, file, fmode, detached);
                 }
         }
 
@@ -665,12 +743,12 @@ static bool analyze_line(char *cmd)
                         char *slave = strchr(master, '|');
                         *slave++ = '\0';
 
-                        return start_program(master, slave, NULL, fmode, detached);
+                        return start_program(master, slave, NULL, NULL, fmode, detached);
                 }
         }
 
         if (strlen(cmd)) {
-                return start_program(cmd, NULL, NULL, fmode, detached);
+                return start_program(cmd, NULL, NULL, NULL, fmode, detached);
         } else {
                 return false;
         }
@@ -724,7 +802,7 @@ int_main(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
                 if (command_hint())
                         continue;
 
-                char *cmd = remove_leading_spaces(global->line);
+                char *cmd = trim_string(global->line);
 
                 if (strlen(cmd) == 0)
                         continue;

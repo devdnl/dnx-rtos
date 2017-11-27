@@ -53,6 +53,7 @@
   Include files
 ==============================================================================*/
 #include <sys/types.h>
+#include "stm32f1/stm32f10x.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -95,7 +96,7 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef bool (*_DMA_cb_t)(u8_t SR, void *arg);
+typedef bool (*_DMA_cb_t)(DMA_Channel_t *channel, u8_t SR, void *arg);
 
 typedef struct {
         void     *arg;          /*! user configuration: callback argument */

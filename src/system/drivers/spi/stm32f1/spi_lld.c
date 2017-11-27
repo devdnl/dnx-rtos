@@ -62,7 +62,7 @@ struct SPI_info {
   Local function prototypes
 ==============================================================================*/
 #if USE_DMA > 0
-static bool DMA_callback(u8_t SR, void *arg);
+static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg);
 #endif
 
 /*==============================================================================
@@ -390,13 +390,14 @@ static void handle_SPI_IRQ(u8_t major)
 //==============================================================================
 /**
  * @brief  DMA IRQ handler
+ * @param  channel      DMA channel
  * @param  major        SPI major number
  * @return If task was woken then true is returned, otherwise false
  */
 //==============================================================================
-static bool DMA_callback(u8_t SR, void *arg)
+static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg)
 {
-        UNUSED_ARG1(SR);
+        UNUSED_ARG2(channel, SR);
 
         struct SPI_slave *hdl = arg;
 

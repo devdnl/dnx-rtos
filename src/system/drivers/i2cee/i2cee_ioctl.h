@@ -89,7 +89,7 @@ if (dev) {
                 .page_prog_time_ms = 10                 // 10ms write cycle
         }
 
-        if (ioctl(dev, IOCTL_I2CEE__CONFIGURE, &cfg) == 0) {
+        if (ioctl(fileno(dev), IOCTL_I2CEE__CONFIGURE, &cfg) == 0) {
                 puts("Configuration success");
         } else {
                 perror("ioctl()");
@@ -123,6 +123,7 @@ Data from the driver can be read in the same way as regular file.
   Include files
 ==============================================================================*/
 #include "drivers/ioctl_macros.h"
+#include "drivers/class/device/ioctl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -137,6 +138,13 @@ extern "C" {
  * @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_I2CEE__CONFIGURE          _IOW(I2CEE, 0x00, I2CEE_config_t*)
+
+/**
+ * @brief  I2C EEPROM driver configuration by using string.
+ * @param  [WR] const char*             configuration string
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
+ */
+#define IOCTL_I2CEE__CONFIGURE_STR      IOCTL_DEVICE__CONFIGURE_STR
 
 /*==============================================================================
   Exported object types

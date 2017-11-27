@@ -100,7 +100,7 @@ static const char *dev_path = "/dev/I2C0-0";
 
 FILE *dev = fopen(dev_path, "r+");
 if (dev) {
-      if (ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg) != 0) {
+      if (ioctl(fileno(dev), IOCTL_I2C__CONFIGURE, &cfg) != 0) {
             perror(dev_path);
       }
 
@@ -131,7 +131,7 @@ static const char *dev_path = "/dev/I2C0-0";
 
 FILE *dev = fopen(dev_path, "r+");
 if (dev) {
-      if (ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg) != 0) {
+      if (ioctl(fileno(dev), IOCTL_I2C__CONFIGURE, &cfg) != 0) {
             perror(dev_path);
       }
 
@@ -218,7 +218,7 @@ int_main(ee_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
       if (dev) {
             // set I2C device configuration
-            ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+            ioctl(fileno(dev), IOCTL_I2C__CONFIGURE, &cfg);
 
             // write blk1 at address 0x0
             fseek(dev, 0x0, SEEK_SET);
@@ -266,12 +266,12 @@ int_main(slave, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
       if (dev) {
             // set I2C device configuration
-            ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+            ioctl(fileno(dev), IOCTL_I2C__CONFIGURE, &cfg);
 
             while (true) {
                     I2C_selection_t sel = {.timeout_ms = MAX_DELAY_MS};
 
-                    if (ioctl(i2c, IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION, &sel) == 0) {
+                    if (ioctl(fileno(dev), IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION, &sel) == 0) {
 
                         u8_t buf[64];
                         memset(buf, 0, sizeof(buf));
@@ -349,7 +349,7 @@ int_main(ee_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
       if (dev) {
             // set I2C device configuration
-            ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+            ioctl(fileno(dev), IOCTL_I2C__CONFIGURE, &cfg);
 
             // read blk1 at address 0x0
             fseek(dev, 0x0, SEEK_SET);
@@ -397,12 +397,12 @@ int_main(slave, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 
       if (dev) {
             // set I2C device configuration
-            ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+            ioctl(fileno(dev), IOCTL_I2C__CONFIGURE, &cfg);
 
             while (true) {
                     I2C_selection_t sel = {.timeout_ms = MAX_DELAY_MS};
 
-                    if (ioctl(i2c, IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION, &sel) == 0) {
+                    if (ioctl(fileno(dev), IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION, &sel) == 0) {
 
                         u8_t buf[64];
                         memset(buf, 0, sizeof(buf));
@@ -457,6 +457,7 @@ int_main(slave, STACK_DEPTH_MEDIUM, int argc, char *argv[])
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "drivers/class/device/ioctl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -509,6 +510,13 @@ typedef struct {
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
 #define IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION     _IOWR(I2C, 1, I2C_selection_t*)
+
+/**
+ * @brief  Configure device by using string
+ * @param  [WR] const char*             configuration string
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
+ */
+#define IOCTL_I2C__CONFIGURE_STR                IOCTL_DEVICE__CONFIGURE_STR
 
 /*==============================================================================
   Exported objects

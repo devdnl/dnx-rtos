@@ -85,7 +85,7 @@ if (!wdg) {
 //...
 
 
-if (ioctl(wdg, IOCTL_WDG__RESET) != 0) {
+if (ioctl(fileno(wdg), IOCTL_WDG__RESET) != 0) {
     // no permission or IO error
 }
 

@@ -52,6 +52,7 @@
 #include "lib/vsnprintf.h"
 #include "lib/vfprintf.h"
 #include "lib/vsscanf.h"
+#include "lib/stropt.h"
 #include "kernel/errno.h"
 #include "kernel/printk.h"
 #include "kernel/kwrapper.h"
@@ -5780,6 +5781,94 @@ extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt,
 static inline int sys_memory_register(mem_region_t *region, void *start, size_t size)
 {
         return _mm_register_region(region, start, size);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return integer value from given configuration.
+ *
+ * Function found expression: VAR=VAL.
+ *
+ * @param opts          options to analyze
+ * @param var           variable to search
+ * @param default       value used if variable does not found
+ *
+ * @return Integer (on error or when variable does not found the default value).
+ */
+//==============================================================================
+static inline int sys_stropt_get_int(const char *opts, const char *var, int defval)
+{
+        return _stropt_get_int(opts, var, defval);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return string from given configuration.
+ *
+ * Function found expression: VAR=STR.
+ *
+ * @param opts          options to analyze
+ * @param var           variable to search
+ * @param len           string length
+ *
+ * @return On success string pointer and length passed by len pointer, otherwise NULL.
+ */
+//==============================================================================
+static inline const char *sys_stropt_get_string_ref(const char *opts, const char *var, size_t *len)
+{
+        return _stropt_get_string_ref(opts, var, len);
+}
+
+//==============================================================================
+/**
+ * @brief  Function copy string from option.
+ *
+ * Function found expression: VAR=STR.
+ *
+ * @param opts          options to analyze
+ * @param var           variable to search
+ * @param buf           destination buffer
+ * @param buflen        destination buffer length
+ *
+ * @return On success string pointer and length passed by len pointer, otherwise NULL.
+ */
+//==============================================================================
+static inline size_t sys_stropt_get_string_copy(const char *opts, const char *var, char *buf, size_t buflen)
+{
+        return _stropt_get_string_copy(opts, var, buf, buflen);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return integer value from given configuration.
+ *
+ * Function found expression: VAR=BOOL(false, true, on, off, enable, disable, yes, no).
+ *
+ * @param opts          options to analyze
+ * @param var           variable to search
+ * @param len           string length
+ *
+ * @return On success return 1 or 0
+ */
+//==============================================================================
+static inline int sys_stropt_get_bool(const char *opts, const char *var, int defval)
+{
+        return _stropt_get_bool(opts, var, defval);
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if flag exist.
+ *
+ * @param opts          options to analyze
+ * @param flag          flag to find
+ *
+ * @return On success return true, otherwise false.
+ */
+//==============================================================================
+static inline bool sys_stropt_is_flag(const char *opts, const char *flag)
+{
+        return _stropt_is_flag(opts, flag);
 }
 
 #ifdef __cplusplus

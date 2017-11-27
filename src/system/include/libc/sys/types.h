@@ -91,7 +91,7 @@ typedef uint64_t fpos_t;
 typedef int ssize_t;
 
 /** @brief File descriptor. */
-typedef uint fd_t;
+typedef intptr_t fd_t;
 
 /**
  * @brief File mode.

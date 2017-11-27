@@ -76,7 +76,7 @@ read commands from Endpoint 0 and do requested commands. One of first commands
 is configuration request. To start USB peripheral one should send specified
 command:
 @code
-ioctl(ep0, IOCTL_USBD__START);
+ioctl(fileno(ep0), IOCTL_USBD__START);
 @endcode
 After this operation a USB host will send several commands. Commands should be
 handled by application code.

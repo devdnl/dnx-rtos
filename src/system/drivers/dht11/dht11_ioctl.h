@@ -78,7 +78,7 @@ static const DHT11_config_t cfg = {
 
 FILE *dev = fopen("/dev/DHT11-0", "r+");
 if (dev) {
-      if (ioctl(dev, IOCTL_DHT11__CONFIGURE, &cfg) != 0) {
+      if (ioctl(fileno(dev), IOCTL_DHT11__CONFIGURE, &cfg) != 0) {
             perror(NULL);
       }
 
@@ -114,7 +114,7 @@ int_main(dht11, STACK_DEPTH_LOW, int argc, char *argv[])
 {
       FILE *dev = fopen("/dev/DHT11-0", "r+");
       if (dev) {
-            ioctl(dev, IOCTL_I2C__CONFIGURE, &cfg);
+            ioctl(fileno(dev), IOCTL_I2C__CONFIGURE, &cfg);
 
             uint8_t buf[5];
             rewind(dev);

@@ -81,7 +81,7 @@ typedef struct {
   Local function prototypes
 ==============================================================================*/
 static void clear_DMA_IRQ_flags(u8_t major, u8_t channel);
-static bool M2M_callback(u8_t SR, void *arg);
+static bool M2M_callback(DMA_Channel_t *channel, u8_t SR, void *arg);
 
 /*==============================================================================
   Local object
@@ -541,6 +541,7 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
 
                         clear_DMA_IRQ_flags(GETMAJOR(dmad), GETCHANNEL(dmad));
                         NVIC_SetPriority(IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                        NVIC_ClearPendingIRQ(IRQn);
                         NVIC_EnableIRQ(IRQn);
 
                         SET_BIT(DMA_Stream->CCR, DMA_CCR1_TCIE | DMA_CCR1_TEIE);
@@ -578,8 +579,10 @@ static void clear_DMA_IRQ_flags(u8_t major, u8_t channel)
  * @return True if yield needed, false otherwise.
  */
 //==============================================================================
-static bool M2M_callback(u8_t SR, void *arg)
+static bool M2M_callback(DMA_Channel_t *channel, u8_t SR, void *arg)
 {
+        UNUSED_ARG1(channel);
+
         bool yield = false;
         int  err   = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
 
@@ -606,7 +609,7 @@ static void IRQ_handle(u8_t major, u8_t channel)
         u32_t SR = DMA_HW[major].DMA->ISR >> (4 * channel);
 
         if (RT_channel->callback) {
-                yield = RT_channel->callback(SR & 0xF, RT_channel->arg);
+                yield = RT_channel->callback(DMA_channel, SR & 0xF, RT_channel->arg);
         }
 
         if (!(DMA_channel->CCR & DMA_CCR1_CIRC)) {

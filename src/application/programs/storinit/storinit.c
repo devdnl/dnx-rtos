@@ -76,8 +76,8 @@ int_main(storinit, STACK_DEPTH_LOW, int argc, char *argv[])
         errno = 0;
         FILE *storage = fopen(argv[1], "r");
         if (storage) {
-                if (ioctl(storage, IOCTL_STORAGE__INITIALIZE) == 0) {
-                        if (ioctl(storage, IOCTL_STORAGE__READ_MBR) != 0) {
+                if (ioctl(fileno(storage), IOCTL_STORAGE__INITIALIZE) == 0) {
+                        if (ioctl(fileno(storage), IOCTL_STORAGE__READ_MBR) != 0) {
                                 perror(argv[1]);
                         }
 

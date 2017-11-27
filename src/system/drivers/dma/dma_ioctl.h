@@ -92,7 +92,7 @@ if (f) {
                 .size = SIZE_IN_BYTES
         };
 
-        if (ioctl(f, IOCTL_DMA__TRANSFER, &t) == 0) {
+        if (ioctl(fileno(f), IOCTL_DMA__TRANSFER, &t) == 0) {
                 // success ...
         } else {
                 // error ...

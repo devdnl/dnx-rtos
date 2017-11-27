@@ -77,7 +77,7 @@ if (rtc) {
         // wake up in 5 seconds
         time_t t = time(NULL) + 5000;
 
-        if (ioctl(rtc, IOCTL_RTC__SET_ALARM, &t) == 0) {
+        if (ioctl(fileno(rtc), IOCTL_RTC__SET_ALARM, &t) == 0) {
                 sync();
                 system_shutdown();
         } else {

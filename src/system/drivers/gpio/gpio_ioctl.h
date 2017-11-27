@@ -93,14 +93,14 @@ if (f) {
 
      // control pin on port A...
      static const u8_t LED = IOCTL_GPIO_PIN_IDX__LED;
-     ioctl(f, IOCTL_GPIO__CLEAR_PIN, &LED);
+     ioctl(fileno(f), IOCTL_GPIO__CLEAR_PIN, &LED);
 
      // ... this same can be done by using alternative interface:
      static const GPIO_pin_in_port_t LED_PORT = {
             .pin_idx  = IOCTL_GPIO_PIN_IDX__LED,
             .port_idx = IOCTL_GPIO_PORT_IDX__LED
      };
-     ioctl(f, IOCTL_GPIO__CLEAR_PIN_IN_PORT, &LED_PORT);
+     ioctl(fileno(f), IOCTL_GPIO__CLEAR_PIN_IN_PORT, &LED_PORT);
 
 
      // there is possiblity to control pin on other port
@@ -108,7 +108,7 @@ if (f) {
             .pin_idx  = IOCTL_GPIO_PIN_IDX__OTHER_PIN,
             .port_idx = IOCTL_GPIO_PORT_IDX__OTHER_PIN
      };
-     ioctl(f, IOCTL_GPIO__SET_PIN_IN_PORT, &OTHER_PIN);
+     ioctl(fileno(f), IOCTL_GPIO__SET_PIN_IN_PORT, &OTHER_PIN);
 
      fclose(f);
 

@@ -1,4 +1,17 @@
-dnx RTOS 2.1.1 Dingo
+dnx RTOS 2.1.4 Dingo
+====================
+New Features, Improvements:
+- ioctl() function operates on file descriptor (fd_t) instead of file object (FILE)
+- Added fileno() function to stdio.h library
+- Added system library to analyze option strings (var1=val,flag,varn=val)
+- Added commit hash to system version
+- Added messages for system assert macro
+- Switched to Configtool v1.2.1
+
+Fixed Bugs:
+- Fixed I2C driver in master mode
+
+dnx RTOS 2.1.2 Dingo
 ====================
 New Features, Improvements:
 - Added I2C slave mode

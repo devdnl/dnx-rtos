@@ -80,16 +80,16 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
-        ioctl(stdin, IOCTL_TTY__ECHO_OFF);
-        ioctl(stdout, IOCTL_TTY__CLEAR_SCR);
+        ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
+        ioctl(fileno(stdout), IOCTL_TTY__CLEAR_SCR);
 
         int     key   = ' ';
         clock_t timer = clock() + REFRESH_INTERVAL_SEC;
 
         while (key != 'q' && key != '\0') {
-                ioctl(stdin, IOCTL_VFS__NON_BLOCKING_RD_MODE);
+                ioctl(fileno(stdin), IOCTL_VFS__NON_BLOCKING_RD_MODE);
                 key = getchar();
-                ioctl(stdin, IOCTL_VFS__DEFAULT_RD_MODE);
+                ioctl(fileno(stdin), IOCTL_VFS__DEFAULT_RD_MODE);
 
                 if (!strchr("k,.", key)) {
                         if ((clock() - timer) < REFRESH_INTERVAL_SEC) {
@@ -170,7 +170,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         printf("Kill PID: ");
                         fflush(stdout);
 
-                        ioctl(stdin, IOCTL_TTY__ECHO_ON);
+                        ioctl(fileno(stdin), IOCTL_TTY__ECHO_ON);
 
                         int pid = 0;
                         scanf("%d", &pid);
@@ -183,14 +183,14 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                                 sleep(2);
                         }
 
-                        ioctl(stdin, IOCTL_TTY__ECHO_OFF);
+                        ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
 
                 } else if (key == 'q') {
                         break;
                 }
         }
 
-        ioctl(stdin, IOCTL_TTY__ECHO_ON);
+        ioctl(fileno(stdin), IOCTL_TTY__ECHO_ON);
 
         return 0;
 }

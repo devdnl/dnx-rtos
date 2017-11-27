@@ -51,6 +51,8 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define _I2C_TIMEOUT_START              10
+#define _I2C_TIMEOUT_BYTE_TRANSFER      100
 #define _I2C_DEVICE_TIMEOUT             2000
 #define _I2C_HEADER_ADDR_10BIT          0xF0
 
@@ -86,19 +88,20 @@ enum _I2C_major {
 /// type defines I2C device in the runtime environment
 typedef struct {
         I2C_config_t              config;               //!< pointer to the device configuration
-        dev_lock_t                lock;                 //!< object used to lock access to opened device
+        dev_lock_t                lock_dev;             //!< object used to lock access to opened device
         u8_t                      major;                //!< major number of the device (I2C peripheral number)
         u8_t                      minor;                //!< minor number of the device (device identifier)
 } I2C_dev_t;
 
 /// type defines main memory of this module
 typedef struct {
-        mutex_t                  *lock;                 //!< mutex used to lock access to the particular peripheral
+        mutex_t                  *lock_mtx;             //!< mutex used to lock access to the particular peripheral
         queue_t                  *event;                //!< queue used to indicate event (operation finished)
         u16_t                     SR1_mask;             //!< SR1 register mask (to catch specified event in IRQ)
         bool                      initialized:1;        //!< indicates that module for this peripheral is initialized
         u8_t                      dev_cnt;              //!< number of initialized devices
         u8_t                      unexp_event_cnt;      //!< number of unexpected events
+        u8_t                      major;                //!< major number of the device (I2C peripheral number)
 } I2C_mem_t;
 
 /*==============================================================================
@@ -114,7 +117,7 @@ extern void _I2C_LLD__release(u8_t major);
 extern int  _I2C_LLD__start(I2C_dev_t *hdl);
 extern int  _I2C_LLD__repeat_start(I2C_dev_t *hdl);
 extern void _I2C_LLD__stop(I2C_dev_t *hdl);
-extern int  _I2C_LLD__send_address(I2C_dev_t *hdl, bool write);
+extern int  _I2C_LLD__send_address(I2C_dev_t *hdl, bool write, size_t count);
 extern int  _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt);
 extern int  _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt);
 extern int  _I2C_LLD__slave_mode_setup(I2C_dev_t *hdl);

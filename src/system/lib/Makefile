@@ -5,4 +5,5 @@ CSRC_CORE   += lib/llist.c
 CSRC_CORE   += lib/vsnprintf.c
 CSRC_CORE   += lib/vfprintf.c
 CSRC_CORE   += lib/vsscanf.c
+CSRC_CORE   += lib/stropt.c
 HDRLOC_CORE += lib

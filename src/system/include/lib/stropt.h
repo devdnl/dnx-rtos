@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    khooks.h
+/*==============================================================================
+File     stropt.h
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   This file support all kernel hooks
+Brief    String options analyze library.
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,55 +24,60 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
-#ifndef _KHOOKS_H_
-#define _KHOOKS_H_
+/**
+@defgroup STROPT_H_ STROPT_H_
 
-#ifdef __cplusplus
-   extern "C" {
-#endif
+Detailed Doxygen description.
+*/
+/**@{*/
+
+#ifndef _STROPT_H_
+#define _STROPT_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "kernel/kwrapper.h"
-
-/*==============================================================================
-  Exported symbolic constants/macros
-==============================================================================*/
-#if __OS_ENABLE_SYS_ASSERT__ > 0
-#define _assert(x) _assert_hook(x, NULL)
-#define _assert_msg(x, msg) _assert_hook(x, msg)
-#else
-#define _assert(x) (void)(x)
-#define _assert_msg(x, msg) (void)(x)
-#endif
-
-/*==============================================================================
-  Exported types, enums definitions
-==============================================================================*/
-
-/*==============================================================================
-  Exported object declarations
-==============================================================================*/
-
-/*==============================================================================
-  Exported function prototypes
-==============================================================================*/
-extern void  vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName);
-extern void  vApplicationTickHook(void);
-extern u32_t _get_uptime_counter(void);
-
-#if __OS_ENABLE_SYS_ASSERT__ > 0
-extern void _assert_hook(bool assert, const char *msg);
-#endif
+#include <string.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
-   }
+extern "C" {
 #endif
 
-#endif /* _KHOOKS_H_ */
+/*==============================================================================
+  Exported macros
+==============================================================================*/
+
+/*==============================================================================
+  Exported object types
+==============================================================================*/
+
+/*==============================================================================
+  Exported objects
+==============================================================================*/
+
+/*==============================================================================
+  Exported functions
+==============================================================================*/
+extern int _stropt_get_int(const char *opts, const char *var, int defval);
+extern const char *_stropt_get_string_ref(const char *opts, const char *var, size_t *len);
+extern size_t _stropt_get_string_copy(const char *opts, const char *var, char *buf, size_t buflen);
+extern int _stropt_get_bool(const char *opts, const char *var, int defval);
+extern bool _stropt_is_flag(const char *opts, const char *flag);
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _STROPT_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

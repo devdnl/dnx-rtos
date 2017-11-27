@@ -63,7 +63,7 @@
 #define PROC_MAX_THREADS(proc)          (((proc)->flag & FLAG_KWORKER) ? __OS_TASK_MAX_SYSTEM_THREADS__ : __OS_TASK_MAX_USER_THREADS__)
 
 #define is_proc_valid(proc)             (proc && proc->header.type == RES_TYPE_PROCESS)
-#define is_tid_in_range(proc, tid)      (tid < PROC_MAX_THREADS(proc))
+#define is_tid_in_range(proc, tid)      ((tid > 0) && (tid < PROC_MAX_THREADS(proc)))
 
 #define FLAG_DETACHED                   (1 << 0)
 #define FLAG_KWORKER                    (1 << 1)

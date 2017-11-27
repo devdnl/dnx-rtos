@@ -105,7 +105,7 @@ example:
         // ...
 
         // registering this application as host
-        if (ioctl(loop_dev, IOCTL_LOOP__HOST_OPEN) != 0) {
+        if (ioctl(fileno(loop_dev), IOCTL_LOOP__HOST_OPEN) != 0) {
                 perror(loop);
                 fclose(loop_dev);
                 exit(EXIT_FAILURE);
@@ -131,7 +131,7 @@ unregister loop device by other application. Unregister example code:
         // ...
 
         // unregistering this application
-        if (ioctl(loop_dev, IOCTL_LOOP__HOST_CLOSE) != 0) {
+        if (ioctl(fileno(loop_dev), IOCTL_LOOP__HOST_CLOSE) != 0) {
                 perror(loop);
                 fclose(loop_dev);
                 exit(EXIT_FAILURE);
@@ -161,7 +161,7 @@ Example code:
 
         while (true) {
                 LOOP_request_t client_req;
-                if (ioctl(loop_dev, IOCTL_LOOP__HOST_WAIT_FOR_REQUEST, &client_req) != 0) {
+                if (ioctl(fileno(loop_dev), IOCTL_LOOP__HOST_WAIT_FOR_REQUEST, &client_req) != 0) {
                         perror(loop);
                         continue;
                 }
@@ -231,7 +231,7 @@ Example code of handling Client to Host request:
                         buf.size = part;
                         buf.err  = ESUCC;
 
-                        int s = ioctl(loop_dev, IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT, &buf);
+                        int s = ioctl(fileno(loop_dev), IOCTL_LOOP__HOST_READ_DATA_FROM_CLIENT, &buf);
                         if (s == 0) {
                                 // buffer is already filled, host can utilize buffer
                                 // ...
@@ -281,7 +281,7 @@ application. Example code of handling Host to Client request:
                         buf.size = n;
                         buf.err  = ESUCC;
 
-                        int s = ioctl(loop_dev, IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT, &buf);
+                        int s = ioctl(fileno(loop_dev), IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT, &buf);
                         if (s != 0) {
                                 break;
                         } else {
@@ -295,7 +295,7 @@ application. Example code of handling Host to Client request:
                         buf.data = NULL;
                         buf.size = 0;
                         buf.err  = errno;
-                        ioctl(loop_dev, IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT, &buf);
+                        ioctl(fileno(loop_dev), IOCTL_LOOP__HOST_WRITE_DATA_TO_CLIENT, &buf);
                 }
         }
 
@@ -337,7 +337,7 @@ request:
                         break;
                 }
 
-                if (ioctl(loop_dev, IOCTL_LOOP__HOST_SET_IOCTL_STATUS, &ioctl_resp) != 0) {
+                if (ioctl(fileno(loop_dev), IOCTL_LOOP__HOST_SET_IOCTL_STATUS, &ioctl_resp) != 0) {
                         perror(loop);
                 }
         }
@@ -370,7 +370,7 @@ the host application should handle statistics request. Example code:
                 stat_resp.size = 100;         // example size
                 stat_resp.err  = ESUCC;       // operation status
 
-                if (ioctl(loop_dev, IOCTL_LOOP__HOST_SET_DEVICE_STATS, &stat_resp) != 0) {
+                if (ioctl(fileno(loop_dev), IOCTL_LOOP__HOST_SET_DEVICE_STATS, &stat_resp) != 0) {
                         perror(loop);
                 }
         }
@@ -404,7 +404,7 @@ request. Example code of handling flush request:
                 // ...
 
                 int err = ESUCC;
-                if (ioctl(loop_dev, IOCTL_LOOP__HOST_FLUSH_DONE, &err) != 0) {
+                if (ioctl(fileno(loop_dev), IOCTL_LOOP__HOST_FLUSH_DONE, &err) != 0) {
                         perror(loop);
                 }
         }
