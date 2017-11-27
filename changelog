@@ -1,4 +1,4 @@
-dnx RTOS 2.1.3 Dingo
+dnx RTOS 2.1.4 Dingo
 ====================
 New Features, Improvements:
 - ioctl() function operates on file descriptor (fd_t) instead of file object (FILE)
