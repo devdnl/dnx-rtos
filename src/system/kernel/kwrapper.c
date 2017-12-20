@@ -40,7 +40,7 @@
 ==============================================================================*/
 /** CALCULATIONS */
 #define _CEILING(x,y)   (((x) + (y) - 1) / (y))
-#define MS2TICK(ms)     (ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ))))
+#define MS2TICK(ms)     ((ms <= (1000/(configTICK_RATE_HZ)) ? 1 : _CEILING(ms,(1000/(configTICK_RATE_HZ)))) + 1)
 
 /*==============================================================================
   Local types, enums definitions
