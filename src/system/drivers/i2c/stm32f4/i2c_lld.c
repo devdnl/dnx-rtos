@@ -71,7 +71,7 @@ typedef struct {
   Local function prototypes
 ==============================================================================*/
 static inline I2C_t *get_I2C(I2C_dev_t *hdl);
-static void clear_send_address_event(I2C_dev_t *hdl);
+static void clear_address_event(I2C_dev_t *hdl);
 static void IRQ_EV_handler(u8_t major);
 static void IRQ_ER_handler(u8_t major);
 
@@ -200,42 +200,6 @@ static void reset(I2C_dev_t *hdl, bool reinit)
 
 //==============================================================================
 /**
- * @brief  Function wait for selected event (IRQ)
- * @param  hdl                  device handle
- * @param  SR1_event_mask       event mask (bits from SR1 register)
- * @param  timeout_ms           timeout in milliseconds
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-static int wait_for_event_IRQ(I2C_dev_t *hdl, u16_t SR1_event_mask, u32_t timeout_ms)
-{
-        I2C_t *i2c = get_I2C(hdl);
-
-        _I2C[hdl->major]->SR1_mask = SR1_event_mask;
-
-        u16_t CR2 = I2C_CR2_ITEVTEN | I2C_CR2_ITERREN;
-
-        if (SR1_event_mask & (I2C_SR1_RXNE | I2C_SR1_TXE)) {
-                CR2 |= I2C_CR2_ITBUFEN;
-        }
-
-        SET_BIT(i2c->CR2, CR2);
-
-        int ferr = EIO;
-        int err  = sys_queue_receive(_I2C[hdl->major]->event, &ferr, timeout_ms);
-        if (!err) {
-                err = ferr;
-        }
-
-        if (err) {
-                reset(hdl, true);
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
  * @brief  Function wait for DMA event (IRQ)
  * @param  hdl                  device handle
  * @param  DMA                  DMA channel
@@ -308,7 +272,7 @@ static int wait_for_event_poll(I2C_dev_t *hdl, u32_t flags, u32_t timeout_ms)
  * @param  hdl                  device handle
  */
 //==============================================================================
-static void clear_send_address_event(I2C_dev_t *hdl)
+static void clear_address_event(I2C_dev_t *hdl)
 {
         I2C_t *i2c = get_I2C(hdl);
 
@@ -443,7 +407,7 @@ int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
 {
         I2C_t *i2c = get_I2C(hdl);
 
-        clear_send_address_event(hdl);
+        clear_address_event(hdl);
 
         CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
         SET_BIT(i2c->CR1, I2C_CR1_START | I2C_CR1_ACK);
@@ -591,7 +555,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                 err = _DMA_DDI_transfer(dmad, &config);
                                 if (!err) {
                                         SET_BIT(i2c->CR2, I2C_CR2_LAST | I2C_CR2_DMAEN);
-                                        clear_send_address_event(hdl);
+                                        clear_address_event(hdl);
 
                                         err = wait_for_event_DMA(hdl);
                                         if (!err) {
@@ -611,7 +575,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                 }
 #endif
                 {
-                        clear_send_address_event(hdl);
+                        clear_address_event(hdl);
 
                         while (count) {
                                 if (count == 3) {
@@ -666,7 +630,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
         } else if (count == 2) {
                 sys_critical_section_begin();
                 {
-                        clear_send_address_event(hdl);
+                        clear_address_event(hdl);
                         CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
                 }
                 sys_critical_section_end();
@@ -690,7 +654,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                 sys_critical_section_begin();
                 {
                         CLEAR_BIT(i2c->CR1, I2C_CR1_ACK);
-                        clear_send_address_event(hdl);
+                        clear_address_event(hdl);
                         SET_BIT(i2c->CR1, I2C_CR1_STOP);
                 }
                 sys_critical_section_end();
@@ -728,7 +692,7 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
         ssize_t n    = 0;
         I2C_t  *i2c  = get_I2C(hdl);
 
-        clear_send_address_event(hdl);
+        clear_address_event(hdl);
 
 #if USE_DMA > 0
         if (count >= 3 && I2C_HW[hdl->major].use_DMA) {
@@ -854,11 +818,25 @@ int _I2C_LLD__slave_wait_for_selection(I2C_dev_t *hdl, I2C_selection_t *event)
 {
         I2C_t *i2c = get_I2C(hdl);
 
-        CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
-        SET_BIT(i2c->CR1, I2C_CR1_ACK);
+        sys_critical_section_begin();
+        {
+                _I2C[hdl->major]->SR1_mask = I2C_SR1_ADDR;
 
-        int err = wait_for_event_IRQ(hdl, I2C_SR1_ADDR, event->timeout_ms);
+                SET_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN);
+                CLEAR_BIT(i2c->CR1, I2C_CR1_STOP);
+                SET_BIT(i2c->CR1, I2C_CR1_ACK);
+        }
+        sys_critical_section_end();
+
+        int ferr = EIO;
+        int err  = sys_queue_receive(_I2C[hdl->major]->event, &ferr, event->timeout_ms);
         if (!err) {
+                err = ferr;
+        }
+
+        if (err) {
+                reset(hdl, true);
+        } else {
                 event->RD_addr = (i2c->SR2 & I2C_SR2_TRA);
         }
 
@@ -883,6 +861,8 @@ int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size
         *wrctr = 0;
 
         u32_t tref = sys_time_get_reference();
+
+        clear_address_event(hdl);
 
         while (true) {
                 if ((i2c->SR1 & I2C_SR1_TXE)) {
@@ -971,9 +951,13 @@ int _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdc
         }
 
         // clear STOPF flag
-        u8_t tmp = i2c->SR1;
-        (void)tmp;
-        SET_BIT(i2c->CR1, I2C_CR1_PE);
+        sys_critical_section_begin();
+        {
+                u8_t tmp = i2c->SR1;
+                (void)tmp;
+                SET_BIT(i2c->CR1, I2C_CR1_PE);
+        }
+        sys_critical_section_end();
 
         return err;
 }
@@ -990,8 +974,6 @@ static void IRQ_EV_handler(u8_t major)
 
         I2C_t *i2c = const_cast(I2C_t*, I2C_HW[major].I2C);
         u16_t  SR1 = i2c->SR1;
-        u16_t  SR2 = i2c->SR2;
-        UNUSED_ARG1(SR2);
 
         if (SR1 & _I2C[major]->SR1_mask) {
                 int err = ESUCC;
