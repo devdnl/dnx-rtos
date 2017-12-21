@@ -98,10 +98,31 @@ this:SetToolTip("Number of threads that can be started by user process.")
 #define __OS_TASK_MAX_USER_THREADS__ 4
 
 /*--
-this:AddWidget("Spinbox", 2, 32, "Maximum number of system process threads")
+this:AddWidget("Spinbox", 2, 32, "Maximum number of kworker threads")
 this:SetToolTip("Number of threads that can be started by system process.")
 --*/
 #define __OS_TASK_MAX_SYSTEM_THREADS__ 12
+
+/*--
+this:AddWidget("Spinbox", 0, 24, "Number of ready-to-run I/O kworker threads")
+this:SetToolTip("Number of ready-to-run threads for I/O syscall handling.\n"..
+                "Set 0 to start thread on demand. When number of real used threads\n"..
+                "is higher than defined then system create one automatically.\n"..
+                "Number of threads should be lower or equal to total kworker threads.\n"..
+                "Some driver creates threads, so this should be take in a count as well.")
+--*/
+#define __OS_TASK_READY_TO_RUN_IO_THREADS__ 0
+
+/*--
+this:AddWidget("Spinbox", 0, 24, "Number of ready-to-run network kworker threads")
+this:SetToolTip("Number of ready-to-run threads for network syscall handling.\n"..
+                "Set 0 to start thread on demand. When number of real used threads\n"..
+                "is higher than defined then system create one automatically.\n"..
+                "Number of threads should be lower or equal to total kworker threads.\n"..
+                "Some driver creates threads, so this should be take in a count as well.")
+--*/
+#define __OS_TASK_READY_TO_RUN_NET_THREADS__ 0
+
 
 
 /*--
