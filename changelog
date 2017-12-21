@@ -1,12 +1,13 @@
 dnx RTOS 2.1.5 Dingo
 ====================
 New Features, Improvements:
--
+- Added Ready-To-Run IO/network kworker threads (faster syscall handling)
+- 
 
 Fixed Bugs:
 - I2C slave mode fix (repeat-start detection)
 - Corrected MS2TICK macro
-- 
+-
 
 dnx RTOS 2.1.4 Dingo
 ====================

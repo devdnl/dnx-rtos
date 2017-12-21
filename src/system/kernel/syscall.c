@@ -518,7 +518,7 @@ int _syscall_kworker_process(int argc, char *argv[])
                                                  NULL);
 
                 if (err) {
-                        _assert_msg(false, "Fail in creating Ready-To-Run thread (%d)", err);
+                        _assert_msg(false, "Fail in creating Ready-To-Run thread");
                         break;
                 }
 
