@@ -1,7 +1,7 @@
 dnx RTOS 2.1.5 Dingo
 ====================
 New Features, Improvements:
-- Added Ready-To-Run IO/network kworker threads (faster syscall handling)
+- Added Ready-To-Run I/O kworker threads (faster syscall handling)
 - 
 
 Fixed Bugs:

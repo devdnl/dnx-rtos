@@ -76,7 +76,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_MUTEXDESTROY,           // | void           | mutex_t *mutex            |                                     |                           |                           |                                           |
         SYSCALL_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size             |                           |                           |                                           |
         SYSCALL_QUEUEDESTROY,           // | void           | queue_t *queue            |                                     |                           |                           |                                           |
-#define _SYSCALL_GROUP_0_OS_NON_BLOCKING  SYSCALL_QUEUEDESTROY // this group ends at ^this^ syscall ----------------------------+---------------------------+---------------------------+-------------------------------------------+
+#define _SYSCALL_GROUP_0_OS_NON_BLOCKING  SYSCALL_QUEUEDESTROY // this group ends at ^this^ syscall --------------------------+---------------------------+---------------------------+-------------------------------------------+
         SYSCALL_THREADKILL,             // | int            | tid_t *tid                |                                     |                           |                           |                                           |
         SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr                |                           |                           |                                           |
         SYSCALL_PROCESSCLEANZOMBIE,     // | int            | pid_t *pid                | int *status                         |                           |                           |                                           |
@@ -134,7 +134,6 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                | const char *node_path     |                                           |
         SYSCALL_DRIVERRELEASE,          // | int            | const char *mod_name      | int *major                          | int *minor                |                           |                                           |
         SYSCALL_KERNELPANICDETECT,      // | bool           | FILE *file                |                                     |                           |                           |                                           |
-#define _SYSCALL_GROUP_1_FS_BLOCKING      SYSCALL_KERNELPANICDETECT // this group ends at ^this^ syscall ----------------------------------+---------------------------+---------------------------+-------------------------------------------+
     #if __ENABLE_NETWORK__ == _YES_
         SYSCALL_NETIFUP,                // | int            | NET_family_t *family      | const NET_generic_config_t *config  |                           |                           |                                           |
         SYSCALL_NETIFDOWN,              // | int            | NET_family_t *family      |                                     |                           |                           |                                           |
@@ -156,7 +155,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_NETRECVFROM,            // | int            | SOCKET *socket            | void *buf                           | size_t *len               | NET_flags_t *flags        | NET_generic_sockaddr_t *from_sockaddr     |
         SYSCALL_NETGETADDRESS,          // | int            | SOCKET *socket            | NET_generic_sockaddr_t *addr        |                           |                           |                                           |
     #endif
-#define _SYSCALL_GROUP_2_NET_BLOCKING     _SYSCALL_COUNT // network group --------------+-------------------------------------+---------------------------+---------------------------+-------------------------------------------+
+#define _SYSCALL_GROUP_1_BLOCKING       _SYSCALL_COUNT // network group ----------------+-------------------------------------+---------------------------+---------------------------+-------------------------------------------+
         _SYSCALL_COUNT
 } syscall_t;
 
