@@ -437,17 +437,24 @@ void syscall(syscall_t syscall, void *retptr, ...)
                                 }
 #endif
 
-                                if (_queue_send(call_rq,
-                                                &syscallrq_ptr,
-                                                MAX_DELAY_MS) == ESUCC) {
+                                while (true) {
+                                        if (_queue_send(call_rq,
+                                                        &syscallrq_ptr,
+                                                        2000) == ESUCC) {
 
-                                        if (_flag_wait(event_flags,
-                                                       _PROCESS_SYSCALL_FLAG(tid),
-                                                       MAX_DELAY_MS) == ESUCC) {
+                                                if (_flag_wait(event_flags,
+                                                               _PROCESS_SYSCALL_FLAG(tid),
+                                                               MAX_DELAY_MS) == ESUCC) {
 
-                                                if (syscallrq.err) {
-                                                        _errno = syscallrq.err;
+                                                        if (syscallrq.err) {
+                                                                _errno = syscallrq.err;
+                                                        }
                                                 }
+
+                                                break;
+                                        } else {
+                                                _printk("syscall: busy timeout");
+                                                _assert_msg(false, "Probably started to less I/O threads");
                                         }
                                 }
                         }
