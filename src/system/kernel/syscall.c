@@ -5,7 +5,7 @@
 
 @brief   System call handling - kernel space
 
-@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -48,11 +48,12 @@
 #include "net/netm.h"
 #include "mm/shm.h"
 #include "mm/cache.h"
+#include "dnx/misc.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define SYSCALL_QUEUE_LENGTH            8
+#define SYSCALL_QUEUE_LENGTH            4
 
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
 #define SYNC_PERIOD_MS                  (1000 * __OS_SYSTEM_CACHE_SYNC_PERIOD__)
@@ -92,6 +93,11 @@ typedef void (*syscallfunc_t)(syscallrq_t*);
   Local function prototypes
 ==============================================================================*/
 static void syscall_do(void *rq);
+#if __OS_TASK_KWORKER_MODE__ == 1
+static void syscall_RTR(void *rq_queue);
+#endif
+
+
 static void syscall_mount(syscallrq_t *rq);
 static void syscall_umount(syscallrq_t *rq);
 #if __OS_ENABLE_STATFS__ == _YES_
@@ -201,10 +207,13 @@ static void syscall_shmdestroy(syscallrq_t *rq);
 /*==============================================================================
   Local objects
 ==============================================================================*/
+#if __OS_TASK_KWORKER_MODE__ == 0
 static queue_t *call_request;
-
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-static u32_t sync_period_ref;
+#elif __OS_TASK_KWORKER_MODE__ == 1
+static queue_t *call_nonblocking;
+static queue_t *call_blocking;
+#else
+#error __OS_TASK_KWORKER_MODE__: unknown mode
 #endif
 
 /* syscall table */
@@ -353,12 +362,25 @@ int _syscall_init()
                 .detached = true
         };
 
-        int err = ESUCC;
+        int err;
 
-        err |= _queue_create(SYSCALL_QUEUE_LENGTH, sizeof(syscallrq_t*), &call_request);
-        err |= _process_create("kworker", &attr, NULL);
-        err |= _process_create(__OS_INIT_PROG__, &attr, NULL);
+#if __OS_TASK_KWORKER_MODE__ == 0
+        catcherr(err = _queue_create(SYSCALL_QUEUE_LENGTH, sizeof(syscallrq_t*),
+                                     &call_request), exit);
 
+#elif __OS_TASK_KWORKER_MODE__ == 1
+        catcherr(err = _queue_create(SYSCALL_QUEUE_LENGTH, sizeof(syscallrq_t*),
+                                     &call_nonblocking), exit);
+
+        catcherr(err = _queue_create(SYSCALL_QUEUE_LENGTH, sizeof(syscallrq_t*),
+                                     &call_blocking), exit);
+#endif
+
+        catcherr(err = _process_create("kworker", &attr, NULL), exit);
+
+        catcherr(err = _process_create(__OS_INIT_PROG__, &attr, NULL), exit);
+
+        exit:
         return err;
 }
 
@@ -397,18 +419,42 @@ void syscall(syscall_t syscall, void *retptr, ...)
                         va_start(syscallrq.args, retptr);
                         {
                                 syscallrq_t *syscallrq_ptr = &syscallrq;
+                                queue_t     *call_rq       = NULL;
 
-                                if (_queue_send(call_request,
-                                                &syscallrq_ptr,
-                                                MAX_DELAY_MS) ==  ESUCC) {
+#if __OS_TASK_KWORKER_MODE__ == 0
+                                call_rq = call_request;
+#elif __OS_TASK_KWORKER_MODE__ == 1
+                                if (syscall <= _SYSCALL_GROUP_0_OS_NON_BLOCKING) {
+                                        call_rq = call_nonblocking;
 
-                                        if (_flag_wait(event_flags,
-                                                       _PROCESS_SYSCALL_FLAG(tid),
-                                                       MAX_DELAY_MS) == ESUCC) {
+                                } else if (syscall <= _SYSCALL_GROUP_1_BLOCKING) {
+                                        call_rq = call_blocking;
 
-                                                if (syscallrq.err) {
-                                                        _errno = syscallrq.err;
+                                } else {
+                                        _errno = ENOSYS;
+                                        va_end(syscallrq.args);
+                                        return;
+                                }
+#endif
+
+                                while (true) {
+                                        if (_queue_send(call_rq,
+                                                        &syscallrq_ptr,
+                                                        2000) == ESUCC) {
+
+                                                if (_flag_wait(event_flags,
+                                                               _PROCESS_SYSCALL_FLAG(tid),
+                                                               MAX_DELAY_MS) == ESUCC) {
+
+                                                        if (syscallrq.err) {
+                                                                _errno = syscallrq.err;
+                                                        }
                                                 }
+
+                                                break;
+                                        } else {
+                                                _printk("syscall: busy timeout");
+                                                _assert_msg(false, "Probably started to less I/O threads");
                                         }
                                 }
                         }
@@ -433,14 +479,8 @@ int _syscall_kworker_process(int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
-        static const thread_attr_t fs_blocking_thread_attr = {
-                .stack_depth = STACK_DEPTH_CUSTOM(__OS_FILE_SYSTEM_STACK_DEPTH__),
-                .priority    = PRIORITY_NORMAL,
-                .detached    = true
-        };
-
-        static const thread_attr_t net_blocking_thread_attr = {
-                .stack_depth = STACK_DEPTH_CUSTOM(__OS_NETWORK_STACK_DEPTH__),
+        static const thread_attr_t blocking_thread_attr = {
+                .stack_depth = STACK_DEPTH_CUSTOM(__OS_IO_STACK_DEPTH__),
                 .priority    = PRIORITY_NORMAL,
                 .detached    = true
         };
@@ -448,33 +488,53 @@ int _syscall_kworker_process(int argc, char *argv[])
         _task_get_process_container(_THIS_TASK, &_kworker_proc, NULL);
         _assert(_kworker_proc);
 
+#if __OS_TASK_KWORKER_MODE__ == 1
+        int iothrs_created = 0;
+
+        for (int i = 0;
+                (i < __OS_TASK_KWORKER_IO_THREADS__)
+             && (i < __OS_TASK_MAX_SYSTEM_THREADS__ - 1); i++) {
+
+                int err = _process_thread_create(_kworker_proc,
+                                                 syscall_RTR,
+                                                 &blocking_thread_attr,
+                                                 call_blocking,
+                                                 NULL);
+
+                if (err) {
+                        _assert_msg(false, "Fail in creating Ready-To-Run thread");
+                        break;
+                }
+
+                iothrs_created++;
+        }
+
+        _printk("Created %d/%d Ready-To-Run IO threads",
+                iothrs_created, __OS_TASK_KWORKER_IO_THREADS__);
+#endif
+
+#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+        u32_t sync_period_ref = _kernel_get_time_ms();
+#endif
+
+        syscallrq_t *sysrq = NULL;
+
         for (;;) {
-                syscallrq_t *rq;
-                if (_queue_receive(call_request, &rq, SYNC_PERIOD_MS) == ESUCC) {
+#if __OS_TASK_KWORKER_MODE__ == 0
+                if (_queue_receive(call_request, &sysrq, SYNC_PERIOD_MS) == ESUCC) {
 
                         _process_clean_up_killed_processes();
 
-                        if (rq->syscall_no <= _SYSCALL_GROUP_0_OS_NON_BLOCKING) {
-                                syscall_do(rq);
+                        if (sysrq->syscall_no <= _SYSCALL_GROUP_0_OS_NON_BLOCKING) {
+                                syscall_do(sysrq);
                         } else {
-                                /* select stack size according to syscall group */
-                                const thread_attr_t *thread_attr = NULL;
-                                if (rq->syscall_no <= _SYSCALL_GROUP_1_FS_BLOCKING) {
-                                        thread_attr = &fs_blocking_thread_attr;
-                                } else if (rq->syscall_no <= _SYSCALL_GROUP_2_NET_BLOCKING) {
-                                        thread_attr = &net_blocking_thread_attr;
-                                } else {
-                                        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
-                                        continue;
-                                }
-
                                 _kernel_release_resources();
 
                                 /* create new syscall task */
                                 switch (_process_thread_create(_kworker_proc,
                                                                syscall_do,
-                                                               thread_attr,
-                                                               rq, NULL) ) {
+                                                               &blocking_thread_attr,
+                                                               sysrq, NULL) ) {
                                 case ESUCC:
                                         _task_yield();
                                         break;
@@ -489,15 +549,21 @@ int _syscall_kworker_process(int argc, char *argv[])
                                         // go through
 
                                 default:
-                                        _queue_send(call_request, &rq, MAX_DELAY_MS);
+                                        _queue_send(call_request, &sysrq, MAX_DELAY_MS);
                                         _sleep_ms(5);
                                         break;
                                 }
                         }
                 }
+#elif __OS_TASK_KWORKER_MODE__ == 1
+                if (_queue_receive(call_nonblocking, &sysrq, SYNC_PERIOD_MS) == ESUCC) {
+                        _process_clean_up_killed_processes();
+                        syscall_do(sysrq);
+                }
+#endif
+
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
                 if ( (_kernel_get_time_ms() - sync_period_ref) >= SYNC_PERIOD_MS) {
-
                         _cache_sync();
                         sync_period_ref = _kernel_get_time_ms();
                 }
@@ -539,12 +605,33 @@ static void syscall_do(void *rq)
         // If there is lack of memory and FS sync is required then thread
         // synchronize all file systems to reduce cache size.
         if (  _cache_is_sync_needed()
-           && sysrq->syscall_no <= _SYSCALL_GROUP_1_FS_BLOCKING) {
+           && sysrq->syscall_no <= _SYSCALL_GROUP_1_BLOCKING) {
 
                 _vfs_sync();
                 _cache_sync();
         }
 }
+
+#if __OS_TASK_KWORKER_MODE__ == 1
+//==============================================================================
+/**
+ * @brief  Function handle thread ready-to-run feature.
+ *
+ * @param  rq           request information
+ */
+//==============================================================================
+static void syscall_RTR(void *rq_queue)
+{
+        for (;;) {
+                syscallrq_t *sysrq;
+
+                if (_queue_receive(rq_queue, &sysrq, MAX_DELAY_MS) == ESUCC) {
+                        _process_clean_up_killed_processes();
+                        syscall_do(sysrq);
+                }
+        }
+}
+#endif
 
 //==============================================================================
 /**

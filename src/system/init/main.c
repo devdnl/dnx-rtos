@@ -87,11 +87,11 @@ void dnxinit(void *arg)
 {
         UNUSED_ARG1(arg);
 
-        _assert(ESUCC == _vfs_init());
-        _assert(ESUCC == _syscall_init());
-
         printk("Welcome to dnx RTOS %s!", get_OS_version());
         printk("Running on platform %s", get_platform_name());
+
+        _assert(ESUCC == _vfs_init());
+        _assert(ESUCC == _syscall_init());
 
         /*
          * This code reuse the main() stack that after kernel start is abandoned.

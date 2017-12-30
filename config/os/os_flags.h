@@ -54,16 +54,10 @@ this:SetToolTip("This value determines the lowest possible stack size that can b
 #define __OS_TASK_MIN_STACK_DEPTH__ 48
 
 /*--
-this:AddWidget("Spinbox", 48, 8192, "Size of file systems stack [levels]")
-this:SetToolTip("This value determines the size of stack that is used by the file systems. This value depends on used file systems.")
+this:AddWidget("Spinbox", 48, 8192, "Size of I/O threads stack [levels]")
+this:SetToolTip("This value determines the size of stack that is used by the file systems, network, etc.")
 --*/
-#define __OS_FILE_SYSTEM_STACK_DEPTH__ 256
-
-/*--
-this:AddWidget("Spinbox", 48, 8192, "Size of network stack [levels]")
-this:SetToolTip("This value determines the size of stack that is used by network subsystem.")
---*/
-#define __OS_NETWORK_STACK_DEPTH__ 140
+#define __OS_IO_STACK_DEPTH__ 240
 
 /*--
 this:AddWidget("Spinbox", 16, 8192, "Size of interrupt stack [levels]")
@@ -98,10 +92,31 @@ this:SetToolTip("Number of threads that can be started by user process.")
 #define __OS_TASK_MAX_USER_THREADS__ 4
 
 /*--
-this:AddWidget("Spinbox", 2, 32, "Maximum number of system process threads")
+this:AddWidget("Combobox", "Mode of kworker syscall threads")
+this:AddItem("Automatic syscall thread allocation", "0")
+this:AddItem("Fixed number of syscall threads", "1")
+this:SetToolTip("When 'Automatic syscall thread allocation' is enabled then system creates\n"..
+                "syscall threads on demand. This option is slow but if system usage is\n"..
+                "not too intense then this option can limit RAM usage (peek usage can be high).\n\n"..
+                "When 'Fixed number of syscall threads' is used then user define how many\n"..
+                "syscall threads are created at system startup. This option provides\n"..
+                "the fastest response for syscalls but may use a lot of RAM.")
+--*/
+#define __OS_TASK_KWORKER_MODE__ 1
+
+/*--
+this:AddWidget("Spinbox", 2, 32, "Maximum number of kworker threads")
 this:SetToolTip("Number of threads that can be started by system process.")
 --*/
-#define __OS_TASK_MAX_SYSTEM_THREADS__ 12
+#define __OS_TASK_MAX_SYSTEM_THREADS__ 5
+
+/*--
+this:AddWidget("Spinbox", 1, 32, "Number of fixed I/O kworker threads")
+this:SetToolTip("Number of kworker threads for I/O syscall handling.\n"..
+                "Option valid only for 'Fixed number of syscall threads' mode.")
+--*/
+#define __OS_TASK_KWORKER_IO_THREADS__ 2
+
 
 
 /*--
@@ -293,10 +308,10 @@ this:SetToolTip("This option enables memory limit for network subsystem. Use 0 f
 
 /*--
 this:AddWidget("Combobox", "Length of errno messages")
-this:AddItem("Disabled (the lowest memory usage)", "0")
-this:AddItem("Only numbers (small memory usage)", "1")
-this:AddItem("Abbreviations (medium memory usage)", "2")
-this:AddItem("Full names (the highest memory usage)", "3")
+this:AddItem("Disabled (the lowest ROM usage)", "0")
+this:AddItem("Only numbers (small ROM usage)", "1")
+this:AddItem("Abbreviations (medium ROM usage)", "2")
+this:AddItem("Full names (the highest ROM usage)", "3")
 this:SetToolTip("The error messages are used to deliver users an information about error that occurred by using specified functions. "..
                 "This option is used to translate errno error number to user friendly strings.")
 --*/
