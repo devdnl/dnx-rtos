@@ -13,5 +13,5 @@ GITHASH=$(git rev-parse --short HEAD)
 VERSION="dnx-RTOS-v$(get_version)-g${GITHASH}"
 
 git clean -xfd
-zip ${VERSION}.zip . -r -9 --exclude /.git* -A
+zip ${VERSION}.zip . -r -9 -x /.git* /*git -A
 echo "Done"
