@@ -9,7 +9,8 @@ get_version() {
     | sed -e 's/.*return\s"//' -e 's/";//' -e 's/\s/_/'
 }
 
-VERSION="dnx-RTOS-v$(get_version)"
+GITHASH=$(git rev-parse --short HEAD)
+VERSION="dnx-RTOS-v$(get_version)-g${GITHASH}"
 
 git clean -xfd
 zip ${VERSION}.zip . -r -9 --exclude /.git* -A

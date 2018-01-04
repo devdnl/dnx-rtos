@@ -68,7 +68,7 @@ int_main(uname, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        printf("%s %s \"%s\", %s %s, %s\n",
+        printf("%s %s \"%s\" ["COMMIT_HASH"], %s %s, %s\n",
                get_OS_name(),
                get_OS_version(),
                get_OS_codename(),

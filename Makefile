@@ -42,6 +42,7 @@ AFLAGS   = -c \
            -g \
            -ggdb3 \
            -include ./config/config.h \
+           -include ./build/defs.h \
            $(CPUCONFIG_AFLAGS)
 
 CFLAGS   = -c \
@@ -55,8 +56,8 @@ CFLAGS   = -c \
            -Wparentheses \
            -Werror=implicit-function-declaration \
            -include ./config/config.h \
+           -include ./build/defs.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
-           -D_COMMIT_HASH=\"-g$(shell $(COMMIT_HASH))\" \
            $(CPUCONFIG_CFLAGS)
 
 CXXFLAGS = -c \
@@ -74,7 +75,7 @@ CXXFLAGS = -c \
            -Werror=implicit-function-declaration \
            -include ./config/config.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
-           -D_COMMIT_HASH=\"-g$(shell $(COMMIT_HASH))\" \
+           -include ./build/defs.h \
            $(CPUCONFIG_CXXFLAGS)
 
 LFLAGS   = -g \
@@ -153,7 +154,6 @@ RESET_CPU   = ./tools/reset.sh
 GIT_HOOKS   = ./tools/apply_git_hooks.sh
 DOXYGEN     = ./tools/doxygen.sh
 RELEASEPKG  = ./tools/releasepkg.sh
-COMMIT_HASH = git rev-parse --short HEAD
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -299,6 +299,8 @@ status :
 ####################################################################################################
 .PHONY : generate
 generate :
+	@$(MKDIR) $(TARGET_PATH)
+
 	@$(ECHO) "Adding user's programs and libraries to the project..."
 	@$(SHELL) $(ADDAPPS) ./$(APP_LOC)
 
@@ -307,6 +309,11 @@ generate :
 
 	@$(ECHO) "Adding drivers to the project..."
 	@$(SHELL) $(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
+
+	@$(ECHO) "Obtaining git hash..."
+	@$(ECHO) "#ifndef COMMIT_HASH" > build/defs.h
+	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" >> build/defs.h
+	@$(ECHO) "#endif" >> build/defs.h
 
 ####################################################################################################
 # Copy git hooks to git repository
