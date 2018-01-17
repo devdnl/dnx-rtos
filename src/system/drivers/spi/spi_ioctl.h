@@ -278,6 +278,7 @@ int_main(spi_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
                   .tx_buffer = global->tx,      // bytes to send
                   .rx_buffer = global->rx,      // buffer to received data
                   .count     = ARRAY_SIZE(tx),  // buffer size
+                  .separated = false,
                   .next      = NULL
             };
 
@@ -406,6 +407,7 @@ typedef struct SPI_transceive {
         const u8_t            *tx_buffer;       /*!< TX buffer pointer.*/
         u8_t                  *rx_buffer;       /*!< RX buffer pointer.*/
         size_t                 count;           /*!< RX and TX buffer size.*/
+        bool                   separated;       /*!< Each chain in separated transfer. */
         struct SPI_transceive *next;            /*!< Next transceive buffer.*/
 } SPI_transceive_t;
 

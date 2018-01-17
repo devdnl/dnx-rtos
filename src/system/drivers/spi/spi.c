@@ -439,10 +439,19 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                                         }
 
                                         for (SPI_transceive_t *t = tr; !err && t && t->count; t = t->next) {
+
+                                                if (not RAW_mode && t->separated) {
+                                                        slave_select(hdl);
+                                                }
+
                                                 err = _SPI_LLD__transceive(hdl,
                                                                            t->tx_buffer,
                                                                            t->rx_buffer,
                                                                            t->count);
+
+                                                if (not RAW_mode && t->separated) {
+                                                        slave_deselect(hdl);
+                                                }
                                         }
 
                                         if (not RAW_mode) {
