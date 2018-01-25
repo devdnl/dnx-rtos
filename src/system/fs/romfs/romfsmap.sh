@@ -4,8 +4,8 @@ root=$(pwd)
 
 cd $(dirname $0)
 
-mkdir -p data
+rm -rf root
 
-python romfsmap.py "${root}/res/romfs" data
+python romfsmap.py "${root}/res/romfs" .
 
 exit 1
