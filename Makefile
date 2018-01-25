@@ -126,34 +126,35 @@ SYS_LIBC_LOC    = $(SYS_LOC)/libc
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
-SHELL       = /bin/sh
-ECHO        = /bin/echo -e
-RM          = /bin/rm -f
-MKDIR       = /bin/mkdir -p
-DATE        = /bin/date
-CAT         = /bin/cat
-GREP        = /bin/grep
-UNAME       = /bin/uname -s
-SIZEOF      = /usr/bin/stat -c %s
-MKDEP       = /usr/bin/makedepend
-WC          = /usr/bin/wc
-CC          = $(TOOLCHAIN)gcc
-CXX         = $(TOOLCHAIN)g++
-LD          = $(TOOLCHAIN)g++
-AS          = $(TOOLCHAIN)gcc -x assembler-with-cpp
-OBJCOPY     = $(TOOLCHAIN)objcopy
-OBJDUMP     = $(TOOLCHAIN)objdump
-SIZE        = $(TOOLCHAIN)size
-CONFIGTOOL  = ./tools/configtool.sh
-CODECHECK   = cppcheck
-ADDAPPS     = ./$(APP_LOC)/addapps.sh
-ADDFS       = ./$(SYS_FS_LOC)/addfs.sh
-ADDDRIVERS  = ./$(SYS_DRV_LOC)/adddriver.sh
-FLASH_CPU   = ./tools/flash.sh
-RESET_CPU   = ./tools/reset.sh
-GIT_HOOKS   = ./tools/apply_git_hooks.sh
-DOXYGEN     = ./tools/doxygen.sh
-RELEASEPKG  = ./tools/releasepkg.sh
+SHELL      = /bin/sh
+ECHO       = /bin/echo -e
+RM         = /bin/rm -f
+MKDIR      = /bin/mkdir -p
+DATE       = /bin/date
+CAT        = /bin/cat
+GREP       = /bin/grep
+UNAME      = /bin/uname -s
+SIZEOF     = /usr/bin/stat -c %s
+MKDEP      = /usr/bin/makedepend
+WC         = /usr/bin/wc
+CC         = $(TOOLCHAIN)gcc
+CXX        = $(TOOLCHAIN)g++
+LD         = $(TOOLCHAIN)g++
+AS         = $(TOOLCHAIN)gcc -x assembler-with-cpp
+OBJCOPY    = $(TOOLCHAIN)objcopy
+OBJDUMP    = $(TOOLCHAIN)objdump
+SIZE       = $(TOOLCHAIN)size
+CONFIGTOOL = ./tools/configtool.sh
+CODECHECK  = cppcheck
+ADDAPPS    = ./$(APP_LOC)/addapps.sh
+ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
+ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
+FLASH_CPU  = ./tools/flash.sh
+RESET_CPU  = ./tools/reset.sh
+GIT_HOOKS  = ./tools/apply_git_hooks.sh
+DOXYGEN    = ./tools/doxygen.sh
+RELEASEPKG = ./tools/releasepkg.sh
+RUNGENS    = ./tools/rungens.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -314,6 +315,8 @@ generate :
 	@$(ECHO) "#ifndef COMMIT_HASH" > build/defs.h
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" >> build/defs.h
 	@$(ECHO) "#endif" >> build/defs.h
+	
+	@$(RUNGENS) $(GENERATOR)
 
 ####################################################################################################
 # Copy git hooks to git repository
