@@ -38,6 +38,8 @@ Detailed Doxygen description.
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,7 +60,7 @@ typedef enum {
 
 typedef struct {
         romfs_file_type_t type;
-        size_t size;
+        const size_t *size;
         const void *data;
         const char *name;
 } romfs_entry_t;

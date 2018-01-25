@@ -39,7 +39,7 @@ Brief   ROM File System
   Local object types
 ==============================================================================*/
 typedef struct {
-        // ...
+        romfs_dir_t *root;
 } romfs_t;
 
 /*==============================================================================
@@ -53,6 +53,7 @@ typedef struct {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern const romfs_dir_t dir_rootrootc;
 
 /*==============================================================================
   External objects
@@ -77,7 +78,8 @@ API_FS_INIT(romfs, void **fs_handle, const char *src_path, const char *opts)
 {
         int err = sys_zalloc(sizeof(romfs_t), fs_handle);
         if (!err) {
-                // ...
+                romfs_t *fs = *fs_handle;
+                fs->root = &dir_rootrootc;
         }
 
         return err;

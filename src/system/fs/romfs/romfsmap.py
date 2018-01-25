@@ -27,6 +27,7 @@ def file2carray(src_path, pointdir, filename):
 
     fout = open(outfile, "wb")
     fout.write("// file generated\n")
+    fout.write("#include <stddef.h>\n")
     fout.write("#include <stdint.h>\n\n")
 
     name = file_arrayname(outfile)
@@ -40,8 +41,15 @@ def file2carray(src_path, pointdir, filename):
             fout.write('\n    ')
             ctr = 0
 
-    fout.write("\n};\n")
+    fout.write("\n};\n\n")
+
+    fout.write("const size_t " + name + "_size = " + str(len(filebytes)) + ";\n")
+
     fout.close()
+
+    with open(os.path.join(dest_dir, "Makefile.in"), "a") as mk:
+        mk.write("CSRC_CORE += fs/romfs/" + outfile + '\n')
+
 
 def dir2carray(dirname, subdirs, files):
     print("dir2carray() =>", dirname, subdirs, files)
@@ -55,6 +63,7 @@ def dir2carray(dirname, subdirs, files):
     fout = open(outfile, "wb")
     fout.write("// file generated\n")
     fout.write("#include <stdint.h>\n")
+    fout.write("#include <stddef.h>\n")
     fout.write('#include "romfs_types.h"\n\n')
 
     for subdir in subdirs:
@@ -64,6 +73,7 @@ def dir2carray(dirname, subdirs, files):
     for file in files:
         name = file_arrayname(os.path.join(path, file + "c"))
         fout.write("extern const uint8_t " + name + "[];\n")
+        fout.write("extern const size_t " + name + "_size;\n")
 
     fout.write("\n")
     fout.write("const romfs_dir_t " + dir_arrayname(outfile) + " = {\n")
@@ -73,21 +83,23 @@ def dir2carray(dirname, subdirs, files):
 
     for subdir in subdirs:
         name = dir_arrayname(os.path.join(path, subdir + "/" + subdir + "c"))
-        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__DIR, 0, " + name + ', "' + subdir + '"},\n')
+        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__DIR, NULL, &" + name + ', "' + subdir + '"},\n')
         entry = entry + 1
 
     for file in files:
         name = file_arrayname(os.path.join(path, file + "c"))
-        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__FILE, sizeof(" + name + "), " + name + ', "' + file + '"},\n')
+        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__FILE, &" + name + "_size, &" + name + ', "' + file + '"},\n')
         entry = entry + 1
 
     fout.write("};\n")
     fout.close()
 
+    with open(os.path.join(dest_dir, "Makefile.in"), "a") as mk:
+        mk.write("CSRC_CORE += fs/romfs/" + outfile + '\n')
 
-# print('walk_dir (absolute) = ' + os.path.abspath(walk_dir))
+
 for root, subdirs, files in os.walk(walk_dir):
-    print('--\nroot = ' + str.replace(".", "", root))
+    #print('--\nroot = ' + str.replace(".", "", root))
 
     pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
 
@@ -96,7 +108,7 @@ for root, subdirs, files in os.walk(walk_dir):
     else:
         pointdir = re.sub("^/", "root/", pointdir)
 
-    print(pointdir)
+    #print(pointdir)
 
     dir2carray(pointdir, subdirs, files)
 
