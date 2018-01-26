@@ -4,8 +4,7 @@ root=$(pwd)
 
 cd $(dirname $0)
 
-rm -rf root
+rm -rf data
+mkdir -p data
 
-echo "# generated file" > Makefile.in
-
-python romfsmap.py "${root}/res/romfs" .
+python romfsmap.py "${root}/res/romfs" data
