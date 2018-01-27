@@ -52,7 +52,7 @@ def file2carray(src_path, pointdir, filename):
     fout.close()
 
     with open(os.path.join(dest_dir, "Makefile.in"), "ab") as mk:
-        mk.write("              fs/romfs/" + outfile + '\\\n')
+        mk.write("               fs/romfs/" + outfile + '\\\n')
 
     file_dict[src_path] = hash_name
 
@@ -128,7 +128,7 @@ def dir2c(dirname, subdirs, files):
     fout.close()
 
     with open(os.path.join(dest_dir, "Makefile.in"), "ab") as mk:
-        mk.write("              fs/romfs/" + outfile + '\\\n')
+        mk.write("               fs/romfs/" + outfile + '\\\n')
 
 
 def main():
@@ -170,7 +170,7 @@ def main():
 
     # prepare Makefile.in
     with open(os.path.join(dest_dir, "Makefile.in"), "ab") as mk:
-        mk.write("             )\n")
+        mk.write("              )\n")
 
 
     # DEBUG: print file hashes
