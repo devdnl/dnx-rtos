@@ -217,6 +217,7 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 ####################################################################################################
 .PHONY : all
 all : generate apply_git_hooks
+	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) rungens
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
@@ -240,6 +241,7 @@ help :
 	@$(ECHO) "   reset               reset target CPU by using ./tools/reset.sh script"
 	@$(ECHO) "   release             create Release package"
 	@$(ECHO) "   doc                 create documentation (Doxygen)"
+	@$(ECHO) "   rungens             start generator scripts"
 
 ####################################################################################################
 # project configuration wizard
@@ -315,7 +317,12 @@ generate :
 	@$(ECHO) "#ifndef COMMIT_HASH" > build/defs.h
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" >> build/defs.h
 	@$(ECHO) "#endif" >> build/defs.h
-	
+
+####################################################################################################
+# Start all generators
+####################################################################################################
+.PHONY : rungens
+rungens :
 	@$(RUNGENS) $(GENERATOR)
 
 ####################################################################################################
