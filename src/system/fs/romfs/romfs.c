@@ -39,12 +39,13 @@ Brief   ROM File System
   Local object types
 ==============================================================================*/
 typedef struct {
-        const romfs_dir_t *root;
+        sem_t *openfiles;
 } romfs_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static int get_entry(const char *path, const romfs_entry_t **entry);
 
 /*==============================================================================
   Local objects
@@ -83,7 +84,11 @@ API_FS_INIT(romfs, void **fs_handle, const char *src_path, const char *opts)
         int err = sys_zalloc(sizeof(romfs_t), fs_handle);
         if (!err) {
                 romfs_t *hdl = *fs_handle;
-                hdl->root = &romfsdir_root;
+
+                err = sys_semaphore_create(65536, 0, &hdl->openfiles);
+                if (err) {
+                        sys_free(fs_handle);
+                }
         }
 
         return err;
@@ -100,9 +105,22 @@ API_FS_INIT(romfs, void **fs_handle, const char *src_path, const char *opts)
 //==============================================================================
 API_FS_RELEASE(romfs, void *fs_handle)
 {
-        sys_free(fs_handle);
+        romfs_t *hdl = fs_handle;
 
-        return ESUCC;
+        size_t openfiles = 0;
+
+        int err = sys_semaphore_get_value(hdl->openfiles, &openfiles);
+        if (!err) {
+                if (openfiles == 0) {
+                        sys_semaphore_destroy(hdl->openfiles);
+                        hdl->openfiles = NULL;
+                        err = sys_free(&fs_handle);
+                } else {
+                        err = EBUSY;
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -122,7 +140,23 @@ API_FS_OPEN(romfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
 {
         romfs_t *hdl = fs_handle;
 
-        int err = ESUCC;
+        if (flags != O_RDONLY) {
+                return EROFS;
+        }
+
+        *fpos = 0;
+
+        const romfs_entry_t *entry = NULL;
+
+        int err = get_entry(path, &entry);
+        if (!err) {
+                if (entry->type == ROMFS_FILE_TYPE__FILE) {
+                        *fhdl = cast(void*, entry);
+                        sys_semaphore_signal(hdl->openfiles);
+                } else {
+                       err = EISDIR;
+                }
+        }
 
         return err;
 }
@@ -140,11 +174,11 @@ API_FS_OPEN(romfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
 //==============================================================================
 API_FS_CLOSE(romfs, void *fs_handle, void *fhdl, bool force)
 {
+        UNUSED_ARG2(fhdl, force);
+
         romfs_t *hdl = fs_handle;
 
-        int err = ESUCC;
-
-        return err;
+        return sys_semaphore_wait(hdl->openfiles, 10);
 }
 
 //==============================================================================
@@ -199,9 +233,24 @@ API_FS_READ(romfs,
             size_t          *rdcnt,
             struct vfs_fattr fattr)
 {
-        romfs_t *hdl = fs_handle;
+        UNUSED_ARG2(fs_handle, fattr);
 
-        int err = ESUCC;
+        int err = EFAULT;
+
+        romfs_entry_t *entry = fhdl;
+        if (entry) {
+                i32_t len = ((entry->size) ? *entry->size : 0) - *fpos;
+                      len = min((i32_t)count, len);
+
+                if (len > 0) {
+                        memcpy(dst, entry->data + *fpos, len);
+                        *rdcnt = len;
+                } else {
+                        *rdcnt = 0;
+                }
+
+                err = ESUCC;
+        }
 
         return err;
 }
@@ -253,9 +302,23 @@ API_FS_FLUSH(romfs, void *fs_handle, void *fhdl)
 //==============================================================================
 API_FS_FSTAT(romfs, void *fs_handle, void *fhdl, struct stat *stat)
 {
-        romfs_t *hdl = fs_handle;
+        UNUSED_ARG1(fs_handle);
 
-        int err = ESUCC;
+        int err = EIO;
+
+        romfs_entry_t *entry = fhdl;
+        if (entry) {
+                stat->st_ctime = COMPILE_EPOCH_TIME;
+                stat->st_mtime = COMPILE_EPOCH_TIME;
+                stat->st_dev   = 0;
+                stat->st_mode  = S_IRUSR | S_IRGRP | S_IROTH | (S_IXUSR * __ROMFS_CFG_EXEC_FILES__);
+                stat->st_size  = entry->size ? *entry->size : 0;
+                stat->st_gid   = 0;
+                stat->st_uid   = 0;
+                stat->st_type  = entry->type == ROMFS_FILE_TYPE__DIR
+                               ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                err = ESUCC;
+        }
 
         return err;
 }
@@ -273,9 +336,12 @@ API_FS_FSTAT(romfs, void *fs_handle, void *fhdl, struct stat *stat)
 //==============================================================================
 API_FS_STAT(romfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        romfs_t *hdl = fs_handle;
+        const romfs_entry_t *entry = NULL;
 
-        int err = ESUCC;
+        int err = get_entry(path, &entry);
+        if (!err) {
+                err = _romfs_fstat(fs_handle, const_cast(void*, entry), stat);
+        }
 
         return err;
 }
@@ -371,7 +437,20 @@ API_FS_OPENDIR(romfs, void *fs_handle, const char *path, DIR *dir)
 {
         romfs_t *hdl = fs_handle;
 
-        int err = ESUCC;
+        const romfs_entry_t *entry = NULL;
+
+        int err = get_entry(path, &entry);
+        if (!err) {
+                if (entry->type == ROMFS_FILE_TYPE__DIR) {
+                        dir->d_hdl   = const_cast(void*, entry->data);
+                        dir->d_items = cast(romfs_dir_t*, entry->data)->items;
+                        dir->d_seek  = 0;
+
+                        sys_semaphore_signal(hdl->openfiles);
+                } else {
+                        err = ENOTDIR;
+                }
+        }
 
         return err;
 }
@@ -388,11 +467,11 @@ API_FS_OPENDIR(romfs, void *fs_handle, const char *path, DIR *dir)
 //==============================================================================
 API_FS_CLOSEDIR(romfs, void *fs_handle, DIR *dir)
 {
+        UNUSED_ARG1(dir);
+
         romfs_t *hdl = fs_handle;
 
-        int err = ESUCC;
-
-        return err;
+        return sys_semaphore_wait(hdl->openfiles, 10);
 }
 
 //==============================================================================
@@ -407,9 +486,26 @@ API_FS_CLOSEDIR(romfs, void *fs_handle, DIR *dir)
 //==============================================================================
 API_FS_READDIR(romfs, void *fs_handle, DIR *dir)
 {
-        romfs_t *hdl = fs_handle;
+        UNUSED_ARG1(fs_handle);
 
-        int err = ESUCC;
+        int err = EFAULT;
+
+        const romfs_dir_t *d = dir->d_hdl;
+
+        if (d && (dir->d_seek < d->items)) {
+                dir->dirent.dev      = 0;
+                dir->dirent.name     = d->entry[dir->d_seek].name;
+                dir->dirent.size     = d->entry[dir->d_seek].size
+                                     ? *d->entry[dir->d_seek].size : 0;
+                dir->dirent.filetype = d->entry[dir->d_seek].type == ROMFS_FILE_TYPE__DIR
+                                     ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                dir->d_seek++;
+
+                err = ESUCC;
+
+        } else {
+                err = ENOENT;
+        }
 
         return err;
 }
@@ -499,22 +595,84 @@ API_FS_SYNC(romfs, void *fs_handle)
 
 //==============================================================================
 /**
- * @brief
+ * @brief Search entry by path.
  *
- * @param  ?
+ * @param  path         path
+ * @param  entry        path related entry
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
-int get_entry(romfs_t *hdl, const char path, romfs_entry_t *entry)
+static int get_entry(const char *path, const romfs_entry_t **entry)
 {
-        romfs_dir_t *dir = hdl->root;
+        static const romfs_entry_t root = {
+                .type = ROMFS_FILE_TYPE__DIR,
+                .size = NULL,
+                .data = &romfsdir_root,
+                .name = "/"
+        };
 
-        while (dir) {
-                for (size_t i = 0; i < dir->items; i++) {
-                        // TODO
+        int err = ENOENT;
+
+        if (strcmp(path, "/") == 0) {
+                *entry = &root;
+                err    = ESUCC;
+
+        } else {
+                path++;
+
+                const romfs_dir_t   *dir = &romfsdir_root;
+                const romfs_entry_t *ent = NULL;
+                bool               found = false;
+
+                do {
+                        const char *end = strchr(path, '/');
+                        size_t nlen = (end == NULL)
+                                    ? strlen(path)
+                                    : ((uintptr_t)end - (uintptr_t)path);
+
+                        if (nlen == 0) break;
+
+                        found = false;
+
+                        for (size_t i = 0; i < dir->items; i++) {
+
+                                ent = &dir->entry[i];
+
+                                if (  (strlen(ent->name) == nlen)
+                                   && (strncmp(ent->name, path, nlen) == 0) ) {
+
+                                        found = true;
+                                        path += nlen;
+
+                                        if ((*path != '\0') && strcmp(path, "/")) {
+                                                path++;
+
+                                                if (ent->type == ROMFS_FILE_TYPE__DIR) {
+                                                        dir = ent->data;
+
+                                                } else {
+                                                        err = ENOTDIR;
+                                                        goto finish;
+                                                }
+                                        } else {
+                                                err = ESUCC;
+                                                goto finish;
+                                        }
+
+                                        break;
+                                }
+                        }
+
+                } while (*path && dir && found);
+
+                finish:
+                if (!err) {
+                        *entry = ent;
                 }
         }
+
+        return err;
 }
 
 /*==============================================================================

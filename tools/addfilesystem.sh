@@ -120,7 +120,7 @@ API_FS_RELEASE($FSNAME, void *fs_handle)
 
         // ...
 
-        sys_free(fs_handle);
+        sys_free(&fs_handle);
 
         return ESUCC;
 }

@@ -41,9 +41,9 @@ this:SetLayout("TitledGridBack", 2, "Home > File Systems > romfs",
 ++*/
 
 /*--
-this:AddWidget("Checkbox", "File mode, user, group")
+this:AddWidget("Checkbox", "Executable flag in regular files")
 --*/
-#define __ROMFS_CFG_EXAMPLE__ _NO_
+#define __ROMFS_CFG_EXEC_FILES__ _YES_
 
 #endif /* _ROMFS_FLAGS_H_ */
 /*==============================================================================
