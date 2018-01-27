@@ -5,8 +5,13 @@ import array
 import re
 import hashlib
 
-walk_dir  = sys.argv[1]
-dest_dir  = sys.argv[2]
+try:
+    walk_dir = sys.argv[1]
+    dest_dir = sys.argv[2]
+except:
+    print("Usage: python romfsmap.py <source-dir> <output-dir>\n")
+    exit(1)
+
 file_dict = {}
 
 
@@ -43,8 +48,8 @@ def file2carray(src_path, pointdir, filename):
 
     fout.close()
 
-    with open(os.path.join(dest_dir, "Makefile.in"), "a") as mk:
-        mk.write("CSRC_CORE += fs/romfs/" + outfile + '\n')
+    with open(os.path.join(dest_dir, "Makefile.in"), "ab") as mk:
+        mk.write("              fs/romfs/" + outfile + '\\\n')
 
     file_dict[src_path] = hash_name
 
@@ -111,46 +116,59 @@ def dir2c(dirname, subdirs, files):
     fout.write("};\n")
     fout.close()
 
-    with open(os.path.join(dest_dir, "Makefile.in"), "a") as mk:
-        mk.write("CSRC_CORE += fs/romfs/" + outfile + '\n')
+    with open(os.path.join(dest_dir, "Makefile.in"), "ab") as mk:
+        mk.write("              fs/romfs/" + outfile + '\\\n')
 
 
-# collect all files
-for root, subdirs, files in os.walk(walk_dir):
-    pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
+def main():
+    # prepare Makefile.in
+    with open(os.path.join(dest_dir, "Makefile.in"), "wb") as mk:
+        mk.write("CSRC_CORE += $(sort\\\n")
 
-    for filename in files:
+
+    # collect all files
+    for root, subdirs, files in os.walk(walk_dir):
+        pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
+
+        for filename in files:
             src_path = os.path.join(root, filename)
             file2carray(src_path, pointdir, filename)
 
 
-# collect all dirs
-for root, subdirs, files in os.walk(walk_dir):
-    pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
+    # collect all dirs
+    for root, subdirs, files in os.walk(walk_dir):
+        pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
 
-    if pointdir:
-        hashdir(pointdir, subdirs, files)
-
-
-# create file tree
-for root, subdirs, files in os.walk(walk_dir):
-    pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
-
-    if pointdir:
-        dir2c(pointdir, subdirs, files)
+        if pointdir:
+            hashdir(pointdir, subdirs, files)
 
 
-# create root dir
-for root, subdirs, files in os.walk(walk_dir):
-    pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
+    # create file tree
+    for root, subdirs, files in os.walk(walk_dir):
+        pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
 
-    if not pointdir:
-        dir2c("/", subdirs, files)
-        #root2c(subdirs, files)
-    else:
-        break
+        if pointdir:
+            dir2c(pointdir, subdirs, files)
 
 
-# print hashes FIXME
-for key, val in file_dict.iteritems():
-    print(key, val)
+    # create root dir
+    for root, subdirs, files in os.walk(walk_dir):
+        pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
+
+        if not pointdir:
+            dir2c("/", subdirs, files)
+            #root2c(subdirs, files)
+        else:
+            break
+
+
+    # prepare Makefile.in
+    with open(os.path.join(dest_dir, "Makefile.in"), "ab") as mk:
+        mk.write("             )\n")
+
+
+    # DEBUG: print file hashes
+    # for key, val in file_dict.iteritems(): print(key, val)
+
+if __name__ == "__main__":
+    main()
