@@ -32,7 +32,7 @@ def file2carray(src_path, pointdir, filename):
     fout.write("#include <stddef.h>\n")
     fout.write("#include <stdint.h>\n\n")
 
-    fout.write("const uint8_t file_" + hash_name + "["+ str(len(filecontent)) +"] = {\n    ")
+    fout.write("const uint8_t romfsfile_" + hash_name + "["+ str(len(filecontent)) +"] = {\n    ")
 
     ctr = 0
     for byte in filecontent:
@@ -44,7 +44,7 @@ def file2carray(src_path, pointdir, filename):
 
     fout.write("\n};\n\n")
 
-    fout.write("const size_t file_" + hash_name + "_size = " + str(len(filecontent)) + ";\n")
+    fout.write("const size_t romfsfile_" + hash_name + "_size = " + str(len(filecontent)) + ";\n")
 
     fout.close()
 
@@ -87,30 +87,32 @@ def dir2c(dirname, subdirs, files):
 
     for subdir in subdirs:
         name = file_dict[(dirname if dirname != "/" else "") + '/' + subdir]
-        fout.write("extern const romfs_dir_t dir_" + name + ";\n")
+        fout.write("extern const romfs_dir_t romfsdir_" + name + ";\n")
 
     for file in files:
         name = file_dict[walk_dir + (dirname if dirname != "/" else "") + '/' + file]
-        fout.write("extern const uint8_t file_" + name + "[];\n")
-        fout.write("extern const size_t file_" + name + "_size;\n")
+        fout.write("extern const uint8_t romfsfile_" + name + "[];\n")
+        fout.write("extern const size_t romfsfile_" + name + "_size;\n")
 
     fout.write("\n")
 
     name = "root" if dirname == "/" else file_dict[dirname]
 
-    fout.write("const romfs_dir_t dir_" + name + " = {\n")
+    fout.write("const romfs_dir_t romfsdir_" + name + " = {\n")
     fout.write("    .items = " + str(len(subdirs) + len(files)) + ",\n")
 
     entry = 0
 
     for subdir in subdirs:
         name = file_dict[(dirname if dirname != "/" else "") + '/' + subdir]
-        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__DIR, NULL, &dir_" + name + ', "' + subdir + '"},\n')
+        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__DIR, NULL, &romfsdir_"
+                   + name + ', "' + subdir + '"},\n')
         entry = entry + 1
 
     for file in files:
         name = file_dict[walk_dir + (dirname if dirname != "/" else "") + '/' + file]
-        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__FILE, &file_" + name + "_size, &file_" + name + ', "' + file + '"},\n')
+        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__FILE, &romfsfile_"
+                   + name + "_size, &romfsfile_" + name + ', "' + file + '"},\n')
         entry = entry + 1
 
     fout.write("};\n")
