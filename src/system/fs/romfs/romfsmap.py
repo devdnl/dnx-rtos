@@ -153,13 +153,8 @@ def main():
 
     # create root dir
     for root, subdirs, files in os.walk(walk_dir):
-        pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
-
-        if not pointdir:
-            dir2c("/", subdirs, files)
-            #root2c(subdirs, files)
-        else:
-            break
+        dir2c("/", subdirs, files)
+        break
 
 
     # prepare Makefile.in

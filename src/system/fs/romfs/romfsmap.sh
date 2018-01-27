@@ -2,6 +2,8 @@
 
 root=$(pwd)
 
+mkdir -p res/romfs
+
 cd $(dirname $0)
 
 rm -rf data
