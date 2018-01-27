@@ -71,8 +71,7 @@ def dir2c(dirname, subdirs, files):
     global file_dict
     global walk_dir
 
-    # create file
-    outfile = os.path.join(dest_dir, file_dict[dirname]) + '.c'
+    outfile = os.path.join(dest_dir, "root" if dirname == "/" else file_dict[dirname]) + '.c'
 
     fout = open(outfile, "wb")
     fout.write("// file generated\n")
@@ -82,74 +81,30 @@ def dir2c(dirname, subdirs, files):
     fout.write('#include "romfs_types.h"\n\n')
 
     for subdir in subdirs:
-        fout.write("extern const romfs_dir_t dir_" + file_dict[dirname + '/' + subdir] + ";\n")
+        name = file_dict[(dirname if dirname != "/" else "") + '/' + subdir]
+        fout.write("extern const romfs_dir_t dir_" + name + ";\n")
 
     for file in files:
-        name = file_dict[walk_dir + dirname + '/' + file]
+        name = file_dict[walk_dir + (dirname if dirname != "/" else "") + '/' + file]
         fout.write("extern const uint8_t file_" + name + "[];\n")
         fout.write("extern const size_t file_" + name + "_size;\n")
 
     fout.write("\n")
-    fout.write("const romfs_dir_t dir_" + file_dict[dirname] + " = {\n")
+
+    name = "root" if dirname == "/" else file_dict[dirname]
+
+    fout.write("const romfs_dir_t dir_" + name + " = {\n")
     fout.write("    .items = " + str(len(subdirs) + len(files)) + ",\n")
 
     entry = 0
 
     for subdir in subdirs:
-        name = file_dict[dirname + '/' + subdir]
+        name = file_dict[(dirname if dirname != "/" else "") + '/' + subdir]
         fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__DIR, NULL, &dir_" + name + ', "' + subdir + '"},\n')
         entry = entry + 1
 
     for file in files:
-        name = file_dict[walk_dir + dirname + '/' + file]
-        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__FILE, &file_" + name + "_size, &file_" + name + ', "' + file + '"},\n')
-        entry = entry + 1
-
-    fout.write("};\n")
-    fout.close()
-
-    with open(os.path.join(dest_dir, "Makefile.in"), "a") as mk:
-        mk.write("CSRC_CORE += fs/romfs/" + outfile + '\n')
-
-
-def root2c(subdirs, files):
-
-    global file_dict
-    global walk_dir
-
-    dirname = "root"
-
-    # create file
-    outfile = os.path.join(dest_dir, dirname) + '.c'
-
-    fout = open(outfile, "wb")
-    fout.write("// file generated\n")
-    fout.write("// source dir: " + walk_dir + dirname + '\n')
-    fout.write("#include <stdint.h>\n")
-    fout.write("#include <stddef.h>\n")
-    fout.write('#include "romfs_types.h"\n\n')
-
-    for subdir in subdirs:
-        fout.write("extern const romfs_dir_t dir_" + file_dict['/' + subdir] + ";\n")
-
-    for file in files:
-        name = file_dict[walk_dir + '/' + file]
-        fout.write("extern const uint8_t file_" + name + "[];\n")
-        fout.write("extern const size_t file_" + name + "_size;\n")
-
-    fout.write("\n")
-    fout.write("const romfs_dir_t dir_" + dirname + " = {\n")
-    fout.write("    .items = " + str(len(subdirs) + len(files)) + ",\n")
-
-    entry = 0
-
-    for subdir in subdirs:
-        name = file_dict['/' + subdir]
-        fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__DIR, NULL, &dir_" + name + ', "' + subdir + '"},\n')
-        entry = entry + 1
-
-    for file in files:
-        name = file_dict[walk_dir + '/' + file]
+        name = file_dict[walk_dir + (dirname if dirname != "/" else "") + '/' + file]
         fout.write("    .entry[" + str(entry) + "] = {ROMFS_FILE_TYPE__FILE, &file_" + name + "_size, &file_" + name + ', "' + file + '"},\n')
         entry = entry + 1
 
@@ -175,8 +130,6 @@ for root, subdirs, files in os.walk(walk_dir):
 
     if pointdir:
         hashdir(pointdir, subdirs, files)
-    else:
-        file_dict['root'] = "/"
 
 
 # create file tree
@@ -192,8 +145,8 @@ for root, subdirs, files in os.walk(walk_dir):
     pointdir = os.path.abspath(root).replace(os.path.abspath(walk_dir), "")
 
     if not pointdir:
-        print("X")
-        root2c(subdirs, files)
+        dir2c("/", subdirs, files)
+        #root2c(subdirs, files)
     else:
         break
 
