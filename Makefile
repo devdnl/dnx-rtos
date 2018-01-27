@@ -126,34 +126,35 @@ SYS_LIBC_LOC    = $(SYS_LOC)/libc
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
-SHELL       = /bin/sh
-ECHO        = /bin/echo -e
-RM          = /bin/rm -f
-MKDIR       = /bin/mkdir -p
-DATE        = /bin/date
-CAT         = /bin/cat
-GREP        = /bin/grep
-UNAME       = /bin/uname -s
-SIZEOF      = /usr/bin/stat -c %s
-MKDEP       = /usr/bin/makedepend
-WC          = /usr/bin/wc
-CC          = $(TOOLCHAIN)gcc
-CXX         = $(TOOLCHAIN)g++
-LD          = $(TOOLCHAIN)g++
-AS          = $(TOOLCHAIN)gcc -x assembler-with-cpp
-OBJCOPY     = $(TOOLCHAIN)objcopy
-OBJDUMP     = $(TOOLCHAIN)objdump
-SIZE        = $(TOOLCHAIN)size
-CONFIGTOOL  = ./tools/configtool.sh
-CODECHECK   = cppcheck
-ADDAPPS     = ./$(APP_LOC)/addapps.sh
-ADDFS       = ./$(SYS_FS_LOC)/addfs.sh
-ADDDRIVERS  = ./$(SYS_DRV_LOC)/adddriver.sh
-FLASH_CPU   = ./tools/flash.sh
-RESET_CPU   = ./tools/reset.sh
-GIT_HOOKS   = ./tools/apply_git_hooks.sh
-DOXYGEN     = ./tools/doxygen.sh
-RELEASEPKG  = ./tools/releasepkg.sh
+SHELL      = /bin/sh
+ECHO       = /bin/echo -e
+RM         = /bin/rm -f
+MKDIR      = /bin/mkdir -p
+DATE       = /bin/date
+CAT        = /bin/cat
+GREP       = /bin/grep
+UNAME      = /bin/uname -s
+SIZEOF     = /usr/bin/stat -c %s
+MKDEP      = /usr/bin/makedepend
+WC         = /usr/bin/wc
+CC         = $(TOOLCHAIN)gcc
+CXX        = $(TOOLCHAIN)g++
+LD         = $(TOOLCHAIN)g++
+AS         = $(TOOLCHAIN)gcc -x assembler-with-cpp
+OBJCOPY    = $(TOOLCHAIN)objcopy
+OBJDUMP    = $(TOOLCHAIN)objdump
+SIZE       = $(TOOLCHAIN)size
+CONFIGTOOL = ./tools/configtool.sh
+CODECHECK  = cppcheck
+ADDAPPS    = ./$(APP_LOC)/addapps.sh
+ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
+ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
+FLASH_CPU  = ./tools/flash.sh
+RESET_CPU  = ./tools/reset.sh
+GIT_HOOKS  = ./tools/apply_git_hooks.sh
+DOXYGEN    = ./tools/doxygen.sh
+RELEASEPKG = ./tools/releasepkg.sh
+RUNGENS    = ./tools/rungens.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -216,6 +217,7 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 ####################################################################################################
 .PHONY : all
 all : generate apply_git_hooks
+	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) rungens
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
@@ -239,6 +241,7 @@ help :
 	@$(ECHO) "   reset               reset target CPU by using ./tools/reset.sh script"
 	@$(ECHO) "   release             create Release package"
 	@$(ECHO) "   doc                 create documentation (Doxygen)"
+	@$(ECHO) "   rungens             start generator scripts"
 
 ####################################################################################################
 # project configuration wizard
@@ -314,6 +317,13 @@ generate :
 	@$(ECHO) "#ifndef COMMIT_HASH" > build/defs.h
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" >> build/defs.h
 	@$(ECHO) "#endif" >> build/defs.h
+
+####################################################################################################
+# Start all generators
+####################################################################################################
+.PHONY : rungens
+rungens :
+	@$(RUNGENS) $(GENERATOR)
 
 ####################################################################################################
 # Copy git hooks to git repository

@@ -117,6 +117,18 @@ __ENABLE_EEFS__=_NO_
 __ENABLE_EXT4FS__=_NO_
 #*/
 
+#/*--
+# this:AddWidget("Checkbox", "Enable romfs")
+# this:SetToolTip("ROM File System")
+# this:AddExtraWidget("Hyperlink", "ROMFS_CONFIGURE", "Configure")
+# this:SetEvent("clicked", "ROMFS_CONFIGURE", function() this:LoadFile("filesystems/romfs_flags.h") end)
+#--*/
+#include "../filesystems/romfs_flags.h"
+#define __ENABLE_ROMFS__ _YES_
+#/*
+__ENABLE_ROMFS__=_YES_
+#*/
+
 #endif /* _FILE_SYSTEMS_FLAGS_H_ */
 #/*=============================================================================
 #  End of file

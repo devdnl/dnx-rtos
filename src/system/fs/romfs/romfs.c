@@ -1,34 +1,11 @@
-#!/usr/bin/env bash
-
-set -e
-
-cd $(dirname $0)
-
-FSNAME=$(echo "$1" | sed 's/[-+/*,."!\@#$%^&*()+-]/_/g')
-FSNAME=${FSNAME,,}
-BRIEF=$2
-AUTHOR=$3
-EMAIL=$4
-
-if [[ "$*" < "2" ]]; then
-    echo "Usage: $(basename $0) <filesystem-name> [brief] [author] [email]"
-    exit 1
-else
-    cd ../src/system/fs
-    mkdir $FSNAME
-    cd $FSNAME
-
-
-#-------------------------------------------------------------------------------
-cat << EOF > $FSNAME.c
 /*==============================================================================
-File    $FSNAME.c
+File    romfs.c
 
-Author  $AUTHOR
+Author  Daniel Zorychta
 
-Brief   $BRIEF
+Brief   ROM File System
 
-        Copyright (C) $(date "+%Y") $AUTHOR <$EMAIL>
+        Copyright (C) 2018 Daniel Zorychta <daniel.zorychta@gmail.com>
 
         This program is free software; you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -52,6 +29,7 @@ Brief   $BRIEF
   Include files
 ==============================================================================*/
 #include "fs/fs.h"
+#include "romfs_types.h"
 
 /*==============================================================================
   Local macros
@@ -61,12 +39,13 @@ Brief   $BRIEF
   Local object types
 ==============================================================================*/
 typedef struct {
-        // ...
-} ${FSNAME}_t;
+        sem_t *openfiles;
+} romfs_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static int get_entry(const char *path, const romfs_entry_t **entry);
 
 /*==============================================================================
   Local objects
@@ -75,6 +54,9 @@ typedef struct {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern const romfs_dir_t romfsdir_root;
+extern const size_t romfs_total_size;
+extern const size_t romfs_files;
 
 /*==============================================================================
   External objects
@@ -95,11 +77,18 @@ typedef struct {
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_INIT($FSNAME, void **fs_handle, const char *src_path, const char *opts)
+API_FS_INIT(romfs, void **fs_handle, const char *src_path, const char *opts)
 {
-        int err = sys_zalloc(sizeof(${FSNAME}_t), fs_handle);
+        UNUSED_ARG2(src_path, opts);
+
+        int err = sys_zalloc(sizeof(romfs_t), fs_handle);
         if (!err) {
-                // ...
+                romfs_t *hdl = *fs_handle;
+
+                err = sys_semaphore_create(65536, 0, &hdl->openfiles);
+                if (err) {
+                        sys_free(fs_handle);
+                }
         }
 
         return err;
@@ -114,15 +103,24 @@ API_FS_INIT($FSNAME, void **fs_handle, const char *src_path, const char *opts)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_RELEASE($FSNAME, void *fs_handle)
+API_FS_RELEASE(romfs, void *fs_handle)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        romfs_t *hdl = fs_handle;
 
-        // ...
+        size_t openfiles = 0;
 
-        sys_free(&fs_handle);
+        int err = sys_semaphore_get_value(hdl->openfiles, &openfiles);
+        if (!err) {
+                if (openfiles == 0) {
+                        sys_semaphore_destroy(hdl->openfiles);
+                        hdl->openfiles = NULL;
+                        err = sys_free(&fs_handle);
+                } else {
+                        err = EBUSY;
+                }
+        }
 
-        return ESUCC;
+        return err;
 }
 
 //==============================================================================
@@ -138,11 +136,27 @@ API_FS_RELEASE($FSNAME, void *fs_handle)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_OPEN($FSNAME, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path, u32_t flags)
+API_FS_OPEN(romfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path, u32_t flags)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        romfs_t *hdl = fs_handle;
 
-        int err = ESUCC;
+        if (flags != O_RDONLY) {
+                return EROFS;
+        }
+
+        *fpos = 0;
+
+        const romfs_entry_t *entry = NULL;
+
+        int err = get_entry(path, &entry);
+        if (!err) {
+                if (entry->type == ROMFS_FILE_TYPE__FILE) {
+                        *fhdl = cast(void*, entry);
+                        sys_semaphore_signal(hdl->openfiles);
+                } else {
+                       err = EISDIR;
+                }
+        }
 
         return err;
 }
@@ -158,13 +172,13 @@ API_FS_OPEN($FSNAME, void *fs_handle, void **fhdl, fpos_t *fpos, const char *pat
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_CLOSE($FSNAME, void *fs_handle, void *fhdl, bool force)
+API_FS_CLOSE(romfs, void *fs_handle, void *fhdl, bool force)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        UNUSED_ARG2(fhdl, force);
 
-        int err = ESUCC;
+        romfs_t *hdl = fs_handle;
 
-        return err;
+        return sys_semaphore_wait(hdl->openfiles, 10);
 }
 
 //==============================================================================
@@ -182,7 +196,7 @@ API_FS_CLOSE($FSNAME, void *fs_handle, void *fhdl, bool force)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_WRITE($FSNAME,
+API_FS_WRITE(romfs,
              void            *fs_handle,
              void            *fhdl,
              const u8_t      *src,
@@ -191,11 +205,8 @@ API_FS_WRITE($FSNAME,
              size_t          *wrcnt,
              struct vfs_fattr fattr)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG7(fs_handle, fhdl, src, count, fpos, wrcnt, fattr);
+        return EROFS;
 }
 
 //==============================================================================
@@ -213,7 +224,7 @@ API_FS_WRITE($FSNAME,
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_READ($FSNAME,
+API_FS_READ(romfs,
             void            *fs_handle,
             void            *fhdl,
             u8_t            *dst,
@@ -222,9 +233,24 @@ API_FS_READ($FSNAME,
             size_t          *rdcnt,
             struct vfs_fattr fattr)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        UNUSED_ARG2(fs_handle, fattr);
 
-        int err = ESUCC;
+        int err = EFAULT;
+
+        romfs_entry_t *entry = fhdl;
+        if (entry) {
+                i32_t len = ((entry->size) ? *entry->size : 0) - *fpos;
+                      len = min((i32_t)count, len);
+
+                if (len > 0) {
+                        memcpy(dst, entry->data + *fpos, len);
+                        *rdcnt = len;
+                } else {
+                        *rdcnt = 0;
+                }
+
+                err = ESUCC;
+        }
 
         return err;
 }
@@ -241,13 +267,10 @@ API_FS_READ($FSNAME,
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_IOCTL($FSNAME, void *fs_handle, void *fhdl, int request, void *arg)
+API_FS_IOCTL(romfs, void *fs_handle, void *fhdl, int request, void *arg)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG4(fs_handle, fhdl, request, arg);
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -260,13 +283,10 @@ API_FS_IOCTL($FSNAME, void *fs_handle, void *fhdl, int request, void *arg)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_FLUSH($FSNAME, void *fs_handle, void *fhdl)
+API_FS_FLUSH(romfs, void *fs_handle, void *fhdl)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG2(fs_handle, fhdl);
+        return ESUCC;
 }
 
 //==============================================================================
@@ -280,11 +300,25 @@ API_FS_FLUSH($FSNAME, void *fs_handle, void *fhdl)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_FSTAT($FSNAME, void *fs_handle, void *fhdl, struct stat *stat)
+API_FS_FSTAT(romfs, void *fs_handle, void *fhdl, struct stat *stat)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        UNUSED_ARG1(fs_handle);
 
-        int err = ESUCC;
+        int err = EIO;
+
+        romfs_entry_t *entry = fhdl;
+        if (entry) {
+                stat->st_ctime = COMPILE_EPOCH_TIME;
+                stat->st_mtime = COMPILE_EPOCH_TIME;
+                stat->st_dev   = 0;
+                stat->st_mode  = S_IRUSR | S_IRGRP | S_IROTH | (S_IXUSR * __ROMFS_CFG_EXEC_FILES__);
+                stat->st_size  = entry->size ? *entry->size : 0;
+                stat->st_gid   = 0;
+                stat->st_uid   = 0;
+                stat->st_type  = entry->type == ROMFS_FILE_TYPE__DIR
+                               ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                err = ESUCC;
+        }
 
         return err;
 }
@@ -300,11 +334,14 @@ API_FS_FSTAT($FSNAME, void *fs_handle, void *fhdl, struct stat *stat)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_STAT($FSNAME, void *fs_handle, const char *path, struct stat *stat)
+API_FS_STAT(romfs, void *fs_handle, const char *path, struct stat *stat)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        const romfs_entry_t *entry = NULL;
 
-        int err = ESUCC;
+        int err = get_entry(path, &entry);
+        if (!err) {
+                err = _romfs_fstat(fs_handle, const_cast(void*, entry), stat);
+        }
 
         return err;
 }
@@ -319,17 +356,17 @@ API_FS_STAT($FSNAME, void *fs_handle, const char *path, struct stat *stat)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_STATFS($FSNAME, void *fs_handle, struct statfs *statfs)
+API_FS_STATFS(romfs, void *fs_handle, struct statfs *statfs)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        UNUSED_ARG1(fs_handle);
 
-        statfs->f_bsize  = 0;
-        statfs->f_blocks = 0;
+        statfs->f_bsize  = 1;
+        statfs->f_blocks = romfs_total_size;
         statfs->f_bfree  = 0;
         statfs->f_ffree  = 0;
-        statfs->f_files  = 0;
+        statfs->f_files  = romfs_files;
         statfs->f_type   = SYS_FS_TYPE__SOLID;
-        statfs->f_fsname = "$FSNAME";
+        statfs->f_fsname = "romfs";
 
         return ESUCC;
 }
@@ -345,13 +382,10 @@ API_FS_STATFS($FSNAME, void *fs_handle, struct statfs *statfs)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_MKDIR($FSNAME, void *fs_handle, const char *path, mode_t mode)
+API_FS_MKDIR(romfs, void *fs_handle, const char *path, mode_t mode)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, path, mode);
+        return EROFS;
 }
 
 //==============================================================================
@@ -365,13 +399,10 @@ API_FS_MKDIR($FSNAME, void *fs_handle, const char *path, mode_t mode)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_MKFIFO($FSNAME, void *fs_handle, const char *path, mode_t mode)
+API_FS_MKFIFO(romfs, void *fs_handle, const char *path, mode_t mode)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, path, mode);
+        return EROFS;
 }
 
 //==============================================================================
@@ -385,13 +416,10 @@ API_FS_MKFIFO($FSNAME, void *fs_handle, const char *path, mode_t mode)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_MKNOD($FSNAME, void *fs_handle, const char *path, const dev_t dev)
+API_FS_MKNOD(romfs, void *fs_handle, const char *path, const dev_t dev)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, path, dev);
+        return EROFS;
 }
 
 //==============================================================================
@@ -405,11 +433,24 @@ API_FS_MKNOD($FSNAME, void *fs_handle, const char *path, const dev_t dev)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_OPENDIR($FSNAME, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(romfs, void *fs_handle, const char *path, DIR *dir)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        romfs_t *hdl = fs_handle;
 
-        int err = ESUCC;
+        const romfs_entry_t *entry = NULL;
+
+        int err = get_entry(path, &entry);
+        if (!err) {
+                if (entry->type == ROMFS_FILE_TYPE__DIR) {
+                        dir->d_hdl   = const_cast(void*, entry->data);
+                        dir->d_items = cast(romfs_dir_t*, entry->data)->items;
+                        dir->d_seek  = 0;
+
+                        sys_semaphore_signal(hdl->openfiles);
+                } else {
+                        err = ENOTDIR;
+                }
+        }
 
         return err;
 }
@@ -424,13 +465,13 @@ API_FS_OPENDIR($FSNAME, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_CLOSEDIR($FSNAME, void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(romfs, void *fs_handle, DIR *dir)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        UNUSED_ARG1(dir);
 
-        int err = ESUCC;
+        romfs_t *hdl = fs_handle;
 
-        return err;
+        return sys_semaphore_wait(hdl->openfiles, 10);
 }
 
 //==============================================================================
@@ -443,11 +484,28 @@ API_FS_CLOSEDIR($FSNAME, void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_READDIR($FSNAME, void *fs_handle, DIR *dir)
+API_FS_READDIR(romfs, void *fs_handle, DIR *dir)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        UNUSED_ARG1(fs_handle);
 
-        int err = ESUCC;
+        int err = EFAULT;
+
+        const romfs_dir_t *d = dir->d_hdl;
+
+        if (d && (dir->d_seek < d->items)) {
+                dir->dirent.dev      = 0;
+                dir->dirent.name     = d->entry[dir->d_seek].name;
+                dir->dirent.size     = d->entry[dir->d_seek].size
+                                     ? *d->entry[dir->d_seek].size : 0;
+                dir->dirent.filetype = d->entry[dir->d_seek].type == ROMFS_FILE_TYPE__DIR
+                                     ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                dir->d_seek++;
+
+                err = ESUCC;
+
+        } else {
+                err = ENOENT;
+        }
 
         return err;
 }
@@ -462,13 +520,10 @@ API_FS_READDIR($FSNAME, void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_REMOVE($FSNAME, void *fs_handle, const char *path)
+API_FS_REMOVE(romfs, void *fs_handle, const char *path)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG2(fs_handle, path);
+        return EROFS;
 }
 
 //==============================================================================
@@ -482,13 +537,10 @@ API_FS_REMOVE($FSNAME, void *fs_handle, const char *path)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_RENAME($FSNAME, void *fs_handle, const char *old_name, const char *new_name)
+API_FS_RENAME(romfs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, old_name, new_name);
+        return EROFS;
 }
 
 //==============================================================================
@@ -502,13 +554,10 @@ API_FS_RENAME($FSNAME, void *fs_handle, const char *old_name, const char *new_na
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_CHMOD($FSNAME, void *fs_handle, const char *path, mode_t mode)
+API_FS_CHMOD(romfs, void *fs_handle, const char *path, mode_t mode)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, path, mode);
+        return EROFS;
 }
 
 //==============================================================================
@@ -523,13 +572,10 @@ API_FS_CHMOD($FSNAME, void *fs_handle, const char *path, mode_t mode)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_CHOWN($FSNAME, void *fs_handle, const char *path, uid_t owner, gid_t group)
+API_FS_CHOWN(romfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
-        ${FSNAME}_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG4(fs_handle, path, owner, group);
+        return EROFS;
 }
 
 //==============================================================================
@@ -541,11 +587,90 @@ API_FS_CHOWN($FSNAME, void *fs_handle, const char *path, uid_t owner, gid_t grou
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_SYNC($FSNAME, void *fs_handle)
+API_FS_SYNC(romfs, void *fs_handle)
 {
-        ${FSNAME}_t *hdl = fs_handle;
+        UNUSED_ARG1(fs_handle);
+        return ESUCC;
+}
 
-        int err = ESUCC;
+//==============================================================================
+/**
+ * @brief Search entry by path.
+ *
+ * @param  path         path
+ * @param  entry        path related entry
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int get_entry(const char *path, const romfs_entry_t **entry)
+{
+        static const romfs_entry_t root = {
+                .type = ROMFS_FILE_TYPE__DIR,
+                .size = NULL,
+                .data = &romfsdir_root,
+                .name = "/"
+        };
+
+        int err = ENOENT;
+
+        if (strcmp(path, "/") == 0) {
+                *entry = &root;
+                err    = ESUCC;
+
+        } else {
+                path++;
+
+                const romfs_dir_t   *dir = &romfsdir_root;
+                const romfs_entry_t *ent = NULL;
+                bool               found = false;
+
+                do {
+                        const char *end = strchr(path, '/');
+                        size_t nlen = (end == NULL)
+                                    ? strlen(path)
+                                    : ((uintptr_t)end - (uintptr_t)path);
+
+                        if (nlen == 0) break;
+
+                        found = false;
+
+                        for (size_t i = 0; i < dir->items; i++) {
+
+                                ent = &dir->entry[i];
+
+                                if (  (strlen(ent->name) == nlen)
+                                   && (strncmp(ent->name, path, nlen) == 0) ) {
+
+                                        found = true;
+                                        path += nlen;
+
+                                        if ((*path != '\0') && strcmp(path, "/")) {
+                                                path++;
+
+                                                if (ent->type == ROMFS_FILE_TYPE__DIR) {
+                                                        dir = ent->data;
+
+                                                } else {
+                                                        err = ENOTDIR;
+                                                        goto finish;
+                                                }
+                                        } else {
+                                                err = ESUCC;
+                                                goto finish;
+                                        }
+
+                                        break;
+                                }
+                        }
+
+                } while (*path && dir && found);
+
+                finish:
+                if (!err) {
+                        *entry = ent;
+                }
+        }
 
         return err;
 }
@@ -553,99 +678,3 @@ API_FS_SYNC($FSNAME, void *fs_handle)
 /*==============================================================================
   End of file
 ==============================================================================*/
-EOF
-
-#-------------------------------------------------------------------------------
-cat << EOF > Makefile
-# Makefile for GNU make
-CSRC_CORE += fs/$FSNAME/$FSNAME.c
-EOF
-
-#-------------------------------------------------------------------------------
-cd ../../../../config/filesystems
-
-cat << EOF > ${FSNAME}_flags.h
-/*==============================================================================
-File    ${FSNAME}_flags.h
-
-Author  $AUTHOR
-
-Brief   $BRIEF
-
-        Copyright (C) $(date "+%Y") $AUTHOR <$EMAIL>
-
-        This program is free software; you can redistribute it and/or modify
-        it under the terms of the GNU General Public License as published by
-        the Free Software Foundation and modified by the dnx RTOS exception.
-
-        NOTE: The modification  to the GPL is  included to allow you to
-              distribute a combined work that includes dnx RTOS without
-              being obliged to provide the source  code for proprietary
-              components outside of the dnx RTOS.
-
-        The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-        but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
-        MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
-        GNU General Public License for more details.
-
-        Full license text is available on the following file: doc/license.txt.
-
-==============================================================================*/
-
-/*
- * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as prefix
- *       and suffix) are exported to the single configuration file
- *       (by using Configtool) when entire project configuration is exported.
- *       All other flag definitions and statements are ignored.
- */
-
-#ifndef _${FSNAME^^}_FLAGS_H_
-#define _${FSNAME^^}_FLAGS_H_
-
-/*--
-this:SetLayout("TitledGridBack", 2, "Home > File Systems > $FSNAME",
-               function() this:LoadFile("filesystems/filesystems_flags.h") end)
-++*/
-
-/*--
-this:AddWidget("Checkbox", "Example configuration")
---*/
-#define __${FSNAME^^}_CFG_EXAMPLE__ _NO_
-
-#endif /* _${FSNAME^^}_FLAGS_H_ */
-/*==============================================================================
-  End of file
-==============================================================================*/
-EOF
-
-#-------------------------------------------------------------------------------
-put_fs_enable() {
-cat << EOF >> filesystems_flags.h
-#/*--
-# this:AddWidget("Checkbox", "Enable $FSNAME")
-# this:SetToolTip("$BRIEF")
-# this:AddExtraWidget("Hyperlink", "${FSNAME^^}_CONFIGURE", "Configure")
-# this:SetEvent("clicked", "${FSNAME^^}_CONFIGURE", function() this:LoadFile("filesystems/${FSNAME}_flags.h") end)
-#--*/
-#include "../filesystems/${FSNAME}_flags.h"
-#define __ENABLE_${FSNAME^^}__ _YES_
-#/*
-__ENABLE_${FSNAME^^}__=_YES_
-#*/
-
-EOF
-}
-
-    readarray file < filesystems_flags.h
-    echo -n "" > filesystems_flags.h
-
-    for line in "${file[@]}"; do
-        if [[ "$line" =~ '#endif /* _FILE_SYSTEMS_FLAGS_H_ */' ]]; then
-            put_fs_enable
-        fi
-
-        echo -n "$line" >> filesystems_flags.h
-    done
-
-    echo "Done"
-fi
