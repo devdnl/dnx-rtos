@@ -47,6 +47,7 @@ make
 - build  - the project's binaries (created after compilation)
 - config - the project's configuration
 - doc    - documentation
+- res    - resources included at project build
 - src    - the project's sources
 - tools  - the project's tools (scripts, wizard, etc)
 

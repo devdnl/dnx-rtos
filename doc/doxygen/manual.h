@@ -33,6 +33,8 @@ Project contains several folders:
 \arg \c doc -- project documentation. Use <tt><b>make doc</b></tt> command in the
         command line to generate Doxygen documentation. PDF version is also
         possible to generate by using LaTeX system,
+\arg \c res -- add here own files to transfer it to the romfs file system.
+        Files can be read by dnx RTOS from ROM memory,
 \arg \c src -- all project sources with user directories: \c lib, \c programs.
         There are also system sources in folder: \c system,
 \arg \c tools -- many scripts and programs that helps organize project.
@@ -290,6 +292,10 @@ file system. In the system there are few file systems:
 \arg \c eefs – the file system is used for small devices e.g. 24CXX memory.
         File system requires small amount of memory and have size limitation
         (up to around 16 MiB).
+\arg \c romfs - file system is used to store read-only files and directories
+        directly from \c res directory to microcontroller memory. This file
+        system uses small amount of memory and can be used to easily copy files
+        to microcontroller at build procedure.
 
 As we can see, each file system has special role in the system. In this case,
 manage of the file systems must be the same for file that can comes from different
