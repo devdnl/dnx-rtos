@@ -12,14 +12,17 @@ except:
     print("Usage: python romfsmap.py <source-dir> <output-dir>\n")
     exit(1)
 
-file_dict = {}
+file_dict  = {}
+total_size = 0
 
 
 def file2carray(src_path, pointdir, filename):
 
     global file_dict
+    global total_size
 
     filecontent = open(src_path, "rb").read()
+    total_size  = total_size + len(filecontent)
 
     hash_object = hashlib.sha1(filecontent)
     hash_name   = hash_object.hexdigest()
@@ -75,6 +78,7 @@ def dir2c(dirname, subdirs, files):
 
     global file_dict
     global walk_dir
+    global total_size
 
     outfile = os.path.join(dest_dir, "root" if dirname == "/" else file_dict[dirname]) + '.c'
 
@@ -115,7 +119,12 @@ def dir2c(dirname, subdirs, files):
                    + name + "_size, &romfsfile_" + name + ', "' + file + '"},\n')
         entry = entry + 1
 
-    fout.write("};\n")
+    fout.write("};\n\n")
+
+    if dirname == "/":
+        fout.write("const size_t romfs_total_size = " + str(total_size) + ';\n')
+        fout.write("const size_t romfs_files = " + str(len(file_dict)) + ';\n')
+
     fout.close()
 
     with open(os.path.join(dest_dir, "Makefile.in"), "ab") as mk:

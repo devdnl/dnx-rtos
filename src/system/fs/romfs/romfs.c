@@ -54,6 +54,8 @@ typedef struct {
   Exported objects
 ==============================================================================*/
 extern const romfs_dir_t romfsdir_root;
+extern const size_t romfs_total_size;
+extern const size_t romfs_files;
 
 /*==============================================================================
   External objects
@@ -76,10 +78,12 @@ extern const romfs_dir_t romfsdir_root;
 //==============================================================================
 API_FS_INIT(romfs, void **fs_handle, const char *src_path, const char *opts)
 {
+        UNUSED_ARG2(src_path, opts);
+
         int err = sys_zalloc(sizeof(romfs_t), fs_handle);
         if (!err) {
-                romfs_t *fs = *fs_handle;
-                fs->root = &romfsdir_root;
+                romfs_t *hdl = *fs_handle;
+                hdl->root = &romfsdir_root;
         }
 
         return err;
@@ -96,10 +100,6 @@ API_FS_INIT(romfs, void **fs_handle, const char *src_path, const char *opts)
 //==============================================================================
 API_FS_RELEASE(romfs, void *fs_handle)
 {
-        romfs_t *hdl = fs_handle;
-
-        // ...
-
         sys_free(fs_handle);
 
         return ESUCC;
@@ -171,11 +171,8 @@ API_FS_WRITE(romfs,
              size_t          *wrcnt,
              struct vfs_fattr fattr)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG7(fs_handle, fhdl, src, count, fpos, wrcnt, fattr);
+        return EROFS;
 }
 
 //==============================================================================
@@ -223,11 +220,8 @@ API_FS_READ(romfs,
 //==============================================================================
 API_FS_IOCTL(romfs, void *fs_handle, void *fhdl, int request, void *arg)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG4(fs_handle, fhdl, request, arg);
+        return ENOTSUP;
 }
 
 //==============================================================================
@@ -242,11 +236,8 @@ API_FS_IOCTL(romfs, void *fs_handle, void *fhdl, int request, void *arg)
 //==============================================================================
 API_FS_FLUSH(romfs, void *fs_handle, void *fhdl)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG2(fs_handle, fhdl);
+        return ESUCC;
 }
 
 //==============================================================================
@@ -301,13 +292,13 @@ API_FS_STAT(romfs, void *fs_handle, const char *path, struct stat *stat)
 //==============================================================================
 API_FS_STATFS(romfs, void *fs_handle, struct statfs *statfs)
 {
-        romfs_t *hdl = fs_handle;
+        UNUSED_ARG1(fs_handle);
 
-        statfs->f_bsize  = 0;
-        statfs->f_blocks = 0;
+        statfs->f_bsize  = 1;
+        statfs->f_blocks = romfs_total_size;
         statfs->f_bfree  = 0;
         statfs->f_ffree  = 0;
-        statfs->f_files  = 0;
+        statfs->f_files  = romfs_files;
         statfs->f_type   = SYS_FS_TYPE__SOLID;
         statfs->f_fsname = "romfs";
 
@@ -327,11 +318,8 @@ API_FS_STATFS(romfs, void *fs_handle, struct statfs *statfs)
 //==============================================================================
 API_FS_MKDIR(romfs, void *fs_handle, const char *path, mode_t mode)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, path, mode);
+        return EROFS;
 }
 
 //==============================================================================
@@ -347,11 +335,8 @@ API_FS_MKDIR(romfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKFIFO(romfs, void *fs_handle, const char *path, mode_t mode)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, path, mode);
+        return EROFS;
 }
 
 //==============================================================================
@@ -367,11 +352,8 @@ API_FS_MKFIFO(romfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_MKNOD(romfs, void *fs_handle, const char *path, const dev_t dev)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, path, dev);
+        return EROFS;
 }
 
 //==============================================================================
@@ -444,11 +426,8 @@ API_FS_READDIR(romfs, void *fs_handle, DIR *dir)
 //==============================================================================
 API_FS_REMOVE(romfs, void *fs_handle, const char *path)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG2(fs_handle, path);
+        return EROFS;
 }
 
 //==============================================================================
@@ -464,11 +443,8 @@ API_FS_REMOVE(romfs, void *fs_handle, const char *path)
 //==============================================================================
 API_FS_RENAME(romfs, void *fs_handle, const char *old_name, const char *new_name)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, old_name, new_name);
+        return EROFS;
 }
 
 //==============================================================================
@@ -484,11 +460,8 @@ API_FS_RENAME(romfs, void *fs_handle, const char *old_name, const char *new_name
 //==============================================================================
 API_FS_CHMOD(romfs, void *fs_handle, const char *path, mode_t mode)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG3(fs_handle, path, mode);
+        return EROFS;
 }
 
 //==============================================================================
@@ -505,11 +478,8 @@ API_FS_CHMOD(romfs, void *fs_handle, const char *path, mode_t mode)
 //==============================================================================
 API_FS_CHOWN(romfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
-        romfs_t *hdl = fs_handle;
-
-        int err = ESUCC;
-
-        return err;
+        UNUSED_ARG4(fs_handle, path, owner, group);
+        return EROFS;
 }
 
 //==============================================================================
@@ -523,11 +493,28 @@ API_FS_CHOWN(romfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 //==============================================================================
 API_FS_SYNC(romfs, void *fs_handle)
 {
-        romfs_t *hdl = fs_handle;
+        UNUSED_ARG1(fs_handle);
+        return ESUCC;
+}
 
-        int err = ESUCC;
+//==============================================================================
+/**
+ * @brief
+ *
+ * @param  ?
+ *
+ * @return ?
+ */
+//==============================================================================
+int get_entry(romfs_t *hdl, const char path, romfs_entry_t *entry)
+{
+        romfs_dir_t *dir = hdl->root;
 
-        return err;
+        while (dir) {
+                for (size_t i = 0; i < dir->items; i++) {
+                        // TODO
+                }
+        }
 }
 
 /*==============================================================================

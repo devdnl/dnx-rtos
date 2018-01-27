@@ -41,7 +41,7 @@ this:SetLayout("TitledGridBack", 2, "Home > File Systems > romfs",
 ++*/
 
 /*--
-this:AddWidget("Checkbox", "Example configuration")
+this:AddWidget("Checkbox", "File mode, user, group")
 --*/
 #define __ROMFS_CFG_EXAMPLE__ _NO_
 
