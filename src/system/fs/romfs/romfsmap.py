@@ -5,22 +5,9 @@ import array
 import re
 import hashlib
 
-walk_dir = sys.argv[1]
-dest_dir = sys.argv[2]
-
+walk_dir  = sys.argv[1]
+dest_dir  = sys.argv[2]
 file_dict = {}
-
-def underscore(name):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-
-
-def file_arrayname(filepath):
-    return 'file_' + re.sub('[,.:/@+-\\\\*\(\)\[\]!#=]', '', underscore(filepath))
-
-
-def dir_arrayname(filepath):
-    return 'dir_' + re.sub('[,.:/@+-\\\\*\(\)\[\]!#=]', '', underscore(filepath))
 
 
 def file2carray(src_path, pointdir, filename):
