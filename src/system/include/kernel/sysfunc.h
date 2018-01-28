@@ -62,7 +62,7 @@
 #include "mm/cache.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
-#include "portable/cpuctl.h"
+#include "cpu/cpuctl.h"
 
 #ifdef __cplusplus
 extern "C" {

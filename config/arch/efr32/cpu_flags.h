@@ -145,7 +145,7 @@ __CPU_NAME__=EFR32MG1V132F256GM32
 CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_CFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4
-CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles -T./src/system/portable/efr32/ld/$(__LD_SCRIPT__).ld
+CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles -T./src/system/cpu/efr32/ld/$(__LD_SCRIPT__).ld
 #*/
 
 #// CPU family

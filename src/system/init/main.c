@@ -29,7 +29,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "portable/cpuctl.h"
+#include "cpu/cpuctl.h"
 #include "mm/heap.h"
 #include "mm/cache.h"
 #include "mm/mm.h"

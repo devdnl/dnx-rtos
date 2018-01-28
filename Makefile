@@ -120,7 +120,7 @@ SYS_KRN_LOC     = $(SYS_LOC)/kernel
 SYS_LIB_LOC     = $(SYS_LOC)/lib
 SYS_MM_LOC      = $(SYS_LOC)/mm
 SYS_NET_LOC     = $(SYS_LOC)/net
-SYS_PORT_LOC    = $(SYS_LOC)/portable
+SYS_CPU_LOC     = $(SYS_LOC)/cpu
 SYS_LIBC_LOC    = $(SYS_LOC)/libc
 
 #---------------------------------------------------------------------------------------------------

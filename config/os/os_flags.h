@@ -115,7 +115,7 @@ this:AddWidget("Spinbox", 1, 32, "Number of fixed I/O kworker threads")
 this:SetToolTip("Number of kworker threads for I/O syscall handling.\n"..
                 "Option valid only for 'Fixed number of syscall threads' mode.")
 --*/
-#define __OS_TASK_KWORKER_IO_THREADS__ 2
+#define __OS_TASK_KWORKER_IO_THREADS__ 3
 
 
 
