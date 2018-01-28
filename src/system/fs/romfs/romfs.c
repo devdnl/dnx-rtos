@@ -311,10 +311,12 @@ API_FS_FSTAT(romfs, void *fs_handle, void *fhdl, struct stat *stat)
                 stat->st_ctime = COMPILE_EPOCH_TIME;
                 stat->st_mtime = COMPILE_EPOCH_TIME;
                 stat->st_dev   = 0;
-                stat->st_mode  = S_IRUSR | S_IRGRP | S_IROTH | (S_IXUSR * __ROMFS_CFG_EXEC_FILES__);
                 stat->st_size  = entry->size ? *entry->size : 0;
                 stat->st_gid   = 0;
                 stat->st_uid   = 0;
+                stat->st_mode  = S_IRUSR | S_IRGRP | S_IROTH
+                               | ( entry->type == ROMFS_FILE_TYPE__FILE
+                                 ? (S_IXUSR * __ROMFS_CFG_EXEC_FILES__) : 0 );
                 stat->st_type  = entry->type == ROMFS_FILE_TYPE__DIR
                                ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
                 err = ESUCC;
