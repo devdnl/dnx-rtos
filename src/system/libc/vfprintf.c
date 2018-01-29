@@ -80,20 +80,18 @@ int vfprintf(FILE *file, const char *format, va_list arg)
         int n = 0;
 
 #if (__OS_PRINTF_ENABLE__ > 0)
-        if (file && format) {
-                va_list carg;
-                va_copy(carg, arg);
-                u32_t size = vsnprintf(NULL, 0, format, carg) + 1;
-                va_end(carg);
+        va_list carg;
+        va_copy(carg, arg);
+        u32_t size = vsnprintf(NULL, 0, format, carg) + 1;
+        va_end(carg);
 
-                char *str = calloc(1, size);
-                if (str) {
-                        n = vsnprintf(str, size, format, arg);
-                        fwrite(str, sizeof(char), n, file);
-                        int err = _errno;
-                        free(str);
-                        _errno = err;
-                }
+        char *str = calloc(1, size);
+        if (str) {
+                n = vsnprintf(str, size, format, arg);
+                fwrite(str, sizeof(char), n, file);
+                int err = _errno;
+                free(str);
+                _errno = err;
         }
 #else
         UNUSED_ARG3(file, format, arg);

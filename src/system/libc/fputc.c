@@ -74,11 +74,9 @@
 int fputc(int c, FILE *stream)
 {
 #if (__OS_PRINTF_ENABLE__ > 0)
-        if (stream) {
-                char ch = (char)c;
-                if (fwrite(&ch, sizeof(char), 1, stream) == 1) {
-                        return c;
-                }
+        char ch = (char)c;
+        if (fwrite(&ch, sizeof(char), 1, stream) == 1) {
+                return c;
         }
 #else
         UNUSED_ARG1(c);
