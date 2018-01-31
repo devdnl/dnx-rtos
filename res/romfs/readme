@@ -1,2 +1,5 @@
-To this folder one can add files and directories that will be visible in system
-after romfs mount.
+All files and directories stored in this folder will be visible in the dnx RTOS.
+To used added files please type in dsh (in dnx RTOS console) command as follow:
+
+   mount - romfs /dev/mnt
+ 
