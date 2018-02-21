@@ -960,6 +960,16 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                 }
                 break;
 
+#if __OS_SYSTEM_SHEBANG_ENABLE__ > 0
+        case FILE_CONTENT_BIN: {
+                const struct _prog_data *pdata = sys_get_programs_table();
+                if (file->arg < sys_get_programs_table_size()) {
+                        len = sys_snprintf(buff, size, "#!%s\n", pdata[file->arg].name);
+                }
+                break;
+        }
+#endif
+
         default:
                 break;
         }
