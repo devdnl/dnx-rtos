@@ -44,7 +44,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define KEY_READ_INTERVAL_SEC   (CLOCKS_PER_SEC * 0.01)
+#define KEY_READ_INTERVAL_SEC   (CLOCKS_PER_SEC / 100)
 #define REFRESH_INTERVAL_SEC    (CLOCKS_PER_SEC * 1)
 #define MSG_LINE_POS            VT100_CURSOR_HOME VT100_CURSOR_DOWN(5) VT100_ERASE_LINE_FROM_CUR
 
@@ -83,15 +83,17 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
         ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
         ioctl(fileno(stdout), IOCTL_TTY__CLEAR_SCR);
 
-        int     key   = ' ';
-        clock_t timer = clock() + REFRESH_INTERVAL_SEC;
+        int     key      = ' ';
+        clock_t timer    = clock() + REFRESH_INTERVAL_SEC;
+        size_t  lastseek = 0;
 
         while (key != 'q' && key != '\0') {
                 ioctl(fileno(stdin), IOCTL_VFS__NON_BLOCKING_RD_MODE);
+                clearerr(stdin);
                 key = getchar();
                 ioctl(fileno(stdin), IOCTL_VFS__DEFAULT_RD_MODE);
 
-                if (!strchr("k,.", key)) {
+                if (!strchr("qk,.", key)) {
                         if ((clock() - timer) < REFRESH_INTERVAL_SEC) {
                                 msleep(KEY_READ_INTERVAL_SEC);
                                 continue;
@@ -105,40 +107,40 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 u32_t uhrs   = (uptime / 3600) % 24;
                 u32_t umins  = (uptime / 60) % 60;
 
-                printf(VT100_CLEAR_SCREEN);
+                printf(VT100_CURSOR_HOME);
 
                 avg_CPU_load_t avg = {0, 0, 0, 0};
                 get_average_CPU_load(&avg);
 
-                printf("%s - %dd %d:%02d up, avg. load %%: %d.%d, %d.%d, %d.%d\n",
+                printf("%s - %dd %d:%02d up, avg. load %%: %d.%d, %d.%d, %d.%d"VT100_ERASE_LINE_FROM_CUR"\n",
                         argv[0], udays, uhrs, umins,
                         avg.avg1min  / 10, avg.avg1min  % 10,
                         avg.avg5min  / 10, avg.avg5min  % 10,
                         avg.avg15min / 10, avg.avg15min % 10);
 
-                printf("B Mem: %d total, %d used, %d free\n",
+                printf("B Mem: %d total, %d used, %d free"VT100_ERASE_LINE_FROM_CUR"\n",
                         get_memory_size(), get_used_memory(), get_free_memory());
 
                 get_memory_usage_details(&global->mem);
-                printf("%d static, %d kernel, %d filesystems\n",
+                printf("%d static, %d kernel, %d filesystems"VT100_ERASE_LINE_FROM_CUR"\n",
                         global->mem.static_memory_usage,
                         global->mem.kernel_memory_usage,
                         global->mem.filesystems_memory_usage);
 
-                printf("%d shared, %d cached, %d modules\n",
+                printf("%d shared, %d cached, %d modules"VT100_ERASE_LINE_FROM_CUR"\n",
                         global->mem.shared_memory_usage,
                         global->mem.cached_memory_usage,
                         global->mem.modules_memory_usage);
 
-                printf("%d network, %d programs\n",
+                printf("%d network, %d programs"VT100_ERASE_LINE_FROM_CUR"\n",
                         global->mem.network_memory_usage,
                         global->mem.programs_memory_usage);
 
-                printf("\n");
+                printf(VT100_ERASE_LINE_FROM_CUR"\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
                         "PID PR     MEM  STU %%STU   %%CPU TH RES CMD"
-                        VT100_RESET_ATTRIBUTES "\n");
+                       VT100_RESET_ATTRIBUTES VT100_ERASE_LINE_FROM_CUR"\n");
 
                 size_t seek = 0;
                 while (process_stat_seek(seek++, &global->pstat) == 0) {
@@ -151,7 +153,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                                          global->pstat.CPU_load % 10);
                         }
 
-                        printf("%3d %2d %7d %4d %4d %s %2d %3d %s\n",
+                        printf("%3d %2d %7d %4d %4d %s %2d %3d %s"VT100_ERASE_LINE_FROM_CUR"\n",
                                 global->pstat.pid,
                                 global->pstat.priority,
                                 global->pstat.memory_usage,
@@ -164,6 +166,14 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                                 + global->pstat.semaphores_count,
                                 global->pstat.name);
                 }
+
+                // clear last lines
+                while (lastseek > seek) {
+                        lastseek--;
+                        printf(VT100_ERASE_LINE_FROM_CUR"\n");
+                }
+
+                lastseek = seek;
 
                 if (key == 'k') {
                         printf(MSG_LINE_POS);
