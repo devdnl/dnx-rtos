@@ -1,5 +1,4 @@
 All files and directories stored in this folder will be visible in the dnx RTOS.
 To used added files please type in dsh (in dnx RTOS console) command as follow:
 
-   mount - romfs /dev/mnt
- 
+   mount - romfs /mnt
