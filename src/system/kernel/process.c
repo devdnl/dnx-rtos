@@ -57,8 +57,8 @@
 #define SHEBANGLEN                      64
 
 // critical section - mutex wait must set to max possible
-#define ATOMIC for (int __ = 0; __ == 0;)\
-        for (int _e = _mutex_lock(process_mtx, MAX_DELAY_MS); _e == 0 && __ == 0; _mutex_unlock(process_mtx), __++)
+#define ATOMIC(_mtx) for (int __ = 0; __ == 0;)\
+        for (int _e = _mutex_lock(_mtx, MAX_DELAY_MS); _e == 0 && __ == 0; _mutex_unlock(_mtx), __++)
 
 #define PROC_MAX_THREADS(proc)          (((proc)->flag & FLAG_KWORKER) ? __OS_TASK_MAX_SYSTEM_THREADS__ : __OS_TASK_MAX_USER_THREADS__)
 
@@ -133,6 +133,7 @@ static u32_t          CPU_total_time_last;
 static avg_CPU_load_t avg_CPU_load_calc;
 static avg_CPU_load_t avg_CPU_load_result;
 static mutex_t       *process_mtx;
+static mutex_t       *kworker_mtx;
 
 /*==============================================================================
   Exported object definitions
@@ -181,6 +182,10 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 {
         if (!process_mtx) {
                 _assert(_mutex_create(MUTEX_TYPE_RECURSIVE, &process_mtx) == ESUCC);
+        }
+
+        if (!kworker_mtx) {
+                _assert(_mutex_create(MUTEX_TYPE_RECURSIVE, &kworker_mtx) == ESUCC);
         }
 
         if (!cmd) {
@@ -240,7 +245,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                                cast(void*, &proc->task));
                 if (err) goto finish;
 
-                ATOMIC {
+                ATOMIC(process_mtx) {
                         err = _task_create(process_code,
                                            proc->pdata->name,
                                            *proc->pdata->stack_depth,
@@ -293,7 +298,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 //==============================================================================
 KERNELSPACE void _process_clean_up_killed_processes(void)
 {
-        ATOMIC {
+        ATOMIC(process_mtx) {
                 while (destroy_process_list) {
                         _process_t *proc = destroy_process_list;
 
@@ -327,7 +332,7 @@ KERNELSPACE int _process_kill(pid_t pid)
 {
         int err = ESRCH;
 
-        ATOMIC {
+        ATOMIC(process_mtx) {
                 foreach_process(proc, active_process_list) {
                         if (proc->pid == pid) {
                                 if (proc->event) {
@@ -368,7 +373,7 @@ KERNELSPACE void _process_remove_zombie(_process_t *proc, int *status)
 {
         _assert(is_proc_valid(proc));
 
-        ATOMIC {
+        ATOMIC(process_mtx) {
                 _process_t *prev = NULL;
                 foreach_process(p, zombie_process_list) {
                         if (p == proc) {
@@ -425,7 +430,7 @@ KERNELSPACE void _process_exit(_process_t *proc, int status)
                         _vfs_vfioctl(proc->f_stderr, IOCTL_VFS__DEFAULT_WR_MODE, none);
                 }
 
-                ATOMIC {
+                ATOMIC(process_mtx) {
                         if (proc->event) {
                                 _flag_set(proc->event, _PROCESS_EXIT_FLAG(0));
                         }
@@ -538,7 +543,7 @@ KERNELSPACE int _process_get_stat_seek(size_t seek, process_stat_t *stat)
         if (stat) {
                 err = ENOENT;
 
-                ATOMIC {
+                ATOMIC(process_mtx) {
                         _process_t *proc = NULL;
 
                         foreach_process(p, active_process_list) {
@@ -596,7 +601,7 @@ KERNELSPACE int _process_get_stat_pid(pid_t pid, process_stat_t *stat)
         if (pid) {
                 err = ENOENT;
 
-                ATOMIC {
+                ATOMIC(process_mtx) {
                         _process_t *proc = NULL;
 
                         foreach_process(p, active_process_list) {
@@ -678,7 +683,7 @@ KERNELSPACE size_t _process_get_count(void)
 {
         size_t count = 0;
 
-        ATOMIC {
+        ATOMIC(process_mtx) {
                 foreach_process(proc, active_process_list) {
                         count++;
                 }
@@ -744,7 +749,7 @@ KERNELSPACE int _process_get_event_flags(_process_t *proc, flag_t **flag)
         int err = EINVAL;
 
         if (is_proc_valid(proc) && flag) {
-                ATOMIC {
+                ATOMIC(process_mtx) {
                         *flag = proc->event;
                         err   = ESUCC;
                 }
@@ -768,7 +773,7 @@ KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
         int err = EINVAL;
 
         if (pid && prio) {
-                ATOMIC {
+                ATOMIC(process_mtx) {
                         if (active_process->pid == pid) {
                                 *prio = _task_get_priority(active_process->task[0]);
                                 err   = ESUCC;
@@ -803,7 +808,7 @@ KERNELSPACE int _process_get_container(pid_t pid, _process_t **process)
         int err = EINVAL;
 
         if (pid && process) {
-                ATOMIC {
+                ATOMIC(process_mtx) {
                         if (active_process->pid == pid) {
                                 *process = active_process;
                                 err = ESUCC;
@@ -890,7 +895,9 @@ u8_t _process_get_max_threads(_process_t *proc)
 KERNELSPACE int _process_register_resource(_process_t *proc, res_header_t *resource)
 {
         if (is_proc_valid(proc)) {
-                ATOMIC {
+                mutex_t *mtx = (proc == _kworker_proc) ? kworker_mtx : process_mtx;
+
+                ATOMIC(mtx) {
                         if (proc->res_list == NULL) {
                                 proc->res_list = resource;
                         } else {
@@ -923,8 +930,9 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
         if (is_proc_valid(proc)) {
                 err = ENOENT;
                 res_header_t *obj_to_destroy = NULL;
+                mutex_t *mtx = (proc == _kworker_proc) ? kworker_mtx : process_mtx;
 
-                ATOMIC {
+                ATOMIC(mtx) {
                         res_header_t *prev     = NULL;
                         int           max_deep = 1024;
 
@@ -991,7 +999,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                 return err;
         }
 
-        ATOMIC {
+        ATOMIC(process_mtx) {
                 u8_t  threads = PROC_MAX_THREADS(proc);
                 tid_t id      = 1;
                 for (; id < threads; id++) {
@@ -1054,7 +1062,7 @@ KERNELSPACE int _process_thread_kill(_process_t *proc, tid_t tid)
         int err = EINVAL;
 
         if (is_proc_valid(proc) && is_tid_in_range(proc, tid)) {
-                ATOMIC {
+                ATOMIC(process_mtx) {
                         _task_destroy(proc->task[tid]);
                         proc->task[tid] = NULL;
 
@@ -1084,7 +1092,7 @@ KERNELSPACE task_t *_process_thread_get_task(_process_t *proc, tid_t tid)
         task_t *task = NULL;
 
         if (is_proc_valid(proc) && is_tid_in_range(proc, tid)) {
-                ATOMIC {
+                ATOMIC(process_mtx) {
                         task = proc->task[tid];
                 }
         }
@@ -1106,7 +1114,7 @@ KERNELSPACE task_t *_process_thread_get_task(_process_t *proc, tid_t tid)
 //==============================================================================
 KERNELSPACE void _task_get_process_container(task_t *taskhdl, _process_t **proc, tid_t *tid)
 {
-        ATOMIC {
+        ATOMIC(process_mtx) {
                 taskhdl = taskhdl ? taskhdl : _task_get_handle();
                 _assert(taskhdl);
 
@@ -1236,7 +1244,7 @@ USERSPACE static void thread_code(void *arg)
         _assert(is_proc_valid(proc));
         _assert(is_tid_in_range(proc, tid));
 
-        ATOMIC {
+        ATOMIC(process_mtx) {
                 if (proc->event) {
                         _flag_set(proc->event, _PROCESS_EXIT_FLAG(tid));
                 }
@@ -1258,7 +1266,7 @@ USERSPACE static void thread_code(void *arg)
 //==============================================================================
 static void process_move_list(_process_t *proc, _process_t **list_from, _process_t **list_to)
 {
-        ATOMIC {
+        ATOMIC(process_mtx) {
                 _process_t *prev = NULL;
                 foreach_process(p, *list_from) {
                         if (p == proc) {
@@ -1539,7 +1547,7 @@ static int get_pid(pid_t *pid)
 {
         int err = ESRCH;
 
-        ATOMIC {
+        ATOMIC(process_mtx) {
                 int n = 1000;
                 while (pid && (n-- > 0)) {
                         if (++PID_cnt >= 1000) {
