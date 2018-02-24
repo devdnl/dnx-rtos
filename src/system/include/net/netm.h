@@ -100,8 +100,9 @@ typedef enum {
         NET_FLAGS__NONE      = 0,               //!< Flags not set.
         NET_FLAGS__NOCOPY    = (1 << 0),        //!< Buffer is not internally copy.
         NET_FLAGS__COPY      = (1 << 1),        //!< Buffer is internally copy.
-        NET_FLAGS__REWIND    = (1 << 4),        //!< Read stream index is rewind.
-        NET_FLAGS__FREEBUF   = (1 << 5),        //!< Skip unread bytes after read and free buffer.
+        NET_FLAGS__MORE      = (1 << 2),        //!< More transfers.
+        NET_FLAGS__REWIND    = (1 << 3),        //!< Read stream index is rewind.
+        NET_FLAGS__FREEBUF   = (1 << 4),        //!< Skip unread bytes after read and free buffer.
 } NET_flags_t;
 
 /** Socket shutdown direction. */
