@@ -663,6 +663,13 @@ static void send_packet(size_t size)
         /* Chained Mode */
         /* Selects the next DMA Tx descriptor list for next buffer to send */
         DMATxDescToSet = cast(ETH_DMADESCTypeDef*, DMATxDescToSet->Buffer2NextDescAddr);
+
+        // FIXME This workaround fixes problems with packets lags...
+        //       The problem is visible only when a lot of data is send
+        //       and many packets are generated.
+        if (size > 1460) {
+                sys_sleep_ms(1);
+        }
 }
 
 //==============================================================================

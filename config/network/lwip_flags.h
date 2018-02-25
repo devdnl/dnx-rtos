@@ -575,7 +575,7 @@ this:SetToolTip("Controls if TCP should queue segments that\narrive out of order
 #define __NETWORK_TCP_QUEUE_OOSEQ__ 0
 /*--
 this:AddWidget("Spinbox", 16, 65535, "TCP_MSS")
-this:SetToolTip("TCP Maximum segment size.")
+this:SetToolTip("TCP Maximum segment size. Default: 1460.")
 --*/
 #define __NETWORK_TCP_MSS__ 1460
 /*--
