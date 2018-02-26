@@ -381,9 +381,9 @@ API_MOD_READ(TTY,
 
         while (count--) {
                 if (fattr.non_blocking_rd) {
-                        if (sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
+                        if (sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS) == ESUCC) {
                                 const char *str = ttyedit_get_value(tty->editline);
-                                copy_string_to_queue(str, tty->queue_out, false, 1);
+                                copy_string_to_queue(str, tty->queue_out, false, MAX_DELAY_MS);
                                 ttyedit_clear(tty->editline);
                                 sys_mutex_unlock(tty->secure_mtx);
                         } else {
@@ -735,17 +735,20 @@ static void vt100_analyze(const char c)
                         const char *str  = ttyedit_get_value(tty->editline);
                         const char *lf   = "\n";
 
-                        ttybfr_put(tty->screen, str, strlen(str));
-                        ttybfr_put(tty->screen, lf, strlen(lf));
-                        ttybfr_clear_fresh_line_counter(tty->screen);
-
                         if (ttyedit_is_echo_enabled(tty->editline)) {
+
+                                ttybfr_put(tty->screen, str, strlen(str));
+                                ttybfr_put(tty->screen, lf, strlen(lf));
+                                ttybfr_clear_fresh_line_counter(tty->screen);
+
                                 const char *crlf = "\r\n";
                                 size_t      wrcnt;
                                 sys_fwrite(crlf, strlen(crlf), &wrcnt, tty_module->outfile);
+
                         }
 
                         copy_string_to_queue(str, tty->queue_out, true, 0);
+
                         ttyedit_clear(tty->editline);
 
                         sys_mutex_unlock(tty->secure_mtx);
