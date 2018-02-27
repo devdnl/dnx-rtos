@@ -95,6 +95,7 @@ int_main(more, STACK_DEPTH_LOW, int argc, char *argv[])
 
         int ROWS = 23;
         ioctl(fileno(stdout), IOCTL_TTY__GET_ROW, &ROWS);
+        ROWS -= 1;
 
         int show = ROWS;
 
