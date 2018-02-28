@@ -98,7 +98,7 @@ static void print_help_msg(const char *prog_name)
         printf("  INET,...      network name\n");
         printf("  up=<options>  configure network\n");
         printf("  down          disable network\n");
-        printf("  -h, --help    this help\n\n");
+        printf("  -h, --help    this help\n");
         printf("\n");
         printf("Options for INET:\n");
         printf("  Static: %s INET up=address,netmask,gateway\n", prog_name);
