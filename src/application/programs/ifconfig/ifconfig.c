@@ -93,18 +93,16 @@ static const char *convert_unit(u64_t *val)
 //==============================================================================
 static void print_help_msg(const char *prog_name)
 {
-        printf("Usage: %s <network> [up=<options>] [down]\n"
-               "General options:\n"
-               "  INET,...      network name\n"
-               "  up=<options>  configure network\n"
-               "  down          disable network\n"
-               "  -h, --help    this help\n\n"
-
-               "Options for INET:\n"
-               "  Static: INET up=address,netmask,gateway\n"
-               "  DHCP  : INET up=dhcp\n",
-
-               prog_name);
+        printf("Usage: %s <network> [up=<options>] [down]\n", prog_name);
+        printf("General options:\n");
+        printf("  INET,...      network name\n");
+        printf("  up=<options>  configure network\n");
+        printf("  down          disable network\n");
+        printf("  -h, --help    this help\n\n");
+        printf("\n");
+        printf("Options for INET:\n");
+        printf("  Static: %s INET up=address,netmask,gateway\n", prog_name);
+        printf("  DHCP  : %s INET up=dhcp\n", prog_name);
 }
 
 //==============================================================================
