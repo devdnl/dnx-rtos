@@ -110,24 +110,38 @@ int_main(hexdump, STACK_DEPTH_LOW, int argc, char *argv[])
 
                         char *ptr = global->line;
 
+                        // file offset
                         ptr += printline(ptr, "%08x  ", seek);
 
+                        // 0-7 byte
                         for (size_t i = 0; (i < 8) && (i < n); i++) {
                                 ptr += printline(ptr, "%02x ", global->buffer[i]);
                         }
 
+                        // delimiter
                         ptr += printline(ptr, " ");
 
+                        // 8-16 byte
                         for (size_t i = 8; i < n; i++) {
                                 ptr += printline(ptr, "%02x ", global->buffer[i]);
                         }
 
+                        // print empty space if less than 16 bytes
+                        int s = 16 - n;
+
+                        while (s > 0) {
+                                ptr += printline(ptr, "   ");
+                                s--;
+                        }
+
+                        // characters
                         ptr += printline(ptr, " |");
                         for (size_t i = 0; i < n; i++) {
                                 char c = global->buffer[i];
                                 ptr += printline(ptr, "%c", isprint(c) ? c : ' ');
                         }
 
+                        // end
                         ptr += printline(ptr, "|");
 
                         puts(global->line);
