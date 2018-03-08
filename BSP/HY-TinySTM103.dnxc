@@ -9550,7 +9550,7 @@
 			};
 			[8.000000]={
 				["key"]="__OS_TASK_MAX_SYSTEM_THREADS__";
-				["value"]="5";
+				["value"]="6";
 			};
 			[9.000000]={
 				["key"]="__OS_TASK_KWORKER_IO_THREADS__";
