@@ -104,7 +104,7 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor)
                         CANM_t *hdl = *device_handle;
 
                         hdl->recv_timeout = MAX_DELAY_MS;
-                        hdl->send_timeout = 0;
+                        hdl->send_timeout = 10;
 
                         err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->config_mtx);
                         if (err) {
@@ -149,9 +149,10 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor)
                         NVIC_EnableIRQ(CAN1_RX1_IRQn);
                         NVIC_SetPriority(CAN1_RX1_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
-                        SET_BIT(CAN1->IER, CAN_IER_FMPIE1
-                                         | CAN_IER_FMPIE0
-                                         | CAN_IER_TMEIE);
+                        err = set_init_mode(hdl);
+                        if (err) {
+                                goto finish;
+                        }
 
                         finish:
                         if (!err) {
@@ -468,7 +469,13 @@ static int configure(CANM_t *hdl, const CAN_config_t *cfg)
 {
         int err = sys_mutex_lock(hdl->config_mtx, MTX_TIMEOUT);
         if (!err) {
-                SET_BIT(CAN1->MCR, CAN_MCR_DBF * _CAN_CFG__DEBUG_FREEZE);
+                SET_BIT(CAN1->MCR, (CAN_MCR_DBF * _CAN_CFG__DEBUG_FREEZE)
+                                 | CAN_MCR_TXFP
+                                 | CAN_MCR_RFLM);
+
+                SET_BIT(CAN1->IER, CAN_IER_FMPIE1
+                                 | CAN_IER_FMPIE0
+                                 | CAN_IER_TMEIE);
 
                 if (cfg->auto_bus_off) {
                         SET_BIT(CAN1->MCR, CAN_MCR_ABOM);
@@ -662,49 +669,63 @@ static int set_filter(CANM_t *hdl, const CAN_filter_t *filter)
 //==============================================================================
 static int send_msg(CANM_t *hdl, const CAN_msg_t *msg)
 {
-        int err = ETIME;
+        int  err  = ETIME;
+        bool loop = true;
+
+        int i = 0;
 
         u32_t tref = sys_get_uptime_ms();
 
-        while (!sys_time_is_expired(tref, msg->timeout_ms)) {
+        while (loop && !sys_time_is_expired(tref, msg->timeout_ms)) {
 
-                for (int i = 0; i < TX_MAILBOXES; i++) {
+                err = ETIME;
+
+                for (int i = 0; loop && (i < TX_MAILBOXES); i++) {
+
                         err = sys_mutex_trylock(hdl->txmbox_mtx[i]);
                         if (!err) {
-
                                 CAN_TxMailBox_t *mbox = &CAN1->sTxMailBox[i];
 
-                                mbox->TIR = CAN_TI0R_RTR * msg->remote_tranmission;
+                                if (!(mbox->TIR & CAN_TI0R_TXRQ)) {
+                                        mbox->TIR = CAN_TI0R_RTR * msg->remote_transmission;
 
-                                if (msg->extended_ID) {
-                                        mbox->TIR |= (msg->ID << 3);
-                                        mbox->TIR |= CAN_TI0R_IDE;
+                                        if (msg->extended_ID) {
+                                                mbox->TIR |= (msg->ID << 3);
+                                                mbox->TIR |= CAN_TI0R_IDE;
+                                        } else {
+                                                mbox->TIR |= (msg->ID << 21);
+                                        }
+
+                                        mbox->TDTR = min(8, msg->data_length) & CAN_TDT0R_DLC;
+
+                                        mbox->TDLR = msg->data[0] << 0
+                                                   | msg->data[1] << 8
+                                                   | msg->data[2] << 16
+                                                   | msg->data[3] << 24;
+
+                                        mbox->TDHR = msg->data[4] << 0
+                                                   | msg->data[5] << 8
+                                                   | msg->data[6] << 16
+                                                   | msg->data[7] << 24;
+
+                                        sys_queue_reset(hdl->txrdy_q[i]);
+
+                                        SET_BIT(mbox->TIR, CAN_TI0R_TXRQ);
+
+                                        int erri = EIO;
+                                        err = sys_queue_receive(hdl->txrdy_q[i], &erri, msg->timeout_ms);
+                                        if (!err) {
+                                                err = erri;
+
+                                        } else {
+                                                printk("CAN: message send abort");
+                                                SET_BIT(CAN1->TSR, CAN_TSR_ABRQ0 << (i * 8));
+                                                sys_sleep_ms(1);
+                                        }
+
+                                        loop = false;
                                 } else {
-                                        mbox->TIR |= (msg->ID << 21);
-                                }
-
-                                mbox->TDTR = min(8, msg->data_length) & CAN_TDT0R_DLC;
-
-                                mbox->TDLR = msg->data[0] << 0
-                                           | msg->data[1] << 8
-                                           | msg->data[2] << 16
-                                           | msg->data[3] << 24;
-
-                                mbox->TDHR = msg->data[4] << 0
-                                           | msg->data[5] << 8
-                                           | msg->data[6] << 16
-                                           | msg->data[7] << 24;
-
-                                SET_BIT(mbox->TIR, CAN_TI0R_TXRQ);
-
-                                int erri = EIO;
-                                err = sys_queue_receive(hdl->txrdy_q[i], &erri, msg->timeout_ms);
-                                if (!err) {
-                                        err = erri;
-
-                                } else {
-                                        SET_BIT(CAN1->TSR, CAN_TSR_ABRQ0 << (i * 8));
-                                        sys_sleep_ms(1);
+                                        err = EBUSY;
                                 }
 
                                 sys_mutex_unlock(hdl->txmbox_mtx[i]);
@@ -740,7 +761,7 @@ static int recv_msg(CANM_t *hdl, CAN_msg_t *msg)
                         msg->extended_ID = false;
                 }
 
-                msg->remote_tranmission = mbox.RIR & CAN_RI0R_RTR;
+                msg->remote_transmission = mbox.RIR & CAN_RI0R_RTR;
                 msg->data_length        = mbox.RDTR & CAN_RDT0R_DLC;
                 msg->data[0]            = mbox.RDLR >> 0;
                 msg->data[1]            = mbox.RDLR >> 8;
@@ -801,7 +822,7 @@ void USB_HP_CAN1_TX_IRQHandler(void)
                         SET_BIT(CAN1->TSR, CAN_TSR_RQCP[i]);
 
                         bool woken = false;
-                        err = sys_queue_send_from_ISR(CANM->txrdy_q[i], &err, &woken);
+                        sys_queue_send_from_ISR(CANM->txrdy_q[i], &err, &woken);
 
                         yield |= woken;
                 }

@@ -149,7 +149,7 @@ typedef struct {
 typedef struct {
         u32_t ID;
         bool  extended_ID;
-        bool  remote_tranmission;
+        bool  remote_transmission;
         u32_t data_length;
         u8_t  data[8];
         u32_t timeout_ms;
