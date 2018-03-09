@@ -6239,15 +6239,16 @@ typedef struct
 
 /*!< CAN control and status registers */
 /*******************  Bit definition for CAN_MCR register  ********************/
-#define  CAN_MCR_INRQ                        ((uint16_t)0x0001)            /*!< Initialization Request */
-#define  CAN_MCR_SLEEP                       ((uint16_t)0x0002)            /*!< Sleep Mode Request */
-#define  CAN_MCR_TXFP                        ((uint16_t)0x0004)            /*!< Transmit FIFO Priority */
-#define  CAN_MCR_RFLM                        ((uint16_t)0x0008)            /*!< Receive FIFO Locked Mode */
-#define  CAN_MCR_NART                        ((uint16_t)0x0010)            /*!< No Automatic Retransmission */
-#define  CAN_MCR_AWUM                        ((uint16_t)0x0020)            /*!< Automatic Wakeup Mode */
-#define  CAN_MCR_ABOM                        ((uint16_t)0x0040)            /*!< Automatic Bus-Off Management */
-#define  CAN_MCR_TTCM                        ((uint16_t)0x0080)            /*!< Time Triggered Communication Mode */
-#define  CAN_MCR_RESET                       ((uint16_t)0x8000)            /*!< CAN software master reset */
+#define  CAN_MCR_INRQ                        ((uint32_t)0x00001)           /*!< Initialization Request */
+#define  CAN_MCR_SLEEP                       ((uint32_t)0x00002)           /*!< Sleep Mode Request */
+#define  CAN_MCR_TXFP                        ((uint32_t)0x00004)           /*!< Transmit FIFO Priority */
+#define  CAN_MCR_RFLM                        ((uint32_t)0x00008)           /*!< Receive FIFO Locked Mode */
+#define  CAN_MCR_NART                        ((uint32_t)0x00010)           /*!< No Automatic Retransmission */
+#define  CAN_MCR_AWUM                        ((uint32_t)0x00020)           /*!< Automatic Wakeup Mode */
+#define  CAN_MCR_ABOM                        ((uint32_t)0x00040)           /*!< Automatic Bus-Off Management */
+#define  CAN_MCR_TTCM                        ((uint32_t)0x00080)           /*!< Time Triggered Communication Mode */
+#define  CAN_MCR_RESET                       ((uint32_t)0x08000)           /*!< CAN software master reset */
+#define  CAN_MCR_DBF                         ((uint32_t)0x10000)           /*!< CAN software master reset */
 
 /*******************  Bit definition for CAN_MSR register  ********************/
 #define  CAN_MSR_INAK                        ((uint16_t)0x0001)            /*!< Initialization Acknowledge */
