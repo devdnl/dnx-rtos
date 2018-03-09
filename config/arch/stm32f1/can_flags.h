@@ -43,7 +43,7 @@ this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > CAN",
 /*--
 this:AddWidget("Checkbox", "Debug freeze")
 --*/
-#define __CAN_CFG_DEBUG_FREEZE__ _NO_
+#define __CAN_CFG_DEBUG_FREEZE__ _YES_
 
 #endif /* _CAN_FLAGS_H_ */
 /*==============================================================================

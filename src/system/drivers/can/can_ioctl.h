@@ -103,11 +103,57 @@ extern "C" {
     //...
     @endcode
  */
-#define IOCTL_CAN__EXAMPLE     _IO(CAN, 0x00)
+#define IOCTL_CAN__CONFIGURE            _IOW(CAN, 0x00, const CAN_config_t*)
+
+#define IOCTL_CAN__SET_FILTER           _IOW(CAN, 0x01, const CAN_filter_t*)
+
+#define IOCTL_CAN__SET_MODE             _IOW(CAN, 0x02, const CAN_mode_t*)
+
+#define IOCTL_CAN__SET_SEND_TIMEOUT     _IOW(CAN, 0x03, const u32_t*)
+
+#define IOCTL_CAN__SET_RECV_TIMEOUT     _IOW(CAN, 0x04, const u32_t*)
+
+#define IOCTL_CAN__SEND_MSG             _IOW(CAN, 0x05, const CAN_msg_t*)
+
+#define IOCTL_CAN__RECV_MSG             _IOR(CAN, 0x06, CAN_msg_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef enum {
+        CAN_MODE__INIT,
+        CAN_MODE__NORMAL,
+        CAN_MODE__SLEEP,
+} CAN_mode_t;
+
+typedef struct {
+        u32_t number;
+        u32_t ID1;
+        u32_t ID2_mask;
+        bool  mask;
+} CAN_filter_t;
+
+typedef struct {
+        bool  loopback;
+        bool  silent;
+        bool  time_triggered_communication;
+        bool  auto_bus_off;
+        bool  auto_wake_up;
+        bool  auto_retransmission;
+        u32_t SJW;
+        u32_t TS1;
+        u32_t TS2;
+        u32_t prescaler;
+} CAN_config_t;
+
+typedef struct {
+        u32_t ID;
+        bool  extended_ID;
+        bool  remote_tranmission;
+        u32_t data_length;
+        u8_t  data[8];
+        u32_t timeout_ms;
+} CAN_msg_t;
 
 /*==============================================================================
   Exported objects
