@@ -104,7 +104,7 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor)
                         CANM_t *hdl = *device_handle;
 
                         hdl->recv_timeout = MAX_DELAY_MS;
-                        hdl->send_timeout = 10;
+                        hdl->send_timeout = 0;
 
                         err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->config_mtx);
                         if (err) {
@@ -688,12 +688,13 @@ static int set_filter(CANM_t *hdl, const CAN_filter_t *filter)
 //==============================================================================
 static int send_msg(CANM_t *hdl, const CAN_msg_t *msg)
 {
-        int  err  = ETIME;
-        bool loop = true;
+        int   err     = ETIME;
+        bool  loop    = true;
+        u32_t timeout = max(1, msg->timeout_ms);
 
         u32_t tref = sys_get_uptime_ms();
 
-        while (loop && !sys_time_is_expired(tref, msg->timeout_ms)) {
+        while (loop && !sys_time_is_expired(tref, timeout)) {
 
                 err = ETIME;
 
@@ -730,7 +731,7 @@ static int send_msg(CANM_t *hdl, const CAN_msg_t *msg)
                                         SET_BIT(mbox->TIR, CAN_TI0R_TXRQ);
 
                                         int erri = EIO;
-                                        err = sys_queue_receive(hdl->txrdy_q[i], &erri, msg->timeout_ms);
+                                        err = sys_queue_receive(hdl->txrdy_q[i], &erri, timeout);
                                         if (!err) {
                                                 err = erri;
 
