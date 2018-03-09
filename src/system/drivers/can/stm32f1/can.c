@@ -243,20 +243,30 @@ API_MOD_WRITE(CAN,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
+        UNUSED_ARG1(fpos);
+
         CANM_t *hdl = device_handle;
 
         int err = EINVAL;
 
-        if (count == sizeof(CAN_msg_t)) {
-                CAN_msg_t msg;
-                memcpy(&msg, src, sizeof(CAN_msg_t));
+        if ((count % sizeof(CAN_msg_t)) == 0) {
 
-                msg.timeout_ms = fattr.non_blocking_wr ? 0 : hdl->send_timeout;
+                while (count >= sizeof(CAN_msg_t)) {
 
-                err = send_msg(hdl, &msg);
+                        CAN_msg_t msg;
+                        memcpy(&msg, src, sizeof(CAN_msg_t));
 
-                if (!err) {
-                        *wrcnt = count;
+                        msg.timeout_ms = fattr.non_blocking_wr ? 0 : hdl->send_timeout;
+
+                        err = send_msg(hdl, &msg);
+
+                        if (!err) {
+                                *wrcnt += sizeof(CAN_msg_t);
+                                src    += sizeof(CAN_msg_t);
+                                count  -= sizeof(CAN_msg_t);
+                        } else {
+                                break;
+                        }
                 }
         }
 
@@ -285,21 +295,30 @@ API_MOD_READ(CAN,
              size_t          *rdcnt,
              struct vfs_fattr fattr)
 {
+        UNUSED_ARG1(fpos);
+
         CANM_t *hdl = device_handle;
 
         int err = EINVAL;
 
-        if (count == sizeof(CAN_msg_t)) {
-                CAN_msg_t msg;
+        if ((count % sizeof(CAN_msg_t)) == 0) {
 
-                msg.timeout_ms = fattr.non_blocking_rd ? 0 : hdl->recv_timeout;
+                while (count >= sizeof(CAN_msg_t)) {
 
-                err = recv_msg(hdl, &msg);
+                        CAN_msg_t msg;
+                        msg.timeout_ms = fattr.non_blocking_rd ? 0 : hdl->recv_timeout;
 
-                if (!err) {
-                        memcpy(dst, &msg, sizeof(CAN_msg_t));
+                        err = recv_msg(hdl, &msg);
 
-                        *rdcnt = count;
+                        if (!err) {
+                                memcpy(dst, &msg, sizeof(CAN_msg_t));
+
+                                *rdcnt += sizeof(CAN_msg_t);
+                                dst    += sizeof(CAN_msg_t);
+                                count  -= sizeof(CAN_msg_t);
+                        } else {
+                                break;
+                        }
                 }
         }
 
@@ -672,8 +691,6 @@ static int send_msg(CANM_t *hdl, const CAN_msg_t *msg)
         int  err  = ETIME;
         bool loop = true;
 
-        int i = 0;
-
         u32_t tref = sys_get_uptime_ms();
 
         while (loop && !sys_time_is_expired(tref, msg->timeout_ms)) {
@@ -732,7 +749,9 @@ static int send_msg(CANM_t *hdl, const CAN_msg_t *msg)
                         }
                 }
 
-                sys_sleep_ms(1);
+                if (loop) {
+                        sys_sleep_ms(1);
+                }
         }
 
         return err;
