@@ -46,14 +46,12 @@ Brief   CAN driver
   Local object types
 ==============================================================================*/
 typedef struct {
-        int      major;
         u32_t    send_timeout;
         u32_t    recv_timeout;
         mutex_t *config_mtx;
         mutex_t *txmbox_mtx[TX_MAILBOXES];
         mutex_t *txrdy_q[TX_MAILBOXES];
         queue_t *rxqueue_q;
-
 } CANM_t;
 
 /*==============================================================================
@@ -96,15 +94,15 @@ static CANM_t *CANM;
 //==============================================================================
 API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor)
 {
-        int err = EFAULT;
+        int err = EINVAL;
 
         if (major == 0 && minor == 0) {
+
                 err = sys_zalloc(sizeof(CANM_t), device_handle);
                 if (!err) {
 
                         CANM_t *hdl = *device_handle;
 
-                        hdl->major        = major;
                         hdl->recv_timeout = MAX_DELAY_MS;
                         hdl->send_timeout = 0;
 
@@ -139,12 +137,15 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor)
                         SET_BIT(CAN1->MCR, CAN_MCR_RESET);
                         CLEAR_BIT(CAN1->MCR, CAN_MCR_RESET);
 
+                        NVIC_ClearPendingIRQ(USB_HP_CAN1_TX_IRQn);
                         NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
                         NVIC_SetPriority(USB_HP_CAN1_TX_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
+                        NVIC_ClearPendingIRQ(USB_LP_CAN1_RX0_IRQn);
                         NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
                         NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
+                        NVIC_ClearPendingIRQ(CAN1_RX1_IRQn);
                         NVIC_EnableIRQ(CAN1_RX1_IRQn);
                         NVIC_SetPriority(CAN1_RX1_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
@@ -425,6 +426,12 @@ API_MOD_STAT(CAN, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static void relese_resources(CANM_t *hdl)
 {
+        NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
+        NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
+        NVIC_DisableIRQ(CAN1_RX1_IRQn);
+
+        CLEAR_BIT(RCC->APB1ENR, RCC_APB1ENR_CAN1EN);
+
         if (hdl->config_mtx) {
                 sys_mutex_destroy(hdl->config_mtx);
         }
