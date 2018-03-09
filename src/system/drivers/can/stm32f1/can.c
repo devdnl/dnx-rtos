@@ -50,7 +50,7 @@ typedef struct {
         u32_t    recv_timeout;
         mutex_t *config_mtx;
         mutex_t *txmbox_mtx[TX_MAILBOXES];
-        mutex_t *txrdy_q[TX_MAILBOXES];
+        queue_t *txrdy_q[TX_MAILBOXES];
         queue_t *rxqueue_q;
 } CANM_t;
 
@@ -409,8 +409,10 @@ API_MOD_STAT(CAN, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         CANM_t *hdl = device_handle;
 
-        device_stat->st_size = sys_queue_get_number_of_items(hdl->rxqueue_q)
-                             * sizeof(CAN_msg_t);
+        size_t items = 0;
+        sys_queue_get_number_of_items(hdl->rxqueue_q, &items);
+
+        device_stat->st_size = items * sizeof(CAN_msg_t);
 
         return ESUCC;
 }
@@ -670,7 +672,7 @@ static int send_msg(CANM_t *hdl, const CAN_msg_t *msg)
                         err = sys_mutex_trylock(hdl->txmbox_mtx[i]);
                         if (!err) {
 
-                                CAN_TxMailBox_t *mbox = CAN1->sTxMailBox[i];
+                                CAN_TxMailBox_t *mbox = &CAN1->sTxMailBox[i];
 
                                 mbox->TIR = CAN_TI0R_RTR * msg->remote_tranmission;
 
