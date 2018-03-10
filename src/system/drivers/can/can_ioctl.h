@@ -29,14 +29,14 @@ Brief   CAN driver
 @defgroup drv-can CAN Driver
 
 \section drv-can-desc Description
-Driver handles ...
+Driver handles CAN controller peripheral existing in microcontroller.
 
 \section drv-can-sup-arch Supported architectures
 \li stm32f1
 
 \section drv-can-ddesc Details
 \subsection drv-can-ddesc-num Meaning of major and minor numbers
-\todo Meaning of major and minor numbers
+Only CAN1 is handled.
 
 \subsubsection drv-can-ddesc-numres Numeration restrictions
 \todo Numeration restrictions

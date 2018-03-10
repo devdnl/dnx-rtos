@@ -48,6 +48,8 @@ Brief   CAN driver
 typedef struct {
         u32_t    send_timeout;
         u32_t    recv_timeout;
+        u32_t    txpend_ctr;
+        u32_t    rxpend_ctr;
         mutex_t *config_mtx;
         mutex_t *txmbox_mtx[TX_MAILBOXES];
         queue_t *txrdy_q[TX_MAILBOXES];
@@ -149,6 +151,10 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor)
                         NVIC_EnableIRQ(CAN1_RX1_IRQn);
                         NVIC_SetPriority(CAN1_RX1_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
+                        NVIC_ClearPendingIRQ(CAN1_SCE_IRQn);
+                        NVIC_EnableIRQ(CAN1_SCE_IRQn);
+                        NVIC_SetPriority(CAN1_SCE_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+
                         err = set_init_mode(hdl);
                         if (err) {
                                 goto finish;
@@ -178,10 +184,38 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor)
 //==============================================================================
 API_MOD_RELEASE(CAN, void *device_handle)
 {
-        // TODO module state check
-
         CANM_t *hdl = device_handle;
 
+        // lock access to module
+        CANM = NULL;
+        sys_sleep_ms(100);
+
+        // finish TX pending transfers
+        int err = ECANCELED;
+
+        for (u32_t n = 0; n < hdl->txpend_ctr; n++) {
+
+                for (int i = 0; i < TX_MAILBOXES; i++) {
+                        sys_queue_send(hdl->txrdy_q[i], &err, 0);
+                }
+
+                sys_sleep_ms(10);
+        }
+
+        // finish RX pending queue
+        CAN_FIFOMailBox_t mbox;
+        memset(&mbox, 0, sizeof(CAN_FIFOMailBox_t));
+
+        for (u32_t n = 0; n < hdl->rxpend_ctr; n++) {
+                sys_queue_send(hdl->rxqueue_q, &mbox, 0);
+        }
+
+        // wait for finish all transfers
+        while ((hdl->txpend_ctr > 0) || (hdl->rxpend_ctr > 0)) {
+                sys_sleep_ms(10);
+        }
+
+        // release all resources
         relese_resources(hdl);
 
         return ESUCC;
@@ -201,7 +235,7 @@ API_MOD_OPEN(CAN, void *device_handle, u32_t flags)
 {
         UNUSED_ARG2(device_handle, flags);
 
-        return ESUCC;
+        return CANM ? ESUCC : ENXIO;
 }
 
 //==============================================================================
@@ -247,6 +281,10 @@ API_MOD_WRITE(CAN,
 
         CANM_t *hdl = device_handle;
 
+        if (CANM == NULL) {
+                return ENXIO;
+        }
+
         int err = EINVAL;
 
         if ((count % sizeof(CAN_msg_t)) == 0) {
@@ -265,6 +303,10 @@ API_MOD_WRITE(CAN,
                                 src    += sizeof(CAN_msg_t);
                                 count  -= sizeof(CAN_msg_t);
                         } else {
+                                if (err == ETIME) {
+                                        err = ESUCC;
+                                }
+
                                 break;
                         }
                 }
@@ -299,6 +341,10 @@ API_MOD_READ(CAN,
 
         CANM_t *hdl = device_handle;
 
+        if (CANM == NULL) {
+                return ENXIO;
+        }
+
         int err = EINVAL;
 
         if ((count % sizeof(CAN_msg_t)) == 0) {
@@ -317,6 +363,10 @@ API_MOD_READ(CAN,
                                 dst    += sizeof(CAN_msg_t);
                                 count  -= sizeof(CAN_msg_t);
                         } else {
+                                if (err == ETIME) {
+                                        err = ESUCC;
+                                }
+
                                 break;
                         }
                 }
@@ -339,6 +389,10 @@ API_MOD_READ(CAN,
 API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
 {
         CANM_t *hdl = device_handle;
+
+        if (CANM == NULL) {
+                return ENXIO;
+        }
 
         int err = EINVAL;
 
@@ -439,11 +493,9 @@ API_MOD_STAT(CAN, void *device_handle, struct vfs_dev_stat *device_stat)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Release resources allocated by module.
  *
- * @param  ?
- *
- * @return ?
+ * @param  hdl          module instance
  */
 //==============================================================================
 static void relese_resources(CANM_t *hdl)
@@ -451,6 +503,13 @@ static void relese_resources(CANM_t *hdl)
         NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
         NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
         NVIC_DisableIRQ(CAN1_RX1_IRQn);
+        NVIC_DisableIRQ(CAN1_SCE_IRQn);
+
+        SET_BIT(CAN1->MCR, CAN_MCR_RESET);
+        CLEAR_BIT(CAN1->MCR, CAN_MCR_RESET);
+
+        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_CAN1RST);
+        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_CAN1RST);
 
         CLEAR_BIT(RCC->APB1ENR, RCC_APB1ENR_CAN1EN);
 
@@ -477,11 +536,12 @@ static void relese_resources(CANM_t *hdl)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Configure peripheral.
  *
- * @param  ?
+ * @param  hdl          module instance
+ * @param  cfg          configuration
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 static int configure(CANM_t *hdl, const CAN_config_t *cfg)
@@ -549,11 +609,11 @@ static int configure(CANM_t *hdl, const CAN_config_t *cfg)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Set CAN controller to initialization mode.
  *
- * @param  ?
+ * @param  hdl          module instance
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 static int set_init_mode(CANM_t *hdl)
@@ -582,11 +642,11 @@ static int set_init_mode(CANM_t *hdl)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Set CAN controller to normal mode (active).
  *
- * @param  ?
+ * @param  hdl          module instance
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 static int set_normal_mode(CANM_t *hdl)
@@ -615,11 +675,11 @@ static int set_normal_mode(CANM_t *hdl)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Set CAN controller to sleep mode.
  *
- * @param  ?
+ * @param  hdl          module instance
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 static int set_sleep_mode(CANM_t *hdl)
@@ -635,11 +695,12 @@ static int set_sleep_mode(CANM_t *hdl)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Set acceptance filter.
  *
- * @param  ?
+ * @param  hdl          module instance
+ * @param  filter       filter configuration
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 static int set_filter(CANM_t *hdl, const CAN_filter_t *filter)
@@ -679,26 +740,31 @@ static int set_filter(CANM_t *hdl, const CAN_filter_t *filter)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function send CAN message.
  *
- * @param  ?
+ * @param  hdl          module instance
+ * @param  msg          message to send
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 static int send_msg(CANM_t *hdl, const CAN_msg_t *msg)
 {
+        sys_context_switch_lock();
+        hdl->txpend_ctr++;
+        sys_context_switch_unlock();
+
         int   err     = ETIME;
         bool  loop    = true;
         u32_t timeout = max(1, msg->timeout_ms);
 
         u32_t tref = sys_get_uptime_ms();
 
-        while (loop && !sys_time_is_expired(tref, timeout)) {
+        while (CANM && loop && !sys_time_is_expired(tref, timeout)) {
 
                 err = ETIME;
 
-                for (int i = 0; loop && (i < TX_MAILBOXES); i++) {
+                for (int i = 0; CANM && loop && (i < TX_MAILBOXES); i++) {
 
                         err = sys_mutex_trylock(hdl->txmbox_mtx[i]);
                         if (!err) {
@@ -755,20 +821,29 @@ static int send_msg(CANM_t *hdl, const CAN_msg_t *msg)
                 }
         }
 
+        sys_context_switch_lock();
+        hdl->txpend_ctr--;
+        sys_context_switch_unlock();
+
         return err;
 }
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Receive message.
  *
- * @param  ?
+ * @param  hdl          module instance
+ * @param  msg          message container to receive to
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 static int recv_msg(CANM_t *hdl, CAN_msg_t *msg)
 {
+        sys_context_switch_lock();
+        hdl->rxpend_ctr++;
+        sys_context_switch_unlock();
+
         CAN_FIFOMailBox_t mbox;
 
         int err = sys_queue_receive(hdl->rxqueue_q, &mbox, msg->timeout_ms);
@@ -782,27 +857,27 @@ static int recv_msg(CANM_t *hdl, CAN_msg_t *msg)
                 }
 
                 msg->remote_transmission = mbox.RIR & CAN_RI0R_RTR;
-                msg->data_length        = mbox.RDTR & CAN_RDT0R_DLC;
-                msg->data[0]            = mbox.RDLR >> 0;
-                msg->data[1]            = mbox.RDLR >> 8;
-                msg->data[2]            = mbox.RDLR >> 16;
-                msg->data[3]            = mbox.RDLR >> 24;
-                msg->data[4]            = mbox.RDHR >> 0;
-                msg->data[5]            = mbox.RDHR >> 8;
-                msg->data[6]            = mbox.RDHR >> 16;
-                msg->data[7]            = mbox.RDHR >> 24;
+                msg->data_length         = mbox.RDTR & CAN_RDT0R_DLC;
+                msg->data[0]             = mbox.RDLR >> 0;
+                msg->data[1]             = mbox.RDLR >> 8;
+                msg->data[2]             = mbox.RDLR >> 16;
+                msg->data[3]             = mbox.RDLR >> 24;
+                msg->data[4]             = mbox.RDHR >> 0;
+                msg->data[5]             = mbox.RDHR >> 8;
+                msg->data[6]             = mbox.RDHR >> 16;
+                msg->data[7]             = mbox.RDHR >> 24;
         }
+
+        sys_context_switch_lock();
+        hdl->rxpend_ctr--;
+        sys_context_switch_unlock();
 
         return err;
 }
 
 //==============================================================================
 /**
- * @brief
- *
- * @param  ?
- *
- * @return ?
+ * @brief CAN TX ready IRQ.
  */
 //==============================================================================
 void USB_HP_CAN1_TX_IRQHandler(void)
@@ -853,11 +928,7 @@ void USB_HP_CAN1_TX_IRQHandler(void)
 
 //==============================================================================
 /**
- * @brief
- *
- * @param  ?
- *
- * @return ?
+ * @brief CAN FIFO0 Rx IRQ.
  */
 //==============================================================================
 void USB_LP_CAN1_RX0_IRQHandler(void)
@@ -873,11 +944,7 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
 
 //==============================================================================
 /**
- * @brief
- *
- * @param  ?
- *
- * @return ?
+ * @brief CAN FIFO1 Rx IRQ.
  */
 //==============================================================================
 void CAN1_RX1_IRQHandler(void)
@@ -893,11 +960,7 @@ void CAN1_RX1_IRQHandler(void)
 
 //==============================================================================
 /**
- * @brief
- *
- * @param  ?
- *
- * @return ?
+ * @brief Bus change IRQ.
  */
 //==============================================================================
 void CAN1_SCE_IRQHandler(void)
