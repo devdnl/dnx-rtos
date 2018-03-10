@@ -62,6 +62,7 @@ To configure CAN controller one should do following steps:
 
 Example code
 @code
+#include <stdio.h>
 #include <sys/ioctl.h>
 
 //...
@@ -120,6 +121,8 @@ if (f) {
         // configuration done
         ...
 
+        fclose(f);
+
 } else {
         perror("CAN");
 }
@@ -129,10 +132,139 @@ if (f) {
 
 
 \subsection drv-can-ddesc-write Data write
-\todo Data write
+There are two possible methods for data write operation: by using fwrite() and
+by using ioctl() functions. By using fwrite() function is possibility to send
+an array of CAN messages.
+
+Example code using fwrite() function
+@code
+#define <stdio.h>
+#define <sys/ioctl.h>
+
+// ...
+
+FILE *f = fopen("/dev/can", "r+");
+if (f) {
+        CAN_msg_t msg;
+        msg.ID = 0x1000;
+        msg.extended_ID = true;
+        msg.data[0] = 0xFF;
+        msg.data[1] = 0x02;
+        msg.data_length = 2;
+        msg.remote_transmission = false;
+        msg.timeout_ms = 2000;
+
+        if (fwrite(&msg, sizeof(msg), 1, f) == 1) {
+
+                // success write
+
+                // ...
+
+        } else {
+                perror("Write error");
+        }
+
+        fclose(f);
+}
+
+// ...
+@endcode
+
+Example code using ioctl() function
+@code
+#define <stdio.h>
+#define <sys/ioctl.h>
+
+// ...
+
+FILE *f = fopen("/dev/can", "r+");
+if (f) {
+        CAN_msg_t msg;
+        msg.ID = 0x1000;
+        msg.extended_ID = true;
+        msg.data[0] = 0xFF;
+        msg.data[1] = 0x02;
+        msg.data_length = 2;
+        msg.remote_transmission = false;
+        msg.timeout_ms = 2000;
+
+        if (ioctl(fileno(f), IOCTL_CAN__SEND_MSG, &msg) == 0) {
+
+                // success write
+
+                // ...
+
+        } else {
+                perror("Write error");
+        }
+
+        fclose(f);
+}
+
+// ...
+@endcode
+
 
 \subsection drv-can-ddesc-read Data read
-\todo Data read
+There are two possible methods for data read operation: by using fread() and
+by using ioctl() functions. By using fread() function is possibility to read
+an array of CAN messages.
+
+Example code using fread() function
+@code
+#define <stdio.h>
+#define <sys/ioctl.h>
+
+// ...
+
+FILE *f = fopen("/dev/can", "r+");
+if (f) {
+        CAN_msg_t msg;
+        msg.timeout_ms = 2000;
+
+        if (fread(&msg, sizeof(msg), 1, f) == 1) {
+
+                // success read
+
+                // ...
+
+        } else {
+                perror("Read error");
+        }
+
+        fclose(f);
+}
+
+// ...
+@endcode
+
+Example code using ioctl() function
+@code
+#define <stdio.h>
+#define <sys/ioctl.h>
+
+// ...
+
+FILE *f = fopen("/dev/can", "r+");
+if (f) {
+        CAN_msg_t msg;
+        msg.timeout_ms = 2000;
+
+        if (ioctl(fileno(f), IOCTL_CAN__RECV_MSG, &msg) == 0) {
+
+                // success read
+
+                // ...
+
+        } else {
+                perror("Read error");
+        }
+
+        fclose(f);
+}
+
+// ...
+@endcode
 
 \subsection drv-can-ddesc-baud Baud rate calculation
 To calculate CAN baud rate following equation should be applied:
