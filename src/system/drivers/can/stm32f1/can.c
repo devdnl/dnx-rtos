@@ -571,7 +571,7 @@ static int configure(CANM_t *hdl, const CAN_config_t *cfg)
                                  | CAN_IER_FMPIE0
                                  | CAN_IER_TMEIE);
 
-                if (cfg->auto_bus_off) {
+                if (cfg->auto_bus_off_management) {
                         SET_BIT(CAN1->MCR, CAN_MCR_ABOM);
                 } else {
                         CLEAR_BIT(CAN1->MCR, CAN_MCR_ABOM);
@@ -589,7 +589,7 @@ static int configure(CANM_t *hdl, const CAN_config_t *cfg)
                         CLEAR_BIT(CAN1->MCR, CAN_MCR_AWUM);
                 }
 
-                if (cfg->time_triggered_communication) {
+                if (cfg->time_triggered_comm) {
                         SET_BIT(CAN1->MCR, CAN_MCR_TTCM);
                 } else {
                         CLEAR_BIT(CAN1->MCR, CAN_MCR_TTCM);
@@ -673,7 +673,7 @@ static int set_normal_mode(CANM_t *hdl)
                 u32_t tref = sys_get_uptime_ms();
 
                 CLEAR_BIT(CAN1->FMR, CAN_FMR_FINIT);
-                CLEAR_BIT(CAN1->MCR, CAN_MCR_INRQ);
+                CLEAR_BIT(CAN1->MCR, CAN_MCR_INRQ | CAN_MCR_SLEEP);
 
                 while (not sys_time_is_expired(tref, INIT_TIMEOUT)) {
                         if (!(CAN1->MSR & CAN_MSR_INAK)) {
