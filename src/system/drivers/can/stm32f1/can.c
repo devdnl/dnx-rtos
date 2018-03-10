@@ -42,6 +42,21 @@ Brief   CAN driver
 #define INIT_TIMEOUT    1000
 #define MTX_TIMEOUT     1000
 
+#if defined(STM32F10X_LD) || defined(STM32F10X_MD) || defined(STM32F10X_HD)\
+ || defined(STM32F10X_XL)
+#define CAN1_TX_IRQN            USB_HP_CAN1_TX_IRQn
+#define CAN1_RX0_IRQN           USB_LP_CAN1_RX0_IRQn
+#define CAN1_TX_IRQHANDLER      USB_HP_CAN1_TX_IRQHandler
+#define CAN1_RX0_IRQHANDLER     USB_LP_CAN1_RX0_IRQHandler
+#endif
+
+#ifdef STM32F10X_CL
+#define CAN1_TX_IRQN            CAN1_TX_IRQn
+#define CAN1_RX0_IRQN           CAN1_RX0_IRQn
+#define CAN1_TX_IRQHANDLER      CAN1_TX_IRQHandler
+#define CAN1_RX0_IRQHANDLER     CAN1_RX0_IRQHandler
+#endif
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -139,13 +154,13 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor)
                         SET_BIT(CAN1->MCR, CAN_MCR_RESET);
                         CLEAR_BIT(CAN1->MCR, CAN_MCR_RESET);
 
-                        NVIC_ClearPendingIRQ(USB_HP_CAN1_TX_IRQn);
-                        NVIC_EnableIRQ(USB_HP_CAN1_TX_IRQn);
-                        NVIC_SetPriority(USB_HP_CAN1_TX_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                        NVIC_ClearPendingIRQ(CAN1_TX_IRQN);
+                        NVIC_EnableIRQ(CAN1_TX_IRQN);
+                        NVIC_SetPriority(CAN1_TX_IRQN, _CPU_IRQ_SAFE_PRIORITY_);
 
-                        NVIC_ClearPendingIRQ(USB_LP_CAN1_RX0_IRQn);
-                        NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
-                        NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                        NVIC_ClearPendingIRQ(CAN1_RX0_IRQN);
+                        NVIC_EnableIRQ(CAN1_RX0_IRQN);
+                        NVIC_SetPriority(CAN1_RX0_IRQN, _CPU_IRQ_SAFE_PRIORITY_);
 
                         NVIC_ClearPendingIRQ(CAN1_RX1_IRQn);
                         NVIC_EnableIRQ(CAN1_RX1_IRQn);
@@ -500,8 +515,8 @@ API_MOD_STAT(CAN, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static void relese_resources(CANM_t *hdl)
 {
-        NVIC_DisableIRQ(USB_HP_CAN1_TX_IRQn);
-        NVIC_DisableIRQ(USB_LP_CAN1_RX0_IRQn);
+        NVIC_DisableIRQ(CAN1_TX_IRQN);
+        NVIC_DisableIRQ(CAN1_RX0_IRQN);
         NVIC_DisableIRQ(CAN1_RX1_IRQn);
         NVIC_DisableIRQ(CAN1_SCE_IRQn);
 
@@ -880,7 +895,7 @@ static int recv_msg(CANM_t *hdl, CAN_msg_t *msg)
  * @brief CAN TX ready IRQ.
  */
 //==============================================================================
-void USB_HP_CAN1_TX_IRQHandler(void)
+void CAN1_TX_IRQHANDLER(void)
 {
         bool yield = false;
 
@@ -931,7 +946,7 @@ void USB_HP_CAN1_TX_IRQHandler(void)
  * @brief CAN FIFO0 Rx IRQ.
  */
 //==============================================================================
-void USB_LP_CAN1_RX0_IRQHandler(void)
+void CAN1_RX0_IRQHANDLER(void)
 {
         bool yield = false;
 
