@@ -86,6 +86,10 @@
 				["key"]="__ENABLE_DCI__";
 				["value"]="_NO_";
 			};
+			[22.000000]={
+				["key"]="__ENABLE_CAN__";
+				["value"]="_NO_";
+			};
 		};
 		["arch/efr32/cpu_flags.h"]={
 			[1.000000]={
@@ -2795,6 +2799,12 @@
 			[56.000000]={
 				["key"]="__AFM_EXTI15_PORT__";
 				["value"]="0";
+			};
+		};
+		["arch/stm32f1/can_flags.h"]={
+			[1.000000]={
+				["key"]="__CAN_CFG_DEBUG_FREEZE__";
+				["value"]="_YES_";
 			};
 		};
 		["arch/stm32f1/clk_flags.h"]={
@@ -9550,7 +9560,7 @@
 			};
 			[8.000000]={
 				["key"]="__OS_TASK_MAX_SYSTEM_THREADS__";
-				["value"]="5";
+				["value"]="6";
 			};
 			[9.000000]={
 				["key"]="__OS_TASK_KWORKER_IO_THREADS__";
