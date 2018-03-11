@@ -3,6 +3,7 @@ dnx RTOS 2.1.7 Dingo
 New Features, Improvements:
 - Created romfs - transport local files to build image
 - SPI: added separated transfers for ioctl() request
+- CAN: added new driver for stm32f1 architecture
 
 Fixed Bugs:
 - 
