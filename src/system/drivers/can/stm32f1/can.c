@@ -755,12 +755,12 @@ static int set_filter(CANM_t *hdl, const CAN_filter_t *filter)
 
                 // set ID and mask
                 if (filter->extended_ID) {
-                        CAN1->sFilterRegister[filter->number].FR1 = filter->ID << 3;
-                        CAN1->sFilterRegister[filter->number].FR2 = filter->mask << 3;
+                        CAN1->sFilterRegister[filter->number].FR1 = (filter->ID << 3) | CAN_TI0R_IDE;
+                        CAN1->sFilterRegister[filter->number].FR2 = (filter->mask << 3) | CAN_TI0R_IDE;
 
                 } else {
-                        CAN1->sFilterRegister[filter->number].FR1 = filter->ID << 21;
-                        CAN1->sFilterRegister[filter->number].FR2 = filter->mask << 21;
+                        CAN1->sFilterRegister[filter->number].FR1 = (filter->ID << 21);
+                        CAN1->sFilterRegister[filter->number].FR2 = (filter->mask << 21);
                 }
 
                 SET_BIT(CAN1->FA1R, CAN_FA1R_FACT0 << filter->number);
