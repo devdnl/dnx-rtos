@@ -90,9 +90,9 @@ if (f) {
         // filter 0 setup
         CAN_filter_t filter;
         filter.number = 0;
-        filter.ID1 = 0xFF10;
-        filter.ID2_mask = 0;
-        filter.mask = false;
+        filter.ID = 0xFF10;
+        filter.mask = 0;
+        filter.extended_ID = false;
 
         if (ioctl(fileno(f), IOCTL_CAN__SET_FILTER, &filter) != 0) {
                 perror("CAN filter error");
@@ -101,9 +101,9 @@ if (f) {
 
         // filter 1 setup
         filter.number = 1;
-        filter.ID1 = 0xFF20;
-        filter.ID2_mask = 0xFFF0;
-        filter.mask = mask;
+        filter.ID = 0xFF20;
+        filter.mask = 0xFFF0;
+        filter.extended_ID = false;
 
         if (ioctl(fileno(f), IOCTL_CAN__SET_FILTER, &filter) != 0) {
                 perror("CAN filter error");
@@ -294,49 +294,63 @@ extern "C" {
  *  @param  [WR] const @ref CAN_config_t * configuration container
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_CAN__CONFIGURE            _IOW(CAN, 0x00, const CAN_config_t*)
+#define IOCTL_CAN__CONFIGURE                    _IOW(CAN, 0x00, const CAN_config_t*)
 
 /**
  *  @brief  Acceptance filter setup.
  *  @param  [WR] const @ref CAN_filter_t * filter container
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_CAN__SET_FILTER           _IOW(CAN, 0x01, const CAN_filter_t*)
+#define IOCTL_CAN__SET_FILTER                   _IOW(CAN, 0x01, const CAN_filter_t*)
+
+/**
+ *  @brief  Disable selected filter.
+ *  @param  [WR] const @ref u32_t * filter number
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__DISABLE_FILTER               _IOW(CAN, 0x02, const u32_t*)
+
+/**
+ *  @brief  Get total number of filter slots.
+ *  @param  [WR] const @ref u32_t * number of filters
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__GET_NUMBER_OF_FILTERS        _IOR(CAN, 0x03, u32_t*)
 
 /**
  *  @brief  CAN controller mode selection.
  *  @param  [WR] const @ref CAN_mode_t * can mode
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_CAN__SET_MODE             _IOW(CAN, 0x02, const CAN_mode_t*)
+#define IOCTL_CAN__SET_MODE                     _IOW(CAN, 0x04, const CAN_mode_t*)
 
 /**
  *  @brief  Set send timeout in milliseconds. Used in write() family function.
  *  @param  [WR] const @ref u32_t * timeout in milliseconds
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_CAN__SET_SEND_TIMEOUT     _IOW(CAN, 0x03, const u32_t*)
+#define IOCTL_CAN__SET_SEND_TIMEOUT             _IOW(CAN, 0x05, const u32_t*)
 
 /**
  *  @brief  Set receive timeout in milliseconds. Used in read() family function.
  *  @param  [WR] const @ref u32_t * timeout in milliseconds
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_CAN__SET_RECV_TIMEOUT     _IOW(CAN, 0x04, const u32_t*)
+#define IOCTL_CAN__SET_RECV_TIMEOUT             _IOW(CAN, 0x06, const u32_t*)
 
 /**
  *  @brief  Send CAN message.
  *  @param  [WR] const @ref CAN_msg_t * CAN message source
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_CAN__SEND_MSG             _IOW(CAN, 0x05, const CAN_msg_t*)
+#define IOCTL_CAN__SEND_MSG                     _IOW(CAN, 0x07, const CAN_msg_t*)
 
 /**
  *  @brief  Receive CAN message.
  *  @param  [RD] @ref CAN_msg_t * CAN message destination
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_CAN__RECV_MSG             _IOR(CAN, 0x06, CAN_msg_t*)
+#define IOCTL_CAN__RECV_MSG                     _IOR(CAN, 0x08, CAN_msg_t*)
 
 /*==============================================================================
   Exported object types
@@ -355,9 +369,9 @@ typedef enum {
  */
 typedef struct {
         u32_t number;                   /*!< Filter number. */
-        u32_t ID1;                      /*!< Identifier 1. */
-        u32_t ID2_mask;                 /*!< Identifier 2 or mask. */
-        bool  mask;                     /*!< Filter is a mask (ID1 + mask). */
+        u32_t ID;                       /*!< Identifier. */
+        u32_t mask;                     /*!< Identifier mask. */
+        bool  extended_ID;              /*!< Extended identifier. */
 } CAN_filter_t;
 
 /**

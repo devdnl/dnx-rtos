@@ -41,6 +41,7 @@ Brief   CAN driver
 #define RX_FIFO_DEPTH   3
 #define INIT_TIMEOUT    1000
 #define MTX_TIMEOUT     1000
+#define FILTERS_COUNT   14
 
 #if defined(STM32F10X_LD) || defined(STM32F10X_MD) || defined(STM32F10X_HD)\
  || defined(STM32F10X_XL)
@@ -80,6 +81,7 @@ static int set_init_mode(CANM_t *hdl);
 static int set_normal_mode(CANM_t *hdl);
 static int set_sleep_mode(CANM_t *hdl);
 static int set_filter(CANM_t *hdl, const CAN_filter_t *filter);
+static int disable_filter(CANM_t *hdl, u32_t filter);
 static int send_msg(CANM_t *hdl, const CAN_msg_t *msg);
 static int recv_msg(CANM_t *hdl, CAN_msg_t *msg);
 
@@ -424,6 +426,19 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
                 }
                 break;
 
+        case IOCTL_CAN__DISABLE_FILTER:
+                if (arg) {
+                        err = disable_filter(hdl, *cast(u32_t*, arg));
+                }
+                break;
+
+        case IOCTL_CAN__GET_NUMBER_OF_FILTERS:
+                if (arg) {
+                        *cast(u32_t*, arg) = FILTERS_COUNT;
+                        err = ESUCC;
+                }
+                break;
+
         case IOCTL_CAN__SET_MODE:
                 if (arg) {
                         CAN_mode_t mode = *cast(CAN_mode_t*, arg);
@@ -720,20 +735,17 @@ static int set_sleep_mode(CANM_t *hdl)
 //==============================================================================
 static int set_filter(CANM_t *hdl, const CAN_filter_t *filter)
 {
-        if (filter->number >= 14) {
+        if (filter->number >= FILTERS_COUNT) {
                 return EINVAL;
         }
 
         int err = sys_mutex_lock(hdl->config_mtx, MTX_TIMEOUT);
         if (!err) {
-                u32_t CAN2SB = 14;
+                u32_t CAN2SB = FILTERS_COUNT;
                 CAN1->FMR = (CAN2SB << 24) | CAN_FMR_FINIT;
 
-                if (filter->mask) {
-                        CLEAR_BIT(CAN1->FM1R, CAN_FM1R_FBM0 << filter->number);
-                } else {
-                        SET_BIT(CAN1->FM1R, CAN_FM1R_FBM0 << filter->number);
-                }
+                // mask mode
+                CLEAR_BIT(CAN1->FM1R, CAN_FM1R_FBM0 << filter->number);
 
                 // 32b ID
                 SET_BIT(CAN1->FS1R, CAN_FS1R_FSC0 << filter->number);
@@ -742,12 +754,49 @@ static int set_filter(CANM_t *hdl, const CAN_filter_t *filter)
                 WRITE_REG(CAN1->FFA1R, 0xAAAAAAAA);
 
                 // set ID and mask
-                CAN1->sFilterRegister[filter->number].FR1 = filter->ID1;
-                CAN1->sFilterRegister[filter->number].FR2 = filter->ID2_mask;
+                if (filter->extended_ID) {
+                        CAN1->sFilterRegister[filter->number].FR1 = filter->ID << 3;
+                        CAN1->sFilterRegister[filter->number].FR2 = filter->mask << 3;
+
+                } else {
+                        CAN1->sFilterRegister[filter->number].FR1 = filter->ID << 21;
+                        CAN1->sFilterRegister[filter->number].FR2 = filter->mask << 21;
+                }
 
                 SET_BIT(CAN1->FA1R, CAN_FA1R_FACT0 << filter->number);
 
                 sys_mutex_unlock(hdl->config_mtx);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function disable selected filter number. To disable filter INIT mode
+ *         must be activated.
+ *
+ * @param  hdl          module instance
+ * @param  filter       filter number
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int disable_filter(CANM_t *hdl, u32_t filter)
+{
+        int err = EINVAL;
+
+        if (filter < FILTERS_COUNT) {
+
+                err = sys_mutex_lock(hdl->config_mtx, MTX_TIMEOUT);
+                if (!err) {
+                        u32_t CAN2SB = FILTERS_COUNT;
+                        CAN1->FMR = (CAN2SB << 24) | CAN_FMR_FINIT;
+
+                        CLEAR_BIT(CAN1->FA1R, CAN_FA1R_FACT0 << filter);
+
+                        sys_mutex_unlock(hdl->config_mtx);
+                }
         }
 
         return err;
