@@ -72,6 +72,7 @@ or
 \li \subpage page-drivers
 
 \section sec-drivers Drivers
+\li \subpage drv-can
 \li \subpage drv-sdio
 \li \subpage drv-dci
 \li \subpage drv-dma
