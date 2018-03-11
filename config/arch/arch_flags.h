@@ -587,9 +587,9 @@ __ENABLE_SDSPI__=_NO_
 #/*--
 # this:PutWidgets("TTY", "arch/noarch/tty_flags.h")
 #--*/
-#define __ENABLE_TTY__ _NO_
+#define __ENABLE_TTY__ _YES_
 #/*
-__ENABLE_TTY__=_NO_
+__ENABLE_TTY__=_YES_
 #*/
 
 #/*--
@@ -652,9 +652,9 @@ __ENABLE_DCI__=_NO_
 #     this:SetFlagValue("__ENABLE_CAN__", "_NO_")
 # end
 #--*/
-#define __ENABLE_CAN__ _YES_
+#define __ENABLE_CAN__ _NO_
 #/*
-__ENABLE_CAN__=_YES_
+__ENABLE_CAN__=_NO_
 #*/
 
 #// MODULE LIST END
