@@ -64,7 +64,7 @@ CXXFLAGS = -c \
            -g \
            -ggdb3 \
            -Os \
-           -std=c++0x \
+           -std=c++11 \
            -ffunction-sections \
            -fno-rtti \
            -fno-exceptions \
