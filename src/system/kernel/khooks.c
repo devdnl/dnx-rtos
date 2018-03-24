@@ -36,7 +36,7 @@
 #include "kernel/printk.h"
 #include "dnx/misc.h"
 #include "lib/unarg.h"
-#include "portable/cpuctl.h"
+#include "cpu/cpuctl.h"
 
 /*==============================================================================
   Local symbolic constants/macros

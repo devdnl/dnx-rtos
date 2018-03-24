@@ -558,6 +558,7 @@ int _syscall_kworker_process(int argc, char *argv[])
 #elif __OS_TASK_KWORKER_MODE__ == 1
                 if (_queue_receive(call_nonblocking, &sysrq, SYNC_PERIOD_MS) == ESUCC) {
                         _process_clean_up_killed_processes();
+                        _kernel_release_resources();
                         syscall_do(sysrq);
                 }
 #endif

@@ -499,6 +499,7 @@ static u8_t SPI_transive(SDSPI_t *hdl, u8_t out)
         tr.count     = 1;
         tr.rx_buffer = &out;
         tr.tx_buffer = &out;
+        tr.separated = false;
         tr.next      = NULL;
 
         if (sys_ioctl(hdl->stg->SPI_file, IOCTL_SPI__TRANSCEIVE, &tr) == ESUCC) {

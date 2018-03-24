@@ -42,6 +42,7 @@ AFLAGS   = -c \
            -g \
            -ggdb3 \
            -include ./config/config.h \
+           -include ./build/defs.h \
            $(CPUCONFIG_AFLAGS)
 
 CFLAGS   = -c \
@@ -55,15 +56,15 @@ CFLAGS   = -c \
            -Wparentheses \
            -Werror=implicit-function-declaration \
            -include ./config/config.h \
+           -include ./build/defs.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
-           -D_COMMIT_HASH=\"-g$(shell $(COMMIT_HASH))\" \
            $(CPUCONFIG_CFLAGS)
 
 CXXFLAGS = -c \
            -g \
            -ggdb3 \
            -Os \
-           -std=c++0x \
+           -std=c++11 \
            -ffunction-sections \
            -fno-rtti \
            -fno-exceptions \
@@ -74,7 +75,7 @@ CXXFLAGS = -c \
            -Werror=implicit-function-declaration \
            -include ./config/config.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
-           -D_COMMIT_HASH=\"-g$(shell $(COMMIT_HASH))\" \
+           -include ./build/defs.h \
            $(CPUCONFIG_CXXFLAGS)
 
 LFLAGS   = -g \
@@ -119,41 +120,41 @@ SYS_KRN_LOC     = $(SYS_LOC)/kernel
 SYS_LIB_LOC     = $(SYS_LOC)/lib
 SYS_MM_LOC      = $(SYS_LOC)/mm
 SYS_NET_LOC     = $(SYS_LOC)/net
-SYS_PORT_LOC    = $(SYS_LOC)/portable
+SYS_CPU_LOC     = $(SYS_LOC)/cpu
 SYS_LIBC_LOC    = $(SYS_LOC)/libc
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
 #---------------------------------------------------------------------------------------------------
-SHELL       = /bin/sh
-ECHO        = /bin/echo -e
-RM          = /bin/rm -f
-MKDIR       = /bin/mkdir -p
-DATE        = /bin/date
-CAT         = /bin/cat
-GREP        = /bin/grep
-UNAME       = /bin/uname -s
-SIZEOF      = /usr/bin/stat -c %s
-MKDEP       = /usr/bin/makedepend
-WC          = /usr/bin/wc
-CC          = $(TOOLCHAIN)gcc
-CXX         = $(TOOLCHAIN)g++
-LD          = $(TOOLCHAIN)g++
-AS          = $(TOOLCHAIN)gcc -x assembler-with-cpp
-OBJCOPY     = $(TOOLCHAIN)objcopy
-OBJDUMP     = $(TOOLCHAIN)objdump
-SIZE        = $(TOOLCHAIN)size
-CONFIGTOOL  = ./tools/configtool.sh
-CODECHECK   = cppcheck
-ADDAPPS     = ./$(APP_LOC)/addapps.sh
-ADDFS       = ./$(SYS_FS_LOC)/addfs.sh
-ADDDRIVERS  = ./$(SYS_DRV_LOC)/adddriver.sh
-FLASH_CPU   = ./tools/flash.sh
-RESET_CPU   = ./tools/reset.sh
-GIT_HOOKS   = ./tools/apply_git_hooks.sh
-DOXYGEN     = ./tools/doxygen.sh
-RELEASEPKG  = ./tools/releasepkg.sh
-COMMIT_HASH = git rev-parse --short HEAD
+SHELL      = /bin/bash
+ECHO       = /bin/echo -e
+RM         = /bin/rm -f
+MKDIR      = /bin/mkdir -p
+DATE       = /bin/date
+CAT        = /bin/cat
+GREP       = /bin/grep
+UNAME      = /bin/uname -s
+SIZEOF     = /usr/bin/stat -c %s
+MKDEP      = /usr/bin/makedepend
+WC         = /usr/bin/wc
+CC         = $(TOOLCHAIN)gcc
+CXX        = $(TOOLCHAIN)g++
+LD         = $(TOOLCHAIN)g++
+AS         = $(TOOLCHAIN)gcc -x assembler-with-cpp
+OBJCOPY    = $(TOOLCHAIN)objcopy
+OBJDUMP    = $(TOOLCHAIN)objdump
+SIZE       = $(TOOLCHAIN)size
+CONFIGTOOL = ./tools/configtool.sh
+CODECHECK  = cppcheck
+ADDAPPS    = ./$(APP_LOC)/addapps.sh
+ADDFS      = ./$(SYS_FS_LOC)/addfs.sh
+ADDDRIVERS = ./$(SYS_DRV_LOC)/adddriver.sh
+FLASH_CPU  = ./tools/flash.sh
+RESET_CPU  = ./tools/reset.sh
+GIT_HOOKS  = ./tools/apply_git_hooks.sh
+DOXYGEN    = ./tools/doxygen.sh
+RELEASEPKG = ./tools/releasepkg.sh
+RUNGENS    = ./tools/rungens.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -216,6 +217,7 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 ####################################################################################################
 .PHONY : all
 all : generate apply_git_hooks
+	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) rungens
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
 .PHONY : build_start
@@ -239,6 +241,7 @@ help :
 	@$(ECHO) "   reset               reset target CPU by using ./tools/reset.sh script"
 	@$(ECHO) "   release             create Release package"
 	@$(ECHO) "   doc                 create documentation (Doxygen)"
+	@$(ECHO) "   rungens             start generator scripts"
 
 ####################################################################################################
 # project configuration wizard
@@ -299,6 +302,8 @@ status :
 ####################################################################################################
 .PHONY : generate
 generate :
+	@$(MKDIR) $(TARGET_PATH)
+
 	@$(ECHO) "Adding user's programs and libraries to the project..."
 	@$(SHELL) $(ADDAPPS) ./$(APP_LOC)
 
@@ -307,6 +312,18 @@ generate :
 
 	@$(ECHO) "Adding drivers to the project..."
 	@$(SHELL) $(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
+
+	@$(ECHO) "Obtaining git hash..."
+	@$(ECHO) "#ifndef COMMIT_HASH" > build/defs.h
+	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" >> build/defs.h
+	@$(ECHO) "#endif" >> build/defs.h
+
+####################################################################################################
+# Start all generators
+####################################################################################################
+.PHONY : rungens
+rungens :
+	@$(RUNGENS) $(GENERATOR)
 
 ####################################################################################################
 # Copy git hooks to git repository

@@ -44,7 +44,7 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define KEY_READ_INTERVAL_SEC   (CLOCKS_PER_SEC * 0.01)
+#define KEY_READ_INTERVAL_SEC   (CLOCKS_PER_SEC / 100)
 #define REFRESH_INTERVAL_SEC    (CLOCKS_PER_SEC * 1)
 #define MSG_LINE_POS            VT100_CURSOR_HOME VT100_CURSOR_DOWN(5) VT100_ERASE_LINE_FROM_CUR
 
@@ -88,10 +88,11 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
 
         while (key != 'q' && key != '\0') {
                 ioctl(fileno(stdin), IOCTL_VFS__NON_BLOCKING_RD_MODE);
+                clearerr(stdin);
                 key = getchar();
                 ioctl(fileno(stdin), IOCTL_VFS__DEFAULT_RD_MODE);
 
-                if (!strchr("k,.", key)) {
+                if (!strchr("qk,.", key)) {
                         if ((clock() - timer) < REFRESH_INTERVAL_SEC) {
                                 msleep(KEY_READ_INTERVAL_SEC);
                                 continue;
@@ -137,8 +138,8 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 printf("\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
-                        "PID PR     MEM  STU %%STU   %%CPU TH RES CMD"
-                        VT100_RESET_ATTRIBUTES "\n");
+                       "PID PR     MEM  STU %%STU   %%CPU TH RES CMD"
+                       VT100_RESET_ATTRIBUTES "\n");
 
                 size_t seek = 0;
                 while (process_stat_seek(seek++, &global->pstat) == 0) {

@@ -199,6 +199,11 @@ static void network_interface_thread(void *arg)
 
                 inet->ready = true;
 
+                while (inet->disconnected) {
+                        sys_msleep(100);
+                        inet->disconnected = not _inetdrv_is_link_connected(inet);
+                }
+
                 while (true) {
                         _inetdrv_handle_input(inet, INPUT_TIMEOUT);
 
@@ -529,9 +534,12 @@ static err_t netif_configure(struct netif *netif)
 //==============================================================================
 int INET_ifup(const NET_INET_config_t *cfg)
 {
-        int err = EINVAL;
+        int err = stack_init();
+        if (err) {
+                return err;
+        }
 
-        stack_init();
+        inet->disconnected = not _inetdrv_is_link_connected(inet);
 
         switch (cfg->mode) {
         case NET_INET_MODE__STATIC: {
@@ -637,6 +645,10 @@ int INET_ifstatus(NET_INET_status_t *status)
                                 create_addr(&status->address, &inet->netif.ip_addr);
                                 create_addr(&status->mask, &inet->netif.netmask);
                                 create_addr(&status->gateway, &inet->netif.gw);
+                        }
+                } else {
+                        if (inet->disconnected) {
+                                status->state = NET_INET_STATE__LINK_DISCONNECTED;
                         }
                 }
 
@@ -903,6 +915,9 @@ int INET_socket_send(INET_socket_t *inet_sock,
                         lwip_flags |= NETCONN_NOCOPY;
                 else
                         lwip_flags |= NETCONN_COPY;
+
+                if (flags & NET_FLAGS__MORE)
+                        lwip_flags |= NETCONN_MORE;
 
                 err = lwIP_status_to_errno(netconn_write(inet_sock->netconn,
                                                          buf,

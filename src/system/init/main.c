@@ -29,7 +29,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "portable/cpuctl.h"
+#include "cpu/cpuctl.h"
 #include "mm/heap.h"
 #include "mm/cache.h"
 #include "mm/mm.h"
@@ -47,7 +47,7 @@
   Local symbolic constants/macros
 ==============================================================================*/
 /* Stack size declared by linker script */
-#define STACK_SIZE                      (((size_t)&__stack_size) - 8)
+#define STACK_SIZE                      (((size_t)&__stack_size) - 512)
 
 /* Stack start declared by linker script */
 #define STACK_START                     ((void *)&__stack_start)
@@ -96,6 +96,8 @@ void dnxinit(void *arg)
         /*
          * This code reuse the main() stack that after kernel start is abandoned.
          * The stack region is reused for HEAP purposes.
+         * If cause problems (strange system behaviour, kernel panics) disable
+         * this option.
          */
         static _mm_region_t main_stack;
         _mm_register_region(&main_stack, STACK_START, STACK_SIZE);

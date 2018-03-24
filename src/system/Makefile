@@ -9,5 +9,5 @@ include $(SYS_KRN_LOC)/Makefile
 include $(SYS_LIB_LOC)/Makefile
 include $(SYS_MM_LOC)/Makefile
 include $(SYS_NET_LOC)/Makefile
-include $(SYS_PORT_LOC)/Makefile
+include $(SYS_CPU_LOC)/Makefile
 include $(SYS_LIBC_LOC)/Makefile

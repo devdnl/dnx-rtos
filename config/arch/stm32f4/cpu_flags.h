@@ -263,7 +263,7 @@ __CPU_NAME__=STM32F429ZIxx
 CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -fno-math-errno -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_CFLAGS=-mcpu=cortex-m4 -mthumb -fno-math-errno -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m4 -mthumb -fno-math-errno -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb-interwork -DGCC_ARMCM4
-CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles -T./src/system/portable/stm32f4/ld/$(__LD_SCRIPT__).ld
+CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles -T./src/system/cpu/stm32f4/ld/$(__LD_SCRIPT__).ld
 #*/
 
 #// All CPU names definitions - general usage

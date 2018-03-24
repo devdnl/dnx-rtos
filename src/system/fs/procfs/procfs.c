@@ -50,6 +50,7 @@
 struct procfs {
         llist_t *file_list;
         mutex_t *resource_mtx;
+        char    *offset_path;
 };
 
 enum path_content {
@@ -102,9 +103,9 @@ static size_t get_file_content   (struct file_info *file_info, char *buff, size_
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_INIT(procfs, void **fs_handle, const char *src_path, const char opts)
+API_FS_INIT(procfs, void **fs_handle, const char *src_path, const char *opts)
 {
-        UNUSED_ARG2(src_path, opts);
+        UNUSED_ARG1(src_path);
 
         int err = sys_zalloc(sizeof(struct procfs), fs_handle);
         if (err == ESUCC) {
@@ -118,6 +119,28 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path, const char opts)
                 if (err != ESUCC)
                         goto finish;
 
+                if (!isstrempty(opts)) {
+
+                        if (!(  isstreq(opts, PATH_ROOT)
+                             || isstreq(opts, PATH_ROOT_BIN)
+                             || isstreq(opts, PATH_ROOT_PID)) ) {
+
+                                err = ENOENT;
+                                goto finish;
+                        }
+
+                        err = sys_zalloc(strsize(opts), cast(void*, &procfs->offset_path));
+                        if (err) {
+                                goto finish;
+                        } else {
+                                strcpy(procfs->offset_path, opts);
+
+                                if (LAST_CHARACTER(procfs->offset_path) == '/') {
+                                        LAST_CHARACTER(procfs->offset_path) = '\0';
+                                }
+                        }
+                }
+
                 finish:
                 if (err != ESUCC) {
                         if (procfs->file_list)
@@ -125,6 +148,9 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path, const char opts)
 
                         if (procfs->resource_mtx)
                                 sys_mutex_destroy(procfs->resource_mtx);
+
+                        if (procfs->offset_path)
+                                sys_free(cast(void*, &procfs->offset_path));
 
                         sys_free(fs_handle);
                 }
@@ -154,6 +180,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
                 } else {
                         sys_llist_destroy(procfs->file_list);
                         mutex_t *mtx = procfs->resource_mtx;
+                        sys_free(cast(void*, &procfs->offset_path));
                         memset(procfs, 0, sizeof(struct procfs));
                         sys_mutex_unlock(mtx);
                         sys_mutex_destroy(mtx);
@@ -179,7 +206,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
 //==============================================================================
 API_FS_OPEN(procfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path, u32_t flags)
 {
-        struct procfs *fsctx = fs_handle;
+        struct procfs *hdl = fs_handle;
 
         if (flags != O_RDONLY) {
                 return EROFS;
@@ -189,45 +216,70 @@ API_FS_OPEN(procfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
 
         *fpos = 0;
 
+        // create path with offset
+        char *opath = const_cast(char*, path);
+
+        if (hdl->offset_path) {
+                err = sys_malloc(strlen(hdl->offset_path) + strsize(path),
+                                 cast(void*, &opath));
+
+                if (!err) {
+                        strcpy(opath, hdl->offset_path);
+                        strcat(opath, path);
+                } else {
+                        return err;
+                }
+        }
+
+        // pointer for modification
+        char *mpath = opath;
+
+        err = ENOENT;
+
         // "/pid" path
-        if (isstreq(path, PATH_ROOT_PID)) {
-                return add_file_to_list(fsctx, -1, FILE_CONTENT_PID, fhdl);
+        if (isstreq(mpath, PATH_ROOT_PID)) {
+                err = add_file_to_list(hdl, -1, FILE_CONTENT_PID, fhdl);
 
         // "/pid/<pid>" path
-        } else if (isstreqn(path, PATH_ROOT_PID"/", strlen(PATH_ROOT_PID) + 1)) {
-                path += strlen(PATH_ROOT_PID) + 1;
+        } else if (isstreqn(mpath, PATH_ROOT_PID"/", strlen(PATH_ROOT_PID) + 1)) {
+                mpath += strlen(PATH_ROOT_PID) + 1;
 
                 i32_t pid = 0;
-                sys_strtoi(path, 10, &pid);
+                sys_strtoi(mpath, 10, &pid);
 
                 process_stat_t stat;
                 if (sys_process_get_stat_pid(pid, &stat) == ESUCC) {
-                        return add_file_to_list(fsctx, pid, FILE_CONTENT_PID, fhdl);
+                        err = add_file_to_list(hdl, pid, FILE_CONTENT_PID, fhdl);
                 } else {
                         err = ENOENT;
                 }
 
         // "/bin" path
-        } else if (isstreq(path, PATH_ROOT_BIN)) {
-                return add_file_to_list(fsctx, -1, FILE_CONTENT_BIN, fhdl);
+        } else if (isstreq(mpath, PATH_ROOT_BIN)) {
+                err = add_file_to_list(hdl, -1, FILE_CONTENT_BIN, fhdl);
 
         // "/bin/<prog>" path
-        } else if (isstreqn(path, PATH_ROOT_BIN"/", strlen(PATH_ROOT_BIN) + 1)) {
-                path += strlen(PATH_ROOT_BIN) + 1;
+        } else if (isstreqn(mpath, PATH_ROOT_BIN"/", strlen(PATH_ROOT_BIN) + 1)) {
+                mpath += strlen(PATH_ROOT_BIN) + 1;
 
                 int n = sys_get_programs_table_size();
                 for (int i = 0; i < n; i++) {
-                        if (isstreq(path, sys_get_programs_table()[i].name)) {
-                                return add_file_to_list(fsctx, i, FILE_CONTENT_BIN, fhdl);
+                        if (isstreq(mpath, sys_get_programs_table()[i].name)) {
+                                err = add_file_to_list(hdl, i, FILE_CONTENT_BIN, fhdl);
+                                break;
                         }
                 }
 
         // "/cpuinfo" path
-        } else if (isstreq(path, PATH_ROOT_CPUINFO)) {
-                return add_file_to_list(fsctx, 0, FILE_CONTENT_CPUINFO, fhdl);
+        } else if (isstreq(mpath, PATH_ROOT_CPUINFO)) {
+                err = add_file_to_list(hdl, 0, FILE_CONTENT_CPUINFO, fhdl);
 
         } else {
                 err = ENOENT;
+        }
+
+        if (opath != path) {
+                sys_free(cast(void*, &opath));
         }
 
         return err;
@@ -529,23 +581,39 @@ API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
 //==============================================================================
 API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
 {
-        UNUSED_ARG1(fs_handle);
+        struct procfs *hdl = fs_handle;
+        int err;
+
+        // create path with offset
+        char *opath = const_cast(char*, path);
+
+        if (hdl->offset_path) {
+                err = sys_malloc(strlen(hdl->offset_path) + strsize(path),
+                                 cast(void*, &opath));
+
+                if (!err) {
+                        strcpy(opath, hdl->offset_path);
+                        strcat(opath, path);
+                } else {
+                        return err;
+                }
+        }
 
         dir->d_seek = 0;
 
-        int err = sys_zalloc(sizeof(struct dir_info), &dir->d_hdl);
+        err = sys_zalloc(sizeof(struct dir_info), &dir->d_hdl);
         if (!err) {
                 struct dir_info *dirinfo = dir->d_hdl;
 
-                if (isstreq(path, PATH_ROOT)) {
+                if (isstreq(opath, PATH_ROOT)) {
                         dirinfo->dir_name = PATH_ROOT;
                         dir->d_items      = 3;
 
-                } else if (isstreq(path, PATH_ROOT_PID"/")) {
+                } else if (isstreq(opath, PATH_ROOT_PID"/")) {
                         dirinfo->dir_name = PATH_ROOT_PID;
                         dir->d_items      = sys_process_get_count();
 
-                } else if (isstreq(path, PATH_ROOT_BIN"/")) {
+                } else if (isstreq(opath, PATH_ROOT_BIN"/")) {
                         dirinfo->dir_name = PATH_ROOT_BIN;
                         dir->d_items      = sys_get_programs_table_size();
 
@@ -553,6 +621,10 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
                         sys_free(&dir->d_hdl);
                         err = ENOENT;
                 }
+        }
+
+        if (opath != path) {
+                sys_free(cast(void*, &opath));
         }
 
         return err;
@@ -828,16 +900,27 @@ static int procfs_readdir_bin(struct procfs *hdl, DIR *dir)
 {
         UNUSED_ARG1(hdl);
 
-        if (dir->d_seek < (size_t)sys_get_programs_table_size()) {
-                dir->dirent.filetype = FILE_TYPE_PROGRAM;
-                dir->dirent.name     = sys_get_programs_table()[dir->d_seek].name;
-                dir->dirent.size     = 0;
-                dir->d_seek++;
+        int err = ENOENT;
 
-                return ESUCC;
-        } else {
-                return ENOENT;
+        if (dir->d_seek < (size_t)sys_get_programs_table_size()) {
+
+                char *content;
+                err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
+                if (!err) {
+
+                        dir->dirent.filetype = FILE_TYPE_PROGRAM;
+                        dir->dirent.name     = sys_get_programs_table()[dir->d_seek].name;
+
+                        struct file_info file = {.arg = dir->d_seek, .content = FILE_CONTENT_BIN};
+                        dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
+
+                        dir->d_seek++;
+
+                        err = sys_free(cast(void**, &content));
+                }
         }
+
+        return err;
 }
 
 //==============================================================================
@@ -959,6 +1042,16 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                                             "Warning: no '"CLK_FILE_PATH"' file to read clocks\n");
                 }
                 break;
+
+#if __OS_SYSTEM_SHEBANG_ENABLE__ > 0
+        case FILE_CONTENT_BIN: {
+                const struct _prog_data *pdata = sys_get_programs_table();
+                if (file->arg < sys_get_programs_table_size()) {
+                        len = sys_snprintf(buff, size, "#!%s\n", pdata[file->arg].name);
+                }
+                break;
+        }
+#endif
 
         default:
                 break;

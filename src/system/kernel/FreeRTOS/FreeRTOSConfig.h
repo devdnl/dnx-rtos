@@ -69,7 +69,7 @@
 
 #include <stdbool.h>
 #include "config.h"             /* general configuration  */
-#include "portable/cpuctl.h"    /* CPU vector definitions */
+#include "cpu/cpuctl.h"         /* CPU vector definitions */
 #include "mm/mm.h"              /* memory management      */
 
 /*-------------------------------------------------------------

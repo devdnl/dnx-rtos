@@ -40,7 +40,7 @@ The library is used to check CPU endianness.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <portable/cpuctl.h>
+#include <cpu/cpuctl.h>
 
 #ifdef __cplusplus
 extern "C" {

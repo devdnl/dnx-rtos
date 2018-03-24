@@ -46,6 +46,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <kernel/syscall.h>
 #include <kernel/kwrapper.h>
 #include <kernel/process.h>
 
@@ -527,6 +528,8 @@ static inline pid_t process_getpid(void)
  *
  * The function process_get_priority() returns priority value of selected
  * process.
+ *
+ * @param pid           process ID
  *
  * @return Priority value.
  *

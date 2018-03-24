@@ -67,6 +67,7 @@ static bool  history_request      ();
 static bool  command_hint         ();
 static bool  is_cd_cmd            (const char *cmd);
 static bool  is_exit_cmd          (const char *cmd);
+static bool  is_clear_cmd         (const char *cmd);
 static bool  is_detached_cmd      (char *cmd);
 static char *find_arg             (char *cmd);
 static void  change_directory     (char *str);
@@ -275,6 +276,20 @@ static bool is_cd_cmd(const char *cmd)
 static bool is_exit_cmd(const char *cmd)
 {
         return strncmp(cmd, "exit ", 5) == 0 || strcmp(cmd, "exit") == 0;
+}
+
+//==============================================================================
+/**
+ * @brief Check if command is CLEAR
+ *
+ * @param  cmd
+ *
+ * @return true if EXIT command, otherwise false
+ */
+//==============================================================================
+static bool is_clear_cmd(const char *cmd)
+{
+        return strncmp(cmd, "clear", 5) == 0 || strcmp(cmd, "clear") == 0;
 }
 
 //==============================================================================
@@ -818,6 +833,11 @@ int_main(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
 
                 if (is_exit_cmd(cmd)) {
                         break;
+                }
+
+                if (is_clear_cmd(cmd)) {
+                        ioctl(fileno(stdout), IOCTL_TTY__CLEAR_SCR);
+                        continue;
                 }
 
                 if (analyze_line(cmd)) {

@@ -1054,7 +1054,7 @@ int _queue_receive(queue_t *queue, void *item, const u32_t waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
                 BaseType_t r = xQueueReceive(queue->object, item, MS2TICK((TickType_t)waittime_ms));
-                return r == pdTRUE ? ESUCC : EAGAIN;
+                return r == pdTRUE ? ESUCC : ETIME;
         } else {
                 return EINVAL;
         }

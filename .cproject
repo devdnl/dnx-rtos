@@ -28,6 +28,7 @@
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.178026589" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
+									<listOptionValue builtIn="false" value="COMPILE_EPOCH_TIME=0"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1584393736" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -36,6 +37,7 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.461217302" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1619145641" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
+									<listOptionValue builtIn="false" value="COMPILE_EPOCH_TIME=0"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.193515825" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
@@ -213,22 +215,22 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
-		<configuration configurationName="Quick static code check">
-			<resource resourceType="PROJECT" workspacePath="/dnx"/>
-		</configuration>
-		<configuration configurationName="Quick Static Code Analyze"/>
-		<configuration configurationName="Build">
-			<resource resourceType="PROJECT" workspacePath="/dnx"/>
-		</configuration>
 		<configuration configurationName="stm32f1">
 			<resource resourceType="PROJECT" workspacePath="/dnx"/>
 		</configuration>
-		<configuration configurationName="Static Code Analyze"/>
-		<configuration configurationName="Static code check"/>
-		<configuration configurationName="Debug">
+		<configuration configurationName="Quick Static Code Analyze"/>
+		<configuration configurationName="Configuration">
 			<resource resourceType="PROJECT" workspacePath="/dnx"/>
 		</configuration>
-		<configuration configurationName="Configuration">
+		<configuration configurationName="Build">
+			<resource resourceType="PROJECT" workspacePath="/dnx"/>
+		</configuration>
+		<configuration configurationName="Static code check"/>
+		<configuration configurationName="Quick static code check">
+			<resource resourceType="PROJECT" workspacePath="/dnx"/>
+		</configuration>
+		<configuration configurationName="Static Code Analyze"/>
+		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/dnx"/>
 		</configuration>
 	</storageModule>

@@ -103,9 +103,13 @@ void _printk(const char *format, ...)
 
                 va_list args;
                 va_start(args, format);
-                _vsnprintf(log_buf.msg[log_buf.wridx].str,
-                           __OS_SYSTEM_MSG_COLS__, format, args);
+                int len = _vsnprintf(log_buf.msg[log_buf.wridx].str,
+                                     __OS_SYSTEM_MSG_COLS__, format, args);
                 va_end(args);
+
+                if (log_buf.msg[log_buf.wridx].str[len - 1] == '\n') {
+                        log_buf.msg[log_buf.wridx].str[len - 1] = '\0';
+                }
 
                 log_buf.msg[log_buf.wridx].timestamp = _kernel_get_time_ms();
 

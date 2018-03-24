@@ -62,7 +62,7 @@
 #include "mm/cache.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
-#include "portable/cpuctl.h"
+#include "cpu/cpuctl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -5787,11 +5787,12 @@ static inline int sys_memory_register(mem_region_t *region, void *start, size_t 
 /**
  * @brief  Function return integer value from given configuration.
  *
- * Function found expression: VAR=VAL.
+ * Function found expression: VAR=VAL. If variable is not found then <i>defval</i>
+ * is returned.
  *
  * @param opts          options to analyze
  * @param var           variable to search
- * @param default       value used if variable does not found
+ * @param defval        value used if variable does not found
  *
  * @return Integer (on error or when variable does not found the default value).
  */
@@ -5843,10 +5844,12 @@ static inline size_t sys_stropt_get_string_copy(const char *opts, const char *va
  * @brief  Function return integer value from given configuration.
  *
  * Function found expression: VAR=BOOL(false, true, on, off, enable, disable, yes, no).
+ * If none of given values is found, then function return <i>defval</i> defined
+ * by user.
  *
  * @param opts          options to analyze
  * @param var           variable to search
- * @param len           string length
+ * @param defval        default value
  *
  * @return On success return 1 or 0
  */
