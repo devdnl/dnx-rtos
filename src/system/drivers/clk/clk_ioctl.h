@@ -34,6 +34,7 @@ Driver handles system clock peripheral (PLL).
 
 \section drv-clk-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
 
 \section drv-clk-ddesc Details
 \subsection drv-clk-ddesc-num Meaning of major and minor numbers

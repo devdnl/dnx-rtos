@@ -35,6 +35,7 @@ directly by protocol stack.
 
 \section drv-ethmac-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
 
 \section drv-ethmac-ddesc Details
 \subsection drv-ethmac-ddesc-num Meaning of major and minor numbers

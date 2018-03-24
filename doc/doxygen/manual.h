@@ -66,6 +66,18 @@ or
       libraries are used then there is big possibility that project exceeds
       available free flash memory.
 
+\section sec-sysstartup System startup
+There is no specified configuration for system startup procedure. This should be
+implemented by user because one have a knowledge how the project should works.
+In default settings system starts the first application called <b>initd</b>.
+The first application name can be changed by Configtool in <b>Operating System</b>
+section by changing <b>Initialization program</b> value. There is example
+implementation of startup program in <b>./src/application/programs/initd/initd.c</b>
+file. There is no restrictions to start any other program as first application but
+one should take in account that first program is responsible for creating entire
+system environment like mounting file systems (at least ramfs), drivers initialization,
+drivers configuration, and starting needed applications/daemons.
+
 \section sec-user_manual User Manual
 \li \subpage page-application
 \li \subpage page-file-systems

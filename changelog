@@ -1,4 +1,12 @@
-dnx RTOS 2.1.7 Dingo
+dnx RTOS 2.2.1 Eagle
+====================
+New Features, Improvements:
+- Updated documentation
+
+Fixed Bugs:
+- 
+
+dnx RTOS 2.2.0 Eagle
 ====================
 New Features, Improvements:
 - Created romfs - put local files to build image
