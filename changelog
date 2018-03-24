@@ -1,12 +1,13 @@
 dnx RTOS 2.1.7 Dingo
 ====================
 New Features, Improvements:
-- Created romfs - transport local files to build image
+- Created romfs - put local files to build image
 - SPI: added separated transfers for ioctl() request
 - CAN: added new driver for stm32f1 architecture
+- Added possibility to mount selected dir of procfs
 
 Fixed Bugs:
-- 
+- System hangs on socket related resource cleaning
 
 dnx RTOS 2.1.6 Dingo
 ====================
