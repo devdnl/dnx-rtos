@@ -1363,10 +1363,6 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
         stat->stack_max_usage = proc->task[0] ? (stat->stack_size - _task_get_free_stack(proc->task[0])) : 0;
         stat->priority        = proc->task[0] ? _task_get_priority(proc->task[0]) : 0;
         stat->CPU_load        = proc->CPU_load;
-        stat->memory_usage    = 0;
-        stat->threads_count   = 0;
-        stat->socket_count    = 0;
-        stat->threads_count   = 0;
 
         u8_t threads = PROC_MAX_THREADS(proc);
         for (tid_t tid = 0; tid < threads; tid++) {
@@ -1401,6 +1397,10 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
                 case RES_TYPE_MEMORY:
                         stat->memory_block_count++;
                         stat->memory_usage += _mm_get_block_size(res);
+                        break;
+
+                case RES_TYPE_SOCKET:
+                        stat->socket_count++;
                         break;
 
                 default:

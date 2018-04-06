@@ -160,9 +160,12 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                                 global->pstat.stack_max_usage * 100 / global->pstat.stack_size,
                                 cpu_load_str,
                                 global->pstat.threads_count,
-                                global->pstat.dir_count + global->pstat.files_count +
-                                global->pstat.mutexes_count + global->pstat.queue_count
-                                + global->pstat.semaphores_count,
+                                global->pstat.dir_count
+                                + global->pstat.files_count
+                                + global->pstat.mutexes_count
+                                + global->pstat.queue_count
+                                + global->pstat.semaphores_count
+                                + global->pstat.socket_count,
                                 global->pstat.name);
                 }
 
