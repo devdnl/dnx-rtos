@@ -50,6 +50,7 @@ extern "C" {
 #include <kernel/syscall.h>
 #include <kernel/kwrapper.h>
 #include <kernel/errno.h>
+#include <cpu/cpuctl.h>
 #include <lib/unarg.h>
 
 /*==============================================================================
@@ -134,11 +135,7 @@ static inline void msleep(const uint milliseconds)
  * The usleep() makes the calling thread sleep until microseconds
  * <i>microseconds</i> have elapsed.<p>
  *
- * @note Function is not fully supported by dnx RTOS. The task falls asleep for
- * at least 1ms (depends on context switch frequency) if the delay is lower than
- * or equal to 1000 microseconds.
- *
- * @param microseconds      number of microseconds to sleep
+ * @param microseconds      number of microseconds to sleep (delay)
  *
  * @b Example
  * @code
@@ -146,9 +143,9 @@ static inline void msleep(const uint milliseconds)
 
         // ...
         usleep(10);
-        // code here will be executed after 1 system tick (at least 1ms)
+        // code here will be executed after 1 system tick (at least 10us)
         usleep(10000);
-        // code here will be executed after at least 10ms
+        // code here will be executed after at least 10000us
         // ...
    @endcode
  *
@@ -158,7 +155,15 @@ static inline void msleep(const uint milliseconds)
 static inline void usleep(const u32_t microseconds)
 {
         u32_t ms = microseconds / 1000;
-        _builtinfunc(sleep_ms, ms ? ms : 1);
+        u32_t us = microseconds % 1000;
+
+        if (ms) {
+                _builtinfunc(sleep_ms, ms);
+        }
+
+        if (us) {
+                _builtinfunc(cpuctl_delay_us, us);
+        }
 }
 
 //==============================================================================

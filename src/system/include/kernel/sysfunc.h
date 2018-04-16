@@ -5422,6 +5422,27 @@ static inline void sys_context_switch_unlock()
 
 //==============================================================================
 /**
+ * @brief Function put to sleep thread for microseconds.
+ *
+ * @note Function can sleep longer that declared because of context switch
+ *       settings.
+ *
+ * @note Function work in critical section.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param microseconds          number of microseconds of sleep
+ *
+ * @see sys_sleep(), sys_sleep_until(), sys_sleep_until_ms()
+ */
+//==============================================================================
+static inline void sys_sleep_us(const u32_t microseconds)
+{
+        _cpuctl_delay_us(microseconds);
+}
+
+//==============================================================================
+/**
  * @brief Function put to sleep thread for milliseconds.
  *
  * @note Function can sleep longer that declared because of context switch

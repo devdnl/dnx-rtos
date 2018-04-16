@@ -202,6 +202,33 @@ void _cpuctl_update_system_clocks(void)
         _critical_section_end();
 }
 
+//==============================================================================
+/**
+ * @brief  Function delay code processing in microseconds.
+ *
+ * @note   Function should block CPU for specified amount of time.
+ * @note   Function should work in critical section and interrupts.
+ *
+ * @param  microseconds         microsecond delay
+ */
+//==============================================================================
+void _cpuctl_delay_us(u16_t microseconds)
+{
+        u32_t ticks = ((u64_t)microseconds * SysTick->LOAD * __OS_TASK_SCHED_FREQ__) / 1000000;
+
+        while (ticks > 0) {
+                i32_t now = SysTick->VAL;
+
+                if (now - ticks > 0) {
+                        while (SysTick->VAL > (u32_t)(now - ticks));
+                        ticks = 0;
+                } else {
+                        while (SysTick->VAL <= (u32_t)now);
+                        ticks -= now;
+                }
+        }
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/
