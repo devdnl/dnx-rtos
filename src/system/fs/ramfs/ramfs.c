@@ -596,6 +596,58 @@ API_FS_CHOWN(ramfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 
 //==============================================================================
 /**
+ * @brief Return file status
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *fhdl                   file handle
+ * @param[out]          *stat                   file status
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_FS_FSTAT(ramfs, void *fs_handle, void *extra, struct stat *stat)
+{
+        UNUSED_ARG1(fs_handle);
+
+        int err = ENOENT;
+
+        struct opened_file_info *opened_file = extra;
+        if (opened_file && opened_file->child) {
+
+                stat->st_gid   = opened_file->child->gid;
+                stat->st_mode  = opened_file->child->mode;
+                stat->st_mtime = opened_file->child->mtime;
+                stat->st_ctime = opened_file->child->ctime;
+                stat->st_size  = opened_file->child->size;
+                stat->st_uid   = opened_file->child->uid;
+                stat->st_type  = opened_file->child->type;
+
+                if (opened_file->child->type == FILE_TYPE_DRV) {
+
+                        stat->st_dev = opened_file->child->data.dev_t;
+
+                        struct vfs_dev_stat dev_stat;
+                        err = sys_driver_stat(opened_file->child->data.dev_t,
+                                              &dev_stat);
+                        if (!err) {
+                                stat->st_size = dev_stat.st_size;
+
+                        } else if (err == ENODEV) {
+                                stat->st_size = 0;
+                                err = ESUCC;
+                        }
+
+                } else {
+                        stat->st_dev = 0;
+                        err          = ESUCC;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
  * @brief Return file/dir status
  *
  * @param[in ]          *fs_handle              file system allocated memory
@@ -618,99 +670,15 @@ API_FS_STAT(ramfs, void *fs_handle, const char *path, struct stat *stat)
                         if ( (strlch(path) == '/' && target->type == FILE_TYPE_DIR)
                            || strlch(path) != '/') {
 
-                                stat->st_gid   = target->gid;
-                                stat->st_mode  = target->mode;
-                                stat->st_mtime = target->mtime;
-                                stat->st_ctime = target->ctime;
-                                stat->st_size  = target->size;
-                                stat->st_uid   = target->uid;
-                                stat->st_type  = target->type;
+                                struct opened_file_info file;
+                                file.child           = target;
+                                file.parent          = NULL;
+                                file.remove_at_close = false;
 
-                                if (target->type == FILE_TYPE_DRV) {
-                                        sys_mutex_unlock(hdl->resource_mtx);
-
-                                        stat->st_dev = target->data.dev_t;
-
-                                        struct vfs_dev_stat dev_stat;
-                                        err = sys_driver_stat(target->data.dev_t,
-                                                              &dev_stat);
-                                        if (!err) {
-                                                stat->st_size = dev_stat.st_size;
-
-                                        } else if (err == ENODEV) {
-                                                stat->st_size = 0;
-                                                err = ESUCC;
-                                        }
-
-                                        return err;
-
-                                } else {
-                                        stat->st_dev = 0;
-                                }
+                                err = _ramfs_fstat(fs_handle, &file, stat);
                         } else {
                                 err = EINVAL;
                         }
-                }
-
-                sys_mutex_unlock(hdl->resource_mtx);
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief Return file status
- *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *fhdl                   file handle
- * @param[out]          *stat                   file status
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_FS_FSTAT(ramfs, void *fs_handle, void *extra, struct stat *stat)
-{
-        struct RAMFS *hdl = fs_handle;
-
-        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (!err) {
-
-                struct opened_file_info *opened_file = extra;
-                if (opened_file && opened_file->child) {
-
-                        stat->st_gid   = opened_file->child->gid;
-                        stat->st_mode  = opened_file->child->mode;
-                        stat->st_mtime = opened_file->child->mtime;
-                        stat->st_ctime = opened_file->child->ctime;
-                        stat->st_size  = opened_file->child->size;
-                        stat->st_uid   = opened_file->child->uid;
-                        stat->st_type  = opened_file->child->type;
-
-                        if (opened_file->child->type == FILE_TYPE_DRV) {
-                                sys_mutex_unlock(hdl->resource_mtx);
-
-                                stat->st_dev = opened_file->child->data.dev_t;
-
-                                struct vfs_dev_stat dev_stat;
-                                err = sys_driver_stat(opened_file->child->data.dev_t,
-                                                      &dev_stat);
-                                if (!err) {
-                                        stat->st_size = dev_stat.st_size;
-
-                                } else if (err == ENODEV) {
-                                        stat->st_size = 0;
-                                        err = ESUCC;
-                                }
-
-                                return err;
-
-                        } else {
-                                stat->st_dev = 0;
-                                err          = ESUCC;
-                        }
-                } else {
-                        err = ENOENT;
                 }
 
                 sys_mutex_unlock(hdl->resource_mtx);

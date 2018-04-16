@@ -168,7 +168,7 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                                 memset(mod, 0, sizeof(mod));
 
                                 if (st.st_type == FILE_TYPE_DRV) {
-                                        snprintf(mod, sizeof(mod), "%2d,%2d,%2d",
+                                        snprintf(mod, sizeof(mod), "%3d,%2d,%2d",
                                                  mod_id, mod_major, mod_minor);
                                 }
 

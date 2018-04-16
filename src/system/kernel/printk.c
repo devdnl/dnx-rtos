@@ -54,9 +54,9 @@ typedef struct {
                 char  str[__OS_SYSTEM_MSG_COLS__];
         } msg[__OS_SYSTEM_MSG_ROWS__];
 
-        uint8_t wridx;
-        uint8_t rdidx;
-        uint8_t size;
+        uint16_t wridx;
+        uint16_t rdidx;
+        uint16_t size;
 } printk_log_t;
 
 /*==============================================================================

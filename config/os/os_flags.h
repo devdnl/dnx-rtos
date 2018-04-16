@@ -281,7 +281,7 @@ this:SetToolTip("This option determine how many characters in row can be stored.
 #define __OS_SYSTEM_MSG_COLS__ 64
 
 /*--
-this:AddWidget("Spinbox", 1, 250, "System log rows")
+this:AddWidget("Spinbox", 1, 4096, "System log rows")
 this:SetToolTip("This option determine how many rows is stored in buffer. " ..
                 "Option is active when system log function is enabled.")
 --*/

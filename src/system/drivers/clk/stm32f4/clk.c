@@ -115,7 +115,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
                         if (_CLK_CFG__LSE_ON != RCC_LSE_Bypass) {
                                 // this oscillator not causes an error because is not a main osc.
                                 if (wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS) != ESUCC) {
-                                        _printk("LSE oscillator start error");
+                                        printk("LSE oscillator start error");
                                 }
                         }
                 }
