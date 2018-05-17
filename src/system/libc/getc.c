@@ -77,7 +77,7 @@ int getc(FILE *stream)
                 return EOF;
         }
 
-        int chr = 0;
+        char chr = 0;
         if (fread(&chr, sizeof(char), 1, stream) != 0) {
                 if (ferror(stream) || feof(stream)) {
                         return EOF;

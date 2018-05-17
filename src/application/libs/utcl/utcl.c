@@ -1,7 +1,7 @@
 /*==============================================================================
 File    utcl.c
 
-Brief   uTCL library.
+Brief   uTCL library based on partcl.
 
         The MIT License (MIT)
 
@@ -43,7 +43,7 @@ Brief   uTCL library.
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define CHUNK 256
+#define CHUNK_LEN 256
 
 #if UTCL_DEBUG
 #define DBG printf
@@ -327,27 +327,69 @@ static int tcl_cmd_unset(struct tcl *tcl, tcl_value_t *args, void *arg)
         tcl_value_t *name = tcl_list_at(args, 1);
 
         struct tcl_var *var;
-        struct tcl_var *prev = NULL;
+        struct tcl_var *var_prev = NULL;
         for (var = tcl->env->vars; var != NULL; var = var->next) {
                 if (strcmp(var->name, tcl_string(name)) == 0) {
+                        tcl_free(var->name);
+                        tcl_free(var->value);
+
+                        if (var_prev) {
+                                var_prev->next = var->next;
+                        } else {
+                                tcl->env->vars = var->next;
+                        }
+
+                        tcl_free((void*)var);
+
+                        DBG("DBG: unsed '%s' variable.\n", tcl_string(name));
+
                         break;
                 }
-                prev = var;
+                var_prev = var;
         }
 
-        if (var) {
-                tcl_free(var->name);
-                tcl_free(var->value);
+        tcl_free(name);
+        return FNORMAL;
+}
 
-                if (prev) {
-                        prev->next = var->next;
-                } else {
-                        tcl->env->vars = var->next;
+//==============================================================================
+/**
+ * @brief Command remove selected function.
+ *
+ * @param tcl   context container
+ * @param args  argument list
+ * @param arg   user argument
+ *
+ * @return One of flow status (Fxx).
+ */
+//==============================================================================
+static int tcl_cmd_unproc(struct tcl *tcl, tcl_value_t *args, void *arg)
+{
+        (void)arg;
+
+        tcl_value_t *name = tcl_list_at(args, 1);
+
+        struct tcl_cmd *cmd_prev = NULL;
+
+        for (struct tcl_cmd *cmd = tcl->cmds; cmd != NULL; cmd = cmd->next) {
+
+                if (strcmp(cmd->name, tcl_string(name)) == 0) {
+
+                        if (cmd_prev) {
+                                cmd_prev = cmd->next;
+                        } else {
+                                tcl->cmds = cmd->next;
+                        }
+
+                        if (cmd->constname == false) {
+                                tcl_free((tcl_value_t*)cmd->name);
+                        }
+                        free(cmd->arg);
+                        free(cmd);
+
+                        break;
                 }
-
-                tcl_free((void*)var);
-
-                DBG("DBG: unsed '%s' variable.\n", tcl_string(name));
+                cmd_prev = cmd;
         }
 
         tcl_free(name);
@@ -619,7 +661,7 @@ static int tcl_cmd_source(struct tcl *tcl, tcl_value_t *args, void *arg)
  *
  * @param tcl   context container
  * @param args  argument list
- * @param arg   user argument
+ * @param arg   user argument (code chunk)
  *
  * @return One of flow status (Fxx).
  */
@@ -1348,6 +1390,31 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len)
 int tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity,
                   void *arg)
 {
+        // remove previous function if exists
+        struct tcl_cmd *cmd_prev = NULL;
+
+        for (struct tcl_cmd *cmd = tcl->cmds; cmd != NULL; cmd = cmd->next) {
+
+                if (strcmp(cmd->name, tcl_string(name)) == 0) {
+
+                        if (cmd_prev) {
+                                cmd_prev = cmd->next;
+                        } else {
+                                tcl->cmds = cmd->next;
+                        }
+
+                        if (cmd->constname == false) {
+                                tcl_free((tcl_value_t*)cmd->name);
+                        }
+                        free(cmd->arg);
+                        free(cmd);
+
+                        break;
+                }
+                cmd_prev = cmd;
+        }
+
+        // add new function
         struct tcl_cmd *cmd = malloc(sizeof(struct tcl_cmd));
         if (cmd) {
                 cmd->name = tcl_alloc(name, strlen(name));
@@ -1426,6 +1493,7 @@ int tcl_init(struct tcl *tcl)
         if (tcl_register_const(tcl, "puts", tcl_cmd_puts, 2, NULL) != FNORMAL) goto error;
         if (tcl_register_const(tcl, "gets", tcl_cmd_gets, 1, NULL) != FNORMAL) goto error;
         if (tcl_register_const(tcl, "proc", tcl_cmd_proc, 4, NULL) != FNORMAL) goto error;
+        if (tcl_register_const(tcl, "unproc", tcl_cmd_unproc, 0, NULL) != FNORMAL) goto error;
         if (tcl_register_const(tcl, "if", tcl_cmd_if, 0, NULL) != FNORMAL) goto error;
         if (tcl_register_const(tcl, "while", tcl_cmd_while, 3, NULL) != FNORMAL) goto error;
         if (tcl_register_const(tcl, "return", tcl_cmd_flow, 0, NULL) != FNORMAL) goto error;
@@ -1491,46 +1559,59 @@ int tcl_loadfile(struct tcl *tcl, const char *filename)
 {
         FILE *f = fopen(filename, "r");
         if (!f) {
-                perror(NULL);
+                perror(filename);
                 return FERROR;
         }
 
-        char *chunk = malloc(CHUNK);
-        int i = 0;
+        int   buflen = CHUNK_LEN;
+        char *buf    = calloc(1, buflen);
+        int   i      = 0;
 
-        while (chunk && f && !tcl->exit) {
+        while (buf && f && !tcl->exit) {
+                int c = fgetc(f);
 
-                if (fgets(chunk, CHUNK, f) == NULL) {
+                if (i > buflen - 1) {
+                        buf = realloc(buf, buflen += CHUNK_LEN);
+                        memset(buf + i, 0, buflen - i);
+                }
+
+                if (c == 0 || c == EOF) {
                         break;
                 }
 
-                i = strlen(chunk);
+                buf[i++] = c;
 
-                tcl_each(chunk, i, 1) {
-                        if (p.token == TERROR && (p.to - chunk) != i) {
-                                memset(chunk, 0, CHUNK);
+                tcl_each(buf, i, 1) {
+
+                        if (p.token == TERROR && (p.to - buf) != i) {
+
+                                memset(buf, 0, buflen);
                                 i = 0;
+                                break;
+
                         } else if (p.token == TCMD && *(p.from) != '\0') {
-                                int r = tcl_eval(tcl, chunk, strlen(chunk));
+
+                                int r = tcl_eval(tcl, buf, strlen(buf));
                                 if (r == FERROR) {
-                                        printf("Chunk error: %s:\n%s\n", filename, chunk);
+                                        printf("Chunk error: %s:\n%s\n", filename, buf);
                                         tcl->exit = 1;
                                         break;
                                 }
 
-                                memset(chunk, 0, CHUNK);
+                                memset(buf, 0, buflen);
                                 i = 0;
                                 break;
                         }
                 }
         }
 
-        if (chunk) {
-                free(chunk);
-        }
+        free(buf);
 
-        if (f) {
-                fclose(f);
+        fclose(f);
+
+        if (i) {
+                printf("TCL: incomplete input\n");
+                return FERROR;
         }
 
         return FNORMAL;

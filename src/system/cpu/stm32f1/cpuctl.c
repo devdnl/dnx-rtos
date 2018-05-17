@@ -50,10 +50,12 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static void calculate_ticks_per_us(void);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static u32_t ticks_per_us;
 
 /*==============================================================================
   Function definitions
@@ -199,6 +201,9 @@ void _cpuctl_update_system_clocks(void)
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
         SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
+
+        calculate_ticks_per_us();
+
         _critical_section_end();
 }
 
@@ -214,18 +219,42 @@ void _cpuctl_update_system_clocks(void)
 //==============================================================================
 void _cpuctl_delay_us(u16_t microseconds)
 {
-        u32_t ticks = ((u64_t)microseconds * SysTick->LOAD * __OS_TASK_SCHED_FREQ__) / 1000000;
+        while (microseconds > 0) {
 
-        while (ticks > 0) {
-                i32_t now = SysTick->VAL;
+                u32_t ticks = ticks_per_us;
 
-                if (now - ticks > 0) {
-                        while (SysTick->VAL > (u32_t)(now - ticks));
-                        ticks = 0;
-                } else {
-                        while (SysTick->VAL <= (u32_t)now);
-                        ticks -= now;
+                while (ticks > 0) {
+                        __asm volatile("nop");
+                        ticks--;
                 }
+
+                microseconds--;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function calculate number of loop needed to generate 1us delay.
+ */
+//==============================================================================
+static void calculate_ticks_per_us(void)
+{
+        ticks_per_us = 0;
+
+        u32_t ticks = ((u64_t)250 * SysTick->LOAD * __OS_TASK_SCHED_FREQ__) / 1000000;
+
+        while (SysTick->VAL >= (SysTick->LOAD / 2));
+
+        u32_t target = SysTick->VAL - ticks;
+
+        while (SysTick->VAL > target) {
+                ticks_per_us++;
+        }
+
+        ticks_per_us /= 185;
+
+        if (ticks_per_us == 0) {
+                ticks_per_us = 1;
         }
 }
 

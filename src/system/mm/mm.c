@@ -257,17 +257,18 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
                         break;
                 }
 
-                case _MM_PROG:
+                case _MM_PROG: {
                         if ((*cast(res_header_t**, mem))->type == RES_TYPE_MEMORY) {
                                 usage = arg;
                                 err   = ESUCC;
                                 (*cast(res_header_t**, mem))->next = NULL;
                                 (*cast(res_header_t**, mem))->type = RES_TYPE_UNKNOWN;
+                                // go through
                         } else {
                                 err = EFAULT;
                                 break;
                         }
-                        // go through
+                }
 
                 case _MM_CACHE:
                 case _MM_SHM:
