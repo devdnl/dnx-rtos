@@ -78,16 +78,16 @@
 int _inetdrv_hardware_init(inet_t *inet)
 {
         /* set MAC address */
-        int err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__SET_MAC_ADDR, inet->netif.hwaddr);
+        int err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__GET_MAC_ADDR, inet->netif.hwaddr);
         if (err) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inet_port_hardware_init: MAC set fail\n"));
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inetdrv_hardware_init: MAC set fail\n"));
                 return err;
         }
 
         /* start Ethernet interface */
         err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__ETHERNET_START);
         if (err) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inet_port_hardware_init: start fail\n"));
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inetdrv_hardware_init: start fail\n"));
                 return err;
         }
 
@@ -109,7 +109,7 @@ int _inetdrv_hardware_deinit(inet_t *inet)
 {
         int err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__ETHERNET_STOP);
         if (err) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inet_port_hardware_deinit: stop fail\n"));
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inetdrv_hardware_deinit: stop fail\n"));
         }
 
         return err;
@@ -139,14 +139,14 @@ void _inetdrv_handle_input(inet_t *inet, u32_t timeout)
         int r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
 
         while (r == 0 && pw.pkt_size > 0) {
-                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: packet size = %d\n", pw.pkt_size));
+                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inetdrv_handle_input: packet size = %d\n", pw.pkt_size));
 
                 // NOTE: subtract packet size by 4 to discard CRC32
                 struct pbuf *p = pbuf_alloc(PBUF_RAW, pw.pkt_size - 4, PBUF_RAM);
                 if (p) {
                         r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, p);
 
-                        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: received = %d\n", p->tot_len));
+                        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inetdrv_handle_input: received = %d\n", p->tot_len));
 
                         if (r == 0) {
                                 if (inet->netif.input(p, &inet->netif) != ERR_OK) {
@@ -156,18 +156,18 @@ void _inetdrv_handle_input(inet_t *inet, u32_t timeout)
                                         inet->rx_bytes += p->tot_len;
                                 }
                         } else {
-                                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: receive error\n"));
+                                LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inetdrv_handle_input: receive error\n"));
                                 pbuf_free(p);
                         }
 
                         r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
                 } else {
-                        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: not enough free memory\n"));
+                        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inetdrv_handle_input: not enough free memory\n"));
                         sys_sleep_ms(10);
                 }
         }
 
-        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_input: packet receive timeout\n"));
+        LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inetdrv_handle_input: packet receive timeout\n"));
 }
 
 //==============================================================================
@@ -199,7 +199,7 @@ err_t _inetdrv_handle_output(struct netif *netif, struct pbuf *p)
               inet->tx_bytes += p->tot_len;
               return ERR_OK;
       } else {
-              LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_netman_handle_output: packet send error\n"));
+              LWIP_DEBUGF(LOW_LEVEL_DEBUG, ("_inetdrv_handle_output: packet send error\n"));
               return ERR_IF;
       }
 }

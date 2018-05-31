@@ -2,9 +2,10 @@ dnx RTOS 2.2.1 Eagle
 ====================
 New Features, Improvements:
 - Updated documentation
+- MAC setup at driver configuration
 
 Fixed Bugs:
-- 
+- Fixed I2C slave mode for STM32F1 port
 
 dnx RTOS 2.2.0 Eagle
 ====================

@@ -465,6 +465,23 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                 }
                 break;
 
+        case IOCTL_ETHMAC__GET_MAC_ADDR:
+                if (arg) {
+                        u8_t *MAC = arg;
+
+                        MAC[5] = ETH->MACA0HR >> 8;
+                        MAC[4] = ETH->MACA0HR;
+                        MAC[3] = ETH->MACA0LR >> 24;
+                        MAC[2] = ETH->MACA0LR >> 16;
+                        MAC[1] = ETH->MACA0LR >> 8;
+                        MAC[0] = ETH->MACA0LR;
+
+                        return ESUCC;
+                } else {
+                        return EINVAL;
+                }
+                break;
+
         case IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN:
                 if (arg) {
                         if (sys_mutex_lock(hdl->tx_access, MAX_DELAY_MS) == ESUCC) {
