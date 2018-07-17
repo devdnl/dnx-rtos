@@ -114,7 +114,6 @@ extern const char *_module_get_name               (size_t);
 extern size_t      _module_get_count              (void);
 extern i32_t       _module_get_ID                 (const char*);
 extern ssize_t     _module_get_number_of_instances(size_t);
-extern int         _module_get_driver_info        (size_t, const char**, int*, int*);
 extern int         _device_lock                   (dev_lock_t*);
 extern int         _device_unlock                 (dev_lock_t*, bool);
 extern int         _device_get_access             (dev_lock_t*);

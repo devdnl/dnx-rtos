@@ -1,5 +1,5 @@
 # Makefile for GNU make
 
-CSRC_PROGRAMS   += modinit/modinit.c
+CSRC_PROGRAMS   += modprobe/modprobe.c
 CXXSRC_PROGRAMS += 
 HDRLOC_PROGRAMS += 

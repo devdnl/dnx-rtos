@@ -84,6 +84,7 @@ drivers configuration, and starting needed applications/daemons.
 \li \subpage page-drivers
 
 \section sec-drivers Drivers
+\li \subpage drv-nvm
 \li \subpage drv-can
 \li \subpage drv-sdio
 \li \subpage drv-dci

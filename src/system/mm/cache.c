@@ -119,8 +119,6 @@ static int cache_alloc(dev_t dev, u32_t blkpos, size_t blksz, cache_t **cache)
                 }
 
                 cman.list_head = *cache;
-
-                printk("CACHE: created (%d B)", blksz);
         }
 
         return err;
@@ -140,8 +138,6 @@ static int cache_free(cache_t *cache)
         int err = EINVAL;
 
         if (cache) {
-                printk("CACHE: freed (%d B)", cache->size);
-
                 if (cache == cman.list_head) {
                         cman.list_head = cache->next;
 
@@ -438,10 +434,6 @@ void _cache_sync(void)
                 cman.sync_needed = false;
 
                 _mutex_unlock(cman.list_mtx);
-
-                if (sync_cnt) {
-                        printk("CACHE: synchronized %d blocks", sync_cnt);
-                }
         }
 #endif
 }
@@ -472,8 +464,6 @@ void _cache_drop(void)
                 }
 
                 _mutex_unlock(cman.list_mtx);
-
-                printk("CACHE: dropped %d blocks", dropped);
         }
 #endif
 }
@@ -528,10 +518,6 @@ void _cache_reduce(size_t size)
                         // There is still not enough space so system try to
                         // synchronize all caches.
                         cman.sync_needed = (to_reduce > 0 && dirty > 0);
-
-                        if (cman.sync_needed) {
-                                printk("CACHE: sync needed", to_reduce);
-                        }
                 }
 
                 _mutex_unlock(cman.list_mtx);

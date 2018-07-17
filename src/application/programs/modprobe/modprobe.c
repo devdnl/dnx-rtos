@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    modinit.c
+@file    modprobe.c
 
 @author  Daniel Zorychta
 
 @brief   Module control.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2018 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -69,8 +69,10 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 static void show_help(const char *name)
 {
-        printf("Usage: %s [OPTIONS] <module name> <major> <minor> [module node]\n", name);
-        puts("  -r            release module");
+        printf("Usage: %s <flag> [OPTIONS]\n", name);
+        puts("  -i            initialize module <module name> <major> <minor> [node path]");
+        puts("  -r            release module <module name> <major> <minor>");
+        puts("  -R            release module <module path>");
         puts("  -h, --help    this help");
 }
 
@@ -79,59 +81,80 @@ static void show_help(const char *name)
  * @brief Program main function
  */
 //==============================================================================
-int_main(modinit, STACK_DEPTH_LOW, int argc, char *argv[])
+int_main(modprobe, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        if (argc < 4) {
-                show_help(argv[0]);
-                return 0;
-        }
+        int err = EXIT_FAILURE;
 
-        int err = EXIT_SUCCESS;
-        errno   = 0;
-
-        bool release = false;
-        for (int i = 1; i < argc; i++) {
-                if (strcmp(argv[i], "-r") == 0) {
-                        release = true;
-                }
-
-                if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-                        show_help(argv[0]);
-                        return 0;
-                }
-        }
-
+        const char *action  = NULL;
         const char *modname = NULL;
-        const char *action  = "";
+        const char *path    = NULL;
         int         major   = 0;
         int         minor   = 0;
 
-        if (release) {
-                action     = "release";
-                major      = atoi(argv[3]);
-                minor      = atoi(argv[4]);
-                modname    = argv[2];
 
-                if (driver_release(modname, major, minor) != 0) {
-                        err = EXIT_FAILURE;
+        if (argc < 2) {
+                show_help(argv[0]);
+
+        } else if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+                show_help(argv[0]);
+
+        } else if ((strcmp(argv[1], "-i") == 0) && (argc >= 5)) {
+
+                action  = "initialize";
+                modname = argv[2];
+                major   = atoi(argv[3]);
+                minor   = atoi(argv[4]);
+                path    = argc >= 6 ? argv[5] : NULL;
+
+                if (driver_init(modname, major, minor, path) >= 0) {
+                        err = EXIT_SUCCESS;
+                }
+
+        } else if ((strcmp(argv[1], "-r") == 0) && (argc == 5)) {
+
+                action  = "release";
+                modname = argv[2];
+                major   = atoi(argv[3]);
+                minor   = atoi(argv[4]);
+
+                if (driver_release(modname, major, minor) == 0) {
+                        err = EXIT_SUCCESS;
+                }
+
+        } else if ((strcmp(argv[1], "-R") == 0) && (argc == 3)) {
+
+                action = "release";
+                path   = argv[2];
+
+                if (driver_release2(path) == 0) {
+                        err = EXIT_SUCCESS;
                 }
 
         } else {
-                action     = "initialize";
-                major      = atoi(argv[2]);
-                minor      = atoi(argv[3]);
-                modname    = argv[1];
-
-                if (driver_init(modname, major, minor, argv[4]) < 0) {
-                        err = EXIT_FAILURE;
-                }
+                show_help(argv[0]);
         }
 
-        if (!err) {
-                printf("Module '%s%d-%d' %sd.\n", modname, major, minor, action);
-        } else {
-                fprintf(stderr, "Module '%s%d-%d' error: %s.\n",
-                        modname, major, minor, strerror(errno));
+
+        if (action) {
+                if (!err) {
+                        if (path) {
+                                printf("Module '%s' %sd.\n", path, action);
+
+                        } else {
+                                printf("Module '%s%d-%d' %sd.\n",
+                                       modname, major, minor, action);
+                        }
+
+                } else {
+                        if (path) {
+                                fprintf(stderr, "Module '%s' error: %s.\n",
+                                        path, strerror(errno));
+
+                        } else {
+                                fprintf(stderr, "Module '%s%d-%d' error: %s.\n",
+                                        modname, major, minor, strerror(errno));
+                        }
+                }
         }
 
         return err;
