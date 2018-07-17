@@ -381,6 +381,7 @@ static int _cache_read(dev_t dev, u32_t blkpos, size_t blksz, size_t blkcnt, u8_
 int _cache_init(void)
 {
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
+        printk("Disc cache enabled");
         return _mutex_create(MUTEX_TYPE_NORMAL, &cman.list_mtx);
 #else
         return ESUCC;

@@ -160,7 +160,8 @@ int _mm_register_region(_mm_region_t *region, void *start, size_t size)
                 // check if memory region is already used
                 for (_mm_region_t *r = &memory_region; r; r = r->next) {
                         if (r->heap.begin == start) {
-                                return EADDRINUSE;
+                                err = EADDRINUSE;
+                                goto finish;
                         }
                 }
 
@@ -174,6 +175,15 @@ int _mm_register_region(_mm_region_t *region, void *start, size_t size)
                                 }
                                 break;
                         }
+                }
+
+                finish:
+                if (!err) {
+                        printk("Registered memory region @ 0x%X of size %d bytes",
+                               start, size);
+                } else {
+                        printk("Memory region registration error (%d) @ 0x%X of size %d bytes",
+                               err, start, size);
                 }
         }
 
