@@ -30,7 +30,10 @@ Brief   NVM driver
 
 \section drv-nvm-desc Description
 Driver handles non-volatile memory (e.g. flash) where sector erase is required
-to write new data.
+to write new data. Make sure that device is able to write/read byte-by-byte. Some
+devices accept only aligned addresses and data (e.g. stm32f1 family requires
+address and data aligned to 16-bits at write operation; read is possible
+byte-by-byte).
 
 \section drv-nvm-sup-arch Supported architectures
 \li stm32f4
@@ -185,7 +188,11 @@ extern "C" {
 #define IOCTL_NVM__CONFIGURE            _IOW(NVM, 0, const NVM_config_t*)
 
 /**
- *  Request erase selected sector.
+ *  Request erase selected sector. Sector number is relative to start sector in
+ *  configuration. Erasing sector #0 (for selected NVM block) in device configured
+ *  with start sector set to 10, driver erase sector 10. In case when user select
+ *  sector #5 to erase then sector 15 will be erased (relative sector number is
+ *  automatically calculated to absolute one).
  *  @param  [WR] const size_t* sector to erase
  *  @return On success 0 is returned, otherwise -1.
  *

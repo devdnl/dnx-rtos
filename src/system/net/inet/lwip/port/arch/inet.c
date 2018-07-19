@@ -189,8 +189,16 @@ static void network_interface_thread(void *arg)
         UNUSED_ARG1(arg);
 
         /* open interface file */
+        bool msg = false;
+
         while (inet->if_file == NULL) {
-                sys_fopen(__NETWORK_TCPIP_DEVICE_PATH__, "r+", &inet->if_file);
+                int err = sys_fopen(__NETWORK_TCPIP_DEVICE_PATH__, "r+", &inet->if_file);
+
+                if (err && !msg) {
+                        printk("INET: interface file error (%s)", strerror(err));
+                        msg = true;
+                }
+
                 sys_msleep(100);
         }
 

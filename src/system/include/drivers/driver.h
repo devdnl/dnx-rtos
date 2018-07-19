@@ -93,6 +93,7 @@ extern "C" {
     #define _MODULE_EXTERN_C extern "C"
   #else
     #define MODULE_NAME(modname) static const char *_module_name_ = #modname
+    #define GET_MODULE_NAME() _module_name_
     #define _MODULE_EXTERN_C
   #endif /* __cplusplus */
 #else /* defined(DOXYGEN) */
