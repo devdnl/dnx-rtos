@@ -56,8 +56,10 @@ struct pipe {
 /*==============================================================================
   Local objects
 ==============================================================================*/
+#if __OS_ENABLE_MKFIFO__ == _YES_
 static const u32_t PIPE_READ_TIMEOUT  = MAX_DELAY_MS;
 static const u32_t PIPE_WRITE_TIMEOUT = MAX_DELAY_MS;
+#endif
 
 /*==============================================================================
   Exported objects
@@ -71,6 +73,7 @@ static const u32_t PIPE_WRITE_TIMEOUT = MAX_DELAY_MS;
   Function definitions
 ==============================================================================*/
 
+#if __OS_ENABLE_MKFIFO__ == _YES_
 //==============================================================================
 /**
  * @brief  Check if pipe is valid
@@ -82,6 +85,7 @@ static bool is_valid(pipe_t *this)
 {
         return this && this->self == this;
 }
+#endif
 
 //==============================================================================
 /**
@@ -94,6 +98,7 @@ static bool is_valid(pipe_t *this)
 //==============================================================================
 int _pipe_create(pipe_t **pipe)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         int err = EINVAL;
 
         if (pipe) {
@@ -111,6 +116,10 @@ int _pipe_create(pipe_t **pipe)
         }
 
         return err;
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -124,6 +133,7 @@ int _pipe_create(pipe_t **pipe)
 //==============================================================================
 int _pipe_destroy(pipe_t *pipe)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe)) {
                 _queue_destroy(pipe->queue);
                 pipe->self = NULL;
@@ -132,6 +142,10 @@ int _pipe_destroy(pipe_t *pipe)
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -146,11 +160,16 @@ int _pipe_destroy(pipe_t *pipe)
 //==============================================================================
 int _pipe_get_length(pipe_t *pipe, size_t *len)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (len && is_valid(pipe)) {
                 return _queue_get_number_of_items(pipe->queue, len);
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG2(pipe, len);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -168,6 +187,7 @@ int _pipe_get_length(pipe_t *pipe, size_t *len)
 //==============================================================================
 int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_blocking)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe) && buf && count) {
 
                 size_t n = 0;
@@ -193,6 +213,10 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG5(pipe, buf, count, rdcnt, non_blocking);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -210,6 +234,7 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
 //==============================================================================
 int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool non_blocking)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe) && buf && count) {
 
                 size_t n = 0;
@@ -233,6 +258,10 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG5(pipe, buf, count, wrcnt, non_blocking);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -246,6 +275,7 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
 //==============================================================================
 int _pipe_close(pipe_t *pipe)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe)) {
                 pipe->closed = true;
 
@@ -254,6 +284,10 @@ int _pipe_close(pipe_t *pipe)
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -267,11 +301,16 @@ int _pipe_close(pipe_t *pipe)
 //==============================================================================
 int _pipe_clear(pipe_t *pipe)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe)) {
                 return _queue_reset(pipe->queue);
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
 }
 
 /*==============================================================================

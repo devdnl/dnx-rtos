@@ -377,6 +377,7 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         bool put_float()
         {
                 if (chr == 'f' || chr == 'F') {
+#if __OS_PRINTF_FLOAT_ENABLE__ == _YES_
                         char result[24];
                         int  len = _dtoa(va_arg(arg, double), result, 6, sizeof(result));
 
@@ -386,6 +387,11 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 }
                         }
 
+#else
+                        double val = va_arg(arg, double);
+                        (void)val;
+                        put_char('0');
+#endif
                         return true;
                 } else {
                         return false;

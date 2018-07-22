@@ -154,6 +154,12 @@ this:SetToolTip("If this function is selected then printf() family function can 
 #define __OS_PRINTF_ENABLE__ _YES_
 
 /*--
+this:AddWidget("Checkbox", "printf() float support (%f flag)")
+this:SetToolTip("If this function is selected then printf() support float to string conversion.")
+--*/
+#define __OS_PRINTF_FLOAT_ENABLE__ _YES_
+
+/*--
 this:AddWidget("Checkbox", "scanf() family functions")
 this:SetToolTip("If this function is selected then scanf() family function can be used by the application.")
 --*/
@@ -250,7 +256,7 @@ this:SetToolTip("If this option is enabled then system is able to run scripts wi
 #define __OS_SYSTEM_SHEBANG_ENABLE__ _NO_
 
 /*--
-this:AddExtraWidget("Void", "VoidOption") -- uncomment if number of upper widgets is odd
+--this:AddExtraWidget("Void", "VoidOption") -- uncomment if number of upper widgets is odd
 this:AddExtraWidget("Label", "LabelSizes", "\nMemory parameters", -1, "bold")
 this:AddExtraWidget("Void", "VoidSizes")
 ++*/
