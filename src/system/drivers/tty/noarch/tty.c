@@ -707,9 +707,11 @@ static void send_cmd(enum cmd cmd, u8_t arg)
 static void vt100_init()
 {
         const char *cmd = VT100_RESET_ATTRIBUTES
+                        #if _TTY_CLR_SCR_AT_INIT == _YES_
                           VT100_CLEAR_SCREEN
-                          VT100_DISABLE_LINE_WRAP
-                          VT100_CURSOR_HOME;
+                          VT100_CURSOR_HOME
+                        #endif
+                          VT100_DISABLE_LINE_WRAP;
 
         size_t wrcnt;
         sys_fwrite(cmd, strlen(cmd), &wrcnt, tty_module->outfile);

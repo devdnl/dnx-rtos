@@ -17,6 +17,7 @@ ASRC_ARCH   += cpu/stm32f4/cmx_startup.s
 CSRC_ARCH   += cpu/stm32f4/cpuctl.c
 CSRC_ARCH   += cpu/stm32f4/cpuhooks.c
 CSRC_ARCH   += cpu/stm32f4/stm32f4xx_vectors.c
+CSRC_ARCH   += cpu/stm32f4/lib/misc.c
 CSRC_ARCH   += cpu/stm32f4/lib/stm32f4xx_rcc.c
 HDRLOC_ARCH += cpu/stm32f4/stm32f4xx
 HDRLOC_ARCH += cpu/stm32f4

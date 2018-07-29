@@ -33,6 +33,7 @@
 #include "stm32f4/cpuctl.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
+#include "stm32f4/lib/misc.h"
 #include "kernel/kwrapper.h"
 
 /*==============================================================================
@@ -83,6 +84,9 @@ static _mm_region_t ram3;
 //==============================================================================
 void _cpuctl_init(void)
 {
+        NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
+        NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
 

@@ -58,6 +58,9 @@ extern "C" {
 /* output file (access from many threads) */
 #define _TTY_OUT_FILE                   __TTY_TERM_OUT_FILE__
 
+/* clear screen at initialization */
+#define _TTY_CLR_SCR_AT_INIT            __TTY_CLR_SCR_AT_INIT__
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/

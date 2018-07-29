@@ -659,7 +659,7 @@ __ENABLE_CAN__=_NO_
 
 #/*--
 # if uC.PERIPH[uC.NAME].NVM ~= nil then
-#     this:PutWidgets("NVM", "arch/"..uC.ARCH.."/nvm_flags.h")
+#     this:PutWidgets("NVM")
 #     this:SetToolTip("NVM driver")
 # else
 #     this:AddWidget("Value")

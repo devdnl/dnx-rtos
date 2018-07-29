@@ -40,11 +40,6 @@ this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > NVM",
                function() this:LoadFile("arch/arch_flags.h") end)
 ++*/
 
-/*--
-this:AddWidget("Checkbox", "Example configuration")
---*/
-#define __NVM_CFG_EXAMPLE__ _NO_
-
 #endif /* _NVM_FLAGS_H_ */
 /*==============================================================================
   End of file
