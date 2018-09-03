@@ -8,6 +8,7 @@ New Features, Improvements:
 - Added MD5, SHA1, SHA256 libraries
 - Added option to TTY module to disable clearing of screen at initialization
 - Added configuration of NVIC in cpuctl in STM32F4 port
+- Added RTC driver for STM32F4 port
 
 Fixed Bugs:
 - Fixed I2C slave mode for STM32F1 port
