@@ -12,6 +12,7 @@ New Features, Improvements:
 Fixed Bugs:
 - Fixed I2C slave mode for STM32F1 port
 - Fixed printk() module
+- Fixed starting LSE clock in stm32f4
 
 dnx RTOS 2.2.0 Eagle
 ====================
