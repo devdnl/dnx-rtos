@@ -117,6 +117,9 @@ void _cpuctl_shutdown_system(void)
 {
         // Note: implementation enters to deep sleep mode.
 
+        /* enable power module */
+        RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+
         /* Clear Wake-up flag */
         PWR->CR |= PWR_CR_CWUF;
 

@@ -6,4 +6,8 @@ ifeq ($(__ENABLE_IRQ__), _YES_)
       CSRC_ARCH   += drivers/irq/$(TARGET)/irq.c
       CXXSRC_ARCH += 
    endif
+   ifeq ($(TARGET), stm32f4)
+      CSRC_ARCH   += drivers/irq/$(TARGET)/irq.c
+      CXXSRC_ARCH += 
+   endif
 endif

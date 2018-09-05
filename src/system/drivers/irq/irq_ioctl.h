@@ -34,6 +34,7 @@ Driver handles external IRQ controller.
 
 \section drv-irq-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
 
 \section drv-irq-ddesc Details
 \subsection drv-irq-ddesc-num Meaning of major and minor numbers
