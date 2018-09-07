@@ -776,6 +776,9 @@ API_FS_OPEN(ramfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
                         goto finish;
                 }
 
+                // load pointer to file descriptor
+                *fhdl = sys_llist_back(hdl->opended_files);
+
                 /* set file parameters */
                 if (child->type == FILE_TYPE_REGULAR) {
                         // truncate file if requested
@@ -794,13 +797,10 @@ API_FS_OPEN(ramfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
                         if (!err) {
                                 *fpos = 0;
                         } else {
-                                sys_llist_pop_back(hdl->opended_files);
-                                goto finish;
+                                int pos = sys_llist_find_end(hdl->opended_files, *fhdl);
+                                sys_llist_erase(hdl->opended_files, pos);
                         }
                 }
-
-                // load pointer to file descriptor
-                *fhdl = sys_llist_back(hdl->opended_files);
 
                 finish:
                 sys_mutex_unlock(hdl->resource_mtx);
