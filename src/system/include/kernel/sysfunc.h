@@ -5895,6 +5895,178 @@ static inline bool sys_stropt_is_flag(const char *opts, const char *flag)
         return _stropt_is_flag(opts, flag);
 }
 
+//==============================================================================
+/**
+ * @brief Function find driver name and then initialize device
+ *
+ * @note Function can be used only by driver code.
+ *
+ * @param [IN]  module              module name
+ * @param [IN]  major               major number
+ * @param [IN]  minor               minor number
+ * @param [OUT] id                  module id (can be NULL)
+ *
+ * @return One of error code (errno)
+ */
+//==============================================================================
+static inline int sys_driver_init(const char *module, u8_t major, u8_t minor, dev_t *id)
+{
+        return _driver_init(module, major, minor, NULL, id);
+}
+
+//==============================================================================
+/**
+ * @brief Function release selected device by using device ID
+ *
+ * @note Function can be used only by driver code.
+ *
+ * @param id                   device id
+ *
+ * @return One of error code (errno)
+ */
+//==============================================================================
+static inline int sys_driver_release(dev_t id)
+{
+        return _driver_release(id);
+}
+
+//==============================================================================
+/**
+ * @brief Function open selected driver
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param flags         flags
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_open(dev_t id, u32_t flags)
+{
+        return _driver_open(id, flags);
+}
+
+//==============================================================================
+/**
+ * @brief Function close selected driver
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param force         force close request
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_close(dev_t id, bool force)
+{
+        return _driver_close(id, force);
+}
+
+//==============================================================================
+/**
+ * @brief Function write data to driver
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param src           data source
+ * @param count         buffer size
+ * @param fpos          file position
+ * @param wrcnt         number of written bytes
+ * @param fattr         file attributes
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_write(dev_t            id,
+                                    const u8_t      *src,
+                                    size_t           count,
+                                    fpos_t          *fpos,
+                                    size_t          *wrcnt,
+                                    struct vfs_fattr fattr)
+{
+        return _driver_write(id, src, count, fpos, wrcnt, fattr);
+}
+
+//==============================================================================
+/**
+ * @brief Function read data to driver
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param dst           data destination
+ * @param count         buffer size
+ * @param fpos          file position
+ * @param rdcnt         number of read byes
+ * @param fattr         file attributes
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_read(dev_t            id,
+                                   u8_t            *dst,
+                                   size_t           count,
+                                   fpos_t          *fpos,
+                                   size_t          *rdcnt,
+                                   struct vfs_fattr fattr)
+{
+        return _driver_read(id, dst, count, fpos, rdcnt, fattr);
+}
+
+//==============================================================================
+/**
+ * @brief IO control
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param request       io request
+ * @param arg           argument
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_ioctl(dev_t id, int request, void *arg)
+{
+        return _driver_ioctl(id, request, arg);
+}
+
+//==============================================================================
+/**
+ * @brief Flush device buffer (forces write)
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_flush(dev_t id)
+{
+        return _driver_flush(id);
+}
+
+//==============================================================================
+/**
+ * @brief Device information
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param stat          status object
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
+{
+        return _driver_stat(id, stat);
+}
+
 #ifdef __cplusplus
 }
 #endif

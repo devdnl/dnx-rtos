@@ -9,7 +9,8 @@ New Features, Improvements:
 - Added option for TTY module to disable clearing of screen at initialization
 - Added vector position setup in STM32F4 port
 - Added RTC driver for STM32F4 port
-- Added IRQ driver for STM32F4 port
+- Added IRQ driver for STM32F4
+- Moved driver API to driver visibility (not only file system)
 
 Fixed Bugs:
 - Fixed I2C slave mode for STM32F1 port
