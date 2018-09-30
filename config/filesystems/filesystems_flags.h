@@ -112,9 +112,9 @@ __ENABLE_EEFS__=_NO_
 # this:SetEvent("clicked", "EXT4FS_CONFIGURE", function() this:LoadFile("filesystems/ext4fs_flags.h") end)
 #--*/
 #include "../filesystems/ext4fs_flags.h"
-#define __ENABLE_EXT4FS__ _NO_
+#define __ENABLE_EXT4FS__ _YES_
 #/*
-__ENABLE_EXT4FS__=_NO_
+__ENABLE_EXT4FS__=_YES_
 #*/
 
 #/*--

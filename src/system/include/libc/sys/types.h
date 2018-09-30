@@ -97,7 +97,7 @@ typedef intptr_t fd_t;
  * @brief File mode.
  * @see S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRO, S_IWGRO, S_IXGRO, S_IROTH, S_IWOTH, S_IXOTH
  */
-typedef u16_t mode_t;
+typedef u32_t mode_t;
 
 /** @brief User ID. */
 typedef u16_t uid_t;
@@ -167,23 +167,12 @@ struct mntent {
 };
 #endif
 
-/** @brief File type. */
-typedef enum tfile {
-        FILE_TYPE_UNKNOWN,      //!< Unknown file type
-        FILE_TYPE_REGULAR,      //!< Regular file
-        FILE_TYPE_DIR,          //!< Directory
-        FILE_TYPE_DRV,          //!< Driver node
-        FILE_TYPE_LINK,         //!< Link to other file
-        FILE_TYPE_PROGRAM,      //!< Program binary or link to built-in program
-        FILE_TYPE_PIPE          //!< FIFO file
-} tfile_t;
-
 #ifndef DOXYGEN // Doxygen documentation inserted in dirent.h file
 /** @brief Directory entry. */
 typedef struct dirent {
-        const char *name;           //!< File name
+        const char *d_name;         //!< File name
         u64_t       size;           //!< File size in bytes
-        tfile_t     filetype;       //!< File type
+        mode_t      mode;           //!< File mode (protection, file type)
         dev_t       dev;            //!< Device address (if file type is driver)
 } dirent_t;
 #endif
@@ -192,12 +181,11 @@ typedef struct dirent {
 struct stat {
         u64_t   st_size;        /*!< Total size, in bytes.*/
         dev_t   st_dev;         /*!< ID of device containing file.*/
-        mode_t  st_mode;        /*!< Protection.*/
+        mode_t  st_mode;        /*!< Protection, file type.*/
         uid_t   st_uid;         /*!< User ID of owner.*/
         gid_t   st_gid;         /*!< Group ID of owner.*/
         time_t  st_ctime;       /*!< Time of creation.*/
         time_t  st_mtime;       /*!< Time of last modification.*/
-        tfile_t st_type;        /*!< Type of file.*/
 };
 
 /** file system statistic */

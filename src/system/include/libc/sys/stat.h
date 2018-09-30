@@ -73,6 +73,22 @@ extern "C" {
 #define S_IWOTH
 /** @brief Execute permission, others. @see mode_t */
 #define S_IXOTH
+/** @brief Mask permission flags. @see mode_t */
+#define S_IPMT(mode_t_m)
+/** @brief Mask file type flags. @see mode_t */
+#define S_IFMT(mode_t_m)
+/** @brief Check if file is a regular file. */
+#define S_ISREG(mode_t_m)
+/** @brief Check if file is a dir. */
+#define S_ISDIR(mode_t_m)
+/** @brief Check if file is a device. */
+#define S_ISDEV(mode_t_m)
+/** @brief Check if file is a link. */
+#define S_ISLNK(mode_t_m)
+/** @brief Check if file is a built-in program. */
+#define S_ISPROG(mode_t_m)
+/** @brief Check if file is a FIFO. */
+#define S_ISFIFO(mode_t_m)
 #endif
 
 /*==============================================================================

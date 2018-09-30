@@ -371,11 +371,10 @@ API_FS_FSTAT(fatfs, void *fs_handle, void *fhdl, struct stat *stat)
 
         stat->st_dev   = 0;
         stat->st_gid   = 0;
-        stat->st_mode  = 0777;
+        stat->st_mode  = S_IFREG | S_IRWXU | S_IRWXG | S_IRWXO;
         stat->st_mtime = time_fat2unix((fat_file->fdate << 16) | fat_file->ftime);
         stat->st_size  = fat_file->fsize;
         stat->st_uid   = 0;
-        stat->st_type  = FILE_TYPE_REGULAR;
 
         return ESUCC;
 }
@@ -547,10 +546,11 @@ API_FS_READDIR(fatfs, void *fs_handle, DIR *dir)
 #else
                         memcpy(fatdir->name, fat_file_info.fname, 13);
 #endif
-                        dir->dirent.name     = &fatdir->name[0];
+                        dir->dirent.d_name   = &fatdir->name[0];
                         dir->dirent.size     = fat_file_info.fsize;
-                        dir->dirent.filetype = fat_file_info.fattrib & LIBFAT_AM_DIR ?
-                                               FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                        dir->dirent.mode     = (S_IRWXU | S_IRWXG | S_IRWXO)
+                                             | (fat_file_info.fattrib & LIBFAT_AM_DIR
+                                               ? S_IFDIR : S_IFREG);
                         dir->d_seek          = fatdir->dir.index;
                 } else {
                         err = ENOENT;
@@ -656,12 +656,12 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
         if (err == ESUCC) {
                 stat->st_dev   = 0;
                 stat->st_gid   = 0;
-                stat->st_mode  = 0777;
                 stat->st_mtime = time_fat2unix((file_info.fdate << 16) | file_info.ftime);
                 stat->st_size  = file_info.fsize;
                 stat->st_uid   = 0;
-                stat->st_type  = file_info.fattrib & LIBFAT_AM_DIR ?
-                                 FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                stat->st_mode  = (S_IRWXU | S_IRWXG | S_IRWXO)
+                               | (file_info.fattrib & LIBFAT_AM_DIR ?
+                                 S_IFDIR : S_IFREG);
         }
 
         return err;

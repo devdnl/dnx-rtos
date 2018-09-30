@@ -59,7 +59,7 @@ static int bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_
 static int bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
 static int lock(struct ext4_blockdev *bdev);
 static int unlock(struct ext4_blockdev *bdev);
-static tfile_t ext4ftype2vfs(u32_t mode);
+static mode_t ext4ftype2vfs(u32_t mode);
 static const char *ext4_path(const char *path);
 
 /*==============================================================================
@@ -390,9 +390,8 @@ API_FS_FSTAT(ext4fs, void *fs_handle, void *fhdl, struct stat *stat)
                 stat->st_dev   = 0;
                 stat->st_uid   = uid;
                 stat->st_gid   = gid;
-                stat->st_mode  = mode & ~EXT4_INODE_MODE_TYPE_MASK;
+                stat->st_mode  = (mode & ~EXT4_INODE_MODE_TYPE_MASK) | ext4ftype2vfs(mode);
                 stat->st_size  = ext4_fsize(file);
-                stat->st_type  = ext4ftype2vfs(mode);
         }
 
         finish:
@@ -445,9 +444,8 @@ API_FS_STAT(ext4fs, void *fs_handle, const char *path, struct stat *stat)
                 stat->st_dev   = 0;
                 stat->st_uid   = uid;
                 stat->st_gid   = gid;
-                stat->st_mode  = mode & ~EXT4_INODE_MODE_TYPE_MASK;
+                stat->st_mode  = (mode & ~EXT4_INODE_MODE_TYPE_MASK) | ext4ftype2vfs(mode);
                 stat->st_size  = size;
-                stat->st_type  = ext4ftype2vfs(mode);
         }
 
         finish:
@@ -634,11 +632,11 @@ API_FS_READDIR(ext4fs, void *fs_handle, DIR *dir)
                         size_t len = de->name_length >= 255 ? 254 : de->name_length;
                         de->name[len] = '\0';
 
-                        dir->dirent.dev      = 0;
-                        dir->dirent.filetype = ext4ftype2vfs(mode);
-                        dir->dirent.name     = cast(const char*, de->name);
-                        dir->dirent.size     = ext4_fsize(&d->f);
-                        dir->d_seek          = d->next_off;
+                        dir->dirent.dev    = 0;
+                        dir->dirent.mode   = (mode & ~EXT4_INODE_MODE_TYPE_MASK) | ext4ftype2vfs(mode);
+                        dir->dirent.d_name = cast(const char*, de->name);
+                        dir->dirent.size   = ext4_fsize(&d->f);
+                        dir->d_seek        = d->next_off;
                 }
         }
 
@@ -893,18 +891,18 @@ static int unlock(struct ext4_blockdev *bdev)
  * @return VFS file type.
  */
 //==============================================================================
-static tfile_t ext4ftype2vfs(u32_t mode)
+static mode_t ext4ftype2vfs(u32_t mode)
 {
         mode &= EXT4_INODE_MODE_TYPE_MASK;
         switch (mode) {
-        case EXT4_INODE_MODE_FIFO:      return FILE_TYPE_PIPE;
-        case EXT4_INODE_MODE_CHARDEV:   return FILE_TYPE_DRV;
-        case EXT4_INODE_MODE_DIRECTORY: return FILE_TYPE_DIR;
-        case EXT4_INODE_MODE_BLOCKDEV:  return FILE_TYPE_DRV;
-        case EXT4_INODE_MODE_FILE:      return FILE_TYPE_REGULAR;
-        case EXT4_INODE_MODE_SOFTLINK:  return FILE_TYPE_LINK;
-        case EXT4_INODE_MODE_SOCKET:    return FILE_TYPE_PIPE;
-        default:                        return FILE_TYPE_UNKNOWN;
+        case EXT4_INODE_MODE_FIFO:      return S_IFIFO;
+        case EXT4_INODE_MODE_CHARDEV:   return S_IFDEV;
+        case EXT4_INODE_MODE_DIRECTORY: return S_IFDIR;
+        case EXT4_INODE_MODE_BLOCKDEV:  return S_IFDEV;
+        case EXT4_INODE_MODE_FILE:      return S_IFREG;
+        case EXT4_INODE_MODE_SOFTLINK:  return S_IFLNK;
+        case EXT4_INODE_MODE_SOCKET:    return S_IFIFO;
+        default:                        return mode;
         }
 }
 

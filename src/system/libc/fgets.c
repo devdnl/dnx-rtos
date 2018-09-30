@@ -89,7 +89,7 @@ char *fgets(char *str, int size, FILE *stream)
 
                 size--;
 
-                if (file_stat.st_type == FILE_TYPE_PIPE || file_stat.st_type == FILE_TYPE_DRV) {
+                if (S_ISFIFO(file_stat.st_mode) || S_ISDEV(file_stat.st_mode)) {
 
                         while ((c != '\n') && size--) {
 
