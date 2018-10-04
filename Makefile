@@ -169,12 +169,13 @@ THIS_MAKEFILE = $(firstword $(MAKEFILE_LIST))
 THREAD = $(shell $(ECHO) $$($(CAT) /proc/cpuinfo | $(GREP) processor | $(WC) -l))
 
 # sets header search path (adds -I flags to paths)
-SEARCHPATH = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
-SEARCHPATH_PROGRAMS = $(foreach var, $(HDRLOC_PROGRAMS),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
-SEARCHPATH_LIB = $(foreach var, $(HDRLOC_LIB),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
-SEARCHPATH_CORE = $(foreach var, $(HDRLOC_CORE),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
-SEARCHPATH_NOARCH = $(foreach var, $(HDRLOC_NOARCH),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
-SEARCHPATH_ARCH = $(foreach var, $(HDRLOC_ARCH),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
+SEARCHPATH          = $(foreach var, $(HDRLOC),-I$(var)) $(foreach var, $(HDRLOC_$(TARGET)),-I$(var))
+SEARCHPATH_TARGET   = $(foreach var, $(HDRLOC_$(TARGET)),-I$(var)) -Isrc/
+SEARCHPATH_PROGRAMS = $(foreach var, $(_HDRLOC_PROGRAMS),-I$(var))
+SEARCHPATH_LIB      = $(foreach var, $(_HDRLOC_LIB),-I$(var))
+SEARCHPATH_CORE     = $(foreach var, $(_HDRLOC_CORE),-I$(var))
+SEARCHPATH_NOARCH   = $(foreach var, $(_HDRLOC_NOARCH),-I$(var))
+SEARCHPATH_ARCH     = $(foreach var, $(_HDRLOC_ARCH),-I$(var))
 
 # main target without defined prefixes
 TARGET = $(__CPU_ARCH__)
@@ -195,8 +196,7 @@ _HDRLOC_LIB      = $(foreach file, $(HDRLOC_LIB),$(APP_LIB_LOC)/$(file))
 _HDRLOC_CORE     = $(foreach file, $(HDRLOC_CORE),$(SYS_LOC)/$(file))
 _HDRLOC_NOARCH   = $(foreach file, $(HDRLOC_NOARCH),$(SYS_LOC)/$(file))
 _HDRLOC_ARCH     = $(foreach file, $(HDRLOC_ARCH),$(SYS_LOC)/$(file))
-
-HDRLOC  = $(_HDRLOC_PROGRAMS) $(_HDRLOC_LIB) $(_HDRLOC_CORE) $(_HDRLOC_NOARCH) $(_HDRLOC_ARCH) src/
+HDRLOC           = src/ $(_HDRLOC_PROGRAMS) $(_HDRLOC_LIB) $(_HDRLOC_CORE) $(_HDRLOC_NOARCH) $(_HDRLOC_ARCH)
 
 # defines all C sources
 CSRC    = $(foreach file, $(CSRC_PROGRAMS),$(APP_PRG_LOC)/$(file)) \
@@ -347,7 +347,8 @@ dependencies :
 	@$(MKDIR) $(TARGET_PATH)
 	@$(RM) $(TARGET_PATH)/*.*
 	@$(ECHO) "" > $(TARGET_PATH)/$(DEP_FILE_NAME)
-	@$(MKDEP)    -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_PROGRAMS) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
+	@$(MKDEP)    -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_TARGET) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
+	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_PROGRAMS) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
 	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_LIB) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
 	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_CORE) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
 	@$(MKDEP) -a -f $(TARGET_PATH)/$(DEP_FILE_NAME) -p $(OBJ_PATH)/ -o .$(OBJ_EXT) $(SEARCHPATH_NOARCH) -Y -- $(CFLAGS_$(TARGET)) -- $(CSRC) $(CXXSRC) >/dev/null 2>&1
