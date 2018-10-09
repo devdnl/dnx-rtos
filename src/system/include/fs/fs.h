@@ -785,6 +785,22 @@ static inline int sys_pipe_close(pipe_t *pipe)
 
 //==============================================================================
 /**
+ * @brief Make FIFO permanent - FIFO is not closed at pipe close.
+ *
+ * @note Function can be used only by file system code.
+ *
+ * @param pipe          a pipe object
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_pipe_permanent(pipe_t *pipe)
+{
+        return _pipe_permanent(pipe);
+}
+
+//==============================================================================
+/**
  * @brief  Clear pipe
  *
  * @note Function can be used only by file system code.

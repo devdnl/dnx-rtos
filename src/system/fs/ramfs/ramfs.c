@@ -1053,6 +1053,10 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *fhdl, int request, void *arg)
                                         sys_mutex_unlock(hdl->resource_mtx);
                                         return sys_pipe_clear(opened_file->child->data.pipe_t);
 
+                                case IOCTL_PIPE__PERMANENT:
+                                        sys_mutex_unlock(hdl->resource_mtx);
+                                        return sys_pipe_permanent(opened_file->child->data.pipe_t);
+
                                 default:
                                         err = EBADRQC;
                                         break;
