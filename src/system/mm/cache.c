@@ -565,7 +565,7 @@ int sys_cache_drop(FILE *file)
         struct stat stat;
         err = _vfs_fstat(file, &stat);
         if (!err) {
-                if (stat.st_type != FILE_TYPE_DRV) {
+                if (not S_ISDEV(stat.st_mode)) {
                         return ESUCC;
                 }
         } else {
@@ -642,7 +642,7 @@ int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, const
         struct stat stat;
         int err = _vfs_fstat(file, &stat);
         if (!err) {
-                if (stat.st_type == FILE_TYPE_DRV) {
+                if (S_ISDEV(stat.st_mode)) {
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
                         err = _cache_write(stat.st_dev, blkpos, blksz, blkcnt, buf, mode);
 #else
@@ -701,7 +701,7 @@ int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, u8_t *
         struct stat stat;
         int err = _vfs_fstat(file, &stat);
         if (!err) {
-                if (stat.st_type == FILE_TYPE_DRV) {
+                if (S_ISDEV(stat.st_mode)) {
 #if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
                         err = _cache_read(stat.st_dev, blkpos, blksz, blkcnt, buf);
 #else

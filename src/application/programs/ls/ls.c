@@ -114,22 +114,22 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                 dirent_t *dirent = readdir(dir);
                 while (!errno && dirent) {
 
-                        if (isstreq(dirent->name, ".") || isstreq(dirent->name, "..") ) {
+                        if (isstreq(dirent->d_name, ".") || isstreq(dirent->d_name, "..") ) {
                                 goto next;
                         }
 
                         struct stat st;
-                        if (stat(dirent->name, &st) == 0) {
+                        if (stat(dirent->d_name, &st) == 0) {
 
                                 const char *type;
-                                switch (st.st_type) {
-                                case FILE_TYPE_DIR:     type = VT100_FONT_COLOR_LIGHT_BLUE"d"; break;
-                                case FILE_TYPE_DRV:     type = VT100_FONT_COLOR_MAGENTA"c";    break;
-                                case FILE_TYPE_LINK:    type = VT100_FONT_COLOR_CYAN"l";       break;
-                                case FILE_TYPE_REGULAR: type = VT100_FONT_COLOR_GREEN"-";      break;
-                                case FILE_TYPE_PROGRAM: type = VT100_FONT_BOLD"*";             break;
-                                case FILE_TYPE_PIPE:    type = VT100_FONT_COLOR_BROWN"p";      break;
-                                default:                type = "?";                            break;
+                                switch (S_IFMT(st.st_mode)) {
+                                case S_IFDIR:  type = VT100_FONT_COLOR_LIGHT_BLUE"d"; break;
+                                case S_IFDEV:  type = VT100_FONT_COLOR_MAGENTA"c";    break;
+                                case S_IFLNK:  type = VT100_FONT_COLOR_CYAN"l";       break;
+                                case S_IFREG:  type = VT100_FONT_COLOR_GREEN"-";      break;
+                                case S_IFPROG: type = VT100_FONT_BOLD"*";             break;
+                                case S_IFIFO:  type = VT100_FONT_COLOR_BROWN"p";      break;
+                                default:       type = "?";                            break;
                                 }
 
                                 char mode[10];
@@ -167,8 +167,8 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                                 char mod[12];
                                 memset(mod, 0, sizeof(mod));
 
-                                if (st.st_type == FILE_TYPE_DRV) {
-                                        snprintf(mod, sizeof(mod), "%3d,%2d,%2d",
+                                if (S_ISDEV(st.st_mode)) {
+                                        snprintf(mod, sizeof(mod), "%2d,%2d,%2d",
                                                  mod_id, mod_major, mod_minor);
                                 }
 
@@ -183,7 +183,7 @@ int_main(ls, STACK_DEPTH_LOW, int argc, char *argv[])
                                        VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(34)"%s"
                                        VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(51)"%s"
                                        VT100_RESET_ATTRIBUTES"\n",
-                                       type, mode, size, unit, mod, time, dirent->name);
+                                       type, mode, size, unit, mod, time, dirent->d_name);
 
                                 count++;
                         } else {

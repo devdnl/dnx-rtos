@@ -206,7 +206,7 @@ static bool command_hint()
                                 DIR *dir = opendir("/proc/bin");
                                 if (dir) {
                                         while ((dirent = readdir(dir))) {
-                                                if (strncmp(dirent->name, global->line, strlen(global->line)) == 0) {
+                                                if (strncmp(dirent->d_name, global->line, strlen(global->line)) == 0) {
                                                         cnt++;
                                                 }
                                         }
@@ -222,11 +222,11 @@ static bool command_hint()
 
                                         while ((dirent = readdir(dir))) {
 
-                                                if (strncmp(dirent->name, global->line, strlen(global->line)) == 0) {
+                                                if (strncmp(dirent->d_name, global->line, strlen(global->line)) == 0) {
                                                         if (cnt > 1) {
-                                                                printf("%s ", dirent->name);
+                                                                printf("%s ", dirent->d_name);
                                                         } else  {
-                                                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, dirent->name);
+                                                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, dirent->d_name);
                                                                 break;
                                                         }
                                                 }

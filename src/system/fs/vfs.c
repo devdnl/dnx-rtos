@@ -397,7 +397,7 @@ int _vfs_mkdir(const struct vfs_path *path, mode_t mode)
                 if (!err) {
 
                         int priority = increase_task_priority();
-                        err = fs->interface->fs_mkdir(fs->handle, external_path, mode);
+                        err = fs->interface->fs_mkdir(fs->handle, external_path, S_IPMT(mode));
                         restore_priority(priority);
                 }
 
@@ -435,7 +435,7 @@ int _vfs_mkfifo(const struct vfs_path *path, mode_t mode)
                 if (!err) {
 
                         int priority = increase_task_priority();
-                        err = fs->interface->fs_mkfifo(fs->handle, external_path, mode);
+                        err = fs->interface->fs_mkfifo(fs->handle, external_path, S_IPMT(mode));
                         restore_priority(priority);
                 }
 
@@ -737,7 +737,7 @@ int _vfs_chmod(const struct vfs_path *path, mode_t mode)
                 if (!err) {
 
                         int priority = increase_task_priority();
-                        err = fs->interface->fs_chmod(fs->handle, external_path, mode);
+                        err = fs->interface->fs_chmod(fs->handle, external_path, S_IPMT(mode));
                         restore_priority(priority);
                 }
 

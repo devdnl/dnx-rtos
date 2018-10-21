@@ -298,7 +298,7 @@ static inline int driver_release2(const char *path)
 
         if (stat(path, &buf) == 0) {
 
-                if (buf.st_type == FILE_TYPE_DRV) {
+                if (S_ISDEV(buf.st_mode)) {
 
                         u8_t  major = _dev_t__extract_major(buf.st_dev);
                         u8_t  minor = _dev_t__extract_minor(buf.st_dev);

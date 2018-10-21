@@ -262,7 +262,6 @@ static uint16_t fletcher16(uint8_t const *data, size_t bytes);
 static int block_read(EEFS_t *hdl, block_buf_t *blk);
 static int block_write(EEFS_t *hdl, block_buf_t *blk);
 static bool is_entry_item_used(dir_entry_t *entry);
-static tfile_t eefs2vfs_file_type(uint8_t eefs_file_type);
 static int block_load(EEFS_t *hdl, const char *path);
 static int block_load_by_type(EEFS_t *hdl, const char *path, uint32_t type);
 static int block_get_file_stat(EEFS_t *hdl, struct stat *stat);
@@ -609,10 +608,10 @@ API_FS_READDIR(eefs, void *fs_handle, DIR *dir)
         hdl->block.num = dd->block_num;
 
         memset(dd->name, 0, sizeof(dd->name));
-        dir->dirent.name     = dd->name;
-        dir->dirent.dev      = 0;
-        dir->dirent.size     = 0;
-        dir->dirent.filetype = FILE_TYPE_UNKNOWN;
+        dir->dirent.d_name = dd->name;
+        dir->dirent.dev    = 0;
+        dir->dirent.size   = 0;
+        dir->dirent.mode   = 0;
 
         int err = sys_mutex_lock(hdl->lock_mtx, BUSY_TIMEOUT);
         if (!err) {
@@ -1494,25 +1493,6 @@ static bool is_entry_item_used(dir_entry_t *entry)
 
 //==============================================================================
 /**
- * @brief  Convert EEFS file type to VFS.
- *
- * @param  eefs_file_type   EEFS file type
- *
- * @return VFS file type.
- */
-//==============================================================================
-static tfile_t eefs2vfs_file_type(uint8_t eefs_file_type)
-{
-        switch (eefs_file_type) {
-        case ENTRY_TYPE_DIR : return FILE_TYPE_DIR;
-        case ENTRY_TYPE_FILE: return FILE_TYPE_REGULAR;
-        case ENTRY_TYPE_NODE: return FILE_TYPE_DRV;
-        default             : return FILE_TYPE_UNKNOWN;
-        }
-}
-
-//==============================================================================
-/**
  * @brief  Function load block by using path.
  *
  * @param  hdl          EEFS handle
@@ -1650,24 +1630,22 @@ static int block_get_file_stat(EEFS_t *hdl, struct stat *stat)
 
                 stat->st_size  = size;
                 stat->st_dev   = 0;
-                stat->st_mode  = hdl->block.buf.dir.mode;
+                stat->st_mode  = S_IFDIR | hdl->block.buf.dir.mode;
                 stat->st_uid   = hdl->block.buf.dir.uid;
                 stat->st_gid   = hdl->block.buf.dir.gid;
                 stat->st_ctime = hdl->block.buf.dir.ctime;
                 stat->st_mtime = hdl->block.buf.dir.mtime;
-                stat->st_type  = FILE_TYPE_DIR;
                 break;
         }
 
         case BLOCK_MAGIC_FILE:
                 stat->st_size  = hdl->block.buf.file.size;
                 stat->st_dev   = 0;
-                stat->st_mode  = hdl->block.buf.file.mode;
+                stat->st_mode  = S_IFREG | hdl->block.buf.file.mode;
                 stat->st_uid   = hdl->block.buf.file.uid;
                 stat->st_gid   = hdl->block.buf.file.gid;
                 stat->st_ctime = hdl->block.buf.file.ctime;
                 stat->st_mtime = hdl->block.buf.file.mtime;
-                stat->st_type  = FILE_TYPE_REGULAR;
                 break;
 
         case BLOCK_MAGIC_NODE: {
@@ -1683,12 +1661,11 @@ static int block_get_file_stat(EEFS_t *hdl, struct stat *stat)
                 }
 
                 stat->st_dev   = hdl->block.buf.node.dev;
-                stat->st_mode  = hdl->block.buf.node.mode;
+                stat->st_mode  = S_IFDEV | hdl->block.buf.node.mode;
                 stat->st_uid   = hdl->block.buf.node.uid;
                 stat->st_gid   = hdl->block.buf.node.gid;
                 stat->st_ctime = hdl->block.buf.node.ctime;
                 stat->st_mtime = hdl->block.buf.node.mtime;
-                stat->st_type  = FILE_TYPE_DRV;
                 break;
         }
 
@@ -2564,7 +2541,6 @@ static int dir_read_entry(EEFS_t *hdl, dir_desc_t *dd, dir_entry_t *eefs_entry, 
 
         strlcpy(dd->name, eefs_entry->name, sizeof(dd->name));
 
-        dirent->filetype  = eefs2vfs_file_type(eefs_entry->type);
         dirent->dev       = -1;
         hdl->tmpblock.num = eefs_entry->block_addr;
 
@@ -2573,6 +2549,7 @@ static int dir_read_entry(EEFS_t *hdl, dir_desc_t *dd, dir_entry_t *eefs_entry, 
                 u16_t size = 0;
                 err = dir_get_size(hdl, &size);
                 dirent->size = size;
+                dirent->mode = S_IFDIR | hdl->tmpblock.buf.dir.mode;
                 break;
         }
 
@@ -2580,13 +2557,15 @@ static int dir_read_entry(EEFS_t *hdl, dir_desc_t *dd, dir_entry_t *eefs_entry, 
                 err = block_read(hdl, &hdl->tmpblock);
                 if (!err) {
                         dirent->size = hdl->tmpblock.buf.file.size;
+                        dirent->mode = S_IFREG | hdl->tmpblock.buf.file.mode;
                 }
                 break;
 
         case ENTRY_TYPE_NODE:
                 err = block_read(hdl, &hdl->tmpblock);
                 if (!err) {
-                        dirent->dev = hdl->tmpblock.buf.node.dev;
+                        dirent->dev  = hdl->tmpblock.buf.node.dev;
+                        dirent->mode = S_IFDEV | hdl->tmpblock.buf.node.mode;
 
                         struct vfs_dev_stat dev_stat;
                         err = sys_driver_stat(hdl->tmpblock.buf.node.dev, &dev_stat);

@@ -39,6 +39,8 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define CLOSED          (1<<0)
+#define PERMANENT       (1<<1)
 
 /*==============================================================================
   Local object types
@@ -46,7 +48,7 @@
 struct pipe {
         queue_t     *queue;
         struct pipe *self;
-        bool         closed;
+        u32_t        flag;
 };
 
 /*==============================================================================
@@ -107,8 +109,8 @@ int _pipe_create(pipe_t **pipe)
 
                         err = _queue_create(__OS_PIPE_LENGTH__, sizeof(u8_t), &(*pipe)->queue);
                         if (err == ESUCC) {
-                                (*pipe)->self   = *pipe;
-                                (*pipe)->closed = false;
+                                (*pipe)->self = *pipe;
+                                (*pipe)->flag = 0;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, pipe));
                         }
@@ -196,7 +198,7 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
                         size_t noitm = 0;
                         _queue_get_number_of_items(pipe->queue, &noitm);
 
-                        if (pipe->closed && noitm == 0) {
+                        if ((pipe->flag & CLOSED) && noitm == 0) {
                                 u8_t null = '\0';
                                 _queue_send(pipe->queue, &null, PIPE_WRITE_TIMEOUT);
                                 break;
@@ -243,7 +245,7 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
                         size_t noitm = 0;
                         _queue_get_number_of_items(pipe->queue, &noitm);
 
-                        if (pipe->closed && noitm == 0) {
+                        if ((pipe->flag & CLOSED) && noitm == 0) {
                                 break;
                         }
 
@@ -277,10 +279,15 @@ int _pipe_close(pipe_t *pipe)
 {
 #if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe)) {
-                pipe->closed = true;
 
-                const u8_t nul = '\0';
-                return _queue_send(pipe->queue, &nul, PIPE_WRITE_TIMEOUT);
+                if (not (pipe->flag & PERMANENT)) {
+                        pipe->flag |= CLOSED;
+
+                        const u8_t nul = '\0';
+                        return _queue_send(pipe->queue, &nul, 10);
+                } else {
+                        return ESUCC;
+                }
         } else {
                 return EINVAL;
         }
@@ -304,6 +311,30 @@ int _pipe_clear(pipe_t *pipe)
 #if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe)) {
                 return _queue_reset(pipe->queue);
+        } else {
+                return EINVAL;
+        }
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Permanent pipe. FIFO is not closed at file close.
+ *
+ * @param  pipe         a pipe object
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _pipe_permanent(pipe_t *pipe)
+{
+#if __OS_ENABLE_MKFIFO__ == _YES_
+        if (is_valid(pipe)) {
+                pipe->flag |= PERMANENT;
+                return ESUCC;
         } else {
                 return EINVAL;
         }
