@@ -454,20 +454,23 @@ static void release_resources(u8_t major)
 //==============================================================================
 static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode)
 {
-        int  err = EIO;
+        int  err = 0;
         u8_t n   = 0;
         u8_t addr[4];
 
-        switch (mode) {
-        case I2C_SUB_ADDR_MODE__3_BYTES: addr[n++] = address >> 16;
-        case I2C_SUB_ADDR_MODE__2_BYTES: addr[n++] = address >> 8;
-        case I2C_SUB_ADDR_MODE__1_BYTE : addr[n++] = address & 0xFF;
+        if (mode >= I2C_SUB_ADDR_MODE__3_BYTES) {
+                addr[n++] = address >> 16;
+        }
+
+        if (mode >= I2C_SUB_ADDR_MODE__2_BYTES) {
+                addr[n++] = address >> 8;
+        }
+
+        if (mode >= I2C_SUB_ADDR_MODE__1_BYTE) {
+                addr[n++] = address & 0xFF;
+
                 size_t wrcnt = 0;
                 err = _I2C_LLD__transmit(hdl, addr, n, &wrcnt);
-                        break;
-
-        default:
-                break;
         }
 
         return err;
