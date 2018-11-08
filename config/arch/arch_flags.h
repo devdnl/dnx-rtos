@@ -685,9 +685,9 @@ __ENABLE_NVM__=_NO_
 #     this:SetFlagValue("__ENABLE_PWM__", "_NO_")
 # end
 #--*/
-#define __ENABLE_PWM__ _YES_
+#define __ENABLE_PWM__ _NO_
 #/*
-__ENABLE_PWM__=_YES_
+__ENABLE_PWM__=_NO_
 #*/
 
 #// MODULE LIST END
