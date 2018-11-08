@@ -87,6 +87,9 @@ void _cpuctl_init(void)
         NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
         NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
+        /* enable FPU */
+        SCB->CPACR |= ((3 << 20)|(3 << 22));
+
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
 
