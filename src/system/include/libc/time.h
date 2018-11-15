@@ -486,7 +486,7 @@ static inline time_t time(time_t *timer)
                 *timer = timeval.tv_sec;
         }
 
-        return err ? -1 : timeval.tv_sec;
+        return err ? (time_t)-1 : timeval.tv_sec;
 #else
         UNUSED_ARG1(timer);
         return -1;
