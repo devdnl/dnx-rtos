@@ -128,7 +128,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_FFLUSH,                 // | int            | FILE *file                |                                     |                           |                           |                                           |
         SYSCALL_SYNC,                   // | void           |                           |                                     |                           |                           |                                           |
     #if __OS_ENABLE_TIMEMAN__ == _YES_
-        SYSCALL_GETTIME,                // | time_t         |                           |                                     |                           |                           |                                           |
+        SYSCALL_GETTIME,                // | int            | struct timeval *          |                                     |                           |                           |                                           |
         SYSCALL_SETTIME,                // | int            | time_t *time              |                                     |                           |                           |                                           |
     #endif
         SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                | const char *node_path     |                                           |

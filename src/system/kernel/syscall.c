@@ -1133,9 +1133,9 @@ static void syscall_sync(syscallrq_t *rq)
 //==============================================================================
 static void syscall_gettime(syscallrq_t *rq)
 {
-        time_t time = -1;
-        SETERRNO(_gettime(&time));
-        SETRETURN(time_t, time);
+        GETARG(struct timeval*, timeval);
+        SETERRNO(_gettime(timeval));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
 //==============================================================================

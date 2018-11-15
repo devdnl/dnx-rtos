@@ -468,7 +468,7 @@ API_FS_FSTAT(procfs, void *fs_handle, void *fhdl, struct stat *stat)
                                    || (file->content == FILE_CONTENT_CPUINFO) ) {
 
                                         time_t t = 0;
-                                        sys_get_time(&t);
+                                        sys_gettime(&t);
 
                                         stat->st_mtime = t;
                                         stat->st_ctime = t;

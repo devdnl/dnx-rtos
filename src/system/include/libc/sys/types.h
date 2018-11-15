@@ -157,6 +157,21 @@ typedef u32_t time_t;
 #define __TIME_TYPE_DEFINED__
 #endif /* DOXYGEN */
 
+#ifndef DOXYGEN /* Doxygen description in sys/time.h */
+/** @brief Subseconds time representation */
+typedef u32_t suseconds_t;
+#define __SUSECONDS_TYPE_DEFINED__
+#endif
+
+#ifndef DOXYGEN
+/** @brief Type representing time value. */
+struct timeval {
+        time_t tv_sec;          /*!< seconds */
+        suseconds_t tv_usec;    /*!< microseconds */
+};
+#define __STRUCT_TIMEVAL_DEFINED__
+#endif
+
 #ifndef DOXYGEN // Doxygen documentation added to mntent.h file
 /** @brief Structure that describes a mount table entry. */
 struct mntent {

@@ -146,7 +146,7 @@ DRESULT _libfat_disk_ioctl(FILE *srcfile, uint8_t cmd, void *buff)
 uint32_t _libfat_get_fattime(void)
 {
         time_t t;
-        sys_get_time(&t);
+        sys_gettime(&t);
 
         struct tm tm;
         sys_gmtime_r(&t, &tm);

@@ -151,6 +151,7 @@ There are documented libraries that are modified for system purposes.
 \li \subpage sys-stat-h     Library contains functions for nodes create and information
 \li \subpage sys-statfs-h   File systems information
 \li \subpage sys-types-h    System types
+\li \subpage sys-time-h     System set/get time
 \li \subpage assert-h       Program assertion macro
 \li \subpage ctype-h        Character classification routines
 \li \subpage dirent-h       Directory handling

@@ -5043,7 +5043,7 @@ static inline u32_t sys_get_uptime_ms()
  *
  * @return Tick counter value.
  *
- * @see sys_get_time_ms(), sys_sleep_until(), sys_sleep_until_ms()
+ * @see sys_gettime_ms(), sys_sleep_until(), sys_sleep_until_ms()
  */
 //==============================================================================
 static inline u32_t sys_get_tick_counter()
@@ -5613,10 +5613,20 @@ static inline time_t sys_mktime(struct tm *timeptr)
  * @see sys_settime()
  */
 //==============================================================================
-static inline int sys_get_time(time_t *timer)
+static inline int sys_gettime(time_t *timer)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
-        return _gettime(timer);
+        struct timeval timeval;
+        int err = _gettime(&timeval);
+        if (!err) {
+                if (timer) {
+                        *timer = timeval.tv_sec;
+                } else {
+                        err = EINVAL;
+                }
+        }
+
+        return err;
 #else
         UNUSED_ARG1(timer);
         return ENOTSUP;

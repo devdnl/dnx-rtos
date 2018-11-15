@@ -2137,7 +2137,7 @@ static int dir_add_item(EEFS_t *hdl, dir_entry_t *dirent, const char *name, u16_
                 memset(&hdl->tmpblock.buf, 0xFF, sizeof(hdl->tmpblock.buf));
 
                 time_t time = 0;
-                sys_get_time(&time);
+                sys_gettime(&time);
 
                 switch (type) {
                 case BLOCK_MAGIC_DIR:
@@ -2596,7 +2596,7 @@ static int file_truncate(EEFS_t *hdl)
         int err = EILSEQ;
 
         time_t time = 0;
-        sys_get_time(&time);
+        sys_gettime(&time);
 
         if (block_is_file(hdl->block)) {
 
@@ -2775,7 +2775,7 @@ static int file_write(EEFS_t *hdl, const u8_t *src, size_t count, fpos_t *fpos, 
                 err = block_read(hdl, &hdl->block);
                 if (!err) {
                         time_t time = 0;
-                        sys_get_time(&time);
+                        sys_gettime(&time);
                         hdl->block.buf.file.mtime = time;
 
                         hdl->block.buf.file.size = max((*fpos + *wrcnt),

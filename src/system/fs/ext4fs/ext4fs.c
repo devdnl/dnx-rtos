@@ -198,7 +198,7 @@ API_FS_OPEN(ext4fs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
                 if (!err) {
                         if (flags & O_CREAT) {
                                 time_t ctime = 0;
-                                if (sys_get_time(&ctime) == ESUCC) {
+                                if (sys_gettime(&ctime) == ESUCC) {
                                         ext4_ctime_set(hdl->mp, path, ctime);
                                 }
                         }
@@ -274,7 +274,7 @@ API_FS_WRITE(ext4fs,
                 err = ext4_fwrite(fhdl, src, count, wrcnt);
 
                 time_t mtime = 0;
-                if (sys_get_time(&mtime) == ESUCC) {
+                if (sys_gettime(&mtime) == ESUCC) {
                         ext4_mtime_set2(hdl->mp, fhdl, mtime);
                 }
         }
@@ -502,7 +502,7 @@ API_FS_MKDIR(ext4fs, void *fs_handle, const char *path, mode_t mode)
                 err = ext4_mode_set(hdl->mp, path, mode);
 
                 time_t ctime = 0;
-                if (sys_get_time(&ctime) == ESUCC) {
+                if (sys_gettime(&ctime) == ESUCC) {
                         ext4_mtime_set(hdl->mp, path, ctime);
                 }
         }

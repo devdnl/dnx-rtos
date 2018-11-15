@@ -913,7 +913,7 @@ API_FS_WRITE(ramfs,
                 if (opened_file && opened_file->child) {
                         node_t *node = opened_file->child;
 
-                        sys_get_time(&node->mtime);
+                        sys_gettime(&node->mtime);
 
                         if (S_ISDEV(node->mode)) {
                                 sys_mutex_unlock(hdl->resource_mtx);
@@ -1318,7 +1318,7 @@ static int new_node(struct RAMFS *hdl,
         if (!err) {
 
                 time_t tm = 0;
-                sys_get_time(&tm);
+                sys_gettime(&tm);
 
                 node->name         = filename;
                 node->data.llist_t = NULL;
