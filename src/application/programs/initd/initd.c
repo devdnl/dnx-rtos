@@ -285,11 +285,20 @@ static void print_system_log_messages(void)
         /*
          * 1. This function prints all system log messages that were stored
          *    at system startup. It can be used in debug purposes. It can be
-         *    also disabled if not needed.
+         *    also disabled if not needed. Function run in thread.
          */
-        u32_t ts = 0;
-        while (syslog_read(global->str, sizeof(global->str), &ts)) {
-                printf("[%5d.%03d] %s\n", ts / 1000, ts % 1000, global->str);
+        struct timeval t = {0, 0};
+
+        while (true) {
+                if (syslog_read(global->str, sizeof(global->str), &t, &t)) {
+                        printf("[%d.%06d] %s\n", t.tv_sec, t.tv_usec, global->str);
+                } else {
+                        if (global->drv_init_done) {
+                                break;
+                        } else {
+                                msleep(10);
+                        }
+                }
         }
 }
 

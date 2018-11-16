@@ -92,7 +92,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 key = getchar();
                 ioctl(fileno(stdin), IOCTL_VFS__DEFAULT_RD_MODE);
 
-                if (!strchr("qk,.", key)) {
+                if (!strchr("qk,.", key) and key != ETX) {
                         if ((clock() - timer) < REFRESH_INTERVAL_SEC) {
                                 msleep(KEY_READ_INTERVAL_SEC);
                                 continue;
@@ -189,7 +189,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
 
                         ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
 
-                } else if (key == 'q') {
+                } else if (key == 'q' or key == ETX) {
                         break;
                 }
         }

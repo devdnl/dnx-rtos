@@ -51,6 +51,7 @@ typedef struct ttycmd  ttycmd_t;
 typedef enum ttycmd_resp {
         TTYCMD_BUSY,
         TTYCMD_KEY_ENTER,
+        TTYCMD_KEY_ENDTEXT,
         TTYCMD_KEY_BACKSPACE,
         TTYCMD_KEY_TAB,
         TTYCMD_KEY_DELETE,

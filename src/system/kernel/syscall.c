@@ -1270,10 +1270,11 @@ static void syscall_free(syscallrq_t *rq)
 //==============================================================================
 static void syscall_syslogread(syscallrq_t *rq)
 {
-        GETARG(char  *, str);
-        GETARG(size_t*, len);
-        GETARG(u32_t *, timestamp);
-        SETRETURN(size_t, _printk_read(str, *len, timestamp));
+        GETARG(char *, str);
+        GETARG(size_t *, len);
+        GETARG(const struct timeval *, from_time);
+        GETARG(struct timeval *, curr_time);
+        SETRETURN(size_t, _printk_read(str, *len, from_time, curr_time));
 }
 #endif
 

@@ -96,6 +96,9 @@ char *fgets(char *str, int size, FILE *stream)
                                 c = fgetc(stream);
                                 if (c == EOF) {
                                         break;
+                                } else if (c == ETX) {
+                                        str = NULL;
+                                        break;
                                 } else {
                                         *p++ = c;
                                 }

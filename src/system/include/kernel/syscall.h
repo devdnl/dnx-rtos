@@ -67,7 +67,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SETCWD,                 // | int            | const char *cwd           |                                     |                           |                           |                                           |
     #endif
     #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
-        SYSCALL_SYSLOGREAD,             // | size_t         | char *str                 | size_t *len                         | u32_t *timestamp          |                           |                                           |
+        SYSCALL_SYSLOGREAD,             // | size_t         | char *str                 | size_t *len                         | const struct timeval *from| struct timeval *current   |                                           |
     #endif
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr                 | void *arg                 |                           |                                           |
         SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init              |                           |                           |                                           |

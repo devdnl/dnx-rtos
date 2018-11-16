@@ -12,6 +12,9 @@ New Features, Improvements:
 - Added IRQ driver for STM32F4 port
 - Moved driver API to driver visibility (not only file system)
 - Added PWM driver for STM32F4 port
+- System log store messages during runtime
+- Better support of printk()
+- Added small support for CTRL+C (ETX) signal
 
 Fixed Bugs:
 - Fixed I2C slave mode for STM32F1 port

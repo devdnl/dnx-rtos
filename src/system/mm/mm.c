@@ -117,7 +117,6 @@ extern void *__ram_start;
 /** number of drivers */
 extern const uint _drvreg_number_of_modules;
 
-
 /*==============================================================================
   Function definitions
 ==============================================================================*/
@@ -131,7 +130,7 @@ extern const uint _drvreg_number_of_modules;
 //==============================================================================
 int _mm_init(void)
 {
-        int err = _heap_init(&memory_region.heap, HEAP_START, HEAP_SIZE);
+        int err = _mm_register_region(&memory_region, HEAP_START, HEAP_SIZE);
         if (!err) {
                 err = _kzalloc(_MM_KRN,
                                _drvreg_number_of_modules * sizeof(i32_t),
