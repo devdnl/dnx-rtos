@@ -155,6 +155,7 @@ GIT_HOOKS  = ./tools/apply_git_hooks.sh
 DOXYGEN    = ./tools/doxygen.sh
 RELEASEPKG = ./tools/releasepkg.sh
 RUNGENS    = ./tools/rungens.sh
+APPSTXCHK  = ./tools/app_syntax_check.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -223,6 +224,7 @@ OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:
 ####################################################################################################
 .PHONY : all
 all : generate apply_git_hooks
+	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) appsyntaxcheck
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) rungens
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
@@ -260,12 +262,31 @@ config : clean apply_git_hooks
 ####################################################################################################
 # analisis
 ####################################################################################################
-.PHONY : check
+.PHONY : check checkprog quickcheck appsyntaxcheck
 check :
-	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,information,missingInclude --force --inconclusive --include=./config/project/flags.h $(SEARCHPATH) $(CSRC) $(CXXSRC)
+	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 \
+	              --enable=warning,style,performance,portability,information,missingInclude \
+	              --force --inconclusive \
+	              --include=./config/project/flags.h \
+	              $(SEARCHPATH) $(CSRC) $(CXXSRC)
 
+checkprog :
+	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,missingInclude \
+	              --inconclusive \
+	              -DCOMPILE_EPOCH_TIME=0 \
+	              $(SEARCHPATH)\
+	              $(foreach file, $(CSRC_PROGRAMS),$(APP_PRG_LOC)/$(file))
+	
 quickcheck :
-	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 --enable=warning,style,performance,portability,missingInclude --force --inconclusive --include=./config/project/flags.h -I src/system/include/libc/dnx $(CSRC) $(CXXSRC)
+	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 \
+	              --enable=warning,style,performance,portability,missingInclude \
+	              --force --inconclusive \
+	              --include=./config/project/flags.h \
+	              -I src/system/include/libc/dnx \
+	              $(CSRC) $(CXXSRC)
+
+appsyntaxcheck :
+	@$(APPSTXCHK) $(foreach file, $(CSRC_PROGRAMS),$(APP_PRG_LOC)/$(file))
 
 
 ####################################################################################################

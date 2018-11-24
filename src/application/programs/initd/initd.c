@@ -291,13 +291,9 @@ static void print_system_log_messages(void)
 
         while (true) {
                 if (syslog_read(global->str, sizeof(global->str), &t, &t)) {
-                        printf("[%d.%06d] %s\n", t.tv_sec, t.tv_usec, global->str);
+                        printf("[%u.%06u] %s\n", t.tv_sec, t.tv_usec, global->str);
                 } else {
-                        if (global->drv_init_done) {
-                                break;
-                        } else {
-                                msleep(10);
-                        }
+                        break;
                 }
         }
 }

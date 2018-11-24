@@ -98,15 +98,13 @@ int_main(hexdump, STACK_DEPTH_LOW, int argc, char *argv[])
 
         FILE *f = fopen(argv[1], "r");
         if (f) {
-                size_t n = 0;
-
                 fseek(f, seek, SEEK_SET);
 
                 do {
                         u32_t seek = ftell(f);
                         u32_t len  = min(sizeof(global->buffer), bytes);
 
-                        n = fread(global->buffer, 1, len, f);
+                        size_t n = fread(global->buffer, 1, len, f);
 
                         char *ptr = global->line;
 

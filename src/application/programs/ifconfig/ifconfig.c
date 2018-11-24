@@ -56,6 +56,14 @@
 GLOBAL_VARIABLES_SECTION {
 };
 
+static const char *if_status[] = {
+       "NOT CONFIGURED",
+       "STATIC IP",
+       "DHCP CONFIGURING",
+       "DHCP",
+       "LINK DISCONNECTED"
+};
+
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -173,14 +181,6 @@ static void INET_up(const char *options)
 //==============================================================================
 static void INET_status(void)
 {
-        static const char *if_status[] = {
-               "NOT CONFIGURED",
-               "STATIC IP",
-               "DHCP CONFIGURING",
-               "DHCP",
-               "LINK DISCONNECTED"
-        };
-
         NET_INET_status_t ifstat;
         if (ifstatus(NET_FAMILY__INET, &ifstat) == 0) {
 

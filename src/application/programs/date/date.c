@@ -52,6 +52,7 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
+        char buf[TIME_FORMAT_BUF_LEN];
 };
 
 static const char *wrong_time_fm = "Wrong time format!";
@@ -135,14 +136,15 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                         uint sign, hour, minute;
                         sign = hour = minute = 0xFF;
 
-                        sscanf(&argv[i][9], "%c%2d%2d", &sign, &hour, &minute);
+                        sscanf(&argv[i][9], "%c%2u%2u", &sign, &hour, &minute);
 
                         if (!(sign == '-' || sign == '+') || hour > 23 || minute > 59) {
                                 puts(wrong_time_fm);
                                 return EXIT_FAILURE;
                         }
 
-                        int diff = (hour * 3600 + minute * 60) * (sign == '-' ? -1 : 1);
+                        int diff = cast(int, (hour * 3600 + minute * 60))
+                                 * (sign == '-' ? -1 : 1);
                         tzset(diff);
 
                         show_date = false;
@@ -150,25 +152,22 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                 }
 
                 if (argv[i][0] == '+') {
-                        char *buf = calloc(1, TIME_FORMAT_BUF_LEN);
-                        if (buf) {
-                                time_t     t  = time(NULL);
+                        time_t t = time(NULL);
 
-                                struct tm tm;
-                                if (UTC) {
-                                        gmtime_r(&t, &tm);
-                                } else {
-                                        localtime_r(&t, &tm);
-                                }
-
-                                strftime(buf, TIME_FORMAT_BUF_LEN, &argv[i][1], &tm);
-                                puts(buf);
-
-                                free(buf);
-
-                                show_date = false;
-                                break;
+                        struct tm tm;
+                        if (UTC) {
+                                gmtime_r(&t, &tm);
+                        } else {
+                                localtime_r(&t, &tm);
                         }
+
+                        strftime(global->buf, TIME_FORMAT_BUF_LEN, &argv[i][1], &tm);
+                        puts(global->buf);
+
+                        free(global->buf);
+
+                        show_date = false;
+                        break;
                 }
         }
 
@@ -182,7 +181,9 @@ int_main(date, STACK_DEPTH_LOW, int argc, char *argv[])
                         localtime_r(&t, &tm);
                 }
 
-                printf(asctime(&tm));
+                strftime(global->buf, TIME_FORMAT_BUF_LEN, "%a %B %d %X %Y\n", &tm);
+
+                printf(global->buf);
         }
 
         return EXIT_SUCCESS;

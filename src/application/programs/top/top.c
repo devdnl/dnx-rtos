@@ -111,7 +111,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 avg_CPU_load_t avg = {0, 0, 0, 0};
                 get_average_CPU_load(&avg);
 
-                printf("%s - %dd %d:%02d up, avg. load %%: %d.%d, %d.%d, %d.%d\n",
+                printf("%s - %ud %u:%0ud up, avg. load %%: %d.%d, %d.%d, %d.%d\n",
                         argv[0], udays, uhrs, umins,
                         avg.avg1min  / 10, avg.avg1min  % 10,
                         avg.avg5min  / 10, avg.avg5min  % 10,
@@ -152,10 +152,10 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                                          global->pstat.CPU_load % 10);
                         }
 
-                        printf("%3d %2d %7d %4d %4d %s %2d %3d %s\n",
+                        printf("%3d %2d %7u %4d %4d %s %2d %3d %s\n",
                                 global->pstat.pid,
                                 global->pstat.priority,
-                                global->pstat.memory_usage,
+                                (uint)global->pstat.memory_usage,
                                 global->pstat.stack_max_usage,
                                 global->pstat.stack_max_usage * 100 / global->pstat.stack_size,
                                 cpu_load_str,

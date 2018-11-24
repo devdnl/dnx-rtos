@@ -113,7 +113,7 @@ int_main(dmesg, STACK_DEPTH_LOW, int argc, char *argv[])
                         char str[128];
 
                         while (syslog_read(str, sizeof(str), &t, &t)) {
-                                printf("[%d.%06d] %s\n", t.tv_sec, t.tv_usec, str);
+                                printf("[%u.%06u] %s\n", t.tv_sec, t.tv_usec, str);
                         }
 
                         if (loop) {
