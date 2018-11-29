@@ -3,11 +3,12 @@
 set -e
 
 file=""
-error=false
+err_file=$(mktemp)
 
 STR_GLOBAL_IN_SECTION="Global variables shall be placed in GLOBAL_VARIABLES_SECTION only"
 
-TYPE_STRUCT="struct|union[[:blank:]]+"
+TYPE_STRUCT="struct[[:blank:]]+"
+TYPE_UNION="union[[:blank:]]+"
 TYPE_STATIC="static[[:blank:]]+"
 TYPE_DEF_EMPTY="[_[:alnum:]]+[*]*[[:blank:]]+[*]*[_[:alnum:]]+[[:blank:]]*\;"
 TYPE_DEF_INIT="[_[:alnum:]]+[*]*[[:blank:]]+[*]*[_[:alnum:]]+[[:blank:]]*=[[:blank:]]*.*"
@@ -15,7 +16,10 @@ TYPE_DEF_INIT="[_[:alnum:]]+[*]*[[:blank:]]+[*]*[_[:alnum:]]+[[:blank:]]*=[[:bla
 REGEXP_FUNC_BEGIN="^[[:blank:]]*(static)*[[:blank:]]*[_[:alnum:]]+[*]*[[:blank:]]+[*]*[_[:alnum:]]+[[:blank:]]*\(.*$"
 REGEXP_FUNC_MAIN="^[[:blank:]]*int_main\(.*$"
 REGEXP_TYPEDEF="^[[:blank:]]*typedef[[:blank:]]+[_[:alnum:]]+[[:blank:]]*[_[:alnum:]]*[[:blank:]]*[\{]*$"
-REGEXP_STRUCT="^[[:blank:]]*${TYPE_STRUCT}[_[:alnum:]]+[[:blank:]]*[\{]*$"
+REGEXP_STRUCT1="^[[:blank:]]*struct[[:blank:]]+[_[:alnum:]]+[[:blank:]]*[\{]*$"
+REGEXP_STRUCT2="^[[:blank:]]*struct[[:blank:]]*[\{]*$"
+REGEXP_UNION1="^[[:blank:]]*union[[:blank:]]+[_[:alnum:]]+[[:blank:]]*[\{]*$"
+REGEXP_UNION2="^[[:blank:]]*union[[:blank:]]*[\{]*$"
 REGEXP_GLOBAL_VAR="^[[:blank:]]*GLOBAL_VARIABLES_SECTION[[:blank:]]*[\{]*.*$"
 REGEXP_COMMSINGLE="^[[:blank:]]*//.*$"
 REGEXP_COMMMULTI="^[[:blank:]]*\/\*.*$"
@@ -31,7 +35,7 @@ REGEXP_CONST_VAR="^[[:blank:]]*.*const.*$"
 #===============================================================================
 error_msg() {
     echo "$file:$line_ctr:1: error: $1"
-    error=true
+    touch $err_file
 }
 
 #===============================================================================
@@ -123,7 +127,7 @@ skip_comment() {
 #===============================================================================
 main() {
     if [ "$1" == "" ]; then
-        echo "Usage: $0 <dir-to-check>"
+        echo "Usage: $0 <file-to-check>"
         exit 1
     fi
 
@@ -134,8 +138,10 @@ main() {
         global_section_found=0
         line_ctr=0
         main_func=false
+        
+        rm -f $err_file
 
-        while IFS='' read -r line || [[ -n "$line" ]]; do
+        cat $file | tr -d '\r' | while IFS='' read -r line || [[ -n "$line" ]]; do
 
             line_ctr=$(($line_ctr + 1))
 
@@ -151,7 +157,10 @@ main() {
               || [[ "$line" =~ $REGEXP_GLOBAL_VAR ]]; then
                 skip_block
 
-            elif [[ "$line" =~ $REGEXP_STRUCT ]] ; then
+            elif [[ "$line" =~ $REGEXP_STRUCT1 ]] \
+              || [[ "$line" =~ $REGEXP_STRUCT2 ]] \
+              || [[ "$line" =~ $REGEXP_UNION1 ]] \
+              || [[ "$line" =~ $REGEXP_UNION2 ]]; then
                 skip_block
                 if [[ "$line" =~ ^.*[_*[:alnum:]]+[[:blank:]]*(=[[:blank:]]*[\{]*)|\; ]]; then
                     error_msg "$STR_GLOBAL_IN_SECTION"
@@ -175,13 +184,15 @@ main() {
                 || [[ "$line" =~ ^[[:blank:]]*$TYPE_STATIC$TYPE_DEF_EMPTY ]] \
                 || [[ "$line" =~ ^[[:blank:]]*$TYPE_STATIC$TYPE_DEF_INIT ]] \
                 || [[ "$line" =~ ^[[:blank:]]*$TYPE_STRUCT$TYPE_DEF_EMPTY ]] \
-                || [[ "$line" =~ ^[[:blank:]]*$TYPE_STRUCT$TYPE_DEF_INIT ]]
+                || [[ "$line" =~ ^[[:blank:]]*$TYPE_STRUCT$TYPE_DEF_INIT ]] \
+                || [[ "$line" =~ ^[[:blank:]]*$TYPE_UNION$TYPE_DEF_EMPTY ]] \
+                || [[ "$line" =~ ^[[:blank:]]*$TYPE_UNION$TYPE_DEF_INIT ]]
                 then
                     error_msg "$STR_GLOBAL_IN_SECTION"
                 fi
 
             fi
-        done < "$file"
+        done
 
         line_ctr=0
 
@@ -194,7 +205,7 @@ main() {
             error_msg "Defined too many GLOBAL_VARIABLES_SECTION (found: $global_section_found)"
         fi
 
-        if [ $error == true ]; then
+        if [ -f $err_file ]; then
             exit 1
         fi
     done
