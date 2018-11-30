@@ -155,7 +155,7 @@ GIT_HOOKS  = ./tools/apply_git_hooks.sh
 DOXYGEN    = ./tools/doxygen.sh
 RELEASEPKG = ./tools/releasepkg.sh
 RUNGENS    = ./tools/rungens.sh
-APPSTXCHK  = ./tools/app_syntax_check.sh
+FINDGVAR   = ./tools/find_global_vars.sh
 
 #---------------------------------------------------------------------------------------------------
 # MAKEFILE CORE (do not edit)
@@ -219,12 +219,14 @@ ASRC    = $(foreach file, $(ASRC_ARCH),$(SYS_LOC)/$(file))
 # defines objects names
 OBJECTS = $(ASRC:.$(AS_EXT)=.$(OBJ_EXT)) $(CSRC:.$(C_EXT)=.$(OBJ_EXT)) $(CXXSRC:.$(CXX_EXT)=.$(OBJ_EXT))
 
+# functions
+FIND_GLOBAL_VARS_LIBS_PROGS = if [[ "$@" =~ $(APP_PRG_LOC) ]] || [[ "$@" =~ $(APP_LIB_LOC) ]]; then $(FINDGVAR) $@ || ($(RM) $@; exit 1); fi
+
 ####################################################################################################
 # targets
 ####################################################################################################
 .PHONY : all
 all : generate apply_git_hooks
-	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) appsyntaxcheck
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) rungens
 	@$(MAKE) -s -j 1 -f$(THIS_MAKEFILE) build_start
 
@@ -276,7 +278,7 @@ checkprog :
 	              -DCOMPILE_EPOCH_TIME=0 \
 	              $(SEARCHPATH)\
 	              $(foreach file, $(CSRC_PROGRAMS),$(APP_PRG_LOC)/$(file))
-	
+
 quickcheck :
 	@$(CODECHECK) -j $(THREAD) -q --std=c99 --std=c++11 \
 	              --enable=warning,style,performance,portability,missingInclude \
@@ -284,10 +286,6 @@ quickcheck :
 	              --include=./config/project/flags.h \
 	              -I src/system/include/libc/dnx \
 	              $(CSRC) $(CXXSRC)
-
-appsyntaxcheck :
-	@$(APPSTXCHK) $(foreach file, $(CSRC_PROGRAMS),$(APP_PRG_LOC)/$(file))
-
 
 ####################################################################################################
 # create basic output files like hex, bin, lst etc.
@@ -403,6 +401,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(C_EXT) $(THIS_MAKEFILE)
 	@$(ECHO) "Compiling: $<"
 	@$(MKDIR) $(dir $@)
 	@$(CC) $(CFLAGS) $(SEARCHPATH) $< -o $@
+	$(FIND_GLOBAL_VARS_LIBS_PROGS)
 
 ####################################################################################################
 # rule used to compile object files from C++ sources
@@ -411,6 +410,7 @@ $(OBJ_PATH)/%.$(OBJ_EXT) : %.$(CXX_EXT) $(THIS_MAKEFILE)
 	@$(ECHO) "Compiling: $<"
 	@$(MKDIR) $(dir $@)
 	@$(CXX) $(CXXFLAGS) $(SEARCHPATH) $< -o $@
+	$(FIND_GLOBAL_VARS_LIBS_PROGS)
 
 ####################################################################################################
 # rule used to compile object files from assembler sources
