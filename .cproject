@@ -25,6 +25,8 @@
 								<option id="gnu.c.compiler.option.debugging.level.266880486" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.347086855" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/7.3.1/include/&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.178026589" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
@@ -41,6 +43,8 @@
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.193515825" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/7.3.1/include/&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -66,7 +70,11 @@
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474" moduleId="org.eclipse.cdt.core.settings" name="Static Code Analyze">
-				<externalSettings/>
+				<externalSettings>
+					<externalSetting>
+						<entry flags="NONE" kind="includePath" name="${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include"/>
+					</externalSetting>
+				</externalSettings>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -128,7 +136,11 @@
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572" moduleId="org.eclipse.cdt.core.settings" name="Quick Static Code Analyze">
-				<externalSettings/>
+				<externalSettings>
+					<externalSetting>
+						<entry flags="NONE" kind="includePath" name="${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include"/>
+					</externalSetting>
+				</externalSettings>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>

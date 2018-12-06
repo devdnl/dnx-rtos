@@ -127,7 +127,7 @@ API_FS_RELEASE(fatfs, void *fs_handle)
                 if (!err) {
                         sys_cache_drop(hdl->fsfile);
                         sys_fclose(hdl->fsfile);
-                        sys_free(fs_handle);
+                        sys_free(&fs_handle);
                 }
         }
 

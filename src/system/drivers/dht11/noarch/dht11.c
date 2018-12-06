@@ -113,7 +113,7 @@ API_MOD_RELEASE(DHT11, void *device_handle)
 
         int err = sys_device_lock(&hdl->lock);
         if (!err) {
-                sys_free(device_handle);
+                sys_free(&device_handle);
         }
 
         return err;

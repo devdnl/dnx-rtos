@@ -259,7 +259,7 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 ttyedit_destroy(tty->editline);
                 ttycmd_destroy(tty->vtcmd);
                 tty_module->tty[tty->major] = NULL;
-                sys_free(device_handle);
+                sys_free(&device_handle);
 
                 /* de-initialize entire module if all TTYs are released */
                 bool release_TTY = true;

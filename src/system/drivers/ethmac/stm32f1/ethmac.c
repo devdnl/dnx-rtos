@@ -245,7 +245,7 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
                 sys_semaphore_destroy(hdl->rx_data_ready);
                 sys_mutex_destroy(hdl->rx_access);
                 sys_mutex_destroy(hdl->tx_access);
-                sys_free(device_handle);
+                sys_free(&device_handle);
                 ethmac = NULL;
         }
 

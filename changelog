@@ -22,6 +22,7 @@ Fixed Bugs:
 - Fixed printk() module
 - Fixed starting LSE clock in stm32f4
 - Fixed RAMFS at file open (file handling)
+- Fixed usage of sys_free() function in drivers and file systems
 
 dnx RTOS 2.2.0 Eagle
 ====================

@@ -44,6 +44,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdio.h>
 #include <stdarg.h>
 #include <drivers/ioctl_macros.h>
 #include <drivers/ioctl_requests.h>

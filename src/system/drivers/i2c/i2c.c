@@ -156,7 +156,7 @@ API_MOD_RELEASE(I2C, void *device_handle)
         if (!err) {
                 _I2C[hdl->major]->dev_cnt--;
                 release_resources(hdl->major);
-                sys_free(device_handle);
+                sys_free(&device_handle);
         }
 
         return err;

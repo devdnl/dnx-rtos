@@ -166,7 +166,7 @@ API_MOD_RELEASE(UART, void *device_handle)
                         _UART_LLD__turn_off(hdl->major);
 
                         _UART_mem[hdl->major] = NULL;
-                        sys_free(device_handle);
+                        sys_free(&device_handle);
 
                         return ESUCC;
                 }

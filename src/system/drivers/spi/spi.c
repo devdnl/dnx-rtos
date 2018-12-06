@@ -155,7 +155,7 @@ API_MOD_RELEASE(SPI, void *device_handle)
         if (!err) {
                 _SPI[hdl->major]->slave_count--;
                 release_resources(hdl->major);
-                sys_free(device_handle);
+                sys_free(&device_handle);
         }
 
         return err;
