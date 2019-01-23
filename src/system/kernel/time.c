@@ -83,7 +83,7 @@ static int open_RTC(void)
                 cpath.CWD  = NULL;
                 cpath.PATH = __OS_RTC_FILE_PATH__;
 
-                err = _vfs_fopen(&cpath, "r", &RTC);
+                err = _vfs_fopen(&cpath, "r+", &RTC);
         }
 
         return err;

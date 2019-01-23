@@ -226,10 +226,6 @@ API_MOD_WRITE(RTC,
 {
         UNUSED_ARG2(device_handle, fattr);
 
-        if (*fpos != 0) {
-                return ESPIPE;
-        }
-
         int err = ESUCC;
 
         count = count > sizeof(time_t) ? sizeof(time_t) : count;
@@ -277,6 +273,7 @@ API_MOD_WRITE(RTC,
         sys_critical_section_end();
 
         *wrcnt = count;
+        *fpos  = 0;
 
         return err;
 }
@@ -304,10 +301,6 @@ API_MOD_READ(RTC,
              struct vfs_fattr fattr)
 {
         UNUSED_ARG2(device_handle, fattr);
-
-        if (*fpos != 0) {
-                return ESPIPE;
-        }
 
         count = count > sizeof(time_t) ? sizeof(time_t) : count;
 
@@ -342,6 +335,7 @@ API_MOD_READ(RTC,
         memcpy(dst, &timer, count);
 
         *rdcnt = count;
+        *fpos  = 0;
 
         return ESUCC;
 }
