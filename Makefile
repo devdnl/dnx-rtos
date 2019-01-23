@@ -435,7 +435,7 @@ cleantarget :
 .PHONY : clean
 clean :
 	@$(ECHO) "Deleting all build files..."
-	-@$(RM) -r $(TARGET_DIR_NAME) ./doc/doxygen/html/ ./doc/doxygen/latex
+	-@$(RM) -r $(TARGET_DIR_NAME) ./doc/doxygen/html/ ./doc/doxygen/latex ./$(APP_LOC)/Makefile ./$(APP_LOC)/program_registration.c
 
 ####################################################################################################
 # flash target CPU by using ./tools/flash.sh script

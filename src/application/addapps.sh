@@ -30,25 +30,25 @@ function check_args()
 }
 
 #-------------------------------------------------------------------------------
-# @brief  Gets program list in the current directory. Folder are interpreted as
+# @brief  Gets program list in the current directory. Folders are interpreted as
 #         programs. Files are ignored.
 # @param  path to scan
 # @return program list
 #-------------------------------------------------------------------------------
 function get_program_list()
 {
-    echo $(ls -F "$1/programs" | grep -P '/|@' | sed 's/\///g' | sed 's/@//g')
+    echo $(ls -F "$1/programs" | grep -P '/|@' | grep -Pv '#' | sed 's/\///g' | sed 's/@//g')
 }
 
 #-------------------------------------------------------------------------------
-# @brief  Gets program list in the current directory. Folder are interpreted as
-#         programs. Files are ignored.
+# @brief  Gets program list in the current directory. Folders are interpreted as
+#         libraries. Files are ignored.
 # @param  path to scan
 # @return program list
 #-------------------------------------------------------------------------------
 function get_library_list()
 {
-    echo $(ls -F "$1/libs" | grep -P '/|@' | sed 's/\///g' | sed 's/@//g')
+    echo $(ls -F "$1/libs" | grep -P '/|@' | grep -Pv '#' | sed 's/\///g' | sed 's/@//g')
 }
 
 #-------------------------------------------------------------------------------
