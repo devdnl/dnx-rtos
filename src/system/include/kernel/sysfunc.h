@@ -1920,7 +1920,7 @@ static inline int sys_btree_insert(btree_t *tree, void *data)
  * @note Function can be used only by file system or driver code.
  *
  * @param  tree         BTree object
- * @param  data         object to delete
+ * @param  key          object to delete
  *
  * @return One of errno value.
  *
@@ -1977,9 +1977,9 @@ static inline int sys_btree_insert(btree_t *tree, void *data)
    @endcode
  */
 //==============================================================================
-static inline int sys_btree_remove(btree_t *tree, void *data)
+static inline int sys_btree_remove(btree_t *tree, void *key)
 {
-        return _btree_remove(tree, data);
+        return _btree_remove(tree, key);
 }
 
 //==============================================================================
