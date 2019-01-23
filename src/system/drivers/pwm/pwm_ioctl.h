@@ -163,11 +163,18 @@ extern "C" {
 #define IOCTL_PWM__GET_VALUE            _IOR(PWM, 0x03, uint16_t*)
 
 /**
+ *  @brief  Get PWM reload (top).
+ *  @param  [RD] uint16_t*      PWM reload
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_PWM__GET_RELOAD           _IOR(PWM, 0x04, uint16_t*)
+
+/**
  *  @brief  Auto adjust of PWM output frequency.
  *  @param  [WR] PWM_auto_adjust_t*     auto adjust configuration object
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_PWM__AUTO_ADJUST          _IOW(PWM, 0x04, const PWM_auto_adjust_t*)
+#define IOCTL_PWM__AUTO_ADJUST          _IOW(PWM, 0x05, const PWM_auto_adjust_t*)
 
 /*==============================================================================
   Exported object types

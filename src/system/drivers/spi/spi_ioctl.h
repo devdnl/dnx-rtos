@@ -398,6 +398,7 @@ typedef struct {
         bool             msb_first;             /*!< MSb first (@b true).*/
         u8_t             CS_port_idx;           /*!< Chip Select port index.*/
         u8_t             CS_pin_idx;            /*!< Chip Select pin index.*/
+        bool             CS_reverse;
 } SPI_config_t;
 
 /**

@@ -468,6 +468,16 @@ API_MOD_IOCTL(PWM, void *device_handle, int request, void *arg)
                         err = EINVAL;
                 }
                 break;
+
+        case IOCTL_PWM__GET_RELOAD:
+                if (arg) {
+                        *cast(u16_t*, arg) = TIM[hdl->timer].reg->ARR;
+
+                        err = ESUCC;
+                } else {
+                        err = EINVAL;
+                }
+                break;
         }
 
         return err;

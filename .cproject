@@ -3,7 +3,9 @@
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395" moduleId="org.eclipse.cdt.core.settings" name="Build">
-				<externalSettings/>
+				<externalSettings>
+					<externalSetting/>
+				</externalSettings>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -26,11 +28,12 @@
 								<option id="gnu.c.compiler.option.include.paths.347086855" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/7.3.1/include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/*/include/&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.178026589" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
 									<listOptionValue builtIn="false" value="COMPILE_EPOCH_TIME=0"/>
+									<listOptionValue builtIn="false" value="COMMIT_HASH=&quot;00000&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1584393736" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -40,11 +43,12 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1619145641" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
 									<listOptionValue builtIn="false" value="COMPILE_EPOCH_TIME=0"/>
+									<listOptionValue builtIn="false" value="COMMIT_HASH=&quot;00000&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.193515825" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/7.3.1/include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/*/include/&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
