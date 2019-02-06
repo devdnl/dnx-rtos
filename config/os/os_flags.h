@@ -244,19 +244,13 @@ this:SetToolTip("If this function is selected then system messages can be send t
 #define __OS_SYSTEM_MSG_ENABLE__ _YES_
 
 /*--
-this:AddWidget("Checkbox", "Filesystem cache")
-this:SetToolTip("If this option is selected then some file system are using cache to speed up IO operations.")
---*/
-#define __OS_SYSTEM_FS_CACHE_ENABLE__ _NO_
-
-/*--
 this:AddWidget("Checkbox", "Execute scripts")
 this:SetToolTip("If this option is enabled then system is able to run scripts with shebang (#!).")
 --*/
 #define __OS_SYSTEM_SHEBANG_ENABLE__ _NO_
 
 /*--
---this:AddExtraWidget("Void", "VoidOption") -- uncomment if number of upper widgets is odd
+this:AddExtraWidget("Void", "VoidOption") -- uncomment if number of upper widgets is odd
 this:AddExtraWidget("Label", "LabelSizes", "\nMemory parameters", -1, "bold")
 this:AddExtraWidget("Void", "VoidSizes")
 ++*/

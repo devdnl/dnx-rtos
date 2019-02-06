@@ -843,13 +843,18 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
                 catcherr(err = card_transfer_block(hdl, dst, 1, DIR_IN), exit);
 
         } else {
-                catcherr(err = card_send_cmd(SD_CMD__CMD18, CMD_RESP_SHORT, address), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1), exit);
+                while (count > 0) {
+                        size_t blocks_to_transfer = min(count, 511);
 
-                catcherr(err = card_transfer_block(hdl, dst, count, DIR_IN), exit);
+                        catcherr(err = card_send_cmd(SD_CMD__CMD18, CMD_RESP_SHORT, address), exit);
+                        catcherr(err = card_get_response(&resp, RESP_R1), exit);
+                        catcherr(err = card_transfer_block(hdl, dst, blocks_to_transfer, DIR_IN), exit);
+                        catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
+                        catcherr(err = card_get_response(&resp, RESP_R1b), exit);
 
-                catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1b), exit);
+                        dst   += blocks_to_transfer * SECTOR_SIZE;
+                        count -= blocks_to_transfer;
+                }
         }
 
         *rdsec = count;
@@ -903,18 +908,23 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
                 } while (!(resp.RESPONSE[0] & 0x100));
 
         } else {
-                catcherr(err = card_send_cmd(SD_CMD__CMD25, CMD_RESP_SHORT, address), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1), exit);
+                while (count > 0) {
+                        size_t blocks_to_transfer = min(count, 511);
 
-                catcherr(err = card_transfer_block(hdl, const_cast(u8_t *, src), count, DIR_OUT), exit);
-
-                catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1b), exit);
-
-                while (!(resp.RESPONSE[0] & 0x100)) {
-                        sys_sleep_ms(1);
-                        catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
+                        catcherr(err = card_send_cmd(SD_CMD__CMD25, CMD_RESP_SHORT, address), exit);
+                        catcherr(err = card_get_response(&resp, RESP_R1), exit);
+                        catcherr(err = card_transfer_block(hdl, const_cast(u8_t *, src), blocks_to_transfer, DIR_OUT), exit);
+                        catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
                         catcherr(err = card_get_response(&resp, RESP_R1b), exit);
+
+                        while (!(resp.RESPONSE[0] & 0x100)) {
+                                sys_sleep_ms(1);
+                                catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
+                                catcherr(err = card_get_response(&resp, RESP_R1b), exit);
+                        }
+
+                        src   += blocks_to_transfer * SECTOR_SIZE;
+                        count -= blocks_to_transfer;
                 }
         }
 

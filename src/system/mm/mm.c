@@ -35,7 +35,6 @@
 #include "config.h"
 #include "mm/mm.h"
 #include "mm/heap.h"
-#include "mm/cache.h"
 #include "mm/shm.h"
 #include "lib/cast.h"
 #include "kernel/errno.h"
@@ -507,47 +506,34 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 
                 size = MEM_ALIGN_SIZE(size);
 
-                for (int try = 0; try <= 1; try++) {
-                        size_t allocated = 0;
-                        void  *blk       = NULL;
+                size_t allocated = 0;
+                void  *blk       = NULL;
+                       err       = ENOMEM;
 
-                        for (_mm_region_t *r = &memory_region; r; r = r->next) {
-                                if (_heap_get_free(&r->heap) >= size) {
+                for (_mm_region_t *r = &memory_region; r; r = r->next) {
 
-                                        blk = _heap_alloc(&r->heap, size, &allocated);
+                        if (_heap_get_free(&r->heap) >= size) {
 
-                                        if (blk) {
-                                                _kernel_scheduler_lock();
-                                                *usage += allocated;
-                                                _kernel_scheduler_unlock();
+                                blk = _heap_alloc(&r->heap, size, &allocated);
 
-                                                if (clear) {
-                                                        memset(blk, 0, size);
-                                                }
+                                if (blk) {
+                                        _kernel_scheduler_lock();
+                                        *usage += allocated;
+                                        _kernel_scheduler_unlock();
 
-                                                if (mpur == _MM_PROG) {
-                                                         cast(res_header_t*, blk)->next = NULL;
-                                                         cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
-                                                }
-
-                                                *mem = blk;
-
-                                                err = ESUCC;
-                                                goto finish;
+                                        if (clear) {
+                                                memset(blk, 0, size);
                                         }
-                                }
-                        }
 
-                        if (!blk) {
-                                err = ENOMEM;
-
-                                if (mpur == _MM_CACHE) {
-                                        break;
-
-                                } else {
-                                        if (try == 0) {
-                                                _cache_reduce(size);
+                                        if (mpur == _MM_PROG) {
+                                                 cast(res_header_t*, blk)->next = NULL;
+                                                 cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
                                         }
+
+                                        *mem = blk;
+
+                                        err = ESUCC;
+                                        goto finish;
                                 }
                         }
                 }

@@ -161,7 +161,6 @@ API_FS_RELEASE(ext4fs, void *fs_handle)
                 err = ext4_umount(hdl->mp);
                 if (err) goto finish;
 
-                sys_cache_drop(hdl->bdif.blkobj);
                 sys_mutex_destroy(hdl->bdif.lockobj);
                 sys_fclose(cast(FILE*, hdl->bdif.blkobj));
                 sys_free(&fs_handle);
@@ -658,11 +657,14 @@ API_FS_REMOVE(ext4fs, void *fs_handle, const char *path)
         ext4fs_t *hdl = fs_handle;
         path = ext4_path(path);
 
-        // try remove file
-        int err = ext4_fremove(hdl->mp, path);
-        if (err) {
-                // try remove dir
-                err = ext4_dir_rm(hdl->mp, path);
+        u32_t mode;
+        int err = ext4_mode_get(hdl->mp, path, &mode);
+        if (!err) {
+                if ((mode &= EXT4_INODE_MODE_TYPE_MASK) == EXT4_INODE_MODE_DIRECTORY) {
+                        err = ext4_dir_rm(hdl->mp, path);
+                } else {
+                        err = ext4_fremove(hdl->mp, path);
+                }
         }
 
         return err;
@@ -742,9 +744,7 @@ API_FS_SYNC(ext4fs, void *fs_handle)
         int err = ext4_cache_write_back(hdl->mp, false);
         if (!err) {
                 err = ext4_cache_flush(hdl->mp);
-                if (!err) {
-                        err = ext4_cache_write_back(hdl->mp, true);
-                }
+                ext4_cache_write_back(hdl->mp, true);
         }
 
         return err;
@@ -824,11 +824,9 @@ static int bclose(struct ext4_blockdev *bdev)
 //==============================================================================
 static int bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-        return sys_cache_read(bdev->bdif->blkobj,
-                              blk_id,
-                              bdev->bdif->ph_bsize,
-                              blk_cnt,
-                              buf);
+        size_t rdcnt = 0;
+        sys_fseek(bdev->bdif->blkobj, blk_id * bdev->bdif->ph_bsize, SEEK_SET);
+        return sys_fread(buf, bdev->bdif->ph_bsize * blk_cnt, &rdcnt, bdev->bdif->blkobj);
 }
 
 //==============================================================================
@@ -845,13 +843,9 @@ static int bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_
 //==============================================================================
 static int bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-        return sys_cache_write(bdev->bdif->blkobj,
-                               blk_id,
-                               bdev->bdif->ph_bsize,
-                               blk_cnt,
-                               buf,
-                               bdev->cache_write_back ? CACHE_WRITE_BACK
-                                                      : CACHE_WRITE_THROUGH);
+        size_t wrcnt = 0;
+        sys_fseek(bdev->bdif->blkobj, blk_id * bdev->bdif->ph_bsize, SEEK_SET);
+        return sys_fwrite(buf, bdev->bdif->ph_bsize * blk_cnt, &wrcnt, bdev->bdif->blkobj);
 }
 
 //==============================================================================

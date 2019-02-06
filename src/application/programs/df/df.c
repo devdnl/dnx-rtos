@@ -87,15 +87,11 @@ int_main(df, STACK_DEPTH_LOW, int argc, char *argv[])
                 u32_t dfree;
                 const char *unit;
 
-                if (mnt.mnt_total > 10*GiB) {
-                        dtotal = CONVERT_TO_GiB(mnt.mnt_total);
-                        dfree  = CONVERT_TO_GiB(mnt.mnt_free);
-                        unit   = "GiB";
-                } else if (mnt.mnt_total > 10*MiB) {
+                if (mnt.mnt_total > 1*GiB) {
                         dtotal = CONVERT_TO_MiB(mnt.mnt_total);
                         dfree  = CONVERT_TO_MiB(mnt.mnt_free);
                         unit   = "MiB";
-                } else if (mnt.mnt_total > 10*KiB) {
+                } else if (mnt.mnt_total > 1*MiB) {
                         dtotal = CONVERT_TO_KiB(mnt.mnt_total);
                         dfree  = CONVERT_TO_KiB(mnt.mnt_free);
                         unit   = "KiB";

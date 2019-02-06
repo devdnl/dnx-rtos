@@ -16,6 +16,7 @@ New Features, Improvements:
 - Better support of printk()
 - Added small support for CTRL+C (ETX) signal
 - Added script that verify program sytax
+- Added more debug messages in DCI driver
 
 Fixed Bugs:
 - Fixed I2C slave mode for STM32F1 port
@@ -23,6 +24,8 @@ Fixed Bugs:
 - Fixed starting LSE clock in stm32f4
 - Fixed RAMFS at file open (file handling)
 - Fixed usage of sys_free() function in drivers and file systems
+- Removed file system cache subsystem - many problems and errors, very slow
+- Fixed SDIO write and read when buffer size is bigger than DMA transfer
 
 dnx RTOS 2.2.0 Eagle
 ====================

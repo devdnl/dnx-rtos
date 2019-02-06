@@ -382,7 +382,6 @@ API_FS_RELEASE(eefs, void *fs_handle)
         if (!err) {
                 if ((hdl->open_files == NULL) && (hdl->open_dirs == NULL)) {
 
-                        sys_cache_drop(hdl->srcdev);
                         sys_fclose(hdl->srcdev);
 
                         mutex_t *mtx = hdl->lock_mtx;
@@ -1431,8 +1430,9 @@ static int block_read(EEFS_t *hdl, block_buf_t *blk)
 {
         memset(&blk->buf, 0, 128);
 
-        int err = sys_cache_read(hdl->srcdev, blk->num, sizeof(block_t), 1,
-                                 cast(u8_t*, &blk->buf));
+        size_t rdcnt = 0;
+        sys_fseek(hdl->srcdev, blk->num * BLOCK_SIZE, SEEK_SET);
+        int err = sys_fread(&blk->buf, BLOCK_SIZE, &rdcnt, hdl->srcdev);
 
         if (!err) {
                 u16_t chsum  = fletcher16(blk->buf.chsum.buf, sizeof(blk->buf.chsum.buf));
@@ -1468,10 +1468,9 @@ static int block_write(EEFS_t *hdl, block_buf_t *blk)
                                                      sizeof(blk->buf.chsum.buf))
                                         ^ blk->num;
 
-                return sys_cache_write(hdl->srcdev, blk->num, sizeof(block_t), 1,
-                                       cast(u8_t*, &blk->buf),
-                                       hdl->flag & FLAG_SYNC ? CACHE_WRITE_THROUGH
-                                                             : CACHE_WRITE_BACK);
+                size_t wrcnt = 0;
+                sys_fseek(hdl->srcdev, blk->num * BLOCK_SIZE, SEEK_SET);
+                return sys_fwrite(&blk->buf, BLOCK_SIZE, &wrcnt, hdl->srcdev);
         }
 }
 

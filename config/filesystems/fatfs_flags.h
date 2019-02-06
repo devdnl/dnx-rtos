@@ -74,6 +74,14 @@ this:AddItem("Vietnam (1258)",                    "1258")
 --*/
 #define __FATFS_LFN_CODEPAGE__ 852
 
+/*--
+this:AddWidget("Checkbox", "Each open file buffered")
+this:SetToolTip("When option is disabled, file system uses the sector buffer in the file system "..
+                "object instead of the sector buffer in the individual file object for file "..
+                "data transfer. This reduces memory consumption 512 bytes each file object.")
+--*/
+#define __FATFS_BUFFERED_FILE_ENABLE__ _YES_
+
 #endif /* _FATFS_FLAGS_H_ */
 /*==============================================================================
   End of file

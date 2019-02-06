@@ -40,7 +40,7 @@ Brief    Digital Camera Interface Driver
 #define DMA_STREAM_PRI          1
 #define DMA_STREAM_AUX          7
 #define DMA_MAX_TRANSFER        65535
-#define DMA_TIMEOUT             2000
+#define DMA_TIMEOUT             500
 
 /*==============================================================================
   Local object types
@@ -148,6 +148,9 @@ API_MOD_INIT(DCI, void **device_handle, u8_t major, u8_t minor)
                                                 break;
                                         }
                                 }
+
+                                printk("%s: transfer size: %d bytes", GET_MODULE_NAME(), DCI->TSIZEW * 4);
+                                printk("%s: number of transfers: %d", GET_MODULE_NAME(), DCI->TCOUNT);
                         } else {
                                 sys_free(device_handle);
                         }
@@ -317,10 +320,15 @@ API_MOD_READ(DCI,
                 if (!err) {
                         *rdcnt = frame_size;
                 } else {
+                        *rdcnt = frame_size; // TEST
                         CLEAR_BIT(DCMI->CR, DCMI_CR_CAPTURE | DCMI_CR_ENABLE);
                         SET_BIT(DCMI->CR, DCMI_CR_ENABLE);
                 }
                 _DMA_DDI_release(dmad);
+
+                if (hdl->tleft > 0) {
+                        printk("%s: %d transfers not captured", GET_MODULE_NAME(), hdl->tleft);
+                }
         }
 
         return err;
@@ -425,6 +433,7 @@ static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
         }
 
         if (SR & DMA_SR_TEIF) {
+                stream->CR = 0;
                 sys_semaphore_signal_from_ISR(hdl->event, &yield);
         }
 

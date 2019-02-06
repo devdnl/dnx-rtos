@@ -80,8 +80,10 @@
 //==============================================================================
 DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        return sys_cache_read(srcfile, sector, _LIBFAT_MAX_SS, count, buff) == ESUCC ?
-               RES_OK : RES_ERROR;
+        size_t rdcnt = 0;
+        sys_fseek(srcfile, sector * _LIBFAT_MAX_SS, SEEK_SET);
+        return sys_fread(buff, count * _LIBFAT_MAX_SS, &rdcnt, srcfile) == ESUCC ?
+                RES_OK : RES_ERROR;
 }
 
 //==============================================================================
@@ -99,8 +101,10 @@ DRESULT _libfat_disk_read(FILE *srcfile, uint8_t *buff, uint32_t sector, uint8_t
 //==============================================================================
 DRESULT _libfat_disk_write(FILE *srcfile, const uint8_t *buff, uint32_t sector, uint8_t count)
 {
-        return sys_cache_write(srcfile, sector, _LIBFAT_MAX_SS, count, buff, CACHE_WRITE_BACK) == ESUCC ?
-               RES_OK : RES_ERROR;
+        size_t wrcnt = 0;
+        sys_fseek(srcfile, sector * _LIBFAT_MAX_SS, SEEK_SET);
+        return sys_fwrite(buff, count * _LIBFAT_MAX_SS, &wrcnt, srcfile) == ESUCC ?
+                RES_OK : RES_ERROR;
 }
 
 //==============================================================================

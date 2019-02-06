@@ -47,7 +47,6 @@
 #include "lib/strlcpy.h"
 #include "net/netm.h"
 #include "mm/shm.h"
-#include "mm/cache.h"
 #include "dnx/misc.h"
 
 /*==============================================================================
@@ -55,11 +54,7 @@
 ==============================================================================*/
 #define SYSCALL_QUEUE_LENGTH            4
 
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-#define SYNC_PERIOD_MS                  (1000 * __OS_SYSTEM_CACHE_SYNC_PERIOD__)
-#else
-#define SYNC_PERIOD_MS                  MAX_DELAY_MS
-#endif
+#define FS_CACHE_SYNC_PERIOD_MS         (1000 * __OS_SYSTEM_CACHE_SYNC_PERIOD__)
 
 #define GETARG(type, var)               type var = va_arg(rq->args, type)
 #define LOADARG(type)                   va_arg(rq->args, type)
@@ -513,9 +508,7 @@ int _syscall_kworker_process(int argc, char *argv[])
                 iothrs_created, __OS_TASK_KWORKER_IO_THREADS__);
 #endif
 
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
         u32_t sync_period_ref = _kernel_get_time_ms();
-#endif
 
         syscallrq_t *sysrq = NULL;
 
@@ -556,19 +549,17 @@ int _syscall_kworker_process(int argc, char *argv[])
                         }
                 }
 #elif __OS_TASK_KWORKER_MODE__ == 1
-                if (_queue_receive(call_nonblocking, &sysrq, SYNC_PERIOD_MS) == ESUCC) {
+                if (_queue_receive(call_nonblocking, &sysrq, FS_CACHE_SYNC_PERIOD_MS) == ESUCC) {
                         _process_clean_up_killed_processes();
                         _kernel_release_resources();
                         syscall_do(sysrq);
                 }
 #endif
 
-#if __OS_SYSTEM_FS_CACHE_ENABLE__ > 0
-                if ( (_kernel_get_time_ms() - sync_period_ref) >= SYNC_PERIOD_MS) {
-                        _cache_sync();
+                if ( (_kernel_get_time_ms() - sync_period_ref) >= FS_CACHE_SYNC_PERIOD_MS) {
+                        _vfs_sync();
                         sync_period_ref = _kernel_get_time_ms();
                 }
-#endif
         }
 
         return -1;
@@ -601,15 +592,6 @@ static void syscall_do(void *rq)
 
         if (_flag_set(flags, _PROCESS_SYSCALL_FLAG(sysrq->client_thread)) != ESUCC) {
                 _assert(false);
-        }
-
-        // If there is lack of memory and FS sync is required then thread
-        // synchronize all file systems to reduce cache size.
-        if (  _cache_is_sync_needed()
-           && sysrq->syscall_no <= _SYSCALL_GROUP_1_BLOCKING) {
-
-                _vfs_sync();
-                _cache_sync();
         }
 }
 
@@ -1120,7 +1102,6 @@ static void syscall_sync(syscallrq_t *rq)
 {
         UNUSED_RQ();
         _vfs_sync();
-        _cache_sync();
 }
 
 #if __OS_ENABLE_TIMEMAN__ == _YES_

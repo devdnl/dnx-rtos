@@ -37,7 +37,6 @@
 #include "lib/llist.h"
 #include "kernel/kwrapper.h"
 #include "kernel/process.h"
-#include "mm/cache.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -1405,7 +1404,7 @@ static int delete_FS_entry(FS_entry_t *this)
         if (this) {
                 err = this->interface->fs_sync(this->handle);
                 if (!err) {
-                        _cache_sync();
+                        this->interface->fs_sync(this->handle);
 
                         err = this->interface->fs_release(this->handle);
                         if (!err) {
