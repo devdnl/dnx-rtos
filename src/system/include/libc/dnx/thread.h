@@ -398,6 +398,7 @@ static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
                 _errno = _builtinfunc(flag_wait, flag, _PROCESS_EXIT_FLAG(0), timeout);
                 if (_errno == 0) {
                         syscall(SYSCALL_PROCESSCLEANZOMBIE, &r, &pid, status);
+                        _builtinfunc(sleep_ms, 1);
                 }
                 r = _errno ? -1 : 0;
         }

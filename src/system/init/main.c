@@ -115,8 +115,8 @@ void dnxinit(void *arg)
 //==============================================================================
 int main(void)
 {
-        _cpuctl_init();
         _assert(ESUCC == _mm_init());
+        _cpuctl_init();
         _assert(ESUCC == _kernel_panic_init());
         _assert(ESUCC == _task_create(dnxinit, "", (1024 / sizeof(StackType_t)), NULL, NULL, NULL));
         _kernel_start();

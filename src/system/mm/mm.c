@@ -90,6 +90,8 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 /*==============================================================================
   Local objects
 ==============================================================================*/
+static const char  *REGISTERED_REGION_STR  = "Registered memory region @ 0x%X of size %d bytes";
+static const char  *REGISTRATION_ERROR_STR = "Memory region registration error (%d) @ 0x%X of size %d bytes";
 static _mm_region_t memory_region;
 static i32_t        memory_usage[_MM_COUNT - 1];
 static i32_t       *module_memory_usage;
@@ -129,8 +131,10 @@ extern const uint _drvreg_number_of_modules;
 //==============================================================================
 int _mm_init(void)
 {
-        int err = _mm_register_region(&memory_region, HEAP_START, HEAP_SIZE);
+        int err = _heap_init(&memory_region.heap, HEAP_START, HEAP_SIZE);
         if (!err) {
+                printk(REGISTERED_REGION_STR, HEAP_START, HEAP_SIZE);
+
                 err = _kzalloc(_MM_KRN,
                                _drvreg_number_of_modules * sizeof(i32_t),
                                cast(void*, &module_memory_usage));
@@ -177,11 +181,9 @@ int _mm_register_region(_mm_region_t *region, void *start, size_t size)
 
                 finish:
                 if (!err) {
-                        printk("Registered memory region @ 0x%X of size %d bytes",
-                               start, size);
+                        printk(REGISTERED_REGION_STR, start, size);
                 } else {
-                        printk("Memory region registration error (%d) @ 0x%X of size %d bytes",
-                               err, start, size);
+                        printk(REGISTRATION_ERROR_STR, err, start, size);
                 }
         }
 

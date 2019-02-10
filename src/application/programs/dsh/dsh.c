@@ -289,7 +289,7 @@ static bool is_exit_cmd(const char *cmd)
 //==============================================================================
 static bool is_clear_cmd(const char *cmd)
 {
-        return strncmp(cmd, "clear", 5) == 0 || strcmp(cmd, "clear") == 0;
+        return strncmp(cmd, "clear ", 6) == 0 || strcmp(cmd, "clear") == 0;
 }
 
 //==============================================================================
