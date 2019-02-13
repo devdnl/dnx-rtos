@@ -70,7 +70,7 @@
 //==============================================================================
 static bool is_semaphore_valid(sem_t *sem)
 {
-        return sem && sem->header.type == RES_TYPE_SEMAPHORE && sem->object;
+        return _mm_is_object_in_heap(sem) && sem->header.type == RES_TYPE_SEMAPHORE && sem->object;
 }
 
 //==============================================================================
@@ -82,7 +82,7 @@ static bool is_semaphore_valid(sem_t *sem)
 //==============================================================================
 static bool is_mutex_valid(mutex_t *mtx)
 {
-        return mtx && mtx->header.type == RES_TYPE_MUTEX && mtx->object;
+        return _mm_is_object_in_heap(mtx) && mtx->header.type == RES_TYPE_MUTEX && mtx->object;
 }
 
 //==============================================================================
@@ -94,7 +94,7 @@ static bool is_mutex_valid(mutex_t *mtx)
 //==============================================================================
 static bool is_queue_valid(queue_t *queue)
 {
-        return queue && queue->header.type == RES_TYPE_QUEUE && queue->object;
+        return _mm_is_object_in_heap(queue) && queue->header.type == RES_TYPE_QUEUE && queue->object;
 }
 
 //==============================================================================
@@ -106,7 +106,7 @@ static bool is_queue_valid(queue_t *queue)
 //==============================================================================
 static bool is_flag_valid(flag_t *flag)
 {
-        return flag && flag->header.type == RES_TYPE_FLAG && flag->object;
+        return _mm_is_object_in_heap(flag) && flag->header.type == RES_TYPE_FLAG && flag->object;
 }
 
 //==============================================================================

@@ -32,7 +32,8 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "sys/types.h"
+#include <stdbool.h>
+#include <sys/types.h>
 #include "heap.h"
 
 #ifdef __cplusplus
@@ -89,6 +90,7 @@ extern size_t _mm_get_block_size(void*);
 extern size_t _mm_get_mem_free(void);
 extern size_t _mm_get_mem_usage(void);
 extern size_t _mm_get_mem_size(void);
+extern bool   _mm_is_object_in_heap(void *ptr);
 extern int    _kzalloc(enum _mm_mem, const size_t, void**, ...);
 extern int    _kmalloc(enum _mm_mem, const size_t, void**, ...);
 extern int    _kfree(enum _mm_mem, void**, ...);

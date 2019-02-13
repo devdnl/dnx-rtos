@@ -41,6 +41,7 @@
 #include "kernel/errno.h"
 #include "kernel/time.h"
 #include "kernel/khooks.h"
+#include "kernel/sysfunc.h"
 #include "lib/cast.h"
 #include "lib/unarg.h"
 #include "lib/strlcat.h"
@@ -67,7 +68,7 @@
 #define GETERRNO()                      rq->err
 #define UNUSED_RQ()                     UNUSED_ARG1(rq)
 
-#define is_proc_valid(proc)             (proc && proc->header.type == RES_TYPE_PROCESS)
+#define is_proc_valid(proc)             (_mm_is_object_in_heap(proc) && ((res_header_t*)proc)->type == RES_TYPE_PROCESS)
 #define is_tid_in_range(proc, tid)      (tid < _process_get_max_threads(proc))
 
 /*==============================================================================
@@ -575,6 +576,15 @@ int _syscall_kworker_process(int argc, char *argv[])
 static void syscall_do(void *rq)
 {
         syscallrq_t *sysrq = rq;
+
+        if (!is_proc_valid(sysrq->client_proc)) {
+                /*
+                 * This message means that during execution this syscall,
+                 * the client process does not exists anymore.
+                 */
+                printk("Invalid client process!");
+                return;
+        }
 
         tid_t tid = _process_get_active_thread();
         _assert(is_tid_in_range(_process_get_active(), tid));

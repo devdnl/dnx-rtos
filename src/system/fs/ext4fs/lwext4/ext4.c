@@ -1979,6 +1979,8 @@ int ext4_mode_get2(struct ext4_mountpoint *mp, ext4_file *file, uint32_t *mode)
         *mode = ext4_inode_get_mode(&mp->fs.sb, inode_ref.inode);
         r = ext4_fs_put_inode_ref(&inode_ref);
 
+        file->fsize = ext4_inode_get_size(&mp->fs.sb, inode_ref.inode);
+
         Finish:
         EXT4_MP_UNLOCK(mp);
 

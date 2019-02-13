@@ -124,7 +124,7 @@ static void socket_free(SOCKET **socket)
 //==============================================================================
 static bool is_socket_valid(SOCKET *socket)
 {
-        return (socket != NULL)
+        return _mm_is_object_in_heap(socket)
             && (socket->header.type == RES_TYPE_SOCKET)
             && (socket->family < _NET_FAMILY__COUNT)
             && (socket->ctx == cast(void *, cast(size_t, socket)

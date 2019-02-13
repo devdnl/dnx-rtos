@@ -1435,7 +1435,7 @@ static int delete_FS_entry(FS_entry_t *this)
 //==============================================================================
 static bool is_file_valid(FILE *file)
 {
-        return (  file                  != NULL
+        return (  _mm_is_object_in_heap(file)
                && file->FS_hdl          != NULL
                && file->FS_if           != NULL
                && file->header.type     == RES_TYPE_FILE
@@ -1453,7 +1453,7 @@ static bool is_file_valid(FILE *file)
 //==============================================================================
 static bool is_dir_valid(DIR *dir)
 {
-        return (dir && dir->header.type == RES_TYPE_DIR);
+        return (_mm_is_object_in_heap(dir) && dir->header.type == RES_TYPE_DIR);
 }
 
 //==============================================================================

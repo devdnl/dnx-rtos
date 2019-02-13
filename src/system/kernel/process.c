@@ -62,7 +62,7 @@
 
 #define PROC_MAX_THREADS(proc)          (((proc)->flag & FLAG_KWORKER) ? __OS_TASK_MAX_SYSTEM_THREADS__ : __OS_TASK_MAX_USER_THREADS__)
 
-#define is_proc_valid(proc)             (proc && proc->header.type == RES_TYPE_PROCESS)
+#define is_proc_valid(proc)             (_mm_is_object_in_heap(proc) && proc->header.type == RES_TYPE_PROCESS)
 #define is_tid_in_range(proc, tid)      ((tid > 0) && (tid < PROC_MAX_THREADS(proc)))
 
 #define FLAG_DETACHED                   (1 << 0)
@@ -1318,7 +1318,23 @@ static void process_destroy_all_resources(_process_t *proc)
                 proc->argc = 0;
         }
 
-        // free all resources
+        // close files, directories, sockets
+        while (proc->res_list) {
+                res_header_t *resource = proc->res_list;
+                proc->res_list = resource->next;
+
+                if (  (resource->type == RES_TYPE_FILE)
+                   || (resource->type == RES_TYPE_DIR)
+                   || (resource->type == RES_TYPE_SOCKET) ) {
+
+                        int err = resource_destroy(resource);
+                        if (err != ESUCC) {
+                                printk("PROCESS: PID %d: unknown object %p\n", proc->pid, resource);
+                        }
+                }
+        }
+
+        // free all other resources
         while (proc->res_list) {
                 res_header_t *resource = proc->res_list;
                 proc->res_list = resource->next;
@@ -1599,6 +1615,11 @@ static int get_pid(pid_t *pid)
 //==============================================================================
 static int resource_destroy(res_header_t *resource)
 {
+        if (!_mm_is_object_in_heap(resource)) {
+                printk("Resource object %p out of heap", resource);
+                return EINVAL;
+        }
+
         res_header_t *res2free = resource;
 
         switch (resource->type) {

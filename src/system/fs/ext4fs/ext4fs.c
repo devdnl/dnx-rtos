@@ -625,8 +625,15 @@ API_FS_READDIR(ext4fs, void *fs_handle, DIR *dir)
 
         ext4_direntry *de = const_cast(ext4_direntry*, ext4_dir_entry_next(d));
         if (de) {
-                u32_t mode;
-                err = ext4_mode_get2(hdl->mp, &d->f, &mode);
+                ext4_file f;
+                f.flags = 0;
+                f.fpos  = 0;
+                f.fsize = 0;
+                f.inode = de->inode;
+                f.mp    = hdl->mp;
+
+                u32_t mode = 0;
+                err = ext4_mode_get2(hdl->mp, &f, &mode);
                 if (!err) {
                         size_t len = de->name_length >= 255 ? 254 : de->name_length;
                         de->name[len] = '\0';
@@ -634,7 +641,7 @@ API_FS_READDIR(ext4fs, void *fs_handle, DIR *dir)
                         dir->dirent.dev    = 0;
                         dir->dirent.mode   = (mode & ~EXT4_INODE_MODE_TYPE_MASK) | ext4ftype2vfs(mode);
                         dir->dirent.d_name = cast(const char*, de->name);
-                        dir->dirent.size   = ext4_fsize(&d->f);
+                        dir->dirent.size   = ext4_fsize(&f);
                         dir->d_seek        = d->next_off;
                 }
         }
@@ -887,8 +894,7 @@ static int unlock(struct ext4_blockdev *bdev)
 //==============================================================================
 static mode_t ext4ftype2vfs(u32_t mode)
 {
-        mode &= EXT4_INODE_MODE_TYPE_MASK;
-        switch (mode) {
+        switch (mode & EXT4_INODE_MODE_TYPE_MASK) {
         case EXT4_INODE_MODE_FIFO:      return S_IFIFO;
         case EXT4_INODE_MODE_CHARDEV:   return S_IFDEV;
         case EXT4_INODE_MODE_DIRECTORY: return S_IFDIR;

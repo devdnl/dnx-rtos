@@ -30,7 +30,6 @@
   Include files
 ==============================================================================*/
 #include <stdarg.h>
-#include <stdbool.h>
 #include <string.h>
 #include "config.h"
 #include "mm/mm.h"
@@ -436,6 +435,32 @@ size_t _mm_get_mem_size(void)
         }
 
         return ramsize;
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if object is located in heap
+ *
+ * @param  ptr  pointer to examine
+ *
+ * @return If pointer is on heap true is returned, otherwise false.
+ */
+//==============================================================================
+bool _mm_is_object_in_heap(void *ptr)
+{
+        if (ptr == NULL) {
+                return false;
+        }
+
+        for (_mm_region_t *r = &memory_region; r; r = r->next) {
+                if (  (cast(uintptr_t, ptr) >= cast(uintptr_t, r->heap.begin))
+                   && (cast(uintptr_t, ptr) <= cast(uintptr_t, r->heap.end  )) ) {
+
+                        return true;
+                }
+        }
+
+        return false;
 }
 
 //==============================================================================
