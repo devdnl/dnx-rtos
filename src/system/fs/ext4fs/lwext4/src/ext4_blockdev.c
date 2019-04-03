@@ -286,7 +286,7 @@ int ext4_blocks_get_direct(struct ext4_blockdev *bdev, void *buf, uint64_t lba,
 
 	ext4_assert(bdev && buf);
 
-	pba = (lba * bdev->lg_bsize) / bdev->bdif->ph_bsize;
+	pba = (lba * bdev->lg_bsize + bdev->part_offset) / bdev->bdif->ph_bsize;
 	pb_cnt = bdev->lg_bsize / bdev->bdif->ph_bsize;
 
 	return ext4_bdif_bread(bdev, buf, pba, pb_cnt * cnt);
@@ -300,7 +300,7 @@ int ext4_blocks_set_direct(struct ext4_blockdev *bdev, const void *buf,
 
 	ext4_assert(bdev && buf);
 
-	pba = (lba * bdev->lg_bsize) / bdev->bdif->ph_bsize;
+	pba = (lba * bdev->lg_bsize + bdev->part_offset) / bdev->bdif->ph_bsize;
 	pb_cnt = bdev->lg_bsize / bdev->bdif->ph_bsize;
 
 	return ext4_bdif_bwrite(bdev, buf, pba, pb_cnt * cnt);
@@ -324,7 +324,7 @@ int ext4_block_writebytes(struct ext4_blockdev *bdev, uint64_t off,
 	if (off + len > bdev->part_size)
 		return EINVAL; /*Ups. Out of range operation*/
 
-	block_idx = (off / bdev->bdif->ph_bsize);
+	block_idx = ((off + bdev->part_offset) / bdev->bdif->ph_bsize);
 
 	/*OK lets deal with the first possible unaligned block*/
 	unalg = (off & (bdev->bdif->ph_bsize - 1));
@@ -394,7 +394,7 @@ int ext4_block_readbytes(struct ext4_blockdev *bdev, uint64_t off, void *buf,
 	if (off + len > bdev->part_size)
 		return EINVAL; /*Ups. Out of range operation*/
 
-	block_idx = (off / bdev->bdif->ph_bsize);
+	block_idx = ((off + bdev->part_offset) / bdev->bdif->ph_bsize);
 
 	/*OK lets deal with the first possible unaligned block*/
 	unalg = (off & (bdev->bdif->ph_bsize - 1));

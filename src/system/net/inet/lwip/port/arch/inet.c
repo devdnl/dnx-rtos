@@ -309,10 +309,10 @@ static int stack_init()
                         .detached    = true
                 };
 
-                int ts = sys_thread_create(network_interface_thread, &attr, NULL, &inet->if_thread);
-                int ms = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &inet->access);
+                int terr = sys_thread_create(network_interface_thread, &attr, NULL, &inet->if_thread);
+                int merr = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &inet->access);
 
-                if (ms == ESUCC && ts == ESUCC) {
+                if (merr == ESUCC && terr == ESUCC) {
 
                         tcpip_init(NULL, NULL);
 
@@ -326,10 +326,10 @@ static int stack_init()
                         return ESUCC;
 
                 } else {
-                        if (ms)
+                        if (!merr)
                                 sys_mutex_destroy(inet->access);
 
-                        if (ts)
+                        if (!terr)
                                 sys_thread_destroy(inet->if_thread);
 
                         _netfree(inet);

@@ -80,12 +80,6 @@ struct ext4_blockdev_iface {
 	 * @param   bdev block device.*/
 	int (*unlock)(struct ext4_blockdev *bdev);
 
-	/**@brief   The user object. */
-	void *blkobj;
-
-	/**@brief   The lock object. */
-	void *lockobj;
-
 	/**@brief   Block size (bytes): physical*/
 	uint32_t ph_bsize;
 
@@ -103,12 +97,18 @@ struct ext4_blockdev_iface {
 
 	/**@brief   Physical write counter*/
 	uint32_t bwrite_ctr;
+
+	/**@brief   User data pointer*/
+	void* p_user;
 };
 
 /**@brief   Definition of the simple block device.*/
 struct ext4_blockdev {
 	/**@brief Block device interface*/
 	struct ext4_blockdev_iface *bdif;
+
+	/**@brief Offset in bdif. For multi partition mode.*/
+	uint64_t part_offset;
 
 	/**@brief Part size in bdif. For multi partition mode.*/
 	uint64_t part_size;
@@ -148,6 +148,7 @@ struct ext4_blockdev {
 	};								       \
 	static struct ext4_blockdev __name = {                                 \
 		.bdif = &__name##_iface,                                       \
+		.part_offset = 0,                                              \
 		.part_size =  (__bcnt) * (__bsize),                            \
 	}
 

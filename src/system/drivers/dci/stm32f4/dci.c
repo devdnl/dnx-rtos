@@ -40,7 +40,7 @@ Brief    Digital Camera Interface Driver
 #define DMA_STREAM_PRI          1
 #define DMA_STREAM_AUX          7
 #define DMA_MAX_TRANSFER        65535
-#define DMA_TIMEOUT             500
+#define DMA_TIMEOUT             1000
 
 /*==============================================================================
   Local object types
@@ -128,24 +128,35 @@ API_MOD_INIT(DCI, void **device_handle, u8_t major, u8_t minor)
                                 DCMI->CWSIZER = (_DCI_CROP_HEIGHT <<  0)
                                               | (_DCI_CROP_WIDTH  << 16);
 
+                                if (_DCI_JPEG) {
+                                        NVIC_EnableIRQ(DCMI_IRQn);
+                                        NVIC_SetPriority(DCMI_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                                        NVIC_ClearPendingIRQ(DCMI_IRQn);
+                                }
+
                                 SET_BIT(DCMI->CR, DCMI_CR_ENABLE);
 
                                 // calculate max DMA transfer size and number of transfers
-                                size_t tc   = (sizeof(u32_t) * (DMA_MAX_TRANSFER + 1)
-                                            / (_DCI_CAM_RES_X * _DCI_BYTES_PER_PIXEL));
+                                if (_DCI_JPEG) {
+                                        DCI->TSIZEW = 32;
+                                        DCI->TCOUNT = DMA_MAX_TRANSFER;
+                                } else {
+                                        size_t tc   = (sizeof(u32_t) * (DMA_MAX_TRANSFER + 1)
+                                                    / (_DCI_CAM_RES_X * _DCI_BYTES_PER_PIXEL));
 
-                                DCI->TSIZEW = (_DCI_CAM_RES_X * _DCI_BYTES_PER_PIXEL)
-                                            / sizeof(u32_t);
+                                        DCI->TSIZEW = (_DCI_CAM_RES_X * _DCI_BYTES_PER_PIXEL)
+                                                    / sizeof(u32_t);
 
-                                DCI->TCOUNT = _DCI_CAM_RES_Y;
+                                        DCI->TCOUNT = _DCI_CAM_RES_Y;
 
-                                for (int i = tc - 1; i > 0; i--) {
-                                        if (_DCI_CAM_RES_Y % i == 0) {
-                                                DCI->TSIZEW = ((_DCI_CAM_RES_X * _DCI_BYTES_PER_PIXEL) * i)
-                                                            / sizeof(u32_t);
+                                        for (int i = tc - 1; i > 0; i--) {
+                                                if (_DCI_CAM_RES_Y % i == 0) {
+                                                        DCI->TSIZEW = ((_DCI_CAM_RES_X * _DCI_BYTES_PER_PIXEL) * i)
+                                                                    / sizeof(u32_t);
 
-                                                DCI->TCOUNT = _DCI_CAM_RES_Y / i;
-                                                break;
+                                                        DCI->TCOUNT = _DCI_CAM_RES_Y / i;
+                                                        break;
+                                                }
                                         }
                                 }
 
@@ -275,8 +286,8 @@ API_MOD_READ(DCI,
         DCI_t *hdl = device_handle;
 
         size_t frame_size = _DCI_CROP
-                          ? (_DCI_CROP_WIDTH * _DCI_CROP_HEIGHT * _DCI_BYTES_PER_PIXEL)
-                          : (_DCI_CAM_RES_X  * _DCI_CAM_RES_Y   * _DCI_BYTES_PER_PIXEL);
+                          ? (_DCI_CROP_WIDTH * _DCI_CROP_HEIGHT * (_DCI_JPEG ? 1 : _DCI_BYTES_PER_PIXEL))
+                          : (_DCI_CAM_RES_X  * _DCI_CAM_RES_Y   * (_DCI_JPEG ? 1 : _DCI_BYTES_PER_PIXEL));
 
         if (count != frame_size) {
                 return ENOTSUP;
@@ -314,20 +325,45 @@ API_MOD_READ(DCI,
 
         int err = _DMA_DDI_transfer(dmad, &config);
         if (!err) {
+
                 SET_BIT(DCMI->CR, DCMI_CR_CAPTURE);
 
                 err = sys_semaphore_wait(hdl->event, DMA_TIMEOUT);
-                if (!err) {
-                        *rdcnt = frame_size;
-                } else {
-                        *rdcnt = frame_size; // TEST
-                        CLEAR_BIT(DCMI->CR, DCMI_CR_CAPTURE | DCMI_CR_ENABLE);
-                        SET_BIT(DCMI->CR, DCMI_CR_ENABLE);
-                }
                 _DMA_DDI_release(dmad);
 
-                if (hdl->tleft > 0) {
-                        printk("%s: %d transfers not captured", GET_MODULE_NAME(), hdl->tleft);
+                *rdcnt = frame_size;
+                CLEAR_BIT(DCMI->CR, DCMI_CR_CAPTURE | DCMI_CR_ENABLE);
+                SET_BIT(DCMI->CR, DCMI_CR_ENABLE);
+
+                if (_DCI_JPEG) {
+                        u32_t *frame = cast(u32_t*, dst);
+
+                        size_t imgsz = (hdl->TCOUNT - hdl->tleft + 1) * sizeof(u32_t) * DCI->TSIZEW;
+                               imgsz = min(imgsz, count);
+
+                        for (int i = imgsz / sizeof(u32_t) - 1; i > 0; i--) {
+                                if (frame[i] == 0) {
+                                        imgsz -= 4;
+                                } else {
+                                        if (  ((frame[i] & 0xFFFF0000) == 0xD9FF0000)
+                                           || ((frame[i] & 0x00FFFF00) == 0x00D9FF00)
+                                           || ((frame[i] & 0x0000FFFF) == 0x0000D9FF)
+                                           || ((frame[i] & 0x000000FF) == 0x000000D9) ) {
+
+                                                err = ESUCC;
+                                        } else {
+                                                printk("DCI: broken JPG stream");
+                                                err = EIO;
+                                        }
+                                        break;
+                                }
+                        }
+
+                        *rdcnt = imgsz;
+                } else {
+                        if (hdl->tleft > 0) {
+                                printk("%s: %d transfers not captured", GET_MODULE_NAME(), hdl->tleft);
+                        }
                 }
         }
 
@@ -355,7 +391,7 @@ API_MOD_IOCTL(DCI, void *device_handle, int request, void *arg)
         case IOCTL_DCI__GET_PARAMS:
                 cast(DCI_params_t*, arg)->x_resolution    = _DCI_CAM_RES_X;
                 cast(DCI_params_t*, arg)->y_resolution    = _DCI_CAM_RES_Y;
-                cast(DCI_params_t*, arg)->bytes_per_pixel = _DCI_BYTES_PER_PIXEL;
+                cast(DCI_params_t*, arg)->bytes_per_pixel = _DCI_JPEG ? 1 :_DCI_BYTES_PER_PIXEL;
                 cast(DCI_params_t*, arg)->JPEG_mode       = _DCI_JPEG;
                 break;
 
@@ -397,10 +433,14 @@ API_MOD_STAT(DCI, void *device_handle, struct vfs_dev_stat *device_stat)
         UNUSED_ARG1(device_handle);
 
         if (_DCI_CROP) {
-                device_stat->st_size = _DCI_CROP_WIDTH * _DCI_CROP_HEIGHT * _DCI_BYTES_PER_PIXEL;
+                device_stat->st_size = _DCI_CROP_WIDTH
+                                     * _DCI_CROP_HEIGHT
+                                     * (_DCI_JPEG ? 1 :_DCI_BYTES_PER_PIXEL);
 
         } else {
-                device_stat->st_size = _DCI_CAM_RES_X * _DCI_CAM_RES_Y * _DCI_BYTES_PER_PIXEL;
+                device_stat->st_size = _DCI_CAM_RES_X
+                                     * _DCI_CAM_RES_Y
+                                     * (_DCI_JPEG ? 1 :_DCI_BYTES_PER_PIXEL);
         }
 
         return ESUCC;
@@ -416,6 +456,12 @@ static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
         DCI_t *hdl = arg;
 
         bool yield = false;
+
+        if (_DCI_JPEG) {
+                NVIC_ClearPendingIRQ(DCMI_IRQn);
+                SET_BIT(DCMI->ICR, DCMI_IER_VSYNC_IE);
+                SET_BIT(DCMI->IER, DCMI_IER_VSYNC_IE);
+        }
 
         if (SR & DMA_SR_TCIF) {
                 if (hdl->tleft > 0) {
@@ -447,7 +493,10 @@ static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 //==============================================================================
 void DCMI_IRQHandler(void)
 {
-        /* not used yet */
+        CLEAR_BIT(DCMI->IER, DCMI_IER_VSYNC_IE);
+        bool yield = false;
+        sys_semaphore_signal_from_ISR(DCI->event, &yield);
+        sys_thread_yield_from_ISR(yield);
 }
 
 /*==============================================================================

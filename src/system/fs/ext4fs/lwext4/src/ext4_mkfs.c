@@ -95,6 +95,7 @@ static int sb2info(struct ext4_sblock *sb, struct ext4_mkfs_info *info)
 	info->label = sb->volume_name;
 	info->len = (uint64_t)info->block_size * ext4_sb_get_blocks_cnt(sb);
 	info->dsc_size = to_le16(sb->desc_size);
+	memcpy(info->uuid, sb->uuid, UUID_SIZE);
 
 	return EOK;
 }
@@ -260,7 +261,7 @@ static void fill_sb(struct fs_aux_info *aux_info, struct ext4_mkfs_info *info)
 	sb->features_incompatible = to_le32(info->feat_incompat);
 	sb->features_read_only = to_le32(info->feat_ro_compat);
 
-	memset(sb->uuid, 0, sizeof(sb->uuid));
+	memcpy(sb->uuid, info->uuid, UUID_SIZE);
 
 	memset(sb->volume_name, 0, sizeof(sb->volume_name));
 	strncpy(sb->volume_name, info->label, sizeof(sb->volume_name));
@@ -709,7 +710,7 @@ int ext4_mkfs(struct ext4_fs *fs, struct ext4_blockdev *bd,
 	bd->fs = fs;
 
 	if (info->len == 0)
-		info->len = bd->bdif->ph_bcnt * bd->bdif->ph_bsize;
+		info->len = bd->part_size;
 
 	if (info->block_size == 0)
 		info->block_size = 4096; /*Set block size to default value*/

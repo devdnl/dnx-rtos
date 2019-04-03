@@ -30,54 +30,43 @@
  * @{
  */
 /**
- * @file  ext4_mkfs.h
- * @brief
+ * @file  ext4_mbr.h
+ * @brief Master boot record parser
  */
 
-#ifndef EXT4_MKFS_H_
-#define EXT4_MKFS_H_
+#ifndef EXT4_MBR_H_
+#define EXT4_MBR_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <ext4_config.h>
-#include <ext4_types.h>
-
 #include <ext4_blockdev.h>
-#include <ext4_fs.h>
 
-#include <stdbool.h>
-#include <stdint.h>
-
-struct ext4_mkfs_info {
-	uint64_t len;
-	uint32_t block_size;
-	uint32_t blocks_per_group;
-	uint32_t inodes_per_group;
-	uint32_t inode_size;
-	uint32_t inodes;
-	uint32_t journal_blocks;
-	uint16_t feat_ro_compat;
-	uint16_t feat_compat;
-	uint16_t feat_incompat;
-	uint32_t bg_desc_reserve_blocks;
-	uint16_t dsc_size;
-	bool journal;
-	const char *label;
+/**@brief Master boot record block devices descriptor*/
+struct ext4_mbr_bdevs {
+	struct ext4_blockdev partitions[4];
 };
 
+int ext4_mbr_scan(struct ext4_blockdev *parent, struct ext4_mbr_bdevs *bdevs);
 
-int ext4_mkfs_read_info(struct ext4_blockdev *bd, struct ext4_mkfs_info *info);
+/**@brief Master boot record partitions*/
+struct ext4_mbr_parts {
 
-int ext4_mkfs(struct ext4_fs *fs, struct ext4_blockdev *bd,
-	      struct ext4_mkfs_info *info, int fs_type);
+	/**@brief Percentage division tab:
+	 *  - {50, 20, 10, 20}
+	 * Sum of all 4 elements must be <= 100*/
+	uint8_t division[4];
+};
+
+int ext4_mbr_write(struct ext4_blockdev *parent, struct ext4_mbr_parts *parts, uint32_t disk_id);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* EXT4_MKFS_H_ */
+#endif /* EXT4_MBR_H_ */
 
 /**
  * @}

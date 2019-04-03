@@ -267,9 +267,9 @@ static uint32_t jbd_commit_csum(struct jbd_fs *jbd_fs,
 	uint32_t checksum = 0;
 
 	if (jbd_has_csum(&jbd_fs->sb)) {
-		uint32_t orig_checksum_type = header->chksum_type,
-			 orig_checksum_size = header->chksum_size,
-			 orig_checksum = header->chksum[0];
+		uint8_t orig_checksum_type = header->chksum_type,
+			 orig_checksum_size = header->chksum_size;
+		uint32_t orig_checksum = header->chksum[0];
 		uint32_t block_size = jbd_get32(&jbd_fs->sb, blocksize);
 		header->chksum_type = 0;
 		header->chksum_size = 0;
@@ -1331,9 +1331,10 @@ static void jbd_journal_flush_trans(struct jbd_trans *trans)
 		      jbd_buf->block_rec->trans == trans)) {
 			int r;
 			struct ext4_block jbd_block = EXT4_BLOCK_ZERO();
-			ext4_assert(jbd_block_get(journal->jbd_fs,
+			r = jbd_block_get(journal->jbd_fs,
 						&jbd_block,
-						jbd_buf->jbd_lba) == EOK);
+						jbd_buf->jbd_lba);
+			ext4_assert(r == EOK);
 			memcpy(tmp_data, jbd_block.data,
 					journal->block_size);
 			ext4_block_set(fs->bdev, &jbd_block);
@@ -1554,12 +1555,15 @@ jbd_trans_finish_callback(struct jbd_journal *journal,
 				jbd_buf_dirty);
 		if (jbd_buf) {
 			if (!revoke) {
-				ext4_assert(ext4_block_get_noread(fs->bdev,
+				int r;
+				r = ext4_block_get_noread(fs->bdev,
 							&block,
-							block_rec->lba) == EOK);
-				ext4_assert(jbd_block_get(journal->jbd_fs,
+							block_rec->lba);
+				ext4_assert(r == EOK);
+				r = jbd_block_get(journal->jbd_fs,
 							&jbd_block,
-							jbd_buf->jbd_lba) == EOK);
+							jbd_buf->jbd_lba);
+				ext4_assert(r == EOK);
 				memcpy(block.data, jbd_block.data,
 						journal->block_size);
 
@@ -1784,8 +1788,8 @@ static int jbd_trans_write_commit_block(struct jbd_trans *trans)
 
 	if (JBD_HAS_INCOMPAT_FEATURE(&journal->jbd_fs->sb,
 				JBD_FEATURE_COMPAT_CHECKSUM)) {
-		jbd_set32(header, chksum_type, JBD_CRC32_CHKSUM);
-		jbd_set32(header, chksum_size, JBD_CRC32_CHKSUM_SIZE);
+		header->chksum_type = JBD_CRC32_CHKSUM;
+		header->chksum_size = JBD_CRC32_CHKSUM_SIZE;
 		jbd_set32(header, chksum[0], trans->data_csum);
 	}
 	jbd_commit_csum_set(journal->jbd_fs, header);
@@ -2141,7 +2145,7 @@ static void jbd_trans_end_write(struct ext4_bcache *bc __unused,
 			TAILQ_REMOVE(&journal->cp_queue, trans, trans_node);
 			jbd_journal_free_trans(journal, trans, false);
 
-			jbd_journal_purge_cp_trans(journal, false, true);
+			jbd_journal_purge_cp_trans(journal, false, false);
 			jbd_journal_write_sb(journal);
 			jbd_write_sb(journal->jbd_fs);
 		}

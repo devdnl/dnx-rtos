@@ -1,12 +1,12 @@
 #/*=============================================================================
-# @file    network_flags.h
+# @file    sipc_flags.h
 #
 # @author  Daniel Zorychta
 #
-# @brief   This file contains list of existing network stacks.
+# @brief   This file contains configuration of SIPC stack.
 #          Hybrid file: included both by Make and CC.
 #
-# @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+# @note    Copyright (C) 2019 Daniel Zorychta <daniel.zorychta@gmail.com>
 #
 #          This program is free software; you can redistribute it and/or modify
 #          it under the terms of the GNU General Public License as published by
@@ -34,67 +34,44 @@
 #*       All other flag definitions and statements are ignored.
 #*/
 
-#ifndef _NETWORK_FLAGS_H_
-#define _NETWORK_FLAGS_H_
+#ifndef _SIPC_FLAGS_H_
+#define _SIPC_FLAGS_H_
 
 #/*--
-# this:SetLayout("TitledGridBack", 2, "Home > Network",
-#                function() this:LoadFile("config.h", true) end)
+# this:SetLayout("TitledGridBack", 2, "Home > Network > SIPC Stack",
+#     function() -- back button
+#         this:LoadFile("network/network_flags.h")
+#     end
+# )
 #++*/
 
 
 #/*--
-# this:AddExtraWidget("Label", "LabelGeneral", "General", -1, "bold")
-# this:AddExtraWidget("Void", "VoidGeneral0")
+# this:AddExtraWidget("Label", "LabelIfc", "Interface", -1, "bold")
+# this:AddExtraWidget("Label", "LabelVoid", "                     ", 24, "bold")
 #
-# this:AddWidget("Checkbox", "Enable network subsystem")
-# this:AddExtraWidget("Void", "VoidEnable")
+# this:AddWidget("Editline", true, "Interface device path")
 #--*/
-#define __ENABLE_NETWORK__ _NO_
-#/*
-__ENABLE_NETWORK__=_NO_
-#*/
+#define __NETWORK_SIPC_INTERFACE_PATH__ "/dev/hmi"
 
 #/*--
-# this:AddExtraWidget("Label", "LabelStacks", "\nStacks", -1, "bold")
-# this:AddExtraWidget("Void", "VoidStacks")
-#++*/
+# this:AddWidget("Combobox", "Debug messages")
+# this:AddItem("Disable", "_NO_")
+# this:AddItem("Enable", "_YES_")
+#--*/
+#define __NETWORK_SIPC_DEBUG_ON__ _NO_
 
 #/*--
-# this:AddWidget("Checkbox", "Enable TCP/IP stack")
-# this:AddExtraWidget("Hyperlink", "TCPIPConfigure", "Configure")
-# this:SetEvent("clicked", "TCPIPConfigure", function() this:LoadFile("network/tcpip_flags.h") end)
+# this:AddWidget("Spinbox", 1, 5000, "Retry delay [ms]")
 #--*/
-#define __ENABLE_TCPIP_STACK__ _NO_
-#/*
-__ENABLE_TCPIP_STACK__=_NO_
-#*/
+#define __NETWORK_SIPC_RETRY_DELAY_MS__ 50
 
 #/*--
-# this:AddWidget("Checkbox", "Enable SIPC stack")
-# this:AddExtraWidget("Hyperlink", "SIPCConfigure", "Configure")
-# this:SetEvent("clicked", "SIPCConfigure", function() this:LoadFile("network/sipc_flags.h") end)
+# this:AddWidget("Spinbox", 128, 65536, "Receive buffer size [B]")
 #--*/
-#define __ENABLE_SIPC_STACK__ _NO_
-#/*
-__ENABLE_SIPC_STACK__=_NO_
-#*/
+#define __NETWORK_SIPC_RECV_BUF_SIZE__ 2048
 
-#if __ENABLE_TCPIP_STACK__ == _YES_
-#include "tcpip_flags.h"
-#/*
-include ./config/network/tcpip_flags.h
-#*/
-#endif
-
-#if __ENABLE_SIPC_STACK__ == _YES_
-#include "sipc_flags.h"
-#/*
-include ./config/network/sipc_flags.h
-#*/
-#endif
-
-#endif /* _NETWORK_FLAGS_H_ */
+#endif /* _SIPC_FLAGS_H_ */
 #/*=============================================================================
 #  End of file
 #=============================================================================*/

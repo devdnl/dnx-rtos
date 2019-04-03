@@ -830,42 +830,6 @@ cleanup:
 	return rc;
 }
 
-#if CONFIG_DIR_INDEX_COMB_SORT
-#define SWAP_ENTRY(se1, se2)                                                   \
-	do {                                                                   \
-		struct ext4_dx_sort_entry tmp = se1;                           \
-		se1 = se2;                                                     \
-		se2 = tmp;                                                     \
-	\
-} while (0)
-
-static void comb_sort(struct ext4_dx_sort_entry *se, uint32_t count)
-{
-	struct ext4_dx_sort_entry *p, *q, *top = se + count - 1;
-	bool more;
-	/* Combsort */
-	while (count > 2) {
-		count = (count * 10) / 13;
-		if (count - 9 < 2)
-			count = 11;
-		for (p = top, q = p - count; q >= se; p--, q--)
-			if (p->hash < q->hash)
-				SWAP_ENTRY(*p, *q);
-	}
-	/* Bubblesort */
-	do {
-		more = 0;
-		q = top;
-		while (q-- > se) {
-			if (q[1].hash >= q[0].hash)
-				continue;
-			SWAP_ENTRY(*(q + 1), *q);
-			more = 1;
-		}
-	} while (more);
-}
-#else
-
 /**@brief  Compare function used to pass in quicksort implementation.
  *         It can compare two entries by hash value.
  * @param arg1  First entry
@@ -888,7 +852,6 @@ static int ext4_dir_dx_entry_comparator(const void *arg1, const void *arg2)
 	else
 		return 1;
 }
-#endif
 
 /**@brief  Insert new index entry to block.
  *         Note that space for new entry must be checked by caller.
@@ -996,13 +959,9 @@ static int ext4_dir_dx_split_data(struct ext4_inode_ref *inode_ref,
 		de = (void *)((uint8_t *)de + elen);
 	}
 
-/* Sort all entries */
-#if CONFIG_DIR_INDEX_COMB_SORT
-	comb_sort(sort, idx);
-#else
 	qsort(sort, idx, sizeof(struct ext4_dx_sort_entry),
 	      ext4_dir_dx_entry_comparator);
-#endif
+
 	/* Allocate new block for store the second part of entries */
 	ext4_fsblk_t new_fblock;
 	uint32_t new_iblock;
@@ -1271,7 +1230,7 @@ ext4_dir_dx_split_index(struct ext4_inode_ref *ino_ref,
 }
 
 int ext4_dir_dx_add_entry(struct ext4_inode_ref *parent,
-			  struct ext4_inode_ref *child, const char *name)
+			  struct ext4_inode_ref *child, const char *name, uint32_t name_len)
 {
 	int rc2 = EOK;
 	int r;
@@ -1298,7 +1257,6 @@ int ext4_dir_dx_add_entry(struct ext4_inode_ref *parent,
 	}
 
 	/* Initialize hinfo structure (mainly compute hash) */
-	uint32_t name_len = strlen(name);
 	struct ext4_hash_info hinfo;
 	r = ext4_dir_hinfo_init(&hinfo, &root_blk, &fs->sb, name_len, name);
 	if (r != EOK) {

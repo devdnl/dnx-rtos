@@ -75,6 +75,11 @@ extern "C" {
 /** Macro gets part <i>d</i> of INET family network address. */
 #define NET_INET_IPv4_d(ip)                     ((ip >> 0)  & 0xFF)
 
+/*------------------------------------------------------------------------------
+  SIPC NETWORK FAMILY
+------------------------------------------------------------------------------*/
+
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -83,7 +88,16 @@ extern "C" {
 ------------------------------------------------------------------------------*/
 /** Network family. */
 typedef enum {
+#if __ENABLE_TCPIP_STACK__ > 0
         NET_FAMILY__INET,                       //!< Internet network.
+#else
+#define NET_FAMILY__INET _NET_FAMILY__COUNT
+#endif
+#if __ENABLE_SIPC_STACK__ > 0
+        NET_FAMILY__SIPC,                       //!< Serial Inter-Processor Communication
+#else
+#define NET_FAMILY__SIPC _NET_FAMILY__COUNT
+#endif
     #ifndef DOXYGEN
         _NET_FAMILY__COUNT
     #endif
@@ -93,6 +107,7 @@ typedef enum {
 typedef enum {
         NET_PROTOCOL__UDP,                      //!< UDP protocol (INET).
         NET_PROTOCOL__TCP,                      //!< TCP protocol (INET).
+        NET_PROTOCOL__STREAM,                   //!< STREAM protocol (SIPC)
 } NET_protocol_t;
 
 /** Control flags. */
@@ -173,6 +188,35 @@ typedef struct {
         u64_t            tx_packets;            /*!< Number of transmitted packets.*/
         u64_t            rx_packets;            /*!< Number of received packets.*/
 } NET_INET_status_t;
+
+/*------------------------------------------------------------------------------
+  SIPC NETWORK FAMILY
+------------------------------------------------------------------------------*/
+/** SIPC network state. */
+typedef enum {
+        NET_SIPC_STATE__DOWN,                   //!< Network not configured.
+        NET_SIPC_STATE__UP,                     //!< Network configured.
+} NET_SIPC_state_t;
+
+/** SIPC configuration. */
+typedef struct {
+        u16_t MTU;
+} NET_SIPC_config_t;
+
+/** SIPC status. */
+typedef struct {
+        NET_SIPC_state_t state;                 /*!< Connection state.*/
+        u16_t            MTU;                   /*!< Transfer size. */
+        u64_t            tx_bytes;              /*!< Number of transmitted bytes.*/
+        u64_t            rx_bytes;              /*!< Number of received bytes.*/
+        u64_t            tx_packets;            /*!< Number of transmitted packets.*/
+        u64_t            rx_packets;            /*!< Number of received packets.*/
+} NET_SIPC_status_t;
+
+/** SIPC socket address. */
+typedef struct {
+        u8_t             port;                   /*!< Port.*/
+} NET_SIPC_sockaddr_t;
 
 /*==============================================================================
   Exported objects

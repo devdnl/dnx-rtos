@@ -46,6 +46,12 @@ ifeq ($(__ENABLE_NETWORK__), _YES_)
          HDRLOC_CORE += net/inet/lwip/port
       endif
    endif
+   
+   ifeq ($(__ENABLE_SIPC_STACK__), _YES_)
+   	CSRC_CORE   += net/sipc/sipc.c
+   	CSRC_CORE   += net/sipc/sipcbuf.c
+   	HDRLOC_CORE += net/sipc
+   endif
 endif
 
 

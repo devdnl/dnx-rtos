@@ -149,10 +149,9 @@ uint32_t ext4_dmask_get(void);
 	do {                                                                   \
 		if ((m) & ext4_dmask_get()) {                                  \
 			if (!((m) & DEBUG_NOPREFIX)) {                         \
-				printf("%s", ext4_dmask_id2str(m));            \
-				printf("l: %d   ", __LINE__);                  \
+			        printk("%sl: %d", ext4_dmask_id2str(m), __LINE__); \
 			}                                                      \
-			printf(__VA_ARGS__);                                   \
+			printk(__VA_ARGS__);                                   \
 			fflush(stdout);                                        \
 		}                                                              \
 	} while (0)

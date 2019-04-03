@@ -658,6 +658,8 @@ static bool is_Ethernet_started(void)
 //==============================================================================
 static void send_packet(size_t size)
 {
+        sys_critical_section_begin();
+
         /* Setting the Frame Length: bits[12:0] */
         DMATxDescToSet->ControlBufferSize = (size & ETH_DMATxDesc_TBS1);
 
@@ -681,12 +683,14 @@ static void send_packet(size_t size)
         /* Selects the next DMA Tx descriptor list for next buffer to send */
         DMATxDescToSet = cast(ETH_DMADESCTypeDef*, DMATxDescToSet->Buffer2NextDescAddr);
 
+        sys_critical_section_end();
+
         // FIXME This workaround fixes problems with packets lags...
         //       The problem is visible only when a lot of data is send
         //       and many packets are generated.
-        if (size > 1460) {
-                sys_sleep_ms(1);
-        }
+//        if (size > 1460) {
+//                sys_sleep_ms(1);
+//        }
 }
 
 //==============================================================================

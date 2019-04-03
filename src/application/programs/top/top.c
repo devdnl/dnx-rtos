@@ -111,7 +111,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 avg_CPU_load_t avg = {0, 0, 0, 0};
                 get_average_CPU_load(&avg);
 
-                printf("%s - %ud %u:%0ud up, avg. load %%: %d.%d, %d.%d, %d.%d\n",
+                printf("%s - %ud %u:%0u up, avg. load %%: %d.%d, %d.%d, %d.%d\n",
                         argv[0], udays, uhrs, umins,
                         avg.avg1min  / 10, avg.avg1min  % 10,
                         avg.avg5min  / 10, avg.avg5min  % 10,

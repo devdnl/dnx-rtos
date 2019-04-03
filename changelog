@@ -19,6 +19,8 @@ New Features, Improvements:
 - Added more debug messages in DCI driver
 - Fixed readdir in ext4fs (file/dir mode)
 - Improved system stability by checking address range of objects in some cases
+- Added SIPC protocol
+- EXT4FS update
 
 Fixed Bugs:
 - Fixed I2C slave mode for STM32F1 port
@@ -28,6 +30,8 @@ Fixed Bugs:
 - Fixed usage of sys_free() function in drivers and file systems
 - Removed file system cache subsystem - many problems and errors, very slow
 - Fixed SDIO write and read when buffer size is bigger than DMA transfer
+- Process context switch
+- Get semaphore counter value 
 
 dnx RTOS 2.2.0 Eagle
 ====================

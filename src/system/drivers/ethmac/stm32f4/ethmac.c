@@ -531,10 +531,12 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                    && pkt->total_size > 0
                                    && pkt->total_size <= ETH_MAX_PACKET_SIZE) {
 
-                                        if (is_buffer_owned_by_DMA(DMARxDescToGet)) {
-                                                pkt->total_size = 0;
+                                        // TEST check solution in tests
+                                        while (is_buffer_owned_by_DMA(DMARxDescToGet)) {
+                                                sys_sleep_ms(1);
+                                        }
 
-                                        } else if (ETH_GetRxPktSize(DMARxDescToGet) > 0) {
+                                        if (ETH_GetRxPktSize(DMARxDescToGet) > 0) {
 
                                                 u8_t  *buffer = get_buffer_address(DMARxDescToGet);
                                                 size_t offset = 0;
@@ -546,15 +548,17 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                                 give_Rx_buffer_to_DMA();
 
-                                                pkt->total_size = offset;
+                                                err = ESUCC;
                                         } else {
+                                                printk("ETH: received empty packet!");
                                                 give_Rx_buffer_to_DMA();
                                                 pkt->total_size = 0;
+
+                                                err = EIO;
                                         }
 
                                         make_Rx_buffer_available();
 
-                                        err = ESUCC;
                                 } else {
                                         err = EINVAL;
                                 }
@@ -660,6 +664,8 @@ static bool is_Ethernet_started(void)
 //==============================================================================
 static void send_packet(size_t size)
 {
+        sys_critical_section_begin();
+
         /* Setting the Frame Length: bits[12:0] */
         DMATxDescToSet->ControlBufferSize = (size & ETH_DMATxDesc_TBS1);
 
@@ -683,12 +689,14 @@ static void send_packet(size_t size)
         /* Selects the next DMA Tx descriptor list for next buffer to send */
         DMATxDescToSet = cast(ETH_DMADESCTypeDef*, DMATxDescToSet->Buffer2NextDescAddr);
 
+        sys_critical_section_end();
+
         // FIXME This workaround fixes problems with packets lags...
         //       The problem is visible only when a lot of data is send
         //       and many packets are generated.
-        if (size > 1460) {
-                sys_sleep_ms(1);
-        }
+//        if (size > 1460) {
+//                sys_sleep_ms(1);
+//        }
 }
 
 //==============================================================================
@@ -701,21 +709,9 @@ static void send_packet(size_t size)
 //==============================================================================
 static size_t wait_for_packet(struct ethmac *hdl, uint32_t timeout)
 {
-        size_t size = 0;
-
-        if (!is_buffer_owned_by_DMA(DMARxDescToGet)) {
-                sys_semaphore_wait(hdl->rx_data_ready, 0);
-                size = ETH_GetRxPktSize(DMARxDescToGet);
-
-        } else {
-                if (sys_semaphore_wait(hdl->rx_data_ready, timeout) == ESUCC) {
-                        if (!is_buffer_owned_by_DMA(DMARxDescToGet)) {
-                                size = ETH_GetRxPktSize(DMARxDescToGet);
-                        }
-                }
-        }
-
-        return size;
+        bool is_owned_by_DMA = is_buffer_owned_by_DMA(DMARxDescToGet);
+        sys_semaphore_wait(hdl->rx_data_ready, is_owned_by_DMA ? timeout : 0);
+        return ETH_GetRxPktSize(DMARxDescToGet);
 }
 
 //==============================================================================

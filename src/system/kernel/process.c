@@ -773,7 +773,8 @@ KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
         int err = EINVAL;
 
         if (pid && prio) {
-                ATOMIC(process_mtx) {
+                _kernel_scheduler_lock();
+                {
                         if (active_process->pid == pid) {
                                 *prio = _task_get_priority(active_process->task[0]);
                                 err   = ESUCC;
@@ -788,6 +789,7 @@ KERNELSPACE int _process_get_priority(pid_t pid, int *prio)
                                 }
                         }
                 }
+                _kernel_scheduler_unlock();
         }
 
         return err;
@@ -808,7 +810,8 @@ KERNELSPACE int _process_get_container(pid_t pid, _process_t **process)
         int err = EINVAL;
 
         if (pid && process) {
-                ATOMIC(process_mtx) {
+                _kernel_scheduler_lock();
+                {
                         if (active_process->pid == pid) {
                                 *process = active_process;
                                 err = ESUCC;
@@ -844,6 +847,7 @@ KERNELSPACE int _process_get_container(pid_t pid, _process_t **process)
                                 }
                         }
                 }
+                _kernel_scheduler_unlock();
         }
 
         return err;
@@ -858,8 +862,11 @@ KERNELSPACE int _process_get_container(pid_t pid, _process_t **process)
 //==============================================================================
 KERNELSPACE tid_t _process_get_active_thread(void)
 {
+        _kernel_scheduler_lock();
         _assert(active_thread < PROC_MAX_THREADS(active_process));
-        return active_thread;
+        tid_t tid = active_thread;
+        _kernel_scheduler_unlock();
+        return tid;
 }
 
 //==============================================================================
@@ -1318,20 +1325,34 @@ static void process_destroy_all_resources(_process_t *proc)
                 proc->argc = 0;
         }
 
-        // close files, directories, sockets
-        while (proc->res_list) {
-                res_header_t *resource = proc->res_list;
-                proc->res_list = resource->next;
+        // close files, directories, sockets, etc
+        res_header_t *resource_curr = proc->res_list;
+        res_header_t *resource_prev = NULL;
+        res_header_t *resource_next = NULL;
 
-                if (  (resource->type == RES_TYPE_FILE)
-                   || (resource->type == RES_TYPE_DIR)
-                   || (resource->type == RES_TYPE_SOCKET) ) {
+        while (resource_curr) {
+                resource_next = resource_curr->next;
 
-                        int err = resource_destroy(resource);
-                        if (err != ESUCC) {
-                                printk("PROCESS: PID %d: unknown object %p\n", proc->pid, resource);
+                if (resource_curr->type != RES_TYPE_MEMORY) {
+
+                        if (resource_curr == proc->res_list) {
+                                proc->res_list = resource_next;
+                        } else {
+                                if (resource_prev) {
+                                        resource_prev->next = resource_next;
+                                }
                         }
+
+                        int err = resource_destroy(resource_curr);
+                        if (err != ESUCC) {
+                                printk("PROCESS: PID %d: unknown object %p\n",
+                                       proc->pid, resource_curr);
+                        }
+                } else {
+                        resource_prev = resource_curr;
                 }
+
+                resource_curr = resource_next;
         }
 
         // free all other resources
@@ -1989,7 +2010,7 @@ KERNELSPACE void _task_switched_in(task_t *task, void *task_tag)
         active_process = task_tag;
         active_thread  = -1;
 
-        if (active_process) {
+        if (active_process && (active_process->header.type == RES_TYPE_PROCESS)) {
                 u8_t threads = PROC_MAX_THREADS(active_process);
 
                 // NOTE: there is possibility to not find selected thread of
@@ -2031,7 +2052,7 @@ KERNELSPACE void _task_switched_out(task_t *task, void *task_tag)
 {
         UNUSED_ARG2(task, task_tag);
 
-        if (active_process) {
+        if (active_process && (active_process->header.type == RES_TYPE_PROCESS)) {
                 active_process->f_stdin  = stdin;
                 active_process->f_stdout = stdout;
                 active_process->f_stderr = stderr;

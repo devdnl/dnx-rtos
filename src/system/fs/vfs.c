@@ -37,6 +37,7 @@
 #include "lib/llist.h"
 #include "kernel/kwrapper.h"
 #include "kernel/process.h"
+#include "kernel/sysfunc.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -1404,8 +1405,6 @@ static int delete_FS_entry(FS_entry_t *this)
         if (this) {
                 err = this->interface->fs_sync(this->handle);
                 if (!err) {
-                        this->interface->fs_sync(this->handle);
-
                         err = this->interface->fs_release(this->handle);
                         if (!err) {
                                 if (this->parent && this->parent->children_cnt) {
@@ -1418,6 +1417,8 @@ static int delete_FS_entry(FS_entry_t *this)
 
                                 _kfree(_MM_KRN, cast(void**, &this));
                         }
+                } else {
+                        printk("VFS: unable to sync '%s' (%d)", this->mount_point, err);
                 }
         }
 

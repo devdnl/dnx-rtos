@@ -1163,7 +1163,7 @@ int _queue_get_number_of_items_from_ISR(queue_t *queue, size_t *items)
 int _queue_get_space_available(queue_t *queue, size_t *items)
 {
         if (is_queue_valid(queue) && items) {
-                UBaseType_t nomsg = uxQueueSpacesAvailable(queue);
+                UBaseType_t nomsg = uxQueueSpacesAvailable(queue->object);
                 *items = nomsg;
                 return ESUCC;
         } else {

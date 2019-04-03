@@ -41,6 +41,8 @@
 extern "C" {
 #endif
 
+#include <kernel/sysfunc.h>
+
 /*****************************************************************************/
 
 #define F_SET_EXT2 2
@@ -84,9 +86,14 @@ extern "C" {
 #define CONFIG_JOURNALING_ENABLE __EXT4FS_CFG_JOURNALING__
 #endif
 
-/**@brief   Enable directory indexing comb sort*/
-#ifndef CONFIG_DIR_INDEX_COMB_SORT
-#define CONFIG_DIR_INDEX_COMB_SORT __EXT4FS_CFG_DIR_INDEXING__
+/**@brief  Enable/disable xattr*/
+#ifndef CONFIG_XATTR_ENABLE
+#define CONFIG_XATTR_ENABLE 1
+#endif
+
+/**@brief  Enable/disable extents*/
+#ifndef CONFIG_EXTENTS_ENABLE
+#define CONFIG_EXTENTS_ENABLE 1
 #endif
 
 /**@brief   Include error codes from ext4_errno or standard library.*/
@@ -117,6 +124,28 @@ extern "C" {
 /**@brief   Cache size of block device.*/
 #ifndef CONFIG_BLOCK_DEV_CACHE_SIZE
 #define CONFIG_BLOCK_DEV_CACHE_SIZE __EXT4FS_CFG_BLK_CACHE_SIZE__
+#endif
+
+
+/**@brief   Maximum block device name*/
+#ifndef CONFIG_EXT4_MAX_BLOCKDEV_NAME
+#define CONFIG_EXT4_MAX_BLOCKDEV_NAME 4
+#endif
+
+
+/**@brief   Maximum block device count*/
+#ifndef CONFIG_EXT4_BLOCKDEVS_COUNT
+#define CONFIG_EXT4_BLOCKDEVS_COUNT 2
+#endif
+
+/**@brief   Maximum mountpoint name*/
+#ifndef CONFIG_EXT4_MAX_MP_NAME
+#define CONFIG_EXT4_MAX_MP_NAME 4
+#endif
+
+/**@brief   Maximum mountpoint count*/
+#ifndef CONFIG_EXT4_MOUNTPOINTS_COUNT
+#define CONFIG_EXT4_MOUNTPOINTS_COUNT 2
 #endif
 
 /**@brief   Include open flags from ext4_errno or standard library.*/
