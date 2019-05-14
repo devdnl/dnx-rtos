@@ -68,6 +68,7 @@ extern void sipcbuf__destroy(sipcbuf_t *sipcbuf);
 extern int  sipcbuf__write(sipcbuf_t *sipcbuf, const u8_t *data, size_t size, bool reference);
 extern int  sipcbuf__read(sipcbuf_t *sipcbuf, u8_t *data, size_t size, size_t *rdctr);
 extern void sipcbuf__clear(sipcbuf_t *sipcbuf);
+extern bool sipcbuf__is_full(sipcbuf_t *sipcbuf);
 
 /*==============================================================================
   Exported inline functions

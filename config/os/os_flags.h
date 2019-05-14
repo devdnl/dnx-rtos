@@ -288,13 +288,6 @@ this:SetToolTip("This option determine how many rows is stored in buffer. " ..
 #define __OS_SYSTEM_MSG_ROWS__ 24
 
 /*--
-this:AddWidget("Spinbox", 0, 65536, "Cache subsystem gap [bytes]")
-this:SetToolTip("This option determine how many free memory in bytes should be " ..
-                "reserved for normal operations that are not used by cache subsystem.")
---*/
-#define __OS_SYSTEM_CACHE_MIN_FREE__ 1024
-
-/*--
 this:AddWidget("Spinbox", 10, 600, "Cache synchronization interval [s]")
 this:SetToolTip("This option determine period of cache synchronization with storage.")
 --*/

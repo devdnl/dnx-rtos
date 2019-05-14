@@ -59,7 +59,9 @@ typedef struct SIPC_socket {
         void    *rxbuf;
         u32_t    recv_timeout;
         u32_t    send_timeout;
+        u16_t    seq;
         u8_t     port;
+        bool     busy;
 } SIPC_socket_t;
 
 /*==============================================================================

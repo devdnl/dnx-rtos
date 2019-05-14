@@ -220,7 +220,9 @@ int _UART_LLD__turn_off(u8_t major)
 //==============================================================================
 void _UART_LLD__transmit(u8_t major)
 {
+        sys_critical_section_begin();
         SET_BIT(UART[major].UART->CR1, USART_CR1_TCIE);
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -232,7 +234,9 @@ void _UART_LLD__transmit(u8_t major)
 //==============================================================================
 void _UART_LLD__abort_trasmission(u8_t major)
 {
+        sys_critical_section_begin();
         CLEAR_BIT(UART[major].UART->CR1, USART_CR1_TCIE);
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -244,7 +248,9 @@ void _UART_LLD__abort_trasmission(u8_t major)
 //==============================================================================
 void _UART_LLD__rx_resume(u8_t major)
 {
+        sys_critical_section_begin();
         SET_BIT(UART[major].UART->CR1, USART_CR1_RXNEIE);
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -256,7 +262,9 @@ void _UART_LLD__rx_resume(u8_t major)
 //==============================================================================
 void _UART_LLD__rx_hold(u8_t major)
 {
+        sys_critical_section_begin();
         CLEAR_BIT(UART[major].UART->CR1, USART_CR1_RXNEIE);
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -293,15 +301,15 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         /* set parity */
         switch (config->parity) {
         case UART_PARITY__OFF:
-                CLEAR_BIT(DEV->UART->CR1, USART_CR1_PCE);
+                CLEAR_BIT(DEV->UART->CR1, USART_CR1_PCE | USART_CR1_M);
                 break;
         case UART_PARITY__EVEN:
-                SET_BIT(DEV->UART->CR1, USART_CR1_PCE);
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_PS);
+                SET_BIT(DEV->UART->CR1, USART_CR1_PCE | USART_CR1_M);
                 break;
         case UART_PARITY__ODD:
-                SET_BIT(DEV->UART->CR1, USART_CR1_PCE);
                 SET_BIT(DEV->UART->CR1, USART_CR1_PS);
+                SET_BIT(DEV->UART->CR1, USART_CR1_PCE | USART_CR1_M);
                 break;
         }
 

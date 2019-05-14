@@ -625,7 +625,7 @@ static void IRQ_handle(u8_t major, u8_t stream)
 
         u32_t SR = stream < 4 ? LISR : HISR;
 
-        switch (stream) {
+        switch (stream % 4) {
         case 0: SR >>=  0; break;
         case 1: SR >>=  6; break;
         case 2: SR >>= 16; break;

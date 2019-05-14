@@ -561,10 +561,10 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: DMA event error %d", err);
+                                                printk("I2C: DMA Rx event error %d", err);
                                         }
                                 } else {
-                                        printk("I2C: DMA transfer error %d", err);
+                                        printk("I2C: DMA receive error %d", err);
                                 }
 
                                 _DMA_DDI_release(dmad);
@@ -733,10 +733,10 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                                                 printk("I2C: write not finished correctly %d", err);
                                         }
                                 } else {
-                                        printk("I2C: DMA event error %d", err);
+                                        printk("I2C: DMA Tx event error %d", err);
                                 }
                         } else {
-                                printk("I2C: DMA transfer error %d", err);
+                                printk("I2C: DMA write error %d", err);
                         }
 
                         _DMA_DDI_release(dmad);

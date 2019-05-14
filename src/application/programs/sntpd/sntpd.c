@@ -377,7 +377,7 @@ int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
                         continue;
                 }
 
-                SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__UDP);
+                SOCKET *socket = socket_open(NET_FAMILY__INET, NET_PROTOCOL__UDP);
                 if (socket) {
                         socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
                         socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
@@ -395,7 +395,7 @@ int_main(sntpd, STACK_DEPTH_LOW, int argc, char *argv[])
                                 }
                         }
 
-                        socket_delete(socket);
+                        socket_close(socket);
 
                         sleep_until(interval, &tref);
                 }

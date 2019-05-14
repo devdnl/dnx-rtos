@@ -236,15 +236,15 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         /* set parity */
         switch (config->parity) {
         case UART_PARITY__OFF:
-                CLEAR_BIT(DEV->UART->CR1, USART_CR1_PCE);
+                CLEAR_BIT(DEV->UART->CR1, USART_CR1_PCE | USART_CR1_M);
                 break;
         case UART_PARITY__EVEN:
-                SET_BIT(DEV->UART->CR1, USART_CR1_PCE);
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_PS);
+                SET_BIT(DEV->UART->CR1, USART_CR1_PCE | USART_CR1_M);
                 break;
         case UART_PARITY__ODD:
-                SET_BIT(DEV->UART->CR1, USART_CR1_PCE);
                 SET_BIT(DEV->UART->CR1, USART_CR1_PS);
+                SET_BIT(DEV->UART->CR1, USART_CR1_PCE | USART_CR1_M);
                 break;
         }
 

@@ -303,7 +303,9 @@ API_MOD_READ(UART,
                 *rdcnt = 0;
 
                 while (count--) {
-                        err = sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT);
+                        err = sys_semaphore_wait(hdl->data_read_sem,
+                                                 fattr.non_blocking_rd ?
+                                                 0 : RX_WAIT_TIMEOUT);
                         if (!err) {
                                 _UART_LLD__rx_hold(hdl->major);
                                 if (_UART_FIFO__read(&hdl->Rx_FIFO, dst)) {

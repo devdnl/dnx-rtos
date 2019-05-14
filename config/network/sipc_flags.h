@@ -62,11 +62,6 @@
 #define __NETWORK_SIPC_DEBUG_ON__ _NO_
 
 #/*--
-# this:AddWidget("Spinbox", 1, 5000, "Retry delay [ms]")
-#--*/
-#define __NETWORK_SIPC_RETRY_DELAY_MS__ 50
-
-#/*--
 # this:AddWidget("Spinbox", 128, 65536, "Receive buffer size [B]")
 #--*/
 #define __NETWORK_SIPC_RECV_BUF_SIZE__ 2048

@@ -1007,6 +1007,8 @@ int _vfs_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *file)
         int err = EINVAL;
 
         if (ptr && size && wrcnt && is_file_valid(file)) {
+                *wrcnt = 0;
+
                 if (file->f_flag.wr) {
                         // move seek to the end of file if "a+" (wr+rd+app) mode is using
                         if (file->f_flag.append && file->f_flag.rd && file->f_flag.seekmod) {
@@ -1059,6 +1061,8 @@ int _vfs_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
         int err = EINVAL;
 
         if (ptr && size && rdcnt && is_file_valid(file)) {
+                *rdcnt = 0;
+
                 if (file->f_flag.rd) {
                         err = file->FS_if->fs_read(file->FS_hdl,
                                                    file->f_hdl,

@@ -515,6 +515,10 @@ static void FLASH_lock(void)
 //==============================================================================
 static int FLASH_erase_sector(uint32_t sector)
 {
+        if (sector >= 12) {
+                sector += 4;
+        }
+
         int err = FLASH_wait_for_operation_finish();
 
         if (!err) {

@@ -310,8 +310,9 @@ API_MOD_IOCTL(I2CEE, void *device_handle, int request, void *arg)
                                 // go through
                         }
                 }
+                //no break
 
-                case IOCTL_I2CEE__CONFIGURE:
+                case IOCTL_I2CEE__CONFIGURE: {
 
                         err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
                         if (!err) {
@@ -332,6 +333,8 @@ API_MOD_IOCTL(I2CEE, void *device_handle, int request, void *arg)
 
                                 sys_mutex_unlock(hdl->mtx);
                         }
+                }
+                //no break
 
                 default:
                         err = EBADRQC;

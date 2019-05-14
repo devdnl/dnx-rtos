@@ -55,6 +55,11 @@ CFLAGS   = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
+           -Werror=int-conversion \
+           -Werror=incompatible-pointer-types \
+           -Werror=type-limits \
+           -Werror=return-type \
+           -Werror=implicit-int \
            -include ./config/config.h \
            -include ./build/defs.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
@@ -73,6 +78,11 @@ CXXFLAGS = -c \
            -Wextra \
            -Wparentheses \
            -Werror=implicit-function-declaration \
+           -Werror=int-conversion \
+           -Werror=incompatible-pointer-types \
+           -Werror=type-limits \
+           -Werror=return-type \
+           -Werror=implicit-int \
            -include ./config/config.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            -include ./build/defs.h \

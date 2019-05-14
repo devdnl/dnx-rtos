@@ -3,7 +3,7 @@ File    sipcbuf.c
 
 Author  Daniel Zorychta
 
-Brief   .
+Brief   SIPC Network management - buffer.
 
         Copyright (C) 2019 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -79,11 +79,12 @@ struct sipcbuf {
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function create new buffer.
  *
- * @param  ?
+ * @param  sipcbuf      pointer to destination pointer
+ * @param  max_capacity maximum buffer capacity
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 int sipcbuf__create(sipcbuf_t **sipcbuf, size_t max_capacity)
@@ -108,11 +109,9 @@ int sipcbuf__create(sipcbuf_t **sipcbuf, size_t max_capacity)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Destroy selected buffer.
  *
- * @param  ?
- *
- * @return ?
+ * @param  sipcbuf      buffer instance
  */
 //==============================================================================
 void sipcbuf__destroy(sipcbuf_t *sipcbuf)
@@ -133,11 +132,14 @@ void sipcbuf__destroy(sipcbuf_t *sipcbuf)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function write data to buffer.
  *
- * @param  ?
+ * @param  sipcbuf      buffer instance
+ * @param  data         data source pointer
+ * @param  size         data size
+ * @param  reference    buffer is reference (no copy)
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 int sipcbuf__write(sipcbuf_t *sipcbuf, const u8_t *data, size_t size, bool reference)
@@ -183,11 +185,14 @@ int sipcbuf__write(sipcbuf_t *sipcbuf, const u8_t *data, size_t size, bool refer
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function read data from buffer.
  *
- * @param  ?
+ * @param  sipcbuf      buffer instance
+ * @param  data         destination data buffer
+ * @param  size         destination buffer size
+ * @param  rdctr        read counter - number of read bytes
  *
- * @return ?
+ * @return One of errno value.
  */
 //==============================================================================
 int sipcbuf__read(sipcbuf_t *sipcbuf, u8_t *data, size_t size, size_t *rdctr)
@@ -244,11 +249,9 @@ int sipcbuf__read(sipcbuf_t *sipcbuf, u8_t *data, size_t size, size_t *rdctr)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function clear data in buffer.
  *
- * @param  ?
- *
- * @return ?
+ * @param  sipcbuf      buffer instance
  */
 //==============================================================================
 void sipcbuf__clear(sipcbuf_t *sipcbuf)
@@ -278,6 +281,30 @@ void sipcbuf__clear(sipcbuf_t *sipcbuf)
                         sys_mutex_unlock(sipcbuf->access);
                 }
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if buffer is full
+ *
+ * @param  sipcbuf      buffer instance
+ *
+ * @return If buffer is full then true is returned, otherwise false.
+ */
+//==============================================================================
+bool sipcbuf__is_full(sipcbuf_t *sipcbuf)
+{
+        bool is_full = false;
+
+        if (sipcbuf) {
+                int err = sys_mutex_lock(sipcbuf->access, MAX_DELAY_MS);
+                if (!err) {
+                        is_full = sipcbuf->total_size >= sipcbuf->max_capacity;
+                        sys_mutex_unlock(sipcbuf->access);
+                }
+        }
+
+        return is_full;
 }
 
 /*==============================================================================
