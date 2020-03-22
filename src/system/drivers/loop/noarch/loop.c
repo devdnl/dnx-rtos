@@ -171,7 +171,7 @@ API_MOD_RELEASE(LOOP, void *device_handle)
                 sys_mutex_unlock(mtx);
                 sys_mutex_destroy(mtx);
                 sys_flag_destroy(hdl->flag);
-                sys_free(device_handle);
+                sys_free(&device_handle);
         }
 
         return err;

@@ -92,7 +92,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 key = getchar();
                 ioctl(fileno(stdin), IOCTL_VFS__DEFAULT_RD_MODE);
 
-                if (!strchr("qk,.", key)) {
+                if (!strchr("qk,.", key) and key != ETX) {
                         if ((clock() - timer) < REFRESH_INTERVAL_SEC) {
                                 msleep(KEY_READ_INTERVAL_SEC);
                                 continue;
@@ -111,7 +111,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 avg_CPU_load_t avg = {0, 0, 0, 0};
                 get_average_CPU_load(&avg);
 
-                printf("%s - %dd %d:%02d up, avg. load %%: %d.%d, %d.%d, %d.%d\n",
+                printf("%s - %ud %u:%0u up, avg. load %%: %d.%d, %d.%d, %d.%d\n",
                         argv[0], udays, uhrs, umins,
                         avg.avg1min  / 10, avg.avg1min  % 10,
                         avg.avg5min  / 10, avg.avg5min  % 10,
@@ -138,7 +138,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 printf("\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
-                       "PID PR     MEM  STU %%STU   %%CPU TH RES CMD"
+                       "PID PR     MEM  STU %%STU  %%CPU SCPS TH RES CMD"
                        VT100_RESET_ATTRIBUTES "\n");
 
                 size_t seek = 0;
@@ -147,22 +147,26 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         if (global->pstat.threads_count == 0) {
                                 snprintf(cpu_load_str, sizeof(cpu_load_str), "zombie");
                         } else {
-                                snprintf(cpu_load_str, 7, "  %2d.%d",
+                                snprintf(cpu_load_str, 7, " %2d.%d",
                                          global->pstat.CPU_load / 10,
                                          global->pstat.CPU_load % 10);
                         }
 
-                        printf("%3d %2d %7d %4d %4d %s %2d %3d %s\n",
+                        printf("%3d %2d %7u %4d %4d %s %4u %2d %3d %s\n",
                                 global->pstat.pid,
                                 global->pstat.priority,
-                                global->pstat.memory_usage,
+                                (uint)global->pstat.memory_usage,
                                 global->pstat.stack_max_usage,
                                 global->pstat.stack_max_usage * 100 / global->pstat.stack_size,
                                 cpu_load_str,
+                                global->pstat.syscalls,
                                 global->pstat.threads_count,
-                                global->pstat.dir_count + global->pstat.files_count +
-                                global->pstat.mutexes_count + global->pstat.queue_count
-                                + global->pstat.semaphores_count,
+                                global->pstat.dir_count
+                                + global->pstat.files_count
+                                + global->pstat.mutexes_count
+                                + global->pstat.queue_count
+                                + global->pstat.semaphores_count
+                                + global->pstat.socket_count,
                                 global->pstat.name);
                 }
 
@@ -186,7 +190,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
 
                         ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
 
-                } else if (key == 'q') {
+                } else if (key == 'q' or key == ETX) {
                         break;
                 }
         }

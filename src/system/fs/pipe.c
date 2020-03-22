@@ -39,6 +39,8 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define CLOSED          (1<<0)
+#define PERMANENT       (1<<1)
 
 /*==============================================================================
   Local object types
@@ -46,7 +48,7 @@
 struct pipe {
         queue_t     *queue;
         struct pipe *self;
-        bool         closed;
+        u32_t        flag;
 };
 
 /*==============================================================================
@@ -56,8 +58,10 @@ struct pipe {
 /*==============================================================================
   Local objects
 ==============================================================================*/
+#if __OS_ENABLE_MKFIFO__ == _YES_
 static const u32_t PIPE_READ_TIMEOUT  = MAX_DELAY_MS;
 static const u32_t PIPE_WRITE_TIMEOUT = MAX_DELAY_MS;
+#endif
 
 /*==============================================================================
   Exported objects
@@ -71,6 +75,7 @@ static const u32_t PIPE_WRITE_TIMEOUT = MAX_DELAY_MS;
   Function definitions
 ==============================================================================*/
 
+#if __OS_ENABLE_MKFIFO__ == _YES_
 //==============================================================================
 /**
  * @brief  Check if pipe is valid
@@ -82,6 +87,7 @@ static bool is_valid(pipe_t *this)
 {
         return this && this->self == this;
 }
+#endif
 
 //==============================================================================
 /**
@@ -94,6 +100,7 @@ static bool is_valid(pipe_t *this)
 //==============================================================================
 int _pipe_create(pipe_t **pipe)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         int err = EINVAL;
 
         if (pipe) {
@@ -102,8 +109,8 @@ int _pipe_create(pipe_t **pipe)
 
                         err = _queue_create(__OS_PIPE_LENGTH__, sizeof(u8_t), &(*pipe)->queue);
                         if (err == ESUCC) {
-                                (*pipe)->self   = *pipe;
-                                (*pipe)->closed = false;
+                                (*pipe)->self = *pipe;
+                                (*pipe)->flag = 0;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, pipe));
                         }
@@ -111,6 +118,10 @@ int _pipe_create(pipe_t **pipe)
         }
 
         return err;
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -124,6 +135,7 @@ int _pipe_create(pipe_t **pipe)
 //==============================================================================
 int _pipe_destroy(pipe_t *pipe)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe)) {
                 _queue_destroy(pipe->queue);
                 pipe->self = NULL;
@@ -132,6 +144,10 @@ int _pipe_destroy(pipe_t *pipe)
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -146,11 +162,16 @@ int _pipe_destroy(pipe_t *pipe)
 //==============================================================================
 int _pipe_get_length(pipe_t *pipe, size_t *len)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (len && is_valid(pipe)) {
                 return _queue_get_number_of_items(pipe->queue, len);
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG2(pipe, len);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -168,6 +189,7 @@ int _pipe_get_length(pipe_t *pipe, size_t *len)
 //==============================================================================
 int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_blocking)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe) && buf && count) {
 
                 size_t n = 0;
@@ -176,7 +198,7 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
                         size_t noitm = 0;
                         _queue_get_number_of_items(pipe->queue, &noitm);
 
-                        if (pipe->closed && noitm == 0) {
+                        if ((pipe->flag & CLOSED) && noitm == 0) {
                                 u8_t null = '\0';
                                 _queue_send(pipe->queue, &null, PIPE_WRITE_TIMEOUT);
                                 break;
@@ -193,6 +215,10 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG5(pipe, buf, count, rdcnt, non_blocking);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -210,6 +236,7 @@ int _pipe_read(pipe_t *pipe, u8_t *buf, size_t count, size_t *rdcnt, bool non_bl
 //==============================================================================
 int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool non_blocking)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe) && buf && count) {
 
                 size_t n = 0;
@@ -218,7 +245,7 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
                         size_t noitm = 0;
                         _queue_get_number_of_items(pipe->queue, &noitm);
 
-                        if (pipe->closed && noitm == 0) {
+                        if ((pipe->flag & CLOSED) && noitm == 0) {
                                 break;
                         }
 
@@ -233,6 +260,10 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG5(pipe, buf, count, wrcnt, non_blocking);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -246,14 +277,24 @@ int _pipe_write(pipe_t *pipe, const u8_t *buf, size_t count, size_t *wrcnt, bool
 //==============================================================================
 int _pipe_close(pipe_t *pipe)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe)) {
-                pipe->closed = true;
 
-                const u8_t nul = '\0';
-                return _queue_send(pipe->queue, &nul, PIPE_WRITE_TIMEOUT);
+                if (not (pipe->flag & PERMANENT)) {
+                        pipe->flag |= CLOSED;
+
+                        u8_t nul = '\0';
+                        _queue_send(pipe->queue, &nul, 10);
+                }
+
+                return ESUCC;
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
 }
 
 //==============================================================================
@@ -267,11 +308,40 @@ int _pipe_close(pipe_t *pipe)
 //==============================================================================
 int _pipe_clear(pipe_t *pipe)
 {
+#if __OS_ENABLE_MKFIFO__ == _YES_
         if (is_valid(pipe)) {
                 return _queue_reset(pipe->queue);
         } else {
                 return EINVAL;
         }
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Permanent pipe. FIFO is not closed at file close.
+ *
+ * @param  pipe         a pipe object
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _pipe_permanent(pipe_t *pipe)
+{
+#if __OS_ENABLE_MKFIFO__ == _YES_
+        if (is_valid(pipe)) {
+                pipe->flag |= PERMANENT;
+                return ESUCC;
+        } else {
+                return EINVAL;
+        }
+#else
+        UNUSED_ARG1(pipe);
+        return ENOTSUP;
+#endif
 }
 
 /*==============================================================================

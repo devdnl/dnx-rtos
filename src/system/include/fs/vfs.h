@@ -98,15 +98,41 @@ extern "C" {
 #endif
 
 /* modes */
-#define S_IRUSR                                 0400
-#define S_IWUSR                                 0200
-#define S_IXUSR                                 0100
-#define S_IRGRP                                 040
-#define S_IWGRP                                 020
-#define S_IXGRP                                 010
-#define S_IROTH                                 04
-#define S_IWOTH                                 02
-#define S_IXOTH                                 01
+#define S_IRWXU                                 0000700    /* RWX mask for owner */
+#define S_IRUSR                                 0000400    /* R for owner */
+#define S_IWUSR                                 0000200    /* W for owner */
+#define S_IXUSR                                 0000100    /* X for owner */
+
+#define S_IRWXG                                 0000070    /* RWX mask for group */
+#define S_IRGRP                                 0000040    /* R for group */
+#define S_IWGRP                                 0000020    /* W for group */
+#define S_IXGRP                                 0000010    /* X for group */
+
+#define S_IRWXO                                 0000007    /* RWX mask for other */
+#define S_IROTH                                 0000004    /* R for other */
+#define S_IWOTH                                 0000002    /* W for other */
+#define S_IXOTH                                 0000001    /* X for other */
+
+#define S_ISUID                                 0004000    /* set user id on execution */
+#define S_ISGID                                 0002000    /* set group id on execution */
+#define S_ISVTX                                 0001000    /* save swapped text even after use */
+
+#define S_IPMT(mode_t_m)                        ((mode_t_m) & 000777)
+#define S_IFMT(mode_t_m)                        ((mode_t_m) & 070000)
+
+#define S_ISREG(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFREG)
+#define S_ISDIR(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFDIR)
+#define S_ISDEV(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFDEV)
+#define S_ISLNK(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFLNK)
+#define S_ISPROG(mode_t_m)                      (S_IFMT(mode_t_m) == S_IFPROG)
+#define S_ISFIFO(mode_t_m)                      (S_IFMT(mode_t_m) == S_IFIFO)
+
+#define S_IFREG                                 0000000
+#define S_IFDIR                                 0010000
+#define S_IFDEV                                 0020000
+#define S_IFLNK                                 0030000
+#define S_IFPROG                                0040000
+#define S_IFIFO                                 0050000
 
 /* stream definitions */
 #define EOF                                     (-1)
@@ -116,6 +142,7 @@ extern "C" {
 /* IO operations on files */
 #define IOCTL_PIPE__CLOSE                       _IO(PIPE, 0x00)
 #define IOCTL_PIPE__CLEAR                       _IO(PIPE, 0x01)
+#define IOCTL_PIPE__PERMANENT                   _IO(PIPE, 0x02)
 #define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(VFS,  0x00)
 #define IOCTL_VFS__DEFAULT_RD_MODE              _IO(VFS,  0x01)
 #define IOCTL_VFS__IS_NON_BLOCKING_RD_MODE      _IO(VFS,  0x02)
@@ -123,7 +150,7 @@ extern "C" {
 #define IOCTL_VFS__DEFAULT_WR_MODE              _IO(VFS,  0x04)
 #define IOCTL_VFS__IS_NON_BLOCKING_WR_MODE      _IO(VFS,  0x05)
 
-/* file system identificator */
+/* file system identifier */
 #define _VFS_FILE_SYSTEM_MAGIC_NO               0xD9EFD24F
 
 /*==============================================================================
@@ -139,7 +166,7 @@ struct vfs_dev_stat {
         u8_t  st_minor;                 /**< device minor number  */
 };
 
-/** file write/read attributtes. Doxygen documentation in fs/fs.h */
+/** file write/read attributes. Doxygen documentation in fs/fs.h */
 struct vfs_fattr {
         bool non_blocking_rd:1;         /**< non-blocking file read access */
         bool non_blocking_wr:1;         /**< non-blocking file write access */

@@ -52,6 +52,7 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static int configure(I2CEE_t *hdl, I2CEE_config_t *cfg);
 
 /*==============================================================================
   Local objects
@@ -215,7 +216,7 @@ API_MOD_WRITE(I2CEE,
                                 }
                         }
                 } else {
-                        printk("I2EE: write out of range 0x%02X", (u32_t)*fpos);
+                        printk("I2CEE: write out of range 0x%02X", (u32_t)*fpos);
                         *wrcnt = 0;
                 }
 
@@ -262,7 +263,7 @@ API_MOD_READ(I2CEE,
                                 err = sys_fread(dst, count, rdcnt, hdl->i2c_dev);
                         }
                 } else {
-                        printk("I2EE: read out of range 0x%02X", (u32_t)*fpos);
+                        printk("I2CEE: read out of range 0x%02X", (u32_t)*fpos);
                         *rdcnt = 0;
                 }
 
@@ -290,48 +291,30 @@ API_MOD_IOCTL(I2CEE, void *device_handle, int request, void *arg)
 
         if (arg) {
                 char pathbuf[32];
-                I2CEE_config_t cfgstr;
+                I2CEE_config_t cfg;
 
                 switch (request) {
                 case IOCTL_I2CEE__CONFIGURE_STR: {
 
                         size_t pathlen = sys_stropt_get_string_copy(arg, "i2c_path",
                                                                     pathbuf, sizeof(pathbuf));
+                        cfg.i2c_path = pathbuf;
+                        cfg.memory_size = sys_stropt_get_int(arg, "memory_size", 0);
+                        cfg.page_prog_time_ms = sys_stropt_get_int(arg, "page_prog_time_ms", 0);
+                        cfg.page_size = sys_stropt_get_int(arg, "page_size", 0);
 
-                        cfgstr.memory_size = sys_stropt_get_int(arg, "memory_size", 0);
-                        cfgstr.page_prog_time_ms = sys_stropt_get_int(arg, "page_prog_time_ms", 0);
-                        cfgstr.page_size = sys_stropt_get_int(arg, "page_size", 0);
-
-                        if (pathlen == 0 || cfgstr.page_size == 0 || cfgstr.memory_size == 0) {
+                        if (pathlen == 0 || cfg.page_size == 0 || cfg.memory_size == 0) {
                                 err = EINVAL;
-                                break;
                         } else {
-                                arg = &cfgstr;
-                                // go through
+                                err = configure(hdl, &cfg);
                         }
+                        break;
                 }
 
-                case IOCTL_I2CEE__CONFIGURE:
-
-                        err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
-                        if (!err) {
-                                I2CEE_config_t *cfg = arg;
-
-                                if (hdl->i2c_dev) {
-                                        err = sys_fclose(hdl->i2c_dev);
-                                }
-
-                                if (!err) {
-                                        err = sys_fopen(cfg->i2c_path, "r+", &hdl->i2c_dev);
-                                        if (!err) {
-                                                hdl->memory_size       = cfg->memory_size;
-                                                hdl->page_size         = cfg->page_size;
-                                                hdl->page_prog_time_ms = cfg->page_prog_time_ms + 1;
-                                        }
-                                }
-
-                                sys_mutex_unlock(hdl->mtx);
-                        }
+                case IOCTL_I2CEE__CONFIGURE: {
+                        err = configure(hdl, arg);
+                        break;
+                }
 
                 default:
                         err = EBADRQC;
@@ -375,6 +358,39 @@ API_MOD_STAT(I2CEE, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_size = hdl->memory_size;
 
         return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief  Function configure driver parameters.
+ *
+ * @param  hdl          driver handle
+ * @param  cfg          configuration
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
+static int configure(I2CEE_t *hdl, I2CEE_config_t *cfg)
+{
+        int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
+        if (!err) {
+                if (hdl->i2c_dev) {
+                        err = sys_fclose(hdl->i2c_dev);
+                }
+
+                if (!err) {
+                        err = sys_fopen(cfg->i2c_path, "r+", &hdl->i2c_dev);
+                        if (!err) {
+                                hdl->memory_size       = cfg->memory_size;
+                                hdl->page_size         = cfg->page_size;
+                                hdl->page_prog_time_ms = cfg->page_prog_time_ms + 1;
+                        }
+                }
+
+                sys_mutex_unlock(hdl->mtx);
+        }
+
+        return err;
 }
 
 /*==============================================================================

@@ -35,6 +35,7 @@
 #include "stm32f4/i2c_cfg.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/dma_ddi.h"
+#include "gpio_ddi.h"
 #include "i2c_ioctl.h"
 #include "i2c.h"
 #include "lib/stm32f4xx_rcc.h"
@@ -168,16 +169,18 @@ static inline I2C_t *get_I2C(I2C_dev_t *hdl)
 //==============================================================================
 static void reset(I2C_dev_t *hdl, bool reinit)
 {
+        printk("I2C%d:%d interface reset", hdl->major, hdl->minor);
+
         I2C_t *i2c = get_I2C(hdl);
 
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
 
         sys_critical_section_begin();
         {
-                u8_t tmp = i2c->SR1;
-                     tmp = i2c->SR2;
-                     tmp = i2c->DR;
-                     tmp = i2c->DR;
+                volatile u8_t tmp = i2c->SR1;
+                              tmp = i2c->SR2;
+                              tmp = i2c->DR;
+                              tmp = i2c->DR;
 
                 UNUSED_ARG1(tmp);
 
@@ -196,6 +199,52 @@ static void reset(I2C_dev_t *hdl, bool reinit)
         }
 
         _I2C_LLD__stop(hdl);
+
+
+        I2C_recovery_t *recovery = &_I2C[hdl->major]->recovery;
+
+        if (recovery->enable) {
+                i8_t state = _GPIO_DDI_get_pin(recovery->SDA.port_idx,
+                                               recovery->SDA.pin_idx);
+                int SCL_mode = 0;
+                int err = _GPIO_DDI_get_pin_mode(recovery->SCL.port_idx,
+                                                 recovery->SCL.pin_idx,
+                                                 &SCL_mode);
+
+                if (err) {
+                        printk("I2C%d:%d invalid SCL pin - recovery skipped",
+                               hdl->major, hdl->minor);
+                }
+
+                if ((state == 0) && (err == 0)) {
+                        printk("I2C%d:%d detected SDA low - bus recovery",
+                               hdl->major, hdl->minor);
+
+                        _GPIO_DDI_set_pin_mode(recovery->SCL.port_idx,
+                                               recovery->SCL.pin_idx,
+                                               GPIO_MODE__OD);
+
+                        for (int i = 0; i < 10; i++) {
+                                _GPIO_DDI_clear_pin(recovery->SCL.port_idx,
+                                                    recovery->SCL.pin_idx);
+                                sys_sleep_ms(1);
+
+                                _GPIO_DDI_set_pin(recovery->SCL.port_idx,
+                                                  recovery->SCL.pin_idx);
+                                sys_sleep_ms(1);
+                        }
+
+                        _GPIO_DDI_set_pin_mode(recovery->SCL.port_idx,
+                                               recovery->SCL.pin_idx,
+                                               SCL_mode);
+
+                        state = _GPIO_DDI_get_pin(recovery->SDA.port_idx,
+                                                  recovery->SDA.pin_idx);
+
+                        printk("I2C%d:%d recovery %s", hdl->major, hdl->minor,
+                               (state == 1) ? "success" : "fail");
+                }
+        }
 }
 
 //==============================================================================
@@ -249,11 +298,14 @@ static int wait_for_event_poll(I2C_dev_t *hdl, u32_t flags, u32_t timeout_ms)
         while (!(i2c->SR1 & flags)) {
 
                 if (sys_time_is_expired(tref, timeout_ms)) {
+                        printk("I2C%d:%d event poll timeout (SR1 mask: %Xh)",
+                               hdl->major, hdl->minor, flags);
                         reset(hdl, true);
                         return EIO;
                 }
 
                 if (i2c->SR1 & (I2C_SR1_ARLO | I2C_SR1_BERR | I2C_SR1_AF)) {
+                        printk("I2C%d:%d event poll error", hdl->major, hdl->minor);
                         reset(hdl, true);
                         return EIO;
                 }
@@ -298,18 +350,19 @@ int _I2C_LLD__init(u8_t major)
         const I2C_info_t *cfg = &I2C_HW[major];
         I2C_t            *i2c = const_cast(I2C_t*, I2C_HW[major].I2C);
 
-        SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
-        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
-
         CLEAR_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
         SET_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
+
+        SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
+        sys_sleep_ms(10);
+        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
 
         RCC_ClocksTypeDef clocks;
         memset(&clocks, 0, sizeof(RCC_ClocksTypeDef));
         RCC_GetClocksFreq(&clocks);
 
         if (clocks.PCLK1_Frequency < 2000000) {
-                printk("I2C: PCLK1 below 2MHz");
+                printk("I2C: PCLK1 below recommended 2MHz");
                 return EIO;
         }
 
@@ -495,6 +548,10 @@ int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write, size_t count)
                 err = wait_for_event_poll(hdl, I2C_SR1_ADDR, _I2C_TIMEOUT_BYTE_TRANSFER);
 
                 finish:
+                if (err) {
+                        printk("I2C%d:%d send 10-bit address error", hdl->major, hdl->minor);
+                }
+
                 return err;
 
         } else {
@@ -510,7 +567,12 @@ int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write, size_t count)
                 }
                 sys_critical_section_end();
 
-                return wait_for_event_poll(hdl, I2C_SR1_ADDR, _I2C_TIMEOUT_BYTE_TRANSFER);
+                int err =  wait_for_event_poll(hdl, I2C_SR1_ADDR, _I2C_TIMEOUT_BYTE_TRANSFER);
+                if (err) {
+                        printk("I2C%d:%d send 7-bit address error", hdl->major, hdl->minor);
+                }
+
+                return err;
         }
 }
 
@@ -551,6 +613,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                 config.FC       = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
                                 config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
                                                 | DMA_SxCR_MINC;
+                                config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
                                 err = _DMA_DDI_transfer(dmad, &config);
                                 if (!err) {
@@ -561,10 +624,10 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: DMA event error %d", err);
+                                                printk("I2C: DMA Rx event error");
                                         }
                                 } else {
-                                        printk("I2C: DMA transfer error %d", err);
+                                        printk("I2C: DMA receive error");
                                 }
 
                                 _DMA_DDI_release(dmad);
@@ -673,6 +736,10 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
 
         *rdcnt = n;
 
+        if (err) {
+                printk("I2C%d:%d receive error", hdl->major, hdl->minor);
+        }
+
         return err;
 }
 
@@ -714,6 +781,7 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                         config.FC       = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
                         config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
                                         | DMA_SxCR_MINC | DMA_SxCR_DIR_0;
+                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {
@@ -730,13 +798,13 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: write not finished correctly %d", err);
+                                                printk("I2C: write not finished correctly");
                                         }
                                 } else {
-                                        printk("I2C: DMA event error %d", err);
+                                        printk("I2C: DMA Tx event error");
                                 }
                         } else {
-                                printk("I2C: DMA transfer error %d", err);
+                                printk("I2C: DMA write error");
                         }
 
                         _DMA_DDI_release(dmad);
@@ -772,6 +840,10 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
 #endif
 
         *wrcnt = n;
+
+        if (err) {
+                printk("I2C%d:%d transmit error", hdl->major, hdl->minor);
+        }
 
         return err;
 }
@@ -945,9 +1017,21 @@ int _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdc
 
                 } else {
                         if (i2c->SR1 & (I2C_SR1_ADDR | I2C_SR1_STOPF)) {
+                                if (i2c->SR1 & I2C_SR1_RXNE) {
+                                       if (count > 0) {
+                                               *dst++ = i2c->DR;
+                                               count--;
+                                               (*rdctr)++;
+                                       } else {
+                                               u8_t tmp = i2c->DR;
+                                               (void)tmp;
+                                       }
+
+                                }
                                 break;
                         }
                 }
+                sys_sleep_ms(1);
         }
 
         // clear STOPF flag

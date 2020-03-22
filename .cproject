@@ -3,7 +3,9 @@
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395" moduleId="org.eclipse.cdt.core.settings" name="Build">
-				<externalSettings/>
+				<externalSettings>
+					<externalSetting/>
+				</externalSettings>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -25,10 +27,15 @@
 								<option id="gnu.c.compiler.option.debugging.level.266880486" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.347086855" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/*/include/&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.178026589" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
 									<listOptionValue builtIn="false" value="COMPILE_EPOCH_TIME=0"/>
+									<listOptionValue builtIn="false" value="COMMIT_HASH=&quot;00000&quot;"/>
+									<listOptionValue builtIn="false" value="size_t=uint32_t"/>
+									<listOptionValue builtIn="false" value="&quot;_Static_assert(_e, _m)&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1584393736" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -38,9 +45,14 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1619145641" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
 									<listOptionValue builtIn="false" value="COMPILE_EPOCH_TIME=0"/>
+									<listOptionValue builtIn="false" value="COMMIT_HASH=&quot;00000&quot;"/>
+									<listOptionValue builtIn="false" value="size_t=uint32_t"/>
+									<listOptionValue builtIn="false" value="&quot;_Static_assert(_e, _m)&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.193515825" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/*/include/&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -66,7 +78,11 @@
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474" moduleId="org.eclipse.cdt.core.settings" name="Static Code Analyze">
-				<externalSettings/>
+				<externalSettings>
+					<externalSetting>
+						<entry flags="NONE" kind="includePath" name="${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include"/>
+					</externalSetting>
+				</externalSettings>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -92,6 +108,8 @@
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1827974321" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
+									<listOptionValue builtIn="false" value="size_t=uint32_t"/>
+									<listOptionValue builtIn="false" value="&quot;_Static_assert(_e, _m)&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.720850547" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -100,6 +118,8 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1445444638" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1134526917" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
+									<listOptionValue builtIn="false" value="size_t=uint32_t"/>
+									<listOptionValue builtIn="false" value="&quot;_Static_assert(_e, _m)&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.890478979" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value=".././src/system/include/stdc"/>
@@ -128,7 +148,11 @@
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572" moduleId="org.eclipse.cdt.core.settings" name="Quick Static Code Analyze">
-				<externalSettings/>
+				<externalSettings>
+					<externalSetting>
+						<entry flags="NONE" kind="includePath" name="${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include"/>
+					</externalSetting>
+				</externalSettings>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -154,6 +178,8 @@
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.2061150996" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
+									<listOptionValue builtIn="false" value="size_t=uint32_t"/>
+									<listOptionValue builtIn="false" value="&quot;_Static_assert(_e, _m)&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1820399009" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -162,6 +188,8 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1491124066" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1483706093" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
+									<listOptionValue builtIn="false" value="size_t=uint32_t"/>
+									<listOptionValue builtIn="false" value="&quot;_Static_assert(_e, _m)&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.include.paths.165594638" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value=".././src/system/include/stdc"/>
@@ -192,27 +220,6 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="dnx.cdt.managedbuild.target.gnu.cross.exe.1150448454" name="Executable" projectType="cdt.managedbuild.target.gnu.cross.exe"/>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1730630010;cdt.managedbuild.config.gnu.cross.exe.debug.1730630010.;cdt.managedbuild.tool.gnu.cross.c.compiler.2083059844;cdt.managedbuild.tool.gnu.c.compiler.input.344115894">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.1898002494;cdt.managedbuild.config.gnu.cross.exe.release.1898002494.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.804202585;cdt.managedbuild.tool.gnu.cpp.compiler.input.532566815">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.93172562;cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.;cdt.managedbuild.tool.gnu.cross.c.compiler.987628345;cdt.managedbuild.tool.gnu.c.compiler.input.1584393736">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1730630010;cdt.managedbuild.config.gnu.cross.exe.debug.1730630010.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1500340638;cdt.managedbuild.tool.gnu.cpp.compiler.input.2025971206">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.1898002494;cdt.managedbuild.config.gnu.cross.exe.release.1898002494.;cdt.managedbuild.tool.gnu.cross.c.compiler.1928992054;cdt.managedbuild.tool.gnu.c.compiler.input.2135207824">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="stm32f1">
@@ -235,4 +242,37 @@
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.;cdt.managedbuild.tool.gnu.cross.c.compiler.987628345;cdt.managedbuild.tool.gnu.c.compiler.input.1584393736">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.1898002494;cdt.managedbuild.config.gnu.cross.exe.release.1898002494.;cdt.managedbuild.tool.gnu.cross.c.compiler.1928992054;cdt.managedbuild.tool.gnu.c.compiler.input.2135207824">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.502121346;cdt.managedbuild.tool.gnu.cpp.compiler.input.36664821">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1730630010;cdt.managedbuild.config.gnu.cross.exe.debug.1730630010.;cdt.managedbuild.tool.gnu.cross.c.compiler.2083059844;cdt.managedbuild.tool.gnu.c.compiler.input.344115894">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.1613634572.;cdt.managedbuild.tool.gnu.cross.c.compiler.802503407;cdt.managedbuild.tool.gnu.c.compiler.input.1820399009">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.1898002494;cdt.managedbuild.config.gnu.cross.exe.release.1898002494.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.804202585;cdt.managedbuild.tool.gnu.cpp.compiler.input.532566815">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.1730630010;cdt.managedbuild.config.gnu.cross.exe.debug.1730630010.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1500340638;cdt.managedbuild.tool.gnu.cpp.compiler.input.2025971206">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.705406428;cdt.managedbuild.tool.gnu.cpp.compiler.input.500335297">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.93172562;cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474;cdt.managedbuild.config.gnu.cross.exe.debug.22955395.1886408786.1283786474.;cdt.managedbuild.tool.gnu.cross.c.compiler.1565281953;cdt.managedbuild.tool.gnu.c.compiler.input.720850547">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+	</storageModule>
 </cproject>

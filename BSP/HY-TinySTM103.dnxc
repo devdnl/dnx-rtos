@@ -9554,7 +9554,7 @@
 			};
 			[9.000000]={
 				["key"]="__OS_TASK_KWORKER_IO_THREADS__";
-				["value"]="3";
+				["value"]="4";
 			};
 			[10.000000]={
 				["key"]="__OS_SLEEP_ON_IDLE__";

@@ -31,6 +31,7 @@ Brief    Network management.
 ==============================================================================*/
 #include "net/netm.h"
 #include "net/inet/inet.h"
+#include "net/sipc/sipc.h"
 #include "cpuctl.h"
 #include "kernel/sysfunc.h"
 
@@ -40,7 +41,37 @@ Brief    Network management.
 #define MAXIMUM_SAFE_UDP_PAYLOAD                508
 
 #define PROXY_TABLE                             static const proxy_func_t proxy[_NET_FAMILY__COUNT]
-#define PROXY_ADD_FAMILY(_family, _proxy_func)  [NET_FAMILY__##_family] = (proxy_func_t)_proxy_func
+#define PROXY_TABLE_U16                         static const proxy_func_u16_t proxy[_NET_FAMILY__COUNT]
+#define PROXY_TABLE_U32                         static const proxy_func_u32_t proxy[_NET_FAMILY__COUNT]
+#define PROXY_TABLE_U64                         static const proxy_func_u64_t proxy[_NET_FAMILY__COUNT]
+#define PROXY_FUNCTION(_family, _proxy_func)    [NET_FAMILY__##_family] = (proxy_func_t)_family##_##_proxy_func
+#define PROXY_FUNCTION_U16(_family, _proxy_func)[NET_FAMILY__##_family] = (proxy_func_u16_t)_family##_##_proxy_func
+#define PROXY_FUNCTION_U32(_family, _proxy_func)[NET_FAMILY__##_family] = (proxy_func_u32_t)_family##_##_proxy_func
+#define PROXY_FUNCTION_U64(_family, _proxy_func)[NET_FAMILY__##_family] = (proxy_func_u64_t)_family##_##_proxy_func
+#define PROXY_ifup(_family)                     PROXY_FUNCTION(_family, ifup)
+#define PROXY_ifdown(_family)                   PROXY_FUNCTION(_family, ifdown)
+#define PROXY_ifstatus(_family)                 PROXY_FUNCTION(_family, ifstatus)
+#define PROXY_gethostbyname(_family)            PROXY_FUNCTION(_family, gethostbyname)
+#define PROXY_socket_create(_family)            PROXY_FUNCTION(_family, socket_create)
+#define PROXY_socket_destroy(_family)           PROXY_FUNCTION(_family, socket_destroy)
+#define PROXY_socket_bind(_family)              PROXY_FUNCTION(_family, socket_bind)
+#define PROXY_socket_listen(_family)            PROXY_FUNCTION(_family, socket_listen)
+#define PROXY_socket_accept(_family)            PROXY_FUNCTION(_family, socket_accept)
+#define PROXY_socket_recv(_family)              PROXY_FUNCTION(_family, socket_recv)
+#define PROXY_socket_recvfrom(_family)          PROXY_FUNCTION(_family, socket_recvfrom)
+#define PROXY_socket_send(_family)              PROXY_FUNCTION(_family, socket_send)
+#define PROXY_socket_sendto(_family)            PROXY_FUNCTION(_family, socket_sendto)
+#define PROXY_socket_set_recv_timeout(_family)  PROXY_FUNCTION(_family, socket_set_recv_timeout)
+#define PROXY_socket_set_send_timeout(_family)  PROXY_FUNCTION(_family, socket_set_send_timeout)
+#define PROXY_socket_get_recv_timeout(_family)  PROXY_FUNCTION(_family, socket_get_recv_timeout)
+#define PROXY_socket_get_send_timeout(_family)  PROXY_FUNCTION(_family, socket_get_send_timeout)
+#define PROXY_socket_connect(_family)           PROXY_FUNCTION(_family, socket_connect)
+#define PROXY_socket_disconnect(_family)        PROXY_FUNCTION(_family, socket_disconnect)
+#define PROXY_socket_shutdown(_family)          PROXY_FUNCTION(_family, socket_shutdown)
+#define PROXY_socket_getaddress(_family)        PROXY_FUNCTION(_family, socket_getaddress)
+#define PROXY_hton_u16(_family)                 PROXY_FUNCTION_U16(_family, hton_u16)
+#define PROXY_hton_u32(_family)                 PROXY_FUNCTION_U32(_family, hton_u32)
+#define PROXY_hton_u64(_family)                 PROXY_FUNCTION_U64(_family, hton_u64)
 #define call_proxy_function(family, ...)        proxy[family](__VA_ARGS__)
 
 /*==============================================================================
@@ -53,6 +84,9 @@ struct socket {
 };
 
 typedef int (*proxy_func_t)();
+typedef u16_t (*proxy_func_u16_t)();
+typedef u32_t (*proxy_func_u32_t)();
+typedef u64_t (*proxy_func_u64_t)();
 
 /*==============================================================================
   Local function prototypes
@@ -85,7 +119,12 @@ typedef int (*proxy_func_t)();
 static int socket_alloc(SOCKET **socket, NET_family_t family)
 {
         static const uint8_t net_socket_size[_NET_FAMILY__COUNT] = {
+                #if __ENABLE_TCPIP_STACK__ > 0
                 [NET_FAMILY__INET] = _mm_align(sizeof(INET_socket_t)),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                [NET_FAMILY__SIPC] = _mm_align(sizeof(SIPC_socket_t)),
+                #endif
         };
 
         int err = _kzalloc(_MM_NET,
@@ -124,7 +163,7 @@ static void socket_free(SOCKET **socket)
 //==============================================================================
 static bool is_socket_valid(SOCKET *socket)
 {
-        return (socket != NULL)
+        return _mm_is_object_in_heap(socket)
             && (socket->header.type == RES_TYPE_SOCKET)
             && (socket->family < _NET_FAMILY__COUNT)
             && (socket->ctx == cast(void *, cast(size_t, socket)
@@ -142,7 +181,12 @@ static bool is_socket_valid(SOCKET *socket)
 int _net_ifup(NET_family_t family, const NET_generic_config_t *config)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_ifup),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_ifup(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_ifup(SIPC),
+                #endif
         };
 
         if (family < _NET_FAMILY__COUNT && config) {
@@ -162,7 +206,12 @@ int _net_ifup(NET_family_t family, const NET_generic_config_t *config)
 int _net_ifdown(NET_family_t family)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_ifdown),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_ifdown(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_ifdown(SIPC),
+                #endif
         };
 
         if (family < _NET_FAMILY__COUNT) {
@@ -183,7 +232,12 @@ int _net_ifdown(NET_family_t family)
 int _net_ifstatus(NET_family_t family,  NET_generic_status_t *status)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_ifstatus),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_ifstatus(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_ifstatus(SIPC),
+                #endif
         };
 
         if (family < _NET_FAMILY__COUNT && status) {
@@ -205,7 +259,12 @@ int _net_ifstatus(NET_family_t family,  NET_generic_status_t *status)
 int _net_socket_create(NET_family_t family, NET_protocol_t protocol, SOCKET **socket)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_create),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_create(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_create(SIPC),
+                #endif
         };
 
         int err = EINVAL;
@@ -235,7 +294,12 @@ int _net_socket_create(NET_family_t family, NET_protocol_t protocol, SOCKET **so
 int _net_socket_destroy(SOCKET *socket)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_destroy),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_destroy(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_destroy(SIPC),
+                #endif
         };
 
         int err = EINVAL;
@@ -261,7 +325,12 @@ int _net_socket_destroy(SOCKET *socket)
 int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_bind),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_bind(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_bind(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket) && addr) {
@@ -281,7 +350,12 @@ int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 int _net_socket_listen(SOCKET *socket)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_listen),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_listen(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_listen(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket)) {
@@ -302,7 +376,12 @@ int _net_socket_listen(SOCKET *socket)
 int _net_socket_accept(SOCKET *socket, SOCKET **new_socket)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_accept),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_accept(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_accept(SIPC),
+                #endif
         };
 
         int err = EINVAL;
@@ -339,7 +418,12 @@ int _net_socket_accept(SOCKET *socket, SOCKET **new_socket)
 int _net_socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags, size_t *recved)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_recv),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_recv(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_recv(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket) && buf && len && recved) {
@@ -370,7 +454,12 @@ int _net_socket_recvfrom(SOCKET                 *socket,
                          size_t                 *recved)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_recvfrom),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_recvfrom(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_recvfrom(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket) && buf && len && sockaddr && recved) {
@@ -395,7 +484,12 @@ int _net_socket_recvfrom(SOCKET                 *socket,
 int _net_socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags, size_t *sent)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_send),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_send(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_send(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket) && buf && len && sent) {
@@ -426,7 +520,12 @@ int _net_socket_sendto(SOCKET                       *socket,
                        size_t                       *sent)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_sendto),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_sendto(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_sendto(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket) && buf && len && to_addr && sent) {
@@ -448,7 +547,12 @@ int _net_socket_sendto(SOCKET                       *socket,
 int _net_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_set_recv_timeout),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_set_recv_timeout(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_set_recv_timeout(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket)) {
@@ -469,7 +573,12 @@ int _net_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_set_send_timeout),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_set_send_timeout(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_set_send_timeout(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket)) {
@@ -490,7 +599,12 @@ int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 int _net_socket_get_recv_timeout(SOCKET *socket, uint32_t *timeout)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_get_recv_timeout),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_get_recv_timeout(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_get_recv_timeout(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket) && timeout) {
@@ -511,7 +625,12 @@ int _net_socket_get_recv_timeout(SOCKET *socket, uint32_t *timeout)
 int _net_socket_get_send_timeout(SOCKET *socket, uint32_t *timeout)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_get_send_timeout),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_get_send_timeout(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_get_send_timeout(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket) && timeout) {
@@ -532,7 +651,12 @@ int _net_socket_get_send_timeout(SOCKET *socket, uint32_t *timeout)
 int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_connect),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_connect(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_connect(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket) && addr) {
@@ -552,7 +676,12 @@ int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
 int _net_socket_disconnect(SOCKET *socket)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_disconnect),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_disconnect(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_disconnect(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket)) {
@@ -573,7 +702,12 @@ int _net_socket_disconnect(SOCKET *socket)
 int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_shutdown),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_shutdown(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_shutdown(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket)) {
@@ -594,7 +728,12 @@ int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
 int _net_socket_getaddress(SOCKET *socket, NET_generic_sockaddr_t *sockaddr)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_socket_getaddress),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_socket_getaddress(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_socket_getaddress(SIPC),
+                #endif
         };
 
         if (is_socket_valid(socket) && sockaddr) {
@@ -616,7 +755,12 @@ int _net_socket_getaddress(SOCKET *socket, NET_generic_sockaddr_t *sockaddr)
 int _net_gethostbyname(NET_family_t family, const char *name, NET_generic_sockaddr_t *addr)
 {
         PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_gethostbyname),
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_gethostbyname(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_gethostbyname(SIPC),
+                #endif
         };
 
         if (family < _NET_FAMILY__COUNT && name && addr) {
@@ -636,8 +780,13 @@ int _net_gethostbyname(NET_family_t family, const char *name, NET_generic_sockad
 //==============================================================================
 u16_t _net_hton_u16(NET_family_t family, u16_t value)
 {
-        PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_hton_u16),
+        PROXY_TABLE_U16 = {
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_hton_u16(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_hton_u16(SIPC),
+                #endif
         };
 
         if (family < _NET_FAMILY__COUNT) {
@@ -657,8 +806,13 @@ u16_t _net_hton_u16(NET_family_t family, u16_t value)
 //==============================================================================
 u32_t _net_hton_u32(NET_family_t family, u32_t value)
 {
-        PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_hton_u32),
+        PROXY_TABLE_U32 = {
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_hton_u32(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_hton_u32(SIPC),
+                #endif
         };
 
         if (family < _NET_FAMILY__COUNT) {
@@ -678,8 +832,13 @@ u32_t _net_hton_u32(NET_family_t family, u32_t value)
 //==============================================================================
 u64_t _net_hton_u64(NET_family_t family, u64_t value)
 {
-        PROXY_TABLE = {
-                PROXY_ADD_FAMILY(INET, INET_hton_u64),
+        PROXY_TABLE_U64 = {
+                #if __ENABLE_TCPIP_STACK__ > 0
+                PROXY_hton_u64(INET),
+                #endif
+                #if __ENABLE_SIPC_STACK__ > 0
+                PROXY_hton_u64(SIPC),
+                #endif
         };
 
         if (family < _NET_FAMILY__COUNT) {

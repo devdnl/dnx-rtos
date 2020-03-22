@@ -36,6 +36,7 @@ Brief    System log reader
 #include <stdbool.h>
 #include <dnx/misc.h>
 #include <dnx/os.h>
+#include <sys/ioctl.h>
 
 /*==============================================================================
   Local macros
@@ -104,19 +105,28 @@ int_main(dmesg, STACK_DEPTH_LOW, int argc, char *argv[])
                 syslog_clear();
 
         } else {
-                do {
-                        char  str[128];
-                        u32_t ts = 0;
-                        u8_t  l  = __OS_SYSTEM_MSG_ROWS__;
+                struct timeval t = {0, 0};
 
-                        while (l-- && syslog_read(str, sizeof(str), &ts)) {
-                                printf("[%5d.%03d] %s\n", ts / 1000, ts % 1000, str);
+                ioctl(fileno(stdin), IOCTL_VFS__NON_BLOCKING_RD_MODE);
+
+                do {
+                        char str[128];
+
+                        while (syslog_read(str, sizeof(str), &t, &t)) {
+                                printf("[%u.%06u] %s\n", t.tv_sec, t.tv_usec, str);
                         }
 
                         if (loop) {
-                                msleep(100);
+                                int c = getchar();
+                                if (c == ETX) {
+                                        loop = false;
+                                } else {
+                                        msleep(100);
+                                }
                         }
                 } while (loop);
+
+                ioctl(fileno(stdin), IOCTL_VFS__DEFAULT_RD_MODE);
         }
 
         return EXIT_SUCCESS;

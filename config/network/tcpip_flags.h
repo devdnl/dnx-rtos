@@ -50,39 +50,9 @@ __STACK_LWIP__=0xf986f02e
 #/*--
 # this:SetLayout("TitledGridBack", 3, "Home > Network > TCP/IP Stack",
 #     function() -- back button
-#         local save = this:IsMACFormatCorrect()
-#         this:LoadFile("network/network_flags.h", save)
+#         this:LoadFile("network/network_flags.h")
 #     end
 # )
-#
-# this:SetEvent("PreSave", function() return this:IsMACFormatCorrect() end)
-#
-# this.IsMACFormatCorrect = function(this)
-#     local MAC = this:GetFlagValue("__NETWORK_TCPIP_MAC_ADDR__"):upper()
-#     local EL  = "[A-F0-9][A-F0-9]"
-#
-#     if MAC:match("^\""..EL..":"..EL..":"..EL..":"..EL..":"..EL..":"..EL.."\"$") then
-#         this:SetFlagValue("LabelMACInfo", "")
-#
-#         MAC0, MAC1, MAC2, MAC3, MAC4, MAC5 = MAC:match("^\"("..EL.."):"..
-#                                                           "("..EL.."):"..
-#                                                           "("..EL.."):"..
-#                                                           "("..EL.."):"..
-#                                                           "("..EL.."):"..
-#                                                           "("..EL..")\"$")
-#
-#         this:SetFlagValue("__NETWORK_TCPIP_MAC_ADDR0__", "0x"..MAC0)
-#         this:SetFlagValue("__NETWORK_TCPIP_MAC_ADDR1__", "0x"..MAC1)
-#         this:SetFlagValue("__NETWORK_TCPIP_MAC_ADDR2__", "0x"..MAC2)
-#         this:SetFlagValue("__NETWORK_TCPIP_MAC_ADDR3__", "0x"..MAC3)
-#         this:SetFlagValue("__NETWORK_TCPIP_MAC_ADDR4__", "0x"..MAC4)
-#         this:SetFlagValue("__NETWORK_TCPIP_MAC_ADDR5__", "0x"..MAC5)
-#         return true
-#     else
-#         this:SetFlagValue("LabelMACInfo", "Invalid MAC format!")
-#         return false
-#     end
-# end
 #++*/
 
 
@@ -108,37 +78,6 @@ __STACK_LWIP__=0xf986f02e
 __NETWORK_TCPIP_STACK__=__STACK_LWIP__
 #*/
 
-
-#/*--
-# this:AddWidget("Editline", true, "MAC address")
-# this:SetToolTip("MAC format: HH:HH:HH:HH:HH:HH")
-# this:AddExtraWidget("Label", "LabelMACInfo", "")
-#--*/
-#define __NETWORK_TCPIP_MAC_ADDR__ "DE:AD:BE:EF:00:00"
-#/*--
-# this:AddWidget("Value")
-#--*/
-#define __NETWORK_TCPIP_MAC_ADDR0__ 0xDE
-#/*--
-# this:AddWidget("Value")
-#--*/
-#define __NETWORK_TCPIP_MAC_ADDR1__ 0xAD
-#/*--
-# this:AddWidget("Value")
-#--*/
-#define __NETWORK_TCPIP_MAC_ADDR2__ 0xBE
-#/*--
-# this:AddWidget("Value")
-#--*/
-#define __NETWORK_TCPIP_MAC_ADDR3__ 0xEF
-#/*--
-# this:AddWidget("Value")
-#--*/
-#define __NETWORK_TCPIP_MAC_ADDR4__ 0x00
-#/*--
-# this:AddWidget("Value")
-#--*/
-#define __NETWORK_TCPIP_MAC_ADDR5__ 0x00
 
 
 #/*--

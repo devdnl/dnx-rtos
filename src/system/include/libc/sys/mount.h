@@ -45,6 +45,9 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <kernel/syscall.h>
+#include <drivers/drvctrl.h>
+#include <sys/stat.h>
+#include <kernel/errno.h>
 
 /*==============================================================================
   Exported macros
@@ -208,7 +211,7 @@ static inline int umount(const char *mount_point)
 
    @endcode
  *
- * @see driver_release()
+ * @see driver_release(), driver_release2()
  */
 //==============================================================================
 static inline dev_t driver_init(const char *mod_name, int major, int minor, const char *node_path)
@@ -247,13 +250,68 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
 
    @endcode
  *
- * @see driver_init()
+ * @see driver_init(), driver_release2()
  */
 //==============================================================================
 static inline int driver_release(const char *mod_name, int major, int minor)
 {
         int r = -1;
         syscall(SYSCALL_DRIVERRELEASE, &r, mod_name, &major, &minor);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief Function releases selected driver.
+ *
+ * The driver_release2() function release driver pointed by <i>path</i>.
+ * If driver was released then node is not removed. From this time, device node
+ * is pointing to not existing (initialized) device, resulting that user can't
+ * access to the file.
+ *
+ * @param path          driver node
+ *
+ * @exception | @ref EINVAL
+ * @exception | ...
+ *
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        driver_release2("/dev/UART");
+
+        // ...
+
+   @endcode
+ *
+ * @see driver_init(), driver_release()
+ */
+//==============================================================================
+static inline int driver_release2(const char *path)
+{
+        int r = -1;
+
+        struct stat buf;
+
+        if (stat(path, &buf) == 0) {
+
+                if (S_ISDEV(buf.st_mode)) {
+
+                        u8_t  major = _dev_t__extract_major(buf.st_dev);
+                        u8_t  minor = _dev_t__extract_minor(buf.st_dev);
+                        u16_t modno = _dev_t__extract_modno(buf.st_dev);
+
+                        const char *mod_name = _builtinfunc(module_get_name, modno);
+
+                        syscall(SYSCALL_DRIVERRELEASE, &r, mod_name, &major, &minor);
+                } else {
+                        _errno = ENODEV;
+                }
+        }
+
         return r;
 }
 

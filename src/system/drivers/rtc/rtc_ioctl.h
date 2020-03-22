@@ -34,6 +34,7 @@ Driver handles real time clock peripheral.
 
 \section drv-rtc-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
 
 \section drv-rtc-ddesc Details
 \subsection drv-rtc-ddesc-num Meaning of major and minor numbers
@@ -128,14 +129,7 @@ extern "C" {
  *  @param  [WR] @ref time_t *  UNIX timestamp.
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_RTC__SET_ALARM    _IOW(RTC, 0x00, time_t*)
-
-/**
- *  @brief  Get RTC alarm value.
- *  @param  [RD] @ref time_t *  UNIX timestamp.
- *  @return On success 0 is returned, otherwise -1.
- */
-#define IOCTL_RTC__GET_ALARM    _IOR(RTC, 0x01, time_t*)
+#define IOCTL_RTC__SET_ALARM    _IOW(RTC, 0x00, const time_t*)
 
 /*==============================================================================
   Exported object types

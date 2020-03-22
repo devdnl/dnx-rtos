@@ -176,31 +176,6 @@ WEAK_DEFAULT void DFSDM1_FLT0_IRQHandler(void);
 WEAK_DEFAULT void DFSDM1_FLT1_IRQHandler(void);
 #endif
 
-#define OTG_HS_EP1_OUT_IRQHandler       CAN3_TX_OTG_HS_EP1_OUT_IRQHandler
-#define CAN3_TX_IRQHandler              CAN3_TX_OTG_HS_EP1_OUT_IRQHandler
-#define OTG_HS_EP1_IN_IRQHandler        CAN3_RX0_OTG_HS_EP1_IN_IRQHandler
-#define CAN3_RX0_IRQHandler             CAN3_RX0_OTG_HS_EP1_IN_IRQHandler
-#define OTG_HS_WKUP_IRQHandler          CAN3_RX1_OTG_HS_WKUP_IRQHandler
-#define CAN3_RX1_IRQHandler             CAN3_RX1_OTG_HS_WKUP_IRQHandler
-#define OTG_HS_IRQHandler               CAN3_SCE_OTG_HS_IRQHandler
-#define CAN3_SCE_IRQHandler             CAN3_SCE_OTG_HS_IRQHandler
-#define AES_IRQHandler                  AES_CRYP_IRQHandler
-#define CRYP_IRQHandler                 AES_CRYP_IRQHandler
-#define HASH_IRQHandler                 HASH_RNG_IRQHandler
-#define RNG_IRQHandler                  HASH_RNG_IRQHandler
-#define LTDC_IRQHandler                 UART9_LTDC_IRQHandler
-#define UART9_IRQHandler                UART9_LTDC_IRQHandler
-#define LTDC_ER_IRQHandler              UART10_LTDC_ER_IRQHandler
-#define UART10_IRQHandler               UART10_LTDC_ER_IRQHandler
-#define SAI2_IRQHandler                 SAI2_QUADSPI_IRQHandler
-#define DSI_IRQHandler                  QUADSPI_DSI_IRQHandler
-
-#if defined(STM32F479xx) || defined(STM32F469xx)
-#define QUADSPI_IRQHandler              SAI2_QUADSPI_IRQHandler
-#else
-#define QUADSPI_IRQHandler              QUADSPI_DSI_IRQHandler
-#endif
-
 /*==================================================================================================
 Vector table
 ==================================================================================================*/

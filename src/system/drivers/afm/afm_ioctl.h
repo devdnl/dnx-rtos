@@ -35,6 +35,7 @@ external interrupt pin assignment, GPIO remap, etc.
 
 \section drv-afm-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
 
 \section drv-afm-ddesc Details
 \subsection drv-afm-ddesc-num Meaning of major and minor numbers

@@ -330,7 +330,7 @@ API_MOD_RELEASE(USBD, void *device_handle)
                 }
 
                 usb_mem->ep[ep_hdl->minor] = NULL;
-                sys_free(device_handle);
+                sys_free(&device_handle);
 
                 /* find if all endpoints are disabled */
                 for (int i = _USBD_MINOR_NUMBER_EP_0; i <= _USBD_MINOR_NUMBER_EP_7; i++) {

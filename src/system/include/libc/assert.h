@@ -96,6 +96,10 @@ extern "C" {
 #   endif
 #endif
 
+#ifndef DOXYGEN
+#define static_assert(_expr, _msg) _Static_assert(_expr, _msg)
+#endif
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/

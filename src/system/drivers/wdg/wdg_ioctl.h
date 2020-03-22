@@ -34,6 +34,7 @@ Driver handles watchdog peripheral.
 
 \section drv-wdg-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
 
 \section drv-wdg-ddesc Details
 \subsection drv-wdg-ddesc-num Meaning of major and minor numbers

@@ -328,7 +328,7 @@ static int attach_pid(shm_region_t *region, pid_t pid)
                         }
 
                         if (!lst->next) {
-                                err = _kzalloc(_MM_CACHE, sizeof(pid_list_t),
+                                err = _kzalloc(_MM_SHM, sizeof(pid_list_t),
                                                cast(void*, &lst->next));
                                 if (err) {
                                         break;
@@ -380,7 +380,7 @@ static int detach_pid(shm_region_t *region, pid_t pid)
 
                                         prv->next = lst->next;
 
-                                        _kfree(_MM_CACHE, cast(void*, &lst));
+                                        _kfree(_MM_SHM, cast(void*, &lst));
                                 }
                         } else {
                                 prv = lst;

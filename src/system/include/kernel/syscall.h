@@ -67,7 +67,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SETCWD,                 // | int            | const char *cwd           |                                     |                           |                           |                                           |
     #endif
     #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
-        SYSCALL_SYSLOGREAD,             // | size_t         | char *str                 | size_t *len                         | u32_t *timestamp          |                           |                                           |
+        SYSCALL_SYSLOGREAD,             // | size_t         | char *str                 | size_t *len                         | const struct timeval *from| struct timeval *current   |                                           |
     #endif
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr                 | void *arg                 |                           |                                           |
         SYSCALL_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init              |                           |                           |                                           |
@@ -128,7 +128,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_FFLUSH,                 // | int            | FILE *file                |                                     |                           |                           |                                           |
         SYSCALL_SYNC,                   // | void           |                           |                                     |                           |                           |                                           |
     #if __OS_ENABLE_TIMEMAN__ == _YES_
-        SYSCALL_GETTIME,                // | time_t         |                           |                                     |                           |                           |                                           |
+        SYSCALL_GETTIME,                // | int            | struct timeval *          |                                     |                           |                           |                                           |
         SYSCALL_SETTIME,                // | int            | time_t *time              |                                     |                           |                           |                                           |
     #endif
         SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                | const char *node_path     |                                           |
@@ -163,7 +163,9 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
   Exported objects
 ==============================================================================*/
 extern struct _process *_kworker_proc;
+#if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
 extern pid_t _syscall_client_PID[__OS_TASK_MAX_SYSTEM_THREADS__];
+#endif
 
 /*==============================================================================
   Exported functions

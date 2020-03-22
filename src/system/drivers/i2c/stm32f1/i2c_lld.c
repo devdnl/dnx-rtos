@@ -270,12 +270,6 @@ int _I2C_LLD__init(u8_t major)
         const I2C_info_t *cfg = &I2C_HW[major];
         I2C_t            *i2c = const_cast(I2C_t*, I2C_HW[major].I2C);
 
-        SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
-        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
-
-        CLEAR_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
-        SET_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
-
         RCC_ClocksTypeDef clocks;
         memset(&clocks, 0, sizeof(RCC_ClocksTypeDef));
         RCC_GetClocksFreq(&clocks);
@@ -284,6 +278,11 @@ int _I2C_LLD__init(u8_t major)
                 printk("I2C: PCLK1 below 2MHz");
                 return EIO;
         }
+
+        SET_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
+
+        SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
+        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
 
         NVIC_EnableIRQ(cfg->IRQ_EV_n);
         NVIC_EnableIRQ(cfg->IRQ_ER_n);
@@ -312,11 +311,11 @@ int _I2C_LLD__init(u8_t major)
                 i2c->TRISE = (((clocks.PCLK1_Frequency / 1000000) * 300) / 1000) + 1;
         }
 
-        i2c->CR1   = I2C_CR1_SWRST;
-        i2c->CR1   = 0;
-        i2c->CR2   = (clocks.PCLK1_Frequency / 1000000) & I2C_CR2_FREQ;
-        i2c->CCR   = CCR;
-        i2c->CR1   = I2C_CR1_PE;
+        i2c->CR1 = I2C_CR1_SWRST;
+        i2c->CR1 = 0;
+        i2c->CR2 = (clocks.PCLK1_Frequency / 1000000) & I2C_CR2_FREQ;
+        i2c->CCR = CCR;
+        i2c->CR1 = I2C_CR1_PE;
 
         _I2C[major]->initialized = true;
 
@@ -518,6 +517,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                 config.MA       = cast(u32_t, dst);
                                 config.NDT      = count;
                                 config.CR       = DMA_CCR1_MINC;
+                                config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
                                 err = _DMA_DDI_transfer(dmad, &config);
                                 if (!err) {
@@ -528,10 +528,10 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: DMA event error %d", err);
+                                                printk("I2C: DMA event error");
                                         }
                                 } else {
-                                        printk("I2C: DMA transfer error %d", err);
+                                        printk("I2C: DMA transfer error");
                                 }
 
                                 _DMA_DDI_release(dmad);
@@ -676,6 +676,7 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                         config.MA       = cast(u32_t, src);
                         config.NDT      = count;
                         config.CR       = DMA_CCR1_MINC | DMA_CCR1_DIR;
+                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {
@@ -692,13 +693,13 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: write not finished correctly %d", err);
+                                                printk("I2C: write not finished correctly");
                                         }
                                 } else {
-                                        printk("I2C: DMA event error %d", err);
+                                        printk("I2C: DMA event error");
                                 }
                         } else {
-                                printk("I2C: DMA transfer error %d", err);
+                                printk("I2C: DMA transfer error");
                         }
 
                         _DMA_DDI_release(dmad);

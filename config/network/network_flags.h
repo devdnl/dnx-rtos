@@ -71,20 +71,26 @@ __ENABLE_TCPIP_STACK__=_NO_
 #*/
 
 #/*--
-# --this:AddWidget("Checkbox", "Enable dnx stack")
-# --this:AddExtraWidget("Hyperlink", "dnxStackConfigure", "Configure")
-# --this:SetEvent("clicked", "dnxStackConfigure", function() this:LoadFile("network/dnx_flags.h") end)
+# this:AddWidget("Checkbox", "Enable SIPC stack")
+# this:AddExtraWidget("Hyperlink", "SIPCConfigure", "Configure")
+# this:SetEvent("clicked", "SIPCConfigure", function() this:LoadFile("network/sipc_flags.h") end)
 #--*/
-#define __ENABLE_DNX_STACK__ _YES_
+#define __ENABLE_SIPC_STACK__ _NO_
 #/*
-__ENABLE_DNX_STACK__=_YES_
+__ENABLE_SIPC_STACK__=_NO_
 #*/
-
 
 #if __ENABLE_TCPIP_STACK__ == _YES_
 #include "tcpip_flags.h"
 #/*
 include ./config/network/tcpip_flags.h
+#*/
+#endif
+
+#if __ENABLE_SIPC_STACK__ == _YES_
+#include "sipc_flags.h"
+#/*
+include ./config/network/sipc_flags.h
 #*/
 #endif
 

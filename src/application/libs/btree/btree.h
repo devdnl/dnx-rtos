@@ -99,8 +99,6 @@ static inline void btree_delete(btree_t *btree)
 /**
  * @brief  Function search selected object in BTree.
  *
- * @note Function can be used only by file system or driver code.
- *
  * @param  tree         BTree object
  * @param  key          object to find
  * @param  ret          found object
@@ -117,8 +115,6 @@ static inline int btree_search(btree_t *tree, void *key, void *ret)
 /**
  * @brief  Function get object with minimum value.
  *
- * @note Function can be used only by file system or driver code.
- *
  * @param  tree         BTree object
  * @param  ret          return object
  *
@@ -133,8 +129,6 @@ static inline int btree_minimum(btree_t *tree, void *ret)
 //==============================================================================
 /**
  * @brief  Function get object with maximum value.
- *
- * @note Function can be used only by file system or driver code.
  *
  * @param  tree         BTree object
  * @param  ret          return object
@@ -151,8 +145,6 @@ static inline int btree_maximum(btree_t *tree, void *ret)
 /**
  * @brief  Function check if BTree is empty.
  *
- * @note Function can be used only by file system or driver code.
- *
  * @param  tree         BTree object
  *
  * @return Return true if BTree is empty, otherwise NULL.
@@ -166,8 +158,6 @@ static inline bool btree_is_empty(btree_t *tree)
 //==============================================================================
 /**
  * @brief  Function return successor object relative to given key.
- *
- * @note Function can be used only by file system or driver code.
  *
  * @param  tree         BTree object
  * @param  key          key to find
@@ -185,8 +175,6 @@ static inline int btree_successor(btree_t *tree, void *key, void *ret)
 /**
  * @brief  Function return predecessor object relative to given key.
  *
- * @note Function can be used only by file system or driver code.
- *
  * @param  tree         BTree object
  * @param  key          key to find
  * @param  ret          predecessor object relative to key
@@ -203,8 +191,6 @@ static inline int btree_predecessor(btree_t *tree, void *key, void *ret)
 /**
  * @brief  Function insert object to BTree.
  *
- * @note Function can be used only by file system or driver code.
- *
  * @param  tree         BTree object
  * @param  data         object to insert to
  *
@@ -220,17 +206,15 @@ static inline int btree_insert(btree_t *tree, void *data)
 /**
  * @brief  Function delete object from BTree selected by key.
  *
- * @note Function can be used only by file system or driver code.
- *
  * @param  tree         BTree object
  * @param  key          object to delete
  *
  * @return On success 0 is returned.
  */
 //==============================================================================
-static inline int btree_remove(btree_t *tree, void *data)
+static inline int btree_remove(btree_t *tree, void *key)
 {
-        return _builtinfunc(btree_remove, tree, data);
+        return _builtinfunc(btree_remove, tree, key);
 }
 
 #ifdef __cplusplus

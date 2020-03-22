@@ -32,7 +32,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "dnx RTOS 2.2.0 \"Eagle\""
+PROJECT_NAME           = "dnx RTOS 2.2.1 \"Eagle\""
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -745,6 +745,9 @@ WARN_LOGFILE           =
 
 INPUT                  = " ." \
                          manual.h \
+                         ../../src/system/drivers/spiee/spiee_ioctl.h \
+                         ../../src/system/drivers/pwm/pwm_ioctl.h \
+                         ../../src/system/drivers/nvm/nvm_ioctl.h \
                          ../../src/system/drivers/can/can_ioctl.h \
                          ../../src/system/drivers/sdio/sdio_ioctl.h \
                          ../../src/system/drivers/dci/dci_ioctl.h \
@@ -762,6 +765,7 @@ INPUT                  = " ." \
                          ../../src/system/include/libc/sys/stat.h \
                          ../../src/system/include/libc/sys/statfs.h \
                          ../../src/system/include/libc/sys/types.h \
+                         ../../src/system/include/libc/sys/time.h \
                          ../../src/system/include/libc/ctype.h \
                          ../../src/system/include/libc/locale.h \
                          ../../src/system/include/libc/assert.h \

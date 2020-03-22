@@ -5,7 +5,7 @@
 
 @brief   This file support CPU control
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 #include "stm32f1/lib/misc.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #include "kernel/kwrapper.h"
+#include "kernel/kpanic.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -50,10 +51,12 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static void calculate_ticks_per_us(void);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static u32_t ticks_per_us;
 
 /*==============================================================================
   Function definitions
@@ -71,9 +74,13 @@
 //==============================================================================
 void _cpuctl_init(void)
 {
-        /* set interrupt vectors and NVIC priority */
-        NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
+        NVIC_SetVectorTable(NVIC_VectTab_FLASH, __CPU_VTOR_TAB_POSITION__);
         NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+
+#if __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ == _YES_
+        /* disable interrupting multi-cycle instructions */
+        SCnSCB->ACTLR |= SCnSCB_ACTLR_DISMCYCINT_Msk;
+#endif
 
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
@@ -199,7 +206,101 @@ void _cpuctl_update_system_clocks(void)
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
         SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
+
+        calculate_ticks_per_us();
+
         _critical_section_end();
+}
+
+//==============================================================================
+/**
+ * @brief  Function delay code processing in microseconds.
+ *
+ * @note   Function should block CPU for specified amount of time.
+ * @note   Function should work in critical section and interrupts.
+ *
+ * @param  microseconds         microsecond delay
+ */
+//==============================================================================
+void _cpuctl_delay_us(u16_t microseconds)
+{
+        while (microseconds > 0) {
+
+                u32_t ticks = ticks_per_us;
+
+                while (ticks > 0) {
+                        __asm volatile("nop");
+                        ticks--;
+                }
+
+                microseconds--;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function calculate number of loop needed to generate 1us delay.
+ */
+//==============================================================================
+static void calculate_ticks_per_us(void)
+{
+        ticks_per_us = 0;
+
+        u32_t ticks = ((u64_t)250 * SysTick->LOAD * __OS_TASK_SCHED_FREQ__) / 1000000;
+
+        while (SysTick->VAL >= (SysTick->LOAD / 2));
+
+        u32_t target = SysTick->VAL - ticks;
+
+        while (SysTick->VAL > target) {
+                ticks_per_us++;
+        }
+
+        ticks_per_us /= 185;
+
+        if (ticks_per_us == 0) {
+                ticks_per_us = 1;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Hard Fault ISR
+ */
+//==============================================================================
+void HardFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Memory Management failure ISR
+ */
+//==============================================================================
+void MemManage_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Bus Fault ISR
+ */
+//==============================================================================
+void BusFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Usage Fault ISR
+ */
+//==============================================================================
+void UsageFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 /*==============================================================================

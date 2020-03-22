@@ -6,7 +6,7 @@
 # @brief   This file contains CPU configuration flags.
 #          Hybrid file: included both by Make and CC.
 #
-# @note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+# @note    Copyright (C) 2019 Daniel Zorychta <daniel.zorychta@gmail.com>
 #
 #          This program is free software; you can redistribute it and/or modify
 #          it under the terms of the GNU General Public License as published by
@@ -230,9 +230,9 @@ __LD_SCRIPT__=STM32F42xxIxx
 #    end
 # )
 #--*/
-#define __CPU_NAME__ STM32F429ZIxx
+#define __CPU_NAME__ STM32F429BIxx
 #/*
-__CPU_NAME__=STM32F429ZIxx
+__CPU_NAME__=STM32F429BIxx
 #*/
 
 #/*
@@ -243,26 +243,48 @@ __CPU_NAME__=STM32F429ZIxx
 # */
 
 #/*--
+# this:AddWidget("Combobox", "RTOS Kernel IRQ priority")
+# uC.AddPriorityItems(this, true)
+#--*/
+#define __CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__ 15
+
+#/*--
+# this:AddWidget("Combobox", "Max RTOS API call IRQ priority")
+# uC.AddPriorityItems(this, true)
+#--*/
+#define __CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ 12
+
+#/*--
 # this:AddWidget("Combobox", "Default IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_DEFAULT_IRQ_PRIORITY__ 15
+#define __CPU_DEFAULT_IRQ_PRIORITY__ 14
 
+#/*--
+# this:AddWidget("Combobox", "Interruption of Multi-cycle instructions")
+# this:AddItem("Enable", "_NO_")
+# this:AddItem("Disable", "_YES_")
+#--*/
+#define __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ _YES_
+
+#/*--
+# this:AddWidget("Editline", false, "Interrupt vector position")
+#--*/
+#define __CPU_VTOR_TAB_POSITION__ 0x40000
 
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------
 #define _CPU_START_FREQUENCY_           (16000000UL)
 #define _CPU_HEAP_ALIGN_                (4)
-#define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (15 << 4)
-#define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (14 << 4)
-#define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (13 << 4)
-#define _CPU_IRQ_SAFE_PRIORITY_         (15)
+#define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (__CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__ << 4)
+#define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (__CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ << 4)
+#define _CPU_IRQ_SAFE_PRIORITY_         (__CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__)
 #define ARCH_stm32f4
 #/*
-CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -fno-math-errno -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb-interwork -DGCC_ARMCM4
-CPUCONFIG_CFLAGS=-mcpu=cortex-m4 -mthumb -fno-math-errno -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb-interwork -DGCC_ARMCM4
-CPUCONFIG_CXXFLAGS=-mcpu=cortex-m4 -mthumb -fno-math-errno -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb-interwork -DGCC_ARMCM4
+CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM4
+CPUCONFIG_CFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM4
+CPUCONFIG_CXXFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles -T./src/system/cpu/stm32f4/ld/$(__LD_SCRIPT__).ld
 #*/
 

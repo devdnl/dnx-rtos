@@ -33,7 +33,9 @@
 #include "stm32f4/cpuctl.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
+#include "stm32f4/lib/misc.h"
 #include "kernel/kwrapper.h"
+#include "kernel/kpanic.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -83,6 +85,17 @@ static _mm_region_t ram3;
 //==============================================================================
 void _cpuctl_init(void)
 {
+        NVIC_SetVectorTable(NVIC_VectTab_FLASH, __CPU_VTOR_TAB_POSITION__);
+        NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+
+        /* enable FPU */
+        SCB->CPACR |= ((3 << 20)|(3 << 22));
+
+#if __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ == _YES_
+        /* disable interrupting multi-cycle instructions */
+        SCnSCB->ACTLR |= SCnSCB_ACTLR_DISMCYCINT_Msk;
+#endif
+
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
 
@@ -112,6 +125,9 @@ void _cpuctl_restart_system(void)
 void _cpuctl_shutdown_system(void)
 {
         // Note: implementation enters to deep sleep mode.
+
+        /* enable power module */
+        RCC->APB1ENR |= RCC_APB1ENR_PWREN;
 
         /* Clear Wake-up flag */
         PWR->CR |= PWR_CR_CWUF;
@@ -211,6 +227,73 @@ void _cpuctl_update_system_clocks(void)
         RCC_GetClocksFreq(&freq);
         SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
         _critical_section_end();
+}
+
+//==============================================================================
+/**
+ * @brief  Function delay code processing in microseconds.
+ *
+ * @note   Function should block CPU for specified amount of time.
+ * @note   Function should work in critical section and interrupts.
+ *
+ * @param  microseconds         microsecond delay
+ */
+//==============================================================================
+void _cpuctl_delay_us(u16_t microseconds)
+{
+        u32_t ticks = ((u64_t)microseconds * SysTick->LOAD * __OS_TASK_SCHED_FREQ__) / 1000000;
+
+        while (ticks > 0) {
+                i32_t now = SysTick->VAL;
+
+                if (now - ticks > 0) {
+                        while (SysTick->VAL > (u32_t)(now - ticks));
+                        ticks = 0;
+                } else {
+                        while (SysTick->VAL <= (u32_t)now);
+                        ticks -= now;
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Hard Fault ISR
+ */
+//==============================================================================
+void HardFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Memory Management failure ISR
+ */
+//==============================================================================
+void MemManage_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Bus Fault ISR
+ */
+//==============================================================================
+void BusFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Usage Fault ISR
+ */
+//==============================================================================
+void UsageFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 /*==============================================================================

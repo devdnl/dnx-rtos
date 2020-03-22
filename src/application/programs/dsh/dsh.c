@@ -206,7 +206,7 @@ static bool command_hint()
                                 DIR *dir = opendir("/proc/bin");
                                 if (dir) {
                                         while ((dirent = readdir(dir))) {
-                                                if (strncmp(dirent->name, global->line, strlen(global->line)) == 0) {
+                                                if (strncmp(dirent->d_name, global->line, strlen(global->line)) == 0) {
                                                         cnt++;
                                                 }
                                         }
@@ -222,11 +222,11 @@ static bool command_hint()
 
                                         while ((dirent = readdir(dir))) {
 
-                                                if (strncmp(dirent->name, global->line, strlen(global->line)) == 0) {
+                                                if (strncmp(dirent->d_name, global->line, strlen(global->line)) == 0) {
                                                         if (cnt > 1) {
-                                                                printf("%s ", dirent->name);
+                                                                printf("%s ", dirent->d_name);
                                                         } else  {
-                                                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, dirent->name);
+                                                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, dirent->d_name);
                                                                 break;
                                                         }
                                                 }
@@ -289,7 +289,7 @@ static bool is_exit_cmd(const char *cmd)
 //==============================================================================
 static bool is_clear_cmd(const char *cmd)
 {
-        return strncmp(cmd, "clear", 5) == 0 || strcmp(cmd, "clear") == 0;
+        return strncmp(cmd, "clear ", 6) == 0 || strcmp(cmd, "clear") == 0;
 }
 
 //==============================================================================
@@ -783,7 +783,17 @@ int_main(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
         if (argc >= 2) {
                 for (int i = 1; i < argc; i++) {
                         if (isstreq(argv[i], "-e")) {
-                                if (!analyze_line(argv[i+1])) {
+
+                                memset(global->line, 0, sizeof(global->line));
+
+                                for (int n = i + 1; n < argc; n++) {
+                                        strlcat(global->line, argv[n], sizeof(global->line));
+                                        strlcat(global->line, " ", sizeof(global->line));
+                                }
+
+                                char *cmd = trim_string(global->line);
+
+                                if (!analyze_line(cmd)) {
                                         print_fail_message(argv[i+1]);
                                 }
 

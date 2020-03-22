@@ -5,7 +5,7 @@ Author  Daniel Zorychta
 
 Brief   EXT4 file system
 
-        Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+        Copyright (C) 2019 Daniel Zorychta <daniel.zorychta@gmail.com>
 
         This program is free software; you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -44,6 +44,8 @@ typedef struct {
         struct ext4_mountpoint    *mp;
         struct ext4_blockdev_iface bdif;
         struct ext4_blockdev       bd;
+        FILE                      *dev;
+        mutex_t                   *fs_mutex;
         u8_t                       buf[SECTOR_SIZE];
         u32_t                      open_files;
 } ext4fs_t;
@@ -57,14 +59,19 @@ static int bopen(struct ext4_blockdev *bdev);
 static int bclose(struct ext4_blockdev *bdev);
 static int bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt);
 static int bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt);
-static int lock(struct ext4_blockdev *bdev);
-static int unlock(struct ext4_blockdev *bdev);
-static tfile_t ext4ftype2vfs(u32_t mode);
-static const char *ext4_path(const char *path);
+static int bdev_lock(struct ext4_blockdev *bdev);
+static int bdev_unlock(struct ext4_blockdev *bdev);
+static void mp_lock(void *p_user);
+static void mp_unlock(void *p_user);
+static mode_t ext4ftype2vfs(u32_t mode);
 
 /*==============================================================================
   Local objects
 ==============================================================================*/
+static const struct ext4_lock EXT4_LOCK = {
+        .lock   = mp_lock,
+        .unlock = mp_unlock,
+};
 
 /*==============================================================================
   Exported objects
@@ -95,42 +102,54 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path, const char *opts)
         if (!err) {
                 ext4fs_t *hdl = *fs_handle;
 
-                err = sys_fopen(src_path, "r+", cast(FILE**, &hdl->bdif.blkobj));
+                bool read_only = sys_stropt_is_flag(opts, "ro");
+
+                err = sys_fopen(src_path, read_only ? "r" : "r+", cast(FILE**, &hdl->dev));
                 if (err) goto finish;
 
                 struct stat st;
-                err = sys_fstat(hdl->bdif.blkobj, &st);
+                err = sys_fstat(hdl->dev, &st);
                 if (err) goto finish;
 
-                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, cast(mutex_t**, &hdl->bdif.lockobj));
+                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, cast(mutex_t**, &hdl->fs_mutex));
                 if (err) goto finish;
 
                 hdl->bdif.open     = bopen;
                 hdl->bdif.bread    = bread;
                 hdl->bdif.bwrite   = bwrite;
                 hdl->bdif.close    = bclose;
-                hdl->bdif.lock     = lock;
-                hdl->bdif.unlock   = unlock;
+                hdl->bdif.lock     = bdev_lock;
+                hdl->bdif.unlock   = bdev_unlock;
                 hdl->bdif.ph_bsize = SECTOR_SIZE;
                 hdl->bdif.ph_bbuf  = hdl->buf;
                 hdl->bdif.ph_bcnt  = st.st_size / SECTOR_SIZE;
+                hdl->bdif.p_user   = hdl;
 
-                hdl->bd.part_size  = st.st_size;
-                hdl->bd.bdif       = &hdl->bdif;
+                hdl->bd.part_size   = st.st_size;
+                hdl->bd.bdif        = &hdl->bdif;
 
-                err = ext4_mount(&hdl->bd, &hdl->mp, strstr(opts, "ro"));
+                err = ext4_mount(&hdl->bd, &hdl->mp, read_only, hdl);
                 if (!err) {
-                        ext4_cache_write_back(hdl->mp, true);
+                        ext4_mount_setup_locks(hdl->mp, &EXT4_LOCK);
+
+                        ext4_recover(hdl->mp);
+                        ext4_journal_start(hdl->mp);
+
+                        ext4_cache_write_back(true, hdl->mp);
+
+                        if (read_only) {
+                                printk("EXTFS: read only file system");
+                        }
                 }
 
                 finish:
                 if (err) {
-                        if (hdl->bdif.lockobj) {
-                                sys_mutex_destroy(hdl->bdif.lockobj);
+                        if (hdl->fs_mutex) {
+                                sys_mutex_destroy(hdl->fs_mutex);
                         }
 
-                        if (hdl->bdif.blkobj) {
-                                sys_fclose(cast(FILE*, hdl->bdif.blkobj));
+                        if (hdl->dev) {
+                                sys_fclose(cast(FILE*, hdl->dev));
                         }
 
                         sys_free(fs_handle);
@@ -155,15 +174,16 @@ API_FS_RELEASE(ext4fs, void *fs_handle)
         int       err = EBUSY;
 
         if (hdl->open_files == 0) {
-                err = ext4_cache_write_back(hdl->mp, false);
+                err = ext4_cache_write_back(false, hdl->mp);
                 if (err) goto finish;
+
+                ext4_journal_stop(hdl->mp);
 
                 err = ext4_umount(hdl->mp);
                 if (err) goto finish;
 
-                sys_cache_drop(hdl->bdif.blkobj);
-                sys_mutex_destroy(hdl->bdif.lockobj);
-                sys_fclose(cast(FILE*, hdl->bdif.blkobj));
+                sys_mutex_destroy(hdl->fs_mutex);
+                sys_fclose(cast(FILE*, hdl->dev));
                 sys_free(&fs_handle);
         }
 
@@ -188,18 +208,20 @@ API_FS_OPEN(ext4fs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
 {
         ext4fs_t  *hdl = fs_handle;
         ext4_file *file;
-        path = ext4_path(path);
 
         file_opened(hdl);
 
         int err = sys_zalloc(sizeof(ext4_file), cast(void**, &file));
         if (!err) {
-                err = ext4_fopen(hdl->mp, file, path, flags);
+                err = ext4_fopen2(file, path, flags, hdl->mp);
                 if (!err) {
                         if (flags & O_CREAT) {
-                                time_t ctime = 0;
-                                if (sys_get_time(&ctime) == ESUCC) {
-                                        ext4_ctime_set(hdl->mp, path, ctime);
+                                time_t time = 0;
+                                if (sys_gettime(&time) == ESUCC) {
+
+                                        ext4_ctime_set(path, time, hdl->mp);
+                                        ext4_mtime_set(path, file, time, hdl->mp);
+                                        ext4_atime_set(path, time, hdl->mp);
                                 }
                         }
 
@@ -274,8 +296,8 @@ API_FS_WRITE(ext4fs,
                 err = ext4_fwrite(fhdl, src, count, wrcnt);
 
                 time_t mtime = 0;
-                if (sys_get_time(&mtime) == ESUCC) {
-                        ext4_mtime_set2(hdl->mp, fhdl, mtime);
+                if (sys_gettime(&mtime) == ESUCC) {
+                        ext4_mtime_set(NULL, fhdl, mtime, hdl->mp);
                 }
         }
 
@@ -369,19 +391,19 @@ API_FS_FSTAT(ext4fs, void *fs_handle, void *fhdl, struct stat *stat)
         ext4_file *file = fhdl;
 
         u32_t ctime = 0;
-        int err = ext4_ctime_get2(hdl->mp, file, &ctime);
+        int err = ext4_ctime_get(NULL, file, &ctime, hdl->mp);
         if (err) goto finish;
 
         u32_t mtime = 0;
-        err = ext4_mtime_get2(hdl->mp, file, &mtime);
+        err = ext4_mtime_get(NULL, file, &mtime, hdl->mp);
         if (err) goto finish;
 
         u32_t uid, gid;
-        err = ext4_owner_get2(hdl->mp, file, &uid, &gid);
+        err = ext4_owner_get(NULL, file, &uid, &gid, hdl->mp);
         if (err) goto finish;
 
         u32_t mode;
-        err = ext4_mode_get2(hdl->mp, file, &mode);
+        err = ext4_mode_get(NULL, file, &mode, hdl->mp);
         if (err) goto finish;
 
         if (!err) {
@@ -390,9 +412,8 @@ API_FS_FSTAT(ext4fs, void *fs_handle, void *fhdl, struct stat *stat)
                 stat->st_dev   = 0;
                 stat->st_uid   = uid;
                 stat->st_gid   = gid;
-                stat->st_mode  = mode & ~EXT4_INODE_MODE_TYPE_MASK;
+                stat->st_mode  = (mode & ~EXT4_INODE_MODE_TYPE_MASK) | ext4ftype2vfs(mode);
                 stat->st_size  = ext4_fsize(file);
-                stat->st_type  = ext4ftype2vfs(mode);
         }
 
         finish:
@@ -413,28 +434,27 @@ API_FS_FSTAT(ext4fs, void *fs_handle, void *fhdl, struct stat *stat)
 API_FS_STAT(ext4fs, void *fs_handle, const char *path, struct stat *stat)
 {
         ext4fs_t *hdl = fs_handle;
-        path = ext4_path(path);
 
         u32_t ctime = 0;
-        int err = ext4_ctime_get(hdl->mp, path, &ctime);
+        int err = ext4_ctime_get(path, NULL, &ctime, hdl->mp);
         if (err) goto finish;
 
         u32_t mtime = 0;
-        err = ext4_mtime_get(hdl->mp, path, &mtime);
+        err = ext4_mtime_get(path, NULL, &mtime, hdl->mp);
         if (err) goto finish;
 
         u32_t uid, gid;
-        err = ext4_owner_get(hdl->mp, path, &uid, &gid);
+        err = ext4_owner_get(path, NULL, &uid, &gid, hdl->mp);
         if (err) goto finish;
 
         u32_t mode;
-        err = ext4_mode_get(hdl->mp, path, &mode);
+        err = ext4_mode_get(path, NULL, &mode, hdl->mp);
         if (err) goto finish;
 
         u64_t     size = 0;
         ext4_file file;
-        memset(&file, 0, sizeof(ext4_file));
-        if (ext4_fopen(hdl->mp, &file, path, O_RDONLY) == ESUCC) {
+        memset(&file, 0, sizeof(file));
+        if (ext4_fopen2(&file, path, O_RDONLY, hdl->mp) == ESUCC) {
                 size = ext4_fsize(&file);
                 ext4_fclose(&file);
         }
@@ -445,9 +465,8 @@ API_FS_STAT(ext4fs, void *fs_handle, const char *path, struct stat *stat)
                 stat->st_dev   = 0;
                 stat->st_uid   = uid;
                 stat->st_gid   = gid;
-                stat->st_mode  = mode & ~EXT4_INODE_MODE_TYPE_MASK;
+                stat->st_mode  = (mode & ~EXT4_INODE_MODE_TYPE_MASK) | ext4ftype2vfs(mode);
                 stat->st_size  = size;
-                stat->st_type  = ext4ftype2vfs(mode);
         }
 
         finish:
@@ -468,6 +487,9 @@ API_FS_STATFS(ext4fs, void *fs_handle, struct statfs *statfs)
 {
         ext4fs_t *hdl = fs_handle;
 
+        statfs->f_type   = SYS_FS_TYPE__SOLID;
+        statfs->f_fsname = "ext4fs";
+
         struct ext4_mount_stats stfs;
         int err = ext4_mount_point_stats(hdl->mp, &stfs);
         if (!err) {
@@ -476,11 +498,9 @@ API_FS_STATFS(ext4fs, void *fs_handle, struct statfs *statfs)
                 statfs->f_bfree  = stfs.free_blocks_count;
                 statfs->f_ffree  = stfs.free_inodes_count;
                 statfs->f_files  = stfs.inodes_count;
-                statfs->f_type   = SYS_FS_TYPE__SOLID;
-                statfs->f_fsname = "ext4fs";
         }
 
-        return ESUCC;
+        return err;
 }
 
 //==============================================================================
@@ -497,15 +517,14 @@ API_FS_STATFS(ext4fs, void *fs_handle, struct statfs *statfs)
 API_FS_MKDIR(ext4fs, void *fs_handle, const char *path, mode_t mode)
 {
         ext4fs_t *hdl = fs_handle;
-        path = ext4_path(path);
 
-        int err = ext4_dir_mk(hdl->mp, path);
+        int err = ext4_dir_mk(path, hdl->mp);
         if (!err) {
-                err = ext4_mode_set(hdl->mp, path, mode);
+                err = ext4_mode_set(path, mode, hdl->mp);
 
                 time_t ctime = 0;
-                if (sys_get_time(&ctime) == ESUCC) {
-                        ext4_mtime_set(hdl->mp, path, ctime);
+                if (sys_gettime(&ctime) == ESUCC) {
+                        ext4_mtime_set(path, NULL, ctime, hdl->mp);
                 }
         }
 
@@ -562,13 +581,12 @@ API_FS_MKNOD(ext4fs, void *fs_handle, const char *path, const dev_t dev)
 API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, DIR *dir)
 {
         ext4fs_t *hdl = fs_handle;
-        path = ext4_path(path);
 
         file_opened(hdl);
 
         int err = sys_zalloc(sizeof(ext4_dir), &dir->d_hdl);
         if (!err) {
-                err = ext4_dir_open(hdl->mp, dir->d_hdl, path);
+                err = ext4_dir_open(dir->d_hdl, path, hdl->mp);
                 if (!err) {
                         memset(&dir->dirent, 0, sizeof(dir->dirent));
                         dir->d_items = 0;
@@ -628,17 +646,24 @@ API_FS_READDIR(ext4fs, void *fs_handle, DIR *dir)
 
         ext4_direntry *de = const_cast(ext4_direntry*, ext4_dir_entry_next(d));
         if (de) {
-                u32_t mode;
-                err = ext4_mode_get2(hdl->mp, &d->f, &mode);
+                ext4_file f;
+                f.flags = 0;
+                f.fpos  = 0;
+                f.fsize = 0;
+                f.inode = de->inode;
+                f.mp    = hdl->mp;
+
+                u32_t mode = 0;
+                err = ext4_mode_get(NULL, &f, &mode, hdl->mp);
                 if (!err) {
                         size_t len = de->name_length >= 255 ? 254 : de->name_length;
                         de->name[len] = '\0';
 
-                        dir->dirent.dev      = 0;
-                        dir->dirent.filetype = ext4ftype2vfs(mode);
-                        dir->dirent.name     = cast(const char*, de->name);
-                        dir->dirent.size     = ext4_fsize(&d->f);
-                        dir->d_seek          = d->next_off;
+                        dir->dirent.dev    = 0;
+                        dir->dirent.mode   = (mode & ~EXT4_INODE_MODE_TYPE_MASK) | ext4ftype2vfs(mode);
+                        dir->dirent.d_name = cast(const char*, de->name);
+                        dir->dirent.size   = ext4_fsize(&f);
+                        dir->d_seek        = d->next_off;
                 }
         }
 
@@ -658,13 +683,15 @@ API_FS_READDIR(ext4fs, void *fs_handle, DIR *dir)
 API_FS_REMOVE(ext4fs, void *fs_handle, const char *path)
 {
         ext4fs_t *hdl = fs_handle;
-        path = ext4_path(path);
 
-        // try remove file
-        int err = ext4_fremove(hdl->mp, path);
-        if (err) {
-                // try remove dir
-                err = ext4_dir_rm(hdl->mp, path);
+        u32_t mode;
+        int err = ext4_mode_get(path, NULL, &mode, hdl->mp);
+        if (!err) {
+                if ((mode &= EXT4_INODE_MODE_TYPE_MASK) == EXT4_INODE_MODE_DIRECTORY) {
+                        err = ext4_dir_rm(path, hdl->mp);
+                } else {
+                        err = ext4_fremove(path, hdl->mp);
+                }
         }
 
         return err;
@@ -684,9 +711,7 @@ API_FS_REMOVE(ext4fs, void *fs_handle, const char *path)
 API_FS_RENAME(ext4fs, void *fs_handle, const char *old_name, const char *new_name)
 {
         ext4fs_t *hdl = fs_handle;
-        old_name = ext4_path(old_name);
-        new_name = ext4_path(new_name);
-        return ext4_frename(hdl->mp, old_name, new_name);
+        return ext4_frename(old_name, new_name, hdl->mp);
 }
 
 //==============================================================================
@@ -703,9 +728,7 @@ API_FS_RENAME(ext4fs, void *fs_handle, const char *old_name, const char *new_nam
 API_FS_CHMOD(ext4fs, void *fs_handle, const char *path, mode_t mode)
 {
         ext4fs_t *hdl = fs_handle;
-        path = ext4_path(path);
-
-        return ext4_mode_set(hdl->mp, path, mode);
+        return ext4_mode_set(path, mode, hdl->mp);
 }
 
 //==============================================================================
@@ -723,9 +746,7 @@ API_FS_CHMOD(ext4fs, void *fs_handle, const char *path, mode_t mode)
 API_FS_CHOWN(ext4fs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 {
         ext4fs_t *hdl = fs_handle;
-        path = ext4_path(path);
-
-        return ext4_owner_set(hdl->mp, path, owner, group);
+        return ext4_owner_set(path, owner, group, hdl->mp);
 }
 
 //==============================================================================
@@ -741,12 +762,10 @@ API_FS_SYNC(ext4fs, void *fs_handle)
 {
         ext4fs_t *hdl = fs_handle;
 
-        int err = ext4_cache_write_back(hdl->mp, false);
+        int err = ext4_cache_write_back(false, hdl->mp);
         if (!err) {
                 err = ext4_cache_flush(hdl->mp);
-                if (!err) {
-                        err = ext4_cache_write_back(hdl->mp, true);
-                }
+                ext4_cache_write_back(true, hdl->mp);
         }
 
         return err;
@@ -761,9 +780,9 @@ API_FS_SYNC(ext4fs, void *fs_handle)
 //==============================================================================
 static void file_opened(ext4fs_t *hdl)
 {
-        if (sys_mutex_lock(hdl->bdif.lockobj, LOCK_TIMEOUT) == ESUCC) {
+        if (sys_mutex_lock(hdl->fs_mutex, LOCK_TIMEOUT) == ESUCC) {
                 hdl->open_files++;
-                sys_mutex_unlock(hdl->bdif.lockobj);
+                sys_mutex_unlock(hdl->fs_mutex);
         }
 }
 
@@ -776,9 +795,9 @@ static void file_opened(ext4fs_t *hdl)
 //==============================================================================
 static void file_closed(ext4fs_t *hdl)
 {
-        if (sys_mutex_lock(hdl->bdif.lockobj, LOCK_TIMEOUT) == ESUCC) {
+        if (sys_mutex_lock(hdl->fs_mutex, LOCK_TIMEOUT) == ESUCC) {
                 hdl->open_files--;
-                sys_mutex_unlock(hdl->bdif.lockobj);
+                sys_mutex_unlock(hdl->fs_mutex);
         }
 }
 
@@ -826,11 +845,11 @@ static int bclose(struct ext4_blockdev *bdev)
 //==============================================================================
 static int bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-        return sys_cache_read(bdev->bdif->blkobj,
-                              blk_id,
-                              bdev->bdif->ph_bsize,
-                              blk_cnt,
-                              buf);
+        ext4fs_t *hdl = bdev->bdif->p_user;
+
+        size_t rdcnt = 0;
+        sys_fseek(hdl->dev, blk_id * bdev->bdif->ph_bsize, SEEK_SET);
+        return sys_fread(buf, bdev->bdif->ph_bsize * blk_cnt, &rdcnt, hdl->dev);
 }
 
 //==============================================================================
@@ -847,13 +866,11 @@ static int bread(struct ext4_blockdev *bdev, void *buf, uint64_t blk_id, uint32_
 //==============================================================================
 static int bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, uint32_t blk_cnt)
 {
-        return sys_cache_write(bdev->bdif->blkobj,
-                               blk_id,
-                               bdev->bdif->ph_bsize,
-                               blk_cnt,
-                               buf,
-                               bdev->cache_write_back ? CACHE_WRITE_BACK
-                                                      : CACHE_WRITE_THROUGH);
+        ext4fs_t *hdl = bdev->bdif->p_user;
+
+        size_t wrcnt = 0;
+        sys_fseek(hdl->dev, blk_id * bdev->bdif->ph_bsize, SEEK_SET);
+        return sys_fwrite(buf, bdev->bdif->ph_bsize * blk_cnt, &wrcnt, hdl->dev);
 }
 
 //==============================================================================
@@ -865,9 +882,10 @@ static int bwrite(struct ext4_blockdev *bdev, const void *buf, uint64_t blk_id, 
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-static int lock(struct ext4_blockdev *bdev)
+static int bdev_lock(struct ext4_blockdev *bdev)
 {
-        return sys_mutex_lock(bdev->bdif->lockobj, LOCK_TIMEOUT);
+        ext4fs_t *hdl = bdev->bdif->p_user;
+        return sys_mutex_lock(hdl->fs_mutex, LOCK_TIMEOUT);
 }
 
 //==============================================================================
@@ -879,9 +897,36 @@ static int lock(struct ext4_blockdev *bdev)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-static int unlock(struct ext4_blockdev *bdev)
+static int bdev_unlock(struct ext4_blockdev *bdev)
 {
-        return sys_mutex_unlock(bdev->bdif->lockobj);
+        ext4fs_t *hdl = bdev->bdif->p_user;
+        return sys_mutex_unlock(hdl->fs_mutex);
+}
+
+//==============================================================================
+/**
+ * @brief  Function lock access to mount point.
+ *
+ * @param  p_user       user object pointer
+ */
+//==============================================================================
+static void mp_lock(void *p_user)
+{
+        ext4fs_t *hdl = p_user;
+        sys_mutex_lock(hdl->fs_mutex, LOCK_TIMEOUT);
+}
+
+//==============================================================================
+/**
+ * @brief  Function unlock access to mount point.
+ *
+ * @param  p_user       user object pointer
+ */
+//==============================================================================
+static void mp_unlock(void *p_user)
+{
+        ext4fs_t *hdl = p_user;
+        sys_mutex_unlock(hdl->fs_mutex);
 }
 
 //==============================================================================
@@ -893,42 +938,18 @@ static int unlock(struct ext4_blockdev *bdev)
  * @return VFS file type.
  */
 //==============================================================================
-static tfile_t ext4ftype2vfs(u32_t mode)
+static mode_t ext4ftype2vfs(u32_t mode)
 {
-        mode &= EXT4_INODE_MODE_TYPE_MASK;
-        switch (mode) {
-        case EXT4_INODE_MODE_FIFO:      return FILE_TYPE_PIPE;
-        case EXT4_INODE_MODE_CHARDEV:   return FILE_TYPE_DRV;
-        case EXT4_INODE_MODE_DIRECTORY: return FILE_TYPE_DIR;
-        case EXT4_INODE_MODE_BLOCKDEV:  return FILE_TYPE_DRV;
-        case EXT4_INODE_MODE_FILE:      return FILE_TYPE_REGULAR;
-        case EXT4_INODE_MODE_SOFTLINK:  return FILE_TYPE_LINK;
-        case EXT4_INODE_MODE_SOCKET:    return FILE_TYPE_PIPE;
-        default:                        return FILE_TYPE_UNKNOWN;
+        switch (mode & EXT4_INODE_MODE_TYPE_MASK) {
+        case EXT4_INODE_MODE_FIFO:      return S_IFIFO;
+        case EXT4_INODE_MODE_CHARDEV:   return S_IFDEV;
+        case EXT4_INODE_MODE_DIRECTORY: return S_IFDIR;
+        case EXT4_INODE_MODE_BLOCKDEV:  return S_IFDEV;
+        case EXT4_INODE_MODE_FILE:      return S_IFREG;
+        case EXT4_INODE_MODE_SOFTLINK:  return S_IFLNK;
+        case EXT4_INODE_MODE_SOCKET:    return S_IFIFO;
+        default:                        return mode;
         }
-}
-
-//==============================================================================
-/**
- * @brief  Function correct VFS path to required by EXT4 (without '/' at the
- *         path beginning). Function convert path without memory allocation.
- *
- * @param  path         path to convert.
- *
- * @return Converted path.
- */
-//==============================================================================
-static const char *ext4_path(const char *path)
-{
-        if (path[0] == '/') {
-                if (path[1] == '\0') {
-                        path = ".";
-                } else {
-                        path += 1;
-                }
-        }
-
-        return path;
 }
 
 //==============================================================================

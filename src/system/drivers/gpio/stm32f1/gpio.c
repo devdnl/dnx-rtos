@@ -360,6 +360,7 @@ API_MOD_IOCTL(GPIO, void *device_handle, int request, void *arg)
                         GPIO_pin_in_port_t *pin = arg;
                         if ((pin->port_idx < ARRAY_SIZE(GPIOx)) && (pin->pin_idx < 16)) {
                                 GPIOx[pin->port_idx].GPIO->BRR = (1 << pin->pin_idx);
+                                err = ESUCC;
                         }
                         break;
                 }

@@ -144,6 +144,10 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                         return TTYCMD_KEY_TAB;
                 }
 
+                if (c == ETX) {
+                        return TTYCMD_KEY_ENDTEXT;
+                }
+
                 if (c == '\033') {
                         memset(this->token, 0, VT100_TOKEN_LEN);
                         this->token[0]  = c;

@@ -108,6 +108,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         // LSE OSCILLATOR
         //----------------------------------------------------------------------
         if (_CLK_CFG__LSE_ON) {
+
+                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
+                SET_BIT(PWR->CR, PWR_CR_DBP);
+
                 if (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
 
                         RCC_LSEConfig(_CLK_CFG__LSE_ON);
@@ -115,7 +119,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
                         if (_CLK_CFG__LSE_ON != RCC_LSE_Bypass) {
                                 // this oscillator not causes an error because is not a main osc.
                                 if (wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS) != ESUCC) {
-                                        _printk("LSE oscillator start error");
+                                        printk("LSE oscillator start error");
                                 }
                         }
                 }

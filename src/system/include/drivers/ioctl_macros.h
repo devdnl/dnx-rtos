@@ -41,10 +41,10 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _IO(g, n)               (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
-#define _IOR(g, n, t)           (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
-#define _IOW(g, n, t)           (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
-#define _IOWR(g, n, t)          (((u32_t)(_IO_GROUP_##g) << 16) | ((u32_t)(n) & 0xFFFF))
+#define _IO(g, n)               (((int)(_IO_GROUP_##g) << 8) | ((int)(n) & 0xFF))
+#define _IOR(g, n, t)           (((int)(_IO_GROUP_##g) << 8) | ((int)(n) & 0xFF))
+#define _IOW(g, n, t)           (((int)(_IO_GROUP_##g) << 8) | ((int)(n) & 0xFF))
+#define _IOWR(g, n, t)          (((int)(_IO_GROUP_##g) << 8) | ((int)(n) & 0xFF))
 
 /*==============================================================================
   Exported object types

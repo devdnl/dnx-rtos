@@ -87,7 +87,7 @@ enum _I2C_major {
 
 /// type defines I2C device in the runtime environment
 typedef struct {
-        I2C_config_t              config;               //!< pointer to the device configuration
+        I2C_config_t              config;               //!< device configuration
         dev_lock_t                lock_dev;             //!< object used to lock access to opened device
         u8_t                      major;                //!< major number of the device (I2C peripheral number)
         u8_t                      minor;                //!< minor number of the device (device identifier)
@@ -97,6 +97,7 @@ typedef struct {
 typedef struct {
         mutex_t                  *lock_mtx;             //!< mutex used to lock access to the particular peripheral
         queue_t                  *event;                //!< queue used to indicate event (operation finished)
+        I2C_recovery_t            recovery;             //!< recovery configuration
         u16_t                     SR1_mask;             //!< SR1 register mask (to catch specified event in IRQ)
         bool                      initialized:1;        //!< indicates that module for this peripheral is initialized
         u8_t                      dev_cnt;              //!< number of initialized devices

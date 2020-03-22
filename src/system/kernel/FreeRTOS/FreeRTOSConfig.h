@@ -126,7 +126,7 @@ extern void  vApplicationSwitchedOut(void);
 
 /* Interrupt nesting behaviour configuration. */
 #define configKERNEL_INTERRUPT_PRIORITY         _CPU_IRQ_RTOS_KERNEL_PRIORITY_
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY    _CPU_IRQ_RTOS_SYSCALL_PRIORITY_
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY    _CPU_IRQ_RTOS_APICALL_PRIORITY_
 #define configMAX_API_CALL_INTERRUPT_PRIORITY   _CPU_IRQ_RTOS_APICALL_PRIORITY_
 
 /* Define to trap errors during development. */

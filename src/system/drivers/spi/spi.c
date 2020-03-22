@@ -60,7 +60,8 @@ static const SPI_config_t SPI_DEFAULT_CFG = {
         .mode        = _SPI_DEFAULT_CFG_MODE,
         .msb_first   = _SPI_DEFAULT_CFG_MSB_FIRST,
         .CS_port_idx = 255,     // CS deactivated
-        .CS_pin_idx  = 255      // CS deactivated
+        .CS_pin_idx  = 255,     // CS deactivated
+        .CS_reverse  = false
 };
 
 /* pointers to memory of specified device */
@@ -155,7 +156,7 @@ API_MOD_RELEASE(SPI, void *device_handle)
         if (!err) {
                 _SPI[hdl->major]->slave_count--;
                 release_resources(hdl->major);
-                sys_free(device_handle);
+                sys_free(&device_handle);
         }
 
         return err;
@@ -440,7 +441,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 
                                         for (SPI_transceive_t *t = tr; !err && t && t->count; t = t->next) {
 
-                                                if (not RAW_mode && t->separated) {
+                                                if (not RAW_mode) {
                                                         slave_select(hdl);
                                                 }
 
@@ -570,7 +571,8 @@ static void release_resources(u8_t major)
 //==============================================================================
 static void slave_select(struct SPI_slave *hdl)
 {
-        _GPIO_DDI_clear_pin(hdl->config.CS_port_idx, hdl->config.CS_pin_idx);
+    (hdl->config.CS_reverse == true) ?  _GPIO_DDI_set_pin(hdl->config.CS_port_idx, hdl->config.CS_pin_idx):
+                                        _GPIO_DDI_clear_pin(hdl->config.CS_port_idx, hdl->config.CS_pin_idx);
 }
 
 //==============================================================================
@@ -582,7 +584,8 @@ static void slave_select(struct SPI_slave *hdl)
 //==============================================================================
 static void slave_deselect(struct SPI_slave *hdl)
 {
-        _GPIO_DDI_set_pin(hdl->config.CS_port_idx, hdl->config.CS_pin_idx);
+    (hdl->config.CS_reverse == true) ?  _GPIO_DDI_clear_pin(hdl->config.CS_port_idx, hdl->config.CS_pin_idx):
+                                        _GPIO_DDI_set_pin(hdl->config.CS_port_idx, hdl->config.CS_pin_idx);
 }
 
 /*==============================================================================

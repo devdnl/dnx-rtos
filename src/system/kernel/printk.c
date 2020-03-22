@@ -49,14 +49,13 @@
   Local object types
 ==============================================================================*/
 typedef struct {
-        struct {
-                u32_t timestamp;
+        struct msg {
+                struct timeval timestamp;
                 char  str[__OS_SYSTEM_MSG_COLS__];
         } msg[__OS_SYSTEM_MSG_ROWS__];
 
-        uint8_t wridx;
-        uint8_t rdidx;
-        uint8_t size;
+        uint16_t head;
+        uint16_t count;
 } printk_log_t;
 
 /*==============================================================================
@@ -66,7 +65,7 @@ typedef struct {
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static printk_log_t log_buf;
+static printk_log_t logbuf;
 
 /*==============================================================================
   Exported objects
@@ -92,29 +91,34 @@ void _printk(const char *format, ...)
 {
         _kernel_scheduler_lock();
         {
-                if (log_buf.size >= __OS_SYSTEM_MSG_ROWS__) {
-                        log_buf.size = __OS_SYSTEM_MSG_ROWS__;
-                        if (++log_buf.rdidx >= __OS_SYSTEM_MSG_ROWS__) {
-                                log_buf.rdidx = 0;
-                        }
-                } else {
-                        log_buf.size++;
+                u16_t prev_head = logbuf.head;
+
+                if (logbuf.count < __OS_SYSTEM_MSG_ROWS__) {
+                        logbuf.count++;
+                }
+
+                if (++logbuf.head >= __OS_SYSTEM_MSG_ROWS__) {
+                        logbuf.head = 0;
                 }
 
                 va_list args;
                 va_start(args, format);
-                int len = _vsnprintf(log_buf.msg[log_buf.wridx].str,
+                int len = _vsnprintf(logbuf.msg[logbuf.head].str,
                                      __OS_SYSTEM_MSG_COLS__, format, args);
                 va_end(args);
 
-                if (log_buf.msg[log_buf.wridx].str[len - 1] == '\n') {
-                        log_buf.msg[log_buf.wridx].str[len - 1] = '\0';
+                if (logbuf.msg[logbuf.head].str[len - 1] == '\n') {
+                        logbuf.msg[logbuf.head].str[len - 1] = '\0';
                 }
 
-                log_buf.msg[log_buf.wridx].timestamp = _kernel_get_time_ms();
+                u32_t now = _kernel_get_time_ms();
+                logbuf.msg[logbuf.head].timestamp.tv_sec  = now / 1000;
+                logbuf.msg[logbuf.head].timestamp.tv_usec = (now % 1000) * 1000;
 
-                if (++log_buf.wridx >= __OS_SYSTEM_MSG_ROWS__) {
-                        log_buf.wridx = 0;
+                if (logbuf.msg[logbuf.head].timestamp.tv_sec == logbuf.msg[prev_head].timestamp.tv_sec) {
+                        if (logbuf.msg[prev_head].timestamp.tv_usec >= logbuf.msg[logbuf.head].timestamp.tv_usec) {
+                                logbuf.msg[logbuf.head].timestamp.tv_usec = logbuf.msg[prev_head].timestamp.tv_usec + 1;
+                        }
                 }
         }
         _kernel_scheduler_unlock();
@@ -126,32 +130,50 @@ void _printk(const char *format, ...)
  *
  * @param str           destination buffer
  * @param len           destination buffer length
- * @param timestamp_ms  message timestamp in milliseconds
+ * @param from_time     log search time starting from system start
+ * @param msg_time      current message time from system start
  *
  * @return Number of bytes copied to the buffer. 0 if message is empty.
  */
 //==============================================================================
-size_t _printk_read(char *str, size_t len, u32_t *timestamp_ms)
+size_t _printk_read(char *str, size_t len, const struct timeval *from_time, struct timeval *msg_time)
 {
         size_t n = 0;
 
-        if (str && len) {
+        if (str && len && from_time && msg_time) {
                 _kernel_scheduler_lock();
                 {
-                        if (log_buf.size > 0) {
-                                log_buf.size--;
+                        if (logbuf.count > 0) {
 
-                                strlcpy(str, log_buf.msg[log_buf.rdidx].str, len);
+                                i32_t idx = logbuf.head - logbuf.count + 1;
+                                      idx = idx < 0
+                                            ? cast(i32_t, ARRAY_SIZE(logbuf.msg)) + idx
+                                            : idx;
 
-                                n = min(len, strnlen(log_buf.msg[log_buf.rdidx].str,
-                                                     __OS_SYSTEM_MSG_COLS__));
+                                size_t msgs = logbuf.count;
 
-                                if (timestamp_ms) {
-                                        *timestamp_ms = log_buf.msg[log_buf.rdidx].timestamp;
-                                }
+                                while (msgs--) {
 
-                                if (++log_buf.rdidx >= __OS_SYSTEM_MSG_ROWS__) {
-                                        log_buf.rdidx = 0;
+                                        struct msg *m = &logbuf.msg[idx];
+
+                                        if (  (m->timestamp.tv_sec > from_time->tv_sec)
+                                           || (  (m->timestamp.tv_sec == from_time->tv_sec)
+                                              && (m->timestamp.tv_usec > from_time->tv_usec)) ) {
+
+                                                strlcpy(str, logbuf.msg[idx].str, len);
+
+                                                n = min(len, strnlen(logbuf.msg[idx].str,
+                                                                     __OS_SYSTEM_MSG_COLS__));
+
+                                                *msg_time = m->timestamp;
+
+                                                break;
+
+                                        } else {
+                                                if (++idx >= cast(i32_t, ARRAY_SIZE(logbuf.msg))) {
+                                                        idx = 0;
+                                                }
+                                        }
                                 }
                         }
                 }
@@ -170,7 +192,7 @@ void _printk_clear(void)
 {
         _kernel_scheduler_lock();
         {
-                memset(&log_buf, 0, sizeof(log_buf));
+                memset(&logbuf, 0, sizeof(logbuf));
         }
         _kernel_scheduler_unlock();
 }

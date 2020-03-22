@@ -93,16 +93,20 @@ this:SetToolTip("Number of threads that can be started by user process.")
 
 /*--
 this:AddWidget("Combobox", "Mode of kworker syscall threads")
-this:AddItem("Automatic syscall thread allocation", "0")
-this:AddItem("Fixed number of syscall threads", "1")
-this:SetToolTip("When 'Automatic syscall thread allocation' is enabled then system creates\n"..
+this:AddItem("Mode 0: Automatic syscall thread allocation", "0")
+this:AddItem("Mode 1: Fixed number of syscall threads", "1")
+this:AddItem("Mode 2: Flat syscalls handling", "2")
+this:SetToolTip("When 'Mode 0: Automatic syscall thread allocation' is enabled then system creates\n"..
                 "syscall threads on demand. This option is slow but if system usage is\n"..
                 "not too intense then this option can limit RAM usage (peek usage can be high).\n\n"..
-                "When 'Fixed number of syscall threads' is used then user define how many\n"..
+                "When 'Mode 1: Fixed number of syscall threads' is used then user define how many\n"..
                 "syscall threads are created at system startup. This option provides\n"..
-                "the fastest response for syscalls but may use a lot of RAM.")
+                "fast response for syscalls but may use a lot of RAM.\n\n"..
+                "When 'Mode 2: Flat syscalls handling' is used then syscalls are handled directly "..
+                "by client process/thread. This option provides the fastest response for syscalls\n"..
+                "but each process must increase stack size for IO operations e.g. file system.")
 --*/
-#define __OS_TASK_KWORKER_MODE__ 1
+#define __OS_TASK_KWORKER_MODE__ 2
 
 /*--
 this:AddWidget("Spinbox", 2, 32, "Maximum number of kworker threads")
@@ -113,11 +117,18 @@ this:SetToolTip("Number of threads that can be started by system process.")
 /*--
 this:AddWidget("Spinbox", 1, 32, "Number of fixed I/O kworker threads")
 this:SetToolTip("Number of kworker threads for I/O syscall handling.\n"..
-                "Option valid only for 'Fixed number of syscall threads' mode.")
+                "Option valid only for 'Mode 1: Fixed number of syscall threads'.")
 --*/
-#define __OS_TASK_KWORKER_IO_THREADS__ 3
+#define __OS_TASK_KWORKER_IO_THREADS__ 4
 
-
+/*--
+this:AddWidget("Combobox", "Priority management of syscall threads")
+this:AddItem("Equal priority for all", "0")
+this:AddItem("The same as the application thread", "1")
+this:SetToolTip("Number of kworker threads for I/O syscall handling.\n"..
+                "Option valid only for 'Mode 1: Fixed number of syscall threads'.")
+--*/
+#define __OS_TASK_KWORKER_THREADS_PRIORITY__ 0
 
 /*--
 this:AddExtraWidget("Label", "LabelFeatures", "\nSystem features (advanced)", -1, "bold")
@@ -152,6 +163,12 @@ this:AddWidget("Checkbox", "printf() family functions")
 this:SetToolTip("If this function is selected then printf() family function can be used by the application.")
 --*/
 #define __OS_PRINTF_ENABLE__ _YES_
+
+/*--
+this:AddWidget("Checkbox", "printf() float support (%f flag)")
+this:SetToolTip("If this function is selected then printf() support float to string conversion.")
+--*/
+#define __OS_PRINTF_FLOAT_ENABLE__ _YES_
 
 /*--
 this:AddWidget("Checkbox", "scanf() family functions")
@@ -238,12 +255,6 @@ this:SetToolTip("If this function is selected then system messages can be send t
 #define __OS_SYSTEM_MSG_ENABLE__ _YES_
 
 /*--
-this:AddWidget("Checkbox", "Filesystem cache")
-this:SetToolTip("If this option is selected then some file system are using cache to speed up IO operations.")
---*/
-#define __OS_SYSTEM_FS_CACHE_ENABLE__ _NO_
-
-/*--
 this:AddWidget("Checkbox", "Execute scripts")
 this:SetToolTip("If this option is enabled then system is able to run scripts with shebang (#!).")
 --*/
@@ -281,18 +292,11 @@ this:SetToolTip("This option determine how many characters in row can be stored.
 #define __OS_SYSTEM_MSG_COLS__ 64
 
 /*--
-this:AddWidget("Spinbox", 1, 250, "System log rows")
+this:AddWidget("Spinbox", 1, 4096, "System log rows")
 this:SetToolTip("This option determine how many rows is stored in buffer. " ..
                 "Option is active when system log function is enabled.")
 --*/
 #define __OS_SYSTEM_MSG_ROWS__ 24
-
-/*--
-this:AddWidget("Spinbox", 0, 65536, "Cache subsystem gap [bytes]")
-this:SetToolTip("This option determine how many free memory in bytes should be " ..
-                "reserved for normal operations that are not used by cache subsystem.")
---*/
-#define __OS_SYSTEM_CACHE_MIN_FREE__ 1024
 
 /*--
 this:AddWidget("Spinbox", 10, 600, "Cache synchronization interval [s]")
@@ -316,6 +320,22 @@ this:SetToolTip("The error messages are used to deliver users an information abo
                 "This option is used to translate errno error number to user friendly strings.")
 --*/
 #define __OS_ERRNO_STRING_LEN__ 3
+
+/*--
+this:AddWidget("Combobox", "Heap sanity check")
+this:AddItem("Disable", "_NO_")
+this:AddItem("Enable", "_YES_")
+this:SetToolTip("Enable/Disable sanity check of heap memory.")
+--*/
+#define __OS_HEAP_SANITY_CHECK__ _NO_
+
+/*--
+this:AddWidget("Combobox", "Heap block overflow check")
+this:AddItem("Disable", "_NO_")
+this:AddItem("Enable", "_YES_")
+this:SetToolTip("Enable/Disable block overflow check of heap memory.")
+--*/
+#define __OS_HEAP_OVERFLOW_CHECK__ _NO_
 
 
 /*--

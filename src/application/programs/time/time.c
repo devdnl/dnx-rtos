@@ -111,7 +111,7 @@ int_main(time, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
         }
 
         u32_t total_time = get_time_ms() - start_time;
-        printf("\nreal\t%dm%d.%03ds\n", total_time / 60000, (total_time / 1000) % 60, total_time % 1000);
+        printf("\nreal\t%um%u.%03us\n", total_time / 60000, (total_time / 1000) % 60, total_time % 1000);
 
         return EXIT_SUCCESS;
 }

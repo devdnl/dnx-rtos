@@ -156,7 +156,7 @@ API_MOD_RELEASE(I2C, void *device_handle)
         if (!err) {
                 _I2C[hdl->major]->dev_cnt--;
                 release_resources(hdl->major);
-                sys_free(device_handle);
+                sys_free(&device_handle);
         }
 
         return err;
@@ -231,16 +231,24 @@ API_MOD_WRITE(I2C,
 
                 } else {
                         err = _I2C_LLD__start(hdl);
-                        if (err) goto error;
+                        if (err) {
+                                printk("I2C%d:%d start error", hdl->major, hdl->minor);
+                                goto error;
+                        }
 
                         err = _I2C_LLD__send_address(hdl, true, count);
                         if (err) {
+                                printk("I2C%d:%d address %Xh error",
+                                       hdl->major, hdl->minor, hdl->config.address);
                                 goto error;
                         }
 
                         if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                                 err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
-                                if (err) goto error;
+                                if (err) {
+                                        printk("I2C%d:%d subaddress error", hdl->major, hdl->minor);
+                                        goto error;
+                                }
                         }
 
                         err = _I2C_LLD__transmit(hdl, src, count, wrcnt);
@@ -250,6 +258,10 @@ API_MOD_WRITE(I2C,
                 }
 
                 sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
+        }
+
+        if (err) {
+                printk("I2C%d:%d write error %d", hdl->major, hdl->minor, err);
         }
 
         return err;
@@ -289,28 +301,52 @@ API_MOD_READ(I2C,
                 } else {
                         if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                                 err = _I2C_LLD__start(hdl);
-                                if (err) goto error;
+                                if (err) {
+                                        printk("I2C%d:%d start error", hdl->major, hdl->minor, err);
+                                        goto error;
+                                }
 
                                 err = _I2C_LLD__send_address(hdl, true, count);
-                                if (err) goto error;
+                                if (err) {
+                                        printk("I2C%d:%d address %Xh error",
+                                               hdl->major, hdl->minor, hdl->config.address);
+                                        goto error;
+                                }
 
                                 err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
-                                if (err) goto error;
+                                if (err) {
+                                        printk("I2C%d:%d subaddress error", hdl->major, hdl->minor);
+                                        goto error;
+                                }
                         }
 
                         err = _I2C_LLD__repeat_start(hdl);
-                        if (err) goto error;
+                        if (err) {
+                                printk("I2C%d:%d repeat start error", hdl->major, hdl->minor);
+                                goto error;
+                        }
 
                         err = _I2C_LLD__send_address(hdl, false, count);
-                        if (err) goto error;
+                        if (err) {
+                                printk("I2C%d:%d address %Xh error",
+                                       hdl->major, hdl->minor, hdl->config.address);
+                                goto error;
+                        }
 
                         err = _I2C_LLD__receive(hdl, dst, count, rdcnt);
+                        if (err) {
+                                printk("I2C%d:%d receive error", hdl->major, hdl->minor);
+                        }
 
                         error:
                         _I2C_LLD__stop(hdl);
                 }
 
                 sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
+        }
+
+        if (err) {
+                printk("I2C%d:%d read error %d", hdl->major, hdl->minor, err);
         }
 
         return err;
@@ -365,6 +401,13 @@ API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
                                 sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
                         }
                         break;
+
+                case IOCTL_I2C__CONFIGURE_RECOVERY:
+                        err = sys_mutex_lock(_I2C[hdl->major]->lock_mtx, ACCESS_TIMEOUT);
+                        if (!err) {
+                                _I2C[hdl->major]->recovery = *cast(const I2C_recovery_t*, arg);
+                                sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
+                        }
                         break;
 
                 default:
@@ -454,20 +497,23 @@ static void release_resources(u8_t major)
 //==============================================================================
 static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mode)
 {
-        int  err = EIO;
+        int  err = 0;
         u8_t n   = 0;
         u8_t addr[4];
 
-        switch (mode) {
-        case I2C_SUB_ADDR_MODE__3_BYTES: addr[n++] = address >> 16;
-        case I2C_SUB_ADDR_MODE__2_BYTES: addr[n++] = address >> 8;
-        case I2C_SUB_ADDR_MODE__1_BYTE : addr[n++] = address & 0xFF;
+        if (mode >= I2C_SUB_ADDR_MODE__3_BYTES) {
+                addr[n++] = address >> 16;
+        }
+
+        if (mode >= I2C_SUB_ADDR_MODE__2_BYTES) {
+                addr[n++] = address >> 8;
+        }
+
+        if (mode >= I2C_SUB_ADDR_MODE__1_BYTE) {
+                addr[n++] = address & 0xFF;
+
                 size_t wrcnt = 0;
                 err = _I2C_LLD__transmit(hdl, addr, n, &wrcnt);
-                        break;
-
-        default:
-                break;
         }
 
         return err;

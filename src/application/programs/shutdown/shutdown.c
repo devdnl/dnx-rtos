@@ -70,6 +70,9 @@ int_main(shutdown, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argv;
 
         sync();
+
+        // TODO umount needed.
+
         system_shutdown();
 
         return EXIT_SUCCESS;

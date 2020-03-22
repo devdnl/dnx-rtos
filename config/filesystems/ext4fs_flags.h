@@ -62,7 +62,7 @@ this:AddItem("Enable", "1")
 #define __EXT4FS_CFG_DIR_INDEXING__ 1
 
 /*--
-this:AddWidget("Spinbox", 1, 8, "Number of cache blocks")
+this:AddWidget("Spinbox", 1, 128, "Number of cache blocks")
 this:SetToolTip("This value determines how many blocks is cached. The 4 blocks "..
                 "is good enough to get nice read/write speed. Single cache "..
                 "allocate the size of block (at least 1 KiB).")

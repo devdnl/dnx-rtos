@@ -127,7 +127,7 @@ typedef struct {
         const char *p_stderr;           /*!< stderr file path (minor).*/
         const char *cwd;                /*!< working directory path.*/
         i16_t       priority;           /*!< process priority.*/
-        bool        has_parent;         /*!< parent exist and is waiting for this process.*/
+        bool        detached;           /*!< process detached from parent.*/
 } process_attr_t;
 
 /**
@@ -251,15 +251,13 @@ extern int _errno;
                 .p_stdin   = NULL,
                 .p_stdout  = NULL,
                 .p_stderr  = NULL,
-                .no_parent = false
+                .detached  = false
         }
 
         pid_t pid = process_create("ls /", &attr);
         if (pid) {
-                process_wait(pid, MAX_DELAY_MS);
-
                 int exit_code = 0;
-                process_delete(pid, &exit_code);
+                process_wait(pid, &exit_code, MAX_DELAY_MS);
         } else {
                 perror("Program not started");
 
@@ -310,7 +308,7 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
                 .p_stdin   = NULL,
                 .p_stdout  = NULL,
                 .p_stderr  = NULL,
-                .parent    = true
+                .detached  = true
         }
 
         pid_t pid = process_create("cat", &attr);
@@ -334,6 +332,7 @@ static inline int process_kill(pid_t pid)
 {
         int r = -1;
         syscall(SYSCALL_PROCESSKILL, &r, &pid);
+        syscall(SYSCALL_PROCESSCLEANZOMBIE, &r, &pid, NULL);
         return r;
 }
 
@@ -371,7 +370,7 @@ static inline int process_kill(pid_t pid)
                 .p_stdin   = NULL,
                 .p_stdout  = NULL,
                 .p_stderr  = NULL,
-                .no_parent = false
+                .detached  = false
         }
 
         int   status = -1;
@@ -398,6 +397,7 @@ static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
                 _errno = _builtinfunc(flag_wait, flag, _PROCESS_EXIT_FLAG(0), timeout);
                 if (_errno == 0) {
                         syscall(SYSCALL_PROCESSCLEANZOMBIE, &r, &pid, status);
+                        _builtinfunc(sleep_ms, 1);
                 }
                 r = _errno ? -1 : 0;
         }
@@ -593,12 +593,20 @@ static inline int process_get_priority(pid_t pid)
         {
                 errno = 0;
 
-                tid_t tid = thread_create(thread, NULL, (void*)0);
+                const thread_attr_t attr = {
+                        .stack_depth = STACK_DEPTH_LOW,
+                        .priority    = PRIORITY_NORMAL,
+                        .detached    = false
+                }
+
+                tid_t tid = thread_create(thread, &attr, NULL);
                 if (tid) {
                         printf("Thread %d created\n", (int)tid);
                 } else {
                         perror("Thread not created");
                 }
+
+                // ...
         }
 
         // ...

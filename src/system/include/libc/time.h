@@ -391,7 +391,7 @@ static inline clock_t clock(void)
 //==============================================================================
 static inline double difftime(time_t end, time_t beginning)
 {
-        return (double)(end - beginning) / (double)CLOCKS_PER_SEC;
+        return (double)(end - beginning);
 }
 
 //==============================================================================
@@ -478,14 +478,15 @@ static inline time_t mktime(struct tm *timeptr)
 static inline time_t time(time_t *timer)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
-        time_t time = -1;
-        syscall(SYSCALL_GETTIME, &time);
+        struct timeval timeval;
+        int err = -1;
+        syscall(SYSCALL_GETTIME, &err, &timeval);
 
         if (timer) {
-                *timer = time;
+                *timer = timeval.tv_sec;
         }
 
-        return time;
+        return err ? (time_t)-1 : timeval.tv_sec;
 #else
         UNUSED_ARG1(timer);
         return -1;

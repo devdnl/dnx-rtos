@@ -45,6 +45,7 @@ Brief   SD Card Interface Driver.
 #define USE_DMA                         _SDIO_CFG_USEDMA
 #define CARD_DT_CK_TIMEOUT              0xFFFFFF
 #define TRANSACTION_TIMEOUT             (2 * (_SDIO_CFG_CARD_TIMEOUT))
+#define COMMAND_TIMEOUT                 ((_SDIO_CFG_CARD_TIMEOUT) / 1)
 
 #define DMA_MAJOR                       1
 #define DMA_CHANNEL                     4
@@ -141,7 +142,7 @@ static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg);
 static int card_get_response(SD_response_t *resp, resp_t type);
 static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address, size_t *rdsec);
 static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t address, size_t *wrsec);
-static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir);
+static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address, u8_t *buf, size_t count, dir_t dir);
 static int MBR_detect_partitions(SDIO_t *hdl);
 
 #if USE_DMA != USE_DMA_NEVER
@@ -200,7 +201,7 @@ API_MOD_INIT(SDIO, void **device_handle, u8_t major, u8_t minor)
 
                 if (!hdl->ctrl->dmad) {
                         printk("SDIO: could not reserve DMA stream");
-                        err = EBUSY;
+                        err = EIO;
                         goto finish;
                 }
 #endif
@@ -545,7 +546,15 @@ static int card_read(SDIO_t *hdl, u8_t *dst, size_t count, u64_t lseek, size_t *
                         lseek /= SECTOR_SIZE;
 
                         size_t rdsec = 0;
-                        err = card_read_sectors(hdl, dst, count, lseek, &rdsec);
+
+                        for (int i = 0; i < 3; i++) {
+                                err = card_read_sectors(hdl, dst, count, lseek, &rdsec);
+                                if (!err) {
+                                        break;
+                                } else {
+                                        card_initialize(hdl);
+                                }
+                        }
 
                         *rdcnt = rdsec * SECTOR_SIZE;
 
@@ -580,10 +589,18 @@ static int card_write(SDIO_t *hdl, const u8_t *src, size_t count, u64_t lseek, s
                         count /= SECTOR_SIZE;
                         lseek /= SECTOR_SIZE;
 
-                        size_t rdsec = 0;
-                        err = card_write_sectors(hdl, src, count, lseek, &rdsec);
+                        size_t wrsec = 0;
 
-                        *wrcnt = rdsec * SECTOR_SIZE;
+                        for (int i = 0; i < 3; i++) {
+                                err = card_write_sectors(hdl, src, count, lseek, &wrsec);
+                                if (!err) {
+                                        break;
+                                } else {
+                                        card_initialize(hdl);
+                                }
+                        }
+
+                        *wrcnt = wrsec * SECTOR_SIZE;
 
                 } else {
                         err = ESPIPE;
@@ -730,15 +747,15 @@ static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg)
         u32_t timer = sys_time_get_reference();
 
         if (resp == CMD_RESP_NONE) {
-                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                while (  !sys_time_is_expired(timer, COMMAND_TIMEOUT)
                       && !(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDSENT)));
 
         } else {
-                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                while (  !sys_time_is_expired(timer, COMMAND_TIMEOUT)
                       && !(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDREND | SDIO_STA_CCRCFAIL)));
         }
 
-        if (  sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+        if (  sys_time_is_expired(timer, COMMAND_TIMEOUT)
            || (SDIO->STA & SDIO_STA_CTIMEOUT) ) {
                 printk("SDIO: Command Timeout Error");
                 return ETIME;
@@ -838,21 +855,21 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
 #endif
 
         if (count == 1) {
-                catcherr(err = card_send_cmd(SD_CMD__CMD17, CMD_RESP_SHORT, address), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1), exit);
-                catcherr(err = card_transfer_block(hdl, dst, 1, DIR_IN), exit);
+                catcherr(err = card_transfer_block(hdl, SD_CMD__CMD17, address, dst, 1, DIR_IN), exit);
+                *rdsec = 1;
 
         } else {
-                catcherr(err = card_send_cmd(SD_CMD__CMD18, CMD_RESP_SHORT, address), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1), exit);
+                while (count > 0) {
+                        size_t blocks_to_transfer = min(count, 511);
+                        catcherr(err = card_transfer_block(hdl, SD_CMD__CMD18, address, dst, blocks_to_transfer, DIR_IN), exit);
+                        catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
+                        catcherr(err = card_get_response(&resp, RESP_R1b), exit);
 
-                catcherr(err = card_transfer_block(hdl, dst, count, DIR_IN), exit);
-
-                catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1b), exit);
+                        dst    += blocks_to_transfer * SECTOR_SIZE;
+                        count  -= blocks_to_transfer;
+                        *rdsec += blocks_to_transfer;
+                }
         }
-
-        *rdsec = count;
 
         exit:
 #if USE_DMA == USE_DMA_IFAVAILABLE
@@ -893,32 +910,34 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
 #endif
 
         if (count == 1) {
-                catcherr(err = card_send_cmd(SD_CMD__CMD24, CMD_RESP_SHORT, address), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1), exit);
-                catcherr(err = card_transfer_block(hdl, const_cast(u8_t *, src), 1, DIR_OUT), exit);
+                catcherr(err = card_transfer_block(hdl, SD_CMD__CMD24, address, const_cast(u8_t *, src), 1, DIR_OUT), exit);
 
                 do {
                         catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
                         catcherr(err = card_get_response(&resp, RESP_R1b), exit);
                 } while (!(resp.RESPONSE[0] & 0x100));
 
+                *wrsec = 1;
+
         } else {
-                catcherr(err = card_send_cmd(SD_CMD__CMD25, CMD_RESP_SHORT, address), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1), exit);
+                while (count > 0) {
+                        size_t blocks_to_transfer = min(count, 511);
 
-                catcherr(err = card_transfer_block(hdl, const_cast(u8_t *, src), count, DIR_OUT), exit);
-
-                catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
-                catcherr(err = card_get_response(&resp, RESP_R1b), exit);
-
-                while (!(resp.RESPONSE[0] & 0x100)) {
-                        sys_sleep_ms(1);
-                        catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
+                        catcherr(err = card_transfer_block(hdl, SD_CMD__CMD25, address, const_cast(u8_t *, src), blocks_to_transfer, DIR_OUT), exit);
+                        catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
                         catcherr(err = card_get_response(&resp, RESP_R1b), exit);
+
+                        while (!(resp.RESPONSE[0] & 0x100)) {
+                                sys_sleep_ms(1);
+                                catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
+                                catcherr(err = card_get_response(&resp, RESP_R1b), exit);
+                        }
+
+                        src    += blocks_to_transfer * SECTOR_SIZE;
+                        count  -= blocks_to_transfer;
+                        *wrsec += blocks_to_transfer;
                 }
         }
-
-        *wrsec = count;
 
         exit:
 #if USE_DMA == USE_DMA_IFAVAILABLE
@@ -939,7 +958,8 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
+static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
+                               u8_t *buf, size_t count, dir_t dir)
 {
         int err = EIO;
 
@@ -963,12 +983,13 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                                 | DMA_SxCR_PINC_FIXED
                                 | DMA_SxCR_PSIZE_WORD
                                 | DMA_SxCR_MINC_ENABLE
-                                | DMA_SxCR_MSIZE_WORD
+                                | DMA_SxCR_MSIZE_BYTE
                                 | DMA_SxCR_CIRC_DISABLE
                                 | DMA_SxCR_PFCTRL_PER;
                 config.FC       = DMA_SxFCR_FEIE_DISABLE
                                 | DMA_SxFCR_DMDIS_YES
                                 | DMA_SxFCR_FTH_FULL;
+                config.IRQ_priority = _SDIO_CFG_IRQ_PRIORITY;
 
                 err = _DMA_DDI_transfer(hdl->ctrl->dmad, &config);
                 if (!err) {
@@ -984,11 +1005,35 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
 
                         SDIO->DLEN   = count * SECTOR_SIZE;
 
-                        SDIO->DCTRL  = SDIO_DCTRL_DBLOCKSIZE_512
-                                     | SDIO_DCTRL_DMAEN
-                                     | SDIO_DCTRL_DTMODE_BLOCK
-                                     | ((dir == DIR_IN) ? SDIO_DCTRL_DTDIR_FROM_CARD : SDIO_DCTRL_DTDIR_TO_CARD)
-                                     | SDIO_DCTRL_DTEN;
+                        /*
+                         * NOTE: this is ugly solution to disable all ISRs but
+                         *       it is a only way to be sure that this part of
+                         *       code will not interrupted.
+                         *       If card works OK then this lock is short.
+                         */
+                        sys_ISR_disable();
+                        {
+                                err = card_send_cmd(cmd, CMD_RESP_SHORT, address);
+                                if (err) {
+                                        sys_ISR_enable();
+                                        return err;
+                                }
+
+                                SD_response_t resp;
+                                err = card_get_response(&resp, RESP_R1);
+                                if (err) {
+                                        sys_ISR_enable();
+                                        return err;
+                                }
+
+                                SDIO->DCTRL  = SDIO_DCTRL_DBLOCKSIZE_512
+                                             | SDIO_DCTRL_DMAEN
+                                             | SDIO_DCTRL_DTMODE_BLOCK
+                                             | ((dir == DIR_IN) ? SDIO_DCTRL_DTDIR_FROM_CARD
+                                                                : SDIO_DCTRL_DTDIR_TO_CARD)
+                                             | SDIO_DCTRL_DTEN;
+                        }
+                        sys_ISR_enable();
 
                         int err_ev = EIO;
                         err = sys_queue_receive(hdl->ctrl->event, &err_ev, TRANSACTION_TIMEOUT);
@@ -1029,32 +1074,52 @@ static int card_transfer_block(SDIO_t *hdl, u8_t *buf, size_t count, dir_t dir)
                 hdl->ctrl->buf   = cast(u32_t*, buf);
                 hdl->ctrl->count = (count * SECTOR_SIZE) / sizeof(SDIO->FIFO);
 
-                SDIO->MASK   = 0;
-                SDIO->ICR    = UINT32_MAX;
-
-                NVIC_SetPriority(SDIO_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
-                NVIC_ClearPendingIRQ(SDIO_IRQn);
-                NVIC_EnableIRQ(SDIO_IRQn);
-
-                SDIO->ICR    = UINT32_MAX;
-
-                SDIO->MASK   = SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT
-                             | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR
-                             | SDIO_STA_STBITERR
-                             | ((dir == DIR_IN) ? ( SDIO_STA_RXFIFOHF
+                SDIO->ICR = UINT32_MAX;
+                SDIO->MASK = 0;
+                SDIO->MASK = SDIO_STA_DCRCFAIL | SDIO_STA_DTIMEOUT
+                           | SDIO_STA_TXUNDERR | SDIO_STA_RXOVERR
+                           | SDIO_STA_STBITERR
+                           | ((dir == DIR_IN) ? ( SDIO_STA_RXFIFOHF
                                                   | SDIO_STA_DATAEND
                                                   | SDIO_STA_DBCKEND )
                                                 : SDIO_STA_TXFIFOHE);
 
                 SDIO->DTIMER = CARD_DT_CK_TIMEOUT;
 
-                SDIO->DLEN   = count * SECTOR_SIZE;
+                SDIO->DLEN = count * SECTOR_SIZE;
 
-                SDIO->DCTRL  = SDIO_DCTRL_DBLOCKSIZE_512
-                             | SDIO_DCTRL_DTMODE_BLOCK
-                             | ((dir == DIR_IN) ? SDIO_DCTRL_DTDIR_FROM_CARD
-                                                : SDIO_DCTRL_DTDIR_TO_CARD)
-                             | SDIO_DCTRL_DTEN;
+                /*
+                 * NOTE: this is ugly solution to disable all ISRs but
+                 *       it is a only way to be sure that this part of
+                 *       code will not interrupted.
+                 *       If card works OK then this lock is short.
+                 */
+                sys_ISR_disable();
+                {
+                        err = card_send_cmd(cmd, CMD_RESP_SHORT, address);
+                        if (err) {
+                                sys_ISR_enable();
+                                return err;
+                        }
+
+                        SD_response_t resp;
+                        err = card_get_response(&resp, RESP_R1);
+                        if (err) {
+                                sys_ISR_enable();
+                                return err;
+                        }
+
+                        NVIC_SetPriority(SDIO_IRQn, _SDIO_CFG_IRQ_PRIORITY);
+                        NVIC_ClearPendingIRQ(SDIO_IRQn);
+                        NVIC_EnableIRQ(SDIO_IRQn);
+
+                        SDIO->DCTRL  = SDIO_DCTRL_DBLOCKSIZE_512
+                                     | SDIO_DCTRL_DTMODE_BLOCK
+                                     | ((dir == DIR_IN) ? SDIO_DCTRL_DTDIR_FROM_CARD
+                                                        : SDIO_DCTRL_DTDIR_TO_CARD)
+                                     | SDIO_DCTRL_DTEN;
+                }
+                sys_ISR_enable();
 
                 int err_ev = EIO;
                 err = sys_queue_receive(hdl->ctrl->event, &err_ev, TRANSACTION_TIMEOUT);

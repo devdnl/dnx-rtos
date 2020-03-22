@@ -106,6 +106,7 @@ typedef struct {
         u32_t     PA;           /*! user configuration: peripheral address */
         u32_t     MA;           /*! user configuration: memory address */
         bool      release;      /*! user configuration: automatically release stream */
+        uint32_t  IRQ_priority; /*! user configuration: IRQ priority */
 } _DMA_DDI_config_t;
 
 /*==============================================================================

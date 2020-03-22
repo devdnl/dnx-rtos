@@ -6,7 +6,7 @@
 # @brief   This file contains CPU configuration flags.
 #          Hybrid file: included both by Make and CC.
 #
-# @note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+# @note    Copyright (C) 2019 Daniel Zorychta <daniel.zorychta@gmail.com>
 #
 #          This program is free software; you can redistribute it and/or modify
 #          it under the terms of the GNU General Public License as published by
@@ -116,26 +116,48 @@ __CPU_NAME__=STM32F103TBxx
 # */
 
 #/*--
+# this:AddWidget("Combobox", "RTOS Kernel IRQ priority")
+# uC.AddPriorityItems(this, true)
+#--*/
+#define __CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__ 15
+
+#/*--
+# this:AddWidget("Combobox", "Max RTOS API call IRQ priority")
+# uC.AddPriorityItems(this, true)
+#--*/
+#define __CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ 14
+
+#/*--
 # this:AddWidget("Combobox", "Default IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_DEFAULT_IRQ_PRIORITY__ 15
+#define __CPU_DEFAULT_IRQ_PRIORITY__ 14
 
+#/*--
+# this:AddWidget("Combobox", "Interruption of Multi-cycle instructions")
+# this:AddItem("Enable", "_NO_")
+# this:AddItem("Disable", "_YES_")
+#--*/
+#define __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ _NO_
+
+#/*--
+# this:AddWidget("Editline", false, "Interrupt vector position")
+#--*/
+#define __CPU_VTOR_TAB_POSITION__ 0x00000
 
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------
 #define _CPU_START_FREQUENCY_           (8000000UL)
 #define _CPU_HEAP_ALIGN_                (4)
-#define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (15 << 4)
-#define _CPU_IRQ_RTOS_SYSCALL_PRIORITY_ (14 << 4)
-#define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (13 << 4)
-#define _CPU_IRQ_SAFE_PRIORITY_         (15)
+#define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (__CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__ << 4)
+#define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (__CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ << 4)
+#define _CPU_IRQ_SAFE_PRIORITY_         (__CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__)
 #define ARCH_stm32f1
 #/*
-CPUCONFIG_AFLAGS=-mcpu=cortex-m3 -mthumb -mthumb-interwork -DGCC_ARMCM3
-CPUCONFIG_CFLAGS=-mcpu=cortex-m3 -mthumb -mthumb-interwork -DGCC_ARMCM3
-CPUCONFIG_CXXFLAGS=-mcpu=cortex-m3 -mthumb -mthumb-interwork -DGCC_ARMCM3
+CPUCONFIG_AFLAGS=-mcpu=cortex-m3 -mthumb -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM3
+CPUCONFIG_CFLAGS=-mcpu=cortex-m3 -mthumb -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM3
+CPUCONFIG_CXXFLAGS=-mcpu=cortex-m3 -mthumb -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM3
 CPUCONFIG_LDFLAGS=-mcpu=cortex-m3 -mthumb -mthumb-interwork -nostartfiles -T./src/system/cpu/stm32f1/ld/$(__CPU_NAME__).ld
 #*/
 

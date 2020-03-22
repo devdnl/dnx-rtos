@@ -59,7 +59,6 @@
 #include "kernel/time.h"
 #include "kernel/process.h"
 #include "kernel/syscall.h"
-#include "mm/cache.h"
 #include "fs/vfs.h"
 #include "drivers/drvctrl.h"
 #include "cpu/cpuctl.h"
@@ -1920,7 +1919,7 @@ static inline int sys_btree_insert(btree_t *tree, void *data)
  * @note Function can be used only by file system or driver code.
  *
  * @param  tree         BTree object
- * @param  data         object to delete
+ * @param  key          object to delete
  *
  * @return One of errno value.
  *
@@ -1977,9 +1976,9 @@ static inline int sys_btree_insert(btree_t *tree, void *data)
    @endcode
  */
 //==============================================================================
-static inline int sys_btree_remove(btree_t *tree, void *data)
+static inline int sys_btree_remove(btree_t *tree, void *key)
 {
-        return _btree_remove(tree, data);
+        return _btree_remove(tree, key);
 }
 
 //==============================================================================
@@ -5043,7 +5042,7 @@ static inline u32_t sys_get_uptime_ms()
  *
  * @return Tick counter value.
  *
- * @see sys_get_time_ms(), sys_sleep_until(), sys_sleep_until_ms()
+ * @see sys_gettime_ms(), sys_sleep_until(), sys_sleep_until_ms()
  */
 //==============================================================================
 static inline u32_t sys_get_tick_counter()
@@ -5389,7 +5388,7 @@ static inline void sys_ISR_disable()
 //==============================================================================
 static inline void sys_ISR_enable()
 {
-        sys_ISR_enable();
+        _ISR_enable();
 }
 
 //==============================================================================
@@ -5418,6 +5417,27 @@ static inline void sys_context_switch_lock()
 static inline void sys_context_switch_unlock()
 {
         _kernel_scheduler_unlock();
+}
+
+//==============================================================================
+/**
+ * @brief Function put to sleep thread for microseconds.
+ *
+ * @note Function can sleep longer that declared because of context switch
+ *       settings.
+ *
+ * @note Function work in critical section.
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param microseconds          number of microseconds of sleep
+ *
+ * @see sys_sleep(), sys_sleep_until(), sys_sleep_until_ms()
+ */
+//==============================================================================
+static inline void sys_sleep_us(const u32_t microseconds)
+{
+        _cpuctl_delay_us(microseconds);
 }
 
 //==============================================================================
@@ -5592,10 +5612,20 @@ static inline time_t sys_mktime(struct tm *timeptr)
  * @see sys_settime()
  */
 //==============================================================================
-static inline int sys_get_time(time_t *timer)
+static inline int sys_gettime(time_t *timer)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
-        return _gettime(timer);
+        struct timeval timeval;
+        int err = _gettime(&timeval);
+        if (!err) {
+                if (timer) {
+                        *timer = timeval.tv_sec;
+                } else {
+                        err = EINVAL;
+                }
+        }
+
+        return err;
 #else
         UNUSED_ARG1(timer);
         return ENOTSUP;
@@ -5689,64 +5719,6 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
         return tm;
 #endif
 }
-
-//==============================================================================
-/**
- * @brief  Function drop cache of selected device (sync on dirty pages).
- *         Function try to synchronize and drop cache of selected device file.
- *         If selected file is a regular file then operation is not continued
- *         because regular files are not cached directly. When file is a device
- *         file then cache is synchronized with storage and dropped from memory.
- *
- * @note Function can be used only by file system code.
- *
- * @param  file         file to synchronize.
- *
- * @return One of errno value.
- */
-//==============================================================================
-extern int sys_cache_drop(FILE *file);
-
-//==============================================================================
-/**
- * @brief Function write block to selected file. If cache exist then block is
- *        write to the cache. If cache does not exist then new one is created.
- *        Only files that are linked with drivers are cached, other files are
- *        written directly.
- *
- * @note Function can be used only by file system code.
- *
- * @param  file         file to write
- * @param  blkpos       block position
- * @param  blksz        block size
- * @param  blkcnt       block count
- * @param  buf          buffer to write from (blocks)
- * @param  mode         write mode
- *
- * @return One of errno value.
- */
-//==============================================================================
-extern int sys_cache_write(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, const u8_t *buf, enum cache_mode mode);
-
-//==============================================================================
-/**
- * @brief Function read block from selected file. If cache exist then cache
- *        data is used. If cache does not exist then file is read and new cache
- *        is created. Function does not cache blocks from files that are not
- *        directly connected do drivers.
- *
- * @note Function can be used only by file system code.
- *
- * @param  file         file to read
- * @param  blkpos       block position
- * @param  blksz        block size
- * @param  blkcnt       block count
- * @param  buf          buffer to read (blocks)
- *
- * @return One of errno value.
- */
-//==============================================================================
-extern int sys_cache_read(FILE *file, u32_t blkpos, size_t blksz, size_t blkcnt, u8_t *buf);
 
 //==============================================================================
 /**
@@ -5872,6 +5844,178 @@ static inline int sys_stropt_get_bool(const char *opts, const char *var, int def
 static inline bool sys_stropt_is_flag(const char *opts, const char *flag)
 {
         return _stropt_is_flag(opts, flag);
+}
+
+//==============================================================================
+/**
+ * @brief Function find driver name and then initialize device
+ *
+ * @note Function can be used only by driver code.
+ *
+ * @param [IN]  module              module name
+ * @param [IN]  major               major number
+ * @param [IN]  minor               minor number
+ * @param [OUT] id                  module id (can be NULL)
+ *
+ * @return One of error code (errno)
+ */
+//==============================================================================
+static inline int sys_driver_init(const char *module, u8_t major, u8_t minor, dev_t *id)
+{
+        return _driver_init(module, major, minor, NULL, id);
+}
+
+//==============================================================================
+/**
+ * @brief Function release selected device by using device ID
+ *
+ * @note Function can be used only by driver code.
+ *
+ * @param id                   device id
+ *
+ * @return One of error code (errno)
+ */
+//==============================================================================
+static inline int sys_driver_release(dev_t id)
+{
+        return _driver_release(id);
+}
+
+//==============================================================================
+/**
+ * @brief Function open selected driver
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param flags         flags
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_open(dev_t id, u32_t flags)
+{
+        return _driver_open(id, flags);
+}
+
+//==============================================================================
+/**
+ * @brief Function close selected driver
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param force         force close request
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_close(dev_t id, bool force)
+{
+        return _driver_close(id, force);
+}
+
+//==============================================================================
+/**
+ * @brief Function write data to driver
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param src           data source
+ * @param count         buffer size
+ * @param fpos          file position
+ * @param wrcnt         number of written bytes
+ * @param fattr         file attributes
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_write(dev_t            id,
+                                    const u8_t      *src,
+                                    size_t           count,
+                                    fpos_t          *fpos,
+                                    size_t          *wrcnt,
+                                    struct vfs_fattr fattr)
+{
+        return _driver_write(id, src, count, fpos, wrcnt, fattr);
+}
+
+//==============================================================================
+/**
+ * @brief Function read data to driver
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param dst           data destination
+ * @param count         buffer size
+ * @param fpos          file position
+ * @param rdcnt         number of read byes
+ * @param fattr         file attributes
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_read(dev_t            id,
+                                   u8_t            *dst,
+                                   size_t           count,
+                                   fpos_t          *fpos,
+                                   size_t          *rdcnt,
+                                   struct vfs_fattr fattr)
+{
+        return _driver_read(id, dst, count, fpos, rdcnt, fattr);
+}
+
+//==============================================================================
+/**
+ * @brief IO control
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param request       io request
+ * @param arg           argument
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_ioctl(dev_t id, int request, void *arg)
+{
+        return _driver_ioctl(id, request, arg);
+}
+
+//==============================================================================
+/**
+ * @brief Flush device buffer (forces write)
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_flush(dev_t id)
+{
+        return _driver_flush(id);
+}
+
+//==============================================================================
+/**
+ * @brief Device information
+ *
+ * @note Function can be used only by file system or driver code.
+ *
+ * @param id            module id
+ * @param stat          status object
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
+{
+        return _driver_stat(id, stat);
 }
 
 #ifdef __cplusplus

@@ -64,6 +64,7 @@ extern void  _cpuctl_restart_system             (void);
 extern void  _cpuctl_shutdown_system            (void);
 extern void  _cpuctl_sleep                      (void);
 extern void  _cpuctl_update_system_clocks       (void);
+extern void  _cpuctl_delay_us                   (u16_t);
 
 #if (__OS_MONITOR_CPU_LOAD__ > 0)
 extern void  _cpuctl_init_CPU_load_counter      (void);

@@ -38,6 +38,7 @@
 ==============================================================================*/
 #define RELEASE_TIMEOUT                         100
 #define RX_WAIT_TIMEOUT                         MAX_DELAY_MS
+#define TX_WAIT_TIMEOUT                         300000
 #define MTX_BLOCK_TIMEOUT                       MAX_DELAY_MS
 
 /*==============================================================================
@@ -166,7 +167,7 @@ API_MOD_RELEASE(UART, void *device_handle)
                         _UART_LLD__turn_off(hdl->major);
 
                         _UART_mem[hdl->major] = NULL;
-                        sys_free(device_handle);
+                        sys_free(&device_handle);
 
                         return ESUCC;
                 }
@@ -239,7 +240,7 @@ API_MOD_WRITE(UART,
 
         int err = sys_mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT);
         if (!err) {
-                u32_t timeout = CEILING((count * 10000), hdl->config.baud) + 100;
+                u32_t timeout = TX_WAIT_TIMEOUT;
 
                 hdl->Tx_buffer.src_ptr   = src;
                 hdl->Tx_buffer.data_size = count;
@@ -303,7 +304,9 @@ API_MOD_READ(UART,
                 *rdcnt = 0;
 
                 while (count--) {
-                        err = sys_semaphore_wait(hdl->data_read_sem, RX_WAIT_TIMEOUT);
+                        err = sys_semaphore_wait(hdl->data_read_sem,
+                                                 fattr.non_blocking_rd ?
+                                                 0 : RX_WAIT_TIMEOUT);
                         if (!err) {
                                 _UART_LLD__rx_hold(hdl->major);
                                 if (_UART_FIFO__read(&hdl->Rx_FIFO, dst)) {

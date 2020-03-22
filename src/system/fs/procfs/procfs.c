@@ -461,25 +461,25 @@ API_FS_FSTAT(procfs, void *fs_handle, void *fhdl, struct stat *stat)
                 if (file->content < _FILE_CONTENT_COUNT) {
 
                         if (file->arg >= 0) {
-                                stat->st_size = get_file_content(file, content, FILE_BUFFER);
-                                stat->st_type = FILE_TYPE_REGULAR;
+                                stat->st_size  = get_file_content(file, content, FILE_BUFFER);
+                                stat->st_mode |= S_IFREG;
 
                                 if (  (file->content == FILE_CONTENT_PID)
                                    || (file->content == FILE_CONTENT_CPUINFO) ) {
 
                                         time_t t = 0;
-                                        sys_get_time(&t);
+                                        sys_gettime(&t);
 
                                         stat->st_mtime = t;
                                         stat->st_ctime = t;
                                 }
 
                                 if (file->content == FILE_CONTENT_BIN) {
-                                        stat->st_type  = FILE_TYPE_PROGRAM;
+                                        stat->st_mode |= S_IFPROG;
                                         stat->st_mode |= S_IXUSR;
                                 }
                         } else {
-                                stat->st_type = FILE_TYPE_DIR;
+                                stat->st_mode |= S_IFDIR;
                         }
                 }
 
@@ -814,13 +814,13 @@ static int procfs_readdir_root(struct procfs *hdl, DIR *dir)
 
         switch (dir->d_seek++) {
         case 0:
-                dir->dirent.name     = "bin";
-                dir->dirent.filetype = FILE_TYPE_DIR;
+                dir->dirent.d_name = "bin";
+                dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IFDIR;
                 break;
 
         case 1:
-                dir->dirent.name     = "pid";
-                dir->dirent.filetype = FILE_TYPE_DIR;
+                dir->dirent.d_name = "pid";
+                dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IFDIR;
                 break;
 
         case 2: {
@@ -828,9 +828,9 @@ static int procfs_readdir_root(struct procfs *hdl, DIR *dir)
                 err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (!err) {
                         struct file_info file = {.content = FILE_CONTENT_CPUINFO, .arg = 0};
-                        dir->dirent.name      = "cpuinfo";
-                        dir->dirent.filetype  = FILE_TYPE_REGULAR;
-                        dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
+                        dir->dirent.d_name = "cpuinfo";
+                        dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IFREG;
+                        dir->dirent.size   = get_file_content(&file, content, FILE_BUFFER);
 
                         sys_free(cast(void**, &content));
                 }
@@ -872,9 +872,9 @@ static int procfs_readdir_pid(struct procfs *hdl, DIR *dir)
                         sys_snprintf(dirinfo->name, sizeof(dirinfo->name),
                                      "%u", stat.pid);
 
-                        dir->dirent.name      = dirinfo->name;
-                        dir->dirent.filetype  = FILE_TYPE_REGULAR;
-                        dir->dirent.dev       = 0;
+                        dir->dirent.d_name = dirinfo->name;
+                        dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IFREG;
+                        dir->dirent.dev    = 0;
 
                         struct file_info file = {.arg = stat.pid, .content = FILE_CONTENT_PID};
                         dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
@@ -908,8 +908,8 @@ static int procfs_readdir_bin(struct procfs *hdl, DIR *dir)
                 err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
                 if (!err) {
 
-                        dir->dirent.filetype = FILE_TYPE_PROGRAM;
-                        dir->dirent.name     = sys_get_programs_table()[dir->d_seek].name;
+                        dir->dirent.d_name = sys_get_programs_table()[dir->d_seek].name;
+                        dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IFPROG;
 
                         struct file_info file = {.arg = dir->d_seek, .content = FILE_CONTENT_BIN};
                         dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
@@ -994,7 +994,8 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                                            "CPU Load: %d.%d%%\n"
                                            "Stack Size: %d\n"
                                            "Stack Usage: %d\n"
-                                           "Priority: %d\n",
+                                           "Priority: %d\n"
+                                           "Syscalls: %u\n",
                                            stat.name,
                                            stat.pid,
                                            stat.memory_usage,
@@ -1009,7 +1010,8 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                                            stat.CPU_load / 10, stat.CPU_load % 10,
                                            stat.stack_size,
                                            stat.stack_max_usage,
-                                           stat.priority);
+                                           stat.priority,
+                                           stat.syscalls);
                 }
                 break;
 

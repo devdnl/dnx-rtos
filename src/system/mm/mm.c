@@ -30,12 +30,10 @@
   Include files
 ==============================================================================*/
 #include <stdarg.h>
-#include <stdbool.h>
 #include <string.h>
 #include "config.h"
 #include "mm/mm.h"
 #include "mm/heap.h"
-#include "mm/cache.h"
 #include "mm/shm.h"
 #include "lib/cast.h"
 #include "kernel/errno.h"
@@ -77,7 +75,7 @@
 /**
  * Macro check if selected address (mem) is in selected heap (heap).
  */
-#define IS_IN_HEAP(heap, mem)           ((mem) >= cast(void*, (heap).begin) && (mem) < (cast(void*, (heap).end)))
+#define IS_IN_HEAP(heap, mem)           ((mem) >= cast(void*, (heap).ram) && (mem) < (cast(void*, (heap).ram_end)))
 
 /*==============================================================================
   Local object types
@@ -91,6 +89,10 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 /*==============================================================================
   Local objects
 ==============================================================================*/
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
+static const char  *REGISTERED_REGION_STR  = "Registered memory region @ 0x%X of size %d bytes";
+static const char  *REGISTRATION_ERROR_STR = "Memory region registration error (%d) @ 0x%X of size %d bytes";
+#endif
 static _mm_region_t memory_region;
 static i32_t        memory_usage[_MM_COUNT - 1];
 static i32_t       *module_memory_usage;
@@ -117,7 +119,6 @@ extern void *__ram_start;
 /** number of drivers */
 extern const uint _drvreg_number_of_modules;
 
-
 /*==============================================================================
   Function definitions
 ==============================================================================*/
@@ -133,6 +134,8 @@ int _mm_init(void)
 {
         int err = _heap_init(&memory_region.heap, HEAP_START, HEAP_SIZE);
         if (!err) {
+                printk(REGISTERED_REGION_STR, HEAP_START, HEAP_SIZE);
+
                 err = _kzalloc(_MM_KRN,
                                _drvreg_number_of_modules * sizeof(i32_t),
                                cast(void*, &module_memory_usage));
@@ -159,8 +162,9 @@ int _mm_register_region(_mm_region_t *region, void *start, size_t size)
         if (region && start && size) {
                 // check if memory region is already used
                 for (_mm_region_t *r = &memory_region; r; r = r->next) {
-                        if (r->heap.begin == start) {
-                                return EADDRINUSE;
+                        if (r->heap.ram == start) {
+                                err = EADDRINUSE;
+                                goto finish;
                         }
                 }
 
@@ -174,6 +178,13 @@ int _mm_register_region(_mm_region_t *region, void *start, size_t size)
                                 }
                                 break;
                         }
+                }
+
+                finish:
+                if (!err) {
+                        printk(REGISTERED_REGION_STR, start, size);
+                } else {
+                        printk(REGISTRATION_ERROR_STR, err, start, size);
                 }
         }
 
@@ -257,17 +268,17 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
                         break;
                 }
 
-                case _MM_PROG:
+                case _MM_PROG: {
                         if ((*cast(res_header_t**, mem))->type == RES_TYPE_MEMORY) {
-                                usage = arg;
+                                usage = &memory_usage[mpur];
                                 err   = ESUCC;
                                 (*cast(res_header_t**, mem))->next = NULL;
                                 (*cast(res_header_t**, mem))->type = RES_TYPE_UNKNOWN;
                         } else {
                                 err = EFAULT;
-                                break;
                         }
-                        // go through
+                        break;
+                }
 
                 case _MM_CACHE:
                 case _MM_SHM:
@@ -430,6 +441,32 @@ size_t _mm_get_mem_size(void)
 
 //==============================================================================
 /**
+ * @brief  Function check if object is located in heap
+ *
+ * @param  ptr  pointer to examine
+ *
+ * @return If pointer is on heap true is returned, otherwise false.
+ */
+//==============================================================================
+bool _mm_is_object_in_heap(void *ptr)
+{
+        if (ptr == NULL) {
+                return false;
+        }
+
+        for (_mm_region_t *r = &memory_region; r; r = r->next) {
+                if (  (cast(uintptr_t, ptr) >= cast(uintptr_t, r->heap.ram))
+                   && (cast(uintptr_t, ptr) <= cast(uintptr_t, r->heap.ram_end  )) ) {
+
+                        return true;
+                }
+        }
+
+        return false;
+}
+
+//==============================================================================
+/**
  * @brief  Allocate memory
  *
  * _MM_PROG:
@@ -498,47 +535,34 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 
                 size = MEM_ALIGN_SIZE(size);
 
-                for (int try = 0; try <= 1; try++) {
-                        size_t allocated = 0;
-                        void  *blk       = NULL;
+                size_t allocated = 0;
+                void  *blk       = NULL;
+                       err       = ENOMEM;
 
-                        for (_mm_region_t *r = &memory_region; r; r = r->next) {
-                                if (_heap_get_free(&r->heap) >= size) {
+                for (_mm_region_t *r = &memory_region; r; r = r->next) {
 
-                                        blk = _heap_alloc(&r->heap, size, &allocated);
+                        if (_heap_get_free(&r->heap) >= size) {
 
-                                        if (blk) {
-                                                _kernel_scheduler_lock();
-                                                *usage += allocated;
-                                                _kernel_scheduler_unlock();
+                                blk = _heap_alloc(&r->heap, size, &allocated);
 
-                                                if (clear) {
-                                                        memset(blk, 0, size);
-                                                }
+                                if (blk) {
+                                        _kernel_scheduler_lock();
+                                        *usage += allocated;
+                                        _kernel_scheduler_unlock();
 
-                                                if (mpur == _MM_PROG) {
-                                                         cast(res_header_t*, blk)->next = NULL;
-                                                         cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
-                                                }
-
-                                                *mem = blk;
-
-                                                err = ESUCC;
-                                                goto finish;
+                                        if (clear) {
+                                                memset(blk, 0, size);
                                         }
-                                }
-                        }
 
-                        if (!blk) {
-                                err = ENOMEM;
-
-                                if (mpur == _MM_CACHE) {
-                                        break;
-
-                                } else {
-                                        if (try == 0) {
-                                                _cache_reduce(size);
+                                        if (mpur == _MM_PROG) {
+                                                 cast(res_header_t*, blk)->next = NULL;
+                                                 cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
                                         }
+
+                                        *mem = blk;
+
+                                        err = ESUCC;
+                                        goto finish;
                                 }
                         }
                 }

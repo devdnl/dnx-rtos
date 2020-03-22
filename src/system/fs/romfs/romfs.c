@@ -316,9 +316,9 @@ API_FS_FSTAT(romfs, void *fs_handle, void *fhdl, struct stat *stat)
                 stat->st_uid   = 0;
                 stat->st_mode  = S_IRUSR | S_IRGRP | S_IROTH
                                | ( entry->type == ROMFS_FILE_TYPE__FILE
-                                 ? (S_IXUSR * __ROMFS_CFG_EXEC_FILES__) : 0 );
-                stat->st_type  = entry->type == ROMFS_FILE_TYPE__DIR
-                               ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                                 ? (S_IXUSR * __ROMFS_CFG_EXEC_FILES__) : 0 )
+                               | (entry->type == ROMFS_FILE_TYPE__DIR
+                                 ? S_IFDIR : S_IFREG);
                 err = ESUCC;
         }
 
@@ -495,12 +495,13 @@ API_FS_READDIR(romfs, void *fs_handle, DIR *dir)
         const romfs_dir_t *d = dir->d_hdl;
 
         if (d && (dir->d_seek < d->items)) {
-                dir->dirent.dev      = 0;
-                dir->dirent.name     = d->entry[dir->d_seek].name;
-                dir->dirent.size     = d->entry[dir->d_seek].size
-                                     ? *d->entry[dir->d_seek].size : 0;
-                dir->dirent.filetype = d->entry[dir->d_seek].type == ROMFS_FILE_TYPE__DIR
-                                     ? FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                dir->dirent.dev    = 0;
+                dir->dirent.d_name = d->entry[dir->d_seek].name;
+                dir->dirent.size   = d->entry[dir->d_seek].size
+                                   ? *d->entry[dir->d_seek].size : 0;
+                dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH
+                                 | (d->entry[dir->d_seek].type == ROMFS_FILE_TYPE__DIR
+                                   ? S_IFDIR : S_IFREG);
                 dir->d_seek++;
 
                 err = ESUCC;

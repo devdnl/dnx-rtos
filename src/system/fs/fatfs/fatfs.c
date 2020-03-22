@@ -5,7 +5,7 @@
 
 @brief   FAT File system support.
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -30,29 +30,28 @@
   Include files
 ==============================================================================*/
 #include "fs/fs.h"
-#include "libfat/libfat.h"
+#include "ffs/ff.h"
 
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define MUTEX_TIMEOUT   5000
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 struct fatdir {
-        FATDIR dir;
-#if _LIBFAT_USE_LFN == 0
-        char name[14];
-#else
-        char name[(_LIBFAT_MAX_LFN + 1) * sizeof(TCHAR)];
-#endif
+        FDIR dir;
+        char name[(FF_MAX_LFN + 1) * sizeof(TCHAR)];
 };
 
 struct fatfs {
-        FILE  *fsfile;
-        FATFS  fatfs;
-        int    opened_files;
-        int    opened_dirs;
+        FILE    *fsfile;
+        FATFS    fatfs;
+        llist_t *file_list;
+        mutex_t *mutex;
+        int      opened_dirs;
+        bool     read_only;
 };
 
 /*==============================================================================
@@ -60,6 +59,7 @@ struct fatfs {
 ==============================================================================*/
 static int    faterr_2_errno(FRESULT fresult);
 static time_t time_fat2unix(uint32_t fattime);
+static int    cmp_ptr(const void *a, const void *b);
 
 /*==============================================================================
   Local object definitions
@@ -89,17 +89,43 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path, const char *opts)
         UNUSED_ARG1(opts);
 
         int err = sys_zalloc(sizeof(struct fatfs), fs_handle);
-        if (err == ESUCC) {
+        if (!err) {
                 struct fatfs *hdl = *fs_handle;
 
-                err = sys_fopen(src_path, "r+", &hdl->fsfile);
-                if (err == ESUCC) {
-                        err = faterr_2_errno(libfat_mount(hdl->fsfile, &hdl->fatfs));
+                hdl->read_only = sys_stropt_is_flag(opts, "ro");
+
+                err = sys_llist_create(cmp_ptr, NULL, &hdl->file_list);
+
+                if (!err) {
+                        err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mutex);
                 }
 
-                if (err != ESUCC) {
-                        if (hdl->fsfile)
+                if (!err) {
+                        err = sys_fopen(src_path, hdl->read_only ? "r" : "r+", &hdl->fsfile);
+                }
+
+                if (!err) {
+                        err = faterr_2_errno(f_mount(&hdl->fatfs, hdl->fsfile, 1));
+                }
+
+                if (!err) {
+                        if (hdl->read_only) {
+                                printk("FATFS: read only file system");
+                        }
+                }
+
+                if (err) {
+                        if (hdl->mutex) {
+                                sys_mutex_destroy(hdl->mutex);
+                        }
+
+                        if (hdl->file_list) {
+                                sys_llist_destroy(hdl->file_list);
+                        }
+
+                        if (hdl->fsfile) {
                                 sys_fclose(hdl->fsfile);
+                        }
 
                         sys_free(fs_handle);
                 }
@@ -122,12 +148,13 @@ API_FS_RELEASE(fatfs, void *fs_handle)
         struct fatfs *hdl = fs_handle;
         int           err = EBUSY;
 
-        if (hdl->opened_dirs == 0 && hdl->opened_files == 0) {
-                err = faterr_2_errno(libfat_umount(&hdl->fatfs));
+        if ((hdl->opened_dirs == 0) && (sys_llist_size(hdl->file_list) == 0)) {
+                err = faterr_2_errno(f_unmount(&hdl->fatfs));
                 if (!err) {
-                        sys_cache_drop(hdl->fsfile);
                         sys_fclose(hdl->fsfile);
-                        sys_free(fs_handle);
+                        sys_mutex_destroy(hdl->mutex);
+                        sys_llist_destroy(hdl->file_list);
+                        sys_free(&fs_handle);
                 }
         }
 
@@ -151,48 +178,64 @@ API_FS_OPEN(fatfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
 {
         struct fatfs *hdl = fs_handle;
 
-        int err = sys_zalloc(sizeof(FATFILE), fhdl);
-        if (err)
+        int err = sys_zalloc(sizeof(FIL), fhdl);
+        if (err) {
                 return err;
-
-        FATFILE *fat_file = *fhdl;
-
-        u8_t fat_mode = 0;
-        if (flags == O_RDONLY) {
-                fat_mode = LIBFAT_FA_READ | LIBFAT_FA_OPEN_EXISTING;
-        } else if (flags == O_RDWR) {
-                fat_mode = LIBFAT_FA_READ | LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_EXISTING;
-        } else if (flags == (O_WRONLY | O_CREAT | O_TRUNC)) {
-                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (flags == (O_RDWR | O_CREAT)) {
-                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_CREATE_ALWAYS;
-        } else if (flags == (O_WRONLY | O_APPEND | O_CREAT)) {
-                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_OPEN_ALWAYS;
-        } else if (flags == (O_RDWR | O_APPEND | O_CREAT)) {
-                fat_mode = LIBFAT_FA_WRITE | LIBFAT_FA_READ | LIBFAT_FA_OPEN_ALWAYS;
-        } else {
-                sys_free(fhdl);
-                return EINVAL;
         }
 
-        err = faterr_2_errno(libfat_open(&hdl->fatfs, fat_file, path, fat_mode));
+        FIL *fat_file = *fhdl;
+
+        u8_t fat_mode = 0;
+
+        if (hdl->read_only) {
+                if (flags == O_RDONLY) {
+                        fat_mode = FA_READ | FA_OPEN_EXISTING;
+                } else {
+                        sys_free(fhdl);
+                        return EROFS;
+                }
+        } else {
+                if (flags == O_RDONLY) {
+                        fat_mode = FA_READ | FA_OPEN_EXISTING;
+                } else if (flags == O_RDWR) {
+                        fat_mode = FA_READ | FA_WRITE | FA_OPEN_EXISTING;
+                } else if (flags == (O_WRONLY | O_CREAT | O_TRUNC)) {
+                        fat_mode = FA_WRITE | FA_CREATE_ALWAYS;
+                } else if (flags == (O_RDWR | O_CREAT)) {
+                        fat_mode = FA_WRITE | FA_READ | FA_CREATE_ALWAYS;
+                } else if (flags == (O_RDWR | O_CREAT | O_TRUNC)) {
+                        fat_mode = FA_WRITE | FA_READ | FA_CREATE_ALWAYS;
+                } else if (flags == (O_WRONLY | O_APPEND | O_CREAT)) {
+                        fat_mode = FA_WRITE | FA_OPEN_ALWAYS;
+                } else if (flags == (O_RDWR | O_APPEND | O_CREAT)) {
+                        fat_mode = FA_WRITE | FA_READ | FA_OPEN_ALWAYS;
+                } else {
+                        sys_free(fhdl);
+                        return EINVAL;
+                }
+        }
+
+        err = faterr_2_errno(f_open(&hdl->fatfs, fat_file, path, fat_mode));
         if (err) {
                 sys_free(fhdl);
                 return err;
         }
 
         if (flags & O_APPEND) {
-                err = faterr_2_errno(libfat_lseek(fat_file, libfat_size(fat_file)));
+                err = faterr_2_errno(f_lseek(fat_file, f_size(fat_file)));
                 if (err) {
                         sys_free(fhdl);
                         return err;
                 }
-                *fpos = libfat_size(fat_file);
+                *fpos = f_size(fat_file);
         } else {
                 *fpos = 0;
         }
 
-        hdl->opened_files++;
+        if (sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT) == 0) {
+                sys_llist_push_back(hdl->file_list, fat_file);
+                sys_mutex_unlock(hdl->mutex);
+        }
 
         return err;
 }
@@ -202,7 +245,7 @@ API_FS_OPEN(fatfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
  * @brief Close file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *fhdl                  file handle
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           force                  force close
  *
  * @return One of errno value (errno.h)
@@ -214,11 +257,18 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *fhdl, bool force)
 
         struct fatfs *hdl = fs_handle;
 
-        FATFILE *fatfile = fhdl;
-        int err = faterr_2_errno(libfat_close(fatfile));
-        if (err == ESUCC) {
-                sys_free(&fhdl);
-                hdl->opened_files--;
+        FIL *fatfile = fhdl;
+
+        int err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT);
+        if (!err) {
+                err = faterr_2_errno(f_close(fatfile));
+                if (!err) {
+                        int pos = sys_llist_find_begin(hdl->file_list, fatfile);
+                        sys_llist_take(hdl->file_list, pos);
+                        sys_free(&fhdl);
+                }
+
+                sys_mutex_unlock(hdl->mutex);
         }
 
         return err;
@@ -229,7 +279,7 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *fhdl, bool force)
  * @brief Write data to the file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *fhdl                  file handle
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ]          *fpos                   position in file
@@ -248,20 +298,25 @@ API_FS_WRITE(fatfs,
              size_t          *wrcnt,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG2(fs_handle, fattr);
+        UNUSED_ARG1(fattr);
 
-        FATFILE *fat_file = fhdl;
-        int      err      = ESUCC;
+        struct fatfs *hdl = fs_handle;
+        FIL *fat_file = fhdl;
+        int  err      = EROFS;
 
-        if (libfat_tell(fat_file) != (u32_t)*fpos) {
-                err = faterr_2_errno(libfat_lseek(fat_file, (u32_t)*fpos));
-        }
+        if (not hdl->read_only) {
+                if (f_tell(fat_file) != (u32_t)*fpos) {
+                        err = faterr_2_errno(f_lseek(fat_file, (u32_t)*fpos));
+                } else {
+                        err = ESUCC;
+                }
 
-        if (err == ESUCC) {
-                uint n = 0;
-                err = faterr_2_errno(libfat_write(fat_file, src, count, &n));
-                if (err == ESUCC) {
-                        *wrcnt = n;
+                if (!err) {
+                        uint n = 0;
+                        err = faterr_2_errno(f_write(fat_file, src, count, &n));
+                        if (!err) {
+                                *wrcnt = n;
+                        }
                 }
         }
 
@@ -273,7 +328,7 @@ API_FS_WRITE(fatfs,
  * @brief Read data from file
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *fhdl                  file handle
+ * @param[in ]          *fhdl                   file handle
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ]          *fpos                   position in file
@@ -294,17 +349,17 @@ API_FS_READ(fatfs,
 {
         UNUSED_ARG2(fs_handle, fattr);
 
-        FATFILE *fat_file = fhdl;
-        int      err      = ESUCC;
+        FIL *fat_file = fhdl;
+        int  err      = ESUCC;
 
-        if (libfat_tell(fat_file) != (u32_t)*fpos) {
-                err = faterr_2_errno(libfat_lseek(fat_file, (u32_t)*fpos));
+        if (f_tell(fat_file) != (u32_t)*fpos) {
+                err = faterr_2_errno(f_lseek(fat_file, (u32_t)*fpos));
         }
 
-        if (err == ESUCC) {
+        if (!err) {
                 uint n = 0;
-                err = faterr_2_errno(libfat_read(fat_file, dst, count, &n));
-                if (err == ESUCC) {
+                err = faterr_2_errno(f_read(fat_file, dst, count, &n));
+                if (!err) {
                         *rdcnt = n;
                 }
         }
@@ -317,7 +372,7 @@ API_FS_READ(fatfs,
  * @brief IO operations on files
  *
  * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *fhdl                  file handle
+ * @param[in ]          *fhdl                   file handle
  * @param[in ]           request                request
  * @param[in ][out]     *arg                    request's argument
  *
@@ -348,36 +403,8 @@ API_FS_FLUSH(fatfs, void *fs_handle, void *fhdl)
 {
         UNUSED_ARG1(fs_handle);
 
-        FATFILE *fat_file = fhdl;
-        return faterr_2_errno(libfat_flush(fat_file));
-}
-
-//==============================================================================
-/**
- * @brief Return file status
- *
- * @param[in ]          *fs_handle              file system allocated memory
- * @param[in ]          *fhdl                  file handle
- * @param[out]          *stat                   file status
- *
- * @return One of errno value (errno.h)
- */
-//==============================================================================
-API_FS_FSTAT(fatfs, void *fs_handle, void *fhdl, struct stat *stat)
-{
-        UNUSED_ARG1(fs_handle);
-
-        FATFILE *fat_file = fhdl;
-
-        stat->st_dev   = 0;
-        stat->st_gid   = 0;
-        stat->st_mode  = 0777;
-        stat->st_mtime = time_fat2unix((fat_file->fdate << 16) | fat_file->ftime);
-        stat->st_size  = fat_file->fsize;
-        stat->st_uid   = 0;
-        stat->st_type  = FILE_TYPE_REGULAR;
-
-        return ESUCC;
+        FIL *fat_file = fhdl;
+        return faterr_2_errno(f_sync(fat_file));
 }
 
 //==============================================================================
@@ -395,10 +422,14 @@ API_FS_MKDIR(fatfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct fatfs *hdl = fs_handle;
 
-        int err = faterr_2_errno(libfat_mkdir(&hdl->fatfs, path));
-        if (err == ESUCC) {
-                uint8_t dosmode = mode & S_IWUSR ? 0 : LIBFAT_AM_RDO;
-                err = faterr_2_errno(libfat_chmod(&hdl->fatfs, path, dosmode, LIBFAT_AM_RDO));
+        int err = EROFS;
+
+        if (not hdl->read_only) {
+                err = faterr_2_errno(f_mkdir(&hdl->fatfs, path));
+                if (!err) {
+                        uint8_t dosmode = mode & S_IWUSR ? 0 : AM_RDO;
+                        err = faterr_2_errno(f_chmod(&hdl->fatfs, path, dosmode, AM_RDO));
+                }
         }
 
         return err;
@@ -461,25 +492,26 @@ API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, DIR *dir)
 
         size_t pathlen = strlen(path);
         char  *dospath = NULL;
+
         int err = sys_zalloc(pathlen + 1, cast(void*, &dospath));
-        if (err == ESUCC) {
+        if (!err) {
 
                 err = sys_malloc(sizeof(struct fatdir), &dir->d_hdl);
-                if (err == ESUCC) {
+                if (!err) {
 
                         strcpy(dospath, path);
                         if (pathlen > 1) {
                                 dospath[pathlen - 1] = '\0';
                         }
 
-                        dir->d_seek     = 0;
-                        dir->d_items    = 0;
+                        dir->d_seek  = 0;
+                        dir->d_items = 0;
 
                         struct fatdir *fatdir = dir->d_hdl;
-                        err = faterr_2_errno(libfat_opendir(&hdl->fatfs,
-                                                            &fatdir->dir,
-                                                            dospath));
-                        if (err == ESUCC) {
+                        err = faterr_2_errno(f_opendir(&hdl->fatfs,
+                                                       &fatdir->dir,
+                                                        dospath));
+                        if (!err) {
                                 hdl->opened_dirs++;
                         } else {
                                 sys_free(&dir->d_hdl);
@@ -529,29 +561,17 @@ API_FS_READDIR(fatfs, void *fs_handle, DIR *dir)
         UNUSED_ARG1(fs_handle);
 
         struct fatdir *fatdir = dir->d_hdl;
-        fatdir->dir.index     = dir->d_seek;
 
-        FILEINFO fat_file_info;
-#if _LIBFAT_USE_LFN != 0
-        fat_file_info.lfname = &fatdir->name[0];
-        fat_file_info.lfsize = _LIBFAT_MAX_LFN;
-#endif
-
-        int err = faterr_2_errno(libfat_readdir(&fatdir->dir, &fat_file_info));
-        if (err == ESUCC) {
-                if (fat_file_info.fname[0] != 0) {
-#if _LIBFAT_USE_LFN != 0
-                        if (fat_file_info.lfname[0] == 0) {
-                                memcpy(fatdir->name, fat_file_info.fname, 13);
-                        }
-#else
-                        memcpy(fatdir->name, fat_file_info.fname, 13);
-#endif
-                        dir->dirent.name     = &fatdir->name[0];
-                        dir->dirent.size     = fat_file_info.fsize;
-                        dir->dirent.filetype = fat_file_info.fattrib & LIBFAT_AM_DIR ?
-                                               FILE_TYPE_DIR : FILE_TYPE_REGULAR;
-                        dir->d_seek          = fatdir->dir.index;
+        FILINFO fno;
+        int err = faterr_2_errno(f_readdir(&fatdir->dir, &fno));
+        if (!err) {
+                if (fno.fname[0] != 0) {
+                        strlcpy(fatdir->name, fno.fname, sizeof(fatdir->name));
+                        dir->dirent.d_name = fatdir->name;
+                        dir->dirent.size = fno.fsize;
+                        dir->dirent.mode = (S_IRWXU | S_IRWXG | S_IRWXO)
+                                           | (fno.fattrib & AM_DIR ? S_IFDIR : S_IFREG);
+                        dir->d_seek = fatdir->dir.dptr;
                 } else {
                         err = ENOENT;
                 }
@@ -573,7 +593,14 @@ API_FS_READDIR(fatfs, void *fs_handle, DIR *dir)
 API_FS_REMOVE(fatfs, void *fs_handle, const char *path)
 {
         struct fatfs *hdl = fs_handle;
-        return faterr_2_errno(libfat_unlink(&hdl->fatfs, path));
+
+        int err = EROFS;
+
+        if (not hdl->read_only) {
+                err = faterr_2_errno(f_unlink(&hdl->fatfs, path));
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -590,7 +617,12 @@ API_FS_REMOVE(fatfs, void *fs_handle, const char *path)
 API_FS_RENAME(fatfs, void *fs_handle, const char *old_name, const char *new_name)
 {
         struct fatfs *hdl = fs_handle;
-        return faterr_2_errno(libfat_rename(&hdl->fatfs, old_name, new_name));
+
+        if (not hdl->read_only) {
+                return faterr_2_errno(f_rename(&hdl->fatfs, old_name, new_name));
+        } else {
+                return EROFS;
+        }
 }
 
 //==============================================================================
@@ -606,9 +638,14 @@ API_FS_RENAME(fatfs, void *fs_handle, const char *old_name, const char *new_name
 //==============================================================================
 API_FS_CHMOD(fatfs, void *fs_handle, const char *path, mode_t mode)
 {
-        struct fatfs *hdl     = fs_handle;
-        uint8_t       dosmode = mode & S_IWUSR ? 0 : LIBFAT_AM_RDO;
-        return faterr_2_errno(libfat_chmod(&hdl->fatfs, path, dosmode, LIBFAT_AM_RDO));
+        struct fatfs *hdl = fs_handle;
+
+        if (not hdl->read_only) {
+                uint8_t dosmode = mode & S_IWUSR ? 0 : AM_RDO;
+                return faterr_2_errno(f_chmod(&hdl->fatfs, path, dosmode, AM_RDO));
+        } else {
+                return EROFS;
+        }
 }
 
 //==============================================================================
@@ -635,6 +672,33 @@ API_FS_CHOWN(fatfs, void *fs_handle, const char *path, uid_t owner, gid_t group)
 
 //==============================================================================
 /**
+ * @brief Return file status
+ *
+ * @param[in ]          *fs_handle              file system allocated memory
+ * @param[in ]          *fhdl                   file handle
+ * @param[out]          *stat                   file status
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+API_FS_FSTAT(fatfs, void *fs_handle, void *fhdl, struct stat *stat)
+{
+        UNUSED_ARG1(fs_handle);
+
+        FIL *fat_file = fhdl;
+
+        stat->st_dev   = 0;
+        stat->st_gid   = 0;
+        stat->st_mode  = S_IFREG | S_IRWXU | S_IRWXG | S_IRWXO;
+        stat->st_mtime = time_fat2unix((fat_file->obj.fdate << 16) | fat_file->obj.ftime);
+        stat->st_size  = f_size(fat_file);
+        stat->st_uid   = 0;
+
+        return ESUCC;
+}
+
+//==============================================================================
+/**
  * @brief Return file/dir status
  *
  * @param[in ]          *fs_handle              file system allocated memory
@@ -648,20 +712,16 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
 {
         struct fatfs *hdl = fs_handle;
 
-        FILEINFO file_info;
-        file_info.lfname = NULL;
-        file_info.lfsize = 0;
-
-        int err = faterr_2_errno(libfat_stat(&hdl->fatfs, path, &file_info));
-        if (err == ESUCC) {
+        FILINFO file_info;
+        int err = faterr_2_errno(f_stat(&hdl->fatfs, path, &file_info));
+        if (!err) {
                 stat->st_dev   = 0;
                 stat->st_gid   = 0;
-                stat->st_mode  = 0777;
                 stat->st_mtime = time_fat2unix((file_info.fdate << 16) | file_info.ftime);
                 stat->st_size  = file_info.fsize;
                 stat->st_uid   = 0;
-                stat->st_type  = file_info.fattrib & LIBFAT_AM_DIR ?
-                                 FILE_TYPE_DIR : FILE_TYPE_REGULAR;
+                stat->st_mode  = (S_IRWXU | S_IRWXG | S_IRWXO)
+                               | (file_info.fattrib & AM_DIR ? S_IFDIR : S_IFREG);
         }
 
         return err;
@@ -682,33 +742,33 @@ API_FS_STATFS(fatfs, void *fs_handle, struct statfs *statfs)
         struct fatfs *hdl    = fs_handle;
         u32_t  free_clusters = 0;
 
-        memset(statfs, 0, sizeof(struct statfs));
-        statfs->f_fsname = "fatfs (FAT\?\?)";
+        statfs->f_fsname = "fatfs (FAT?)";
         statfs->f_type   = hdl->fatfs.fs_type;
 
         struct stat fstat;
         fstat.st_size = 0;
 
         int err = sys_fstat(hdl->fsfile, &fstat);
-        if (err == ESUCC) {
+        if (!err && (fstat.st_size > 0)) {
 
-                err = faterr_2_errno(libfat_getfree(&hdl->fatfs, &free_clusters));
-                if (err == ESUCC) {
-                        statfs->f_bsize  = _LIBFAT_MAX_SS;
+                err = faterr_2_errno(f_getfree(&hdl->fatfs, &free_clusters));
+                if (!err) {
+                        statfs->f_bsize  = FF_MAX_SS;
                         statfs->f_bfree  = free_clusters * hdl->fatfs.csize;
-                        statfs->f_blocks = fstat.st_size / _LIBFAT_MAX_SS;
+                        statfs->f_blocks = fstat.st_size / FF_MAX_SS;
                         statfs->f_ffree  = 0;
                         statfs->f_files  = 0;
                         statfs->f_type   = SYS_FS_TYPE__SOLID;
 
-                        if (hdl->fatfs.fs_type == LIBFAT_FS_FAT12)
+                        if (hdl->fatfs.fs_type == FS_FAT12) {
                                 statfs->f_fsname = "fatfs (FAT12)";
-                        else if (hdl->fatfs.fs_type == LIBFAT_FS_FAT16)
+                        } else if (hdl->fatfs.fs_type == FS_FAT16) {
                                 statfs->f_fsname = "fatfs (FAT16)";
-                        else if (hdl->fatfs.fs_type == LIBFAT_FS_FAT32)
+                        } else if (hdl->fatfs.fs_type == FS_FAT32) {
                                 statfs->f_fsname = "fatfs (FAT32)";
-                        else
-                                statfs->f_fsname = "fatfs (FAT\?\?)";
+                        } else {
+                                statfs->f_fsname = "fatfs (FAT?)";
+                        }
                 }
         }
 
@@ -727,7 +787,23 @@ API_FS_STATFS(fatfs, void *fs_handle, struct statfs *statfs)
 API_FS_SYNC(fatfs, void *fs_handle)
 {
         struct fatfs *hdl = fs_handle;
-        return faterr_2_errno(libfat_sync(&hdl->fatfs));
+
+        if (not hdl->read_only) {
+
+                int err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT);
+                if (!err) {
+
+                        sys_llist_foreach(FIL*, f, hdl->file_list) {
+                                f_sync(f);
+                        }
+
+                        sys_mutex_unlock(hdl->mutex);
+                }
+
+                return err;
+        } else {
+                return ESUCC;
+        }
 }
 
 //==============================================================================
@@ -744,7 +820,7 @@ static int faterr_2_errno(FRESULT fresult)
         static const uint8_t fat2errno[] = {
                 [FR_OK                 ] = ESUCC,
                 [FR_DISK_ERR           ] = EIO,
-                [FR_INT_ERR            ] = EAGAIN,
+                [FR_INT_ERR            ] = EINVAL,
                 [FR_NOT_READY          ] = EBUSY,
                 [FR_NO_FILE            ] = ENOENT,
                 [FR_NO_PATH            ] = ENOENT,
@@ -769,9 +845,11 @@ static int faterr_2_errno(FRESULT fresult)
 
 //==============================================================================
 /**
- * @brief  ?
- * @param  ?
- * @return ?
+ * @brief  Function convert FAT time to UNIX timestamp.
+ *
+ * @param  fattime      FAT time format
+ *
+ * @return Unix timestamp.
  */
 //==============================================================================
 static time_t time_fat2unix(uint32_t fattime)
@@ -785,6 +863,27 @@ static time_t time_fat2unix(uint32_t fattime)
         tm.tm_year = ((fattime >> 25) & 0x7F) + 80;
 
         return sys_mktime(&tm);
+}
+
+//==============================================================================
+/**
+ * @brief  Function compare pointers.
+ *
+ * @param  a    pointer a
+ * @param  b    pointer b
+ *
+ * @return Return 0 if equal.
+ */
+//==============================================================================
+static int cmp_ptr(const void *a, const void *b)
+{
+        if (a < b) {
+                return -1;
+        } else if (b > a) {
+                return 1;
+        } else {
+                return 0;
+        }
 }
 
 /*==============================================================================

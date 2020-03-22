@@ -174,8 +174,8 @@ static void put_new_line_buffer(ttybfr_t *this)
         void link_new_line(const char *str, size_t len)
         {
                 char *line = NULL;
-                sys_malloc(len + 1, cast(void**, &line));
-                if (line) {
+                int err = sys_malloc(len + 1, cast(void**, &line));
+                if (!err && line) {
                         strcpy(line, str);
                         link_line(this, line);
                 }
@@ -195,8 +195,8 @@ static void put_new_line_buffer(ttybfr_t *this)
                 } else {
                         size_t last_line_len = strlen(last_line);
                         char *line = NULL;
-                        sys_malloc(last_line_len + new_line_len + 1, cast(void**, &line));
-                        if (line) {
+                        int err = sys_malloc(last_line_len + new_line_len + 1, cast(void**, &line));
+                        if (!err && line) {
                                 strcpy(line, last_line);
                                 strcat(line, this->new_line_bfr);
                                 link_line(this, line);

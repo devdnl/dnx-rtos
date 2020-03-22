@@ -3,9 +3,9 @@
 
 @author  Daniel Zorychta
 
-@brief   dnx RTOS environment functions
+@brief   dnx RTOS time functions
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2018 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -50,6 +50,12 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
+#if __OS_ENABLE_TIMEMAN__ == _YES_
+static FILE  *RTC;
+static time_t last_sec;
+static u32_t  last_msec;
+static u32_t  usec;
+#endif
 
 /*==============================================================================
   Exported objects
@@ -65,55 +71,83 @@
 #if __OS_ENABLE_TIMEMAN__ == _YES_
 //==============================================================================
 /**
+ * @brief  Function open RTC file.
+ */
+//==============================================================================
+static int open_RTC(void)
+{
+        int err = 0;
+
+        if (RTC == NULL) {
+                struct vfs_path cpath;
+                cpath.CWD  = NULL;
+                cpath.PATH = __OS_RTC_FILE_PATH__;
+
+                err = _vfs_fopen(&cpath, "r+", &RTC);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function simulate microseconds
+ *
+ * @param  timeval      time structure
+ *
+ * @return Calculated value of microseconds.
+ */
+//==============================================================================
+static void simulate_usec(struct timeval *timeval)
+{
+        u32_t ms_now = sys_get_uptime_ms();
+
+        if (last_sec != timeval->tv_sec) {
+                usec = 0;
+        } else {
+                if (usec < 998500) {
+                        usec += (ms_now - last_msec) * 1000;
+                        usec  = min(usec, 998500);
+                } else {
+                        usec++;
+                }
+        }
+
+        timeval->tv_usec = usec;
+        last_msec = ms_now;
+        last_sec  = timeval->tv_sec;
+}
+
+//==============================================================================
+/**
  * @brief  Get current time
  *
- * The function returns this value, and if the argument is not a null pointer,
- * it also sets this value to the object pointed by timer.
- * The value returned generally represents the number of seconds since 00:00
- * hours, Jan 1, 1970 UTC (i.e., the current unix timestamp). Although libraries
- * may use a different representation of time: Portable programs should not use
- * the value returned by this function directly, but always rely on calls to
- * other elements of the standard library to translate them to portable types
- * (such as localtime, gmtime or difftime).
+ * The function can get the time.
  *
- * @param  timer        Pointer to an object of type time_t, where the time
- *                      value is stored.
- *                      Alternatively, this parameter can be a null pointer,
- *                      in which case the parameter is not used (the function
- *                      still returns a value of type time_t with the result).
+ * @param  timeval      Pointer to an object of type struct timeval, where the
+ *                      time value is stored.
  *
  * @return One of errno value.
  */
 //==============================================================================
-int _gettime(time_t *timer)
+int _gettime(struct timeval *timeval)
 {
-        static uint32_t time_ref  = 0;
-        static time_t   timecache = 0;
-
         int err = EINVAL;
 
-        if (timer) {
-                if (  (time_ref == 0) || (timecache == 0)
-                   || sys_time_is_expired(time_ref, 500)) {
+        if (timeval) {
+                if (RTC == NULL) {
+                        err = open_RTC();
+                }
 
-                        FILE *rtc;
+                if (RTC) {
+                        _vfs_fseek(RTC, 0, VFS_SEEK_SET);
 
-                        struct vfs_path cpath;
-                        cpath.CWD  = NULL;
-                        cpath.PATH = __OS_RTC_FILE_PATH__;
+                        size_t rdcnt;
+                        err = _vfs_fread(&timeval->tv_sec, sizeof(time_t), &rdcnt, RTC);
 
-                        err = _vfs_fopen(&cpath, "r", &rtc);
                         if (!err) {
-                                size_t rdcnt;
-                                err = _vfs_fread(timer, sizeof(time_t), &rdcnt, rtc);
-                                timecache = *timer;
-                                _vfs_fclose(rtc, false);
-
-                                time_ref = sys_time_get_reference();
+                                simulate_usec(timeval);
                         }
-                } else {
-                        *timer = timecache;
-                        err    = ESUCC;
                 }
         }
 
@@ -135,24 +169,22 @@ int _gettime(time_t *timer)
 //==============================================================================
 int _settime(time_t *timer)
 {
-        int result = EINVAL;
+        int err = EINVAL;
 
         if (timer) {
-                FILE *rtc;
+                if (RTC == NULL) {
+                        err = open_RTC();
+                }
 
-                struct vfs_path cpath;
-                cpath.CWD  = NULL;
-                cpath.PATH = __OS_RTC_FILE_PATH__;
+                if (RTC) {
+                        _vfs_fseek(RTC, 0, VFS_SEEK_SET);
 
-                result = _vfs_fopen(&cpath, "w", &rtc);
-                if (result == ESUCC) {
                         size_t wrcnt;
-                        result = _vfs_fwrite(timer, sizeof(time_t), &wrcnt, rtc);
-                        _vfs_fclose(rtc, false);
+                        err = _vfs_fwrite(timer, sizeof(time_t), &wrcnt, RTC);
                 }
         }
 
-        return result;
+        return err;
 }
 #endif
 

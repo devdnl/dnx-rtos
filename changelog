@@ -1,4 +1,55 @@
-dnx RTOS 2.1.7 Dingo
+dnx RTOS 2.3.0 Falcon
+=====================
+New Features, Improvements:
+- Updated many drivers
+- Added syscall mode 2 (flat syscall handling)
+- Context switch optimizations 
+- EXT4FS fixes
+- Updated FAT32 library
+- Updated heap library (added memory consistency checker)
+- LwIP update
+- and more...
+
+Fixed Bugs:
+- Process handling
+- and more...
+
+dnx RTOS 2.2.1 Eagle
+====================
+New Features, Improvements:
+- Updated documentation
+- MAC setup at driver configuration
+- Added driver_release2() function - release module by path
+- Added NVM driver
+- Added MD5, SHA1, SHA256 libraries
+- Added option for TTY module to disable clearing of screen at initialization
+- Added vector position setup in STM32F4 port
+- Added RTC driver for STM32F4 port
+- Added IRQ driver for STM32F4 port
+- Moved driver API to driver visibility (not only file system)
+- Added PWM driver for STM32F4 port
+- System log store messages during runtime
+- Better support of printk()
+- Added small support for CTRL+C (ETX) signal
+- Added script that verify program sytax
+- Added more debug messages in DCI driver
+- Fixed readdir in ext4fs (file/dir mode)
+- Improved system stability by checking address range of objects in some cases
+- Added SIPC protocol
+- EXT4FS update
+
+Fixed Bugs:
+- Fixed I2C slave mode for STM32F1 port
+- Fixed printk() module
+- Fixed starting LSE clock in stm32f4
+- Fixed RAMFS at file open (file handling)
+- Fixed usage of sys_free() function in drivers and file systems
+- Removed file system cache subsystem - many problems and errors, very slow
+- Fixed SDIO write and read when buffer size is bigger than DMA transfer
+- Process context switch
+- Get semaphore counter value 
+
+dnx RTOS 2.2.0 Eagle
 ====================
 New Features, Improvements:
 - Created romfs - put local files to build image

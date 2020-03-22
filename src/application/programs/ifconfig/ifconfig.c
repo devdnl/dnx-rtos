@@ -56,6 +56,19 @@
 GLOBAL_VARIABLES_SECTION {
 };
 
+static const char *INET_STATE[] = {
+       "NOT CONFIGURED",
+       "STATIC IP",
+       "DHCP CONFIGURING",
+       "DHCP",
+       "LINK DISCONNECTED"
+};
+
+static const char *SIPC_STATE[] = {
+       "NOT CONFIGURED",
+       "CONFIGURED"
+};
+
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -103,6 +116,11 @@ static void print_help_msg(const char *prog_name)
         printf("Options for INET:\n");
         printf("  Static: %s INET up=address,netmask,gateway\n", prog_name);
         printf("  DHCP  : %s INET up=dhcp\n", prog_name);
+        printf("\n");
+        printf("Options for SIPC:\n");
+        printf("  MTU setup  : %s SIPC up=MTU\n", prog_name);
+        printf("  Default MTU: %s SIPC up=auto\n", prog_name);
+        printf("\n");
 }
 
 //==============================================================================
@@ -166,6 +184,7 @@ static void INET_up(const char *options)
         }
 }
 
+
 //==============================================================================
 /**
  * @brief Function gets INET connection status.
@@ -173,14 +192,6 @@ static void INET_up(const char *options)
 //==============================================================================
 static void INET_status(void)
 {
-        static const char *if_status[] = {
-               "NOT CONFIGURED",
-               "STATIC IP",
-               "DHCP CONFIGURING",
-               "DHCP",
-               "LINK DISCONNECTED"
-        };
-
         NET_INET_status_t ifstat;
         if (ifstatus(NET_FAMILY__INET, &ifstat) == 0) {
 
@@ -196,7 +207,7 @@ static void INET_status(void)
                        "  RX packets: %u (%u %s)\n"
                        "  TX packets: %u (%u %s)\n",
 
-                       if_status[ifstat.state],
+                       INET_STATE[ifstat.state],
 
                        ifstat.hw_addr[0],
                        ifstat.hw_addr[1],
@@ -223,8 +234,60 @@ static void INET_status(void)
                        (uint)ifstat.rx_packets, cast(uint, ifstat.rx_bytes), rx_unit,
                        (uint)ifstat.tx_packets, cast(uint, ifstat.tx_bytes), tx_unit
                );
+        }
+}
+
+
+//==============================================================================
+/**
+ * @brief Function setup SIPC connection.
+ * @param options       string options
+ */
+//==============================================================================
+static void SIPC_up(const char *options)
+{
+        UNUSED_ARG1(options);
+
+        NET_SIPC_config_t conf;
+        if (isstreq(options, "auto")) {
+                conf.MTU = 1024;
         } else {
+                int MTU = 0;
+                sscanf(options, "%u", &MTU);
+                conf.MTU = MTU;
+        }
+
+        if (ifup(NET_FAMILY__SIPC, &conf) != 0) {
                 perror("INET");
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function gets INET connection status.
+ */
+//==============================================================================
+static void SIPC_status(void)
+{
+        NET_SIPC_status_t ifstat;
+        if (ifstatus(NET_FAMILY__SIPC, &ifstat) == 0) {
+
+                const char *tx_unit = convert_unit(&ifstat.tx_bytes);
+                const char *rx_unit = convert_unit(&ifstat.rx_bytes);
+
+                printf("SIPC\n"
+                       "  Status: %s\n"
+                       "  MTU: %u B\n"
+                       "  RX packets: %u (%u %s)\n"
+                       "  TX packets: %u (%u %s)\n",
+
+                       SIPC_STATE[ifstat.state],
+                       ifstat.MTU,
+                       (uint)ifstat.rx_packets, cast(uint, ifstat.rx_bytes), rx_unit,
+                       (uint)ifstat.tx_packets, cast(uint, ifstat.tx_bytes), tx_unit
+               );
+        } else {
+                perror("SIPC");
         }
 }
 
@@ -243,6 +306,7 @@ int_main(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
         if (argc == 1) {
                 // print statuses of all networks
                 INET_status();
+                SIPC_status();
 
         } else if (argc >= 4) {
                 // print help if too many arguments are given
@@ -279,6 +343,15 @@ int_main(ifconfig, STACK_DEPTH_LOW, int argc, char *argv[])
                                         INET_up(up_args);
                                 } else {
                                         INET_status();
+                                }
+
+                        } else if (isstreq(net, "SIPC")) {
+                                if (down) {
+                                        ifdown(NET_FAMILY__SIPC);
+                                } else if (up_args) {
+                                        SIPC_up(up_args);
+                                } else {
+                                        SIPC_status();
                                 }
 
                         } else {

@@ -77,8 +77,8 @@ int_main(df, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        printf(VT100_FONT_BOLD"File system"VT100_CURSOR_FORWARD(5)"Total"VT100_CURSOR_FORWARD(5)
-               "Free"VT100_CURSOR_FORWARD(6)"%%Used  Mount point"VT100_RESET_ATTRIBUTES"\n");
+        printf(VT100_FONT_BOLD"File system"VT100_CURSOR_FORWARD(6)"Total"VT100_CURSOR_FORWARD(6)
+               "Free"VT100_CURSOR_FORWARD(7)"%%Used  Mount point"VT100_RESET_ATTRIBUTES"\n");
 
         struct mntent mnt;
         int           i = 0;
@@ -87,15 +87,11 @@ int_main(df, STACK_DEPTH_LOW, int argc, char *argv[])
                 u32_t dfree;
                 const char *unit;
 
-                if (mnt.mnt_total > 10*GiB) {
-                        dtotal = CONVERT_TO_GiB(mnt.mnt_total);
-                        dfree  = CONVERT_TO_GiB(mnt.mnt_free);
-                        unit   = "GiB";
-                } else if (mnt.mnt_total > 10*MiB) {
+                if (mnt.mnt_total > 1*GiB) {
                         dtotal = CONVERT_TO_MiB(mnt.mnt_total);
                         dfree  = CONVERT_TO_MiB(mnt.mnt_free);
                         unit   = "MiB";
-                } else if (mnt.mnt_total > 10*KiB) {
+                } else if (mnt.mnt_total > 1*MiB) {
                         dtotal = CONVERT_TO_KiB(mnt.mnt_total);
                         dfree  = CONVERT_TO_KiB(mnt.mnt_free);
                         unit   = "KiB";
@@ -107,10 +103,10 @@ int_main(df, STACK_DEPTH_LOW, int argc, char *argv[])
 
                 u32_t percent = ((dtotal - dfree) * 1000) / dtotal;
 
-                printf("%s"  VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(16)
-                       "%u%s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(26)
-                       "%u%s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(36)
-                       "%u.%u%%"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(43)
+                printf("%s"  VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(17)
+                       "%u%s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(28)
+                       "%u%s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(39)
+                       "%u.%u%%"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(46)
                        "%s\n",
                        mnt.mnt_fsname, dtotal, unit, dfree, unit,
                        percent / 10, percent % 10, mnt.mnt_dir);

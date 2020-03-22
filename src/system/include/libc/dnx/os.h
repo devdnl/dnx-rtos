@@ -476,7 +476,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "2.2.0";
+        return "2.3.0";
 }
 
 //==============================================================================
@@ -502,7 +502,7 @@ static inline const char *get_OS_version(void)
 //==============================================================================
 static inline const char *get_OS_codename(void)
 {
-        return "Eagle";
+        return "Falcon";
 }
 
 //==============================================================================
@@ -935,7 +935,8 @@ static inline void system_shutdown(void)
  *
  * @param  str          message string
  * @param  len          maximum string size
- * @param  timestamp    message timestamp (in milliseconds). Can be NULL.
+ * @param  from_time    time from log is get (time from system start)
+ * @param  curr_time    log current time (time from system start)
  *
  * @return String size. 0 if system log is empty.
  *
@@ -946,7 +947,8 @@ static inline void system_shutdown(void)
         // ...
 
         char msg[128];
-        while (syslog_read(msg, sizeof(msg), NULL) {
+        struct timeval t = {0, 0};
+        while (syslog_read(msg, sizeof(msg), &t, &t) {
                 puts(msg);
         }
 
@@ -955,16 +957,17 @@ static inline void system_shutdown(void)
    @endcode
  */
 //==============================================================================
-static inline size_t syslog_read(char *str, size_t len, u32_t *timestamp)
+static inline size_t syslog_read(char *str, size_t len, const struct timeval *from_time, struct timeval *curr_time)
 {
 #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         size_t n = 0;
-        syscall(SYSCALL_SYSLOGREAD, &n, str, &len, timestamp);
+        syscall(SYSCALL_SYSLOGREAD, &n, str, &len, from_time, curr_time);
         return n;
 #else
         (void)str;
         (void)len;
-        (void)timestamp;
+        (void)from_time;
+        (void)curr_time;
         return 0;
 #endif
 }

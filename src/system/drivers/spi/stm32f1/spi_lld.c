@@ -286,6 +286,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                                            | DMA_CCRx_DIR_M2P
                                            | DMA_CCRx_MSIZE_BYTE
                                            | DMA_CCRx_PSIZE_BYTE;
+                        config_tx.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
                         _DMA_DDI_config_t config_rx;
                         config_rx.arg      = hdl;
@@ -298,6 +299,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                                            | DMA_CCRx_DIR_P2M
                                            | DMA_CCRx_MSIZE_BYTE
                                            | DMA_CCRx_PSIZE_BYTE;
+                        config_rx.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
                         err = _DMA_DDI_transfer(dmadrx, &config_rx);
                         if (!err) {

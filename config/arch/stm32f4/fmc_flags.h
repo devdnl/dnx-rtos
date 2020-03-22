@@ -91,7 +91,7 @@ this:AddWidget("Combobox", "Burst read mode")
 this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 --*/
-#define __FMC_SDRAM_RBURST__ 0
+#define __FMC_SDRAM_RBURST__ 1
 
 /*--
 this:AddWidget("Combobox", "SDRAM clock period")
@@ -154,7 +154,7 @@ this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 this:SetEvent("clicked", function() this:SDRAMEn(1) end)
 --*/
-#define __FMC_SDRAM_1_ENABLE__ 0
+#define __FMC_SDRAM_1_ENABLE__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")
@@ -204,7 +204,7 @@ this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 this:SetEvent("clicked", function() this:SDRAMEn(2) end)
 --*/
-#define __FMC_SDRAM_2_ENABLE__ 1
+#define __FMC_SDRAM_2_ENABLE__ 0
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")

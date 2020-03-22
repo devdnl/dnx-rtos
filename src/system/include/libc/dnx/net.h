@@ -104,7 +104,7 @@ int_main(server, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
-        SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open(NET_FAMILY__INET, NET_PROTOCOL__TCP);
         if (socket) {
                 if (socket_bind(socket, &ADDR_ANY) == 0) {
                         if (socket_listen(socket) == 0) {
@@ -127,12 +127,12 @@ int_main(server, STACK_DEPTH_LOW, int argc, char *argv[])
                                                     strlen(HELLO),
                                                     NET_FLAGS__NOCOPY);
 
-                                        socket_delete(new_socket);
+                                        socket_close(new_socket);
                                 }
                         }
                 }
 
-                socket_delete(socket);
+                socket_close(socket);
         }
 
         if (errno != 0) {
@@ -166,7 +166,7 @@ static const NET_INET_sockaddr_t SERVER_ADDR = {
 
 int_main(client, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        SOCKET *socket = socket_new(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open(NET_FAMILY__INET, NET_PROTOCOL__TCP);
         if (socket) {
                 socket_set_send_timeout(socket, 2000);
                 socket_set_recv_timeout(socket, 2000);
@@ -189,7 +189,7 @@ int_main(client, STACK_DEPTH_LOW, int argc, char *argv[])
                         }
                 } while (0);
 
-                socket_delete(socket);
+                socket_close(socket);
         }
 
         if (errno != 0) {
@@ -328,10 +328,10 @@ static inline int ifstatus(NET_family_t family, NET_generic_status_t *status)
  * @return On error @b NULL is returned and @ref errno value is set appropriately,
  *         otherwise new socket pointer.
  *
- * @see socket_delete()
+ * @see socket_close()
  */
 //==============================================================================
-static inline SOCKET *socket_new(NET_family_t family, NET_protocol_t protocol)
+static inline SOCKET *socket_open(NET_family_t family, NET_protocol_t protocol)
 {
 #if __ENABLE_NETWORK__ == _YES_
         SOCKET *socket = NULL;
@@ -346,26 +346,32 @@ static inline SOCKET *socket_new(NET_family_t family, NET_protocol_t protocol)
 
 //==============================================================================
 /**
- * @brief  The function closes socket.
+ * @brief  The function close socket in both directions.
  *
- * @param  socket       Socket
+ * @param  socket       The socket to close.
  *
- * @see socket_new()
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
+ *
+ * @see socket_shutdown(), socket_open()
  */
 //==============================================================================
-static inline void socket_delete(SOCKET *socket)
+static inline int socket_close(SOCKET *socket)
 {
 #if __ENABLE_NETWORK__ == _YES_
         syscall(SYSCALL_NETSOCKETDESTROY, NULL, socket);
+        return 0;
 #else
         UNUSED_ARG1(socket);
+        _errno = ENOTSUP;
+        return -1;
 #endif
 }
 
 //==============================================================================
 /**
  * @brief Assigns an address to the socket. When a socket is created with
- *        socket_new(), it exists in an address family space but has no address
+ *        socket_open(), it exists in an address family space but has no address
  *        assigned. socket_bind() requests that the address pointed to by sockAddr be
  *        assigned to the socket. Clients do not normally require that an address
  *        be assigned to a socket. However, servers usually require that the
@@ -703,23 +709,6 @@ static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
         _errno = ENOTSUP;
         return -1;
 #endif
-}
-
-//==============================================================================
-/**
- * @brief  The function close socket in both directions.
- *
- * @param  socket       The socket to close.
- *
- * @return On success 0 is returned, otherwise -1 and @ref errno value is set
- *         appropriately.
- *
- * @see socket_shutdown()
- */
-//==============================================================================
-static inline int socket_close(SOCKET *socket)
-{
-        return socket_shutdown(socket, NET_SHUT__RDWR);
 }
 
 //==============================================================================

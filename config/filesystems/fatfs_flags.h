@@ -35,44 +35,43 @@
 #define _FATFS_FLAGS_H_
 
 /*--
-this:SetLayout("TitledGridBack", 2, "Home > File Systems > fatfs",
+this:SetLayout("TitledGridBack", 1, "Home > File Systems > fatfs",
                function() this:LoadFile("filesystems/filesystems_flags.h") end)
 ++*/
-
-/*--
-this:AddWidget("Checkbox", "Enable Long File Names")
---*/
-#define __FATFS_LFN_ENABLE__ _YES_
 
 /*--
 this:AddWidget("Combobox")
 this:AddItem("U.S. (437)",                        "437" )
 this:AddItem("Arabic (720)",                      "720" )
 this:AddItem("Greek (737)",                       "737" )
+this:AddItem("KBL (771)",                         "771" )
 this:AddItem("Baltic (775)",                      "775" )
-this:AddItem("Multilingual Latin 1 (850)",        "850" )
+this:AddItem("Latin 1 (850)",                     "850" )
 this:AddItem("Latin 2 (852)",                     "852" )
 this:AddItem("Cyrillic (855)",                    "855" )
 this:AddItem("Turkish (857)",                     "857" )
-this:AddItem("Multilingual Latin 1 + Euro (858)", "858" )
+this:AddItem("Portuguese (860)",                  "860" )
+this:AddItem("Icelandic (861)",                   "861" )
 this:AddItem("Hebrew (862)",                      "862" )
+this:AddItem("Canadian French (863)",             "863" )
+this:AddItem("Arabic (864)",                      "864" )
+this:AddItem("Nordic (865)",                      "865" )
 this:AddItem("Russian (866)",                     "866" )
-this:AddItem("Thai (874)",                        "874" )
-this:AddItem("Japanese Shift-JIS (932)",          "932" )
-this:AddItem("Simplified Chinese GBK (936)",      "936" )
-this:AddItem("Korean (949)",                      "949" )
-this:AddItem("Traditional Chinese Big5 (950)",    "950" )
-this:AddItem("Central Europe (1250)",             "1250")
-this:AddItem("Cyrillic (1251)",                   "1251")
-this:AddItem("Latin 1 (1252)",                    "1252")
-this:AddItem("Greek (1253)",                      "1253")
-this:AddItem("Turkish (1254)",                    "1254")
-this:AddItem("Hebrew (1255)",                     "1255")
-this:AddItem("Arabic (1256)",                     "1256")
-this:AddItem("Baltic (1257)",                     "1257")
-this:AddItem("Vietnam (1258)",                    "1258")
+this:AddItem("Greek 2 (869)",                     "869" )
+this:AddItem("Japanese (DBCS) (932)",             "932" )
+this:AddItem("Simplified Chinese (DBCS) (936)",   "936" )
+this:AddItem("Korean (DBCS) (949)",               "949" )
+this:AddItem("Traditional Chinese (DBCS) (950)",  "950" )
 --*/
 #define __FATFS_LFN_CODEPAGE__ 852
+
+/*--
+this:AddWidget("Checkbox", "Buffered files (fast)")
+this:SetToolTip("When option is disabled, file system uses the sector buffer in the file system "..
+                "object instead of the sector buffer in the individual file object for file "..
+                "data transfer. This reduces memory consumption 512 bytes each file object.")
+--*/
+#define __FATFS_BUFFERED_FILE_ENABLE__ _YES_
 
 #endif /* _FATFS_FLAGS_H_ */
 /*==============================================================================
