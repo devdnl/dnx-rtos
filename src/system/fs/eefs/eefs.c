@@ -2662,10 +2662,10 @@ static int file_add_chain(EEFS_t *hdl)
 
                 if (!err) {
                         if (block_is_file(hdl->block)) {
-                                hdl->block.buf.file_data.data_next = next;
+                                hdl->block.buf.file.data_next = next;
 
                         } else if (block_is_file_data(hdl->block)) {
-                                hdl->block.buf.file.data_next = next;
+                                hdl->block.buf.file_data.data_next = next;
 
                         } else {
                                 err = EILSEQ;
@@ -2730,10 +2730,10 @@ static int file_write(EEFS_t *hdl, const u8_t *src, size_t count, fpos_t *fpos, 
                         data       = hdl->block.buf.file_data.data;
 
                         if (block_is_file(hdl->block)) {
-                                next = hdl->block.buf.file_data.data_next;
+                                next = hdl->block.buf.file.data_next;
 
                         } else if (block_is_file_data(hdl->block)) {
-                                next = hdl->block.buf.file.data_next;
+                                next = hdl->block.buf.file_data.data_next;
 
                         } else {
                                 err = EILSEQ;
@@ -2833,10 +2833,10 @@ static int file_read(EEFS_t *hdl, u8_t *dst, size_t count, fpos_t *fpos, size_t 
                         data       = hdl->block.buf.file_data.data;
 
                         if (block_is_file(hdl->block)) {
-                                next = hdl->block.buf.file_data.data_next;
+                                next = hdl->block.buf.file.data_next;
 
                         } else if (block_is_file_data(hdl->block)) {
-                                next = hdl->block.buf.file.data_next;
+                                next = hdl->block.buf.file_data.data_next;
 
                         } else {
                                 err = EILSEQ;

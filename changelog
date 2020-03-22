@@ -1,3 +1,19 @@
+dnx RTOS 2.3.0 Falcon
+=====================
+New Features, Improvements:
+- Updated many drivers
+- Added syscall mode 2 (flat syscall handling)
+- Context switch optimizations 
+- EXT4FS fixes
+- Updated FAT32 library
+- Updated heap library (added memory consistency checker)
+- LwIP update
+- and more...
+
+Fixed Bugs:
+- Process handling
+- and more...
+
 dnx RTOS 2.2.1 Eagle
 ====================
 New Features, Improvements:

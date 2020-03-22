@@ -783,7 +783,17 @@ int_main(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
         if (argc >= 2) {
                 for (int i = 1; i < argc; i++) {
                         if (isstreq(argv[i], "-e")) {
-                                if (!analyze_line(argv[i+1])) {
+
+                                memset(global->line, 0, sizeof(global->line));
+
+                                for (int n = i + 1; n < argc; n++) {
+                                        strlcat(global->line, argv[n], sizeof(global->line));
+                                        strlcat(global->line, " ", sizeof(global->line));
+                                }
+
+                                char *cmd = trim_string(global->line);
+
+                                if (!analyze_line(cmd)) {
                                         print_fail_message(argv[i+1]);
                                 }
 

@@ -185,7 +185,7 @@ int _UART_LLD__turn_on(u8_t major)
                 SET_BIT(*UART[major].APBENR, UART[major].APBENR_UARTEN);
 
                 NVIC_EnableIRQ(UART[major].IRQn);
-                NVIC_SetPriority(UART[major].IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                NVIC_SetPriority(UART[major].IRQn, _UART_IRQ_PRIORITY);
 
                 return ESUCC;
         } else {

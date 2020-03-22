@@ -335,7 +335,7 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
                 if (once && appends == 0) {
                         break;
                 } else {
-                        sleep(1);
+                        sleep(5);
                         continue;
                 }
         }

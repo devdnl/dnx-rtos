@@ -41,7 +41,13 @@ Brief    Network management.
 #define MAXIMUM_SAFE_UDP_PAYLOAD                508
 
 #define PROXY_TABLE                             static const proxy_func_t proxy[_NET_FAMILY__COUNT]
+#define PROXY_TABLE_U16                         static const proxy_func_u16_t proxy[_NET_FAMILY__COUNT]
+#define PROXY_TABLE_U32                         static const proxy_func_u32_t proxy[_NET_FAMILY__COUNT]
+#define PROXY_TABLE_U64                         static const proxy_func_u64_t proxy[_NET_FAMILY__COUNT]
 #define PROXY_FUNCTION(_family, _proxy_func)    [NET_FAMILY__##_family] = (proxy_func_t)_family##_##_proxy_func
+#define PROXY_FUNCTION_U16(_family, _proxy_func)[NET_FAMILY__##_family] = (proxy_func_u16_t)_family##_##_proxy_func
+#define PROXY_FUNCTION_U32(_family, _proxy_func)[NET_FAMILY__##_family] = (proxy_func_u32_t)_family##_##_proxy_func
+#define PROXY_FUNCTION_U64(_family, _proxy_func)[NET_FAMILY__##_family] = (proxy_func_u64_t)_family##_##_proxy_func
 #define PROXY_ifup(_family)                     PROXY_FUNCTION(_family, ifup)
 #define PROXY_ifdown(_family)                   PROXY_FUNCTION(_family, ifdown)
 #define PROXY_ifstatus(_family)                 PROXY_FUNCTION(_family, ifstatus)
@@ -63,9 +69,9 @@ Brief    Network management.
 #define PROXY_socket_disconnect(_family)        PROXY_FUNCTION(_family, socket_disconnect)
 #define PROXY_socket_shutdown(_family)          PROXY_FUNCTION(_family, socket_shutdown)
 #define PROXY_socket_getaddress(_family)        PROXY_FUNCTION(_family, socket_getaddress)
-#define PROXY_hton_u16(_family)                 PROXY_FUNCTION(_family, hton_u16)
-#define PROXY_hton_u32(_family)                 PROXY_FUNCTION(_family, hton_u32)
-#define PROXY_hton_u64(_family)                 PROXY_FUNCTION(_family, hton_u64)
+#define PROXY_hton_u16(_family)                 PROXY_FUNCTION_U16(_family, hton_u16)
+#define PROXY_hton_u32(_family)                 PROXY_FUNCTION_U32(_family, hton_u32)
+#define PROXY_hton_u64(_family)                 PROXY_FUNCTION_U64(_family, hton_u64)
 #define call_proxy_function(family, ...)        proxy[family](__VA_ARGS__)
 
 /*==============================================================================
@@ -78,6 +84,9 @@ struct socket {
 };
 
 typedef int (*proxy_func_t)();
+typedef u16_t (*proxy_func_u16_t)();
+typedef u32_t (*proxy_func_u32_t)();
+typedef u64_t (*proxy_func_u64_t)();
 
 /*==============================================================================
   Local function prototypes
@@ -771,7 +780,7 @@ int _net_gethostbyname(NET_family_t family, const char *name, NET_generic_sockad
 //==============================================================================
 u16_t _net_hton_u16(NET_family_t family, u16_t value)
 {
-        PROXY_TABLE = {
+        PROXY_TABLE_U16 = {
                 #if __ENABLE_TCPIP_STACK__ > 0
                 PROXY_hton_u16(INET),
                 #endif
@@ -797,7 +806,7 @@ u16_t _net_hton_u16(NET_family_t family, u16_t value)
 //==============================================================================
 u32_t _net_hton_u32(NET_family_t family, u32_t value)
 {
-        PROXY_TABLE = {
+        PROXY_TABLE_U32 = {
                 #if __ENABLE_TCPIP_STACK__ > 0
                 PROXY_hton_u32(INET),
                 #endif
@@ -823,7 +832,7 @@ u32_t _net_hton_u32(NET_family_t family, u32_t value)
 //==============================================================================
 u64_t _net_hton_u64(NET_family_t family, u64_t value)
 {
-        PROXY_TABLE = {
+        PROXY_TABLE_U64 = {
                 #if __ENABLE_TCPIP_STACK__ > 0
                 PROXY_hton_u64(INET),
                 #endif

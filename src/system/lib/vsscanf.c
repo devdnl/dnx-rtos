@@ -273,7 +273,7 @@ int _vsscanf(const char *str, const char *format, va_list args)
                                                 str++;
                                         }
 
-                                        double *value = va_arg(args, double*);
+                                        float *value = va_arg(args, float*);
                                         if (value) {
                                                 char *end;
                                                 *value = _strtod(str, &end);

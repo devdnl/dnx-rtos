@@ -79,13 +79,13 @@ extern "C" {
 ==============================================================================*/
 typedef struct {
         /** pointer to the heap (ram_heap): for alignment, ram is now a pointer instead of an array */
-        u8_t *begin;
+        u8_t *ram;
 
         /** the last entry, always unused! */
-        struct mem *end;
+        struct mem *ram_end;
 
         /** pointer to the lowest free block, this is used for faster search */
-        struct mem *lfree;
+        struct mem volatile *lfree;
 
         /** aligned heap size */
         size_t size;

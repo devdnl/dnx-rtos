@@ -70,6 +70,9 @@ int_main(reboot, STACK_DEPTH_LOW, int argc, char *argv[])
         (void) argv;
 
         sync();
+
+        // TODO umount needed.
+
         system_reboot();
 
         return EXIT_SUCCESS;

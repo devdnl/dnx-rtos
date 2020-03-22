@@ -52,7 +52,7 @@
 #
 # this:AddWidget("Editline", true, "Interface device path")
 #--*/
-#define __NETWORK_SIPC_INTERFACE_PATH__ "/dev/hmi"
+#define __NETWORK_SIPC_INTERFACE_PATH__ "/dev/nc"
 
 #/*--
 # this:AddWidget("Combobox", "Debug messages")

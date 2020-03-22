@@ -59,10 +59,10 @@ extern "C" {
 struct ext4_lock {
 
 	/**@brief   Lock access to mount point.*/
-	void (*lock)(void);
+	void (*lock)(void*);
 
 	/**@brief   Unlock access to mount point.*/
-	void (*unlock)(void);
+	void (*unlock)(void*);
 };
 
 /********************************FILE DESCRIPTOR*****************************/
@@ -121,7 +121,7 @@ typedef struct ext4_dir {
  * @return Standard error code */
 int ext4_mount(struct ext4_blockdev *bdev,
                struct ext4_mountpoint **mount_point,
-               bool read_only);
+               bool read_only, void *p_user);
 
 /**@brief   Umount operation.
  *

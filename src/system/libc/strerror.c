@@ -217,7 +217,7 @@ const char *strerror(int errnum)
 
         if (__OS_ERRNO_STRING_LEN__ == 0) {
                 return "";
-        } else if (errnum < _ENUMBER) {
+        } else if ((errnum >= 0) && (errnum < _ENUMBER)) {
                 return errstr[errnum];
         } else {
                 return "Unknown error";

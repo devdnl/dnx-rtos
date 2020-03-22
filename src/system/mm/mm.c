@@ -75,7 +75,7 @@
 /**
  * Macro check if selected address (mem) is in selected heap (heap).
  */
-#define IS_IN_HEAP(heap, mem)           ((mem) >= cast(void*, (heap).begin) && (mem) < (cast(void*, (heap).end)))
+#define IS_IN_HEAP(heap, mem)           ((mem) >= cast(void*, (heap).ram) && (mem) < (cast(void*, (heap).ram_end)))
 
 /*==============================================================================
   Local object types
@@ -89,8 +89,10 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 /*==============================================================================
   Local objects
 ==============================================================================*/
+#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 static const char  *REGISTERED_REGION_STR  = "Registered memory region @ 0x%X of size %d bytes";
 static const char  *REGISTRATION_ERROR_STR = "Memory region registration error (%d) @ 0x%X of size %d bytes";
+#endif
 static _mm_region_t memory_region;
 static i32_t        memory_usage[_MM_COUNT - 1];
 static i32_t       *module_memory_usage;
@@ -160,7 +162,7 @@ int _mm_register_region(_mm_region_t *region, void *start, size_t size)
         if (region && start && size) {
                 // check if memory region is already used
                 for (_mm_region_t *r = &memory_region; r; r = r->next) {
-                        if (r->heap.begin == start) {
+                        if (r->heap.ram == start) {
                                 err = EADDRINUSE;
                                 goto finish;
                         }
@@ -453,8 +455,8 @@ bool _mm_is_object_in_heap(void *ptr)
         }
 
         for (_mm_region_t *r = &memory_region; r; r = r->next) {
-                if (  (cast(uintptr_t, ptr) >= cast(uintptr_t, r->heap.begin))
-                   && (cast(uintptr_t, ptr) <= cast(uintptr_t, r->heap.end  )) ) {
+                if (  (cast(uintptr_t, ptr) >= cast(uintptr_t, r->heap.ram))
+                   && (cast(uintptr_t, ptr) <= cast(uintptr_t, r->heap.ram_end  )) ) {
 
                         return true;
                 }

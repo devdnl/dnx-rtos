@@ -62,6 +62,7 @@ typedef struct SIPC_socket {
         u16_t    seq;
         u8_t     port;
         bool     busy;
+        bool     waiting_for_data_ack;
 } SIPC_socket_t;
 
 /*==============================================================================

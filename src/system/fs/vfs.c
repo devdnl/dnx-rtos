@@ -59,17 +59,15 @@ typedef struct FS_entry {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static bool         is_first_fs             (const char *mount_point);
-static int          new_FS_entry            (FS_entry_t *parent_FS, const char *fs_mount_point, const char *fs_src_file, const vfs_FS_itf_t *fs_interface, const char *opts, FS_entry_t **fs_entry);
-static int          delete_FS_entry         (FS_entry_t *this);
-static bool         is_file_valid           (FILE *file);
-static bool         is_dir_valid            (DIR *dir);
-static int          increase_task_priority  (void);
-static inline void  restore_priority        (int priority);
-static int          parse_flags             (const char *str, u32_t *flags);
-static int          get_path_FS             (const char *path, size_t len, int *position, FS_entry_t **fs_entry);
-static int          get_path_base_FS        (const char *path, const char **extPath, FS_entry_t **fs_entry);
-static int          new_absolute_path       (const struct vfs_path *path, enum path_correction corr, char **new_path);
+static bool is_first_fs      (const char *mount_point);
+static int  new_FS_entry     (FS_entry_t *parent_FS, const char *fs_mount_point, const char *fs_src_file, const vfs_FS_itf_t *fs_interface, const char *opts, FS_entry_t **fs_entry);
+static int  delete_FS_entry  (FS_entry_t *this);
+static bool is_file_valid    (FILE *file);
+static bool is_dir_valid     (DIR *dir);
+static int  parse_flags      (const char *str, u32_t *flags);
+static int  get_path_FS      (const char *path, size_t len, int *position, FS_entry_t **fs_entry);
+static int  get_path_base_FS (const char *path, const char **extPath, FS_entry_t **fs_entry);
+static int  new_absolute_path(const struct vfs_path *path, enum path_correction corr, char **new_path);
 
 /*==============================================================================
   Local object definitions
@@ -316,18 +314,21 @@ int _vfs_getmntentry(int seek, struct mntent *mntent)
         }
 
         if (!err) {
-                int priority = increase_task_priority();
+                mntent->mnt_dir   = fs->mount_point;
+                mntent->mnt_free  = 0;
+                mntent->mnt_total = 0;
 
                 struct statfs stat_fs;
+                memset(&stat_fs, 0, sizeof(stat_fs));
+
                 err = fs->interface->fs_statfs(fs->handle, &stat_fs);
                 if (!err) {
                         mntent->mnt_fsname = stat_fs.f_fsname;
-                        mntent->mnt_dir    = fs->mount_point;
                         mntent->mnt_free   = (u64_t)stat_fs.f_bfree  * stat_fs.f_bsize;
                         mntent->mnt_total  = (u64_t)stat_fs.f_blocks * stat_fs.f_bsize;
+                } else {
+                        mntent->mnt_fsname = stat_fs.f_fsname ? stat_fs.f_fsname : "unknown";
                 }
-
-                restore_priority(priority);
         }
 
         return err;
@@ -358,10 +359,7 @@ int _vfs_mknod(const struct vfs_path *path, dev_t dev)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-
-                        int priority = increase_task_priority();
                         err = fs->interface->fs_mknod(fs->handle, external_path, dev);
-                        restore_priority(priority);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -395,10 +393,7 @@ int _vfs_mkdir(const struct vfs_path *path, mode_t mode)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-
-                        int priority = increase_task_priority();
                         err = fs->interface->fs_mkdir(fs->handle, external_path, S_IPMT(mode));
-                        restore_priority(priority);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -433,10 +428,7 @@ int _vfs_mkfifo(const struct vfs_path *path, mode_t mode)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-
-                        int priority = increase_task_priority();
                         err = fs->interface->fs_mkfifo(fs->handle, external_path, S_IPMT(mode));
-                        restore_priority(priority);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -476,9 +468,7 @@ int _vfs_opendir(const struct vfs_path *path, DIR **dir)
                                 (*dir)->FS_hdl = fs->handle;
                                 (*dir)->FS_if  = fs->interface;
 
-                                int priority = increase_task_priority();
                                 err = fs->interface->fs_opendir(fs->handle, external_path, *dir);
-                                restore_priority(priority);
                         }
 
                         _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -533,16 +523,12 @@ int _vfs_readdir(DIR *dir, dirent_t **dirent)
         int err = EINVAL;
 
         if (is_dir_valid(dir) && dirent) {
-                int priority = increase_task_priority();
-
                 err = dir->FS_if->fs_readdir(dir->FS_hdl, dir);
                 if (!err) {
                         *dirent = &dir->dirent;
                 } else {
                         *dirent = NULL;
                 }
-
-                restore_priority(priority);
         }
 
         return err;
@@ -686,12 +672,9 @@ int _vfs_rename(const struct vfs_path *old_name, const struct vfs_path *new_name
                 if (!err) {
 
                         if (old_fs == new_fs) {
-                                int priority = increase_task_priority();
-
                                 err = old_fs->interface->fs_rename(old_fs->handle,
                                                                    old_extern_path,
                                                                    new_extern_path);
-                                restore_priority(priority);
                         } else {
                                 err = ENOTSUP;
                         }
@@ -735,10 +718,7 @@ int _vfs_chmod(const struct vfs_path *path, mode_t mode)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-
-                        int priority = increase_task_priority();
                         err = fs->interface->fs_chmod(fs->handle, external_path, S_IPMT(mode));
-                        restore_priority(priority);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -774,10 +754,7 @@ int _vfs_chown(const struct vfs_path *path, uid_t owner, gid_t group)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-
-                        int priority = increase_task_priority();
                         err = fs->interface->fs_chown(fs->handle, external_path, owner, group);
-                        restore_priority(priority);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -812,10 +789,7 @@ int _vfs_stat(const struct vfs_path *path, struct stat *stat)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-
-                        int priority = increase_task_priority();
                         err = fs->interface->fs_stat(fs->handle, external_path, stat);
-                        restore_priority(priority);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -849,10 +823,7 @@ int _vfs_statfs(const struct vfs_path *path, struct statfs *statfs)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, NULL, &fs);
                 if (!err) {
-
-                        int priority = increase_task_priority();
                         err = fs->interface->fs_statfs(fs->handle, statfs);
-                        restore_priority(priority);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -910,8 +881,6 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-                        int priority = increase_task_priority();
-
                         err = fs->interface->fs_open(fs->handle,
                                                      &file_obj->f_hdl,
                                                      &file_obj->f_lseek,
@@ -943,8 +912,6 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
                                 file_obj->f_flag      = f_flags;
                                 file_obj->header.type = RES_TYPE_FILE;
                         }
-
-                        restore_priority(priority);
                 }
         }
 
@@ -1223,11 +1190,7 @@ int _vfs_fstat(FILE *file, struct stat *stat)
         int err = EINVAL;
 
         if (is_file_valid(file) && stat) {
-                int priority = increase_task_priority();
-
                 err = file->FS_if->fs_fstat(file->FS_hdl, file->f_hdl, stat);
-
-                restore_priority(priority);
         }
 
         return err;
@@ -1247,11 +1210,7 @@ int _vfs_fflush(FILE *file)
         int err = EINVAL;
 
         if (is_file_valid(file)) {
-                int priority = increase_task_priority();
-
                 err = file->FS_if->fs_flush(file->FS_hdl, file->f_hdl);
-
-                restore_priority(priority);
         }
 
         return err;
@@ -1408,21 +1367,21 @@ static int delete_FS_entry(FS_entry_t *this)
 
         if (this) {
                 err = this->interface->fs_sync(this->handle);
-                if (!err) {
-                        err = this->interface->fs_release(this->handle);
-                        if (!err) {
-                                if (this->parent && this->parent->children_cnt) {
-                                        this->parent->children_cnt--;
-                                }
-
-                                if (this->mount_point) {
-                                        _kfree(_MM_KRN, cast(void**, &this->mount_point));
-                                }
-
-                                _kfree(_MM_KRN, cast(void**, &this));
-                        }
-                } else {
+                if (err) {
                         printk("VFS: unable to sync '%s' (%d)", this->mount_point, err);
+                }
+
+                err = this->interface->fs_release(this->handle);
+                if (!err) {
+                        if (this->parent && this->parent->children_cnt) {
+                                this->parent->children_cnt--;
+                        }
+
+                        if (this->mount_point) {
+                                _kfree(_MM_KRN, cast(void**, &this->mount_point));
+                        }
+
+                        _kfree(_MM_KRN, cast(void**, &this));
                 }
         }
 
@@ -1459,36 +1418,6 @@ static bool is_file_valid(FILE *file)
 static bool is_dir_valid(DIR *dir)
 {
         return (_mm_is_object_in_heap(dir) && dir->header.type == RES_TYPE_DIR);
-}
-
-//==============================================================================
-/**
- * @brief Function increase task priority and return original priority value
- *
- * @return original task priority
- */
-//==============================================================================
-static int increase_task_priority(void)
-{
-        int priority = _task_get_priority(_THIS_TASK);
-
-        if (priority < PRIORITY_HIGHEST) {
-                _task_set_priority(_THIS_TASK, priority + 1);
-        }
-
-        return priority;
-}
-
-//==============================================================================
-/**
- * @brief Function restore original priority
- *
- * @param priority
- */
-//==============================================================================
-static inline void restore_priority(int priority)
-{
-        _task_set_priority(_THIS_TASK, priority);
 }
 
 //==============================================================================

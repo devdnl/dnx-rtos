@@ -35,6 +35,7 @@
 #include "stm32f4/lib/stm32f4xx_rcc.h"
 #include "stm32f4/lib/misc.h"
 #include "kernel/kwrapper.h"
+#include "kernel/kpanic.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -84,11 +85,16 @@ static _mm_region_t ram3;
 //==============================================================================
 void _cpuctl_init(void)
 {
-        NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
+        NVIC_SetVectorTable(NVIC_VectTab_FLASH, __CPU_VTOR_TAB_POSITION__);
         NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
         /* enable FPU */
         SCB->CPACR |= ((3 << 20)|(3 << 22));
+
+#if __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ == _YES_
+        /* disable interrupting multi-cycle instructions */
+        SCnSCB->ACTLR |= SCnSCB_ACTLR_DISMCYCINT_Msk;
+#endif
 
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
@@ -248,6 +254,46 @@ void _cpuctl_delay_us(u16_t microseconds)
                         ticks -= now;
                 }
         }
+}
+
+//==============================================================================
+/**
+ * @brief Hard Fault ISR
+ */
+//==============================================================================
+void HardFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Memory Management failure ISR
+ */
+//==============================================================================
+void MemManage_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Bus Fault ISR
+ */
+//==============================================================================
+void BusFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Usage Fault ISR
+ */
+//==============================================================================
+void UsageFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 /*==============================================================================

@@ -130,7 +130,7 @@ API_MOD_INIT(DCI, void **device_handle, u8_t major, u8_t minor)
 
                                 if (_DCI_JPEG) {
                                         NVIC_EnableIRQ(DCMI_IRQn);
-                                        NVIC_SetPriority(DCMI_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                                        NVIC_SetPriority(DCMI_IRQn, _DCI_IRQ_PRIORITY);
                                         NVIC_ClearPendingIRQ(DCMI_IRQn);
                                 }
 
@@ -138,7 +138,8 @@ API_MOD_INIT(DCI, void **device_handle, u8_t major, u8_t minor)
 
                                 // calculate max DMA transfer size and number of transfers
                                 if (_DCI_JPEG) {
-                                        DCI->TSIZEW = 32;
+                                        printk("%s: enabled JPEG mode", GET_MODULE_NAME());
+                                        DCI->TSIZEW = 256;
                                         DCI->TCOUNT = DMA_MAX_TRANSFER;
                                 } else {
                                         size_t tc   = (sizeof(u32_t) * (DMA_MAX_TRANSFER + 1)
@@ -290,10 +291,12 @@ API_MOD_READ(DCI,
                           : (_DCI_CAM_RES_X  * _DCI_CAM_RES_Y   * (_DCI_JPEG ? 1 : _DCI_BYTES_PER_PIXEL));
 
         if (count != frame_size) {
+                printk("DCI: invalid frame size: %u vs %u", count, frame_size);
                 return ENOTSUP;
         }
 
         if (*fpos != 0) {
+                printk("DCI: file seek not 0");
                 return ESPIPE;
         }
 
@@ -306,20 +309,22 @@ API_MOD_READ(DCI,
         }
 
         _DMA_DDI_config_t config;
-        config.MA[0]    = cast(u32_t, dst);
-        config.MA[1]    = cast(u32_t, dst) + (hdl->TSIZEW * sizeof(u32_t));
-        config.PA       = cast(u32_t, &DCMI->DR);
-        config.NDT      = hdl->TSIZEW;
-        config.arg      = DCI;
-        config.callback = DMA_callback;
-        config.release  = false;
-        config.FC       = DMA_SxFCR_FTH_1 | DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2 | DMA_SxFCR_DMDIS;
-        config.CR       = DMA_CHANNEL << DMA_SxCR_CHSEL_Pos
-                        | DMA_SxCR_PL_1
-                        | DMA_SxCR_MSIZE_0
-                        | DMA_SxCR_PSIZE_1
-                        | DMA_SxCR_MINC | DMA_SxCR_DBM
-                        | DMA_SxCR_CIRC;
+        config.MA[0]        = cast(u32_t, dst);
+        config.MA[1]        = cast(u32_t, dst) + (hdl->TSIZEW * sizeof(u32_t));
+        config.PA           = cast(u32_t, &DCMI->DR);
+        config.NDT          = hdl->TSIZEW;
+        config.arg          = DCI;
+        config.callback     = DMA_callback;
+        config.release      = false;
+        config.FC           = DMA_SxFCR_FTH_FULL | DMA_SxFCR_FS_EMPTY | DMA_SxFCR_DMDIS_YES;
+        config.CR           = DMA_SxCR_CHSEL_SEL(DMA_CHANNEL)
+                            | DMA_SxCR_PL_HIGH
+                            | DMA_SxCR_MSIZE_BYTE
+                            | DMA_SxCR_PSIZE_WORD
+                            | DMA_SxCR_MINC_ENABLE
+                            | DMA_SxCR_DBM_ENABLE
+                            | DMA_SxCR_CIRC_ENABLE;
+        config.IRQ_priority = _DCI_IRQ_PRIORITY;
 
         hdl->tleft = hdl->TCOUNT - 1;
 
@@ -393,6 +398,7 @@ API_MOD_IOCTL(DCI, void *device_handle, int request, void *arg)
                 cast(DCI_params_t*, arg)->y_resolution    = _DCI_CAM_RES_Y;
                 cast(DCI_params_t*, arg)->bytes_per_pixel = _DCI_JPEG ? 1 :_DCI_BYTES_PER_PIXEL;
                 cast(DCI_params_t*, arg)->JPEG_mode       = _DCI_JPEG;
+                err = ESUCC;
                 break;
 
         default:

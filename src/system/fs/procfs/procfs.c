@@ -994,7 +994,8 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                                            "CPU Load: %d.%d%%\n"
                                            "Stack Size: %d\n"
                                            "Stack Usage: %d\n"
-                                           "Priority: %d\n",
+                                           "Priority: %d\n"
+                                           "Syscalls: %u\n",
                                            stat.name,
                                            stat.pid,
                                            stat.memory_usage,
@@ -1009,7 +1010,8 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                                            stat.CPU_load / 10, stat.CPU_load % 10,
                                            stat.stack_size,
                                            stat.stack_max_usage,
-                                           stat.priority);
+                                           stat.priority,
+                                           stat.syscalls);
                 }
                 break;
 

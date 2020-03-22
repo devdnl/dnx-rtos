@@ -34,6 +34,7 @@
 #include "efr32/efr32xx.h"
 #include "efr32/lib/em_cmu.h"
 #include "kernel/kwrapper.h"
+#include "kernel/kpanic.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -218,6 +219,46 @@ void _cpuctl_delay_us(u16_t microseconds)
                         ticks -= now;
                 }
         }
+}
+
+//==============================================================================
+/**
+ * @brief Hard Fault ISR
+ */
+//==============================================================================
+void HardFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Memory Management failure ISR
+ */
+//==============================================================================
+void MemManage_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Bus Fault ISR
+ */
+//==============================================================================
+void BusFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Usage Fault ISR
+ */
+//==============================================================================
+void UsageFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 /*==============================================================================

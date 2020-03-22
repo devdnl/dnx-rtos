@@ -368,6 +368,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                         config.NDT      = NDT;
                                         config.CR       = PMSIZE | DMA_CCR1_MEM2MEM
                                                          | DMA_CCR1_MINC | DMA_CCR1_PINC;
+                                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
                                         err = _DMA_DDI_transfer(dmad, &config);
                                         if (!err) {
@@ -540,7 +541,7 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                         RT_channel->release  = config->release;
 
                         clear_DMA_IRQ_flags(GETMAJOR(dmad), GETCHANNEL(dmad));
-                        NVIC_SetPriority(IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                        NVIC_SetPriority(IRQn, config->IRQ_priority);
                         NVIC_ClearPendingIRQ(IRQn);
                         NVIC_EnableIRQ(IRQn);
 

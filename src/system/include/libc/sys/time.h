@@ -188,7 +188,7 @@ static inline int settimeofday(const struct timeval *tv, const struct timezone *
         int err = 0;
 
         if (tv) {
-                syscall(SYSCALL_SETTIME, &err, tv->tv_sec);
+                syscall(SYSCALL_SETTIME, &err, &tv->tv_sec);
         }
 
         if (!err && tz) {

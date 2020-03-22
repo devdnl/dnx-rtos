@@ -326,6 +326,7 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #*/
 
 #define ARCH_noarch
+#include "noarch/spiee_flags.h"
 #include "noarch/loop_flags.h"
 #include "noarch/tty_flags.h"
 #include "noarch/sdspi_flags.h"
@@ -688,6 +689,15 @@ __ENABLE_NVM__=_NO_
 #define __ENABLE_PWM__ _NO_
 #/*
 __ENABLE_PWM__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("SPIEE")
+# this:SetToolTip("SPI EEPROM")
+#--*/
+#define __ENABLE_SPIEE__ _NO_
+#/*
+__ENABLE_SPIEE__=_NO_
 #*/
 
 #// MODULE LIST END

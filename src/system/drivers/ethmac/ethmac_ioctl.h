@@ -217,14 +217,14 @@ extern "C" {
  * @param  [WR] @ref ETHMAC_packet_chain_t*       chain buffer reference.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN            _IOW(ETHMAC, 0x03, ethmac_packet_chain_t*)
+#define IOCTL_ETHMAC__SEND_PACKET                       _IOW(ETHMAC, 0x03, ethmac_packet_t*)
 
 /**
  * @brief  Receive packet to chain buffer.
  * @param  [RD] @ref ETHMAC_packet_chain_t*       chain buffer reference (each chain must have allocated memory!).
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN           _IOR(ETHMAC, 0x04, ethmac_packet_chain_t*)
+#define IOCTL_ETHMAC__RECEIVE_PACKET                    _IOR(ETHMAC, 0x04, ethmac_packet_t*)
 
 /**
  * @brief  Starts Ethernet interface.
@@ -252,11 +252,9 @@ extern "C" {
  * Type represent packet chain.
  */
 typedef struct ETHMAC_packet_chain {
-        struct ETHMAC_packet_chain *next;               /*!< Next chain of payload.*/
-        void                       *payload;            /*!< Payload.*/
-        u16_t                       total_size;         /*!< Total size.*/
-        u16_t                       payload_size;       /*!< Payload size.*/
-} ETHMAC_packet_chain_t;
+        void  *payload;         /*!< Payload.*/
+        u16_t  payload_size;    /*!< Payload size.*/
+} ETHMAC_packet_t;
 
 /**
  * Type represent link status.

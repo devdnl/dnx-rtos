@@ -16,6 +16,7 @@ CSRC_CORE   += libc/gmtime_r.c
 CSRC_CORE   += libc/localtime_r.c
 CSRC_CORE   += libc/locale.c
 CSRC_CORE   += libc/system.c
+CSRC_CORE   += libc/strchrrep.c
 CSRC_CORE   += libc/strlcat.c
 CSRC_CORE   += libc/strlcpy.c
 CSRC_CORE   += libc/strcasecmp.c

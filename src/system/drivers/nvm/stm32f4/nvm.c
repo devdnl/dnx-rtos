@@ -424,7 +424,7 @@ API_MOD_IOCTL(NVM, void *device_handle, int request, void *arg)
 
                         size_t sector = secsz->sector + hdl->start_sector;
 
-                        if (sector < ARRAY_SIZE(SECTOR_INFO)) {
+                        if (sector < (hdl->start_sector + hdl->sector_count)) {
                                 secsz->size = SECTOR_INFO[sector].size;
                                 err = ESUCC;
                         }

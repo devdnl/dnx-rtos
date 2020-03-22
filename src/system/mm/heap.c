@@ -65,6 +65,8 @@
 #include "mm/heap.h"
 #include "kernel/kwrapper.h"
 #include "kernel/errno.h"
+#include "kernel/khooks.h"
+#include "kernel/printk.h"
 #include <string.h>
 
 /*==============================================================================
@@ -81,6 +83,20 @@
 #define BLOCK_MIN_SIZE_ALIGNED          MEM_ALIGN_SIZE(__HEAP_BLOCK_SIZE__)
 #define SIZEOF_STRUCT_MEM               MEM_ALIGN_SIZE(sizeof(struct mem))
 
+#if __OS_HEAP_OVERFLOW_CHECK__ == _YES_
+#define MEM_SANITY_REGION_BEFORE_ALIGNED 8
+#define MEM_SANITY_REGION_AFTER_ALIGNED  8
+#else
+#define MEM_SANITY_REGION_BEFORE_ALIGNED 0
+#define MEM_SANITY_REGION_AFTER_ALIGNED  0
+#endif
+
+#define MEM_SANITY_OFFSET               MEM_SANITY_REGION_BEFORE_ALIGNED
+#define MEM_SANITY_OVERHEAD             (MEM_SANITY_REGION_BEFORE_ALIGNED + MEM_SANITY_REGION_AFTER_ALIGNED)
+
+#define PROTECT                         _kernel_scheduler_lock
+#define UNPROTECT                       _kernel_scheduler_unlock
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -90,9 +106,12 @@
  * we only use the macro SIZEOF_STRUCT_MEM, which automatically alignes.
  */
 struct mem {
-        size_t next;    /**< index (-> ram[next]) of the next struct      */
-        size_t prev;    /**< index (-> ram[prev]) of the previous struct  */
-        u8_t   used;    /**< 1: this area is used; 0: this area is unused */
+        size_t next;            /**< index (-> ram[next]) of the next struct      */
+        size_t prev;            /**< index (-> ram[prev]) of the previous struct  */
+        u8_t   used;            /**< 1: this area is used; 0: this area is unused */
+#if __OS_HEAP_OVERFLOW_CHECK__ == _YES_
+        size_t user_size;       /**< user size used in overflow check */
+#endif
 };
 
 /*==============================================================================
@@ -111,6 +130,35 @@ static void plug_holes(_heap_t *heap, struct mem *mem);
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  Function convert heap pointer to block representation.
+ *
+ * @param  heap         heap instance
+ * @param  ptr          pointer to convert
+ *
+ * @return Pointer to block.
+ */
+//==============================================================================
+static struct mem *ptr_to_mem(_heap_t *heap, size_t ptr)
+{
+        return (struct mem *)(void *)&heap->ram[ptr];
+}
+
+//==============================================================================
+/**
+ * @brief  Function convert block representation to heap pointer.
+ *
+ * @param  heap         heap instance
+ * @param  mem          block representation
+ *
+ * @return Heap pointer.
+ */
+//==============================================================================
+static size_t mem_to_ptr(_heap_t *heap, volatile void *mem)
+{
+        return (size_t)((u8_t *)mem - heap->ram);
+}
 
 //==============================================================================
 /**
@@ -127,21 +175,22 @@ static void plug_holes(_heap_t *heap, struct mem *mem);
 static void plug_holes(_heap_t *heap, struct mem *mem)
 {
         /* plug hole forward */
-        struct mem *nmem = (struct mem *)(void *)&heap->begin[mem->next];
+        struct mem *nmem = ptr_to_mem(heap, mem->next);
 
-        if (mem != nmem && nmem->used == 0 && (u8_t *)nmem != (u8_t *)heap->end) {
+        if (mem != nmem && nmem->used == 0 && (u8_t *)nmem != (u8_t *)heap->ram_end) {
                 /* if mem->next is unused and not end of ram, combine mem and mem->next */
                 if (heap->lfree == nmem) {
                         heap->lfree = mem;
                 }
 
                 mem->next = nmem->next;
-
-                ((struct mem*)(void*)&heap->begin[nmem->next])->prev = (size_t)((u8_t*)mem - heap->begin);
+                if (nmem->next != heap->size) {
+                        ptr_to_mem(heap, nmem->next)->prev = mem_to_ptr(heap, mem);
+                }
         }
 
         /* plug hole backward */
-        struct mem *pmem = (struct mem *)(void *)&heap->begin[mem->prev];
+        struct mem *pmem = ptr_to_mem(heap, mem->prev);
 
         if (pmem != mem && pmem->used == 0) {
                 /* if mem->prev is unused, combine mem and mem->prev */
@@ -150,10 +199,191 @@ static void plug_holes(_heap_t *heap, struct mem *mem)
                 }
 
                 pmem->next = mem->next;
-
-                ((struct mem *)(void *)&heap->begin[mem->next])->prev = (size_t)((u8_t *)pmem - heap->begin);
+                if (mem->next != heap->size) {
+                        ptr_to_mem(heap, mem->next)->prev = mem_to_ptr(heap, pmem);
+                }
         }
 }
+
+//==============================================================================
+/**
+ * @brief  Function check if memory block representation is valid.
+ *
+ * @param  heap         heap instance
+ * @param  mem          memory block representation
+ *
+ * @return 0: link invalid; 1: link valid.
+ */
+//==============================================================================
+static int link_valid(_heap_t *heap, struct mem *mem)
+{
+        size_t rmem_idx  = mem_to_ptr(heap, mem);
+        struct mem *nmem = ptr_to_mem(heap, mem->next);
+        struct mem *pmem = ptr_to_mem(heap, mem->prev);
+
+        if (  (mem->next > heap->size) || (mem->prev > heap->size)
+           || ((mem->prev != rmem_idx) && (pmem->next != rmem_idx))
+           || ((nmem != heap->ram_end) && (nmem->prev != rmem_idx))) {
+
+                return 0;
+
+        } else {
+                return 1;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function check heap consistency.
+ *
+ * @param  heap         heap instance
+ */
+//==============================================================================
+static void sanity(_heap_t *heap)
+{
+#if __OS_HEAP_SANITY_CHECK__ == _YES_
+        _assert_msg(MEM_ALIGN_SIZE(heap->size) == heap->size, "HEAP: invalid heap size alignment");
+
+        /* begin with first element here */
+        struct mem *mem = (struct mem *)heap->ram;
+
+        _assert_msg((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid");
+
+        u8_t last_used = mem->used;
+
+        _assert_msg(mem->prev == 0, "HEAP: element prev ptr not valid");
+
+        _assert_msg(mem->next <= heap->size, "HEAP: element next ptr invalid");
+
+        _assert_msg(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->next) == ptr_to_mem(heap, mem->next)),
+                    "HEAP: element next ptr unaligned");
+
+        /* check all elements before the end of the heap */
+        size_t max = heap->size / SIZEOF_STRUCT_MEM;
+
+        for (mem = ptr_to_mem(heap, mem->next);
+             ((u8_t *) mem > heap->ram) && (mem < heap->ram_end);
+             mem = ptr_to_mem(heap, mem->next)) {
+
+                _assert_msg(MEM_ALIGN_SIZE((uintptr_t)mem) == (uintptr_t)mem, "HEAP: element unaligned");
+
+                _assert_msg(mem->prev <= heap->size, "HEAP: element prev ptr invalid");
+
+                _assert_msg(mem->next <= heap->size, "HEAP: element next ptr invalid");
+
+                _assert_msg(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->prev) == ptr_to_mem(heap, mem->prev)),
+                            "HEAP: element prev ptr unaligned");
+
+                _assert_msg(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->next) == ptr_to_mem(heap, mem->next)),
+                            "HEAP: element next ptr unaligned");
+
+                if (last_used == 0) {
+                        /* 2 unused elements in a row? */
+                        _assert_msg(mem->used == 1, "HEAP: 2 element unused in row?");
+                } else {
+                        _assert_msg((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid");
+                }
+
+                _assert_msg(link_valid(heap, mem), "HEAP: element link invalid");
+
+                /* used/unused altering */
+                last_used = mem->used;
+
+                _assert_msg(--max > 0, "HEAP: sanity: dead loop");
+        }
+
+        _assert_msg(mem == ptr_to_mem(heap, heap->size), "HEAP: end ptr sanity");
+        _assert_msg(mem->used == 1, "HEAP: element used invalid");
+        _assert_msg(mem->prev == heap->size, "HEAP: element prev ptr invalid");
+        _assert_msg(mem->next == heap->size, "HEAP: element next ptr invalid");
+#else
+        (void)(heap);
+#endif
+}
+
+#if __OS_HEAP_OVERFLOW_CHECK__ == _YES_
+//==============================================================================
+/**
+ * @brief  Function check block overflow.
+ *
+ * @param  p            pointer to examine
+ * @param  size         allocation size
+ */
+//==============================================================================
+static void overflow_check_raw(void *p, size_t size)
+{
+        u8_t *m = (u8_t *) p + size;
+        for (u16_t k = 0; k < MEM_SANITY_REGION_AFTER_ALIGNED; k++) {
+                if (m[k] != 0xcd) {
+                        _printk("HEAP: block overflow @ %p", p);
+                        break;
+                }
+        }
+
+        m = (u8_t *) p - MEM_SANITY_REGION_BEFORE_ALIGNED;
+        for (u16_t k = 0; k < MEM_SANITY_REGION_BEFORE_ALIGNED; k++) {
+                if (m[k] != 0xcd) {
+                        _printk("HEAP: block underflow @ %p", p);
+                        break;
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function initialize overflow parameters.
+ *
+ * @param  p            block
+ * @param  size         alloc size
+ */
+//==============================================================================
+static void mem_overflow_init_raw(void *p, size_t size)
+{
+        u8_t *m = (u8_t *) p - MEM_SANITY_REGION_BEFORE_ALIGNED;
+        memset(m, 0xcd, MEM_SANITY_REGION_BEFORE_ALIGNED);
+
+        m = (u8_t *) p + size;
+        memset(m, 0xcd, MEM_SANITY_REGION_AFTER_ALIGNED);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief  Function initialize overflow parameters of memory block representation.
+ *
+ * @param  mem          memory block
+ * @param  user_size    allocated size
+ */
+//==============================================================================
+static void overflow_init_element(struct mem *mem, size_t user_size)
+{
+#if __OS_HEAP_OVERFLOW_CHECK__ == _YES_
+        void *p = (u8_t *) mem + SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET;
+        mem->user_size = user_size;
+        mem_overflow_init_raw(p, user_size);
+#else
+        (void)mem;
+        (void)user_size;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if block overflow occurred.
+ *
+ * @param  mem          memory block
+ */
+//==============================================================================
+static void overflow_check_element(struct mem *mem)
+{
+#if __OS_HEAP_OVERFLOW_CHECK__ == _YES_
+        void *p = (u8_t *) mem + SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET;
+        overflow_check_raw(p, mem->user_size);
+#else
+        (void)mem;
+#endif
+}
+
 
 //==============================================================================
 /**
@@ -175,25 +405,27 @@ int _heap_init(_heap_t *heap, void *start, size_t size)
                 heap->used_max = 0;
 
                 /* align the heap */
-                heap->begin = start;
+                heap->ram = start;
 
                 /* aligned memory size */
-                heap->size = MEM_ALIGN_SIZE(size - SIZEOF_STRUCT_MEM);
+                heap->size = MEM_ALIGN_SIZE(size - SIZEOF_STRUCT_MEM - MEM_SANITY_OFFSET);
 
                 /* initialize the start of the heap */
-                struct mem *mem = (struct mem *)heap->begin;
+                struct mem *mem = (struct mem *)heap->ram;
                 mem->next = heap->size;
                 mem->prev = 0;
                 mem->used = 0;
 
                 /* initialize the end of the heap */
-                heap->end = (struct mem *)&heap->begin[heap->size];
-                heap->end->used = 1;
-                heap->end->next = heap->size;
-                heap->end->prev = heap->size;
+                heap->ram_end = ptr_to_mem(heap, heap->size);
+                heap->ram_end->used = 1;
+                heap->ram_end->next = heap->size;
+                heap->ram_end->prev = heap->size;
+
+                sanity(heap);
 
                 /* initialize the lowest-free pointer to the start of the heap */
-                heap->lfree = (struct mem *)heap->begin;
+                heap->lfree = (struct mem *)heap->ram;
 
                 err = ESUCC;
         }
@@ -213,31 +445,61 @@ int _heap_init(_heap_t *heap, void *start, size_t size)
 //==============================================================================
 void _heap_free(_heap_t *heap, void *rmem, size_t *freed)
 {
-        if (heap && (u8_t *)rmem >= (u8_t *)heap->begin && (u8_t *)rmem < (u8_t *)heap->end) {
-
-                _kernel_scheduler_lock();
-
-                /* Get the corresponding struct mem ... */
-                struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
-                /* ... which has to be in a used state and is now unused. */
-                mem->used = 0;
-
-                if (mem < heap->lfree) {
-                        /* the newly freed struct is now the lowest */
-                        heap->lfree = mem;
-                }
-
-                size_t blksize = (mem->next - (size_t)(((u8_t *)mem - heap->begin)));
-                heap->used -= blksize;
-
-                if (freed) {
-                        *freed = blksize;
-                }
-
-                plug_holes(heap, mem);
-
-                _kernel_scheduler_unlock();
+        if (!heap || !rmem) {
+                return;
         }
+
+        PROTECT();
+
+        if ((((uintptr_t)rmem) & (_HEAP_ALIGN_ - 1)) != 0) {
+                _printk("HEAP: free: unaligned pointer");
+                UNPROTECT();
+                return;
+        }
+
+        struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - (SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET));
+        if ((u8_t *)mem < heap->ram || (u8_t *)rmem + BLOCK_MIN_SIZE_ALIGNED > (u8_t *)heap->ram_end) {
+                _printk("HEAP: free: illegal pointer");
+                UNPROTECT();
+                return;
+        }
+
+        overflow_check_element(mem);
+
+        if (mem->used > 1) {
+                _printk("HEAP: free: invalid usage indicator");
+                UNPROTECT();
+                return;
+        }
+
+        if (!mem->used) {
+                _printk("HEAP: free: block unused");
+                UNPROTECT();
+                return;
+        }
+
+        if (!link_valid(heap, mem)) {
+                _printk("HEAP: free: invalid link");
+                UNPROTECT();
+                return;
+        }
+
+        mem->used = 0;
+
+        if (mem < heap->lfree) {
+                /* the newly freed struct is now the lowest */
+                heap->lfree = mem;
+        }
+
+        size_t blksize = (mem->next - (size_t)(((u8_t *)mem - heap->ram)));
+        heap->used -= blksize;
+        if (freed) *freed = blksize;
+
+        plug_holes(heap, mem);
+
+        sanity(heap);
+
+        UNPROTECT();
 }
 
 //==============================================================================
@@ -252,40 +514,39 @@ void _heap_free(_heap_t *heap, void *rmem, size_t *freed)
  * @return Pointer to allocated memory or NULL if no free memory was found.
  */
 //==============================================================================
-void *_heap_alloc(_heap_t *heap, size_t size, size_t *allocated)
+void *_heap_alloc(_heap_t *heap, size_t size_in, size_t *allocated)
 {
-        size_t ptr, ptr2;
+        size_t ptr, ptr2, size;
         struct mem *mem, *mem2;
         size_t used;
 
-        if (!heap || size == 0) {
+        if (!heap || size_in == 0) {
                 return NULL;
         }
 
         /* Expand the size of the allocated memory region so that we can adjust for alignment. */
-        size = MEM_ALIGN_SIZE(size);
-
-        if(size < BLOCK_MIN_SIZE_ALIGNED) {
+        size = MEM_ALIGN_SIZE(size_in);
+        if (size < BLOCK_MIN_SIZE_ALIGNED) {
                 /* every data block must be at least BLOCK_MIN_SIZE_ALIGNED long */
                 size = BLOCK_MIN_SIZE_ALIGNED;
         }
 
-        if (size > heap->size) {
+        size += MEM_SANITY_REGION_BEFORE_ALIGNED + MEM_SANITY_REGION_AFTER_ALIGNED;
+
+        if (size > heap->size || size < size_in) {
                 return NULL;
         }
 
         /* protect the heap from concurrent access */
-        _kernel_scheduler_lock();
+        PROTECT();
 
         /*
          * Scan through the heap searching for a free block that is big enough,
          * beginning with the lowest free block.
          */
-        for (ptr = (size_t)((u8_t *)heap->lfree - heap->begin);
-             ptr < heap->size - size;
-             ptr = ((struct mem *)(void *)&heap->begin[ptr])->next) {
+        for (ptr = mem_to_ptr(heap, heap->lfree); ptr < heap->size - size; ptr = ptr_to_mem(heap, ptr)->next) {
 
-                mem = (struct mem *)(void *)&heap->begin[ptr];
+                mem = ptr_to_mem(heap, ptr);
 
                 if ((!mem->used) && (mem->next - (ptr + SIZEOF_STRUCT_MEM)) >= size) {
                         /*
@@ -310,17 +571,16 @@ void *_heap_alloc(_heap_t *heap, size_t size, size_t *allocated)
                                 ptr2 = ptr + SIZEOF_STRUCT_MEM + size;
 
                                 /* create mem2 struct */
-                                mem2 = (struct mem *)(void *)&heap->begin[ptr2];
+                                mem2 = ptr_to_mem(heap, ptr2);
                                 mem2->used = 0;
                                 mem2->next = mem->next;
                                 mem2->prev = ptr;
-
                                 /* and insert it between mem and mem->next */
                                 mem->next = ptr2;
                                 mem->used = 1;
 
                                 if (mem2->next != heap->size) {
-                                        ((struct mem *)(void *)&heap->begin[mem2->next])->prev = ptr2;
+                                        ptr_to_mem(heap, mem2->next)->prev = ptr2;
                                 }
 
                                 used = (size + SIZEOF_STRUCT_MEM);
@@ -336,30 +596,35 @@ void *_heap_alloc(_heap_t *heap, size_t size, size_t *allocated)
                                  */
                                 mem->used = 1;
 
-                                used = (mem->next - (size_t)((u8_t *)mem - heap->begin));
+                                used = (mem->next - mem_to_ptr(heap, mem));
                         }
 
                         if (mem == heap->lfree) {
+                                volatile struct mem *cur = heap->lfree;
+
                                 /* Find next free block after mem and update lowest free pointer */
-                                while (heap->lfree->used && heap->lfree != heap->end) {
-                                        heap->lfree = (struct mem *)(void *)&heap->begin[heap->lfree->next];
+                                while (cur->used && cur != heap->ram_end) {
+                                        cur = ptr_to_mem(heap, cur->next);
                                 }
+
+                                heap->lfree = cur;
                         }
 
                         heap->used    += used;
                         heap->used_max = heap->used_max < heap->used ? heap->used : heap->used_max;
+                        if (allocated) *allocated = used;
 
-                        if (allocated) {
-                                *allocated = used;
-                        }
+                        overflow_init_element(mem, size_in);
 
-                        _kernel_scheduler_unlock();
+                        sanity(heap);
 
-                        return (u8_t *)mem + SIZEOF_STRUCT_MEM;
+                        UNPROTECT();
+
+                        return (u8_t *)mem + SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET;
                 }
         }
 
-        _kernel_scheduler_unlock();
+        UNPROTECT();
 
         return NULL;
 }
@@ -375,7 +640,13 @@ void *_heap_alloc(_heap_t *heap, size_t size, size_t *allocated)
 //==============================================================================
 size_t _heap_get_free(_heap_t *heap)
 {
-        return (heap->size - heap->used);
+        size_t size = 0;
+
+        PROTECT();
+        size = (heap->size - heap->used);
+        UNPROTECT();
+
+        return size;
 }
 
 //==============================================================================
@@ -418,21 +689,46 @@ size_t _heap_get_size(_heap_t *heap)
 //==============================================================================
 size_t _heap_get_block_size(_heap_t *heap, void *rmem)
 {
-    size_t blksize = 0;
+        if (!heap || !rmem) {
+                return 0;
+        }
 
-    if (heap && (u8_t *)rmem >= (u8_t *)heap->begin && (u8_t *)rmem < (u8_t *)heap->end) {
+        if ((((uintptr_t)rmem) & (_HEAP_ALIGN_ - 1)) != 0) {
+                _printk("HEAP: blksize: unaligned pointer");
+                return 0 ;
+        }
 
-            _kernel_scheduler_lock();
+        struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - (SIZEOF_STRUCT_MEM + MEM_SANITY_OFFSET));
+        if ((u8_t *)mem < heap->ram || (u8_t *)rmem + BLOCK_MIN_SIZE_ALIGNED > (u8_t *)heap->ram_end) {
+                _printk("HEAP: blksize: illegal pointer");
+                return 0;
+        }
 
-            /* get the corresponding struct mem */
-            struct mem *mem = (struct mem *)(void *)((u8_t *)rmem - SIZEOF_STRUCT_MEM);
+        PROTECT();
 
-            blksize = (mem->next - (size_t)(((u8_t *)mem - heap->begin)));
+        if (mem->used > 1) {
+                UNPROTECT();
+                _printk("HEAP: blksize: invalid usage indicator");
+                return 0;
+        }
 
-            _kernel_scheduler_unlock();
-    }
+        if (!mem->used) {
+                UNPROTECT();
+                _printk("HEAP: blksize: block unused");
+                return 0;
+        }
 
-    return blksize;
+        if (!link_valid(heap, mem)) {
+                UNPROTECT();
+                _printk("HEAP: blksize: invalid link");
+                return 0;
+        }
+
+        size_t blksize = (mem->next - (size_t)(((u8_t *)mem - heap->ram)));
+
+        UNPROTECT();
+
+        return blksize;
 }
 
 /*==============================================================================

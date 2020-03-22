@@ -38,6 +38,31 @@ Brief   IPC library.
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#ifndef IPC_DEBUG_ON
+#define IPC_DEBUG_ON            0
+#endif
+
+#define IPC_DEBUG_ONLY_ERRORS   1
+
+#if IPC_DEBUG_ON
+#include <stdio.h>
+#include <unistd.h>
+#include <dnx/vt100.h>
+#include <dnx/os.h>
+static void ipc_msg(const char *msg, int err, void *host, void *client)
+{
+        if (!IPC_DEBUG_ONLY_ERRORS || err) {
+                printf("%s(P:%d) %s->%d C:%p H:%p%s\n",
+                       err ? VT100_FONT_COLOR_RED : VT100_RESET_ATTRIBUTES,
+                       getpid(), msg, err, client, host, VT100_RESET_ATTRIBUTES);
+        }
+}
+#define IPC_DEBUG(_msg, _err, _host, _client)   ipc_msg(_msg, _err, _host, _client)
+#else
+#define IPC_DEBUG(...)
+#endif
+
+#define IPC_MUTEX_TIMEOUT       1000
 
 /*==============================================================================
   Local object types
@@ -48,9 +73,16 @@ Brief   IPC library.
 struct ipc_client {
         void       *this;       /*!< This pointer */
         ipc_host_t *host;       /*!< Host object reference */
+        mutex_t    *mtx;        /*!< Access mutex */
         sem_t      *ans_sem;    /*!< Answer semaphore */
         void       *cmd_data;   /*!< Command data object */
         void       *ans_data;   /*!< Answer data object */
+
+#if IPC_DEBUG_ON
+        pid_t       caller_pid;
+        bool        waiting_for_response;
+        u32_t       last_call;
+#endif
 };
 
 /**
@@ -102,13 +134,16 @@ int ipc_host_create(ipc_host_t **host, size_t queue_len)
                                 *host = this;
                                 err   = ESUCC;
                         } else {
-                                err = errno;
+                                *host = NULL;
+                                err   = errno;
                                 free(this);
                         }
                 } else {
                         err = errno;
                 }
         }
+
+        IPC_DEBUG("host create", err, *host, NULL);
 
         return err;
 }
@@ -123,6 +158,7 @@ int ipc_host_create(ipc_host_t **host, size_t queue_len)
 void ipc_host_destroy(ipc_host_t *host)
 {
         if (host) {
+                IPC_DEBUG("host destroy", 0, host, NULL);
                 queue_delete(host->cmd_queue);
                 host->cmd_queue = NULL;
                 free(host);
@@ -151,9 +187,12 @@ int ipc_host_recv_request(ipc_host_t *host, ipc_client_t **client, uint32_t time
                         *client = clt;
                         err     = 0;
                 } else {
+                        *client = NULL;
                         err = errno;
                 }
         }
+
+        IPC_DEBUG("host receive request", err, host, *client);
 
         return err;
 }
@@ -173,6 +212,7 @@ int ipc_host_send_response(ipc_client_t *client)
 
         if (client && (client->this == client)) {
                 err = semaphore_signal(client->ans_sem) ? 0 : errno;
+                IPC_DEBUG("host send response", err, client->host, client);
         }
 
         return err;
@@ -195,20 +235,28 @@ int ipc_client_connect(ipc_host_t *host, ipc_client_t **client, size_t cmd_data_
         int err = EINVAL;
 
         if (host && client && cmd_data_len && ans_data_len) {
+                // check if object is valid
+                if (queue_get_number_of_items(host->cmd_queue) < 0) {
+                        IPC_DEBUG("client connect (invalid object)", -1, host, *client);
+                        return -1;
+                }
+
                 ipc_client_t *clt = malloc(sizeof(ipc_client_t));
                 if (clt) {
                         clt->host     = host;
                         clt->cmd_data = calloc(1, cmd_data_len);
                         clt->ans_data = calloc(1, ans_data_len);
                         clt->ans_sem  = semaphore_new(1, 0);
+                        clt->mtx      = mutex_new(MUTEX_TYPE_NORMAL);
 
-                        if (clt->ans_sem && clt->cmd_data && clt->ans_data) {
+                        if (clt->ans_sem && clt->mtx && clt->cmd_data && clt->ans_data) {
                                 clt->this = clt;
                                 *client   = clt;
                                 err       = 0;
 
                         } else {
-                                err = ENOMEM;
+                                *client = NULL;
+                                err     = ENOMEM;
 
                                 if (clt->ans_sem) {
                                         semaphore_delete(clt->ans_sem);
@@ -222,12 +270,18 @@ int ipc_client_connect(ipc_host_t *host, ipc_client_t **client, size_t cmd_data_
                                         free(clt->ans_data);
                                 }
 
+                                if (clt->mtx) {
+                                        mutex_delete(clt->mtx);
+                                }
+
                                 free(clt);
                         }
                 } else {
                         err = errno;
                 }
         }
+
+        IPC_DEBUG("client connect", err, host, *client);
 
         return err;
 }
@@ -244,10 +298,12 @@ int ipc_client_connect(ipc_host_t *host, ipc_client_t **client, size_t cmd_data_
 void ipc_client_disconnect(ipc_client_t *client)
 {
         if (client && (client->this == client)) {
+                IPC_DEBUG("client disconnect", 0, client->host, client);
                 client->host = NULL;
                 free(client->ans_data);
                 free(client->cmd_data);
                 semaphore_delete(client->ans_sem);
+                mutex_delete(client->mtx);
                 client->this = NULL;
         }
 }
@@ -266,18 +322,41 @@ int ipc_client_call(ipc_client_t *client)
         int err = EINVAL;
 
         if (client && (client->this == client)) {
-                semaphore_wait(client->ans_sem, 0); // reset semaphore
 
-                if (queue_send(client->host->cmd_queue, &client, MAX_DELAY_MS)) {
-                        if (semaphore_wait(client->ans_sem, MAX_DELAY_MS)) {
-                                err = 0;
+                if (mutex_lock(client->mtx, IPC_MUTEX_TIMEOUT)) {
+
+                        #if IPC_DEBUG_ON
+                        client->caller_pid = getpid();
+                        client->waiting_for_response = true;
+                        client->last_call = get_time_ms();
+                        #endif
+
+                        semaphore_wait(client->ans_sem, 0); // reset semaphore
+
+                        IPC_DEBUG("client calling...", 0, client->host, client);
+
+                        if (queue_send(client->host->cmd_queue, &client, MAX_DELAY_MS)) {
+                                if (semaphore_wait(client->ans_sem, MAX_DELAY_MS)) {
+                                        err = 0;
+                                } else {
+                                        err = errno;
+                                }
                         } else {
                                 err = errno;
                         }
+
+                        #if IPC_DEBUG_ON
+                        client->caller_pid = 0;
+                        client->waiting_for_response = false;
+                        #endif
+
+                        mutex_unlock(client->mtx);
                 } else {
-                        err = errno;
+                        err = ETIME;
                 }
         }
+
+        IPC_DEBUG("client call", err, client->host, client);
 
         return err;
 }

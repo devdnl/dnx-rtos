@@ -5,7 +5,7 @@
 
 @brief   This file support CPU control
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 #include "stm32f1/lib/misc.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #include "kernel/kwrapper.h"
+#include "kernel/kpanic.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -73,9 +74,13 @@ static u32_t ticks_per_us;
 //==============================================================================
 void _cpuctl_init(void)
 {
-        /* set interrupt vectors and NVIC priority */
-        NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
+        NVIC_SetVectorTable(NVIC_VectTab_FLASH, __CPU_VTOR_TAB_POSITION__);
         NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+
+#if __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ == _YES_
+        /* disable interrupting multi-cycle instructions */
+        SCnSCB->ACTLR |= SCnSCB_ACTLR_DISMCYCINT_Msk;
+#endif
 
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
@@ -256,6 +261,46 @@ static void calculate_ticks_per_us(void)
         if (ticks_per_us == 0) {
                 ticks_per_us = 1;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Hard Fault ISR
+ */
+//==============================================================================
+void HardFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Memory Management failure ISR
+ */
+//==============================================================================
+void MemManage_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Bus Fault ISR
+ */
+//==============================================================================
+void BusFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief Usage Fault ISR
+ */
+//==============================================================================
+void UsageFault_Handler(void)
+{
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 /*==============================================================================

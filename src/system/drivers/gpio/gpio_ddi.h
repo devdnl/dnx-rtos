@@ -104,6 +104,37 @@ extern void _GPIO_DDI_clear_pin(u8_t port_idx, u8_t pin_idx);
 //==============================================================================
 extern i8_t _GPIO_DDI_get_pin(u8_t port_idx, u8_t pin_idx);
 
+//==============================================================================
+/**
+ * @brief  Function set pin mode.
+ * @param  port_idx      Port index.
+ * @param  pin_idx       Pin index.
+ * @param  mode          Pin mode
+ */
+//==============================================================================
+extern void _GPIO_DDI_set_pin_mode(u8_t port_idx, u8_t pin_idx, int mode);
+
+//==============================================================================
+/**
+ * @brief  Function get pin mode.
+ * @param  port_idx      Port index.
+ * @param  pin_idx       Pin index.
+ * @param  mode          Pin mode
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+extern int _GPIO_DDI_get_pin_mode(u8_t port_idx, u8_t pin_idx, int *mode);
+
+//==============================================================================
+/**
+ * @brief  Function set pin multiplexer (internal connection).
+ * @param  port_idx      Port index.
+ * @param  pin_idx       Pin index.
+ * @param  mux           Pin multiplexer
+ */
+//==============================================================================
+extern void _GPIO_DDI_set_pin_mux(u8_t port_idx, u8_t pin_idx, int mux);
+
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/

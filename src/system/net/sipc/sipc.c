@@ -36,6 +36,8 @@ HANDSHAKE -----------> (port opened)
 HANDSHAKE -----------> (port not opened)
 (error)   <----------- NACK
 
+BIND      -----------> (no action)
+
 Data send (ACK):
 DATA      -----------> buffer (empty) -> store
 (ok)      <----------- ACK
@@ -48,6 +50,13 @@ Data send (BUSY) - buffer full:
 DATA      -----------> (port opened) buffer (full capacity) -> store
 (wait)    <----------- BUSY (buffer exceeds capacity)
 (ok)      <----------- ACK  (buffer ready for data receive)
+
+Data send (REPEAT) - checksum incorrect:
+DATA      -----------> checksum incorrect
+(ok)      <----------- REPEAT
+DATA      -----------> store data
+(ok)      <----------- ACK
+
 */
 
 /*==============================================================================
@@ -66,9 +75,12 @@ DATA      -----------> (port opened) buffer (full capacity) -> store
 #define PACKET_TYPE_ACK                 2
 #define PACKET_TYPE_NACK                3
 #define PACKET_TYPE_BUSY                4
-#define _PACKET_TYPE_COUNT              5
+#define PACKET_TYPE_REPEAT              5
+#define PACKET_TYPE_BIND                6
+#define _PACKET_TYPE_COUNT              7
 
 #define zalloc(_size, _pptr) _kzalloc(_MM_NET, _size, _pptr)
+#define kalloc(_size, _pptr) _kmalloc(_MM_NET, _size, _pptr)
 #define zfree(_pptr) _kfree(_MM_NET, _pptr)
 
 #if __NETWORK_SIPC_DEBUG_ON__ > 0
@@ -134,7 +146,7 @@ static const u8_t PACKET_PREABLE[2] = {0xAA, 0x55};
 static u32_t CONNECTION_TIMEOUT = 4000;
 
 #if __NETWORK_SIPC_DEBUG_ON__ > 0
-static const char *TYPE_STR[] = {"DATA", "HSK", "ACK", "NACK", "BUSY"};
+static const char *TYPE_STR[] = {"DATA", "HSK", "ACK", "NACK", "BUSY", "REPT", "BIND"};
 #endif
 
 /*==============================================================================
@@ -156,7 +168,7 @@ static const char *TYPE_STR[] = {"DATA", "HSK", "ACK", "NACK", "BUSY"};
  * @return None
  */
 //==============================================================================
-static void clear_transfer_counters()
+static void clear_transfer_counters(void)
 {
         sipc->stats.rx_bytes   = 0;
         sipc->stats.tx_bytes   = 0;
@@ -283,6 +295,14 @@ static int send_packet(u16_t seq, u8_t port, u8_t type, const u8_t *payload, u16
 {
         DEBUG("sending packet : seq:%u, port:%d, type:%s, plen:%d", seq, port, TYPE_STR[type], plen);
 
+        if (!sipc) {
+                return ENONET;
+        }
+
+        if (sipc->state == NET_SIPC_STATE__DOWN) {
+                return ENONET;
+        }
+
         if (!payload) {
                 plen = 0;
         }
@@ -320,6 +340,10 @@ static int send_packet(u16_t seq, u8_t port, u8_t type, const u8_t *payload, u16
                         }
                 }
 
+                sipc->seq_ctr++;
+                sipc->stats.tx_packets++;
+                sipc->stats.tx_bytes += plen;
+
                 sys_mutex_unlock(sipc->packet_send_mtx);
         }
 
@@ -349,6 +373,10 @@ static bool is_packet_valid(sipc_packet_t *packet, u8_t *payload)
         bool is_valid = checksum == cast(u16_t, (packet->checksum[0] | (packet->checksum[1] << 8)));
 
         if (not is_valid) {
+                if (not __NETWORK_SIPC_DEBUG_ON__) {
+                        printk("SIPC: invalid checksum");
+                }
+
                 DEBUG("packet checksum: %04Xh:%04Xh->%s", checksum,
                        cast(u16_t, (packet->checksum[0] | (packet->checksum[1] << 8))),
                        is_valid ? "VALID" : "INVALID");
@@ -419,6 +447,23 @@ static void input_thread(void *arg)
                 u8_t *payload;
                 receive_packet(&packet, &payload);
 
+                if (sipc->state == NET_SIPC_STATE__DOWN) {
+
+                        clear_transfer_counters();
+
+                        if (sys_mutex_lock(sipc->socket_list_mtx, MAX_DELAY_MS) == 0) {
+
+                                sys_llist_foreach(SIPC_socket_t*, socket, sipc->socket_list) {
+                                        u8_t type = PACKET_TYPE_NACK;
+                                        sys_queue_send(socket->ansq, &type, 0);
+                                }
+
+                                sys_mutex_unlock(sipc->socket_list_mtx);
+                        }
+
+                        continue;
+                }
+
                 DEBUG("received packet: seq:%u, port:%d, type:%s, plen:%d",
                       packet.seq, packet.port, packet.type < _PACKET_TYPE_COUNT
                                                            ? TYPE_STR[packet.type]
@@ -450,6 +495,14 @@ static void input_thread(void *arg)
                                                 zfree((void*)&payload);
                                         }
 
+                                } else if ((packet.type) == PACKET_TYPE_REPEAT) {
+                                        if (payload) {
+                                                DEBUG("REPEAT with data - freeing");
+                                                zfree((void*)&payload);
+                                        }
+
+                                        sys_queue_send(socket->ansq, &packet.type, 0);
+
                                 } else if (packet.type == PACKET_TYPE_DATA) {
 
                                         int err = sipcbuf__write(socket->rxbuf, payload,
@@ -469,6 +522,17 @@ static void input_thread(void *arg)
 
                                         send_packet(packet.seq, packet.port, ptype, NULL, 0);
 
+                                } else if (packet.type == PACKET_TYPE_BIND) {
+
+                                        if (payload) {
+                                                DEBUG("BIND with data - freeing");
+                                                zfree((void*)&payload);
+                                        }
+
+                                        if (socket->waiting_for_data_ack) {
+                                                sys_queue_send(socket->ansq, &packet.type, 0);
+                                        }
+
                                 } else if (packet.type == PACKET_TYPE_HANDSHAKE) {
 
                                         if (payload) {
@@ -477,6 +541,10 @@ static void input_thread(void *arg)
                                         }
 
                                         send_packet(packet.seq, packet.port, PACKET_TYPE_ACK, NULL, 0);
+
+                                        if (socket->waiting_for_data_ack) {
+                                                sys_queue_send(socket->ansq, &packet.type, 0);
+                                        }
 
                                 } else {
                                         if (payload) {
@@ -501,6 +569,8 @@ static void input_thread(void *arg)
                         if (payload) {
                                 zfree((void*)&payload);
                         }
+
+                        send_packet(packet.seq, packet.port, PACKET_TYPE_REPEAT, NULL, 0);
                 }
         }
 }
@@ -585,7 +655,7 @@ static void unregister_socket(SIPC_socket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static int stack_init()
+static int stack_init(void)
 {
         if (sipc) {
                 return ESUCC;
@@ -784,7 +854,7 @@ int SIPC_socket_connect(SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
 
         sys_queue_reset(socket->ansq);
 
-        socket->seq = sipc->seq_ctr++;
+        socket->seq = sipc->seq_ctr;
 
         err = send_packet(socket->seq, socket->port, PACKET_TYPE_HANDSHAKE, NULL, 0);
         if (!err) {
@@ -864,7 +934,13 @@ int SIPC_socket_bind(SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
         socket->port = addr->port;
 
         int err = register_socket(socket);
-        if (err) {
+        if (!err) {
+
+                sys_queue_reset(socket->ansq);
+                socket->seq = sipc->seq_ctr;
+                err = send_packet(socket->seq, socket->port, PACKET_TYPE_BIND, NULL, 0);
+
+        } else {
                 socket->port = 0;
         }
 
@@ -929,6 +1005,7 @@ int SIPC_socket_recv(SIPC_socket_t *socket,
                 err = sipcbuf__read(socket->rxbuf, buf, len, recved);
                 if (!err) {
                         if (*recved == 0) {
+                                err = ETIME;
                                 sys_sleep_ms(5);
                                 continue;
                         } else {
@@ -999,21 +1076,31 @@ int SIPC_socket_send(SIPC_socket_t *socket,
 
         *sent = 0;
 
+        void *bufcopy = NULL;
+
+        if (flags & NET_FLAGS__COPY) {
+                err = kalloc(len, &bufcopy);
+                if (!err && bufcopy) {
+                        memcpy(bufcopy, buf, len);
+                        buf = bufcopy;
+                } else {
+                        return err;
+                }
+        }
+
         sys_queue_reset(socket->ansq);
 
         while (len) {
 
                 u16_t plen = min(len, sipc->conf.MTU);
-                socket->seq = sipc->seq_ctr++;
+                socket->seq = sipc->seq_ctr;
+                socket->waiting_for_data_ack = true;
 
                 err = send_packet(socket->seq, socket->port, PACKET_TYPE_DATA, buf, plen);
                 if (!err) {
                         u8_t type;
                         err = sys_queue_receive(socket->ansq, &type, socket->send_timeout);
                         if (!err) {
-                                sipc->stats.tx_packets++;
-                                sipc->stats.tx_bytes += plen;
-
                                 switch (type) {
                                 case PACKET_TYPE_ACK:
                                         buf   += plen;
@@ -1022,6 +1109,15 @@ int SIPC_socket_send(SIPC_socket_t *socket,
                                         break;
 
                                 case PACKET_TYPE_NACK:
+                                        err = ECONNREFUSED;
+                                        len = 0;
+                                        break;
+
+                                case PACKET_TYPE_REPEAT:
+                                        break;
+
+                                case PACKET_TYPE_BIND:
+                                case PACKET_TYPE_HANDSHAKE:
                                         err = ECONNRESET;
                                         len = 0;
                                         break;
@@ -1037,6 +1133,12 @@ int SIPC_socket_send(SIPC_socket_t *socket,
                 } else {
                         break;
                 }
+        }
+
+        socket->waiting_for_data_ack = false;
+
+        if (bufcopy) {
+                zfree(&bufcopy);
         }
 
         return err;

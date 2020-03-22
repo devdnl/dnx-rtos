@@ -291,6 +291,17 @@ int_main(telnetd, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 
         mkdir("/run", 0777);
 
+
+        NET_INET_status_t netstat = {0};
+
+        do {
+                ifstatus(NET_FAMILY__INET, &netstat);
+                msleep(500);
+        } while (! ( (netstat.state == NET_INET_STATE__DHCP_CONFIGURED)
+                   ||(netstat.state == NET_INET_STATE__STATIC_IP) ) );
+
+
+
         SOCKET *listener = socket_open(NET_FAMILY__INET, NET_PROTOCOL__TCP);
         if (!listener) {
                 global->msg = "Connection failed";

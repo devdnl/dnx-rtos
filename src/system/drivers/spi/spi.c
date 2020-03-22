@@ -441,7 +441,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
 
                                         for (SPI_transceive_t *t = tr; !err && t && t->count; t = t->next) {
 
-                                                if (not RAW_mode && t->separated) {
+                                                if (not RAW_mode) {
                                                         slave_select(hdl);
                                                 }
 

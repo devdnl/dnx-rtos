@@ -138,7 +138,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 printf("\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
-                       "PID PR     MEM  STU %%STU   %%CPU TH RES CMD"
+                       "PID PR     MEM  STU %%STU  %%CPU SCPS TH RES CMD"
                        VT100_RESET_ATTRIBUTES "\n");
 
                 size_t seek = 0;
@@ -147,18 +147,19 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                         if (global->pstat.threads_count == 0) {
                                 snprintf(cpu_load_str, sizeof(cpu_load_str), "zombie");
                         } else {
-                                snprintf(cpu_load_str, 7, "  %2d.%d",
+                                snprintf(cpu_load_str, 7, " %2d.%d",
                                          global->pstat.CPU_load / 10,
                                          global->pstat.CPU_load % 10);
                         }
 
-                        printf("%3d %2d %7u %4d %4d %s %2d %3d %s\n",
+                        printf("%3d %2d %7u %4d %4d %s %4u %2d %3d %s\n",
                                 global->pstat.pid,
                                 global->pstat.priority,
                                 (uint)global->pstat.memory_usage,
                                 global->pstat.stack_max_usage,
                                 global->pstat.stack_max_usage * 100 / global->pstat.stack_size,
                                 cpu_load_str,
+                                global->pstat.syscalls,
                                 global->pstat.threads_count,
                                 global->pstat.dir_count
                                 + global->pstat.files_count

@@ -62,7 +62,7 @@
 
 #define PROC_MAX_THREADS(proc)          (((proc)->flag & FLAG_KWORKER) ? __OS_TASK_MAX_SYSTEM_THREADS__ : __OS_TASK_MAX_USER_THREADS__)
 
-#define is_proc_valid(proc)             (_mm_is_object_in_heap(proc) && proc->header.type == RES_TYPE_PROCESS)
+#define is_proc_valid(proc)             (_mm_is_object_in_heap(proc) && (proc->header.type == RES_TYPE_PROCESS))
 #define is_tid_in_range(proc, tid)      ((tid > 0) && (tid < PROC_MAX_THREADS(proc)))
 
 #define FLAG_DETACHED                   (1 << 0)
@@ -92,6 +92,8 @@ struct _process {
         u16_t            CPU_load;      //!< CPU load (10 = 1%)
         i8_t             status;        //!< program status (return value)
         u8_t             flag;          //!< control flags
+        u16_t            syscalls;      //!< syscalls per second
+        u16_t            syscalls_ctr;  //!< syscall counter
 };
 
 typedef struct {
@@ -128,7 +130,7 @@ static _process_t    *active_process_list;
 static _process_t    *destroy_process_list;
 static _process_t    *zombie_process_list;
 static _process_t    *active_process;
-static tid_t          active_thread;
+static task_t        *active_task;
 static u32_t          CPU_total_time_last;
 static avg_CPU_load_t avg_CPU_load_calc;
 static avg_CPU_load_t avg_CPU_load_result;
@@ -298,21 +300,23 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 //==============================================================================
 KERNELSPACE void _process_clean_up_killed_processes(void)
 {
-        ATOMIC(process_mtx) {
-                while (destroy_process_list) {
-                        _process_t *proc = destroy_process_list;
+        if (destroy_process_list) {
+                ATOMIC(process_mtx) {
+                        while (destroy_process_list) {
+                                _process_t *proc = destroy_process_list;
 
-                        process_destroy_all_resources(proc);
+                                process_destroy_all_resources(proc);
 
-                        if (not (proc->flag & FLAG_DETACHED)) {
-                                process_move_list(proc,
-                                                  &destroy_process_list,
-                                                  &zombie_process_list);
-                        } else {
-                                destroy_process_list = cast(_process_t *, proc->header.next);
-                                _flag_destroy(proc->event);
-                                proc->event = NULL;
-                                _kfree(_MM_KRN, cast(void*, &proc));
+                                if (not (proc->flag & FLAG_DETACHED)) {
+                                        process_move_list(proc,
+                                                          &destroy_process_list,
+                                                          &zombie_process_list);
+                                } else {
+                                        destroy_process_list = cast(_process_t *, proc->header.next);
+                                        _flag_destroy(proc->event);
+                                        proc->event = NULL;
+                                        _kfree(_MM_KRN, cast(void*, &proc));
+                                }
                         }
                 }
         }
@@ -342,7 +346,7 @@ KERNELSPACE int _process_kill(pid_t pid)
                                 u8_t threads = PROC_MAX_THREADS(proc);
 
                                 for (int i = 0; i < threads; i++) {
-                                        if (proc->task[i]) {
+                                        if (proc->task && proc->task[i]) {
                                                 _task_destroy(proc->task[i]);
                                                 proc->task[i] = NULL;
                                         }
@@ -411,7 +415,7 @@ KERNELSPACE void _process_remove_zombie(_process_t *proc, int *status)
 //==============================================================================
 KERNELSPACE void _process_exit(_process_t *proc, int status)
 {
-        if (is_proc_valid(proc)) {
+        if (is_proc_valid(proc) && proc->task) {
                 proc->status = status;
 
                 va_list none;
@@ -855,7 +859,7 @@ KERNELSPACE int _process_get_container(pid_t pid, _process_t **process)
 
 //==============================================================================
 /**
- * @brief  Function return container of active thread
+ * @brief  Function return thread ID of active thread
  *
  * @return Thread ID.
  */
@@ -863,10 +867,43 @@ KERNELSPACE int _process_get_container(pid_t pid, _process_t **process)
 KERNELSPACE tid_t _process_get_active_thread(void)
 {
         _kernel_scheduler_lock();
-        _assert(active_thread < PROC_MAX_THREADS(active_process));
-        tid_t tid = active_thread;
+
+        tid_t tid = UINT8_MAX;
+
+        for (int i = 0; i < PROC_MAX_THREADS(active_process); i++) {
+                if (active_process->task && (active_process->task[i] == active_task)) {
+                        tid = i;
+                        break;
+                }
+        }
+
+        _assert(tid < PROC_MAX_THREADS(active_process));
+
         _kernel_scheduler_unlock();
         return tid;
+}
+
+
+//==============================================================================
+/**
+ * @brief  Function return PID of active process.
+ *
+ * @return Thread ID.
+ */
+//==============================================================================
+KERNELSPACE pid_t _process_get_active_process_pid(void)
+{
+        _kernel_scheduler_lock();
+
+        pid_t pid = 0;
+
+        if (active_process) {
+                pid = active_process->pid;
+        }
+
+        _kernel_scheduler_unlock();
+
+        return pid;
 }
 
 //==============================================================================
@@ -941,7 +978,7 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
 
                 ATOMIC(mtx) {
                         res_header_t *prev     = NULL;
-                        int           max_deep = 1024;
+                        int           max_deep = 4096;
 
                         foreach_resource(curr, proc->res_list) {
                                 if (curr == resource) {
@@ -1002,7 +1039,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
 {
         int err = EINVAL;
 
-        if (!is_proc_valid(proc) || !func) {
+        if (!is_proc_valid(proc) || !proc->task || !func) {
                 return err;
         }
 
@@ -1068,10 +1105,12 @@ KERNELSPACE int _process_thread_kill(_process_t *proc, tid_t tid)
 {
         int err = EINVAL;
 
-        if (is_proc_valid(proc) && is_tid_in_range(proc, tid)) {
+        if (is_proc_valid(proc) && proc->task && is_tid_in_range(proc, tid)) {
                 ATOMIC(process_mtx) {
-                        _task_destroy(proc->task[tid]);
-                        proc->task[tid] = NULL;
+                        if (proc->task[tid]) {
+                                _task_destroy(proc->task[tid]);
+                                proc->task[tid] = NULL;
+                        }
 
                         if (proc->event) {
                                 _flag_set(proc->event, _PROCESS_EXIT_FLAG(tid));
@@ -1098,14 +1137,31 @@ KERNELSPACE task_t *_process_thread_get_task(_process_t *proc, tid_t tid)
 {
         task_t *task = NULL;
 
-        if (is_proc_valid(proc) && is_tid_in_range(proc, tid)) {
+        if (is_proc_valid(proc) && proc->task && is_tid_in_range(proc, tid)) {
                 ATOMIC(process_mtx) {
                         task = proc->task[tid];
                 }
         }
 
         return task;
+}
 
+//==============================================================================
+/**
+ * Function increase syscall request counter (stats).
+ *
+ * @param proc          process
+ * @param kworker       kworker process
+ */
+//==============================================================================
+KERNELSPACE void _process_syscall_stat_inc(_process_t *proc, _process_t *kworker)
+{
+        if (is_proc_valid(proc) and is_proc_valid(kworker)) {
+                ATOMIC(process_mtx) {
+                        proc->syscalls_ctr++;
+                        kworker->syscalls_ctr++;
+                }
+        }
 }
 
 //==============================================================================
@@ -1135,7 +1191,7 @@ KERNELSPACE void _task_get_process_container(task_t *taskhdl, _process_t **proc,
                 u8_t threads = PROC_MAX_THREADS(p);
 
                 for (int i = 0; i < threads; i++) {
-                        if (p->task[i] == taskhdl) {
+                        if (p->task && p->task[i] == taskhdl) {
                                 if (tid) {
                                         *tid = i;
                                 }
@@ -1161,7 +1217,12 @@ KERNELSPACE void _calculate_CPU_load(void)
                 proc->CPU_load = proc->timecnt / (_CPU_total_time / 1000);
                 proc->timecnt  = 0;
                 avg_CPU_load_calc.avg1sec += proc->CPU_load;
+
+                proc->syscalls = proc->syscalls_ctr;
+                proc->syscalls_ctr = 0;
         }
+
+        avg_CPU_load_result.avg1sec = avg_CPU_load_calc.avg1sec;
 
         _CPU_total_time     = 0;
         CPU_total_time_last = 0;
@@ -1396,14 +1457,15 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
 
         stat->name            = proc->pdata->name;
         stat->pid             = proc->pid;
-        stat->stack_size      = proc->task[0] ? *proc->pdata->stack_depth : 0;
-        stat->stack_max_usage = proc->task[0] ? (stat->stack_size - _task_get_free_stack(proc->task[0])) : 0;
-        stat->priority        = proc->task[0] ? _task_get_priority(proc->task[0]) : 0;
+        stat->stack_size      = (proc->task && proc->task[0]) ? *proc->pdata->stack_depth : 0;
+        stat->stack_max_usage = (proc->task && proc->task[0]) ? (stat->stack_size - _task_get_free_stack(proc->task[0])) : 0;
+        stat->priority        = (proc->task && proc->task[0]) ? _task_get_priority(proc->task[0]) : 0;
         stat->CPU_load        = proc->CPU_load;
+        stat->syscalls        = proc->syscalls;
 
         u8_t threads = PROC_MAX_THREADS(proc);
         for (tid_t tid = 0; tid < threads; tid++) {
-                if (proc->task[tid]) {
+                if (proc->task && proc->task[tid]) {
                         stat->threads_count++;
                 }
         }
@@ -2003,26 +2065,11 @@ static int allocate_process_globals(_process_t *proc, const struct _prog_data *u
 //==============================================================================
 KERNELSPACE void _task_switched_in(task_t *task, void *task_tag)
 {
-#if (__OS_MONITOR_CPU_LOAD__ > 0)
-        _CPU_total_time    += _cpuctl_get_CPU_load_counter_delta();
         CPU_total_time_last = _CPU_total_time;
-#endif
         active_process = task_tag;
-        active_thread  = -1;
+        active_task = task;
 
         if (active_process && (active_process->header.type == RES_TYPE_PROCESS)) {
-                u8_t threads = PROC_MAX_THREADS(active_process);
-
-                // NOTE: there is possibility to not find selected thread of
-                //       process, this mean that thread was removed but is still
-                //       in memory thus can be switched by kernel.
-                for (int i = 0; i < threads; i++) {
-                        if (active_process->task[i] == task) {
-                                active_thread = i;
-                                break;
-                        }
-                }
-
                 stdin  = active_process->f_stdin;
                 stdout = active_process->f_stdout;
                 stderr = active_process->f_stderr;

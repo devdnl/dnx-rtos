@@ -805,7 +805,6 @@ int ext4_fs_put_inode_ref(struct ext4_inode_ref *ref)
 void ext4_fs_inode_blocks_init(struct ext4_fs *fs,
 			       struct ext4_inode_ref *inode_ref)
 {
-	struct ext4_inode *inode = inode_ref->inode;
 
 	/* Reset blocks array. For inode which is not directory or file, just
 	 * fill in blocks with 0 */
@@ -818,6 +817,8 @@ void ext4_fs_inode_blocks_init(struct ext4_fs *fs,
 	}
 
 #if CONFIG_EXTENT_ENABLE
+	struct ext4_inode *inode = inode_ref->inode;
+
 	/* Initialize extents if needed */
 	if (ext4_sb_feature_incom(&fs->sb, EXT4_FINCOM_EXTENTS)) {
 		ext4_inode_set_flag(inode, EXT4_INODE_FLAG_EXTENTS);

@@ -152,6 +152,7 @@ typedef struct {
         u32_t     MA[2];        /*! user configuration: memory address */
         u32_t     FC;           /*! user configuration: FIFO control */
         bool      release;      /*! user configuration: automatically release stream */
+        uint32_t  IRQ_priority; /*! user configuration: IRQ priority */
 } _DMA_DDI_config_t;
 
 /*==============================================================================

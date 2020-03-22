@@ -53,6 +53,7 @@ extern "C" {
 #define _UART_DEFAULT_HW_FLOW_CTRL              __UART_DEFAULT_HW_FLOW_CTRL__
 #define _UART_DEFAULT_SINGLE_WIRE_MODE          __UART_DEFAULT_SINGLE_WIRE_MODE__
 #define _UART_DEFAULT_BAUD                      __UART_DEFAULT_BAUD__
+#define _UART_IRQ_PRIORITY                      __UART_IRQ_PRIORITY__
 
 /*==============================================================================
   Exported types, enums definitions

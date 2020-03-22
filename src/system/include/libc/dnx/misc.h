@@ -568,6 +568,20 @@ extern "C" {
 //==============================================================================
 #define catcherr(op, errlabel) if ((op) != 0) {goto errlabel;}
 
+//==============================================================================
+/**
+ * @brief Macro check if value is in range.
+ */
+//==============================================================================
+#define IS_IN_RANGE(val, min, max) (((val) > (min)) && ((val) < (max)))
+
+//==============================================================================
+/**
+ * @brief Macro check if value is in sharp range.
+ */
+//==============================================================================
+#define IS_IN_RANGE_SHARP(val, min, max) (((val) >= (min)) && ((val) <= (max)))
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -639,6 +653,23 @@ static inline bool is_object_in_heap(void *ptr)
 {
         extern bool _mm_is_object_in_heap(void *ptr);
         return _mm_is_object_in_heap(ptr);
+}
+
+//==============================================================================
+/**
+ * @brief  Function replace characters in string.
+ *
+ * @param  str          string (in/out buffer)
+ * @param  from         find character
+ * @param  to           replace character
+ *
+ * @return Number of replaced characters.
+ */
+//==============================================================================
+static inline int strchrrep(char *str, char from, char to)
+{
+        extern int _strchrrep(char *str, char from, char to);
+        return _strchrrep(str, from, to);
 }
 
 /*==============================================================================

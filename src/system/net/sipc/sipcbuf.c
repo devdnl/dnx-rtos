@@ -54,7 +54,7 @@ struct sipcbuf {
         data_chain_t *end;
         size_t        total_size;
         size_t        seek;
-        size_t        max_capacity;
+        size_t        soft_max_capacity;
 };
 
 /*==============================================================================
@@ -82,7 +82,7 @@ struct sipcbuf {
  * @brief  Function create new buffer.
  *
  * @param  sipcbuf      pointer to destination pointer
- * @param  max_capacity maximum buffer capacity
+ * @param  max_capacity maximum buffer capacity (can exceeds up to MTU)
  *
  * @return One of errno value.
  */
@@ -97,7 +97,7 @@ int sipcbuf__create(sipcbuf_t **sipcbuf, size_t max_capacity)
                 err = sys_mutex_create(MUTEX_TYPE_NORMAL, &this->access);
 
                 if (!err) {
-                        this->max_capacity = max(256, max_capacity);
+                        this->soft_max_capacity = max(256, max_capacity);
                         *sipcbuf = this;
                 } else {
                         _kfree(_MM_NET, (void*)&this);
@@ -149,12 +149,6 @@ int sipcbuf__write(sipcbuf_t *sipcbuf, const u8_t *data, size_t size, bool refer
         if (sipcbuf && data && size) {
                 err = sys_mutex_lock(sipcbuf->access, MAX_DELAY_MS);
                 if (!err) {
-                        if (  (sipcbuf->total_size > 0)
-                           && (sipcbuf->total_size + size > sipcbuf->max_capacity)) {
-                                err = ENOSPC;
-                                goto finish;
-                        }
-
                         data_chain_t *chain = NULL;
 
                         err = _kzalloc(_MM_NET, sizeof(data_chain_t), (void*)&chain);
@@ -175,7 +169,6 @@ int sipcbuf__write(sipcbuf_t *sipcbuf, const u8_t *data, size_t size, bool refer
                                 sipcbuf->total_size += size;
                         }
 
-                        finish:
                         sys_mutex_unlock(sipcbuf->access);
                 }
         }
@@ -299,7 +292,7 @@ bool sipcbuf__is_full(sipcbuf_t *sipcbuf)
         if (sipcbuf) {
                 int err = sys_mutex_lock(sipcbuf->access, MAX_DELAY_MS);
                 if (!err) {
-                        is_full = sipcbuf->total_size >= sipcbuf->max_capacity;
+                        is_full = sipcbuf->total_size >= sipcbuf->soft_max_capacity;
                         sys_mutex_unlock(sipcbuf->access);
                 }
         }

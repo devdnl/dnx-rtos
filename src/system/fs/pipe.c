@@ -283,11 +283,11 @@ int _pipe_close(pipe_t *pipe)
                 if (not (pipe->flag & PERMANENT)) {
                         pipe->flag |= CLOSED;
 
-                        const u8_t nul = '\0';
-                        return _queue_send(pipe->queue, &nul, 10);
-                } else {
-                        return ESUCC;
+                        u8_t nul = '\0';
+                        _queue_send(pipe->queue, &nul, 10);
                 }
+
+                return ESUCC;
         } else {
                 return EINVAL;
         }

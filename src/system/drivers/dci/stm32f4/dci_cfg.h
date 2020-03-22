@@ -62,6 +62,7 @@ extern "C" {
 #define _DCI_CROP_START_Y      __DCI_CROP_START_Y__
 #define _DCI_CROP_HEIGHT       __DCI_CROP_HEIGHT__
 #define _DCI_CROP_WIDTH        __DCI_CROP_WIDTH__
+#define _DCI_IRQ_PRIORITY      __DCI_IRQ_PRIORITY__
 
 /*==============================================================================
   Exported object types

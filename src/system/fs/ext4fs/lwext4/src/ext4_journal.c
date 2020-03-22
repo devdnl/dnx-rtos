@@ -855,6 +855,7 @@ static void jbd_display_block_tags(struct jbd_fs *jbd_fs,
 				   struct tag_info *tag_info,
 				   void *arg)
 {
+        (void)tag_info;
 	uint32_t *iblock = arg;
 	ext4_dbg(DEBUG_JBD, "Block in block_tag: %" PRIu64 "\n", tag_info->block);
 	(*iblock)++;
@@ -944,7 +945,7 @@ static void jbd_replay_block_tags(struct jbd_fs *jbd_fs,
 	}
 
 	jbd_block_set(jbd_fs, &journal_block);
-	
+
 	return;
 }
 
@@ -1460,7 +1461,7 @@ static uint32_t jbd_journal_alloc_block(struct jbd_journal *journal,
 	start_block = journal->last++;
 	trans->alloc_blocks++;
 	wrap(&journal->jbd_fs->sb, journal->last);
-	
+
 	/* If there is no space left, flush just one journalled
 	 * transaction.*/
 	if (journal->last == journal->start) {
@@ -1830,7 +1831,7 @@ static int jbd_journal_prepare(struct jbd_journal *journal,
 		if (ext4_bcache_test_flag(jbd_buf->block.buf,
 					BC_DIRTY))
 			break;
-	
+
 		TAILQ_REMOVE(&jbd_buf->block_rec->dirty_buf_queue,
 			jbd_buf,
 			dirty_buf_node);
@@ -2027,7 +2028,7 @@ again:
 			jbd_set32(bhdr, magic, JBD_MAGIC_NUMBER);
 			jbd_set32(bhdr, blocktype, JBD_REVOKE_BLOCK);
 			jbd_set32(bhdr, sequence, trans->trans_id);
-			
+
 			header = (struct jbd_revoke_header *)bhdr;
 			blocks_entry = (char *)(header + 1);
 			tag_tbl_size = journal->block_size -

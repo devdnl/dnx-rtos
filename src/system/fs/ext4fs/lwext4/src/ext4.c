@@ -61,14 +61,14 @@
 #define EXT4_MP_LOCK(_m)                                                       \
 	do {                                                                   \
 		if ((_m)->os_locks)                                            \
-			(_m)->os_locks->lock();                                \
+			(_m)->os_locks->lock(_m->user);                        \
 	} while (0)
 
 /**@brief   Mount point OS dependent unlock*/
 #define EXT4_MP_UNLOCK(_m)                                                     \
 	do {                                                                   \
 		if ((_m)->os_locks)                                            \
-			(_m)->os_locks->unlock();                              \
+			(_m)->os_locks->unlock(_m->user);                      \
 	} while (0)
 
 /**@brief   Mount point descriptor.*/
@@ -94,6 +94,9 @@ struct ext4_mountpoint {
 
 	/**@brief   Block cache.*/
 	struct ext4_bcache bc;
+
+	/**@brief   User pointer.*/
+	void *user;
 };
 
 /****************************************************************************/
@@ -299,7 +302,7 @@ static int ext4_unlink(struct ext4_mountpoint *mp,
 /****************************************************************************/
 
 int ext4_mount(struct ext4_blockdev *bdev, struct ext4_mountpoint **mount_point,
-	       bool read_only)
+	       bool read_only, void *p_user)
 {
 	int r;
 	uint32_t bsize;
@@ -320,6 +323,8 @@ int ext4_mount(struct ext4_blockdev *bdev, struct ext4_mountpoint **mount_point,
 		r = ENOMEM;
                 goto Finish;
 	}
+
+	mp->user = p_user;
 
 	r = ext4_block_init(bd);
 	if (r != EOK)

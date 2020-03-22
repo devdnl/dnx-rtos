@@ -554,6 +554,81 @@ i8_t _GPIO_DDI_get_pin(u8_t port_idx, u8_t pin_idx)
         }
 }
 
+//==============================================================================
+/**
+ * @brief  Function set pin mode.
+ * @param  port_idx      Port index.
+ * @param  pin_idx       Pin index.
+ * @param  mode          Pin mode
+ */
+//==============================================================================
+void _GPIO_DDI_set_pin_mode(u8_t port_idx, u8_t pin_idx, int mode)
+{
+        if ((port_idx < ARRAY_SIZE(GPIOx)) && (pin_idx < 16)) {
+                sys_ISR_disable();
+
+                CLEAR_BIT(GPIOx[port_idx].GPIO->PUPDR, (0x3 << (pin_idx*2)));
+                SET_BIT(GPIOx[port_idx].GPIO->PUPDR, _PUPDR(mode) << (pin_idx * 2));
+
+                CLEAR_BIT(GPIOx[port_idx].GPIO->OTYPER, (1 << pin_idx));
+                SET_BIT(GPIOx[port_idx].GPIO->OTYPER, _OTYPER(mode) << pin_idx);
+
+                CLEAR_BIT(GPIOx[port_idx].GPIO->MODER, (0x3 << (pin_idx*2)));
+                SET_BIT(GPIOx[port_idx].GPIO->MODER, _MODER(mode) << (pin_idx * 2));
+
+                sys_ISR_enable();
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function get pin mode.
+ * @param  port_idx      Port index.
+ * @param  pin_idx       Pin index.
+ * @param  mode          Pin mode
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+int _GPIO_DDI_get_pin_mode(u8_t port_idx, u8_t pin_idx, int *mode)
+{
+        if ((port_idx < ARRAY_SIZE(GPIOx)) && (pin_idx < 16) && mode) {
+                sys_ISR_disable();
+
+                *mode = _MODE((GPIOx[port_idx].GPIO->MODER >> (pin_idx * 2)) & 3,
+                              (GPIOx[port_idx].GPIO->OTYPER >> pin_idx) & 1,
+                              (GPIOx[port_idx].GPIO->PUPDR >> (pin_idx * 2)) & 3);
+
+                sys_ISR_enable();
+
+                return 0;
+        } else {
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function set pin multiplexer (internal peripheral connection).
+ * @param  port_idx      Port index.
+ * @param  pin_idx       Pin index.
+ * @param  mux           Pin multiplexer
+ */
+//==============================================================================
+void _GPIO_DDI_set_pin_mux(u8_t port_idx, u8_t pin_idx, int mux)
+{
+        if ((port_idx < ARRAY_SIZE(GPIOx)) && (pin_idx < 16) && (mux < 16)) {
+
+                sys_ISR_disable();
+
+                int reg = pin_idx / 8;
+
+                CLEAR_BIT(GPIOx[port_idx].GPIO->AFR[reg], (0xF << (pin_idx*4)));
+                SET_BIT(GPIOx[port_idx].GPIO->AFR[reg], ((mux & 0xF) << (pin_idx*4)));
+
+                sys_ISR_enable();
+        }
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/

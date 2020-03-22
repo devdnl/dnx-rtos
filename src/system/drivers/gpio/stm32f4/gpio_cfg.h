@@ -283,9 +283,30 @@ _PIN_CONFIGURATION(GPIOK, 10, 14, __GPIO_PK_PIN_14_NAME__, __GPIO_PK_PIN_14_MODE
 _PIN_CONFIGURATION(GPIOK, 10, 15, __GPIO_PK_PIN_15_NAME__, __GPIO_PK_PIN_15_MODE__, __GPIO_PK_PIN_15_SPEED__, __GPIO_PK_PIN_15_AF__, __GPIO_PK_PIN_15_STATE__);
 #endif
 
+#define _PUPDR(_v)  (((_v) >> 0) & 3)
+#define _OTYPER(_v) (((_v) >> 2) & 1)
+#define _MODER(_v)  (((_v) >> 3) & 3)
+#define _MODE(_m, _t, _p) ((((_m) & 3) << 3) | (((_t) & 1) << 2) | (((_p) & 3) << 0))
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef enum {
+        GPIO_MODE__PP       = _MODE(1, 0, 0),
+        GPIO_MODE__OD       = _MODE(1, 1, 0),
+        GPIO_MODE__OD_PU    = _MODE(1, 1, 1),
+        GPIO_MODE__OD_PD    = _MODE(1, 1, 2),
+        GPIO_MODE__AF_PP    = _MODE(2, 0, 0),
+        GPIO_MODE__AF_PP_PU = _MODE(2, 0, 1),
+        GPIO_MODE__AF_PP_PD = _MODE(2, 0, 2),
+        GPIO_MODE__AF_OD    = _MODE(2, 1, 0),
+        GPIO_MODE__AF_OD_PU = _MODE(2, 1, 1),
+        GPIO_MODE__AF_OD_PD = _MODE(2, 1 ,2),
+        GPIO_MODE__IN       = _MODE(0, 0, 0),
+        GPIO_MODE__IN_PU    = _MODE(0, 0, 1),
+        GPIO_MODE__IN_PD    = _MODE(0, 0, 2),
+        GPIO_MODE__ANALOG   = _MODE(3, 0, 0),
+} GPIO_mode_t;
 
 /*==============================================================================
   Exported object declarations

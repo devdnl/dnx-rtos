@@ -208,6 +208,7 @@ static queue_t *call_request;
 #elif __OS_TASK_KWORKER_MODE__ == 1
 static queue_t *call_nonblocking;
 static queue_t *call_blocking;
+#elif __OS_TASK_KWORKER_MODE__ == 2
 #else
 #error __OS_TASK_KWORKER_MODE__: unknown mode
 #endif
@@ -278,10 +279,7 @@ static const syscallfunc_t syscalltab[] = {
         #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         [SYSCALL_SYSLOGREAD       ] = syscall_syslogread,
         #endif
-        [SYSCALL_KERNELPANICDETECT] = syscall_kernelpanicdetect,
-        #if __OS_ENABLE_SYSTEMFUNC__ == _YES_
-        [SYSCALL_SYSTEM           ] = syscall_system,
-        #endif
+        [SYSCALL_KERNELPANICDETECT ] = syscall_kernelpanicdetect,
         [SYSCALL_PROCESSCREATE     ] = syscall_processcreate,
         [SYSCALL_PROCESSKILL       ] = syscall_processkill,
         [SYSCALL_PROCESSCLEANZOMBIE] = syscall_processcleanzombie,
@@ -329,7 +327,9 @@ static const syscallfunc_t syscalltab[] = {
   Exported objects
 ==============================================================================*/
 _process_t *_kworker_proc;
+#if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
 pid_t       _syscall_client_PID[__OS_TASK_MAX_SYSTEM_THREADS__];
+#endif
 
 /*==============================================================================
   External objects
@@ -392,6 +392,33 @@ int _syscall_init()
 void syscall(syscall_t syscall, void *retptr, ...)
 {
         if (syscall < _SYSCALL_COUNT) {
+#if __OS_TASK_KWORKER_MODE__ == 2
+                _process_t *proc; tid_t tid;
+                _task_get_process_container(_THIS_TASK, &proc, &tid);
+
+                _assert(proc);
+                _assert(is_tid_in_range(proc, tid));
+
+
+                _process_clean_up_killed_processes();
+
+                syscallrq_t syscallrq = {
+                        .syscall_no     = syscall,
+                        .client_proc    = proc,
+                        .client_thread  = tid,
+                        .retptr         = retptr,
+                        .err            = ESUCC,
+                };
+
+                va_start(syscallrq.args, retptr);
+                syscall_do(&syscallrq);
+                va_end(syscallrq.args);
+
+                if (syscallrq.err) {
+                        _errno = syscallrq.err;
+                }
+        }
+#else
                 _process_t *proc; tid_t tid;
                 _task_get_process_container(_THIS_TASK, &proc, &tid);
 
@@ -459,6 +486,7 @@ void syscall(syscall_t syscall, void *retptr, ...)
         } else {
                 _errno = ENOSYS;
         }
+#endif
 }
 
 //==============================================================================
@@ -475,11 +503,13 @@ int _syscall_kworker_process(int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
+#if (__OS_TASK_KWORKER_MODE__ ==  0) || (__OS_TASK_KWORKER_MODE__ ==  1)
         static const thread_attr_t blocking_thread_attr = {
                 .stack_depth = STACK_DEPTH_CUSTOM(__OS_IO_STACK_DEPTH__),
                 .priority    = PRIORITY_NORMAL,
                 .detached    = true
         };
+#endif
 
         _task_get_process_container(_THIS_TASK, &_kworker_proc, NULL);
         _assert(_kworker_proc);
@@ -511,10 +541,9 @@ int _syscall_kworker_process(int argc, char *argv[])
 
         u32_t sync_period_ref = _kernel_get_time_ms();
 
-        syscallrq_t *sysrq = NULL;
-
         for (;;) {
 #if __OS_TASK_KWORKER_MODE__ == 0
+                syscallrq_t *sysrq = NULL;
                 if (_queue_receive(call_request, &sysrq, SYNC_PERIOD_MS) == ESUCC) {
 
                         _process_clean_up_killed_processes();
@@ -555,6 +584,8 @@ int _syscall_kworker_process(int argc, char *argv[])
                         _kernel_release_resources();
                         syscall_do(sysrq);
                 }
+#elif __OS_TASK_KWORKER_MODE__ == 2
+                _sleep_ms(1000);
 #endif
 
                 if ( (_kernel_get_time_ms() - sync_period_ref) >= FS_CACHE_SYNC_PERIOD_MS) {
@@ -586,6 +617,7 @@ static void syscall_do(void *rq)
                 return;
         }
 
+#if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
         tid_t tid = _process_get_active_thread();
         _assert(is_tid_in_range(_process_get_active(), tid));
 
@@ -597,12 +629,24 @@ static void syscall_do(void *rq)
 
         _process_get_pid(sysrq->client_proc, &_syscall_client_PID[tid]);
         _assert(_syscall_client_PID[tid] > 0);
+
+#if __OS_TASK_KWORKER_THREADS_PRIORITY__ == 1
+        int priority = 0;
+        _process_get_priority(_syscall_client_PID[tid], &priority);
+        _task_set_priority(NULL, priority);
+#endif
+#endif
+        _process_syscall_stat_inc(sysrq->client_proc, _kworker_proc);
+
         syscalltab[sysrq->syscall_no](sysrq);
+
+#if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
         _syscall_client_PID[tid] = 0;
 
         if (_flag_set(flags, _PROCESS_SYSCALL_FLAG(sysrq->client_thread)) != ESUCC) {
                 _assert(false);
         }
+#endif
 }
 
 #if __OS_TASK_KWORKER_MODE__ == 1

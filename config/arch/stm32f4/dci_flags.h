@@ -212,6 +212,18 @@ this:AddWidget("Spinbox", 1, 2048, "Crop width")
 --*/
 #define __DCI_CROP_WIDTH__ 1
 
+
+/*--
+this:AddExtraWidget("Label", "LabelIRQ", "\nIRQ configuration", -1, "bold")
+this:AddExtraWidget("Void", "VoidIRQ")
+++*/
+/*--
+this:AddWidget("Combobox", "IRQ priority")
+uC.AddPriorityItems(this, false)
+--*/
+#define __DCI_IRQ_PRIORITY__ 12
+
+
 #endif /* _DCI_FLAGS_H_ */
 /*==============================================================================
   End of file

@@ -65,7 +65,6 @@ static void   give_Rx_buffer_to_DMA     (void);
 static bool   is_buffer_owned_by_DMA    (ETH_DMADESCTypeDef *DMA_descriptor);
 static void   make_Rx_buffer_available  (void);
 static u8_t  *get_buffer_address        (ETH_DMADESCTypeDef *DMA_descriptor);
-static void   ETH_Stop                  (void);
 
 /*==============================================================================
   Local objects
@@ -482,10 +481,10 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN:
+        case IOCTL_ETHMAC__SEND_PACKET:
                 if (arg) {
                         if (sys_mutex_lock(hdl->tx_access, MAX_DELAY_MS) == ESUCC) {
-                                ETHMAC_packet_chain_t *pkt = cast(ETHMAC_packet_chain_t*, arg);
+                                ETHMAC_packet_t *pkt = arg;
 
                                 while (is_buffer_owned_by_DMA(DMATxDescToSet)) {
                                         sys_sleep_ms(1);
@@ -493,22 +492,17 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                 if (  !is_buffer_owned_by_DMA(DMATxDescToSet)
                                    && pkt->payload
-                                   && pkt->payload_size
-                                   && pkt->total_size > 0
-                                   && pkt->total_size <= ETH_MAX_PACKET_SIZE) {
+                                   && pkt->payload_size <= ETH_MAX_PACKET_SIZE) {
 
-                                        u8_t  *buffer = get_buffer_address(DMATxDescToSet);
-                                        size_t offset = 0;
+                                        u8_t *buffer = get_buffer_address(DMATxDescToSet);
 
-                                        for (ETHMAC_packet_chain_t *p = pkt; p != NULL; p = p->next) {
-                                                memcpy(&buffer[offset], p->payload, p->payload_size);
-                                                offset += p->payload_size;
-                                        }
+                                        memcpy(buffer, pkt->payload, pkt->payload_size);
 
-                                        send_packet(pkt->total_size);
+                                        send_packet(pkt->payload_size);
 
                                         err = ESUCC;
                                 } else {
+                                        printk("ETH: payload size too big or NULL");
                                         err = EAGAIN;
                                 }
 
@@ -521,15 +515,13 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN:
+        case IOCTL_ETHMAC__RECEIVE_PACKET:
                 if (arg) {
                         if (sys_mutex_lock(hdl->rx_access, MAX_DELAY_MS) == ESUCC) {
-                                ETHMAC_packet_chain_t *pkt = cast(ETHMAC_packet_chain_t*, arg);
+                                ETHMAC_packet_t *pkt = arg;
 
                                 if (  pkt->payload
-                                   && pkt->payload_size
-                                   && pkt->total_size > 0
-                                   && pkt->total_size <= ETH_MAX_PACKET_SIZE) {
+                                   && pkt->payload_size <= ETH_MAX_PACKET_SIZE) {
 
                                         // TEST check solution in tests
                                         while (is_buffer_owned_by_DMA(DMARxDescToGet)) {
@@ -538,13 +530,9 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
 
                                         if (ETH_GetRxPktSize(DMARxDescToGet) > 0) {
 
-                                                u8_t  *buffer = get_buffer_address(DMARxDescToGet);
-                                                size_t offset = 0;
+                                                u8_t *buffer = get_buffer_address(DMARxDescToGet);
 
-                                                for (ETHMAC_packet_chain_t *p = pkt; p != NULL; p = p->next) {
-                                                        memcpy(p->payload, &buffer[offset], p->payload_size);
-                                                        offset += p->payload_size;
-                                                }
+                                                memcpy(pkt->payload, buffer, pkt->payload_size);
 
                                                 give_Rx_buffer_to_DMA();
 
@@ -552,7 +540,6 @@ API_MOD_IOCTL(ETHMAC, void *device_handle, int request, void *arg)
                                         } else {
                                                 printk("ETH: received empty packet!");
                                                 give_Rx_buffer_to_DMA();
-                                                pkt->total_size = 0;
 
                                                 err = EIO;
                                         }
@@ -690,13 +677,6 @@ static void send_packet(size_t size)
         DMATxDescToSet = cast(ETH_DMADESCTypeDef*, DMATxDescToSet->Buffer2NextDescAddr);
 
         sys_critical_section_end();
-
-        // FIXME This workaround fixes problems with packets lags...
-        //       The problem is visible only when a lot of data is send
-        //       and many packets are generated.
-//        if (size > 1460) {
-//                sys_sleep_ms(1);
-//        }
 }
 
 //==============================================================================
@@ -723,12 +703,16 @@ static size_t wait_for_packet(struct ethmac *hdl, uint32_t timeout)
 //==============================================================================
 static void give_Rx_buffer_to_DMA(void)
 {
+        sys_critical_section_begin();
+
         /* Set Own bit of the Rx descriptor Status: gives the buffer back to ETHERNET DMA */
         DMARxDescToGet->Status = ETH_DMARxDesc_OWN;
 
         /* Update the ETHERNET DMA global Rx descriptor with next Rx descriptor */
         /* Selects the next DMA Rx descriptor list for next buffer to read */
         DMARxDescToGet = cast(ETH_DMADESCTypeDef*, DMARxDescToGet->Buffer2NextDescAddr);
+
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -752,10 +736,14 @@ static bool is_buffer_owned_by_DMA(ETH_DMADESCTypeDef *DMA_descriptor)
 //==============================================================================
 static void make_Rx_buffer_available(void)
 {
+        sys_critical_section_begin();
+
         if (ETH->DMASR & ETH_DMASR_RBUS) {
                 ETH_DMAClearFlag(ETH_DMA_FLAG_RBU);
                 ETH_ResumeDMAReception();
         }
+
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -772,24 +760,16 @@ static u8_t *get_buffer_address(ETH_DMADESCTypeDef *DMA_descriptor)
 
 //==============================================================================
 /**
- * @brief  Function stops Ethernet interface (opposition function to ETH_Start())
- * @param  None
- * @return None
+ * @brief  Function get speed and duplex from PHY
+ * @param  PHYAddress           PHY address
+ * @param  ETH_InitStruct       ETH init structure
+ * @return Buffer address of selected DMA
  */
 //==============================================================================
-static void ETH_Stop(void)
+void ETH_EXTERN_GetSpeedAndDuplex(uint32_t PHYAddress, ETH_InitTypeDef *ETH_InitStruct)
 {
-        /* Enable transmit state machine of the MAC for transmission on the MII */
-        ETH_MACTransmissionCmd(DISABLE);
-        /* Flush Transmit FIFO */
-        ETH_FlushTransmitFIFO();
-        /* Enable receive state machine of the MAC for reception from the MII */
-        ETH_MACReceptionCmd(DISABLE);
-
-        /* Start DMA transmission */
-        ETH_DMATransmissionCmd(DISABLE);
-        /* Start DMA reception */
-        ETH_DMAReceptionCmd(DISABLE);
+        UNUSED_ARG2(PHYAddress, ETH_InitStruct);
+        // empty
 }
 
 //==============================================================================

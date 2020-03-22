@@ -517,6 +517,7 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                 config.MA       = cast(u32_t, dst);
                                 config.NDT      = count;
                                 config.CR       = DMA_CCR1_MINC;
+                                config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
                                 err = _DMA_DDI_transfer(dmad, &config);
                                 if (!err) {
@@ -527,10 +528,10 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: DMA event error %d", err);
+                                                printk("I2C: DMA event error");
                                         }
                                 } else {
-                                        printk("I2C: DMA transfer error %d", err);
+                                        printk("I2C: DMA transfer error");
                                 }
 
                                 _DMA_DDI_release(dmad);
@@ -675,6 +676,7 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                         config.MA       = cast(u32_t, src);
                         config.NDT      = count;
                         config.CR       = DMA_CCR1_MINC | DMA_CCR1_DIR;
+                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {
@@ -691,13 +693,13 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: write not finished correctly %d", err);
+                                                printk("I2C: write not finished correctly");
                                         }
                                 } else {
-                                        printk("I2C: DMA event error %d", err);
+                                        printk("I2C: DMA event error");
                                 }
                         } else {
-                                printk("I2C: DMA transfer error %d", err);
+                                printk("I2C: DMA transfer error");
                         }
 
                         _DMA_DDI_release(dmad);
