@@ -354,6 +354,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         _DMA_DDI_config_t config_tx;
                         config_tx.arg      = NULL;
                         config_tx.callback = NULL;
+                        config_tx.cb_next  = NULL;
                         config_tx.release  = true;
                         config_tx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
                         config_tx.MA[0]    = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
@@ -369,6 +370,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         _DMA_DDI_config_t config_rx;
                         config_rx.arg      = hdl;
                         config_rx.callback = DMA_callback;
+                        config_rx.cb_next  = NULL;
                         config_rx.release  = true;
                         config_rx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
                         config_rx.MA[0]    = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);

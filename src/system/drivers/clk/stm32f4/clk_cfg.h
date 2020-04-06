@@ -344,7 +344,7 @@ extern "C" {
  *       frequency ranges from 1 to 2 MHz. It is recommended to select a frequency
  *       of 2 MHz to limit PLL jitter.
  */
-#define _CLK_CFG__PLL_M                 __CLK_PLL_M__
+#define _CLK_CFG__PLL_SRC_DIV_M         __CLK_PLL_SRC_DIV_M__
 
 /*
  * PLL multiplier (PLLN)

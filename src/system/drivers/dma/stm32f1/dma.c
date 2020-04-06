@@ -66,6 +66,7 @@ typedef struct {
 typedef struct {
         void           *arg;
         _DMA_cb_t       callback;
+        _DMA_cb_t       cb_next;
         u32_t           dmad;
         bool            release;
 } DMA_RT_channel_t;
@@ -362,6 +363,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                         _DMA_DDI_config_t config;
                                         config.arg      = hdl->queue[channel];
                                         config.callback = M2M_callback;
+                                        config.cb_next  = NULL;
                                         config.release  = true;
                                         config.PA       = cast(u32_t, transfer->src);
                                         config.MA       = cast(u32_t, transfer->dst);
@@ -538,6 +540,7 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
 
                         RT_channel->arg      = config->arg;
                         RT_channel->callback = config->callback;
+                        RT_channel->cb_next  = config->cb_next;
                         RT_channel->release  = config->release;
 
                         clear_DMA_IRQ_flags(GETMAJOR(dmad), GETCHANNEL(dmad));
@@ -617,7 +620,6 @@ static void IRQ_handle(u8_t major, u8_t channel)
                 CLEAR_BIT(DMA_channel->CCR, DMA_CCR1_EN);
 
                 RT_channel->callback = NULL;
-                RT_channel->arg      = NULL;
 
                 if (RT_channel->release) {
                         RT_channel->dmad    = 0;
@@ -635,6 +637,10 @@ static void IRQ_handle(u8_t major, u8_t channel)
         }
 
         clear_DMA_IRQ_flags(major, channel);
+
+        if (RT_channel->cb_next) {
+                yield |= RT_channel->cb_next(DMA_channel, SR & 0x3F,  RT_channel->arg);
+        }
 
         sys_thread_yield_from_ISR(yield);
 }

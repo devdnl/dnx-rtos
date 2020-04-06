@@ -967,6 +967,7 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
         if (hdl->ctrl->dmad) {
                 _DMA_DDI_config_t config;
                 config.callback = DMA_finished;
+                config.cb_next  = NULL;
                 config.arg      = hdl;
                 config.release  = false;
                 config.PA       = cast(u32_t, &SDIO->FIFO);

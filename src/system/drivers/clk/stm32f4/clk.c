@@ -239,7 +239,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         //----------------------------------------------------------------------
 #if defined(STM32F410xx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
         RCC_PLLConfig(_CLK_CFG__PLL_SRC,
-                      _CLK_CFG__PLL_M,
+                      _CLK_CFG__PLL_SRC_DIV_M,
                       _CLK_CFG__PLL_N,
                       _CLK_CFG__PLL_P,
                       _CLK_CFG__PLL_Q,
@@ -248,7 +248,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
 
 #if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE)
         RCC_PLLConfig(_CLK_CFG__PLL_SRC,
-                      _CLK_CFG__PLL_M,
+                      _CLK_CFG__PLL_SRC_DIV_M,
                       _CLK_CFG__PLL_N,
                       _CLK_CFG__PLL_P,
                       _CLK_CFG__PLL_Q);

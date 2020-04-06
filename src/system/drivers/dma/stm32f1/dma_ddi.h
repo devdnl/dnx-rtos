@@ -101,6 +101,7 @@ typedef bool (*_DMA_cb_t)(DMA_Channel_t *channel, u8_t SR, void *arg);
 typedef struct {
         void     *arg;          /*! user configuration: callback argument */
         _DMA_cb_t callback;     /*! user configuration: finish callback */
+        _DMA_cb_t cb_next;      /*! user configuration: next callback */
         u32_t     CR;           /*! user configuration: control register */
         u32_t     NDT;          /*! user configuration: data number */
         u32_t     PA;           /*! user configuration: peripheral address */

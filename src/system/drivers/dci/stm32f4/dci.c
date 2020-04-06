@@ -315,6 +315,7 @@ API_MOD_READ(DCI,
         config.NDT          = hdl->TSIZEW;
         config.arg          = DCI;
         config.callback     = DMA_callback;
+        config.cb_next      = NULL;
         config.release      = false;
         config.FC           = DMA_SxFCR_FTH_FULL | DMA_SxFCR_FS_EMPTY | DMA_SxFCR_DMDIS_YES;
         config.CR           = DMA_SxCR_CHSEL_SEL(DMA_CHANNEL)

@@ -56,6 +56,7 @@ typedef struct {
 typedef struct {
         void           *arg;
         _DMA_cb_t       callback;
+        _DMA_cb_t       cb_next;
         u32_t           dmad;
         bool            release;
 } DMA_RT_stream_t;
@@ -356,6 +357,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
                                         _DMA_DDI_config_t config;
                                         config.arg      = hdl->queue[stream];
                                         config.callback = M2M_callback;
+                                        config.cb_next  = NULL;
                                         config.release  = true;
                                         config.PA       = cast(u32_t, transfer->src);
                                         config.MA[0]    = cast(u32_t, transfer->dst);
@@ -538,6 +540,7 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
 
                         RT_stream->arg      = config->arg;
                         RT_stream->callback = config->callback;
+                        RT_stream->cb_next  = config->cb_next;
                         RT_stream->release  = config->release;
 
                         clear_DMA_IRQ_flags(GETMAJOR(dmad), GETSTREAM(dmad));
@@ -642,7 +645,6 @@ static void IRQ_handle(u8_t major, u8_t stream)
                 DMA_Stream->CR = 0;
 
                 RT_stream->callback = NULL;
-                RT_stream->arg      = NULL;
 
                 if (RT_stream->release) {
                         RT_stream->dmad    = 0;
@@ -660,6 +662,11 @@ static void IRQ_handle(u8_t major, u8_t stream)
         }
 
         clear_DMA_IRQ_flags(major, stream);
+
+        if (RT_stream->cb_next) {
+                yield |= RT_stream->cb_next(DMA_HW[major].stream[stream],
+                                            SR & 0x3F, RT_stream->arg);
+        }
 
         sys_thread_yield_from_ISR(yield);
 }
