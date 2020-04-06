@@ -393,11 +393,11 @@ int _I2C_LLD__init(u8_t major)
                 i2c->TRISE = (((clocks.PCLK1_Frequency / 1000000) * 300) / 1000) + 1;
         }
 
-        i2c->CR1   = I2C_CR1_SWRST;
-        i2c->CR1   = 0;
-        i2c->CR2   = (clocks.PCLK1_Frequency / 1000000) & I2C_CR2_FREQ;
-        i2c->CCR   = CCR;
-        i2c->CR1   = I2C_CR1_PE;
+        i2c->CR1 = I2C_CR1_SWRST;
+        i2c->CR1 = 0;
+        i2c->CR2 = (clocks.PCLK1_Frequency / 1000000) & I2C_CR2_FREQ;
+        i2c->CCR = CCR;
+        i2c->CR1 = I2C_CR1_PE;
 
         _I2C[major]->initialized = true;
 

@@ -140,16 +140,17 @@ static inline I2C_t *get_I2C(I2C_dev_t *hdl)
 //==============================================================================
 static void reset(I2C_dev_t *hdl, bool reinit)
 {
+        printk("I2C%d:%d interface reset", hdl->major, hdl->minor);
         I2C_t *i2c = get_I2C(hdl);
 
         CLEAR_BIT(i2c->CR2, I2C_CR2_ITEVTEN | I2C_CR2_ITERREN | I2C_CR2_ITBUFEN);
 
         sys_critical_section_begin();
         {
-                u8_t tmp = i2c->SR1;
-                     tmp = i2c->SR2;
-                     tmp = i2c->DR;
-                     tmp = i2c->DR;
+                volatile u8_t tmp = i2c->SR1;
+                              tmp = i2c->SR2;
+                              tmp = i2c->DR;
+                              tmp = i2c->DR;
 
                 UNUSED_ARG1(tmp);
 
@@ -221,11 +222,14 @@ static int wait_for_event_poll(I2C_dev_t *hdl, u32_t flags, u32_t timeout_ms)
         while (!(i2c->SR1 & flags)) {
 
                 if (sys_time_is_expired(tref, timeout_ms)) {
+                        printk("I2C%d:%d event poll timeout (SR1 mask: %Xh)",
+                               hdl->major, hdl->minor, flags);
                         reset(hdl, true);
                         return EIO;
                 }
 
                 if (i2c->SR1 & (I2C_SR1_ARLO | I2C_SR1_BERR | I2C_SR1_AF)) {
+                        printk("I2C%d:%d event poll error", hdl->major, hdl->minor);
                         reset(hdl, true);
                         return EIO;
                 }
@@ -270,19 +274,21 @@ int _I2C_LLD__init(u8_t major)
         const I2C_info_t *cfg = &I2C_HW[major];
         I2C_t            *i2c = const_cast(I2C_t*, I2C_HW[major].I2C);
 
+        CLEAR_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
+        SET_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
+
+        SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
+        sys_sleep_ms(10);
+        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
         RCC_ClocksTypeDef clocks;
         memset(&clocks, 0, sizeof(RCC_ClocksTypeDef));
         RCC_GetClocksFreq(&clocks);
 
         if (clocks.PCLK1_Frequency < 2000000) {
-                printk("I2C: PCLK1 below 2MHz");
+                printk("I2C: PCLK1 below recommended 2MHz");
                 return EIO;
         }
 
-        SET_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
-
-        SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
-        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
 
         NVIC_EnableIRQ(cfg->IRQ_EV_n);
         NVIC_EnableIRQ(cfg->IRQ_ER_n);
@@ -466,6 +472,9 @@ int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write, size_t count)
                 err = wait_for_event_poll(hdl, I2C_SR1_ADDR, _I2C_TIMEOUT_BYTE_TRANSFER);
 
                 finish:
+                if (err) {
+                        printk("I2C%d:%d send 10-bit address error", hdl->major, hdl->minor);
+                }
                 return err;
 
         } else {
@@ -481,7 +490,12 @@ int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write, size_t count)
                 }
                 sys_critical_section_end();
 
-                return wait_for_event_poll(hdl, I2C_SR1_ADDR, _I2C_TIMEOUT_BYTE_TRANSFER);
+                int err =  wait_for_event_poll(hdl, I2C_SR1_ADDR, _I2C_TIMEOUT_BYTE_TRANSFER);
+                if (err) {
+                        printk("I2C%d:%d send 7-bit address error", hdl->major, hdl->minor);
+                }
+
+                return err;
         }
 }
 
@@ -528,10 +542,10 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: DMA event error");
+                                                printk("I2C: DMA Rx event error");
                                         }
                                 } else {
-                                        printk("I2C: DMA transfer error");
+                                        printk("I2C: DMA receive error");
                                 }
 
                                 _DMA_DDI_release(dmad);
@@ -639,6 +653,9 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
 #endif
 
         *rdcnt = n;
+        if (err) {
+                printk("I2C%d:%d receive error", hdl->major, hdl->minor);
+        }
 
         return err;
 }
@@ -696,10 +713,10 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
                                                 printk("I2C: write not finished correctly");
                                         }
                                 } else {
-                                        printk("I2C: DMA event error");
+                                        printk("I2C: DMA Tx event error");
                                 }
                         } else {
-                                printk("I2C: DMA transfer error");
+                                printk("I2C: DMA write error");
                         }
 
                         _DMA_DDI_release(dmad);
@@ -735,6 +752,9 @@ int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wr
 #endif
 
         *wrcnt = n;
+        if (err) {
+                printk("I2C%d:%d transmit error", hdl->major, hdl->minor);
+        }
 
         return err;
 }
@@ -908,9 +928,21 @@ int _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdc
 
                 } else {
                         if (i2c->SR1 & (I2C_SR1_ADDR | I2C_SR1_STOPF)) {
+                                if (i2c->SR1 & I2C_SR1_RXNE) {
+                                       if (count > 0) {
+                                               *dst++ = i2c->DR;
+                                               count--;
+                                               (*rdctr)++;
+                                       } else {
+                                               u8_t tmp = i2c->DR;
+                                               (void)tmp;
+                                       }
+
+                                }
                                 break;
                         }
                 }
+                sys_sleep_ms(1);
         }
 
         // clear STOPF flag
