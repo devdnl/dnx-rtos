@@ -1603,10 +1603,11 @@ uint32_t ETH_Init(ETH_InitTypeDef* ETH_InitStruct, u16 PHYAddress);
 void ETH_StructInit(ETH_InitTypeDef* ETH_InitStruct);
 void ETH_SoftwareReset(void);
 FlagStatus ETH_GetSoftwareResetStatus(void);
-void  ETH_Start(void);
+void ETH_Start(void);
+void ETH_Stop(void);
 uint32_t ETH_HandleTxPkt(u8 *ppkt, u16 FrameLength);
 uint32_t ETH_HandleRxPkt(u8 *ppkt);
-uint32_t ETH_GetRxPktSize(void);
+uint32_t ETH_GetRxPktSize(ETH_DMADESCTypeDef *DMARxDesc);
 void ETH_DropRxPkt(void);
 
 /**

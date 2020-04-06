@@ -465,6 +465,29 @@ void ETH_Start(void)
 }
 
 /**
+  * @brief  Disables ENET MAC and DMA reception/transmission
+  * @param  None
+  * @retval None
+  */
+void ETH_Stop(void)
+{
+  /* Stop DMA transmission */
+  ETH_DMATransmissionCmd(DISABLE);
+
+  /* Stop DMA reception */
+  ETH_DMAReceptionCmd(DISABLE);
+
+  /* Disable receive state machine of the MAC for reception from the MII */
+  ETH_MACReceptionCmd(DISABLE);
+
+  /* Flush Transmit FIFO */
+  ETH_FlushTransmitFIFO();
+
+  /* Disable transmit state machine of the MAC for transmission on the MII */
+  ETH_MACTransmissionCmd(DISABLE);
+}
+
+/**
   * @brief  Transmits a packet, from application buffer, pointed by ppkt.
   * @param  ppkt: pointer to the application's packet buffer to transmit.
   * @param  FrameLength: Tx Packet size.
@@ -602,13 +625,13 @@ uint32_t ETH_HandleRxPkt(uint8_t *ppkt)
   * @param  None
   * @retval framelength: received packet size
   */
-uint32_t ETH_GetRxPktSize(void)
+uint32_t ETH_GetRxPktSize(ETH_DMADESCTypeDef *DMARxDesc)
 {
   uint32_t frameLength = 0;
-  if(((DMARxDescToGet->Status & ETH_DMARxDesc_OWN) == (uint32_t)RESET) &&
-     ((DMARxDescToGet->Status & ETH_DMARxDesc_ES) == (uint32_t)RESET) &&
-     ((DMARxDescToGet->Status & ETH_DMARxDesc_LS) != (uint32_t)RESET) &&
-     ((DMARxDescToGet->Status & ETH_DMARxDesc_FS) != (uint32_t)RESET))
+  if(((DMARxDesc->Status & ETH_DMARxDesc_OWN) == (uint32_t)RESET) &&
+     ((DMARxDesc->Status & ETH_DMARxDesc_ES) == (uint32_t)RESET) &&
+     ((DMARxDesc->Status & ETH_DMARxDesc_LS) != (uint32_t)RESET) &&
+     ((DMARxDesc->Status & ETH_DMARxDesc_FS) != (uint32_t)RESET))
   {
     /* Get the size of the packet: including 4 bytes of the CRC */
     frameLength = ETH_GetDMARxDescFrameLength(DMARxDescToGet);
