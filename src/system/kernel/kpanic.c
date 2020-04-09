@@ -117,7 +117,16 @@ bool _kernel_panic_detect(FILE *file)
                         && kernel_panic_descriptor.valid2 == _KERNEL_PANIC_DESC_VALID2 );
 
         if (occurred) {
-                printk("KERNEL PANIC in %s: %d:%d:%s", kernel_panic_descriptor.name,
+                const char *panic_type;
+
+                if (  (strncmp(kernel_panic_descriptor.name, "kworker",  128) == 0)
+                   || (kernel_panic_descriptor.cause >= _KERNEL_PANIC_DESC_CAUSE_CPUFAULT) ) {
+                        panic_type = "KERNEL PANIC";
+                } else {
+                        panic_type = "APP CRASH";
+                }
+
+                printk("%s in %s: %d:%d:%s", panic_type, kernel_panic_descriptor.name,
                        kernel_panic_descriptor.pid, kernel_panic_descriptor.tid,
                        cause[kernel_panic_descriptor.cause]);
 
@@ -131,7 +140,7 @@ bool _kernel_panic_detect(FILE *file)
                         }
 
                       #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
-                        sys_fprintf(file, VT100_FONT_COLOR_RED"*** KERNEL PANIC ***"VT100_RESET_ATTRIBUTES"\n");
+                        sys_fprintf(file, VT100_FONT_COLOR_RED"*** %s ***"VT100_RESET_ATTRIBUTES"\n", panic_type);
                         sys_fprintf(file, "Cause: %s\n", cause[kernel_panic_descriptor.cause]);
                         sys_fprintf(file, "PID  : %d (%.*s)\n", kernel_panic_descriptor.pid, 256, kernel_panic_descriptor.name);
                         sys_fprintf(file, "TID  : %d\n", kernel_panic_descriptor.tid);
