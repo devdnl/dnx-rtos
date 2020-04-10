@@ -539,7 +539,7 @@ int _syscall_kworker_process(int argc, char *argv[])
                 iothrs_created, __OS_TASK_KWORKER_IO_THREADS__);
 #endif
 
-        u32_t sync_period_ref = _kernel_get_time_ms();
+        u64_t sync_period_ref = _kernel_get_time_ms();
 
         for (;;) {
 #if __OS_TASK_KWORKER_MODE__ == 0

@@ -57,7 +57,7 @@ extern int       _ltimeoff;
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern char      *_itoa          (i32_t, char*, u8_t, bool, u8_t);
+extern char      *_itoa          (i64_t, char*, u8_t, bool, u8_t);
 extern int        _dtoa          (double, char*, int, int);
 extern double     _strtod        (const char*, char**);
 extern float      _strtof        (const char*, char**);

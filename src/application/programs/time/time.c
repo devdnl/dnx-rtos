@@ -93,7 +93,7 @@ int_main(time, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 
         errno = 0;
 
-        u32_t start_time = get_time_ms();
+        u64_t start_time = get_time_ms();
 
         process_attr_t attr;
         memset(&attr, 0, sizeof(attr));

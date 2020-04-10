@@ -58,6 +58,7 @@
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+extern u64_t _uptime_ms;
 
 /*==============================================================================
   Function definitions
@@ -127,9 +128,9 @@ void _kernel_start(void)
  * @return a OS time in milliseconds
  */
 //==============================================================================
-u32_t _kernel_get_time_ms(void)
+u64_t _kernel_get_time_ms(void)
 {
-        return (xTaskGetTickCount() * (1000/(configTICK_RATE_HZ)));
+        return (_uptime_ms * (1000/(configTICK_RATE_HZ)));
 }
 
 //==============================================================================

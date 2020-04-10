@@ -147,7 +147,7 @@ struct tm {
 
 #ifndef DOXYGEN /* Doxygen description in time.h */
 /** @brief Clock representation type. */
-typedef u32_t clock_t;
+typedef u64_t clock_t;
 #define __CLOCK_TYPE_DEFINED__
 #endif /* DOXYGEN */
 

@@ -386,7 +386,7 @@ static inline u32_t get_tick_counter(void)
 
         // ...
 
-        printf("System works by %u ms\n", (uint)get_time_ms());
+        printf("System works by %lu ms\n", get_time_ms());
 
         // ...
 
@@ -395,7 +395,7 @@ static inline u32_t get_tick_counter(void)
  * @see get_uptime()
  */
 //==============================================================================
-static inline u32_t get_time_ms(void)
+static inline u64_t get_time_ms(void)
 {
         return _builtinfunc(kernel_get_time_ms);
 }

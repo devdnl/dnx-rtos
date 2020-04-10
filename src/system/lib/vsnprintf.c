@@ -304,7 +304,7 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         bool put_integer()
         {
                 if (chr == 'd' || chr == 'u' || chr == 'i' || chr == 'x' || chr == 'X') {
-                        char result[16];
+                        char result[65];
                         bool upper  = chr == 'X';
                         bool spaces = false;
                         bool expand = false;
@@ -333,10 +333,9 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
                         }
 
-                        /* NOTE: 64-bit integers are not supported */
-                        i32_t val;
+                        i64_t val;
                         if (long_long) {
-                                val = va_arg(arg, i32_t);
+                                val = va_arg(arg, i64_t);
                         } else {
                                 val = va_arg(arg, i32_t);
                         }

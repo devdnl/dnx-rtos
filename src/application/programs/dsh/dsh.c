@@ -480,8 +480,8 @@ static bool start_program(char *master, char *slave, char *std_in,
         if (master && slave) {
                 pipe_name = calloc(sizeof(char), strlen(global->pipe_file) + 7);
                 if (pipe_name) {
-                        u32_t uptime = get_time_ms();
-                        snprintf(pipe_name, strlen(global->pipe_file) + 7, "%s%x", global->pipe_file, uptime);
+                        u64_t uptime = get_time_ms();
+                        snprintf(pipe_name, strlen(global->pipe_file) + 7, "%s%lx", global->pipe_file, uptime);
 
                         if (mkfifo(pipe_name, 0666)) {
                                 perror("sh");

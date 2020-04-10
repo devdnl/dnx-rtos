@@ -111,7 +111,7 @@ void _printk(const char *format, ...)
                         logbuf.msg[logbuf.head].str[len - 1] = '\0';
                 }
 
-                u32_t now = _kernel_get_time_ms();
+                u64_t now = _kernel_get_time_ms();
                 logbuf.msg[logbuf.head].timestamp.tv_sec  = now / 1000;
                 logbuf.msg[logbuf.head].timestamp.tv_usec = (now % 1000) * 1000;
 
