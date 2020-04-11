@@ -486,6 +486,45 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 err = ESUCC;
                 break;
 
+        case IOCTL_TTY__READ_BUFFER:
+                err = EINVAL;
+                if (arg) {
+                        TTY_buffer_t *buf = arg;
+
+                        if (buf->ptr && buf->size) {
+
+                                err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+                                if (!err) {
+
+                                        buf->ptr[0] = '\0';
+
+                                        for (int i = _TTY_TERMINAL_ROWS - 1; i >= 0; i--) {
+
+                                                const char *str = ttybfr_get_line(tty->screen, i);
+                                                if (str) {
+
+                                                        size_t len = min(buf->size, strlen(str));
+                                                        if (len) {
+                                                                strlcat(buf->ptr, str, len);
+                                                                buf->ptr   += len - 2;
+                                                                *buf->ptr++ = '\n';
+                                                                *buf->ptr   = '\0';
+                                                                buf->size  -= len - 1;
+
+                                                        } else {
+                                                                break;
+                                                        }
+                                                }
+                                        }
+
+                                        sys_mutex_unlock(tty->secure_mtx);
+                                }
+
+                                err = ESUCC;
+                        }
+                }
+                break;
+
         default:
                 err = EBADRQC;
                 break;

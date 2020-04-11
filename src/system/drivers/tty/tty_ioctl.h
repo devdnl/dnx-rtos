@@ -166,9 +166,20 @@ extern "C" {
  */
 #define IOCTL_TTY__REFRESH_LAST_LINE            _IO(TTY, 0x09)
 
+/**
+ *  @brief  Read buffer.
+ *  @param  [RD, WR] TTY_buffer_t*      buffer descriptor
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_TTY__READ_BUFFER                  _IOWR(TTY, 0x0A, TTY_buffer_t*)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct {
+        char  *ptr;
+        size_t size;
+} TTY_buffer_t;
 
 /*==============================================================================
   Exported objects
