@@ -6,4 +6,4 @@ else
     dev=$1
 fi
 
-minicom -D "$dev"  -b 115200
+minicom -C /tmp/minicom.log -D "$dev"  -b 115200

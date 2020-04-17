@@ -356,14 +356,14 @@ static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 
         // ...
 
-        printf("Context was switched %u times\n", (uint)get_tick_counter());
+        printf("Context was switched %lu times\n", get_tick_counter());
 
         // ...
 
    @endcode
  */
 //==============================================================================
-static inline u32_t get_tick_counter(void)
+static inline u64_t get_tick_counter(void)
 {
         return _builtinfunc(kernel_get_tick_counter);
 }

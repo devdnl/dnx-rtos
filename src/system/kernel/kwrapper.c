@@ -58,7 +58,7 @@
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-extern u64_t _uptime_ms;
+extern u64_t _tick_counter;
 
 /*==============================================================================
   Function definitions
@@ -130,7 +130,7 @@ void _kernel_start(void)
 //==============================================================================
 u64_t _kernel_get_time_ms(void)
 {
-        return (_uptime_ms * (1000/(configTICK_RATE_HZ)));
+        return (_tick_counter * (1000/(configTICK_RATE_HZ)));
 }
 
 //==============================================================================
@@ -140,9 +140,9 @@ u64_t _kernel_get_time_ms(void)
  * @return a tick counter value
  */
 //==============================================================================
-u32_t _kernel_get_tick_counter(void)
+u64_t _kernel_get_tick_counter(void)
 {
-        return (u32_t)xTaskGetTickCount();
+        return _tick_counter;
 }
 
 //==============================================================================

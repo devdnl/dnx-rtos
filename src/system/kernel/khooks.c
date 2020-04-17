@@ -59,7 +59,7 @@ static u32_t sec_divider;
   Exported object definitions
 ==============================================================================*/
 u32_t        _uptime_counter_sec = 0;
-u64_t        _uptime_ms = 0;
+u64_t        _tick_counter = 0;
 extern u32_t _CPU_total_time;
 
 /*==============================================================================
@@ -107,7 +107,7 @@ void vApplicationStackOverflowHook(TaskHandle_t taskHdl, char *taskName)
 //==============================================================================
 void vApplicationTickHook(void)
 {
-        _uptime_ms++;
+        _tick_counter++;
 
 #if (__OS_MONITOR_CPU_LOAD__ > 0)
         _CPU_total_time += _cpuctl_get_CPU_load_counter_delta();

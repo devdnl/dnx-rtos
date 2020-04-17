@@ -5036,7 +5036,7 @@ static inline u64_t sys_get_uptime_ms(void)
  *
  * The tick counter is incremented every context switch interrupt. If context switch
  * frequency is set to 1000Hz then counter is incremented every 1ms. To get value
- * of system time in milliseconds use sys_get_time_ms() functions.
+ * of system time in milliseconds use sys_get_time_ms() function.
  *
  * @note Function can be used only by file system or driver code.
  *
@@ -5045,7 +5045,7 @@ static inline u64_t sys_get_uptime_ms(void)
  * @see sys_gettime_ms(), sys_sleep_until(), sys_sleep_until_ms()
  */
 //==============================================================================
-static inline u32_t sys_get_tick_counter(void)
+static inline u64_t sys_get_tick_counter(void)
 {
         return _kernel_get_tick_counter();
 }
