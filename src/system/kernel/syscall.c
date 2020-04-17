@@ -544,7 +544,7 @@ int _syscall_kworker_process(int argc, char *argv[])
         for (;;) {
 #if __OS_TASK_KWORKER_MODE__ == 0
                 syscallrq_t *sysrq = NULL;
-                if (_queue_receive(call_request, &sysrq, SYNC_PERIOD_MS) == ESUCC) {
+                if (_queue_receive(call_request, &sysrq, FS_CACHE_SYNC_PERIOD_MS) == ESUCC) {
 
                         _process_clean_up_killed_processes();
 
@@ -568,8 +568,8 @@ int _syscall_kworker_process(int argc, char *argv[])
                                         _process_clean_up_killed_processes();
                                         _kernel_release_resources();
                                         _vfs_sync();
-                                        _cache_sync();
-                                        // go through
+                                        _queue_send(call_request, &sysrq, MAX_DELAY_MS);
+                                        break;
 
                                 default:
                                         _queue_send(call_request, &sysrq, MAX_DELAY_MS);
@@ -579,6 +579,7 @@ int _syscall_kworker_process(int argc, char *argv[])
                         }
                 }
 #elif __OS_TASK_KWORKER_MODE__ == 1
+                syscallrq_t *sysrq = NULL;
                 if (_queue_receive(call_nonblocking, &sysrq, FS_CACHE_SYNC_PERIOD_MS) == ESUCC) {
                         _process_clean_up_killed_processes();
                         _kernel_release_resources();
