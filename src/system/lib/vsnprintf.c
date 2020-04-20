@@ -336,8 +336,13 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                         i64_t val;
                         if (long_long) {
                                 val = va_arg(arg, i64_t);
+
                         } else {
                                 val = va_arg(arg, i32_t);
+
+                                if (unsign) {
+                                        val &= 0xFFFFFFFFUL;
+                                }
                         }
 
                         char *result_ptr = _itoa(val, result, base, unsign, expand ? arg_size : 0);
@@ -363,6 +368,8 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                         break;
                                 }
                         }
+
+                        long_long = false;
 
                         return true;
                 } else {

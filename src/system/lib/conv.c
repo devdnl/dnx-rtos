@@ -138,14 +138,14 @@ char *_itoa(i64_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req)
                         val = -val;
                 }
 
-                i64_t quot, rem;
+                u64_t quot, rem;
                 do {
                         if (usign_val) {
                                 quot = cast(u64_t, val) / base;
                                 rem  = cast(u64_t, val) % base;
                         } else {
-                                quot = val / base;
-                                rem  = val % base;
+                                quot = cast(u64_t, val) / base;
+                                rem  = cast(u64_t, val) % base;
                         }
 
                         *buf++ = digits[rem];
