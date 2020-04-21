@@ -710,9 +710,9 @@ __ENABLE_SPIEE__=_NO_
 #     this:SetFlagValue("__ENABLE_SND__", "_NO_")
 # end
 #--*/
-#define __ENABLE_SND__ _YES_
+#define __ENABLE_SND__ _NO_
 #/*
-__ENABLE_SND__=_YES_
+__ENABLE_SND__=_NO_
 #*/
 
 #// MODULE LIST END

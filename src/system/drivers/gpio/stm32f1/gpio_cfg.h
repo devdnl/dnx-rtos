@@ -199,9 +199,32 @@ _PIN_CONFIGURATION(GPIOG, 6, 14, __GPIO_PG_PIN_14_NAME__, __GPIO_PG_PIN_14_MODE_
 _PIN_CONFIGURATION(GPIOG, 6, 15, __GPIO_PG_PIN_15_NAME__, __GPIO_PG_PIN_15_MODE__, __GPIO_PG_PIN_15_STATE__);
 #endif
 
+#define _CNF(_v)                        (((_v) >> 4) & 3)
+#define _MODER(_v)                      (((_v) >> 2) & 3)
+#define _PXODR(_v)                      (((_v) >> 0) & 3)
+#define _MODE(_cnf, _moder, _pxodr)     ( (((_cnf) & 3) << 4) | (((_moder) & 3) << 2) | (((_pxodr) & 3) << 0) )
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
+typedef enum {
+        GPIO_MODE__PP_10MHz      = _MODE(0, 1, 2),
+        GPIO_MODE__PP_2MHz       = _MODE(0, 2, 2),
+        GPIO_MODE__PP_50MHz      = _MODE(0, 3, 2),
+        GPIO_MODE__OD_10MHz      = _MODE(1, 1, 2),
+        GPIO_MODE__OD_2MHz       = _MODE(1, 2, 2),
+        GPIO_MODE__OD_50MHz      = _MODE(1, 3, 2),
+        GPIO_MODE__AF_PP_10MHz   = _MODE(2, 1, 2),
+        GPIO_MODE__AF_PP_2MHz    = _MODE(2, 2, 2),
+        GPIO_MODE__AF_PP_50MHz   = _MODE(2, 3, 2),
+        GPIO_MODE__AF_OD_10MHz   = _MODE(3, 1, 2),
+        GPIO_MODE__AF_OD_2MHz    = _MODE(3, 2, 2),
+        GPIO_MODE__AF_OD_50MHz   = _MODE(3, 3, 2),
+        GPIO_MODE__ANALOG        = _MODE(0, 0, 2),
+        GPIO_MODE__IN            = _MODE(1, 0, 2),
+        GPIO_MODE__IN_PD         = _MODE(2, 0, 0),
+        GPIO_MODE__IN_PU         = _MODE(2, 0, 1),
+} GPIO_mode_t;
 
 /*==============================================================================
   Exported object declarations
