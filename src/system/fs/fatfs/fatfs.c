@@ -691,6 +691,7 @@ API_FS_FSTAT(fatfs, void *fs_handle, void *fhdl, struct stat *stat)
         stat->st_gid   = 0;
         stat->st_mode  = S_IFREG | S_IRWXU | S_IRWXG | S_IRWXO;
         stat->st_mtime = time_fat2unix((fat_file->obj.fdate << 16) | fat_file->obj.ftime);
+        stat->st_ctime = stat->st_mtime;
         stat->st_size  = f_size(fat_file);
         stat->st_uid   = 0;
 
@@ -718,6 +719,7 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
                 stat->st_dev   = 0;
                 stat->st_gid   = 0;
                 stat->st_mtime = time_fat2unix((file_info.fdate << 16) | file_info.ftime);
+                stat->st_ctime = stat->st_mtime;
                 stat->st_size  = file_info.fsize;
                 stat->st_uid   = 0;
                 stat->st_mode  = (S_IRWXU | S_IRWXG | S_IRWXO)

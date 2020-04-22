@@ -295,7 +295,7 @@ API_MOD_READ(DMA,
 //==============================================================================
 API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
 {
-        DMA_RT_t *hdl = device_handle;
+        UNUSED_ARG1(device_handle);
 
         int err = EPERM;
 

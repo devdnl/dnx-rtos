@@ -411,7 +411,8 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         bool put_pointer()
         {
                 if (chr == 'p') {
-                        int   val = va_arg(arg, int);
+                        i64_t val = va_arg(arg, uintptr_t);
+                        val &= UINTPTR_MAX;
                         char  result[16];
                         char *result_ptr = _itoa(val, result, 16, true, 0);
 
