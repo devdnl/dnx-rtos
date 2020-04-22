@@ -32,14 +32,31 @@
 #include "drivers/driver.h"
 #include "ethmac_cfg.h"
 #include "ethmac_ioctl.h"
-#include "stm32f4xx.h"
 #include "stm32f4x7_eth.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f10x.h"
+#elif defined(ARCH_stm32f4)
+#include "stm32f4xx.h"
+#endif
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
 #define INIT_TIMEOUT            2000
 #define PHY_BSR_LINK_STATUS     (1 << 2)
+
+#if defined(ARCH_stm32f1)
+#define AHBxENR                  AHBENR
+#define RCC_AHBxENR_ETHMACRXEN   RCC_AHBENR_ETHMACRXEN
+#define RCC_AHBxENR_ETHMACTXEN   RCC_AHBENR_ETHMACTXEN
+#define RCC_AHBxENR_ETHMACEN     RCC_AHBENR_ETHMACEN
+#elif defined(ARCH_stm32f4)
+#define AHBxENR                  AHB1ENR
+#define RCC_AHBxENR_ETHMACRXEN   RCC_AHB1ENR_ETHMACRXEN
+#define RCC_AHBxENR_ETHMACTXEN   RCC_AHB1ENR_ETHMACTXEN
+#define RCC_AHBxENR_ETHMACEN     RCC_AHB1ENR_ETHMACEN
+#endif
 
 /*==============================================================================
   Local object types
@@ -136,7 +153,7 @@ API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
                 }
 
                 // enable interrupts
-                SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETHMACRXEN | RCC_AHB1ENR_ETHMACTXEN | RCC_AHB1ENR_ETHMACEN);
+                SET_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACRXEN | RCC_AHBxENR_ETHMACTXEN | RCC_AHBxENR_ETHMACEN);
 
                 NVIC_EnableIRQ(ETH_IRQn);
                 NVIC_SetPriority(ETH_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
@@ -240,9 +257,9 @@ API_MOD_RELEASE(ETHMAC, void *device_handle)
         if (!err) {
                 ETH_DeInit();
                 NVIC_DisableIRQ(ETH_IRQn);
-                CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_ETHMACRXEN
-                                      | RCC_AHB1ENR_ETHMACTXEN
-                                      | RCC_AHB1ENR_ETHMACEN);
+                CLEAR_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACRXEN
+                                      | RCC_AHBxENR_ETHMACTXEN
+                                      | RCC_AHBxENR_ETHMACEN);
                 sys_semaphore_destroy(hdl->rx_data_ready);
                 sys_mutex_destroy(hdl->rx_access);
                 sys_mutex_destroy(hdl->tx_access);

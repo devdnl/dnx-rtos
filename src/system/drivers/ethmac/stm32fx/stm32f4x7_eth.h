@@ -35,7 +35,12 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "config.h"
+#if defined(ARCH_stm32f1)
+#include "stm32f10x.h"
+#elif defined(ARCH_stm32f4)
 #include "stm32f4xx.h"
+#endif
 #include "ethmac_cfg.h"
 
 /** @addtogroup STM32F4x7_ETH_Driver

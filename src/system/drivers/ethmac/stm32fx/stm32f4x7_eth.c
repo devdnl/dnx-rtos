@@ -28,7 +28,11 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4x7_eth.h"
+#if defined(ARCH_stm32f1)
+#include "lib/stm32f10x_rcc.h"
+#elif defined(ARCH_stm32f4)
 #include "lib/stm32f4xx_rcc.h"
+#endif
 #include <string.h>
 
 /** @addtogroup STM32F4x7_ETH_Driver
@@ -104,6 +108,20 @@ static void ETH_Delay(__IO uint32_t nCount)
 }
 #endif /* USE_Delay*/
 
+#if defined(ARCH_stm32f1)
+#define RCC_AHBxPeriph_ETH_MAC          RCC_AHBPeriph_ETH_MAC
+#define RCC_AHBxPeriphResetCmd          RCC_AHBPeriphResetCmd
+#define ETH_MACMIIAR_CR_Div62_Pos       (2U)
+#define ETH_MACMIIAR_CR_Div62_Msk       (0x1U << ETH_MACMIIAR_CR_Div62_Pos) /*!< 0x00000004 */
+#define ETH_MACMIIAR_CR_Div62           ETH_MACMIIAR_CR_Div62_Msk /* HCLK:100-150 MHz; MDC clock= HCLK/62  */
+#define ETH_MACMIIAR_CR_Div102_Pos      (4U)
+#define ETH_MACMIIAR_CR_Div102_Msk      (0x1U << ETH_MACMIIAR_CR_Div102_Pos) /*!< 0x00000010 */
+#define ETH_MACMIIAR_CR_Div102          ETH_MACMIIAR_CR_Div102_Msk /* HCLK:150-168 MHz; MDC clock= HCLK/102 */
+#elif defined(ARCH_stm32f4)
+#define RCC_AHBxPeriph_ETH_MAC          RCC_AHB1Periph_ETH_MAC
+#define RCC_AHBxPeriphResetCmd          RCC_AHB1PeriphResetCmd
+#endif
+
 
 /******************************************************************************/
 /*                           Global ETH MAC/DMA functions                     */
@@ -116,8 +134,8 @@ static void ETH_Delay(__IO uint32_t nCount)
   */
 void ETH_DeInit(void)
 {
-  RCC_AHB1PeriphResetCmd(RCC_AHB1Periph_ETH_MAC, ENABLE);
-  RCC_AHB1PeriphResetCmd(RCC_AHB1Periph_ETH_MAC, DISABLE);
+  RCC_AHBxPeriphResetCmd(RCC_AHBxPeriph_ETH_MAC, ENABLE);
+  RCC_AHBxPeriphResetCmd(RCC_AHBxPeriph_ETH_MAC, DISABLE);
 }
 
 /**
@@ -2226,7 +2244,11 @@ void ETH_ResumeDMAReception(void)
 void ETH_SetReceiveWatchdogTimer(uint8_t Value)
 {
   /* Set the DMA Receive status watchdog timer register */
+#if defined(ARCH_stm32f1)
+  (void)Value;
+#elif defined(ARCH_stm32f4)
   ETH->DMARSWTR = Value;
+#endif
 }
 
 /******************************************************************************/
@@ -2575,7 +2597,10 @@ void ETH_PowerDownCmd(FunctionalState NewState)
 void ETH_MMCCounterFullPreset(void)
 {
   /* Preset and Initialize the MMC counters to almost-full value */
+#if defined(ARCH_stm32f1)
+#elif defined(ARCH_stm32f4)
   ETH->MMCCR |= ETH_MMCCR_MCFHP | ETH_MMCCR_MCP;
+#endif
 }
 
 /**
@@ -2585,11 +2610,14 @@ void ETH_MMCCounterFullPreset(void)
   */
 void ETH_MMCCounterHalfPreset(void)
 {
+#if defined(ARCH_stm32f1)
+#elif defined(ARCH_stm32f4)
   /* Preset the MMC counters to almost-full value */
   ETH->MMCCR &= ~ETH_MMCCR_MCFHP;
 
   /* Initialize the MMC counters to almost-half value */
   ETH->MMCCR |= ETH_MMCCR_MCP;
+#endif
 }
 
 /**
