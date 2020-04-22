@@ -197,6 +197,19 @@ extern void _DMA_DDI_release(u32_t dmad);
 //==============================================================================
 extern int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config);
 
+//==============================================================================
+/**
+ * @brief Function start memory-to-memory transfer by using free channel.
+ *
+ * @param dst                   destination address.
+ * @param src                   source address.
+ * @param size                  block size.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int _DMA_DDI_memcpy(void *dst, const void *src, size_t size);
+
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/

@@ -308,86 +308,15 @@ API_MOD_READ(DMA,
 //==============================================================================
 API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
 {
-        DMA_RT_t *hdl = device_handle;
+        UNUSED_ARG1(device_handle);
 
         int err = EPERM;
 
         if (arg) {
                 switch (request) {
                 case IOCTL_DMA__TRANSFER: {
-                        err = EBUSY;
-
-                        u32_t dmad    = 0;
-                        u8_t  channel = 0;
-
-                        for (; channel < DMA_HW[hdl->major].chcnt; channel++) {
-                                dmad = _DMA_DDI_reserve(hdl->major, channel + 1);
-                                if (dmad) break;
-                        }
-
-                        if (dmad && (hdl->queue[channel] == NULL)) {
-                                err = sys_queue_create(1, sizeof(int), &hdl->queue[channel]);
-                                if (err) {
-                                        _DMA_DDI_release(dmad);
-                                        break;
-                                }
-                        }
-
-                        if (dmad) {
-                                const DMA_transfer_t *transfer = arg;
-
-                                u32_t PMSIZE, NDT;
-
-                                if (  ((transfer->size & 3) == 0)
-                                   && ((cast(u32_t, transfer->src) & 3) == 0)
-                                   && ((cast(u32_t, transfer->dst) & 3) == 0) ) {
-
-                                        PMSIZE = (2 << 10) | (2 << 8);
-
-                                        NDT = transfer->size / 4;
-
-                                } else if (  ((transfer->size & 1) == 0)
-                                          && ((cast(u32_t, transfer->src) & 1) == 0)
-                                          && ((cast(u32_t, transfer->dst) & 1) == 0) ) {
-
-                                        PMSIZE = (1 << 10) | (1 << 8);
-
-                                        NDT = transfer->size / 2;
-
-                                } else {
-                                        PMSIZE = 0;
-                                        NDT   = transfer->size;
-                                }
-
-                                if (NDT <= UINT16_MAX) {
-                                        _DMA_DDI_config_t config;
-                                        config.arg      = hdl->queue[channel];
-                                        config.callback = M2M_callback;
-                                        config.cb_next  = NULL;
-                                        config.release  = true;
-                                        config.PA       = cast(u32_t, transfer->src);
-                                        config.MA       = cast(u32_t, transfer->dst);
-                                        config.NDT      = NDT;
-                                        config.CR       = PMSIZE | DMA_CCR1_MEM2MEM
-                                                         | DMA_CCR1_MINC | DMA_CCR1_PINC;
-                                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
-
-                                        err = _DMA_DDI_transfer(dmad, &config);
-                                        if (!err) {
-                                                int ferr = EIO;
-                                                err = sys_queue_receive(hdl->queue[channel],
-                                                                        &ferr,
-                                                                        M2M_TRANSFER_TIMEOUT);
-                                                if (!err) {
-                                                        err = ferr;
-                                                }
-                                        }
-                                } else {
-                                        err = EFBIG;
-                                }
-
-                                _DMA_DDI_release(dmad);
-                        }
+                        const DMA_transfer_t *transfer = arg;
+                        err = _DMA_DDI_memcpy(transfer->dst, transfer->src, transfer->size);
                         break;
                 }
 
@@ -557,6 +486,106 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
 
         return err;
 }
+
+//==============================================================================
+/**
+ * @brief Function start memory-to-memory transfer by using free channel.
+ *
+ * @param dst                   destination address.
+ * @param src                   source address.
+ * @param size                  block size.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
+{
+        /*
+         * Only DMA2 is able to transfer data in memory-to-memory mode.
+         */
+        if (DMA_COUNT < 2) {
+                return ENXIO;
+        }
+
+        DMA_RT_t *hdl = DMA_RT[1];
+        if (!hdl || !dst || !src || !size) {
+                return EINVAL;
+        }
+
+        int err = EBUSY;
+
+        u32_t dmad    = 0;
+        u8_t  channel = 0;
+
+        for (; channel < DMA_HW[hdl->major].chcnt; channel++) {
+                dmad = _DMA_DDI_reserve(hdl->major, channel + 1);
+                if (dmad) break;
+        }
+
+        if (dmad && (hdl->queue[channel] == NULL)) {
+                err = sys_queue_create(1, sizeof(int), &hdl->queue[channel]);
+                if (err) {
+                        _DMA_DDI_release(dmad);
+                        return err;
+                }
+        }
+
+        if (dmad) {
+                u32_t PMSIZE, NDT;
+
+                if (  ((size & 3) == 0)
+                   && ((cast(u32_t, src) & 3) == 0)
+                   && ((cast(u32_t, dst) & 3) == 0) ) {
+
+                        PMSIZE = (2 << 10) | (2 << 8);
+
+                        NDT = size / 4;
+
+                } else if (  ((size & 1) == 0)
+                          && ((cast(u32_t, src) & 1) == 0)
+                          && ((cast(u32_t, dst) & 1) == 0) ) {
+
+                        PMSIZE = (1 << 10) | (1 << 8);
+
+                        NDT = size / 2;
+
+                } else {
+                        PMSIZE = 0;
+                        NDT    = size;
+                }
+
+                if (NDT <= UINT16_MAX) {
+                        _DMA_DDI_config_t config;
+                        config.arg      = hdl->queue[channel];
+                        config.callback = M2M_callback;
+                        config.cb_next  = NULL;
+                        config.release  = true;
+                        config.PA       = cast(u32_t, src);
+                        config.MA       = cast(u32_t, dst);
+                        config.NDT      = NDT;
+                        config.CR       = PMSIZE | DMA_CCR1_MEM2MEM
+                                        | DMA_CCR1_MINC | DMA_CCR1_PINC;
+                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+
+                        err = _DMA_DDI_transfer(dmad, &config);
+                        if (!err) {
+                                int ferr = EIO;
+                                err = sys_queue_receive(hdl->queue[channel], &ferr,
+                                                        M2M_TRANSFER_TIMEOUT);
+                                if (!err) {
+                                        err = ferr;
+                                }
+                        }
+                } else {
+                        err = EFBIG;
+                }
+
+                _DMA_DDI_release(dmad);
+        }
+
+        return err;
+}
+
 
 //==============================================================================
 /**
