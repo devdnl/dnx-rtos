@@ -29,10 +29,16 @@ Brief   PWM driver
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f4/pwm_cfg.h"
-#include "stm32f4/stm32f4xx.h"
-#include "stm32f4/lib/stm32f4xx_rcc.h"
 #include "../pwm_ioctl.h"
+#include "../stm32fx/pwm_cfg.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f1/lib/stm32f10x_rcc.h"
+#include "stm32f1/stm32f10x.h"
+#elif defined(ARCH_stm32f4)
+#include "stm32f4/lib/stm32f4xx_rcc.h"
+#include "stm32f4/stm32f4xx.h"
+#endif
 
 /*==============================================================================
   Local macros
@@ -42,6 +48,11 @@ Brief   PWM driver
 /*==============================================================================
   Local object types
 ==============================================================================*/
+#if defined(ARCH_stm32f1)
+typedef TIM_t TIM_TypeDef;
+#elif defined(ARCH_stm32f4)
+#endif
+
 typedef struct {
         TIM_TypeDef   *reg;
         __IO uint32_t *APBENR;
@@ -64,72 +75,72 @@ static u32_t get_timer_frequency(PWM_t *hdl);
 MODULE_NAME(PWM);
 
 static const TIM_addr_t TIM[] = {
-#ifdef TIM1
+#ifdef RCC_APB2ENR_TIM1EN
         {.reg = TIM1,  .APBENR = &RCC->APB2ENR, .APBENR_TIMEN = RCC_APB2ENR_TIM1EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM2
+#ifdef RCC_APB1ENR_TIM2EN
         {.reg = TIM2,  .APBENR = &RCC->APB1ENR, .APBENR_TIMEN = RCC_APB1ENR_TIM2EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM3
+#ifdef RCC_APB1ENR_TIM3EN
         {.reg = TIM3,  .APBENR = &RCC->APB1ENR, .APBENR_TIMEN = RCC_APB1ENR_TIM3EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM4
+#ifdef RCC_APB1ENR_TIM4EN
         {.reg = TIM4,  .APBENR = &RCC->APB1ENR, .APBENR_TIMEN = RCC_APB1ENR_TIM4EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM5
+#ifdef RCC_APB1ENR_TIM5EN
         {.reg = TIM5,  .APBENR = &RCC->APB1ENR, .APBENR_TIMEN = RCC_APB1ENR_TIM5EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM6
+#ifdef RCC_APB1ENR_TIM6EN
         {.reg = TIM6,  .APBENR = &RCC->APB1ENR, .APBENR_TIMEN = RCC_APB1ENR_TIM6EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM7
+#ifdef RCC_APB1ENR_TIM7EN
         {.reg = TIM7,  .APBENR = &RCC->APB1ENR, .APBENR_TIMEN = RCC_APB1ENR_TIM7EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM8
+#ifdef RCC_APB2ENR_TIM8EN
         {.reg = TIM8,  .APBENR = &RCC->APB2ENR, .APBENR_TIMEN = RCC_APB2ENR_TIM8EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM9
+#ifdef RCC_APB2ENR_TIM9EN
         {.reg = TIM9,  .APBENR = &RCC->APB2ENR, .APBENR_TIMEN = RCC_APB2ENR_TIM9EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM10
+#ifdef RCC_APB2ENR_TIM10EN
         {.reg = TIM10, .APBENR = &RCC->APB2ENR, .APBENR_TIMEN = RCC_APB2ENR_TIM10EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM11
+#ifdef RCC_APB2ENR_TIM11EN
         {.reg = TIM11, .APBENR = &RCC->APB2ENR, .APBENR_TIMEN = RCC_APB2ENR_TIM11EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM12
+#ifdef RCC_APB1ENR_TIM12EN
         {.reg = TIM12, .APBENR = &RCC->APB1ENR, .APBENR_TIMEN = RCC_APB1ENR_TIM12EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM13
+#ifdef RCC_APB1ENR_TIM13EN
         {.reg = TIM13, .APBENR = &RCC->APB1ENR, .APBENR_TIMEN = RCC_APB1ENR_TIM13EN},
 #else
         TIM_NULL,
 #endif
-#ifdef TIM14
+#ifdef RCC_APB1ENR_TIM14EN
         {.reg = TIM14, .APBENR = &RCC->APB1ENR, .APBENR_TIMEN = RCC_APB1ENR_TIM14EN},
 #else
         TIM_NULL,
