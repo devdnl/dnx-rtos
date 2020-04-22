@@ -299,12 +299,7 @@ API_MOD_IOCTL(DMA, void *device_handle, int request, void *arg)
 
         int err = EPERM;
 
-        /*
-         * Note:
-         * Only the DMA2 controller is able to perform memory-to-memory transfers.
-         * It is peripheral limitation.
-         */
-        if (hdl->major == 1 && arg) {
+        if (arg) {
                 switch (request) {
                 case IOCTL_DMA__TRANSFER: {
                         const DMA_transfer_t *transfer = arg;

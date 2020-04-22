@@ -30,15 +30,29 @@
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f1/crc_cfg.h"
-#include "stm32f1/stm32f10x.h"
 #include "../crc_ioctl.h"
+#include "../stm32fx/crc_cfg.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f1/stm32f10x.h"
+#elif defined(ARCH_stm32f4)
+#include "stm32f4/stm32f4xx.h"
+#endif
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
 #undef CRC
+
+#if defined(ARCH_stm32f1)
 #define CRCP    ((CRC_t *) CRC_BASE)
+#define AHBxENR                 AHBENR
+#define RCC_AHBxENR_CRCEN       RCC_AHBENR_CRCEN
+#elif defined(ARCH_stm32f4)
+#define CRCP    ((CRC_TypeDef *) CRC_BASE)
+#define AHBxENR                 AHB1ENR
+#define RCC_AHBxENR_CRCEN       RCC_AHB1ENR_CRCEN
+#endif
 
 /*==============================================================================
   Local object types
@@ -82,13 +96,13 @@ API_MOD_INIT(CRC, void **device_handle, u8_t major, u8_t minor)
                 return ENODEV;
         }
 
-        if (RCC->AHBENR & RCC_AHBENR_CRCEN) {
+        if (RCC->AHBxENR & RCC_AHBxENR_CRCEN) {
                 return EADDRINUSE;
         }
 
         int err = sys_zalloc(sizeof(CRCM), device_handle);
         if (err == ESUCC) {
-                SET_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
+                SET_BIT(RCC->AHBxENR, RCC_AHBxENR_CRCEN);
         }
 
         return err;
@@ -109,7 +123,7 @@ API_MOD_RELEASE(CRC, void *device_handle)
 
         int err = sys_device_lock(&hdl->file_lock);
         if (!err) {
-                CLEAR_BIT(RCC->AHBENR, RCC_AHBENR_CRCEN);
+                CLEAR_BIT(RCC->AHBxENR, RCC_AHBxENR_CRCEN);
                 sys_free(cast(void**, &hdl));
         }
 
