@@ -35,7 +35,12 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
+#if defined(ARCH_stm32f1)
+#include "stm32f1/stm32f10x.h"
+typedef enum IRQn IRQn_Type;
+#elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
+#endif
 
 /*==============================================================================
   Exported symbolic constants/macros

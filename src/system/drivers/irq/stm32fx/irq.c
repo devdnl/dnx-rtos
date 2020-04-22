@@ -29,8 +29,7 @@ Brief   This driver support external interrupts (EXTI).
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f4/irq_cfg.h"
-#include "stm32f4/stm32f4xx.h"
+#include "stm32fx/irq_cfg.h"
 #include "../irq_ioctl.h"
 
 /*==============================================================================
