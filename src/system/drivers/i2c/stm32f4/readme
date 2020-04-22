@@ -1,0 +1,2 @@
+STM32F1 architecture use common STM32Fx driver in stm32fx directory.
+Do not remove this directory due to build system compatibility.
