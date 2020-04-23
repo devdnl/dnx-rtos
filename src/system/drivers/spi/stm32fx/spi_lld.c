@@ -30,31 +30,43 @@ Brief   SPI driver.
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "spi_cfg.h"
-#include "stm32f1/stm32f10x.h"
-#include "stm32f1/dma_ddi.h"
 #include "../spi_ioctl.h"
 #include "../spi.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f1/stm32f10x.h"
+#include "stm32f1/dma_ddi.h"
+#elif defined(ARCH_stm32f4)
+#include "stm32f4/stm32f4xx.h"
+#include "stm32f4/dma_ddi.h"
+#endif
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define USE_DMA ((_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0) || (_SPI3_USE_DMA > 0))
+#define USE_DMA         (( (_SPI1_USE_DMA > 0) || (_SPI2_USE_DMA > 0)\
+                        || (_SPI3_USE_DMA > 0) || (_SPI4_USE_DMA > 0)\
+                        || (_SPI5_USE_DMA > 0) || (_SPI6_USE_DMA > 0))\
+                        && __ENABLE_DMA__)
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 /* SPI peripheral configuration */
 struct SPI_info {
-        SPI_t                   *SPI;                   //!< SPI peripheral address
+        SPI_TypeDef             *const SPI;             //!< SPI peripheral address
         __IO u32_t              *APBRSTR;               //!< APB reset register address
         __IO u32_t              *APBENR;                //!< APB enable register
         u32_t                    APBRSTRENR;            //!< APB reset/enable bit
         IRQn_Type                IRQn;                  //!< SPI IRQ number
     #if USE_DMA > 0
         bool                     use_DMA;               //!< peripheral uses DMA and IRQ (true), or only IRQ (false)
-        u8_t                     DMA_Tx_channel;        //!< primary Tx stream number
-        u8_t                     DMA_Rx_channel;        //!< primary Rx stream number
+        u8_t                     DMA_channel;           //!< DMA peripheral request channel number
         u8_t                     DMA_major;             //!< DMA peripheral number
+        u8_t                     DMA_tx_stream_pri;     //!< primary Tx stream number
+        u8_t                     DMA_tx_stream_alt;     //!< alternative Tx stream number
+        u8_t                     DMA_rx_stream_pri;     //!< primary Rx stream number
+        u8_t                     DMA_rx_stream_alt;     //!< alternative Rx stream number
     #endif
 };
 
@@ -62,7 +74,11 @@ struct SPI_info {
   Local function prototypes
 ==============================================================================*/
 #if USE_DMA > 0
-static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg);
+#if defined(ARCH_stm32f1)
+static bool DMA_callback(DMA_Channel_t *stream, u8_t SR, void *arg);
+#elif defined(ARCH_stm32f4)
+static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
+#endif
 #endif
 
 /*==============================================================================
@@ -70,6 +86,7 @@ static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg);
 ==============================================================================*/
 /* SPI peripherals basic parameters */
 static const struct SPI_info SPI_HW[_NUMBER_OF_SPI_PERIPHERALS] = {
+#if defined(ARCH_stm32f1)
         #if defined(RCC_APB2ENR_SPI1EN)
         {
                 .SPI                   = SPI1,
@@ -79,8 +96,10 @@ static const struct SPI_info SPI_HW[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .IRQn                  = SPI1_IRQn,
                 #if USE_DMA > 0
                 .use_DMA               = _SPI1_USE_DMA,
-                .DMA_Tx_channel        = 3,
-                .DMA_Rx_channel        = 2,
+                .DMA_tx_stream_pri     = 3,
+                .DMA_tx_stream_alt     = UINT8_MAX,
+                .DMA_rx_stream_pri     = 2,
+                .DMA_rx_stream_alt     = UINT8_MAX,
                 .DMA_major             = 0,
                 #endif
         },
@@ -94,8 +113,10 @@ static const struct SPI_info SPI_HW[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .IRQn                  = SPI2_IRQn,
                 #if USE_DMA > 0
                 .use_DMA               = _SPI2_USE_DMA,
-                .DMA_Tx_channel        = 5,
-                .DMA_Rx_channel        = 4,
+                .DMA_tx_stream_pri     = 5,
+                .DMA_tx_stream_alt     = UINT8_MAX,
+                .DMA_rx_stream_pri     = 4,
+                .DMA_rx_stream_alt     = UINT8_MAX,
                 .DMA_major             = 0,
                 #endif
         },
@@ -109,12 +130,124 @@ static const struct SPI_info SPI_HW[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .IRQn                  = SPI3_IRQn,
                 #if USE_DMA > 0
                 .use_DMA               = _SPI3_USE_DMA,
-                .DMA_Tx_channel        = 2,
-                .DMA_Rx_channel        = 1,
+                .DMA_tx_stream_pri     = 2,
+                .DMA_tx_stream_alt     = UINT8_MAX,
+                .DMA_rx_stream_pri     = 1,
+                .DMA_rx_stream_alt     = UINT8_MAX,
                 .DMA_major             = 1,
                 #endif
         }
         #endif
+#elif defined(ARCH_stm32f4)
+        #if defined(RCC_APB2ENR_SPI1EN)
+        {
+                .SPI                    = SPI1,
+                .APBENR                 = &RCC->APB2ENR,
+                .APBRSTR                = &RCC->APB2RSTR,
+                .APBRSTRENR             = RCC_APB2ENR_SPI1EN,
+                .IRQn                   = SPI1_IRQn,
+                #if USE_DMA > 0
+                .use_DMA                = _SPI1_USE_DMA,
+                .DMA_tx_stream_pri      = 3,
+                .DMA_tx_stream_alt      = 5,
+                .DMA_rx_stream_pri      = 0,
+                .DMA_rx_stream_alt      = 2,
+                .DMA_channel            = 3,
+                .DMA_major              = 1,
+                #endif
+        },
+        #endif
+        #if defined(RCC_APB1ENR_SPI2EN)
+        {
+                .SPI                    = SPI2,
+                .APBENR                 = &RCC->APB1ENR,
+                .APBRSTR                = &RCC->APB1RSTR,
+                .APBRSTRENR             = RCC_APB1ENR_SPI2EN,
+                .IRQn                   = SPI2_IRQn,
+                #if USE_DMA > 0
+                .use_DMA                = _SPI2_USE_DMA,
+                .DMA_tx_stream_pri      = 4,
+                .DMA_tx_stream_alt      = 4,
+                .DMA_rx_stream_pri      = 3,
+                .DMA_rx_stream_alt      = 6,
+                .DMA_channel            = 0,
+                .DMA_major              = 0,
+                #endif
+        },
+        #endif
+        #if defined(RCC_APB1ENR_SPI3EN)
+        {
+                .SPI                    = SPI3,
+                .APBENR                 = &RCC->APB1ENR,
+                .APBRSTR                = &RCC->APB1RSTR,
+                .APBRSTRENR             = RCC_APB1ENR_SPI3EN,
+                .IRQn                   = SPI3_IRQn,
+                #if USE_DMA > 0
+                .use_DMA                = _SPI3_USE_DMA,
+                .DMA_tx_stream_pri      = 5,
+                .DMA_tx_stream_alt      = 7,
+                .DMA_rx_stream_pri      = 0,
+                .DMA_rx_stream_alt      = 2,
+                .DMA_channel            = 0,
+                .DMA_major              = 0,
+                #endif
+        },
+        #endif
+        #if defined(RCC_APB2ENR_SPI4EN)
+        {
+                .SPI                    = SPI4,
+                .APBENR                 = &RCC->APB2ENR,
+                .APBRSTR                = &RCC->APB2RSTR,
+                .APBRSTRENR             = RCC_APB2ENR_SPI4EN,
+                .IRQn                   = SPI4_IRQn,
+                #if USE_DMA > 0
+                .use_DMA                = _SPI4_USE_DMA,
+                .DMA_tx_stream_pri      = 1,
+                .DMA_tx_stream_alt      = 1,
+                .DMA_rx_stream_pri      = 0,
+                .DMA_rx_stream_alt      = 0,
+                .DMA_channel            = 4,
+                .DMA_major              = 1,
+                #endif
+        },
+        #endif
+        #if defined(RCC_APB2ENR_SPI5EN)
+        {
+                .SPI                    = SPI5,
+                .APBENR                 = &RCC->APB2ENR,
+                .APBRSTR                = &RCC->APB2RSTR,
+                .APBRSTRENR             = RCC_APB2ENR_SPI5EN,
+                .IRQn                   = SPI5_IRQn,
+                #if USE_DMA > 0
+                .use_DMA                = _SPI5_USE_DMA,
+                .DMA_tx_stream_pri      = 4,
+                .DMA_tx_stream_alt      = 4,
+                .DMA_rx_stream_pri      = 3,
+                .DMA_rx_stream_alt      = 3,
+                .DMA_channel            = 2,
+                .DMA_major              = 1,
+                #endif
+        },
+        #endif
+        #if defined(RCC_APB2ENR_SPI6EN)
+        {
+                .SPI                    = SPI6,
+                .APBENR                 = &RCC->APB2ENR,
+                .APBRSTR                = &RCC->APB2RSTR,
+                .APBRSTRENR             = RCC_APB2ENR_SPI6EN,
+                .IRQn                   = SPI6_IRQn,
+                #if USE_DMA > 0
+                .use_DMA                = _SPI6_USE_DMA,
+                .DMA_tx_stream_pri      = 5,
+                .DMA_tx_stream_alt      = 5,
+                .DMA_rx_stream_pri      = 6,
+                .DMA_rx_stream_alt      = 6,
+                .DMA_channel            = 1,
+                .DMA_major              = 1,
+                #endif
+        },
+        #endif
+#endif
 };
 
 /*==============================================================================
@@ -194,7 +327,7 @@ void _SPI_LLD__apply_config(struct SPI_slave *hdl)
                 [SPI_MODE__3] = SPI_CR1_CPOL | SPI_CR1_CPHA
         };
 
-        SPI_t *SPI = SPI_HW[hdl->major].SPI;
+        SPI_TypeDef *SPI = SPI_HW[hdl->major].SPI;
 
         /* clear register */
         WRITE_REG(SPI->CR1, 0);
@@ -234,7 +367,7 @@ void _SPI_LLD__apply_config(struct SPI_slave *hdl)
 //==============================================================================
 void _SPI_LLD__halt(u8_t major)
 {
-        SPI_t *SPI = SPI_HW[major].SPI;
+        SPI_TypeDef *SPI = SPI_HW[major].SPI;
 
         while (SPI->SR & SPI_SR_BSY);
 
@@ -262,11 +395,19 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
         if (SPI_HW[hdl->major].use_DMA) {
                 // reserve TX stream
                 u32_t dmadtx = _DMA_DDI_reserve(SPI_HW[hdl->major].DMA_major,
-                                                SPI_HW[hdl->major].DMA_Tx_channel);
+                                                SPI_HW[hdl->major].DMA_tx_stream_pri);
+                if (dmadtx == 0) {
+                        dmadtx = _DMA_DDI_reserve(SPI_HW[hdl->major].DMA_major,
+                                                  SPI_HW[hdl->major].DMA_tx_stream_alt);
+                }
 
                 // reserve RX stream
                 u32_t dmadrx = _DMA_DDI_reserve(SPI_HW[hdl->major].DMA_major,
-                                                SPI_HW[hdl->major].DMA_Rx_channel);
+                                                SPI_HW[hdl->major].DMA_rx_stream_pri);
+                if (dmadrx == 0) {
+                        dmadrx = _DMA_DDI_reserve(SPI_HW[hdl->major].DMA_major,
+                                                  SPI_HW[hdl->major].DMA_rx_stream_alt);
+                }
 
                 // configure channels
                 if (dmadtx && dmadrx) {
@@ -280,29 +421,49 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         config_tx.callback = NULL;
                         config_tx.cb_next  = NULL;
                         config_tx.release  = true;
-                        config_tx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
-                        config_tx.MA       = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
                         config_tx.NDT      = count;
+                        config_tx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
+                        config_tx.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+#if defined(ARCH_stm32f1)
+                        config_tx.MA       = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
                         config_tx.CR       = (txbuf ? DMA_CCRx_MINC_ENABLE : DMA_CCRx_MINC_FIXED)
                                            | DMA_CCRx_DIR_M2P
                                            | DMA_CCRx_MSIZE_BYTE
                                            | DMA_CCRx_PSIZE_BYTE;
-                        config_tx.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+
+#elif defined(ARCH_stm32f4)
+                        config_tx.MA[0]    = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
+                        config_tx.FC       = 0;
+                        config_tx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
+                                           | (txbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)
+                                           | DMA_SxCR_DIR_M2P
+                                           | DMA_SxCR_MSIZE_BYTE
+                                           | DMA_SxCR_PSIZE_BYTE;
+#endif
 
                         _DMA_DDI_config_t config_rx;
                         config_rx.arg      = hdl;
                         config_rx.callback = DMA_callback;
                         config_rx.cb_next  = NULL;
                         config_rx.release  = true;
-                        config_rx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
-                        config_rx.MA       = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
                         config_rx.NDT      = count;
+                        config_rx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
+                        config_rx.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+#if defined(ARCH_stm32f1)
+                        config_rx.MA       = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
                         config_rx.CR       = (rxbuf ? DMA_CCRx_MINC_ENABLE : DMA_CCRx_MINC_FIXED)
                                            | DMA_CCRx_DIR_P2M
                                            | DMA_CCRx_MSIZE_BYTE
                                            | DMA_CCRx_PSIZE_BYTE;
-                        config_rx.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
-
+#elif defined(ARCH_stm32f4)
+                        config_rx.MA[0]    = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
+                        config_rx.FC       = 0;
+                        config_rx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
+                                           | (rxbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)
+                                           | DMA_SxCR_DIR_P2M
+                                           | DMA_SxCR_MSIZE_BYTE
+                                           | DMA_SxCR_PSIZE_BYTE;
+#endif
                         err = _DMA_DDI_transfer(dmadrx, &config_rx);
                         if (!err) {
                                 err = _DMA_DDI_transfer(dmadtx, &config_tx);
@@ -347,8 +508,8 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
 //==============================================================================
 static void handle_SPI_IRQ(u8_t major)
 {
-        bool   woken = false;
-        SPI_t *spi   = SPI_HW[major].SPI;
+        bool         woken = false;
+        SPI_TypeDef *spi   = SPI_HW[major].SPI;
 
         /* transmit data by using Tx register */
         if ((spi->SR & SPI_SR_TXE) && (spi->CR2 & SPI_CR2_TXEIE)) {
@@ -394,14 +555,18 @@ static void handle_SPI_IRQ(u8_t major)
 //==============================================================================
 /**
  * @brief  DMA IRQ handler
- * @param  channel      DMA channel
+ * @param  stream       DMA stream/channel
  * @param  major        SPI major number
  * @return If task was woken then true is returned, otherwise false
  */
 //==============================================================================
-static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg)
+#if defined(ARCH_stm32f1)
+static bool DMA_callback(DMA_Channel_t *stream, u8_t SR, void *arg)
+#elif defined(ARCH_stm32f4)
+static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
+#endif
 {
-        UNUSED_ARG2(channel, SR);
+        UNUSED_ARG2(stream, SR);
 
         struct SPI_slave *hdl = arg;
 
@@ -414,12 +579,12 @@ static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg)
 }
 #endif
 
+#if defined(RCC_APB2ENR_SPI1EN)
 //==============================================================================
 /**
  * @brief SPI1 IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB2ENR_SPI1EN)
 void SPI1_IRQHandler(void)
 {
         handle_SPI_IRQ(_SPI1);
@@ -427,26 +592,64 @@ void SPI1_IRQHandler(void)
 #endif
 
 //==============================================================================
+
+#if defined(RCC_APB1ENR_SPI2EN)
+//==============================================================================
 /**
  * @brief SPI2 IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_SPI2EN)
 void SPI2_IRQHandler(void)
 {
         handle_SPI_IRQ(_SPI2);
 }
 #endif
 
+#if defined(RCC_APB1ENR_SPI3EN)
 //==============================================================================
 /**
  * @brief SPI3 IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_SPI3EN)
 void SPI3_IRQHandler(void)
 {
         handle_SPI_IRQ(_SPI3);
+}
+#endif
+
+#if defined(RCC_APB2ENR_SPI4EN)
+//==============================================================================
+/**
+ * @brief SPI4 IRQ handler
+ */
+//==============================================================================
+void SPI4_IRQHandler(void)
+{
+        handle_SPI_IRQ(_SPI4);
+}
+#endif
+
+#if defined(RCC_APB2ENR_SPI5EN)
+//==============================================================================
+/**
+ * @brief SPI5 IRQ handler
+ */
+//==============================================================================
+void SPI5_IRQHandler(void)
+{
+        handle_SPI_IRQ(_SPI5);
+}
+#endif
+
+#if defined(RCC_APB2ENR_SPI6EN)
+//==============================================================================
+/**
+ * @brief SPI6 IRQ handler
+ */
+//==============================================================================
+void SPI6_IRQHandler(void)
+{
+        handle_SPI_IRQ(_SPI6);
 }
 #endif
 

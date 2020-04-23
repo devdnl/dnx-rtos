@@ -45,11 +45,11 @@
 #undef CRC
 
 #if defined(ARCH_stm32f1)
-#define CRCP    ((CRC_t *) CRC_BASE)
+#define CRCP                    ((CRC_TypeDef *) CRC_BASE)
 #define AHBxENR                 AHBENR
 #define RCC_AHBxENR_CRCEN       RCC_AHBENR_CRCEN
 #elif defined(ARCH_stm32f4)
-#define CRCP    ((CRC_TypeDef *) CRC_BASE)
+#define CRCP                     ((CRC_TypeDef *) CRC_BASE)
 #define AHBxENR                 AHB1ENR
 #define RCC_AHBxENR_CRCEN       RCC_AHB1ENR_CRCEN
 #endif

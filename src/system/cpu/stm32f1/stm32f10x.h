@@ -773,7 +773,7 @@ typedef struct
   uint8_t   RESERVED0;
   uint16_t  RESERVED1;
   __IO uint32_t CR;
-} CRC_t;
+} CRC_TypeDef;
 
 /**
   * @brief Digital to Analog Converter
@@ -1197,7 +1197,7 @@ typedef struct
   uint16_t  RESERVED7;
   __IO uint16_t I2SPR;
   uint16_t  RESERVED8;
-} SPI_t;
+} SPI_TypeDef;
 
 /**
   * @brief TIM
@@ -1411,8 +1411,8 @@ typedef struct
 #define RTC                 ((RTC_t *) RTC_BASE)
 #define WWDG                ((WWDG_t *) WWDG_BASE)
 #define IWDG                ((IWDG_t *) IWDG_BASE)
-#define SPI2                ((SPI_t *) SPI2_BASE)
-#define SPI3                ((SPI_t *) SPI3_BASE)
+#define SPI2                ((SPI_TypeDef *) SPI2_BASE)
+#define SPI3                ((SPI_TypeDef *) SPI3_BASE)
 #define USART2              ((USART_t *) USART2_BASE)
 #define USART3              ((USART_t *) USART3_BASE)
 #define UART4               ((USART_t *) UART4_BASE)
@@ -1438,7 +1438,7 @@ typedef struct
 #define ADC1                ((ADC_t *) ADC1_BASE)
 #define ADC2                ((ADC_t *) ADC2_BASE)
 #define TIM1                ((TIM_t *) TIM1_BASE)
-#define SPI1                ((SPI_t *) SPI1_BASE)
+#define SPI1                ((SPI_TypeDef *) SPI1_BASE)
 #define TIM8                ((TIM_t *) TIM8_BASE)
 #define USART1              ((USART_t *) USART1_BASE)
 #define ADC3                ((ADC_t *) ADC3_BASE)
@@ -1464,7 +1464,7 @@ typedef struct
 #define DMA2_Channel4       ((DMA_Channel_t *) DMA2_Channel4_BASE)
 #define DMA2_Channel5       ((DMA_Channel_t *) DMA2_Channel5_BASE)
 #define RCC                 ((RCC_t *) RCC_BASE)
-#define CRC                 ((CRC_t *) CRC_BASE)
+#define CRC                 ((CRC_TypeDef *) CRC_BASE)
 #define FLASH               ((FLASH_t *) FLASH_R_BASE)
 #define OB                  ((OB_t *) OB_BASE)
 #define ETH                 ((ETH_t *) ETH_BASE)
