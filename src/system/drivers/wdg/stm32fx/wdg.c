@@ -28,9 +28,16 @@ Brief    Watchdog driver.
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f4/wdg_cfg.h"
-#include "stm32f4/stm32f4xx.h"
+#include "stm32fx/wdg_cfg.h"
 #include "../wdg_ioctl.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f1/stm32f10x.h"
+#define DBGMCU_IWDG_STOP        DBGMCU_CR_DBG_IWDG_STOP
+#elif defined(ARCH_stm32f4)
+#include "stm32f4/stm32f4xx.h"
+#define DBGMCU_IWDG_STOP        DBGMCU_APB1_FZ_DBG_IWDG_STOP
+#endif
 
 /*==============================================================================
   Local macros
@@ -308,7 +315,7 @@ static inline void configure_wdg(void)
         IWDG->RLR = reload;
 
         if (_WDG_CFG_DISABLE_ON_DEBUG) {
-                SET_BIT(DBGMCU->CR, DBGMCU_APB1_FZ_DBG_IWDG_STOP);
+                SET_BIT(DBGMCU->CR, DBGMCU_IWDG_STOP);
         }
 }
 
