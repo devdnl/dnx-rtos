@@ -30,12 +30,18 @@
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#if defined(ARCH_stm32f1)
+
 #include "uart.h"
 #include "uart_ioctl.h"
-#include "stm32f1/uart_cfg.h"
+#include "stm32fx/uart_cfg.h"
+
+#if defined(ARCH_stm32f1)
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
+#elif defined(ARCH_stm32f4)
+#include "stm32f4/stm32f4xx.h"
+#include "stm32f4/lib/stm32f4xx_rcc.h"
+#endif
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -46,7 +52,7 @@
 ==============================================================================*/
 /* UART registers */
 typedef struct {
-        USART_t        *UART;
+        USART_TypeDef  *UART;
         __IO uint32_t  *APBENR;
         __IO uint32_t  *APBRSTR;
         const uint32_t  APBENR_UARTEN;
@@ -111,6 +117,56 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART5EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART5RST,
                 .IRQn            = UART5_IRQn,
+        },
+        #endif
+        #if defined(RCC_APB2ENR_USART6EN)
+        {
+                .UART            = USART6,
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_USART6EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_USART6RST,
+                .IRQn            = USART6_IRQn,
+        },
+        #endif
+        #if defined(RCC_APB1ENR_UART7EN)
+        {
+                .UART            = UART7,
+                .APBENR          = &RCC->APB1ENR,
+                .APBRSTR         = &RCC->APB1RSTR,
+                .APBENR_UARTEN   = RCC_APB1ENR_UART7EN,
+                .APBRSTR_UARTRST = RCC_APB1RSTR_UART7RST,
+                .IRQn            = UART7_IRQn,
+        },
+        #endif
+        #if defined(RCC_APB1ENR_UART8EN)
+        {
+                .UART            = UART8,
+                .APBENR          = &RCC->APB1ENR,
+                .APBRSTR         = &RCC->APB1RSTR,
+                .APBENR_UARTEN   = RCC_APB1ENR_UART8EN,
+                .APBRSTR_UARTRST = RCC_APB1RSTR_UART8RST,
+                .IRQn            = UART8_IRQn,
+        },
+        #endif
+        #if defined(RCC_APB2ENR_UART9EN)
+        {
+                .UART            = UART9,
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_UART9EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_UART9RST,
+                .IRQn            = UART9_IRQn,
+        },
+        #endif
+        #if defined(RCC_APB2ENR_UART10EN)
+        {
+                .UART            = UART10,
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_UART10EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_UART10RST,
+                .IRQn            = UART10_IRQn,
         }
         #endif
 };
@@ -135,7 +191,7 @@ int _UART_LLD__turn_on(u8_t major)
                 SET_BIT(*UART[major].APBENR, UART[major].APBENR_UARTEN);
 
                 NVIC_EnableIRQ(UART[major].IRQn);
-                NVIC_SetPriority(UART[major].IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                NVIC_SetPriority(UART[major].IRQn, _UART_IRQ_PRIORITY);
 
                 return ESUCC;
         } else {
@@ -161,7 +217,6 @@ int _UART_LLD__turn_off(u8_t major)
         return ESUCC;
 }
 
-
 //==============================================================================
 /**
  * @brief Function transmit currently setup buffer.
@@ -171,7 +226,9 @@ int _UART_LLD__turn_off(u8_t major)
 //==============================================================================
 void _UART_LLD__transmit(u8_t major)
 {
+        sys_critical_section_begin();
         SET_BIT(UART[major].UART->CR1, USART_CR1_TCIE);
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -183,7 +240,9 @@ void _UART_LLD__transmit(u8_t major)
 //==============================================================================
 void _UART_LLD__abort_trasmission(u8_t major)
 {
+        sys_critical_section_begin();
         CLEAR_BIT(UART[major].UART->CR1, USART_CR1_TCIE);
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -195,7 +254,9 @@ void _UART_LLD__abort_trasmission(u8_t major)
 //==============================================================================
 void _UART_LLD__rx_resume(u8_t major)
 {
+        sys_critical_section_begin();
         SET_BIT(UART[major].UART->CR1, USART_CR1_RXNEIE);
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -207,7 +268,9 @@ void _UART_LLD__rx_resume(u8_t major)
 //==============================================================================
 void _UART_LLD__rx_hold(u8_t major)
 {
+        sys_critical_section_begin();
         CLEAR_BIT(UART[major].UART->CR1, USART_CR1_RXNEIE);
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -226,7 +289,15 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
 
-        u32_t PCLK = (DEV->UART == USART1) ? freq.PCLK2_Frequency : freq.PCLK1_Frequency;
+        u32_t PCLK = freq.PCLK1_Frequency;
+
+        #if defined(USART1)
+        PCLK = (DEV->UART == USART1) ? freq.PCLK2_Frequency : PCLK;
+        #endif
+
+        #if defined(USART6)
+        PCLK = (DEV->UART == USART6) ? freq.PCLK2_Frequency : PCLK;
+        #endif
 
         DEV->UART->BRR = (PCLK / (config->baud)) + 1;
 
@@ -417,7 +488,66 @@ void UART5_IRQHandler(void)
 }
 #endif
 
+//==============================================================================
+/**
+ * @brief UART6 Interrupt
+ */
+//==============================================================================
+#if defined(RCC_APB2ENR_USART6EN)
+void USART6_IRQHandler(void)
+{
+        IRQ_handle(_UART6);
+}
 #endif
+
+//==============================================================================
+/**
+ * @brief UART7 Interrupt
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_UART7EN)
+void UART7_IRQHandler(void)
+{
+        IRQ_handle(_UART7);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief UART8 Interrupt
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_UART8EN)
+void UART8_IRQHandler(void)
+{
+        IRQ_handle(_UART8);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief UART9 Interrupt
+ */
+//==============================================================================
+#if defined(RCC_APB2ENR_UART9EN)
+void UART9_IRQHandler(void)
+{
+        IRQ_handle(_UART9);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief UART10 Interrupt
+ */
+//==============================================================================
+#if defined(RCC_APB2ENR_UART10EN)
+void UART10_IRQHandler(void)
+{
+        IRQ_handle(_UART10);
+}
+#endif
+
 /*==============================================================================
   End of file
 ==============================================================================*/

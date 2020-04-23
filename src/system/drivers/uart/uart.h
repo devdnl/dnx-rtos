@@ -35,11 +35,11 @@
 #include "uart_ioctl.h"
 
 #if defined(ARCH_stm32f1)
-#include "stm32f1/uart_cfg.h"
+#include "stm32fx/uart_cfg.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #elif defined(ARCH_stm32f4)
-#include "stm32f4/uart_cfg.h"
+#include "stm32fx/uart_cfg.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
 #elif defined(ARCH_efr32)

@@ -1267,7 +1267,7 @@ typedef struct
   uint16_t  RESERVED5;
   __IO uint16_t GTPR;
   uint16_t  RESERVED6;
-} USART_t;
+} USART_TypeDef;
 
 /**
   * @brief Window WATCHDOG
@@ -1413,10 +1413,10 @@ typedef struct
 #define IWDG                ((IWDG_t *) IWDG_BASE)
 #define SPI2                ((SPI_TypeDef *) SPI2_BASE)
 #define SPI3                ((SPI_TypeDef *) SPI3_BASE)
-#define USART2              ((USART_t *) USART2_BASE)
-#define USART3              ((USART_t *) USART3_BASE)
-#define UART4               ((USART_t *) UART4_BASE)
-#define UART5               ((USART_t *) UART5_BASE)
+#define USART2              ((USART_TypeDef *) USART2_BASE)
+#define USART3              ((USART_TypeDef *) USART3_BASE)
+#define UART4               ((USART_TypeDef *) UART4_BASE)
+#define UART5               ((USART_TypeDef *) UART5_BASE)
 #define I2C1                ((I2C_t *) I2C1_BASE)
 #define I2C2                ((I2C_t *) I2C2_BASE)
 #define USB                 ((USB_t *) USB_BASE)
@@ -1440,7 +1440,7 @@ typedef struct
 #define TIM1                ((TIM_t *) TIM1_BASE)
 #define SPI1                ((SPI_TypeDef *) SPI1_BASE)
 #define TIM8                ((TIM_t *) TIM8_BASE)
-#define USART1              ((USART_t *) USART1_BASE)
+#define USART1              ((USART_TypeDef *) USART1_BASE)
 #define ADC3                ((ADC_t *) ADC3_BASE)
 #define TIM15               ((TIM_t *) TIM15_BASE)
 #define TIM16               ((TIM_t *) TIM16_BASE)
