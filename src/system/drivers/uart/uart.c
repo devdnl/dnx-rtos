@@ -82,14 +82,13 @@ struct UART_mem *_UART_mem[_UART_COUNT];
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG1(minor);
-
         if (major >= _UART_COUNT || minor != 0) {
                 return ENODEV;
         }
@@ -118,7 +117,12 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor)
                 if (!err) {
                         _UART_mem[major]->major  = major;
                         _UART_mem[major]->config = UART_DEFAULT_CONFIG;
-                        _UART_LLD__configure(major, &UART_DEFAULT_CONFIG);
+
+                        if (config) {
+                                _UART_mem[major]->config = *cast(struct UART_config *, config);
+                        }
+
+                        _UART_LLD__configure(major, &_UART_mem[major]->config);
                 }
 
                 finish:
@@ -342,8 +346,8 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
         if (arg) {
                 switch (request) {
                 case IOCTL_UART__SET_CONFIGURATION:
-                        _UART_LLD__configure(hdl->major, arg);
                         hdl->config = *cast(struct UART_config *, arg);
+                        _UART_LLD__configure(hdl->major, arg);
                         err = ESUCC;
                         break;
 

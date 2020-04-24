@@ -1202,8 +1202,9 @@ static void syscall_driverinit(syscallrq_t *rq)
         GETARG(int *, major);
         GETARG(int *, minor);
         GETARG(const char *, node_path);
+        GETARG(const void *, config);
         dev_t drvid = -1;
-        SETERRNO(_driver_init(mod_name, *major, *minor,  node_path, &drvid));
+        SETERRNO(_driver_init(mod_name, *major, *minor,  node_path, config, &drvid));
         SETRETURN(dev_t, GETERRNO() == ESUCC ? drvid : -1);
 }
 

@@ -96,11 +96,12 @@ static IRQ_t *IRQ;
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
         int err = ENODEV;
 
@@ -115,9 +116,14 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor)
                                 // device's minor number is used as identifier
                                 *device_handle = cast(void*, cast(u32_t, minor));
 
-                                IRQ_configure(minor,
-                                              DEFAULT_CONFIG[minor].mode,
-                                              _CPU_IRQ_SAFE_PRIORITY_);
+                                enum _IRQ_MODE mode = DEFAULT_CONFIG[minor].mode;
+
+                                if (config) {
+                                        const IRQ_config_t *cfg = config;
+                                        mode = *cfg;
+                                }
+
+                                IRQ_configure(minor, mode, _CPU_IRQ_SAFE_PRIORITY_);
                         }
                 }
         }

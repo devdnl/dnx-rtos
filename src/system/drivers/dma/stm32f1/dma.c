@@ -143,12 +143,15 @@ static DMA_RT_t *DMA_RT[DMA_COUNT];
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
+        UNUSED_ARG1(config);
+
         int err = EFAULT;
 
         if (major < DMA_COUNT && minor == 0) {

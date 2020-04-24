@@ -57,7 +57,7 @@ extern "C" {
           .drv_flush   = _##_modname##_flush}}
 
 #define _IMPORT_MODULE_INTERFACE(_modname)\
-extern API_MOD_INIT(_modname, void**, u8_t, u8_t);\
+extern API_MOD_INIT(_modname, void**, u8_t, u8_t, const void *config);\
 extern API_MOD_RELEASE(_modname, void*);\
 extern API_MOD_OPEN(_modname, void*, u32_t);\
 extern API_MOD_CLOSE(_modname, void*, bool);\
@@ -71,7 +71,7 @@ extern API_MOD_STAT(_modname, void*, struct vfs_dev_stat*)
   Exported object types
 ==============================================================================*/
 struct _module_if {
-        int (*drv_init   )(void **drvhdl, u8_t major, u8_t minor);
+        int (*drv_init   )(void **drvhdl, u8_t major, u8_t minor, const void *config);
         int (*drv_release)(void *drvhdl);
         int (*drv_open   )(void *drvhdl, u32_t flags);
         int (*drv_close  )(void *drvhdl, bool force);
@@ -100,7 +100,7 @@ typedef pid_t dev_lock_t;
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int         _driver_init                   (const char*, u8_t, u8_t, const char*, dev_t*);
+extern int         _driver_init                   (const char*, u8_t, u8_t, const char*, const void*, dev_t*);
 extern int         _driver_release                (dev_t);
 extern int         _driver_open                   (dev_t, u32_t);
 extern int         _driver_close                  (dev_t, bool);

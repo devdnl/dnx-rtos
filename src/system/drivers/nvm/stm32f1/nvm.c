@@ -73,6 +73,7 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static int configure(NVM_t *hdl, const NVM_config_t *conf);
 static void FLASH_unlock(void);
 static void FLASH_lock(void);
 static int FLASH_erase_sector(uint32_t sector);
@@ -99,11 +100,12 @@ MODULE_NAME(NVM);
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_INIT(NVM, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(NVM, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
         UNUSED_ARG1(major);
 
@@ -116,7 +118,15 @@ API_MOD_INIT(NVM, void **device_handle, u8_t major, u8_t minor)
 
                         err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mtx);
 
+                        if (!err && config) {
+                                err = configure(hdl, config);
+                        }
+
                         if (err) {
+                                if (hdl->mtx) {
+                                        sys_mutex_destroy(hdl->mtx);
+                                }
+
                                 sys_free(device_handle);
                         }
                 }
@@ -341,24 +351,7 @@ API_MOD_IOCTL(NVM, void *device_handle, int request, void *arg)
         switch (request) {
         case IOCTL_NVM__CONFIGURE:
                 if (arg) {
-                        const NVM_config_t *conf = arg;
-
-                        if (  (conf->number_of_sectors == 0)
-                           || (conf->start_sector >= MAX_SECTORS)
-                           || ((conf->start_sector + conf->number_of_sectors - 1)
-                              >= MAX_SECTORS) ) {
-
-                                break;
-                        }
-
-                        err = sys_mutex_lock(hdl->mtx, TIMEOUT_MS);
-                        if (!err) {
-                                hdl->sector_count = conf->number_of_sectors;
-                                hdl->start_sector = conf->start_sector;
-                                hdl->total_size   = SECTOR_SIZE * hdl->sector_count;
-
-                                sys_mutex_unlock(hdl->mtx);
-                        }
+                        err = configure(hdl, arg);
                 }
                 break;
 
@@ -464,6 +457,38 @@ API_MOD_STAT(NVM, void *device_handle, struct vfs_dev_stat *device_stat)
         device_stat->st_size = hdl->total_size;
 
         return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief  Function configure NVM.
+ *
+ * @param  hdl          driver handle
+ * @param  config       driver configuration
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
+static int configure(NVM_t *hdl, const NVM_config_t *conf)
+{
+        if (  (conf->number_of_sectors == 0)
+           || (conf->start_sector >= MAX_SECTORS)
+           || ((conf->start_sector + conf->number_of_sectors - 1)
+              >= MAX_SECTORS) ) {
+
+                return EINVAL;
+        }
+
+        int err = sys_mutex_lock(hdl->mtx, TIMEOUT_MS);
+        if (!err) {
+                hdl->sector_count = conf->number_of_sectors;
+                hdl->start_sector = conf->start_sector;
+                hdl->total_size   = SECTOR_SIZE * hdl->sector_count;
+
+                sys_mutex_unlock(hdl->mtx);
+        }
+
+        return err;
 }
 
 //==============================================================================

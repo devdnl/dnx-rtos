@@ -162,11 +162,12 @@ static const TIM_addr_t TIM[] = {
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_INIT(PWM, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(PWM, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
         int err = EFAULT;
 
@@ -205,6 +206,16 @@ API_MOD_INIT(PWM, void **device_handle, u8_t major, u8_t minor)
 
                         TIM[hdl->timer].reg->BDTR  |= TIM_BDTR_MOE;
                         TIM[hdl->timer].reg->CR1   |= TIM_CR1_CEN;
+
+                        if (config) {
+                                const PWM_config_t *conf = config;
+
+                                TIM[hdl->timer].reg->PSC = conf->prescaler > 0
+                                                         ? conf->prescaler - 1
+                                                         : conf->prescaler;
+                                TIM[hdl->timer].reg->ARR = conf->reload;
+                                TIM[hdl->timer].reg->CNT = 0;
+                        }
                 }
         }
 

@@ -52,7 +52,7 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int configure(I2CEE_t *hdl, I2CEE_config_t *cfg);
+static int configure(I2CEE_t *hdl, const I2CEE_config_t *cfg);
 
 /*==============================================================================
   Local objects
@@ -78,11 +78,12 @@ MODULE_NAME(I2CEE);
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(I2CEE, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(I2CEE, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
         UNUSED_ARG1(major);
 
@@ -95,7 +96,16 @@ API_MOD_INIT(I2CEE, void **device_handle, u8_t major, u8_t minor)
                 I2CEE_t *hdl = *device_handle;
 
                 err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
+
+                if (!err && config) {
+                        err = configure(hdl, config);
+                }
+
                 if (err) {
+                        if (hdl->mtx) {
+                                sys_mutex_destroy(hdl->mtx);
+                        }
+
                         sys_free(device_handle);
                 }
         }
@@ -370,7 +380,7 @@ API_MOD_STAT(I2CEE, void *device_handle, struct vfs_dev_stat *device_stat)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-static int configure(I2CEE_t *hdl, I2CEE_config_t *cfg)
+static int configure(I2CEE_t *hdl, const I2CEE_config_t *cfg)
 {
         int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
         if (!err) {

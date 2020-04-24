@@ -82,11 +82,12 @@ struct SPI *_SPI[_NUMBER_OF_SPI_PERIPHERALS];
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
         UNUSED_ARG1(minor);
 
@@ -125,6 +126,10 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor)
                 struct SPI_slave *hdl = *device_handle;
                 hdl->config           = SPI_DEFAULT_CFG;
                 hdl->major            = major;
+
+                if (config) {
+                        hdl->config = *cast(SPI_config_t*, config);
+                }
 
                 sys_device_unlock(&hdl->lock, true);
 

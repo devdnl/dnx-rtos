@@ -178,6 +178,58 @@ static inline int umount(const char *mount_point)
 
 //==============================================================================
 /**
+ * @brief Function initializes driver with configuration argument.
+ *
+ * The driver_init() function initialize driver pointed by <i>mod_name</i>
+ * and create file node pointed by <i>node_path</i>. If there is no need to
+ * create node, then <i>node_path</i> can be <b>NULL</b>. Node can be created
+ * later by using mknod() function.
+ *
+ * Driver must exist in system to perform initialization. Driver's nodes can
+ * be created only on file system which support it.
+ *
+ * @param mod_name      module name
+ * @param major         major driver number
+ * @param minor         minor driver number
+ * @param node_path     path where driver node should be created (or NULL)
+ * @param config        configuration object (or NULL)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EADDRINUSE
+ *
+ * @return On success, driver ID is returned. On error, \b -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        static const TTY_config_t config = {
+                .input_file   = "/dev/ttyS0",
+                .output_file  = "/dev/ttyS0",
+                .clear_screen = true,
+        };
+        driver_init2("TTY", 0, 0, "/dev/tty0", &config);        // TTY as /dev/tty0
+
+        driver_init2("AFIO", 0, 0, NULL, NULL);                 // driver without node
+
+        // ...
+
+   @endcode
+ *
+ * @see driver_release(), driver_release2(), driver_init()
+ */
+//==============================================================================
+static inline dev_t driver_init2(const char *mod_name, int major, int minor, const char *node_path, const void *config)
+{
+        dev_t r = -1;
+        syscall(SYSCALL_DRIVERINIT, &r, mod_name, &major, &minor, node_path, config);
+        return r;
+}
+
+//==============================================================================
+/**
  * @brief Function initializes driver.
  *
  * The driver_init() function initialize driver pointed by <i>mod_name</i>
@@ -211,14 +263,12 @@ static inline int umount(const char *mount_point)
 
    @endcode
  *
- * @see driver_release(), driver_release2()
+ * @see driver_release(), driver_release2(), driver_init2()
  */
 //==============================================================================
 static inline dev_t driver_init(const char *mod_name, int major, int minor, const char *node_path)
 {
-        dev_t r = -1;
-        syscall(SYSCALL_DRIVERINIT, &r, mod_name, &major, &minor, node_path);
-        return r;
+        return driver_init2(mod_name, major, minor, node_path, NULL);
 }
 
 //==============================================================================

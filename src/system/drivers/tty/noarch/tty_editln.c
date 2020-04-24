@@ -42,7 +42,7 @@
   Local object types
 ==============================================================================*/
 struct ttyedit {
-        FILE  *out_file;
+        FILE  **out_file;
         void  *self;
         char   buffer[EDITLINE_LEN + 1];
         u16_t  length;
@@ -92,7 +92,7 @@ static inline bool is_valid(ttyedit_t *this)
  * @param On of errno value.
  */
 //==============================================================================
-int ttyedit_create(FILE *out_file, ttyedit_t **edit)
+int ttyedit_create(FILE **out_file, ttyedit_t **edit)
 {
         int err = sys_zalloc(sizeof(ttyedit_t), cast(void**, edit));
         if (err == ESUCC) {
@@ -129,12 +129,17 @@ int ttyedit_destroy(ttyedit_t *this)
  * @brief Enable editline echo
  *
  * @param this          editline object
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-void ttyedit_enable_echo(ttyedit_t *this)
+int ttyedit_enable_echo(ttyedit_t *this)
 {
         if (is_valid(this)) {
                 this->echo_enabled = true;
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
 }
 
@@ -143,12 +148,17 @@ void ttyedit_enable_echo(ttyedit_t *this)
  * @brief Disable editline echo
  *
  * @param this          editline object
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-void ttyedit_disable_echo(ttyedit_t *this)
+int ttyedit_disable_echo(ttyedit_t *this)
 {
         if (is_valid(this)) {
                 this->echo_enabled = false;
+                return ESUCC;
+        } else {
+                return EINVAL;
         }
 }
 
@@ -212,10 +222,10 @@ void ttyedit_set_value(ttyedit_t *this, const char *str, bool show)
 
                         if (show) {
                                 size_t wrcnt;
-                                sys_fwrite(str, strlen(str), &wrcnt, this->out_file);
+                                sys_fwrite(str, strlen(str), &wrcnt, *this->out_file);
 
                                 static const char *erase_line_end = VT100_ERASE_LINE_END;
-                                sys_fwrite(erase_line_end, strlen(erase_line_end), &wrcnt, this->out_file);
+                                sys_fwrite(erase_line_end, strlen(erase_line_end), &wrcnt, *this->out_file);
                         }
                 }
         }
@@ -264,13 +274,13 @@ void ttyedit_insert_char(ttyedit_t *this, const char c)
                                 size_t wrcnt;
 
                                 const char *cmd = VT100_SAVE_CURSOR_POSITION;
-                                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
 
                                 cmd = &this->buffer[this->cursor_position - 1];
-                                sys_fwrite(cmd, this->length - (this->cursor_position - 1), &wrcnt, this->out_file);
+                                sys_fwrite(cmd, this->length - (this->cursor_position - 1), &wrcnt, *this->out_file);
 
                                 cmd = VT100_RESTORE_CURSOR_POSITION VT100_SHIFT_CURSOR_RIGHT(1);
-                                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
                         }
                 } else {
                         this->buffer[this->cursor_position++] = c;
@@ -278,7 +288,7 @@ void ttyedit_insert_char(ttyedit_t *this, const char c)
 
                         if (this->echo_enabled) {
                                 size_t wrcnt;
-                                sys_fwrite(&c, 1, &wrcnt, this->out_file);
+                                sys_fwrite(&c, 1, &wrcnt, *this->out_file);
                         }
                 }
         }
@@ -309,13 +319,13 @@ void ttyedit_remove_char(ttyedit_t *this)
                 size_t wrcnt;
 
                 const char *cmd = "\b"VT100_ERASE_LINE_FROM_CUR VT100_SAVE_CURSOR_POSITION;
-                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
 
                 cmd = &this->buffer[this->cursor_position];
-                sys_fwrite(cmd, this->length - this->cursor_position, &wrcnt, this->out_file);
+                sys_fwrite(cmd, this->length - this->cursor_position, &wrcnt, *this->out_file);
 
                 cmd = VT100_RESTORE_CURSOR_POSITION;
-                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
         }
 }
 
@@ -342,13 +352,13 @@ void ttyedit_delete_char(ttyedit_t *this)
                 size_t wrcnt;
 
                 const char *cmd = VT100_SAVE_CURSOR_POSITION VT100_ERASE_LINE_FROM_CUR;
-                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
 
                 cmd = &this->buffer[this->cursor_position];
-                sys_fwrite(cmd, this->length - this->cursor_position, &wrcnt, this->out_file);
+                sys_fwrite(cmd, this->length - this->cursor_position, &wrcnt, *this->out_file);
 
                 cmd = VT100_RESTORE_CURSOR_POSITION;
-                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
         }
 }
 
@@ -364,7 +374,7 @@ void ttyedit_move_cursor_left(ttyedit_t *this)
         if (is_valid(this)) {
                 if (this->cursor_position > 0) {
                         size_t wrcnt;
-                        sys_fwrite("\b", 1, &wrcnt, this->out_file);
+                        sys_fwrite("\b", 1, &wrcnt, *this->out_file);
                         this->cursor_position--;
                 }
         }
@@ -383,7 +393,7 @@ void ttyedit_move_cursor_right(ttyedit_t *this)
                 if (this->cursor_position < this->length) {
                         size_t      wrcnt;
                         const char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
-                        sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                        sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
                         this->cursor_position++;
                 }
         }
@@ -401,15 +411,15 @@ void ttyedit_move_cursor_home(ttyedit_t *this)
         if (is_valid(this)) {
                 size_t      wrcnt;
                 const char *cmd = VT100_CURSOR_OFF;
-                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
 
                 while (this->cursor_position > 0) {
-                        sys_fwrite("\b", 1, &wrcnt, this->out_file);
+                        sys_fwrite("\b", 1, &wrcnt, *this->out_file);
                         this->cursor_position--;
                 }
 
                 cmd = VT100_CURSOR_ON;
-                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
         }
 }
 
@@ -425,16 +435,16 @@ void ttyedit_move_cursor_end(ttyedit_t *this)
         if (is_valid(this)) {
                 size_t      wrcnt;
                 const char *cmd = VT100_CURSOR_OFF;
-                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
 
                 while (this->cursor_position < this->length) {
                         char *cmd = VT100_SHIFT_CURSOR_RIGHT(1);
-                        sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                        sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
                         this->cursor_position++;
                 }
 
                 cmd = VT100_CURSOR_ON;
-                sys_fwrite(cmd, strlen(cmd), &wrcnt, this->out_file);
+                sys_fwrite(cmd, strlen(cmd), &wrcnt, *this->out_file);
         }
 }
 

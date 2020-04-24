@@ -111,13 +111,14 @@ extern ETH_DMADESCTypeDef *DMATxDescToSet;
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(ETHMAC, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG2(major, minor);
+        UNUSED_ARG1(config);
 
         if (major != 0 || minor != 0) {
                 return ENODEV;

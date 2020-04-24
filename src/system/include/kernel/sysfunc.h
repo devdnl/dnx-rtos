@@ -5855,14 +5855,15 @@ static inline bool sys_stropt_is_flag(const char *opts, const char *flag)
  * @param [IN]  module              module name
  * @param [IN]  major               major number
  * @param [IN]  minor               minor number
+ * @param [IN]  config              module configuration object (optional, can be NULL)
  * @param [OUT] id                  module id (can be NULL)
  *
  * @return One of error code (errno)
  */
 //==============================================================================
-static inline int sys_driver_init(const char *module, u8_t major, u8_t minor, dev_t *id)
+static inline int sys_driver_init(const char *module, u8_t major, u8_t minor, const void *config, dev_t *id)
 {
-        return _driver_init(module, major, minor, NULL, id);
+        return _driver_init(module, major, minor, NULL, config, id);
 }
 
 //==============================================================================

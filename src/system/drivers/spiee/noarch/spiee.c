@@ -53,7 +53,7 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int configure(SPIEE_t *hdl, SPIEE_config_t *cfg);
+static int configure(SPIEE_t *hdl, const SPIEE_config_t *cfg);
 static void get_address(SPIEE_t *hdl, u32_t pos, u8_t addr[4]);
 static int wait_for_write_finish(SPIEE_t *hdl);
 
@@ -82,11 +82,12 @@ static const u8_t EECMD_RDSR  = 0x05;
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_INIT(SPIEE, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(SPIEE, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
         UNUSED_ARG1(major);
 
@@ -99,6 +100,11 @@ API_MOD_INIT(SPIEE, void **device_handle, u8_t major, u8_t minor)
                 SPIEE_t *hdl = *device_handle;
 
                 err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
+
+                if (!err && config) {
+                        err = configure(hdl, config);
+                }
+
                 if (err) {
                         sys_free(device_handle);
                 }
@@ -436,7 +442,7 @@ API_MOD_STAT(SPIEE, void *device_handle, struct vfs_dev_stat *device_stat)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-static int configure(SPIEE_t *hdl, SPIEE_config_t *cfg)
+static int configure(SPIEE_t *hdl, const SPIEE_config_t *cfg)
 {
         int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
         if (!err) {

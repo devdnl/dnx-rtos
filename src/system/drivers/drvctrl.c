@@ -226,14 +226,15 @@ static void driver__remove(dev_t devid)
  * @param  modno        module number
  * @param  major        module major number
  * @param  minor        module minor number
+ * @param  config       module configuration (optional, NULL if not used)
  * @param  mem          module memory to be allocated by driver
  *
  * @return One of errno value.
  */
 //==============================================================================
-static inline int driver__initialize(u16_t modno, u8_t major, u8_t minor, void **mem)
+static inline int driver__initialize(u16_t modno, u8_t major, u8_t minor, const void *config, void **mem)
 {
-        return _drvreg_module_table[modno].IF.drv_init(mem, major, minor);
+        return _drvreg_module_table[modno].IF.drv_init(mem, major, minor, config);
 }
 
 //==============================================================================
@@ -259,12 +260,13 @@ static inline int driver__release(u16_t modno, void *mem)
  * @param [IN]  major               major number
  * @param [IN]  minor               minor number
  * @param [IN]  node_path           path name to create in the file system (can be NULL or empty string)
+ * @param [IN]  config              driver configuration (can be NULL)
  * @param [OUT] id                  module id (can be NULL)
  *
  * @return One of error code (errno)
  */
 //==============================================================================
-int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_path, dev_t *id)
+int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_path, const void *config, dev_t *id)
 {
         int err;
 
@@ -284,7 +286,7 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
         err             = driver__register(modno, major, minor, &drv);
         if (!err) {
 
-                err = driver__initialize(modno, major, minor, &drv->mem);
+                err = driver__initialize(modno, major, minor, config, &drv->mem);
                 if (!err) {
                         if (id) {
                                 *id = drv->devid;

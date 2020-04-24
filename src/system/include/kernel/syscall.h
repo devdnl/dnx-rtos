@@ -131,7 +131,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_GETTIME,                // | int            | struct timeval *          |                                     |                           |                           |                                           |
         SYSCALL_SETTIME,                // | int            | time_t *time              |                                     |                           |                           |                                           |
     #endif
-        SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                | const char *node_path     |                                           |
+        SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                | const char *node_path     | const void *config                        |
         SYSCALL_DRIVERRELEASE,          // | int            | const char *mod_name      | int *major                          | int *minor                |                           |                                           |
         SYSCALL_KERNELPANICDETECT,      // | bool           | FILE *file                |                                     |                           |                           |                                           |
     #if __ENABLE_NETWORK__ == _YES_

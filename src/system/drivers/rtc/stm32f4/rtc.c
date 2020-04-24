@@ -91,17 +91,17 @@ static const pre_t PRE[] = {
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(RTC, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(RTC, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(_module_name_);
+        UNUSED_ARG3(device_handle, config, _module_name_);
 
         if ((major != 0) or (minor != 0)) {
-                return EINVAL;
+                return ENODEV;
         }
 
         int err = ESUCC;

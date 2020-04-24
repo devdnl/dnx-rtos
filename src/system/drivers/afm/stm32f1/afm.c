@@ -176,13 +176,14 @@ static const uint32_t EXTICR4 = EXTICR(_AFM_EXTI15_PORT, _AFM_EXTI14_PORT, _AFM_
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG1(device_handle);
+        UNUSED_ARG2(device_handle, config);
 
         if (major == 0 && minor == 0) {
                 if (!(RCC->APB2ENR & RCC_APB2ENR_AFIOEN)) {

@@ -79,6 +79,7 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static int      configure                  (SDSPI_t *hdl, const SDSPI_config_t *sdspi_cfg);
 static void     SPI_select_card            (SDSPI_t *hdl);
 static void     SPI_deselect_card          (SDSPI_t *hdl);
 static u8_t     SPI_transive               (SDSPI_t *hdl, u8_t out);
@@ -115,11 +116,12 @@ static const u16_t SECTOR_SIZE = 512;
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
         int err = ENODEV;
 
@@ -138,6 +140,10 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor)
 
                 err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->stg->protect_mtx);
                 if (err) goto finish;
+
+                if (config) {
+                        err = configure(hdl, config);
+                }
 
                 finish:
                 if (err) {
@@ -352,37 +358,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
 
         switch (request) {
         case IOCTL_SDSPI__CONFIGURE: {
-                SDSPI_config_t *sdspi_cfg = arg;
-
-                if (hdl->stg->SPI_file) {
-                        err = sys_fclose(hdl->stg->SPI_file);
-                        if (err) {
-                                break;
-                        }
-                }
-
-                err = sys_fopen(sdspi_cfg->filepath, "r+", &hdl->stg->SPI_file);
-                if (!err) {
-
-                        hdl->stg->timeout_ms = sdspi_cfg->timeout;
-
-                        SPI_config_t spi_cfg;
-                        err = sys_ioctl(hdl->stg->SPI_file,
-                                        IOCTL_SPI__GET_CONFIGURATION, &spi_cfg);
-                        if (!err) {
-
-                                spi_cfg.flush_byte = 0xFF;
-                                spi_cfg.mode       = SPI_MODE__0;
-                                spi_cfg.msb_first  = true;
-
-                                err = sys_ioctl(hdl->stg->SPI_file,
-                                                IOCTL_SPI__SET_CONFIGURATION, &spi_cfg);
-                        }
-
-                        if (err) {
-                                sys_fclose(hdl->stg->SPI_file);
-                        }
-                }
+                err = configure(hdl, arg);
                 break;
         }
 
@@ -429,6 +405,53 @@ API_MOD_FLUSH(SDSPI, void *device_handle)
         UNUSED_ARG1(device_handle);
 
         return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief Function make basic configuration.
+ *
+ * @param[in]   hdl             driver's memory handle
+ * @param[in]   sdspi_cfg       configuration
+ *
+ * @retval One of errno value (errno.h).
+ */
+//==============================================================================
+static int configure(SDSPI_t *hdl, const SDSPI_config_t *sdspi_cfg)
+{
+        int err = EINVAL;
+
+        if (hdl->stg->SPI_file) {
+                err = sys_fclose(hdl->stg->SPI_file);
+                if (err) {
+                        return err;
+                }
+        }
+
+        err = sys_fopen(sdspi_cfg->filepath, "r+", &hdl->stg->SPI_file);
+        if (!err) {
+
+                hdl->stg->timeout_ms = sdspi_cfg->timeout;
+
+                SPI_config_t spi_cfg;
+                err = sys_ioctl(hdl->stg->SPI_file,
+                                IOCTL_SPI__GET_CONFIGURATION, &spi_cfg);
+                if (!err) {
+
+                        spi_cfg.flush_byte = 0xFF;
+                        spi_cfg.mode       = SPI_MODE__0;
+                        spi_cfg.msb_first  = true;
+
+                        err = sys_ioctl(hdl->stg->SPI_file,
+                                        IOCTL_SPI__SET_CONFIGURATION, &spi_cfg);
+                }
+
+                if (err) {
+                        sys_fclose(hdl->stg->SPI_file);
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
