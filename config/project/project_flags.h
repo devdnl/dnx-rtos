@@ -88,9 +88,9 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 # this:AddItem("STMicroelectronics STM32F7", "stm32f7")
 # this:AddItem("Silicon Labs EFR32 Mighty Gecko (experimental)", "efr32")
 #--*/
-#define __CPU_ARCH__ stm32f1
+#define __CPU_ARCH__ stm32f7
 #/*
-__CPU_ARCH__=stm32f1
+__CPU_ARCH__=stm32f7
 #*/
 
 #/*--

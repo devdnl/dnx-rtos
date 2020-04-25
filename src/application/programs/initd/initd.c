@@ -136,7 +136,7 @@ static void initialize_basic_drivers(void)
                 .output_file  = "/dev/ttyS0",
                 .clear_screen = true,
         };
-        driver_init2("TTY", 0, 0, "/dev/tty0", TTY_config);     // first user terminal
+        driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config);     // first user terminal
 
         /*
          * NOTE: Drivers that are initialized in this stage can be reduced or

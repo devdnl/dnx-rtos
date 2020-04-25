@@ -45,6 +45,11 @@
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
+#define __CPU_FAMILY__ _STM32F7XX_
+
+#/*-- Flag is set in __CPU_NAME__ event
+# this:AddWidget("Value")
+#--*/
 #define __CPU_SERIES__ _STM32F756xx
 
 #/*-- Flag is set in __CPU_NAME__ event
@@ -105,7 +110,6 @@ __LD_SCRIPT__=STM32F756xGxx
 #                  {"STM32F756IGxx", "_STM32F756xx", "STM32F75xxGxx"},
 #                  {"STM32F756NGxx", "_STM32F756xx", "STM32F75xxGxx"},
 #                  {"STM32F756VGxx", "_STM32F756xx", "STM32F75xxGxx"},
-#                  {"STM32F756ZGxx", "_STM32F756xx", "STM32F75xxGxx"},
 #                  {"STM32F756ZGxx", "_STM32F756xx", "STM32F75xxGxx"},
 #                  {"STM32F765BGxx", "_STM32F765xx", "STM32F76xxGxx"},
 #                  {"STM32F765BIxx", "_STM32F765xx", "STM32F76xxIxx"},
@@ -272,7 +276,6 @@ CPUCONFIG_LDFLAGS=-mcpu=cortex-m7 -mthumb -mthumb-interwork -nostartfiles -T./sr
 #define STM32F756NGxx 0x91c10878
 #define STM32F756VGxx 0x94c5551a
 #define STM32F756ZGxx 0xaf59930c
-#define STM32F756ZGxx 0x06dd58e9
 #define STM32F765BGxx 0xd8f34eaf
 #define STM32F765BIxx 0x93a4eda3
 #define STM32F765IGxx 0x9896aaf7
