@@ -48,7 +48,7 @@
 #define TDR             DR
 #elif defined(ARCH_stm32f7)
 #include "stm32f7/stm32f7xx.h"
-#include "stm32f7/lib/stm32f7xx_rcc.h"
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #define SR              ISR
 #define USART_SR_RXNE   USART_ISR_RXNE
 #define USART_SR_ORE    USART_ISR_ORE
@@ -70,6 +70,9 @@ typedef struct {
         const uint32_t  APBENR_UARTEN;
         const uint32_t  APBRSTR_UARTRST;
         const IRQn_Type IRQn;
+        #if defined(ARCH_stm32f7)
+        const u32_t     CLKSRC;
+        #endif
 } UART_regs_t;
 
 /*==============================================================================
@@ -89,6 +92,9 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_USART1EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART1RST,
                 .IRQn            = USART1_IRQn,
+                #if defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_USART1_CLKSOURCE,
+                #endif
         },
         #endif
         #if defined(RCC_APB1ENR_USART2EN)
@@ -99,6 +105,9 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_USART2EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART2RST,
                 .IRQn            = USART2_IRQn,
+                #if defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_USART2_CLKSOURCE,
+                #endif
         },
         #endif
         #if defined(RCC_APB1ENR_USART3EN)
@@ -109,6 +118,9 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_USART3EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART3RST,
                 .IRQn            = USART3_IRQn,
+                #if defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_USART3_CLKSOURCE,
+                #endif
         },
         #endif
         #if defined(RCC_APB1ENR_UART4EN)
@@ -119,6 +131,9 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART4EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART4RST,
                 .IRQn            = UART4_IRQn,
+                #if defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART4_CLKSOURCE,
+                #endif
         },
         #endif
         #if defined(RCC_APB1ENR_UART5EN)
@@ -129,6 +144,9 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART5EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART5RST,
                 .IRQn            = UART5_IRQn,
+                #if defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART5_CLKSOURCE,
+                #endif
         },
         #endif
         #if defined(RCC_APB2ENR_USART6EN)
@@ -139,6 +157,9 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_USART6EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART6RST,
                 .IRQn            = USART6_IRQn,
+                #if defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_USART6_CLKSOURCE,
+                #endif
         },
         #endif
         #if defined(RCC_APB1ENR_UART7EN)
@@ -149,6 +170,9 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART7EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART7RST,
                 .IRQn            = UART7_IRQn,
+                #if defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART7_CLKSOURCE,
+                #endif
         },
         #endif
         #if defined(RCC_APB1ENR_UART8EN)
@@ -159,6 +183,9 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART8EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART8RST,
                 .IRQn            = UART8_IRQn,
+                #if defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART8_CLKSOURCE,
+                #endif
         },
         #endif
         #if defined(RCC_APB2ENR_UART9EN)
@@ -298,6 +325,7 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         const UART_regs_t *DEV = &UART[major];
 
         /* set baud */
+#if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
 
@@ -310,6 +338,28 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         #if defined(USART6)
         PCLK = (DEV->UART == USART6) ? freq.PCLK2_Frequency : PCLK;
         #endif
+#elif defined(ARCH_stm32f7)
+        u32_t PCLK = 0;
+
+        switch (DEV->CLKSRC) {
+        case LL_RCC_USART1_CLKSOURCE:
+        case LL_RCC_USART2_CLKSOURCE:
+        case LL_RCC_USART3_CLKSOURCE:
+        case LL_RCC_USART6_CLKSOURCE:
+                PCLK = LL_RCC_GetUSARTClockFreq(DEV->CLKSRC);
+                break;
+
+        case LL_RCC_UART4_CLKSOURCE:
+        case LL_RCC_UART5_CLKSOURCE:
+        case LL_RCC_UART7_CLKSOURCE:
+        case LL_RCC_UART8_CLKSOURCE:
+                PCLK = LL_RCC_GetUARTClockFreq(DEV->CLKSRC);
+                break;
+
+        default:
+                break;
+        }
+#endif
 
         DEV->UART->BRR = (PCLK / (config->baud)) + 1;
 

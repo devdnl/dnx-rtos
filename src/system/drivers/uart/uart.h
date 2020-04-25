@@ -45,7 +45,7 @@
 #elif defined(ARCH_stm32f7)
 #include "stm32fx/uart_cfg.h"
 #include "stm32f7/stm32f7xx.h"
-#include "stm32f7/lib/stm32f7xx_rcc.h"
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #elif defined(ARCH_efr32)
 #include "efr32/uart_cfg.h"
 #include "efr32/efr32xx.h"

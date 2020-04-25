@@ -32,7 +32,7 @@
 #include "config.h"
 #include "stm32f7/cpuctl.h"
 #include "stm32f7/stm32f7xx.h"
-#include "stm32f7/lib/stm32f7xx_rcc.h"
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #include "stm32f7/lib/misc.h"
 #include "kernel/kwrapper.h"
 #include "kernel/kpanic.h"
@@ -224,8 +224,8 @@ void _cpuctl_update_system_clocks(void)
 
         /* update context switch counter frequency */
         _critical_section_begin();
-        RCC_ClocksTypeDef freq;
-        RCC_GetClocksFreq(&freq);
+        LL_RCC_ClocksTypeDef freq;
+        LL_RCC_GetSystemClocksFreq(&freq);
         SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
         _critical_section_end();
 }
