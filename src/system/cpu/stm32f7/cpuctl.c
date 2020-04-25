@@ -47,8 +47,8 @@
 #define RAM2_START              ((void *)&__ram2_start)
 #define RAM2_SIZE               ((size_t)&__ram2_size)
 
-#define RAM3_START              ((void *)&__ram3_start)
-#define RAM3_SIZE               ((size_t)&__ram3_size)
+#define DTCM_START              ((void *)&__dtcm_start)
+#define DTCM_SIZE               ((size_t)&__dtcm_size)
 
 /*==============================================================================
   Local types, enums definitions
@@ -63,11 +63,11 @@
 ==============================================================================*/
 extern void *__ram2_start;
 extern void *__ram2_size;
-extern void *__ram3_start;
-extern void *__ram3_size;
+extern void *__dtcm_start;
+extern void *__dtcm_size;
 
 static _mm_region_t ram2;
-static _mm_region_t ram3;
+static _mm_region_t dtcm;
 
 /*==============================================================================
   Function definitions
@@ -104,7 +104,7 @@ void _cpuctl_init(void)
         #endif
 
         _mm_register_region(&ram2, RAM2_START, RAM2_SIZE);
-        _mm_register_region(&ram3, RAM3_START, RAM3_SIZE);
+        _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE);
 }
 
 //==============================================================================
@@ -130,10 +130,11 @@ void _cpuctl_shutdown_system(void)
         RCC->APB1ENR |= RCC_APB1ENR_PWREN;
 
         /* Clear Wake-up flag */
-        PWR->CR |= PWR_CR_CWUF;
+        PWR->CR2 |= PWR_CR2_CWUPF1 | PWR_CR2_CWUPF2 | PWR_CR2_CWUPF3
+                  | PWR_CR2_CWUPF4 | PWR_CR2_CWUPF5 | PWR_CR2_CWUPF6;
 
         /* Select STANDBY mode */
-        PWR->CR |= PWR_CR_PDDS;
+        PWR->CR1 |= PWR_CR1_PDDS;
 
         /* Set SLEEPDEEP bit of Cortex System Control Register */
         SCB_SysCtrl |= SysCtrl_SLEEPDEEP;

@@ -55,9 +55,9 @@
 #/*-- Flag is set in __CPU_NAME__ event
 # this:AddWidget("Value")
 #--*/
-#define __LD_SCRIPT__ STM32F756xGxx
+#define __LD_SCRIPT__ STM32F75xxGxx
 #/*
-__LD_SCRIPT__=STM32F756xGxx
+__LD_SCRIPT__=STM32F75xxGxx
 #*/
 
 #/*--

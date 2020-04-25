@@ -33,15 +33,15 @@ __rom_start = ORIGIN(rom);
 __rom_size  = LENGTH(rom);
 __rom_end   = __rom_start + __rom_size;
 
-__ram_start = ORIGIN(ram);
-__ram_size  = LENGTH(ram);
+__ram_start = ORIGIN(ram1);
+__ram_size  = LENGTH(ram1);
 __ram_end   = __ram_start + __ram_size;
 
 __ram2_start = ORIGIN(ram2);
 __ram2_size  = LENGTH(ram2);
 
-__ram3_start = ORIGIN(ram3);
-__ram3_size  = LENGTH(ram3);
+__dtcm_start = ORIGIN(dtcm);
+__dtcm_size  = LENGTH(dtcm);
 
 PROVIDE(__rom_start = __rom_start);
 PROVIDE(__rom_size  = __rom_size);
@@ -54,8 +54,8 @@ PROVIDE(__ram_end   = __ram_end);
 PROVIDE(__ram2_start = __ram2_start);
 PROVIDE(__ram2_size  = __ram2_size);
 
-PROVIDE(__ram3_start = __ram3_start);
-PROVIDE(__ram3_size  = __ram3_size);
+PROVIDE(__dtcm_start = __dtcm_start);
+PROVIDE(__dtcm_size  = __dtcm_size);
 
 /*==============================================================================
 entry point
@@ -145,7 +145,7 @@ SECTIONS
       . = ALIGN(4);
       __data_end = .;
       PROVIDE(__data_end = __data_end);
-   } > ram AT > rom
+   } > ram1 AT > rom
 
    .bss :
    {
@@ -161,7 +161,7 @@ SECTIONS
       . = ALIGN(4);
       __bss_end = .;
       PROVIDE(__bss_end = __bss_end);
-   } > ram AT > ram
+   } > ram1 AT > ram1
 
    .stack :
    {
@@ -192,7 +192,7 @@ SECTIONS
       . = ALIGN(8);
       __stack_end = .;
       PROVIDE(__stack_end = __stack_end);
-   } > ram AT > ram
+   } > ram1 AT > ram1
 
    . = ALIGN(4);
    __heap_start = .;
