@@ -33,7 +33,8 @@
 Driver handles CRC peripheral installed in the microcontroller.
 
 \section drv-crc-sup-arch Supported architectures
-\li STM32F10x
+\li STM32f1
+\li STM32f4
 
 \section drv-crc-ddesc Details
 \subsection drv-crc-ddesc-num Meaning of major and minor numbers
