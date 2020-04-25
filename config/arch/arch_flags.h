@@ -282,6 +282,107 @@
 #     uC.PERIPH["STM32F479NIxx"] = {GPIO = true, CLK = true, CRC = true, RTC = true, I2C = true, DMA = true, AFM = true, SND = true, IRQ = true, NVM = true, PWM = true, SDIO = true, WDG = true, SPI = true, UART = true, FMC = true, ETHMAC = true, DCI = true}
 # end
 #
+# if uC.ARCH == "stm32f7" then
+#     uC.AddPriorityItems = function(this, no_default)
+#         this:AddItem("Priority 0 (the highest)", "0")
+#         for i = 1, 14 do this:AddItem("Priority "..i, tostring(i)) end
+#         this:AddItem("Priority 15 (the lowest, safe for kernel API)", "15")
+#         if no_default ~= true then
+#             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
+#         end
+#     end
+#
+#     uC.PERIPH["STM32F722ICxx"] = {}
+#     uC.PERIPH["STM32F722IExx"] = {}
+#     uC.PERIPH["STM32F722RCxx"] = {}
+#     uC.PERIPH["STM32F722RExx"] = {}
+#     uC.PERIPH["STM32F722VCxx"] = {}
+#     uC.PERIPH["STM32F722VExx"] = {}
+#     uC.PERIPH["STM32F722ZCxx"] = {}
+#     uC.PERIPH["STM32F722ZExx"] = {}
+#     uC.PERIPH["STM32F723ICxx"] = {}
+#     uC.PERIPH["STM32F723IExx"] = {}
+#     uC.PERIPH["STM32F723VCxx"] = {}
+#     uC.PERIPH["STM32F723VExx"] = {}
+#     uC.PERIPH["STM32F723ZCxx"] = {}
+#     uC.PERIPH["STM32F723ZExx"] = {}
+#     uC.PERIPH["STM32F730I8xx"] = {}
+#     uC.PERIPH["STM32F730R8xx"] = {}
+#     uC.PERIPH["STM32F730V8xx"] = {}
+#     uC.PERIPH["STM32F730Z8xx"] = {}
+#     uC.PERIPH["STM32F732IExx"] = {}
+#     uC.PERIPH["STM32F732RExx"] = {}
+#     uC.PERIPH["STM32F732VExx"] = {}
+#     uC.PERIPH["STM32F732ZExx"] = {}
+#     uC.PERIPH["STM32F733IExx"] = {}
+#     uC.PERIPH["STM32F733VExx"] = {}
+#     uC.PERIPH["STM32F733ZExx"] = {}
+#     uC.PERIPH["STM32F745IExx"] = {}
+#     uC.PERIPH["STM32F745IGxx"] = {}
+#     uC.PERIPH["STM32F745VExx"] = {}
+#     uC.PERIPH["STM32F745VGxx"] = {}
+#     uC.PERIPH["STM32F745ZExx"] = {}
+#     uC.PERIPH["STM32F745ZGxx"] = {}
+#     uC.PERIPH["STM32F746BExx"] = {}
+#     uC.PERIPH["STM32F746BGxx"] = {}
+#     uC.PERIPH["STM32F746IExx"] = {}
+#     uC.PERIPH["STM32F746IGxx"] = {}
+#     uC.PERIPH["STM32F746NExx"] = {}
+#     uC.PERIPH["STM32F746NGxx"] = {}
+#     uC.PERIPH["STM32F746VExx"] = {}
+#     uC.PERIPH["STM32F746VGxx"] = {}
+#     uC.PERIPH["STM32F746ZExx"] = {}
+#     uC.PERIPH["STM32F746ZGxx"] = {}
+#     uC.PERIPH["STM32F750N8xx"] = {}
+#     uC.PERIPH["STM32F750V8xx"] = {}
+#     uC.PERIPH["STM32F750Z8xx"] = {}
+#     uC.PERIPH["STM32F756BGxx"] = {}
+#     uC.PERIPH["STM32F756IGxx"] = {}
+#     uC.PERIPH["STM32F756NGxx"] = {}
+#     uC.PERIPH["STM32F756VGxx"] = {}
+#     uC.PERIPH["STM32F756ZGxx"] = {}
+#     uC.PERIPH["STM32F756ZGxx"] = {}
+#     uC.PERIPH["STM32F765BGxx"] = {}
+#     uC.PERIPH["STM32F765BIxx"] = {}
+#     uC.PERIPH["STM32F765IGxx"] = {}
+#     uC.PERIPH["STM32F765IIxx"] = {}
+#     uC.PERIPH["STM32F765NGxx"] = {}
+#     uC.PERIPH["STM32F765NIxx"] = {}
+#     uC.PERIPH["STM32F765VGxx"] = {}
+#     uC.PERIPH["STM32F765VIxx"] = {}
+#     uC.PERIPH["STM32F765ZGxx"] = {}
+#     uC.PERIPH["STM32F765ZIxx"] = {}
+#     uC.PERIPH["STM32F767BGxx"] = {}
+#     uC.PERIPH["STM32F767BIxx"] = {}
+#     uC.PERIPH["STM32F767IGxx"] = {}
+#     uC.PERIPH["STM32F767IIxx"] = {}
+#     uC.PERIPH["STM32F767NGxx"] = {}
+#     uC.PERIPH["STM32F767NIxx"] = {}
+#     uC.PERIPH["STM32F767VGxx"] = {}
+#     uC.PERIPH["STM32F767VIxx"] = {}
+#     uC.PERIPH["STM32F767ZGxx"] = {}
+#     uC.PERIPH["STM32F767ZIxx"] = {}
+#     uC.PERIPH["STM32F768AIxx"] = {}
+#     uC.PERIPH["STM32F769AGxx"] = {}
+#     uC.PERIPH["STM32F769AIxx"] = {}
+#     uC.PERIPH["STM32F769BGxx"] = {}
+#     uC.PERIPH["STM32F769BIxx"] = {}
+#     uC.PERIPH["STM32F769IGxx"] = {}
+#     uC.PERIPH["STM32F769IIxx"] = {}
+#     uC.PERIPH["STM32F769NGxx"] = {}
+#     uC.PERIPH["STM32F769NIxx"] = {}
+#     uC.PERIPH["STM32F777BIxx"] = {}
+#     uC.PERIPH["STM32F777IIxx"] = {}
+#     uC.PERIPH["STM32F777NIxx"] = {}
+#     uC.PERIPH["STM32F777VIxx"] = {}
+#     uC.PERIPH["STM32F777ZIxx"] = {}
+#     uC.PERIPH["STM32F778AIxx"] = {}
+#     uC.PERIPH["STM32F779AIxx"] = {}
+#     uC.PERIPH["STM32F779BIxx"] = {}
+#     uC.PERIPH["STM32F779IIxx"] = {}
+#     uC.PERIPH["STM32F779NIxx"] = {}
+# end
+#
 # if uC.ARCH == "efr32" then
 #     uC.AddPriorityItems = function(this, no_default)
 #         this:AddItem("Priority 0 (the highest)", "0")
@@ -369,6 +470,8 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32f4/nvm_flags.h"
 #include "stm32f4/pwm_flags.h"
 #include "stm32f4/snd_flags.h"
+#elif (__CPU_ARCH__ == stm32f7)
+#include "stm32f7/cpu_flags.h"
 #elif (__CPU_ARCH__ == efr32)
 #include "efr32/cpu_flags.h"
 #include "efr32/gpio_flags.h"
