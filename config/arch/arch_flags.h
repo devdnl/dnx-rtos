@@ -471,6 +471,7 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32f4/snd_flags.h"
 #elif (__CPU_ARCH__ == stm32f7)
 #include "stm32f7/cpu_flags.h"
+#include "stm32f7/gpio_flags.h"
 #elif (__CPU_ARCH__ == efr32)
 #include "efr32/cpu_flags.h"
 #include "efr32/gpio_flags.h"
