@@ -3,9 +3,10 @@
 
 @author  Daniel Zorychta
 
-@brief   This file support USART peripherals
+@brief   This file support USART peripherals for STM32F1/F4/F7.
+         * STM32F7 architecture is supported without extra features.
 
-@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -38,9 +39,20 @@
 #if defined(ARCH_stm32f1)
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
+#define RDR             DR
+#define TDR             DR
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
+#define RDR             DR
+#define TDR             DR
+#elif defined(ARCH_stm32f7)
+#include "stm32f7/stm32f7xx.h"
+#include "stm32f7/lib/stm32f7xx_rcc.h"
+#define SR              ISR
+#define USART_SR_RXNE   USART_ISR_RXNE
+#define USART_SR_ORE    USART_ISR_ORE
+#define USART_SR_TC     USART_ISR_TC
 #endif
 
 /*==============================================================================
@@ -395,7 +407,7 @@ static void IRQ_handle(u8_t major)
         /* receiver interrupt handler */
         int received = 0;
         while ((DEV->UART->CR1 & USART_CR1_RXNEIE) && (DEV->UART->SR & (USART_SR_RXNE | USART_SR_ORE))) {
-                u8_t DR = DEV->UART->DR;
+                u8_t DR = DEV->UART->RDR;
 
                 if (_UART_FIFO__write(&_UART_mem[major]->Rx_FIFO, &DR)) {
                         received++;
@@ -406,7 +418,7 @@ static void IRQ_handle(u8_t major)
         if ((DEV->UART->CR1 & USART_CR1_TCIE) && (DEV->UART->SR & USART_SR_TC)) {
 
                 if (_UART_mem[major]->Tx_buffer.data_size && _UART_mem[major]->Tx_buffer.src_ptr) {
-                        DEV->UART->DR = *(_UART_mem[major]->Tx_buffer.src_ptr++);
+                        DEV->UART->TDR = *(_UART_mem[major]->Tx_buffer.src_ptr++);
 
                         if (--_UART_mem[major]->Tx_buffer.data_size == 0) {
                                 _UART_mem[major]->Tx_buffer.src_ptr = NULL;
