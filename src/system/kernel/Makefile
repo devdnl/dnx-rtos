@@ -34,6 +34,6 @@ HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM4F
 endif
 
 ifeq ($(TARGET), efr32)
-CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
-HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM4F
+CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/port.c
+HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/
 endif
