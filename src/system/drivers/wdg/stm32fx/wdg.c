@@ -37,6 +37,9 @@ Brief    Watchdog driver.
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
 #define DBGMCU_IWDG_STOP        DBGMCU_APB1_FZ_DBG_IWDG_STOP
+#elif defined(ARCH_stm32f7)
+#include "stm32f7/stm32f7xx.h"
+#define DBGMCU_IWDG_STOP        DBGMCU_APB1_FZ_DBG_IWDG_STOP
 #endif
 
 /*==============================================================================
