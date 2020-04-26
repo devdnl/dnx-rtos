@@ -120,7 +120,7 @@ this:SetEvent("clicked", "ComboboxTimeout",
     end
 )
 
--- set timout selection widget according to selected divider and reload value
+-- set timeout selection widget according to selected divider and reload value
 local DIV    = this:GetFlagValue("__WDG_CLK_DIVIDER__")
 local RELOAD = this:GetFlagValue("__WDG_RELOAD_VALUE__")
 local time   = this:GetTime(DIV, RELOAD)

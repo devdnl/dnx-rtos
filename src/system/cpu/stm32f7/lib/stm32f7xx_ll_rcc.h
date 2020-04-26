@@ -262,14 +262,14 @@ typedef struct
 /** @defgroup RCC_LL_EC_MCOxSOURCE  MCO source selection
   * @{
   */
-#define LL_RCC_MCO1SOURCE_HSI              (uint32_t)(RCC_CFGR_MCO1|0x00000000U)                    /*!< HSI selection as MCO1 source */
-#define LL_RCC_MCO1SOURCE_LSE              (uint32_t)(RCC_CFGR_MCO1|(RCC_CFGR_MCO1_0 >> 16U))       /*!< LSE selection as MCO1 source */
-#define LL_RCC_MCO1SOURCE_HSE              (uint32_t)(RCC_CFGR_MCO1|(RCC_CFGR_MCO1_1 >> 16U))       /*!< HSE selection as MCO1 source */
-#define LL_RCC_MCO1SOURCE_PLLCLK           (uint32_t)(RCC_CFGR_MCO1|((RCC_CFGR_MCO1_1|RCC_CFGR_MCO1_0) >> 16U))       /*!< PLLCLK selection as MCO1 source */
-#define LL_RCC_MCO2SOURCE_SYSCLK           (uint32_t)(RCC_CFGR_MCO2|0x00000000U)                    /*!< SYSCLK selection as MCO2 source */
-#define LL_RCC_MCO2SOURCE_PLLI2S           (uint32_t)(RCC_CFGR_MCO2|(RCC_CFGR_MCO2_0 >> 16U))       /*!< PLLI2S selection as MCO2 source */
-#define LL_RCC_MCO2SOURCE_HSE              (uint32_t)(RCC_CFGR_MCO2|(RCC_CFGR_MCO2_1 >> 16U))       /*!< HSE selection as MCO2 source */
-#define LL_RCC_MCO2SOURCE_PLLCLK           (uint32_t)(RCC_CFGR_MCO2|((RCC_CFGR_MCO2_1|RCC_CFGR_MCO2_0) >> 16U))       /*!< PLLCLK selection as MCO2 source */
+#define LL_RCC_MCO1_CLKSOURCE_HSI              (uint32_t)(RCC_CFGR_MCO1|0x00000000U)                    /*!< HSI selection as MCO1 source */
+#define LL_RCC_MCO1_CLKSOURCE_LSE              (uint32_t)(RCC_CFGR_MCO1|(RCC_CFGR_MCO1_0 >> 16U))       /*!< LSE selection as MCO1 source */
+#define LL_RCC_MCO1_CLKSOURCE_HSE              (uint32_t)(RCC_CFGR_MCO1|(RCC_CFGR_MCO1_1 >> 16U))       /*!< HSE selection as MCO1 source */
+#define LL_RCC_MCO1_CLKSOURCE_PLLCLK           (uint32_t)(RCC_CFGR_MCO1|((RCC_CFGR_MCO1_1|RCC_CFGR_MCO1_0) >> 16U))       /*!< PLLCLK selection as MCO1 source */
+#define LL_RCC_MCO2_CLKSOURCE_SYSCLK           (uint32_t)(RCC_CFGR_MCO2|0x00000000U)                    /*!< SYSCLK selection as MCO2 source */
+#define LL_RCC_MCO2_CLKSOURCE_PLLI2S           (uint32_t)(RCC_CFGR_MCO2|(RCC_CFGR_MCO2_0 >> 16U))       /*!< PLLI2S selection as MCO2 source */
+#define LL_RCC_MCO2_CLKSOURCE_HSE              (uint32_t)(RCC_CFGR_MCO2|(RCC_CFGR_MCO2_1 >> 16U))       /*!< HSE selection as MCO2 source */
+#define LL_RCC_MCO2_CLKSOURCE_PLLCLK           (uint32_t)(RCC_CFGR_MCO2|((RCC_CFGR_MCO2_1|RCC_CFGR_MCO2_0) >> 16U))       /*!< PLLCLK selection as MCO2 source */
 /**
   * @}
   */
@@ -421,14 +421,14 @@ typedef struct
 /** @defgroup RCC_LL_EC_SAIx_CLKSOURCE  Peripheral SAI clock source selection
   * @{
   */
-#define LL_RCC_SAI1_CLKSOURCE_PLLSAI       (uint32_t)(RCC_DCKCFGR1_SAI1SEL | 0x00000000U)                      /*!< PLLSAI clock used as SAI1 clock source */
+#define LL_RCC_SAI1_CLKSOURCE_PLLSAIQDIV       (uint32_t)(RCC_DCKCFGR1_SAI1SEL | 0x00000000U)                      /*!< PLLSAI clock used as SAI1 clock source */
 #define LL_RCC_SAI1_CLKSOURCE_PLLI2S       (uint32_t)(RCC_DCKCFGR1_SAI1SEL | (RCC_DCKCFGR1_SAI1SEL_0 >> 16U))  /*!< PLLI2S clock used as SAI1 clock source */
 #define LL_RCC_SAI1_CLKSOURCE_PIN          (uint32_t)(RCC_DCKCFGR1_SAI1SEL | (RCC_DCKCFGR1_SAI1SEL_1 >> 16U))  /*!< External pin clock used as SAI1 clock source */
 #if defined(RCC_SAI1SEL_PLLSRC_SUPPORT)
 #define LL_RCC_SAI1_CLKSOURCE_PLLSRC       (uint32_t)(RCC_DCKCFGR1_SAI1SEL | (RCC_DCKCFGR1_SAI1SEL >> 16U))    /*!< Main source clock used as SAI1 clock source */
 #endif /* RCC_SAI1SEL_PLLSRC_SUPPORT */
-#define LL_RCC_SAI2_CLKSOURCE_PLLSAI       (uint32_t)(RCC_DCKCFGR1_SAI2SEL | 0x00000000U)                      /*!< PLLSAI clock used as SAI2 clock source */
-#define LL_RCC_SAI2_CLKSOURCE_PLLI2S       (uint32_t)(RCC_DCKCFGR1_SAI2SEL | (RCC_DCKCFGR1_SAI2SEL_0 >> 16U))  /*!< PLLI2S clock used as SAI2 clock source */
+#define LL_RCC_SAI2_CLKSOURCE_PLLSAIQDIV       (uint32_t)(RCC_DCKCFGR1_SAI2SEL | 0x00000000U)                      /*!< PLLSAI clock used as SAI2 clock source */
+#define LL_RCC_SAI2_CLKSOURCE_PLLI2SQDIV       (uint32_t)(RCC_DCKCFGR1_SAI2SEL | (RCC_DCKCFGR1_SAI2SEL_0 >> 16U))  /*!< PLLI2S clock used as SAI2 clock source */
 #define LL_RCC_SAI2_CLKSOURCE_PIN          (uint32_t)(RCC_DCKCFGR1_SAI2SEL | (RCC_DCKCFGR1_SAI2SEL_1 >> 16U))  /*!< External pin clock used as SAI2 clock source */
 #if defined(RCC_SAI2SEL_PLLSRC_SUPPORT)
 #define LL_RCC_SAI2_CLKSOURCE_PLLSRC       (uint32_t)(RCC_DCKCFGR1_SAI2SEL | (RCC_DCKCFGR1_SAI2SEL >> 16U))    /*!< Main source clock used as SAI2 clock source */
@@ -462,8 +462,8 @@ typedef struct
 /** @defgroup RCC_LL_EC_USB_CLKSOURCE  Peripheral USB clock source selection
   * @{
   */
-#define LL_RCC_USB_CLKSOURCE_PLL          0x00000000U            /*!< PLL clock used as USB clock source */
-#define LL_RCC_USB_CLKSOURCE_PLLSAI       RCC_DCKCFGR2_CK48MSEL  /*!< PLLSAI1 clock used as USB clock source */
+#define LL_RCC_USB_CLKSOURCE_PLLQ          0x00000000U            /*!< PLL clock used as USB clock source */
+#define LL_RCC_USB_CLKSOURCE_PLLSAIP       RCC_DCKCFGR2_CK48MSEL  /*!< PLLSAI1 clock used as USB clock source */
 /**
   * @}
   */
@@ -473,7 +473,7 @@ typedef struct
   * @{
   */
 #define LL_RCC_DSI_CLKSOURCE_PHY          0x00000000U           /*!< DSI-PHY clock used as DSI byte lane clock source */
-#define LL_RCC_DSI_CLKSOURCE_PLL          RCC_DCKCFGR2_DSISEL   /*!< PLL clock used as DSI byte lane clock source */
+#define LL_RCC_DSI_CLKSOURCE_PLLR          RCC_DCKCFGR2_DSISEL   /*!< PLL clock used as DSI byte lane clock source */
 /**
   * @}
   */
@@ -493,7 +493,7 @@ typedef struct
 /** @defgroup RCC_LL_EC_I2S1_CLKSOURCE  Peripheral I2S clock source selection
   * @{
   */
-#define LL_RCC_I2S1_CLKSOURCE_PLLI2S           0x00000000U                /*!< I2S oscillator clock used as I2S1 clock */
+#define LL_RCC_I2S1_CLKSOURCE_PLLI2SR           0x00000000U                /*!< I2S oscillator clock used as I2S1 clock */
 #define LL_RCC_I2S1_CLKSOURCE_PIN              RCC_CFGR_I2SSRC            /*!< External pin clock used as I2S1 clock */
 /**
   * @}
@@ -686,7 +686,7 @@ typedef struct
 #define LL_RCC_RTC_CLKSOURCE_NONE          0x00000000U             /*!< No clock used as RTC clock */
 #define LL_RCC_RTC_CLKSOURCE_LSE           RCC_BDCR_RTCSEL_0       /*!< LSE oscillator clock used as RTC clock */
 #define LL_RCC_RTC_CLKSOURCE_LSI           RCC_BDCR_RTCSEL_1       /*!< LSI oscillator clock used as RTC clock */
-#define LL_RCC_RTC_CLKSOURCE_HSE           RCC_BDCR_RTCSEL         /*!< HSE oscillator clock divided by HSE prescaler used as RTC clock */
+#define LL_RCC_RTC_CLKSOURCE_HSE_RTC           RCC_BDCR_RTCSEL         /*!< HSE oscillator clock divided by HSE prescaler used as RTC clock */
 /**
   * @}
   */
@@ -2349,14 +2349,14 @@ __STATIC_INLINE uint32_t LL_RCC_GetAPB2Prescaler(void)
   *         CFGR         MCO2          LL_RCC_ConfigMCO\n
   *         CFGR         MCO2PRE       LL_RCC_ConfigMCO
   * @param  MCOxSource This parameter can be one of the following values:
-  *         @arg @ref LL_RCC_MCO1SOURCE_HSI
-  *         @arg @ref LL_RCC_MCO1SOURCE_LSE
-  *         @arg @ref LL_RCC_MCO1SOURCE_HSE
-  *         @arg @ref LL_RCC_MCO1SOURCE_PLLCLK
-  *         @arg @ref LL_RCC_MCO2SOURCE_SYSCLK
-  *         @arg @ref LL_RCC_MCO2SOURCE_PLLI2S
-  *         @arg @ref LL_RCC_MCO2SOURCE_HSE
-  *         @arg @ref LL_RCC_MCO2SOURCE_PLLCLK
+  *         @arg @ref LL_RCC_MCO1_CLKSOURCE_HSI
+  *         @arg @ref LL_RCC_MCO1_CLKSOURCE_LSE
+  *         @arg @ref LL_RCC_MCO1_CLKSOURCE_HSE
+  *         @arg @ref LL_RCC_MCO1_CLKSOURCE_PLLCLK
+  *         @arg @ref LL_RCC_MCO2_CLKSOURCE_SYSCLK
+  *         @arg @ref LL_RCC_MCO2_CLKSOURCE_PLLI2S
+  *         @arg @ref LL_RCC_MCO2_CLKSOURCE_HSE
+  *         @arg @ref LL_RCC_MCO2_CLKSOURCE_PLLCLK
   * @param  MCOxPrescaler This parameter can be one of the following values:
   *         @arg @ref LL_RCC_MCO1_DIV_1
   *         @arg @ref LL_RCC_MCO1_DIV_2
@@ -2491,12 +2491,12 @@ __STATIC_INLINE void LL_RCC_SetLPTIMClockSource(uint32_t LPTIMxSource)
   * @rmtoll DCKCFGR1        SAI1SEL       LL_RCC_SetSAIClockSource\n
   *         DCKCFGR1        SAI2SEL       LL_RCC_SetSAIClockSource
   * @param  SAIxSource This parameter can be one of the following values:
-  *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PLLSAI
+  *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PLLSAIQDIV
   *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PLLI2S
   *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PIN
   *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PLLSRC (*)
-  *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLSAI
-  *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLI2S
+  *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLSAIQDIV
+  *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLI2SQDIV
   *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PIN
   *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLSRC (*)
   *
@@ -2556,8 +2556,8 @@ __STATIC_INLINE void LL_RCC_SetRNGClockSource(uint32_t RNGxSource)
   * @brief  Configure USB clock source
   * @rmtoll DCKCFGR2        CK48MSEL      LL_RCC_SetUSBClockSource
   * @param  USBxSource This parameter can be one of the following values:
-  *         @arg @ref LL_RCC_USB_CLKSOURCE_PLL
-  *         @arg @ref LL_RCC_USB_CLKSOURCE_PLLSAI
+  *         @arg @ref LL_RCC_USB_CLKSOURCE_PLLQ
+  *         @arg @ref LL_RCC_USB_CLKSOURCE_PLLSAIP
   * @retval None
   */
 __STATIC_INLINE void LL_RCC_SetUSBClockSource(uint32_t USBxSource)
@@ -2584,7 +2584,7 @@ __STATIC_INLINE void LL_RCC_SetCECClockSource(uint32_t Source)
   * @brief  Configure I2S clock source
   * @rmtoll CFGR         I2SSRC        LL_RCC_SetI2SClockSource
   * @param  Source This parameter can be one of the following values:
-  *         @arg @ref LL_RCC_I2S1_CLKSOURCE_PLLI2S
+  *         @arg @ref LL_RCC_I2S1_CLKSOURCE_PLLI2SR
   *         @arg @ref LL_RCC_I2S1_CLKSOURCE_PIN
   * @retval None
   */
@@ -2599,7 +2599,7 @@ __STATIC_INLINE void LL_RCC_SetI2SClockSource(uint32_t Source)
   * @rmtoll DCKCFGR2         DSISEL        LL_RCC_SetDSIClockSource
   * @param  Source This parameter can be one of the following values:
   *         @arg @ref LL_RCC_DSI_CLKSOURCE_PHY
-  *         @arg @ref LL_RCC_DSI_CLKSOURCE_PLL
+  *         @arg @ref LL_RCC_DSI_CLKSOURCE_PLLR
   * @retval None
   */
 __STATIC_INLINE void LL_RCC_SetDSIClockSource(uint32_t Source)
@@ -2761,12 +2761,12 @@ __STATIC_INLINE uint32_t LL_RCC_GetLPTIMClockSource(uint32_t LPTIMx)
   *         @arg @ref LL_RCC_SAI1_CLKSOURCE
   *         @arg @ref LL_RCC_SAI2_CLKSOURCE
   * @retval Returned value can be one of the following values:
-  *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PLLSAI
+  *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PLLSAIQDIV
   *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PLLI2S
   *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PIN
   *         @arg @ref LL_RCC_SAI1_CLKSOURCE_PLLSRC (*)
-  *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLSAI
-  *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLI2S
+  *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLSAIQDIV
+  *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLI2SQDIV
   *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PIN
   *         @arg @ref LL_RCC_SAI2_CLKSOURCE_PLLSRC (*)
   *
@@ -2831,8 +2831,8 @@ __STATIC_INLINE uint32_t LL_RCC_GetRNGClockSource(uint32_t RNGx)
   * @param  USBx This parameter can be one of the following values:
   *         @arg @ref LL_RCC_USB_CLKSOURCE
   * @retval Returned value can be one of the following values:
-  *         @arg @ref LL_RCC_USB_CLKSOURCE_PLL
-  *         @arg @ref LL_RCC_USB_CLKSOURCE_PLLSAI
+  *         @arg @ref LL_RCC_USB_CLKSOURCE_PLLQ
+  *         @arg @ref LL_RCC_USB_CLKSOURCE_PLLSAIP
   */
 __STATIC_INLINE uint32_t LL_RCC_GetUSBClockSource(uint32_t USBx)
 {
@@ -2861,7 +2861,7 @@ __STATIC_INLINE uint32_t LL_RCC_GetCECClockSource(uint32_t CECx)
   * @param  I2Sx This parameter can be one of the following values:
   *         @arg @ref LL_RCC_I2S1_CLKSOURCE
   * @retval Returned value can be one of the following values:
-  *         @arg @ref LL_RCC_I2S1_CLKSOURCE_PLLI2S
+  *         @arg @ref LL_RCC_I2S1_CLKSOURCE_PLLI2SR
   *         @arg @ref LL_RCC_I2S1_CLKSOURCE_PIN
   */
 __STATIC_INLINE uint32_t LL_RCC_GetI2SClockSource(uint32_t I2Sx)
@@ -2907,7 +2907,7 @@ __STATIC_INLINE uint32_t LL_RCC_GetDFSDMClockSource(uint32_t DFSDMx)
   *         @arg @ref LL_RCC_DSI_CLKSOURCE
   * @retval Returned value can be one of the following values:
   *         @arg @ref LL_RCC_DSI_CLKSOURCE_PHY
-  *         @arg @ref LL_RCC_DSI_CLKSOURCE_PLL
+  *         @arg @ref LL_RCC_DSI_CLKSOURCE_PLLR
   */
 __STATIC_INLINE uint32_t LL_RCC_GetDSIClockSource(uint32_t DSIx)
 {
@@ -2933,7 +2933,7 @@ __STATIC_INLINE uint32_t LL_RCC_GetDSIClockSource(uint32_t DSIx)
   *         @arg @ref LL_RCC_RTC_CLKSOURCE_NONE
   *         @arg @ref LL_RCC_RTC_CLKSOURCE_LSE
   *         @arg @ref LL_RCC_RTC_CLKSOURCE_LSI
-  *         @arg @ref LL_RCC_RTC_CLKSOURCE_HSE
+  *         @arg @ref LL_RCC_RTC_CLKSOURCE_HSE_RTC
   * @retval None
   */
 __STATIC_INLINE void LL_RCC_SetRTCClockSource(uint32_t Source)
@@ -2948,7 +2948,7 @@ __STATIC_INLINE void LL_RCC_SetRTCClockSource(uint32_t Source)
   *         @arg @ref LL_RCC_RTC_CLKSOURCE_NONE
   *         @arg @ref LL_RCC_RTC_CLKSOURCE_LSE
   *         @arg @ref LL_RCC_RTC_CLKSOURCE_LSI
-  *         @arg @ref LL_RCC_RTC_CLKSOURCE_HSE
+  *         @arg @ref LL_RCC_RTC_CLKSOURCE_HSE_RTC
   */
 __STATIC_INLINE uint32_t LL_RCC_GetRTCClockSource(void)
 {
