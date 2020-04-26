@@ -508,7 +508,7 @@ this:AddItem("LSE", "LL_RCC_LPTIM1_CLKSOURCE_LSE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_LPTIM1_SRC", "")
 --*/
-#define __CLK_LPTIM1_SRC__ LL_RCC_LPTIM1_CLKSOURCE_LSI
+#define __CLK_LPTIM1_SRC__ LL_RCC_LPTIM1_CLKSOURCE_PCLK1
 
 /*--
 this:AddWidget("Combobox", "USART1 clock source")
