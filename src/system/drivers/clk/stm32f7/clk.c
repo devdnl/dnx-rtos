@@ -50,7 +50,6 @@
 ==============================================================================*/
 static void set_flash_latency       (u32_t latency);
 static void enable_prefetch_buffer  (void);
-static int  wait_for_flag           (u32_t flag, u32_t timeout);
 static bool is_APB1_divided         (void);
 static bool is_APB2_divided         (void);
 
@@ -82,45 +81,62 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
 {
         UNUSED_ARG4(device_handle, major, minor, config);
 
-        RCC_DeInit();
+        int err = ESUCC;
+
+        LL_RCC_DeInit();
 
         set_flash_latency(__CLK_FLASH_LATENCY__);
         enable_prefetch_buffer();
 
-        int err = ESUCC;
-
         //----------------------------------------------------------------------
         // MCOx clock sources and prescalers
         //----------------------------------------------------------------------
-        RCC_MCO1Config(_CLK_CFG__MCO1_SRC, _CLK_CFG__MCO1_DIV);
-        RCC_MCO2Config(_CLK_CFG__MCO2_SRC, _CLK_CFG__MCO2_DIV);
+        LL_RCC_ConfigMCO(__CLK_MCO1_SRC__, __CLK_MCO1_DIV__);
+        LL_RCC_ConfigMCO(__CLK_MCO2_SRC__, __CLK_MCO2_DIV__);
 
         //----------------------------------------------------------------------
         // LSI OSCILLATOR
         //----------------------------------------------------------------------
-        if (_CLK_CFG__LSI_ON) {
-                RCC_LSICmd(_CLK_CFG__LSI_ON);
-                err = wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS);
-                if (err)
-                        return err;
+        if (__CLK_LSI_ON__) {
+                LL_RCC_LSI_Enable();
+
+                u64_t tref = sys_time_get_reference();
+                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (LL_RCC_LSI_IsReady()) {
+                                break;
+                        }
+                }
+
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: LSI timeout");
+                }
         }
 
         //----------------------------------------------------------------------
         // LSE OSCILLATOR
         //----------------------------------------------------------------------
-        if (_CLK_CFG__LSE_ON) {
+        if (__CLK_LSE_ON__) {
 
                 SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
-                SET_BIT(PWR->CR, PWR_CR_DBP);
+                SET_BIT(PWR->CR1, PWR_CR1_DBP);
 
                 if (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
 
-                        RCC_LSEConfig(_CLK_CFG__LSE_ON);
+                        if (__CLK_LSE_ON__ == _CLK_BAYPASS) {
+                                LL_RCC_LSE_EnableBypass();
 
-                        if (_CLK_CFG__LSE_ON != RCC_LSE_Bypass) {
-                                // this oscillator not causes an error because is not a main osc.
-                                if (wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS) != ESUCC) {
-                                        printk("LSE oscillator start error");
+                        } else {
+                                LL_RCC_LSE_Enable();
+
+                                u64_t tref = sys_time_get_reference();
+                                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                        if (LL_RCC_LSE_IsReady()) {
+                                                break;
+                                        }
+                                }
+
+                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                        printk("CLK: LSE timeout");
                                 }
                         }
                 }
@@ -129,215 +145,138 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         //----------------------------------------------------------------------
         // HSE OSCILLATOR
         //----------------------------------------------------------------------
-        if (_CLK_CFG__HSE_ON) {
-                RCC_HSEConfig(_CLK_CFG__HSE_ON);
-                err = wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS);
-                if (err)
-                        return err;
+        if (__CLK_HSE_ON__) {
+
+                if (__CLK_HSE_ON__ == _CLK_BAYPASS) {
+                        LL_RCC_HSE_Enable();
+                        LL_RCC_HSE_EnableBypass();
+
+                } else {
+                        LL_RCC_HSE_Enable();
+
+                        u64_t tref = sys_time_get_reference();
+                        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                if (LL_RCC_HSE_IsReady()) {
+                                        break;
+                                }
+                        }
+
+                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                printk("CLK: HSE timeout");
+                        }
+                }
         }
 
         //----------------------------------------------------------------------
         // RTC clock selection
         //----------------------------------------------------------------------
-        if ( (  (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE && _CLK_CFG__LSE_ON)
-             || (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSI && _CLK_CFG__LSI_ON)
-             || (IS_RCC_RTCCLK_SOURCE(_CLK_CFG__RTCCLK_SRC)   && _CLK_CFG__HSE_ON) )
+        if ( (  (__CLK_RTC_SRC__ == LL_RCC_RTC_CLKSOURCE_LSE && __CLK_LSE_ON__)
+             || (__CLK_RTC_SRC__ == LL_RCC_RTC_CLKSOURCE_LSI && __CLK_LSI_ON__)
+             || (__CLK_RTC_SRC__ == LL_RCC_RTC_CLKSOURCE_HSE_RTC && __CLK_HSE_ON__) )
 
            && (RCC->BDCR & RCC_BDCR_RTCEN) == 0
            && (RCC->BDCR & (RCC_BDCR_RTCSEL_1 | RCC_BDCR_RTCSEL_0)) == 0) {
 
                 SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
-                SET_BIT(PWR->CR, PWR_CR_DBP);
-                RCC_RTCCLKConfig(_CLK_CFG__RTCCLK_SRC);
+                SET_BIT(PWR->CR1, PWR_CR1_DBP);
+                LL_RCC_SetRTCClockSource(__CLK_RTC_SRC__);
         }
-
-        //----------------------------------------------------------------------
-        // SAI clock source
-        //----------------------------------------------------------------------
-#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
-        RCC_SAIPLLSAIClkDivConfig(_CLK_CFG__SAI_PLLSAI_CLK_DIV);
-        RCC_SAIPLLI2SClkDivConfig(_CLK_CFG__SAI_PLLI2S_CLK_DIV);
-#endif
-
-#if defined(STM32F413_423xx)
-        RCC_SAIPLLI2SRClkDivConfig(_CLK_CFG__SAI_PLLI2S_CLK_DIVR);
-        RCC_SAIPLLRClkDivConfig(_CLK_CFG__SAI_PLL_CLK_DIVR);
-#endif
-
-#if defined(STM32F446xx)
-        RCC_SAICLKConfig(RCC_SAIInstance_SAI1, _CLK_CFG__SAI1_CLK_SRC);
-        RCC_SAICLKConfig(RCC_SAIInstance_SAI2, _CLK_CFG__SAI2_CLK_SRC);
-#endif
-
-#if defined(STM32F413_423xx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
-        RCC_SAIBlockACLKConfig(_CLK_CFG__SAI_BLOCK_A_CLK_SRC);
-        RCC_SAIBlockBCLKConfig(_CLK_CFG__SAI_BLOCK_B_CLK_SRC);
-#endif
-
-        //----------------------------------------------------------------------
-        // LTDC clock source
-        //----------------------------------------------------------------------
-#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
-        RCC_LTDCCLKDivConfig(_CLK_CFG__LTDC_CLK_DIV);
-#endif
-
-        //----------------------------------------------------------------------
-        // DFSDM clock source
-        //----------------------------------------------------------------------
-#if defined(STM32F412xG) || defined(STM32F413_423xx)
-        RCC_DFSDM1CLKConfig(_CLK_CFG__DFSDM1_CLK_SRC);
-        RCC_DFSDM1ACLKConfig(_CLK_CFG__DFSDM1_ACLK_SRC);
-
-#if defined(STM32F413_423xx)
-        RCC_DFSDM2ACLKConfig(_CLK_CFG__DFSDM2_ACLK_SRC);
-#endif
-#endif
-
-        //----------------------------------------------------------------------
-        // DSI clock source
-        //----------------------------------------------------------------------
-#if defined(STM32F469_479xx)
-        RCC_DSIClockSourceConfig(_CLK_CFG__DSI_CLK_SRC);
-#endif
-
-        //----------------------------------------------------------------------
-        // DFSDM clock source
-        //----------------------------------------------------------------------
-#if defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
-        RCC_48MHzClockSourceConfig(_CLK_CFG__48MHZ_CLK_SRC);
-#endif
-
-        //----------------------------------------------------------------------
-        // SDIO clock source
-        //----------------------------------------------------------------------
-#if defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
-        RCC_SDIOClockSourceConfig(_CLK_CFG__SDIO_CLK_SRC);
-#endif
-
-        //----------------------------------------------------------------------
-        // SPDIF clock source
-        //----------------------------------------------------------------------
-#if defined(STM32F446xx)
-        RCC_SPDIFRXClockSourceConfig(_CLK_CFG__SPDIF_CLK_SRC);
-#endif
-
-        //----------------------------------------------------------------------
-        // CEC clock source
-        //----------------------------------------------------------------------
-#if defined(STM32F446xx)
-        RCC_CECClockSourceConfig(_CLK_CFG__CEC_CLK_SRC);
-#endif
-
-        //----------------------------------------------------------------------
-        // FMPI2C clock source
-        //----------------------------------------------------------------------
-#if defined(STM32F410xx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx)
-        RCC_FMPI2C1ClockSourceConfig(_CLK_CFG__FMPI2C1_CLK_SRC);
-#endif
 
         //----------------------------------------------------------------------
         // Main PLL configuration
         //----------------------------------------------------------------------
-#if defined(STM32F410xx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
-        RCC_PLLConfig(_CLK_CFG__PLL_SRC,
-                      _CLK_CFG__PLL_SRC_DIV_M,
-                      _CLK_CFG__PLL_N,
-                      _CLK_CFG__PLL_P,
-                      _CLK_CFG__PLL_Q,
-                      _CLK_CFG__PLL_R);
-#endif
+        if (__CLK_PLL_ON__) {
 
-#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE)
-        RCC_PLLConfig(_CLK_CFG__PLL_SRC,
-                      _CLK_CFG__PLL_SRC_DIV_M,
-                      _CLK_CFG__PLL_N,
-                      _CLK_CFG__PLL_P,
-                      _CLK_CFG__PLL_Q);
-#endif
+                LL_RCC_PLL_ConfigDomain_SYS(__CLK_PLL_SRC__, __CLK_PLL_SRC_DIV_M__,
+                                            __CLK_PLL_N__, __CLK_PLL_P__);
 
-        RCC_PLLCmd(_CLK_CFG__PLL_ON);
-        if (_CLK_CFG__PLL_ON) {
-                err = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
-                if (err)
-                        return err;
+                LL_RCC_PLL_ConfigDomain_48M(__CLK_PLL_SRC__, __CLK_PLL_SRC_DIV_M__,
+                                            __CLK_PLL_N__, __CLK_PLL_Q__);
+
+                LL_RCC_PLL_Enable();
+
+                u64_t tref = sys_time_get_reference();
+                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (LL_RCC_PLL_IsReady()) {
+                                break;
+                        }
+                }
+
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: PLL timeout");
+                }
         }
 
         //----------------------------------------------------------------------
         // I2S PLL configuration
         //----------------------------------------------------------------------
-#if defined(STM32F40_41xxx) || defined(STM32F401xx)
-        RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_R);
-#endif
+        if (__CLK_PLLI2S_ON__) {
 
-#if defined(STM32F411xE)
-        RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_R, _CLK_CFG__PLLI2S_M);
-#endif
+                LL_RCC_PLLI2S_ConfigDomain_I2S(__CLK_PLL_SRC__, __CLK_PLL_SRC_DIV_M__,
+                                               __CLK_PLLI2S_N__, __CLK_PLLI2S_R__);
 
-#if defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx)
-        RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_Q, _CLK_CFG__PLLI2S_R);
-#endif
+                LL_RCC_PLLI2S_ConfigDomain_SAI(__CLK_PLL_SRC__, __CLK_PLL_SRC_DIV_M__,
+                                               __CLK_PLLI2S_N__, __CLK_PLLI2S_Q__,
+                                               __CLK_PLLI2S_Q_DIV__);
 
-#if defined(STM32F412xG ) || defined(STM32F413_423xx) || defined(STM32F446xx)
-        RCC_PLLI2SConfig(_CLK_CFG__PLLI2S_M, _CLK_CFG__PLLI2S_N, _CLK_CFG__PLLI2S_P,
-                         _CLK_CFG__PLLI2S_Q, _CLK_CFG__PLLI2S_R);
-#endif
+                LL_RCC_PLLI2S_ConfigDomain_SPDIFRX(__CLK_PLL_SRC__, __CLK_PLL_SRC_DIV_M__,
+                                                   __CLK_PLLI2S_N__, __CLK_PLLI2S_P__);
 
-#if defined(STM32F40_41xxx) || defined(STM32F401xx) || defined(STM32F411xE) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F469_479xx) || defined(STM32F412xG ) || defined(STM32F413_423xx) || defined(STM32F446xx)
-        RCC_PLLI2SCmd(_CLK_CFG__PLLI2S_ON);
-        if (_CLK_CFG__PLLI2S_ON) {
-                err = wait_for_flag(RCC_FLAG_PLLI2SRDY, TIMEOUT_MS);
-                if (err)
-                        return err;
+                LL_RCC_PLLI2S_Enable();
+
+                u64_t tref = sys_time_get_reference();
+                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (LL_RCC_PLLI2S_IsReady()) {
+                                break;
+                        }
+                }
+
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: PLLI2S timeout");
+                }
         }
-#endif
 
         //----------------------------------------------------------------------
         // SAI PLL configuration
         //----------------------------------------------------------------------
-#if defined(STM32F469_479xx)
-        RCC_PLLSAIConfig(_CLK_CFG__PLLSAI_N, _CLK_CFG__PLLSAI_P, _CLK_CFG__PLLSAI_Q, _CLK_CFG__PLLSAI_R);
-#endif
+        if (__CLK_PLLSAI_ON__) {
 
-#if defined(STM32F446xx)
-        RCC_PLLSAIConfig(_CLK_CFG__PLLSAI_M, _CLK_CFG__PLLSAI_N, _CLK_CFG__PLLSAI_P, _CLK_CFG__PLLSAI_Q);
-#endif
+                LL_RCC_PLLSAI_ConfigDomain_48M(__CLK_PLL_SRC__, __CLK_PLL_SRC_DIV_M__,
+                                               __CLK_PLLSAI_N__, __CLK_PLLSAI_P__);
+                LL_RCC_PLLSAI_ConfigDomain_LTDC(__CLK_PLL_SRC__, __CLK_PLL_SRC_DIV_M__,
+                                                __CLK_PLLSAI_N__, __CLK_PLLSAI_R__,
+                                                __CLK_PLLSAI_R_DIV__);
+                LL_RCC_PLLSAI_ConfigDomain_SAI(__CLK_PLL_SRC__, __CLK_PLL_SRC_DIV_M__,
+                                               __CLK_PLLSAI_N__, __CLK_PLLSAI_Q__,
+                                               __CLK_PLLSAI_Q_DIV__);
 
-#if defined(STM32F427_437xx) || defined(STM32F429_439xx)
-        RCC_PLLSAIConfig(_CLK_CFG__PLLSAI_N, _CLK_CFG__PLLSAI_Q, _CLK_CFG__PLLSAI_R);
-#endif
+                LL_RCC_PLLSAI_Enable();
 
-#if defined(STM32F469_479xx) || defined(STM32F446xx) || defined(STM32F427_437xx) || defined(STM32F429_439xx)
-        RCC_PLLSAICmd(_CLK_CFG__PLLSAI_ON);
-        if (_CLK_CFG__PLLSAI_ON) {
-                err = wait_for_flag(RCC_FLAG_PLLSAIRDY, TIMEOUT_MS);
-                if (err)
-                        return err;
+                u64_t tref = sys_time_get_reference();
+                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (LL_RCC_PLLSAI_IsReady()) {
+                                break;
+                        }
+                }
+
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: PLLSAI timeout");
+                }
         }
-#endif
 
         //----------------------------------------------------------------------
         // Peripheral clock sources and prescalers
         //----------------------------------------------------------------------
-        RCC_PCLK2Config(_CLK_CFG__APB2_PRE);
-        RCC_PCLK1Config(_CLK_CFG__APB1_PRE);
-        RCC_HCLKConfig(_CLK_CFG__AHB_PRE);
-        RCC_SYSCLKConfig(_CLK_CFG__SYSCLK_SRC);
+        LL_RCC_SetAHBPrescaler(__CLK_AHB_PRE__);
+        LL_RCC_SetAPB1Prescaler(__CLK_APB1_PRE__);
+        LL_RCC_SetAPB2Prescaler(__CLK_APB2_PRE__);
+        LL_RCC_SetSysClkSource(__CLK_SYS_CLK_SRC__);
 
         //----------------------------------------------------------------------
-        // I2S clock source
+        // SAI clock source
         //----------------------------------------------------------------------
-#if defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx)
-        RCC_I2SCLKConfig(RCC_I2SBus_APB1, _CLK_CFG__I2SAPB1_CLK_SRC);
-        RCC_I2SCLKConfig(RCC_I2SBus_APB2, _CLK_CFG__I2SAPB2_CLK_SRC);
-#endif
-
-#if defined(STM32F410xx) || defined(STM32F40_41xxx)
-        RCC_I2SCLKConfig(_CLK_CFG__I2S_CLK_SRC);
-#endif
-
-#if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE) || defined(STM32F469_479xx)
-        RCC_I2SCLKConfig(_CLK_CFG__I2S_CLK_SRC);
-#endif
+        LL_RCC_SetSAIClockSource(__CLK_SAI1_SRC__);
+        LL_RCC_SetSAIClockSource(__CLK_SAI2_SRC__);
 
         sys_update_system_clocks();
 
@@ -357,7 +296,7 @@ API_MOD_RELEASE(CLK, void *device_handle)
 {
         UNUSED_ARG1(device_handle);
 
-        RCC_DeInit();
+        LL_RCC_DeInit();
         sys_update_system_clocks();
 
         return ESUCC;
@@ -466,8 +405,8 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
 
         if (arg) {
                 if (request == IOCTL_CLK__GET_CLK_INFO) {
-                        RCC_ClocksTypeDef freq;
-                        RCC_GetClocksFreq(&freq);
+                        LL_RCC_ClocksTypeDef freq;
+                        LL_RCC_GetSystemClocksFreq(&freq);
 
                         CLK_info_t *clkinf = arg;
 
@@ -578,30 +517,8 @@ static void set_flash_latency(u32_t latency)
 //==============================================================================
 static void enable_prefetch_buffer(void)
 {
-        SET_BIT(FLASH->ACR, FLASH_ACR_PRFTEN | FLASH_ACR_ICEN | FLASH_ACR_DCEN);
-}
 
-//==============================================================================
-/**
- * @brief Wait for flag set
- *
- * ERRNO: EIO
- *
- * @param flag          flag
- *
- * @return ESUCC if success, ETIME on error
- */
-//==============================================================================
-static int wait_for_flag(u32_t flag, u32_t timeout)
-{
-        u32_t timer = sys_time_get_reference();
-        while (RCC_GetFlagStatus(flag) == RESET) {
-                if (sys_time_is_expired(timer, timeout)) {
-                        return ETIME;
-                }
-        }
-
-        return ESUCC;
+        SET_BIT(FLASH->ACR, FLASH_ACR_PRFTEN | FLASH_ACR_ARTEN);
 }
 
 //==============================================================================

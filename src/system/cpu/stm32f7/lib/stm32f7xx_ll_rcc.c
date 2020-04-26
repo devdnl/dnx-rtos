@@ -688,7 +688,7 @@ uint32_t LL_RCC_GetI2SClockFreq(uint32_t I2SxSource)
     /* I2S1 CLK clock frequency */
     switch (LL_RCC_GetI2SClockSource(I2SxSource))
     {
-      case LL_RCC_I2S1_CLKSOURCE_PLLI2S:       /* I2S1 Clock is PLLI2S */
+      case LL_RCC_I2S1_CLKSOURCE_PLLI2SR:       /* I2S1 Clock is PLLI2S */
         if (LL_RCC_PLLI2S_IsReady())
         {
           i2s_frequency = RCC_PLLI2S_GetFreqDomain_I2S();
@@ -775,7 +775,7 @@ uint32_t LL_RCC_GetSAIClockFreq(uint32_t SAIxSource)
     /* SAI1CLK clock frequency */
     switch (LL_RCC_GetSAIClockSource(SAIxSource))
     {
-      case LL_RCC_SAI1_CLKSOURCE_PLLSAI:    /* PLLSAI clock used as SAI1 clock source */
+      case LL_RCC_SAI1_CLKSOURCE_PLLSAIQDIV:    /* PLLSAI clock used as SAI1 clock source */
         if (LL_RCC_PLLSAI_IsReady())
         {
           sai_frequency = RCC_PLLSAI_GetFreqDomain_SAI();
@@ -825,14 +825,14 @@ uint32_t LL_RCC_GetSAIClockFreq(uint32_t SAIxSource)
       /* SAI2CLK clock frequency */
       switch (LL_RCC_GetSAIClockSource(SAIxSource))
       {
-      case LL_RCC_SAI2_CLKSOURCE_PLLSAI:    /* PLLSAI clock used as SAI2 clock source */
+      case LL_RCC_SAI2_CLKSOURCE_PLLSAIQDIV:    /* PLLSAI clock used as SAI2 clock source */
         if (LL_RCC_PLLSAI_IsReady())
         {
           sai_frequency = RCC_PLLSAI_GetFreqDomain_SAI();
         }
         break;
 
-      case LL_RCC_SAI2_CLKSOURCE_PLLI2S:    /* PLLI2S clock used as SAI2 clock source */
+      case LL_RCC_SAI2_CLKSOURCE_PLLI2SQDIV:    /* PLLI2S clock used as SAI2 clock source */
         if (LL_RCC_PLLI2S_IsReady())
         {
           sai_frequency = RCC_PLLI2S_GetFreqDomain_SAI();
@@ -1048,14 +1048,14 @@ uint32_t LL_RCC_GetUSBClockFreq(uint32_t USBxSource)
   /* USBCLK clock frequency */
   switch (LL_RCC_GetUSBClockSource(USBxSource))
   {
-    case LL_RCC_USB_CLKSOURCE_PLL:           /* PLL clock used as USB clock source */
+    case LL_RCC_USB_CLKSOURCE_PLLQ:           /* PLL clock used as USB clock source */
       if (LL_RCC_PLL_IsReady())
       {
         usb_frequency = RCC_PLL_GetFreqDomain_48M();
       }
       break;
 
-    case LL_RCC_USB_CLKSOURCE_PLLSAI:       /* PLLSAI clock used as USB clock source */
+    case LL_RCC_USB_CLKSOURCE_PLLSAIP:       /* PLLSAI clock used as USB clock source */
     default:
       if (LL_RCC_PLLSAI_IsReady())
       {

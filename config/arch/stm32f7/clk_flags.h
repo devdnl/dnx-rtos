@@ -57,7 +57,7 @@ this:AddItem("Enable", "ENABLE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_LSI_ON", "")
 --*/
-#define __CLK_LSI_ON__ DISABLE
+#define __CLK_LSI_ON__ ENABLE
 
 /*--
 this:AddWidget("Combobox", "LSE oscillator")
@@ -67,7 +67,7 @@ this:AddItem("Baypass", "_CLK_BAYPASS")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_LSE_ON", "")
 --*/
-#define __CLK_LSE_ON__ DISABLE
+#define __CLK_LSE_ON__ ENABLE
 
 /*--
 this:AddWidget("Combobox", "HSE oscillator")
@@ -77,7 +77,7 @@ this:AddItem("Baypass", "_CLK_BAYPASS")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_HSE_ON", "")
 --*/
-#define __CLK_HSE_ON__ ENABLE
+#define __CLK_HSE_ON__ _CLK_BAYPASS
 
 //==============================================================================
 // PLL Clock source Configuration
@@ -94,7 +94,7 @@ this:AddItem("HSE", "LL_RCC_PLLSOURCE_HSE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL_SRC", "")
 --*/
-#define __CLK_PLL_SRC__ LL_RCC_PLLSOURCE_HSE
+#define __CLK_PLL_SRC__ LL_RCC_PLLSOURCE_HSI
 
 /*--
 this:AddWidget("Combobox", "Clock divider (M)")
@@ -102,7 +102,7 @@ for i=2,63 do this:AddItem(tostring(i), "LL_RCC_PLLM_DIV_"..tostring(i)) end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL_SRC_DIV_M", "")
 --*/
-#define __CLK_PLL_SRC_DIV_M__ LL_RCC_PLLM_DIV_4
+#define __CLK_PLL_SRC_DIV_M__ LL_RCC_PLLM_DIV_8
 
 //==============================================================================
 // PLL Configuration
@@ -127,7 +127,7 @@ for i=50,432 do this:AddItem(tostring(i), tostring(i)) end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL_N", "")
 --*/
-#define __CLK_PLL_N__ 168
+#define __CLK_PLL_N__ 216
 
 /*--
 this:AddWidget("Combobox", "Main clock divider (P)")
@@ -146,7 +146,7 @@ for i=2,15 do this:AddItem(tostring(i), "LL_RCC_PLLQ_DIV_"..tostring(i)) end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL_Q", "")
 --*/
-#define __CLK_PLL_Q__ LL_RCC_PLLQ_DIV_7
+#define __CLK_PLL_Q__ LL_RCC_PLLQ_DIV_9
 
 /*--
 this:AddWidget("Combobox", "DSI domain clock divider (R)")
@@ -171,7 +171,7 @@ this:AddItem("Disable", "DISABLE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLLI2S_ON", "")
 --*/
-#define __CLK_PLLI2S_ON__ DISABLE
+#define __CLK_PLLI2S_ON__ ENABLE
 
 /*--
 this:AddWidget("Combobox", "Clock multiplier (N)")
@@ -231,7 +231,7 @@ this:AddItem("Disable", "DISABLE")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLLSAI_ON", "")
 --*/
-#define __CLK_PLLSAI_ON__ DISABLE
+#define __CLK_PLLSAI_ON__ ENABLE
 
 /*--
 this:AddWidget("Combobox", "Clock multiplier (N)")
@@ -239,7 +239,7 @@ for i=50,432 do this:AddItem(tostring(i), tostring(i)) end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLLSAI_N", "")
 --*/
-#define __CLK_PLLSAI_N__ 203
+#define __CLK_PLLSAI_N__ 96
 
 /*--
 this:AddWidget("Combobox", "48M clock divider (P)")
@@ -250,7 +250,7 @@ this:AddItem("8",  "LL_RCC_PLLSAIP_DIV_8")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLLSAI_P", "")
 --*/
-#define __CLK_PLLSAI_P__ LL_RCC_PLLSAIP_DIV_8
+#define __CLK_PLLSAI_P__ LL_RCC_PLLSAIP_DIV_4
 
 /*--
 this:AddWidget("Combobox", "SAI clock divider (Q)")
@@ -332,7 +332,7 @@ this:AddItem("HCLK / 16", "LL_RCC_APB1_DIV_16")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_APB1_PRE", "")
 --*/
-#define __CLK_APB1_PRE__ LL_RCC_APB1_DIV_2
+#define __CLK_APB1_PRE__ LL_RCC_APB1_DIV_4
 
 /*--
 this:AddWidget("Combobox", "APB2 prescaler")
@@ -344,7 +344,7 @@ this:AddItem("HCLK / 16", "LL_RCC_APB2_DIV_16")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_APB2_PRE", "")
 --*/
-#define __CLK_APB2_PRE__ LL_RCC_APB2_DIV_2
+#define __CLK_APB2_PRE__ LL_RCC_APB2_DIV_8
 
 /*--
 this:AddWidget("Combobox", "RTC Clock source")
@@ -364,7 +364,7 @@ for i=2,31 do this:AddItem(tostring(i), "LL_RCC_RTC_HSE_DIV_"..tostring(i)) end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_RTC_HSE_DIV", "")
 --*/
-#define __CLK_RTC_HSE_DIV__ LL_RCC_RTC_HSE_DIV_2
+#define __CLK_RTC_HSE_DIV__ LL_RCC_RTC_NOCLOCK
 
 /*--
 this:AddWidget("Combobox", "MCO1 Clock source")
@@ -376,7 +376,7 @@ this:AddItem("PLLCLK", "LL_RCC_MCO1_CLKSOURCE_PLLCLK")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO1_SRC", "")
 --*/
-#define __CLK_MCO1_SRC__ LL_RCC_MCO1_CLKSOURCE_HSI
+#define __CLK_MCO1_SRC__ LL_RCC_MCO1_CLKSOURCE_HSE
 
 /*--
 this:AddWidget("Combobox", "MCO1 Clock divider (output)")
@@ -384,7 +384,7 @@ for i = 1, 5 do this:AddItem("MCO divided by "..i, "LL_RCC_MCO1_DIV_"..tostring(
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO1_DIV", "")
 --*/
-#define __CLK_MCO1_DIV__ LL_RCC_MCO1_DIV_2
+#define __CLK_MCO1_DIV__ LL_RCC_MCO1_DIV_1
 
 /*--
 this:AddWidget("Combobox", "MCO2 Clock source")
@@ -662,7 +662,7 @@ this:AddExtraWidget("Label", "LABEL_FLASH_LATENCY", "")
 -- Value calculated automatically
 this:AddWidget("Value")
 --*/
-#define __CLK_FLASH_LATENCY__ 5
+#define __CLK_FLASH_LATENCY__ 7
 
 
 //==============================================================================
