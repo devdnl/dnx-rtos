@@ -35,6 +35,7 @@ Driver handles GPIO peripheral.
 \section drv-gpio-sup-arch Supported architectures
 \li stm32f1
 \li stm32f4
+\li stm32f7
 \li efr32
 
 \section drv-gpio-ddesc Details

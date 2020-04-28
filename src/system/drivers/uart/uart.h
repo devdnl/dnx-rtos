@@ -42,6 +42,10 @@
 #include "stm32fx/uart_cfg.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
+#elif defined(ARCH_stm32f7)
+#include "stm32fx/uart_cfg.h"
+#include "stm32f7/stm32f7xx.h"
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #elif defined(ARCH_efr32)
 #include "efr32/uart_cfg.h"
 #include "efr32/efr32xx.h"
@@ -110,6 +114,34 @@ enum {
         #endif
         #if defined(RCC_APB2ENR_UART10EN)
         _UART10,
+        #endif
+        _UART_COUNT
+};
+#elif defined(ARCH_stm32f7)
+enum {
+        #if defined(RCC_APB2ENR_USART1EN)
+        _UART1,
+        #endif
+        #if defined(RCC_APB1ENR_USART2EN)
+        _UART2,
+        #endif
+        #if defined(RCC_APB1ENR_USART3EN)
+        _UART3,
+        #endif
+        #if defined(RCC_APB1ENR_UART4EN)
+        _UART4,
+        #endif
+        #if defined(RCC_APB1ENR_UART5EN)
+        _UART5,
+        #endif
+        #if defined(RCC_APB2ENR_USART6EN)
+        _UART6,
+        #endif
+        #if defined(RCC_APB1ENR_UART7EN)
+        _UART7,
+        #endif
+        #if defined(RCC_APB1ENR_UART8EN)
+        _UART8,
         #endif
         _UART_COUNT
 };

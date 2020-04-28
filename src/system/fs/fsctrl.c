@@ -105,7 +105,7 @@ int _mount(const char            *FS_name,
                 }
 
                 if (err == ENOENT) {
-                        printk("Filesystem '%s' does not exist", FS_name);
+                        printk("Filesystem '%s' not exist", FS_name);
                 }
         }
 
