@@ -344,7 +344,7 @@ this:AddItem("HCLK / 16", "LL_RCC_APB2_DIV_16")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_APB2_PRE", "")
 --*/
-#define __CLK_APB2_PRE__ LL_RCC_APB2_DIV_8
+#define __CLK_APB2_PRE__ LL_RCC_APB2_DIV_2
 
 /*--
 this:AddWidget("Combobox", "RTC Clock source")
@@ -384,7 +384,7 @@ for i = 1, 5 do this:AddItem("MCO divided by "..i, "LL_RCC_MCO1_DIV_"..tostring(
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO1_DIV", "")
 --*/
-#define __CLK_MCO1_DIV__ LL_RCC_MCO1_DIV_1
+#define __CLK_MCO1_DIV__ LL_RCC_MCO1_DIV_4
 
 /*--
 this:AddWidget("Combobox", "MCO2 Clock source")
@@ -884,14 +884,14 @@ this.CalculateFreq = function(self)
        this:SetFlagValue("LABEL_AHB_PRE", PrintFrequency(freq.HCLK).." (HCLK)")
     end
 
-    if freq.PCLK1 > 90e6 then
-       this:SetFlagValue("LABEL_APB1_PRE", PrintFrequency(freq.PCLK1).." (PCLK1) [max is 90MHz]")
+    if freq.PCLK1 > 54e6 then
+       this:SetFlagValue("LABEL_APB1_PRE", PrintFrequency(freq.PCLK1).." (PCLK1) [max is 54MHz]")
     else
        this:SetFlagValue("LABEL_APB1_PRE", PrintFrequency(freq.PCLK1).." (PCLK1)")
     end
 
-    if freq.PCLK2 > 45e6 then
-       this:SetFlagValue("LABEL_APB2_PRE", PrintFrequency(freq.PCLK2).." (PCLK2) [max is 45MHz]")
+    if freq.PCLK2 > 108e6 then
+       this:SetFlagValue("LABEL_APB2_PRE", PrintFrequency(freq.PCLK2).." (PCLK2) [max is 108MHz]")
     else
        this:SetFlagValue("LABEL_APB2_PRE", PrintFrequency(freq.PCLK2).." (PCLK2)")
     end
