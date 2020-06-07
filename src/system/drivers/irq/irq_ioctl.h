@@ -214,6 +214,13 @@ typedef enum {
  */
 #define IOCTL_IRQ__CONFIGURE            _IOW(IRQ, 2, const IRQ_config_t*)
 
+/**
+ * @brief  Get number of interrupt occurence
+ * @param  [RD] @ref irq_counter_t*       number of interrupt occurence
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set
+ */
+#define IOCTL_IRQ__GET_COUNTER          _IOR(IRQ, 3, u32_t*)
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/

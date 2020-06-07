@@ -42,6 +42,7 @@ Brief   This driver support external interrupts (EXTI).
 ==============================================================================*/
 typedef struct {
         sem_t *sem[NUMBER_OF_IRQs];
+        u32_t counter[NUMBER_OF_IRQs];
 } IRQ_t;
 
 typedef struct {
@@ -289,6 +290,13 @@ API_MOD_IOCTL(IRQ, void *device_handle, int request, void *arg)
                         break;
                 }
 
+                case IOCTL_IRQ__GET_COUNTER: {
+                        u32_t *counter = arg;
+                        *counter = IRQ->counter[minor];
+                        err = ESUCC;
+                        break;
+                }
+
                 default:
                         err = EBADRQC;
                 }
@@ -458,6 +466,8 @@ static bool IRQ_handler(u8_t minor)
         WRITE_REG(EXTI->PR, EXTI_PR_PR0 << minor);
 
         if (IRQ) {
+                IRQ->counter[minor]++;
+
                 bool woken = false;
                 sys_semaphore_signal_from_ISR(IRQ->sem[minor], &woken);
                 return woken;
