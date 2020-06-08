@@ -463,17 +463,18 @@ static int IRQ_configure(u8_t minor, enum _IRQ_MODE mode, u8_t priority)
 //==============================================================================
 static bool IRQ_handler(u8_t minor)
 {
-        WRITE_REG(EXTI->PR, EXTI_PR_PR0 << minor);
+        if (IRQ && (EXTI->PR & (EXTI_PR_PR0 << minor))) {
 
-        if (IRQ) {
+                WRITE_REG(EXTI->PR, EXTI_PR_PR0 << minor);
+
                 IRQ->counter[minor]++;
 
                 bool woken = false;
                 sys_semaphore_signal_from_ISR(IRQ->sem[minor], &woken);
                 return woken;
-        } else {
-                return false;
         }
+
+        return false;
 }
 
 //==============================================================================
