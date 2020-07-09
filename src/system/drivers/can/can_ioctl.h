@@ -33,6 +33,7 @@ Driver handles CAN controller peripheral existing in microcontroller.
 
 \section drv-can-sup-arch Supported architectures
 \li stm32f1
+\li stm32f4
 
 \section drv-can-ddesc Details
 \subsection drv-can-ddesc-num Meaning of major and minor numbers
@@ -152,7 +153,6 @@ if (f) {
         msg.data[1] = 0x02;
         msg.data_length = 2;
         msg.remote_transmission = false;
-        msg.timeout_ms = 2000;
 
         if (fwrite(&msg, sizeof(msg), 1, f) == 1) {
 
@@ -186,7 +186,6 @@ if (f) {
         msg.data[1] = 0x02;
         msg.data_length = 2;
         msg.remote_transmission = false;
-        msg.timeout_ms = 2000;
 
         if (ioctl(fileno(f), IOCTL_CAN__SEND_MSG, &msg) == 0) {
 
@@ -220,7 +219,6 @@ Example code using fread() function
 FILE *f = fopen("/dev/can", "r+");
 if (f) {
         CAN_msg_t msg;
-        msg.timeout_ms = 2000;
 
         if (fread(&msg, sizeof(msg), 1, f) == 1) {
 
@@ -248,7 +246,6 @@ Example code using ioctl() function
 FILE *f = fopen("/dev/can", "r+");
 if (f) {
         CAN_msg_t msg;
-        msg.timeout_ms = 2000;
 
         if (ioctl(fileno(f), IOCTL_CAN__RECV_MSG, &msg) == 0) {
 
@@ -399,7 +396,6 @@ typedef struct {
         bool  remote_transmission;      /*!< Remote transmission (true). */
         u32_t data_length;              /*!< Data length. */
         u8_t  data[8];                  /*!< Data buffer (8 bytes). */
-        u32_t timeout_ms;               /*!< Timeout in milliseconds. */
 } CAN_msg_t;
 
 /*==============================================================================
