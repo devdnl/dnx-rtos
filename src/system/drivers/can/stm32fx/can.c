@@ -36,17 +36,19 @@ Brief   CAN driver
 #include "stm32f1/stm32f10x.h"
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
+#elif defined(ARCH_stm32f7)
+#include "stm32f7/stm32f7xx.h"
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #endif
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define TX_MAILBOXES    3
-#define RX_MAILBOXES    2
-#define RX_FIFO_DEPTH   3
-#define INIT_TIMEOUT    1000
-#define MTX_TIMEOUT     1000
-#define FILTERS_COUNT   14
+#define TX_MAILBOXES            3
+#define RX_MAILBOXES            2
+#define RX_FIFO_DEPTH           3
+#define INIT_TIMEOUT            1000
+#define MTX_TIMEOUT             1000
 
 #if defined(ARCH_stm32f1)
 #if defined(STM32F10X_LD) || defined(STM32F10X_MD) || defined(STM32F10X_HD)\
@@ -55,6 +57,7 @@ Brief   CAN driver
 #define CAN1_RX0_IRQN           USB_LP_CAN1_RX0_IRQn
 #define CAN1_TX_IRQHANDLER      USB_HP_CAN1_TX_IRQHandler
 #define CAN1_RX0_IRQHANDLER     USB_LP_CAN1_RX0_IRQHandler
+#define FILTERS_COUNT           14
 #endif
 
 #ifdef STM32F10X_CL
@@ -62,6 +65,7 @@ Brief   CAN driver
 #define CAN1_RX0_IRQN           CAN1_RX0_IRQn
 #define CAN1_TX_IRQHANDLER      CAN1_TX_IRQHandler
 #define CAN1_RX0_IRQHANDLER     CAN1_RX0_IRQHandler
+#define FILTERS_COUNT           28
 #endif
 #endif
 
@@ -70,6 +74,15 @@ Brief   CAN driver
 #define CAN1_RX0_IRQN           CAN1_RX0_IRQn
 #define CAN1_TX_IRQHANDLER      CAN1_TX_IRQHandler
 #define CAN1_RX0_IRQHANDLER     CAN1_RX0_IRQHandler
+#define FILTERS_COUNT           28
+#endif
+
+#if defined(ARCH_stm32f7)
+#define CAN1_TX_IRQN            CAN1_TX_IRQn
+#define CAN1_RX0_IRQN           CAN1_RX0_IRQn
+#define CAN1_TX_IRQHANDLER      CAN1_TX_IRQHandler
+#define CAN1_RX0_IRQHANDLER     CAN1_RX0_IRQHandler
+#define FILTERS_COUNT           28
 #endif
 
 /*==============================================================================

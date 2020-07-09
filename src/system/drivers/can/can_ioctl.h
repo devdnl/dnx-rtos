@@ -34,6 +34,7 @@ Driver handles CAN controller peripheral existing in microcontroller.
 \section drv-can-sup-arch Supported architectures
 \li stm32f1
 \li stm32f4
+\li stm32f7
 
 \section drv-can-ddesc Details
 \subsection drv-can-ddesc-num Meaning of major and minor numbers

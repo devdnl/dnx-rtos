@@ -10,4 +10,8 @@ ifeq ($(__ENABLE_CAN__), _YES_)
       CSRC_ARCH   += drivers/can/stm32fx/can.c
       CXXSRC_ARCH +=
    endif
+	ifeq ($(TARGET), stm32f7)
+      CSRC_ARCH   += drivers/can/stm32fx/can.c
+      CXXSRC_ARCH +=
+   endif
 endif
