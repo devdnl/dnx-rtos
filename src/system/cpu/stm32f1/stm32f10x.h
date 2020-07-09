@@ -675,7 +675,7 @@ typedef struct
   __IO uint32_t TDTR;
   __IO uint32_t TDLR;
   __IO uint32_t TDHR;
-} CAN_TxMailBox_t;
+} CAN_TxMailBox_TypeDef;
 
 /**
   * @brief Controller Area Network FIFOMailBox
@@ -687,7 +687,7 @@ typedef struct
   __IO uint32_t RDTR;
   __IO uint32_t RDLR;
   __IO uint32_t RDHR;
-} CAN_FIFOMailBox_t;
+} CAN_FIFOMailBox_TypeDef;
 
 /**
   * @brief Controller Area Network FilterRegister
@@ -697,7 +697,7 @@ typedef struct
 {
   __IO uint32_t FR1;
   __IO uint32_t FR2;
-} CAN_FilterRegister_t;
+} CAN_FilterRegister_TypeDef;
 
 /**
   * @brief Universal Serial Bus
@@ -729,8 +729,8 @@ typedef struct
   __IO uint32_t ESR;
   __IO uint32_t BTR;
   uint32_t  RESERVED0[88];
-  CAN_TxMailBox_t sTxMailBox[3];
-  CAN_FIFOMailBox_t sFIFOMailBox[2];
+  CAN_TxMailBox_TypeDef sTxMailBox[3];
+  CAN_FIFOMailBox_TypeDef sFIFOMailBox[2];
   uint32_t  RESERVED1[12];
   __IO uint32_t FMR;
   __IO uint32_t FM1R;
@@ -742,11 +742,11 @@ typedef struct
   __IO uint32_t FA1R;
   uint32_t  RESERVED5[8];
 #ifndef STM32F10X_CL
-  CAN_FilterRegister_t sFilterRegister[14];
+  CAN_FilterRegister_TypeDef sFilterRegister[14];
 #else
-  CAN_FilterRegister_t sFilterRegister[28];
+  CAN_FilterRegister_TypeDef sFilterRegister[28];
 #endif /* STM32F10X_CL */
-} CAN_t;
+} CAN_TypeDef;
 
 /**
   * @brief Consumer Electronics Control (CEC)
@@ -1420,7 +1420,7 @@ typedef struct
 #define I2C1                ((I2C_t *) I2C1_BASE)
 #define I2C2                ((I2C_t *) I2C2_BASE)
 #define USB                 ((USB_t *) USB_BASE)
-#define CAN1                ((CAN_t *) CAN1_BASE)
+#define CAN1                ((CAN_TypeDef *) CAN1_BASE)
 #define CAN2                ((CAN_t *) CAN2_BASE)
 #define BKP                 ((BKP_t *) BKP_BASE)
 #define PWR                 ((PWR_t *) PWR_BASE)
