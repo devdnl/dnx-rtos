@@ -108,7 +108,10 @@ bool _kernel_panic_detect(FILE *file)
                "SEGFAULT",
                "STACKOVF",
                "CPUFAULT",
-               "INTERNAL",
+               "INTERNAL1",
+               "INTERNAL2",
+               "INTERNAL3",
+               "INTERNAL4",
                "UNKNOWN"
         };
 #endif

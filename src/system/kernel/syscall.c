@@ -624,7 +624,7 @@ static void syscall_do(void *rq)
 
         flag_t *flags = NULL;
         if (_process_get_event_flags(sysrq->client_proc, &flags) != ESUCC) {
-                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL_1);
         }
         _assert(flags);
 

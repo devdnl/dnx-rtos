@@ -82,6 +82,7 @@ struct _process {
         FILE            *f_stderr;      //!< stderr file
         void            *globals;       //!< address to global variables
         res_header_t    *res_list;      //!< list of used resources
+        u32_t            res_list_size; //!< size of resources list
         char            *cwd;           //!< current working path
         const pdata_t   *pdata;         //!< program data
         char            **argv;         //!< program arguments
@@ -948,6 +949,8 @@ KERNELSPACE int _process_register_resource(_process_t *proc, res_header_t *resou
                                 resource->next = proc->res_list;
                                 proc->res_list = resource;
                         }
+
+                        proc->res_list_size++;
                 }
 
                 return ESUCC;
@@ -978,7 +981,7 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
 
                 ATOMIC(mtx) {
                         res_header_t *prev     = NULL;
-                        int           max_deep = 4096;
+                        int           max_deep = proc->res_list_size + 1;
 
                         foreach_resource(curr, proc->res_list) {
                                 if (curr == resource) {
@@ -990,6 +993,7 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
                                                 }
 
                                                 obj_to_destroy = curr;
+                                                proc->res_list_size--;
                                         } else {
                                                 err = EFAULT;
                                         }
@@ -1001,7 +1005,7 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
 
                                         if (--max_deep == 0) {
                                                 _assert(max_deep > 0);
-                                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL_2);
                                         }
                                 }
                         }
@@ -1009,8 +1013,8 @@ KERNELSPACE int _process_release_resource(_process_t *proc, res_header_t *resour
 
                 if (obj_to_destroy) {
                         err = resource_destroy(obj_to_destroy);
-                        if (err != ESUCC) {
-                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                        if (err) {
+                                _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL_3);
                         }
                 }
         }
@@ -1436,6 +1440,7 @@ static void process_destroy_all_resources(_process_t *proc)
         _shm_detach_anywhere(proc->pid);
 #endif
 
+        proc->res_list_size = 0;
         proc->res_list = NULL;
         proc->f_stdin  = NULL;
         proc->f_stdout = NULL;

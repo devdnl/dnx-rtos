@@ -530,7 +530,7 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                 }
 
                 if (!usage) {
-                        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL);
+                        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_INTERNAL_4);
                 }
 
                 size = MEM_ALIGN_SIZE(size);

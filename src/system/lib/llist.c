@@ -768,7 +768,7 @@ void *_llist_back(llist_t *this)
 //==============================================================================
 int _llist_swap(llist_t *this, int j, int k)
 {
-        if (is_llist_valid(this) && j >= 0 && k >= 0) {
+        if (is_llist_valid(this) && (j >= 0) && (k >= 0) && (j != k)) {
                 if (cast(size_t, j) < this->count && cast(size_t, k) < this->count) {
 
                         item_t *item_a = get_item(this, j);
