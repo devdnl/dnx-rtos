@@ -65,19 +65,22 @@
 
 //==============================================================================
 /**
- * @brief Function receive string from selected file.
+ * @brief Function receive string from selected file using buffer 'buf' of size
+ *        'buflen'.
  *
  * @param[out] *str          buffer with string
  * @param[in]   size         buffer size
  * @param[in]  *stream       source stream
+ * @param[in]  *buf          buffer
+ * @param[in]   buflen       buffer length
  *
- * @retval NULL if error, otherwise pointer to str
+ * @retval NULL if error, otherwise pointer to str.
  */
 //==============================================================================
-char *fgets(char *str, int size, FILE *stream)
+char *fgets_buffered(char *str, int size, FILE *stream, char *buf, size_t buflen)
 {
 #if (__OS_PRINTF_ENABLE__ > 0)
-        if (!str || size < 1 || !stream) {
+        if (!str || size < 1 || !stream || !buf || !buflen) {
                 return NULL;
         }
 
@@ -105,8 +108,7 @@ char *fgets(char *str, int size, FILE *stream)
                         }
 
                 } else {
-                        char chunk[16];
-                        int  n = 0;
+                        int n = 0;
 
                         i64_t fpos = ftell(stream);
 
@@ -117,10 +119,10 @@ char *fgets(char *str, int size, FILE *stream)
 
                         while ((c != '\n') && (size > 0) && !(ferror(stream) || feof(stream))) {
 
-                                n = fread(chunk, 1, sizeof(chunk), stream);
+                                n = fread(buf, 1, buflen, stream);
 
                                 for (int i = 0; c != '\n' && size > 0 && i < n; size--, i++) {
-                                        c    = chunk[i];
+                                        c    = buf[i];
                                         *p++ = c;
                                         fpos++;
                                 }
@@ -146,6 +148,23 @@ char *fgets(char *str, int size, FILE *stream)
         UNUSED_ARG3(str, size, stream);
 #endif
         return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief Function receive string from selected file.
+ *
+ * @param[out] *str          buffer with string
+ * @param[in]   size         buffer size
+ * @param[in]  *stream       source stream
+ *
+ * @retval NULL if error, otherwise pointer to str
+ */
+//==============================================================================
+char *fgets(char *str, int size, FILE *stream)
+{
+        char chunk[16];
+        return fgets_buffered(str, size, stream, chunk, sizeof(chunk));
 }
 
 /*==============================================================================

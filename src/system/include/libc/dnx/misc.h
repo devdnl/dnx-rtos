@@ -46,6 +46,7 @@ dnx RTOS miscellaneous macros and functions.
 #include <lib/unarg.h>
 #include <lib/strlcat.h>
 #include <lib/strlcpy.h>
+#include <kernel/syscall.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -671,6 +672,22 @@ static inline int strchrrep(char *str, char from, char to)
         extern int _strchrrep(char *str, char from, char to);
         return _strchrrep(str, from, to);
 }
+
+//==============================================================================
+/**
+ * @brief Function receive string from selected file using buffer 'buf' of size
+ *        'buflen'.
+ *
+ * @param[out] *str          buffer with string
+ * @param[in]   size         buffer size
+ * @param[in]  *stream       source stream
+ * @param[in]  *buf          buffer
+ * @param[in]   buflen       buffer length
+ *
+ * @retval NULL if error, otherwise pointer to str.
+ */
+//==============================================================================
+extern char *fgets_buffered(char *str, int size, FILE *stream, char *buf, size_t buflen);
 
 /*==============================================================================
   Exported inline functions
