@@ -262,7 +262,7 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *fhdl, bool force)
         int err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT);
         if (!err) {
                 err = faterr_2_errno(f_close(fatfile));
-                if (!err) {
+                if (!err or hdl->read_only) {
                         int pos = sys_llist_find_begin(hdl->file_list, fatfile);
                         sys_llist_take(hdl->file_list, pos);
                         sys_free(&fhdl);
