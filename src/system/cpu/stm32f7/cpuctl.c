@@ -36,6 +36,7 @@
 #include "stm32f7/lib/misc.h"
 #include "kernel/kwrapper.h"
 #include "kernel/kpanic.h"
+#include "kernel/sysfunc.h"
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -50,13 +51,52 @@
 #define DTCM_START              ((void *)&__dtcm_start)
 #define DTCM_SIZE               ((size_t)&__dtcm_size)
 
+// Memory Management Fault Status Register
+#define NVIC_MFSR               (*(volatile unsigned char*)(0xE000ED28u))
+
+// Bus Fault Status Register
+#define NVIC_BFSR               (*(volatile unsigned char*)(0xE000ED29u))
+
+// Usage Fault Status Register
+#define NVIC_UFSR               (*(volatile unsigned short*)(0xE000ED2Au))
+
+// Hard Fault Status Register
+#define NVIC_HFSR               (*(volatile unsigned int*)(0xE000ED2Cu))
+
+// Debug Fault Status Register
+#define NVIC_DFSR               (*(volatile unsigned int*)(0xE000ED30u))
+
+// Bus Fault Manage Address Register
+#define NVIC_BFAR               (*(volatile unsigned int*)(0xE000ED38u))
+
+// Auxiliary Fault Status Register
+#define NVIC_AFSR               (*(volatile unsigned int*)(0xE000ED3Cu))
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+typedef struct {
+        uint32_t R0;
+        uint32_t R1;
+        uint32_t R2;
+        uint32_t R3;
+        uint32_t R12;
+        uint32_t LR;    // Link register.
+        uint32_t PC;    // Program counter.
+        uint32_t PSR;   // Program status register.
+        uint32_t MFSR;  // Memory Management Fault Status Register.
+        uint32_t BFSR;  // Bus Fault Status Register.
+        uint32_t UFSR;  // Usage Fault Status Register.
+        uint32_t HFSR;  // Hard Fault Status Register.
+        uint32_t DFSR;  // Debug Fault Status Register.
+        uint32_t BFAR;  // Bus Fault Manage Address Register.
+        uint32_t AFSR;  // Auxiliary Fault Status Register.
+} reg_dump_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+void get_registers_from_stack(uint32_t *stack_address);
 
 /*==============================================================================
   Local object definitions
@@ -68,6 +108,8 @@ extern void *__dtcm_size;
 
 static _mm_region_t ram2;
 static _mm_region_t dtcm;
+
+static volatile reg_dump_t reg_dump __attribute__ ((section (".noinit")));
 
 /*==============================================================================
   Function definitions
@@ -259,12 +301,48 @@ void _cpuctl_delay_us(u16_t microseconds)
 
 //==============================================================================
 /**
+ * @brief  Function printout dumped registers.
+ *
+ * @param  file         destination file
+ */
+//==============================================================================
+void _cpuctl_print_exception(void *file)
+{
+        sys_fprintf(file, "R0   : %08xh\n", reg_dump.R0);
+        sys_fprintf(file, "R1   : %08xh\n", reg_dump.R1);
+        sys_fprintf(file, "R2   : %08xh\n", reg_dump.R2);
+        sys_fprintf(file, "R3   : %08xh\n", reg_dump.R3);
+        sys_fprintf(file, "R12  : %08xh\n", reg_dump.R12);
+        sys_fprintf(file, "LR   : %08xh\n", reg_dump.LR);
+        sys_fprintf(file, "PC   : %08xh\n", reg_dump.PC);
+        sys_fprintf(file, "PSR  : %08xh\n", reg_dump.PSR);
+        sys_fprintf(file, "MFSR : %08xh\n", reg_dump.MFSR);
+        sys_fprintf(file, "BFSR : %08xh\n", reg_dump.BFSR);
+        sys_fprintf(file, "UFSR : %08xh\n", reg_dump.UFSR);
+        sys_fprintf(file, "HFSR : %08xh\n", reg_dump.HFSR);
+        sys_fprintf(file, "DFSR : %08xh\n", reg_dump.DFSR);
+        sys_fprintf(file, "BFAR : %08xh\n", reg_dump.BFAR);
+        sys_fprintf(file, "AFSR : %08xh\n", reg_dump.AFSR);
+}
+
+//==============================================================================
+/**
  * @brief Hard Fault ISR
  */
 //==============================================================================
 void HardFault_Handler(void)
 {
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+        __asm volatile
+        (
+                " tst lr, #4                                                \n"
+                " ite eq                                                    \n"
+                " mrseq r0, msp                                             \n"
+                " mrsne r0, psp                                             \n"
+                " ldr r1, [r0, #24]                                         \n"
+                " ldr r2, handler2_address_const                            \n"
+                " bx r2                                                     \n"
+                " handler2_address_const: .word get_registers_from_stack    \n"
+        );
 }
 
 //==============================================================================
@@ -295,6 +373,34 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
         _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief  Function dump registers stored in stack.
+ *
+ * @param  stack_address        stack address
+ */
+//==============================================================================
+void get_registers_from_stack(uint32_t *stack_address)
+{
+        reg_dump.R0   = stack_address[0];
+        reg_dump.R1   = stack_address[1];
+        reg_dump.R2   = stack_address[2];
+        reg_dump.R3   = stack_address[3];
+        reg_dump.R12  = stack_address[4];
+        reg_dump.LR   = stack_address[5];
+        reg_dump.PC   = stack_address[6];
+        reg_dump.PSR  = stack_address[7];
+        reg_dump.MFSR = NVIC_MFSR;
+        reg_dump.BFSR = NVIC_BFSR;
+        reg_dump.UFSR = NVIC_UFSR;
+        reg_dump.HFSR = NVIC_HFSR;
+        reg_dump.DFSR = NVIC_DFSR;
+        reg_dump.BFAR = NVIC_BFAR;
+        reg_dump.AFSR = NVIC_AFSR;
+
+        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
 }
 
 /*==============================================================================

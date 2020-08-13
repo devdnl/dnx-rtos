@@ -147,6 +147,7 @@ bool _kernel_panic_detect(FILE *file)
                         sys_fprintf(file, "Cause: %s\n", cause[kernel_panic_descriptor.cause]);
                         sys_fprintf(file, "PID  : %d (%.*s)\n", kernel_panic_descriptor.pid, 256, kernel_panic_descriptor.name);
                         sys_fprintf(file, "TID  : %d\n", kernel_panic_descriptor.tid);
+                        _cpuctl_print_exception(file);
                       #endif
                 }
 
