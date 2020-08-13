@@ -75,21 +75,21 @@ extern "C" {
 
 #undef  sys_llist_create
 #define sys_llist_create(llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist)\
-        _llist_create_mod(_get_module_number(_module_name_), llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist);
+        _llist_create_mod(_module_get_ID(_module_name_), llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist);
 
 #undef sys_btree_create
 #define sys_btree_create(size_t__size, btree_cmp_functor_t__functor, btree_obj_dtor_t__obj_dtor, btree_t__pptree)\
-        _btree_create_mod(_get_module_number(_module_name_), size_t__size, btree_cmp_functor_t__functor, btree_obj_dtor_t__obj_dtor, btree_t__pptree)
+        _btree_create_mod(_module_get_ID(_module_name_), size_t__size, btree_cmp_functor_t__functor, btree_obj_dtor_t__obj_dtor, btree_t__pptree)
 #endif /* DOXYGEN */
 
 #ifndef DOXYGEN
   #ifdef __cplusplus
     #define MODULE_NAME(modname) \
     static const char *_module_name_ = #modname;\
-    inline void* operator new     (size_t size) {void *mem = NULL; _modmalloc(size, _get_module_number(_module_name_), &mem); return mem;}\
-    inline void* operator new[]   (size_t size) {void *mem = NULL; _modmalloc(size, _get_module_number(_module_name_), &mem); return mem;}\
-    inline void  operator delete  (void* ptr  ) {_modfree(&ptr, _get_module_number(_module_name_));}\
-    inline void  operator delete[](void* ptr  ) {_modfree(&ptr, _get_module_number(_module_name_));}
+    inline void* operator new     (size_t size) {void *mem = NULL; _modmalloc(size, _module_get_ID(_module_name_), &mem); return mem;}\
+    inline void* operator new[]   (size_t size) {void *mem = NULL; _modmalloc(size, _module_get_ID(_module_name_), &mem); return mem;}\
+    inline void  operator delete  (void* ptr  ) {_modfree(&ptr, _module_get_ID(_module_name_));}\
+    inline void  operator delete[](void* ptr  ) {_modfree(&ptr, _module_get_ID(_module_name_));}
     #define _MODULE_EXTERN_C extern "C"
   #else
     #define MODULE_NAME(modname) static const char *_module_name_ = #modname
