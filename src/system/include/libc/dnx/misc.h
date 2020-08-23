@@ -658,6 +658,21 @@ static inline bool is_object_in_heap(void *ptr)
 
 //==============================================================================
 /**
+ * @brief  Function check if selected address is in .text section.
+ *
+ * @param  ptr          object's pointer
+ *
+ * @return If object is in heap then true is returned, otherwise false.
+ */
+//==============================================================================
+static inline bool is_rom_address(void *ptr)
+{
+        extern bool _mm_is_rom_address(void *ptr);
+        return _mm_is_rom_address(ptr);
+}
+
+//==============================================================================
+/**
  * @brief  Function replace characters in string.
  *
  * @param  str          string (in/out buffer)

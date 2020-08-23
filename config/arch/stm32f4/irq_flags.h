@@ -61,7 +61,7 @@ end
 this:AddWidget("Combobox", "IRQ 0")
 this:AddIrqMode()
 --*/
-#define __IRQ_LINE_0_MODE__ _IRQ_MODE_FALLING_EDGE
+#define __IRQ_LINE_0_MODE__ _IRQ_MODE_DISABLED
 
 /*--
 this:AddWidget("Combobox", "IRQ 1")

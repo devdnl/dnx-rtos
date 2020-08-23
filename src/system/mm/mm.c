@@ -77,6 +77,9 @@
  */
 #define IS_IN_HEAP(heap, mem)           ((mem) >= cast(void*, (heap).ram) && (mem) < (cast(void*, (heap).ram_end)))
 
+#define TEXT_START                      ((void *)&__text_start)
+#define TEXT_END                        ((void *)&__text_end)
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -118,6 +121,9 @@ extern void *__ram_start;
 
 /** number of drivers */
 extern const uint _drvreg_number_of_modules;
+
+extern void *__text_start;
+extern void *__text_end;
 
 /*==============================================================================
   Function definitions
@@ -463,6 +469,20 @@ bool _mm_is_object_in_heap(void *ptr)
         }
 
         return false;
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if address is in .text section.
+ *
+ * @param  ptr          address to examine
+ *
+ * @return If pointer is in .text section true is returned, otherwise false.
+ */
+//==============================================================================
+bool _mm_is_rom_address(void *ptr)
+{
+        return (ptr != NULL) && (ptr >= TEXT_START) && (ptr <= TEXT_END);
 }
 
 //==============================================================================

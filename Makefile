@@ -66,6 +66,8 @@ CFLAGS   = -c \
            -Werror=override-init \
            -Werror=misleading-indentation \
            -Werror=switch \
+           -Werror=stringop-overflow \
+           -Werror=overflow \
            -include ./config/config.h \
            -include ./build/defs.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
@@ -89,6 +91,8 @@ CXXFLAGS = -c \
            -Werror=enum-compare \
            -Werror=misleading-indentation \
            -Werror=switch \
+           -Werror=stringop-overflow \
+           -Werror=overflow \
            -include ./config/config.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            -include ./build/defs.h \
@@ -388,9 +392,8 @@ generate :
 	@$(SHELL) $(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
 
 	@$(ECHO) "Obtaining git hash..."
-	@$(ECHO) "#ifndef COMMIT_HASH" > build/defs.h
-	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" >> build/defs.h
-	@$(ECHO) "#endif" >> build/defs.h
+	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h
+	@$(ECHO) "#define BRANCH_NAME \"$(shell git symbolic-ref --short HEAD 2>/dev/null)"\" >> build/defs.h
 
 ####################################################################################################
 # Start all generators
