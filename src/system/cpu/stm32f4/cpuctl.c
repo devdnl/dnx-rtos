@@ -66,6 +66,9 @@
 // Debug Fault Status Register
 #define NVIC_DFSR               (*(volatile unsigned int*)(0xE000ED30u))
 
+// MemManage Fault Address Register
+#define NVIC_MFAR               (*(volatile unsigned int*)(0xE000ED34u))
+
 // Bus Fault Manage Address Register
 #define NVIC_BFAR               (*(volatile unsigned int*)(0xE000ED38u))
 
@@ -91,6 +94,7 @@ typedef struct {
         uint32_t DFSR;  // Debug Fault Status Register.
         uint32_t BFAR;  // Bus Fault Manage Address Register.
         uint32_t AFSR;  // Auxiliary Fault Status Register.
+        uint32_t MFAR;  // MemManage Fault Address Register
 } reg_dump_t;
 
 /*==============================================================================
@@ -322,6 +326,7 @@ void _cpuctl_print_exception(void *file)
         sys_fprintf(file, "DFSR : %08xh\n", reg_dump.DFSR);
         sys_fprintf(file, "BFAR : %08xh\n", reg_dump.BFAR);
         sys_fprintf(file, "AFSR : %08xh\n", reg_dump.AFSR);
+        sys_fprintf(file, "MFAR : %08xh\n", reg_dump.MFAR);
 }
 
 //==============================================================================
@@ -398,6 +403,7 @@ void get_registers_from_stack(uint32_t *stack_address)
         reg_dump.DFSR = NVIC_DFSR;
         reg_dump.BFAR = NVIC_BFAR;
         reg_dump.AFSR = NVIC_AFSR;
+        reg_dump.MFAR = NVIC_MFAR;
 
         _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
 }
