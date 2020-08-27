@@ -87,13 +87,15 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         set_flash_latency(_CLK_CFG__FLASH_LATENCY);
         enable_prefetch_buffer();
 
-        int status = ESUCC;
+        int err = ESUCC;
 
         if (_CLK_CFG__LSI_ON) {
                 RCC_LSICmd(_CLK_CFG__LSI_ON);
-                status = wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS);
-                if (status != ESUCC)
-                        return status;
+                err = wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS);
+                if (err) {
+                        printk("CLK: LSI timeout");
+                        return err;
+                }
         }
 
         if (_CLK_CFG__LSE_ON) {
@@ -105,17 +107,21 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                         RCC_LSEConfig(_CLK_CFG__LSE_ON);
 
                         if (_CLK_CFG__LSE_ON != RCC_LSE_Bypass) {
-                                wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS);
-                                // this oscillator not causes an error because is not a main osc.
+                                if (wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS) != ESUCC) {
+                                        // this oscillator not causes an error because is not a main osc.
+                                        printk("CLK: LSE timeout");
+                                }
                         }
                 }
         }
 
         if (_CLK_CFG__HSE_ON) {
                 RCC_HSEConfig(_CLK_CFG__HSE_ON);
-                status = wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS);
-                if (status != ESUCC)
-                        return status;
+                err = wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS);
+                if (err) {
+                        printk("CLK: HSE timeout");
+                        return err;
+                }
         }
 
         if (  (  (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE        && _CLK_CFG__LSE_ON)
@@ -135,17 +141,21 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         if (_CLK_CFG__PLL2_ON) {
                 RCC_PLL2Config(_CLK_CFG__PLL2_MUL);
                 RCC_PLL2Cmd(_CLK_CFG__PLL2_ON);
-                status = wait_for_flag(RCC_FLAG_PLL2RDY, TIMEOUT_MS);
-                if (status != ESUCC)
-                        return status;
+                err = wait_for_flag(RCC_FLAG_PLL2RDY, TIMEOUT_MS);
+                if (err) {
+                        printk("CLK: PLL2 timeout");
+                        return err;
+                }
         }
 
         if (_CLK_CFG__PLL3_ON) {
                 RCC_PLL3Config(_CLK_CFG__PLL3_MUL);
                 RCC_PLL3Cmd(_CLK_CFG__PLL3_ON);
-                status = wait_for_flag(RCC_FLAG_PLL3RDY, TIMEOUT_MS);
-                if (status != ESUCC)
-                        return status;
+                err = wait_for_flag(RCC_FLAG_PLL3RDY, TIMEOUT_MS);
+                if (err) {
+                        printk("CLK: PLL3 timeout");
+                        return err;
+                }
         }
 
         RCC_I2S2CLKConfig(_CLK_CFG__I2S2_SRC);
@@ -160,7 +170,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         RCC_PLLConfig(_CLK_CFG__PLL_SRC, _CLK_CFG__PLL_MUL);
         RCC_PLLCmd(_CLK_CFG__PLL_ON);
         if (_CLK_CFG__PLL_ON) {
-                status = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
+                err = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
+                if (err)  {
+                        printk("CLK: PLL timeout");
+                }
         }
 
         RCC_ADCCLKConfig(_CLK_CFG__ADC_PRE);
@@ -173,7 +186,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
 
         sys_update_system_clocks();
 
-        return status;
+        return err;
 }
 
 //==============================================================================

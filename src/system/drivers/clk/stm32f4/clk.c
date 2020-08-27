@@ -101,8 +101,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         if (_CLK_CFG__LSI_ON) {
                 RCC_LSICmd(_CLK_CFG__LSI_ON);
                 err = wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: LSI timeout");
                         return err;
+                }
         }
 
         //----------------------------------------------------------------------
@@ -120,7 +122,8 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                         if (_CLK_CFG__LSE_ON != RCC_LSE_Bypass) {
                                 // this oscillator not causes an error because is not a main osc.
                                 if (wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS) != ESUCC) {
-                                        printk("LSE oscillator start error");
+                                        // this oscillator not causes an error because is not a main osc.
+                                        printk("CLK: LSE timeout");
                                 }
                         }
                 }
@@ -132,8 +135,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         if (_CLK_CFG__HSE_ON) {
                 RCC_HSEConfig(_CLK_CFG__HSE_ON);
                 err = wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: HSE timeout");
                         return err;
+                }
         }
 
         //----------------------------------------------------------------------
@@ -258,8 +263,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         RCC_PLLCmd(_CLK_CFG__PLL_ON);
         if (_CLK_CFG__PLL_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: PLL timeout");
                         return err;
+                }
         }
 
         //----------------------------------------------------------------------
@@ -286,8 +293,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         RCC_PLLI2SCmd(_CLK_CFG__PLLI2S_ON);
         if (_CLK_CFG__PLLI2S_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLI2SRDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: PLLI2S timeout");
                         return err;
+                }
         }
 #endif
 
@@ -310,8 +319,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         RCC_PLLSAICmd(_CLK_CFG__PLLSAI_ON);
         if (_CLK_CFG__PLLSAI_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLSAIRDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: PLLSAI timeout");
                         return err;
+                }
         }
 #endif
 
