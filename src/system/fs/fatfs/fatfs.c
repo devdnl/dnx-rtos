@@ -150,11 +150,12 @@ API_FS_RELEASE(fatfs, void *fs_handle)
 
         if ((hdl->opened_dirs == 0) && (sys_llist_size(hdl->file_list) == 0)) {
                 err = faterr_2_errno(f_unmount(&hdl->fatfs));
-                if (!err) {
+                if (!err or hdl->read_only) {
                         sys_fclose(hdl->fsfile);
                         sys_mutex_destroy(hdl->mutex);
                         sys_llist_destroy(hdl->file_list);
                         sys_free(&fs_handle);
+                        err = 0;
                 }
         }
 
@@ -266,6 +267,7 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *fhdl, bool force)
                         int pos = sys_llist_find_begin(hdl->file_list, fatfile);
                         sys_llist_take(hdl->file_list, pos);
                         sys_free(&fhdl);
+                        err = 0;
                 }
 
                 sys_mutex_unlock(hdl->mutex);
