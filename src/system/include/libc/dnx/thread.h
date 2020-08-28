@@ -332,7 +332,10 @@ static inline int process_kill(pid_t pid)
 {
         int r = -1;
         syscall(SYSCALL_PROCESSKILL, &r, &pid);
-        syscall(SYSCALL_PROCESSCLEANZOMBIE, &r, &pid, NULL);
+
+        int _;
+        syscall(SYSCALL_PROCESSCLEANZOMBIE, &_, &pid, NULL);
+
         return r;
 }
 
