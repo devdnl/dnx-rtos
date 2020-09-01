@@ -54,6 +54,7 @@ CFLAGS   = -c \
            -Wall \
            -Wextra \
            -Wparentheses \
+           -mno-unaligned-access \
            -Werror=implicit-function-declaration \
            -Werror=int-conversion \
            -Werror=incompatible-pointer-types \
@@ -82,6 +83,7 @@ CXXFLAGS = -c \
            -fno-rtti \
            -fno-exceptions \
            -fno-unwind-tables \
+           -mno-unaligned-access \
            -Wall \
            -Wextra \
            -Wparentheses \
@@ -101,6 +103,7 @@ CXXFLAGS = -c \
 LFLAGS   = -g \
            $(CPUCONFIG_LDFLAGS) \
            -Wl,--gc-sections \
+           -mno-unaligned-access \
            -Wl,-u,vectors \
            -Wl,-Map=$(TARGET_DIR_NAME)/$(TARGET)/$(PROJECT).map,--cref,--no-warn-mismatch \
            -Wall \

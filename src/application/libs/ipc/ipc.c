@@ -305,6 +305,7 @@ void ipc_client_disconnect(ipc_client_t *client)
                 semaphore_delete(client->ans_sem);
                 mutex_delete(client->mtx);
                 client->this = NULL;
+                free(client);
         }
 }
 
