@@ -120,6 +120,7 @@ bool _kernel_panic_detect(FILE *file)
                         && kernel_panic_descriptor.valid2 == _KERNEL_PANIC_DESC_VALID2 );
 
         if (occurred) {
+              #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
                 const char *panic_type;
 
                 if (  (strncmp(kernel_panic_descriptor.name, "kworker",  128) == 0)
@@ -132,6 +133,7 @@ bool _kernel_panic_detect(FILE *file)
                 printk("%s in %s: %d:%d:%s", panic_type, kernel_panic_descriptor.name,
                        kernel_panic_descriptor.pid, kernel_panic_descriptor.tid,
                        cause[kernel_panic_descriptor.cause]);
+              #endif
 
                 if (file) {
                         if (kernel_panic_descriptor.cause > _KERNEL_PANIC_DESC_CAUSE_UNKNOWN) {

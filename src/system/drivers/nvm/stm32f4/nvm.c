@@ -68,9 +68,10 @@ typedef struct {
 ==============================================================================*/
 static void FLASH_unlock(void);
 static void FLASH_lock(void);
-static int FLASH_erase_sector(uint32_t sector);
-static int FLASH_program_byte(uint32_t address, uint8_t data);
-static int FLASH_wait_for_operation_finish(void);
+static int  FLASH_erase_sector(uint32_t sector);
+static int  FLASH_program_byte(uint32_t address, uint8_t data);
+static int  FLASH_wait_for_operation_finish(void);
+static int  configure(NVM_t *hdl, const NVM_config_t *conf);
 
 /*==============================================================================
   Local object
