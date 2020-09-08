@@ -159,6 +159,7 @@ static void syscall_processstatseek(syscallrq_t *rq);
 static void syscall_processstatpid(syscallrq_t *rq);
 static void syscall_processgetpid(syscallrq_t *rq);
 static void syscall_processgetprio(syscallrq_t *rq);
+static void syscall_threadstat(syscallrq_t *rq);
 #if __OS_ENABLE_GETCWD__ == _YES_
 static void syscall_getcwd(syscallrq_t *rq);
 static void syscall_setcwd(syscallrq_t *rq);
@@ -288,6 +289,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_PROCESSSTATPID    ] = syscall_processstatpid,
         [SYSCALL_PROCESSGETPID     ] = syscall_processgetpid,
         [SYSCALL_PROCESSGETPRIO    ] = syscall_processgetprio,
+        [SYSCALL_THREADSTAT        ] = syscall_threadstat,
         #if __OS_ENABLE_GETCWD__ == _YES_
         [SYSCALL_GETCWD] = syscall_getcwd,
         [SYSCALL_SETCWD] = syscall_setcwd,
@@ -619,7 +621,7 @@ static void syscall_do(void *rq)
         }
 
 #if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
-        tid_t tid = _process_get_active_thread();
+        tid_t tid = _process_get_active_thread(NULL);
         _assert(is_tid_in_range(_process_get_active(), tid));
 
         flag_t *flags = NULL;
@@ -1415,6 +1417,22 @@ static void syscall_processstatseek(syscallrq_t *rq)
         GETARG(size_t *, seek);
         GETARG(process_stat_t*, stat);
         SETERRNO(_process_get_stat_seek(*seek, stat));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall read thread statistics.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_threadstat(syscallrq_t *rq)
+{
+        GETARG(pid_t*, pid);
+        GETARG(tid_t*, tid);
+        GETARG(thread_stat_t*, stat);
+        SETERRNO(_process_thread_get_stat(*pid, *tid, stat));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

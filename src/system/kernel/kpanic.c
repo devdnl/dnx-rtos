@@ -175,7 +175,7 @@ void _kernel_panic_report(enum _kernel_panic_desc_cause suggested_cause)
 
         if (proc) {
                 kernel_panic_descriptor.name = _process_get_name(proc);
-                kernel_panic_descriptor.tid  = _process_get_active_thread();
+                kernel_panic_descriptor.tid  = _process_get_active_thread(proc);
                 _process_get_pid(proc, &kernel_panic_descriptor.pid);
 
         } else {

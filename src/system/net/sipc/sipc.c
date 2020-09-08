@@ -696,6 +696,8 @@ static int stack_init(void)
                         printk("SIPC: stack initialization error");
 
                         err = ENOMEM;
+                } else {
+                        printk("SIPC: thread ID: %u", sipc->if_thread);
                 }
         }
 

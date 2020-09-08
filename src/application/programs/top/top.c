@@ -62,6 +62,8 @@
 GLOBAL_VARIABLES_SECTION {
         memstat_t      mem;
         process_stat_t pstat;
+        bool           show_threads;
+        uint           refresh_inteval_s;
 };
 
 /*==============================================================================
@@ -78,13 +80,19 @@ GLOBAL_VARIABLES_SECTION {
 //==============================================================================
 int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        UNUSED_ARG2(argc, argv);
+        global->refresh_inteval_s = REFRESH_INTERVAL_SEC;
+
+        for (int i = 1; i < argc; i++) {
+                if (isstreq(argv[i], "-t")) {
+                        global->show_threads = true;
+                }
+        }
 
         ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
         ioctl(fileno(stdout), IOCTL_TTY__CLEAR_SCR);
 
         int     key   = ' ';
-        clock_t timer = clock() + REFRESH_INTERVAL_SEC;
+        clock_t timer = clock() + global->refresh_inteval_s;
 
         while (key != 'q' && key != '\0') {
                 ioctl(fileno(stdin), IOCTL_VFS__NON_BLOCKING_RD_MODE);
@@ -92,8 +100,8 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 key = getchar();
                 ioctl(fileno(stdin), IOCTL_VFS__DEFAULT_RD_MODE);
 
-                if (!strchr("qk,.", key) and key != ETX) {
-                        if ((clock() - timer) < REFRESH_INTERVAL_SEC) {
+                if (!strchr("qki,.", key) and key != ETX) {
+                        if ((clock() - timer) < global->refresh_inteval_s) {
                                 msleep(KEY_READ_INTERVAL_SEC);
                                 continue;
                         } else {
@@ -138,7 +146,7 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                 printf("\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
-                       "PID PR     MEM  STU %%STU  %%CPU SCPS TH RES CMD"
+                       "PID PR     MEM   STS %%STU  %%CPU SCPS TH RES CMD"
                        VT100_RESET_ATTRIBUTES "\n");
 
                 size_t seek = 0;
@@ -152,22 +160,42 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                                          global->pstat.CPU_load % 10);
                         }
 
-                        printf("%3d %2d %7u %4d %4d %s %4u %2d %3d %s\n",
-                                global->pstat.pid,
-                                global->pstat.priority,
-                                (uint)global->pstat.memory_usage,
-                                global->pstat.stack_max_usage,
-                                global->pstat.stack_max_usage * 100 / global->pstat.stack_size,
-                                cpu_load_str,
-                                global->pstat.syscalls,
-                                global->pstat.threads_count,
-                                global->pstat.dir_count
-                                + global->pstat.files_count
-                                + global->pstat.mutexes_count
-                                + global->pstat.queue_count
-                                + global->pstat.semaphores_count
-                                + global->pstat.socket_count,
-                                global->pstat.name);
+                        const char *fmtbegin = global->show_threads ? VT100_FONT_BOLD: "";
+
+                        printf("%s%3d %2d %7u %5d %4d %s %4u %2d %3d %s"VT100_RESET_ATTRIBUTES"\n",
+                               fmtbegin,
+                               global->pstat.pid,
+                               global->pstat.priority,
+                               (uint)global->pstat.memory_usage,
+                               global->pstat.stack_size,
+                               global->pstat.stack_max_usage * 100 / global->pstat.stack_size,
+                               cpu_load_str,
+                               global->pstat.syscalls,
+                               global->pstat.threads_count,
+                               global->pstat.dir_count
+                               + global->pstat.files_count
+                               + global->pstat.mutexes_count
+                               + global->pstat.queue_count
+                               + global->pstat.semaphores_count
+                               + global->pstat.socket_count,
+                               global->pstat.name);
+
+                        if (global->show_threads) {
+                                for (int tid = 0; tid < max(__OS_TASK_MAX_SYSTEM_THREADS__, __OS_TASK_MAX_USER_THREADS__); tid++) {
+
+                                        thread_stat_t stat;
+                                        if (thread_stat(global->pstat.pid, tid, &stat) == 0) {
+                                                printf("%     %2d         %5d %4d  %2d.%d %4u %2d\n",
+                                                        stat.priority,
+                                                        stat.stack_size,
+                                                        stat.stack_max_usage * 100 / stat.stack_size,
+                                                        stat.CPU_load / 10,
+                                                        stat.CPU_load % 10,
+                                                        stat.syscalls,
+                                                        stat.tid);
+                                        }
+                                }
+                        }
                 }
 
                 if (key == 'k') {
@@ -187,6 +215,19 @@ int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
                                 errno = 0;
                                 sleep(2);
                         }
+
+                        ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
+
+                } else if (key == 'i') {
+                        printf(MSG_LINE_POS);
+                        printf("Refresh interval: ");
+                        fflush(stdout);
+
+                        ioctl(fileno(stdin), IOCTL_TTY__ECHO_ON);
+
+                        scanf("%u", &global->refresh_inteval_s);
+                        global->refresh_inteval_s *= CLOCKS_PER_SEC;
+                        global->refresh_inteval_s  = max(global->refresh_inteval_s, 1000);
 
                         ioctl(fileno(stdin), IOCTL_TTY__ECHO_OFF);
 

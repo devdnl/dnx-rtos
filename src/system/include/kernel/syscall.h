@@ -59,6 +59,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
     #endif
         SYSCALL_PROCESSGETSYNCFLAG,     // | int            | pid_t *pid                | flag_t **obj                        |                           |                           |                                           |
         SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat                |                           |                           |                                           |
+        SYSCALL_THREADSTAT,             // | int            | pid_t *pid                | tid_t *tid                          | thread_stat_t *stat       |                           |                                           |
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat                |                           |                           |                                           |
         SYSCALL_PROCESSGETPID,          // | pid_t          |                           |                                     |                           |                           |                                           |
         SYSCALL_PROCESSGETPRIO,         // | int            | pid_t *pid                |                                     |                           |                           |                                           |

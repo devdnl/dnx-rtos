@@ -835,6 +835,48 @@ static inline int thread_join(tid_t tid)
 
 //==============================================================================
 /**
+ * @brief Function returns statistics of selected thread.
+ *
+ * The function thread_stat() return statistics of thread selected by <i>tid</i>.
+ *
+ * @param pid       process ID
+ * @param tid       thread ID
+ * @param stat      statistics
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
+ *
+ * @return Return 0 on success. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        thread_stat_t stat;
+
+        if (thread_stat(getpid(), 0, &stat) == 0) {
+                printf("CPU load: %d\n", stat.CPU_load);
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see process_stat()
+ */
+//==============================================================================
+static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
+{
+        int r = -1;
+        syscall(SYSCALL_THREADSTAT, &r, &pid, &tid, stat);
+        return r;
+}
+
+//==============================================================================
+/**
  * @brief Function create new semaphore.
  *
  * The function semaphore_new() creates new semaphore object. The

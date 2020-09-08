@@ -73,12 +73,12 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int configure(NVM_t *hdl, const NVM_config_t *conf);
 static void FLASH_unlock(void);
 static void FLASH_lock(void);
-static int FLASH_erase_sector(uint32_t sector);
-static int FLASH_program_half_word(uint32_t address, uint16_t data);
-static int FLASH_wait_for_operation_finish(uint32_t address);
+static int  FLASH_erase_sector(uint32_t sector);
+static int  FLASH_program_half_word(uint32_t address, uint16_t data);
+static int  FLASH_wait_for_operation_finish(uint32_t address);
+static int  configure(NVM_t *hdl, const NVM_config_t *conf);
 
 /*==============================================================================
   Local object

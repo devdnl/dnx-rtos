@@ -96,15 +96,17 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
         UNUSED_ARG1(name);
 
         thread_attr_t attr = {
-            .priority    = prio,
-            .stack_depth = stacksize,
-            .detached    = true
+                .priority    = prio,
+                .stack_depth = stacksize,
+                .detached    = true
         };
 
         sys_thread_t thr;
 
         if (sys_thread_create(thread, &attr, arg, &thr) != ESUCC) {
                 thr = -1;
+        } else {
+                printk("%s: thread ID %u", name, thr);
         }
 
         return thr;

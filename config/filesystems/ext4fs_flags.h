@@ -71,10 +71,11 @@ this:SetToolTip("This value determines how many blocks is cached. The 4 blocks "
 
 /*--
 this:AddWidget("Combobox", "Write buffer strategy")
-this:AddItem("Write Thought", "0")
+this:AddItem("Write Through", "0")
 this:AddItem("Write Back", "1")
 --*/
 #define __EXT4FS_CFG_WR_BUF_STRATEGY__ 1
+
 #endif /* _EXT4FS_FLAGS_H_ */
 /*==============================================================================
   End of file

@@ -133,7 +133,7 @@ typedef struct {
         bool        detached;           //!< independent process (no parent)
 } process_attr_t;
 
-/** USERSPACE: process attributes */
+/** USERSPACE: process statistics */
 typedef struct {
         const char *name;               //!< process name
         pid_t       pid;                //!< process ID
@@ -152,6 +152,16 @@ typedef struct {
         i16_t       priority;           //!< priority
         u16_t       syscalls;           //!< syscalls per second
 } process_stat_t;
+
+/** USERSPACE: thread statistics */
+typedef struct {
+        tid_t       tid;                //!< thread ID
+        u16_t       CPU_load;           //!< CPU load (1% = 10)
+        u16_t       stack_size;         //!< stack size
+        u16_t       stack_max_usage;    //!< max stack usage
+        i16_t       priority;           //!< priority
+        u16_t       syscalls;           //!< syscalls per second
+} thread_stat_t;
 
 /** USERSPACE: thread attributes */
 typedef struct {
@@ -203,12 +213,13 @@ extern int         _process_get_priority                (pid_t, int*);
 extern int         _process_get_container               (pid_t, _process_t**);
 extern int         _process_get_stat_seek               (size_t, process_stat_t*);
 extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
-extern tid_t       _process_get_active_thread           (void);
+extern tid_t       _process_get_active_thread           (_process_t *process);
 extern pid_t       _process_get_active_process_pid      (void);
 extern u8_t        _process_get_max_threads             (_process_t*);
 extern int         _process_thread_create               (_process_t*, thread_func_t, const thread_attr_t*, void*, tid_t*);
 extern int         _process_thread_kill                 (_process_t*, tid_t);
 extern task_t     *_process_thread_get_task             (_process_t *proc, tid_t tid);
+extern int         _process_thread_get_stat             (pid_t, tid_t tid, thread_stat_t*);
 extern void        _process_syscall_stat_inc            (_process_t *proc, _process_t *kworker);
 extern void        _task_switched_in                    (task_t *task, void *task_tag);
 extern void        _task_switched_out                   (task_t *task, void *task_tag);

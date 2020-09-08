@@ -291,7 +291,9 @@ static int stack_init(void)
                 int terr = sys_thread_create(network_interface_thread, &attr, NULL, &inet->if_thread);
                 int merr = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &inet->access);
 
-                if (merr == ESUCC && terr == ESUCC) {
+                if (!merr && !terr) {
+
+                        printk("INET: thread ID: %u", inet->if_thread);
 
                         tcpip_init(NULL, NULL);
 
