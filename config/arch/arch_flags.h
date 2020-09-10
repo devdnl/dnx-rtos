@@ -121,6 +121,87 @@
 #     uC.PERIPH["STM32F107VCxx"] = {GPIO = true, CLK = true, CRC = true, DMA = true, PWM = true, WDG = true, UART = true, SPI = true, AFM = true, IRQ = true, I2C = true, NVM = true, RTC = true, CAN = true, ETHMAC = true}
 # end
 #
+# if uC.ARCH == "stm32f3" then
+#     uC.AddPriorityItems = function(this, no_default)
+#         this:AddItem("Priority 0 (the highest)", "0")
+#         for i = 1, 14 do this:AddItem("Priority "..i, tostring(i)) end
+#         this:AddItem("Priority 15 (the lowest, safe for kernel API)", "15")
+#         if no_default ~= true then
+#             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
+#         end
+#     end
+#
+#     uC.PERIPH["STM32F301C6xx"] = {}
+#     uC.PERIPH["STM32F301C8xx"] = {}
+#     uC.PERIPH["STM32F301K6xx"] = {}
+#     uC.PERIPH["STM32F301K8xx"] = {}
+#     uC.PERIPH["STM32F301R6xx"] = {}
+#     uC.PERIPH["STM32F301R8xx"] = {}
+#     uC.PERIPH["STM32F302C6xx"] = {}
+#     uC.PERIPH["STM32F302C8xx"] = {}
+#     uC.PERIPH["STM32F302CBxx"] = {}
+#     uC.PERIPH["STM32F302CCxx"] = {}
+#     uC.PERIPH["STM32F302K6xx"] = {}
+#     uC.PERIPH["STM32F302K8xx"] = {}
+#     uC.PERIPH["STM32F302R6xx"] = {}
+#     uC.PERIPH["STM32F302R8xx"] = {}
+#     uC.PERIPH["STM32F302RBxx"] = {}
+#     uC.PERIPH["STM32F302RCxx"] = {}
+#     uC.PERIPH["STM32F302RDxx"] = {}
+#     uC.PERIPH["STM32F302RExx"] = {}
+#     uC.PERIPH["STM32F302VBxx"] = {}
+#     uC.PERIPH["STM32F302VCxx"] = {}
+#     uC.PERIPH["STM32F302VDxx"] = {}
+#     uC.PERIPH["STM32F302VExx"] = {}
+#     uC.PERIPH["STM32F302ZDxx"] = {}
+#     uC.PERIPH["STM32F302ZExx"] = {}
+#     uC.PERIPH["STM32F303C6xx"] = {}
+#     uC.PERIPH["STM32F303C8xx"] = {}
+#     uC.PERIPH["STM32F303CBxx"] = {}
+#     uC.PERIPH["STM32F303CCxx"] = {}
+#     uC.PERIPH["STM32F303K6xx"] = {}
+#     uC.PERIPH["STM32F303K8xx"] = {}
+#     uC.PERIPH["STM32F303R6xx"] = {}
+#     uC.PERIPH["STM32F303R8xx"] = {}
+#     uC.PERIPH["STM32F303RBxx"] = {}
+#     uC.PERIPH["STM32F303RCxx"] = {}
+#     uC.PERIPH["STM32F303RDxx"] = {}
+#     uC.PERIPH["STM32F303RExx"] = {}
+#     uC.PERIPH["STM32F303VBxx"] = {}
+#     uC.PERIPH["STM32F303VCxx"] = {}
+#     uC.PERIPH["STM32F303VDxx"] = {}
+#     uC.PERIPH["STM32F303VExx"] = {}
+#     uC.PERIPH["STM32F303ZDxx"] = {}
+#     uC.PERIPH["STM32F303ZExx"] = {}
+#     uC.PERIPH["STM32F318C8xx"] = {}
+#     uC.PERIPH["STM32F318K8xx"] = {}
+#     uC.PERIPH["STM32F328C8xx"] = {}
+#     uC.PERIPH["STM32F334C4xx"] = {}
+#     uC.PERIPH["STM32F334C6xx"] = {}
+#     uC.PERIPH["STM32F334C8xx"] = {}
+#     uC.PERIPH["STM32F334K4xx"] = {}
+#     uC.PERIPH["STM32F334K6xx"] = {}
+#     uC.PERIPH["STM32F334K8xx"] = {}
+#     uC.PERIPH["STM32F334R6xx"] = {}
+#     uC.PERIPH["STM32F334R8xx"] = {}
+#     uC.PERIPH["STM32F358CCxx"] = {}
+#     uC.PERIPH["STM32F358RCxx"] = {}
+#     uC.PERIPH["STM32F358VCxx"] = {}
+#     uC.PERIPH["STM32F373C8xx"] = {}
+#     uC.PERIPH["STM32F373CBxx"] = {}
+#     uC.PERIPH["STM32F373CCxx"] = {}
+#     uC.PERIPH["STM32F373R8xx"] = {}
+#     uC.PERIPH["STM32F373RBxx"] = {}
+#     uC.PERIPH["STM32F373RCxx"] = {}
+#     uC.PERIPH["STM32F373V8xx"] = {}
+#     uC.PERIPH["STM32F373VBxx"] = {}
+#     uC.PERIPH["STM32F373VCxx"] = {}
+#     uC.PERIPH["STM32F378CCxx"] = {}
+#     uC.PERIPH["STM32F378RCxx"] = {}
+#     uC.PERIPH["STM32F378VCxx"] = {}
+#     uC.PERIPH["STM32F398VExx"] = {}
+# end
+#
 # if uC.ARCH == "stm32f4" then
 #     uC.AddPriorityItems = function(this, no_default)
 #         this:AddItem("Priority 0 (the highest)", "0")
@@ -450,6 +531,8 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32f1/i2c_flags.h"
 #include "stm32f1/nvm_flags.h"
 #include "stm32f1/pwm_flags.h"
+#elif (__CPU_ARCH__ == stm32f3)
+#include "stm32f3/cpu_flags.h"
 #elif (__CPU_ARCH__ == stm32f4)
 #include "stm32f4/can_flags.h"
 #include "stm32f4/cpu_flags.h"
@@ -770,9 +853,9 @@ __ENABLE_DCI__=_NO_
 #     this:SetFlagValue("__ENABLE_CAN__", "_NO_")
 # end
 #--*/
-#define __ENABLE_CAN__ _YES_
+#define __ENABLE_CAN__ _NO_
 #/*
-__ENABLE_CAN__=_YES_
+__ENABLE_CAN__=_NO_
 #*/
 
 #/*--
