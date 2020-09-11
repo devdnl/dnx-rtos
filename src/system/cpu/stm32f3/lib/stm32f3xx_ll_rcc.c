@@ -16,6 +16,7 @@
   *
   ******************************************************************************
   */
+#define USE_FULL_LL_DRIVER
 #if defined(USE_FULL_LL_DRIVER)
 
 /* Includes ------------------------------------------------------------------*/
@@ -46,6 +47,8 @@ const uint16_t aADCPrescTable[16]       = {1U, 2U, 4U, 6U, 8U, 10U, 12U, 16U, 32
 #if defined(RCC_CFGR_SDPRE)
 const uint8_t aSDADCPrescTable[16]       = {2U, 4U, 6U, 8U, 10U, 12U, 14U, 16U, 20U, 24U, 28U, 32U, 36U, 40U, 44U, 48U};
 #endif /* RCC_CFGR_SDPRE */
+const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
+const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
 /**
   * @}
   */
@@ -239,7 +242,7 @@ ErrorStatus LL_RCC_DeInit(void)
   vl_mask = 0xFFFFFFFFU;
   CLEAR_BIT(vl_mask, (RCC_CFGR_SW | RCC_CFGR_HPRE | RCC_CFGR_PPRE1 |\
                       RCC_CFGR_PPRE2 | RCC_CFGR_MCOSEL));
- 
+
   /* Write new value in CFGR register */
   LL_RCC_WriteReg(CFGR, vl_mask);
 
@@ -249,10 +252,10 @@ ErrorStatus LL_RCC_DeInit(void)
 
   /* Read CR register */
   vl_mask = LL_RCC_ReadReg(CR);
-  
+
   /* Reset HSEON, CSSON, PLLON bits */
   CLEAR_BIT(vl_mask, (RCC_CR_PLLON | RCC_CR_CSSON | RCC_CR_HSEON));
- 
+
    /* Write new value in CR register */
   LL_RCC_WriteReg(CR, vl_mask);
 
@@ -297,9 +300,9 @@ ErrorStatus LL_RCC_DeInit(void)
   *         and different peripheral clocks available on the device.
   * @note   If SYSCLK source is HSI, function returns values based on HSI_VALUE(**)
   * @note   If SYSCLK source is HSE, function returns values based on HSE_VALUE(***)
-  * @note   If SYSCLK source is PLL, function returns values based on 
+  * @note   If SYSCLK source is PLL, function returns values based on
   *         HSI_VALUE(**) or HSE_VALUE(***) multiplied/divided by the PLL factors.
-  * @note   (**) HSI_VALUE is a defined constant but the real value may vary 
+  * @note   (**) HSI_VALUE is a defined constant but the real value may vary
   *              depending on the variations in voltage and temperature.
   * @note   (***) HSE_VALUE is a defined constant, user has to ensure that
   *               HSE_VALUE is same as the real frequency of the crystal used.
@@ -586,7 +589,7 @@ uint32_t LL_RCC_GetI2CClockFreq(uint32_t I2CxSource)
       case LL_RCC_I2C2_CLKSOURCE_SYSCLK: /* I2C2 Clock is System Clock */
         i2c_frequency = RCC_GetSystemClockFreq();
         break;
-	
+
       case LL_RCC_I2C2_CLKSOURCE_HSI:    /* I2C2 Clock is HSI Osc. */
       default:
         if (LL_RCC_HSI_IsReady())
@@ -682,7 +685,7 @@ uint32_t LL_RCC_GetUSBClockFreq(uint32_t USBxSource)
     default:
       if (LL_RCC_PLL_IsReady())
       {
-        usb_frequency = (RCC_PLL_GetFreqDomain_SYS() * 3U) / 2U;
+        usb_frequency = (RCC_PLL_GetFreqDomain_SYS() * 2U) / 3U;
       }
       break;
   }
