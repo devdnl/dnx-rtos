@@ -2440,6 +2440,9 @@ typedef struct
 #define CAN_MCR_RESET_Pos      (15U)
 #define CAN_MCR_RESET_Msk      (0x1UL << CAN_MCR_RESET_Pos)                     /*!< 0x00008000 */
 #define CAN_MCR_RESET          CAN_MCR_RESET_Msk                               /*!<bxCAN software master reset */
+#define CAN_MCR_DBF_Pos        (16U)
+#define CAN_MCR_DBF_Msk        (0x1U << CAN_MCR_DBF_Pos)                       /*!< 0x00010000 */
+#define CAN_MCR_DBF            CAN_MCR_DBF_Msk                                 /*!<bxCAN Debug freeze */
 
 /*******************  Bit definition for CAN_MSR register  ********************/
 #define CAN_MSR_INAK_Pos       (0U)
