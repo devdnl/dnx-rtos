@@ -54,6 +54,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(mknod, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -63,7 +64,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Program main function
  */
 //==============================================================================
-int_main(mknod, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         if (argc < 5) {
                 printf("%s <file> <module name> <major> <minor>\n", argv[0]);

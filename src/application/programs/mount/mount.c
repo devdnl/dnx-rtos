@@ -54,6 +54,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(mount, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -63,7 +64,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Program main function
  */
 //==============================================================================
-int_main(mount, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         if (argc < 4) {
                 printf("Usage: %s <source|-> <file system name> <mount point> [options]\n", argv[0]);

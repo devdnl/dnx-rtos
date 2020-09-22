@@ -58,6 +58,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(modprobe, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -81,7 +82,7 @@ static void show_help(const char *name)
  * @brief Program main function
  */
 //==============================================================================
-int_main(modprobe, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         int err = EXIT_FAILURE;
 

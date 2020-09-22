@@ -69,6 +69,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(top, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -78,7 +79,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Main function
  */
 //==============================================================================
-int_main(top, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         global->refresh_inteval_s = REFRESH_INTERVAL_SEC;
 

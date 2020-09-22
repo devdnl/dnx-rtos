@@ -71,6 +71,7 @@ CFLAGS   = -c \
            -Werror=overflow \
            -include ./config/config.h \
            -include ./build/defs.h \
+           -Wno-main\
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            $(CPUCONFIG_CFLAGS)
 

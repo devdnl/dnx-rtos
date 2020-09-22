@@ -40,6 +40,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+PROGRAM_PARAMS(ttyread, STACK_DEPTH_VERY_LOW);
 
 /*==============================================================================
   External objects
@@ -59,7 +60,7 @@ GLOBAL_VARIABLES_SECTION {
  * @param argv      arguments
  */
 //==============================================================================
-int_main(ttyread, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         if (argc < 2) {
                 printf("Usage: %s <tty-file>\n", argv[0]);

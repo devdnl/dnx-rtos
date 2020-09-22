@@ -66,6 +66,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(tcl, STACK_DEPTH_LARGE);
 
 /*==============================================================================
   Function definitions
@@ -130,7 +131,7 @@ static bool is_history_request()
  * @brief TCL main function
  */
 //==============================================================================
-int_main(tcl, STACK_DEPTH_LARGE, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         tcl_init(&global->tcl);
         tcl_register_const(&global->tcl, "sleep", tcl_cmd_sleep, 2, NULL);

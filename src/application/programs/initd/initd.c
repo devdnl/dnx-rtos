@@ -64,6 +64,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(initd, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -413,7 +414,7 @@ static void start_user_programs(void)
  * @return program status
  */
 //==============================================================================
-int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 

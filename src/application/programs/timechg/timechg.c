@@ -63,6 +63,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(timechg, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -131,7 +132,7 @@ static bool is_summer_time(void)
  * @brief Program main function
  */
 //==============================================================================
-int_main(timechg, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         if (argc != 2) {
                 printf("Usage: %s <interval-sec>\n", argv[0]);
