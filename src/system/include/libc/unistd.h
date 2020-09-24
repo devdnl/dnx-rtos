@@ -52,6 +52,7 @@ extern "C" {
 #include <kernel/errno.h>
 #include <cpu/cpuctl.h>
 #include <lib/unarg.h>
+#include <fs/vfs.h>
 
 /*==============================================================================
   Exported macros
@@ -487,6 +488,81 @@ static inline uid_t getuid(void)
 {
         return 0;
 }
+
+//==============================================================================
+/**
+ * @brief  Function open file as file descriptor.
+ *
+ * @param  path         file path
+ * @param  flags        file open flags
+ * @param  mode         optional mode
+ *
+ * @return On success file descriptor is returned (fd >= 0), otherwise -1.
+ */
+//==============================================================================
+extern fd_t open(const char *path, int flags, ...);
+
+//==============================================================================
+/**
+ * @brief  Function close file descriptor.
+ *
+ * @param  fd           file descriptor
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+extern int close(fd_t fd);
+
+//==============================================================================
+/**
+ * @brief  Function read file.
+ *
+ * @param  fd           file descriptor
+ * @param  buf          buffer
+ * @param  count        bytes to read
+ *
+ * @return On success number of read bytes is returned, otherwise negative value.
+ */
+//==============================================================================
+extern ssize_t read(fd_t fd, void *buf, size_t count);
+
+//==============================================================================
+/**
+ * @brief  Function read file.
+ *
+ * @param  fd           file descriptor
+ * @param  buf          buffer
+ * @param  count        bytes to read
+ *
+ * @return On success number of written bytes is returned, otherwise negative value.
+ */
+//==============================================================================
+extern ssize_t write(fd_t fd, const void *buf, size_t count);
+
+//==============================================================================
+/**
+ * @brief  Function set file position.
+ *
+ * @param  fd           file descriptor
+ * @param  offset       offset
+ * @param  whence       seek mode
+ *
+ * @return On success return file offset after operation, otherwise negative value
+ *         on error.
+ */
+//==============================================================================
+extern off_t lseek(fd_t fd, off_t offset, int whence);
+
+//==============================================================================
+/**
+ * @brief  Function remove selected file.
+ *
+ * @param  pathname     file to remove
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+extern int unlink(const char *pathname);
 
 #ifdef __cplusplus
 }
