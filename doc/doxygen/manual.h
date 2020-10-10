@@ -180,7 +180,8 @@ The dnx RTOS program implementation has some limitations:
 \arg If the user wants to create a constant then it should be inserted beyond
      the global variable section, because constants are stored in the ROM memory.
 \arg The main function of the program has to be created by using the <tt><b>int_main()</b></tt>
-     macro. Those macros create special hidden variables that are used by the system.
+     macro, or by <tt><b>int main()</b></tt> with macro <tt><b>PROGRAM_PARAMS()</b></tt>.
+     Those macros creates special hidden variables that are used by the system,
 \arg Environment variables are not supported.
 
 \section app-prg-reg Application Registration Details
