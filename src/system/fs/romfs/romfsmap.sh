@@ -10,4 +10,4 @@ cd $(dirname $0)
 rm -rf "${data}"
 mkdir -p "${data}"
 
-/usr/bin/python romfsmap.py "${root}/res/romfs" "${data}"
+/usr/bin/python2.7 romfsmap.py "${root}/res/romfs" "${data}"
