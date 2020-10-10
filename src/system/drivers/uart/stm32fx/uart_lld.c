@@ -41,6 +41,13 @@
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #define RDR             DR
 #define TDR             DR
+#elif defined(ARCH_stm32f3)
+#include "stm32f3/stm32f3xx.h"
+#include "stm32f3/lib/stm32f3xx_ll_rcc.h"
+#define SR              ISR
+#define USART_SR_RXNE   USART_ISR_RXNE
+#define USART_SR_ORE    USART_ISR_ORE
+#define USART_SR_TC     USART_ISR_TC
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
@@ -70,7 +77,7 @@ typedef struct {
         const uint32_t  APBENR_UARTEN;
         const uint32_t  APBRSTR_UARTRST;
         const IRQn_Type IRQn;
-        #if defined(ARCH_stm32f7)
+        #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
         const u32_t     CLKSRC;
         #endif
 } UART_regs_t;
@@ -92,7 +99,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_USART1EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART1RST,
                 .IRQn            = USART1_IRQn,
-                #if defined(ARCH_stm32f7)
+                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART1_CLKSOURCE,
                 #endif
         },
@@ -105,7 +112,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_USART2EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART2RST,
                 .IRQn            = USART2_IRQn,
-                #if defined(ARCH_stm32f7)
+                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART2_CLKSOURCE,
                 #endif
         },
@@ -118,7 +125,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_USART3EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART3RST,
                 .IRQn            = USART3_IRQn,
-                #if defined(ARCH_stm32f7)
+                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART3_CLKSOURCE,
                 #endif
         },
@@ -131,7 +138,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART4EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART4RST,
                 .IRQn            = UART4_IRQn,
-                #if defined(ARCH_stm32f7)
+                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART4_CLKSOURCE,
                 #endif
         },
@@ -144,7 +151,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART5EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART5RST,
                 .IRQn            = UART5_IRQn,
-                #if defined(ARCH_stm32f7)
+                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART5_CLKSOURCE,
                 #endif
         },
@@ -338,21 +345,36 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         #if defined(USART6)
         PCLK = (DEV->UART == USART6) ? freq.PCLK2_Frequency : PCLK;
         #endif
-#elif defined(ARCH_stm32f7)
+#elif defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
         u32_t PCLK = 0;
 
         switch (DEV->CLKSRC) {
+        #if defined(LL_RCC_USART1_CLKSOURCE)
         case LL_RCC_USART1_CLKSOURCE:
+        #endif
+        #if defined(LL_RCC_USART2_CLKSOURCE)
         case LL_RCC_USART2_CLKSOURCE:
+        #endif
+        #if defined(LL_RCC_USART3_CLKSOURCE)
         case LL_RCC_USART3_CLKSOURCE:
+        #endif
+        #if defined(LL_RCC_USART6_CLKSOURCE)
         case LL_RCC_USART6_CLKSOURCE:
+        #endif
                 PCLK = LL_RCC_GetUSARTClockFreq(DEV->CLKSRC);
                 break;
-
+        #if defined(LL_RCC_UART4_CLKSOURCE)
         case LL_RCC_UART4_CLKSOURCE:
+        #endif
+        #if defined(LL_RCC_UART5_CLKSOURCE)
         case LL_RCC_UART5_CLKSOURCE:
+        #endif
+        #if defined(LL_RCC_UART7_CLKSOURCE)
         case LL_RCC_UART7_CLKSOURCE:
+        #endif
+        #if defined(LL_RCC_UART8_CLKSOURCE)
         case LL_RCC_UART8_CLKSOURCE:
+        #endif
                 PCLK = LL_RCC_GetUARTClockFreq(DEV->CLKSRC);
                 break;
 

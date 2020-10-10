@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    cpuctl.h
+@file    gpio_macros.h
 
 @author  Daniel Zorychta
 
-@brief   This file support CPU control
+@brief   This driver support GPIO. Configuration and pin control macros.
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _SYS_CPUCTL_H_
-#define _SYS_CPUCTL_H_
+#ifndef _GPIO_MACROS_H_
+#define _GPIO_MACROS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,38 +36,57 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#define _BYTE_ORDER_LITTLE_ENDIAN       0
-#define _BYTE_ORDER_BIG_ENDIAN          1
-
-#if defined(ARCH_stm32f1)
-#       include "stm32f1/cpuctl.h"
-#elif defined(ARCH_stm32f3)
-#       include "stm32f3/cpuctl.h"
-#elif defined(ARCH_stm32f4)
-#       include "stm32f4/cpuctl.h"
-#elif defined(ARCH_stm32f7)
-#       include "stm32f7/cpuctl.h"
-#elif defined(ARCH_efr32)
-#       include "efr32/cpuctl.h"
-#endif
 
 /*==============================================================================
-  Exported symbolic constants/macros
+  Exported macros
+==============================================================================*/
+/** concat macro */
+#define _CONCAT(x, y) x##y
+
+/** speed (do not edit) */
+#define _GPIO_SPEED_LOW                         0x00
+#define _GPIO_SPEED_MEDIUM                      0x01
+#define _GPIO_SPEED_HIGH                        0x02
+#define _GPIO_SPEED_VERY_HIGH                   0x03
+
+/** [mmmm tttt pppp] (do not edit) */
+#define _GPIO_MODE_IN                           0x000
+#define _GPIO_MODE_IN_PU                        0x001
+#define _GPIO_MODE_IN_PD                        0x002
+#define _GPIO_MODE_PP                           0x100
+#define _GPIO_MODE_OD                           0x110
+#define _GPIO_MODE_OD_PU                        0x111
+#define _GPIO_MODE_OD_PD                        0x112
+#define _GPIO_MODE_AF_PP                        0x200
+#define _GPIO_MODE_AF_PP_PU                     0x201
+#define _GPIO_MODE_AF_PP_PD                     0x202
+#define _GPIO_MODE_AF_OD                        0x210
+#define _GPIO_MODE_AF_OD_PU                     0x211
+#define _GPIO_MODE_AF_OD_PD                     0x212
+#define _GPIO_MODE_ANALOG                       0x300
+
+/** define pin state (do not edit) */
+#define _FLOAT                                  0U
+#define _LOW                                    0U
+#define _HIGH                                   1U
+
+/*==============================================================================
+  Exported object types
 ==============================================================================*/
 
 /*==============================================================================
-  Exported types, enums definitions
+  Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported function prototypes
+  Exported functions
 ==============================================================================*/
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _SYS_CPUCTL_H_ */
+#endif /* _GPIO_MACROS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

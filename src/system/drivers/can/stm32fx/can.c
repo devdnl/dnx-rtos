@@ -34,6 +34,8 @@ Brief   CAN driver
 
 #if defined(ARCH_stm32f1)
 #include "stm32f1/stm32f10x.h"
+#elif defined(ARCH_stm32f3)
+#include "stm32f3/stm32f3xx.h"
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
 #elif defined(ARCH_stm32f7)
@@ -67,6 +69,22 @@ Brief   CAN driver
 #define CAN1_RX0_IRQHANDLER     CAN1_RX0_IRQHandler
 #define FILTERS_COUNT           28
 #endif
+#endif
+
+#if defined(ARCH_stm32f3)
+#define CAN1_TX_IRQN            CAN_TX_IRQn
+#define CAN1_RX0_IRQN           CAN_RX0_IRQn
+#define CAN1_TX_IRQHANDLER      USB_HP_CAN_TX_IRQHandler
+#define CAN1_RX0_IRQHANDLER     USB_LP_CAN_RX0_IRQHandler
+#define CAN1_RX1_IRQHandler     CAN_RX1_IRQHandler
+#define CAN1_SCE_IRQHandler     CAN_SCE_IRQHandler
+#define FILTERS_COUNT           14
+#define RCC_APB1ENR_CAN1EN      RCC_APB1ENR_CANEN
+#define RCC_APB1RSTR_CAN1RST    RCC_APB1RSTR_CANRST
+#define RCC_APB1RSTR_CAN1RST    RCC_APB1RSTR_CANRST
+#define CAN1                    CAN
+#define CAN1_RX1_IRQn           CAN_RX1_IRQn
+#define CAN1_SCE_IRQn           CAN_SCE_IRQn
 #endif
 
 #if defined(ARCH_stm32f4)
@@ -117,7 +135,7 @@ static int recv_msg(CAN_t *hdl, CAN_msg_t *msg, u32_t timeout_ms);
 ==============================================================================*/
 MODULE_NAME(CAN);
 
-static CAN_t *CAN;
+static CAN_t *CAN_hdl;
 
 /*==============================================================================
   Exported object
@@ -211,7 +229,7 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
 
                         finish:
                         if (!err) {
-                                CAN = hdl;
+                                CAN_hdl = hdl;
 
                         } else {
                                 relese_resources(hdl);
@@ -236,7 +254,7 @@ API_MOD_RELEASE(CAN, void *device_handle)
         CAN_t *hdl = device_handle;
 
         // lock access to module
-        CAN = NULL;
+        CAN_hdl = NULL;
         sys_sleep_ms(100);
 
         // finish TX pending transfers
@@ -284,7 +302,7 @@ API_MOD_OPEN(CAN, void *device_handle, u32_t flags)
 {
         UNUSED_ARG2(device_handle, flags);
 
-        return CAN ? ESUCC : ENXIO;
+        return CAN_hdl ? ESUCC : ENXIO;
 }
 
 //==============================================================================
@@ -330,7 +348,7 @@ API_MOD_WRITE(CAN,
 
         CAN_t *hdl = device_handle;
 
-        if (CAN == NULL) {
+        if (CAN_hdl == NULL) {
                 return ENXIO;
         }
 
@@ -386,7 +404,7 @@ API_MOD_READ(CAN,
 
         CAN_t *hdl = device_handle;
 
-        if (CAN == NULL) {
+        if (CAN_hdl == NULL) {
                 return ENXIO;
         }
 
@@ -431,7 +449,7 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
 {
         CAN_t *hdl = device_handle;
 
-        if (CAN == NULL) {
+        if (CAN_hdl == NULL) {
                 return ENXIO;
         }
 
@@ -849,11 +867,11 @@ static int send_msg(CAN_t *hdl, const CAN_msg_t *msg, u32_t timeout_ms)
 
         u32_t tref = sys_get_uptime_ms();
 
-        while (CAN && loop && !sys_time_is_expired(tref, timeout)) {
+        while (CAN_hdl && loop && !sys_time_is_expired(tref, timeout)) {
 
                 err = ETIME;
 
-                for (int i = 0; CAN && loop && (i < TX_MAILBOXES); i++) {
+                for (int i = 0; CAN_hdl && loop && (i < TX_MAILBOXES); i++) {
 
                         err = sys_mutex_trylock(hdl->txmbox_mtx[i]);
                         if (!err) {
@@ -1006,7 +1024,7 @@ void CAN1_TX_IRQHANDLER(void)
                         SET_BIT(CAN1->TSR, CAN_TSR_RQCP[i]);
 
                         bool woken = false;
-                        sys_queue_send_from_ISR(CAN->txrdy_q[i], &err, &woken);
+                        sys_queue_send_from_ISR(CAN_hdl->txrdy_q[i], &err, &woken);
 
                         yield |= woken;
                 }
@@ -1024,7 +1042,7 @@ void CAN1_RX0_IRQHANDLER(void)
 {
         bool yield = false;
 
-        sys_queue_send_from_ISR(CAN->rxqueue_q, &CAN1->sFIFOMailBox[0], &yield);
+        sys_queue_send_from_ISR(CAN_hdl->rxqueue_q, &CAN1->sFIFOMailBox[0], &yield);
 
         SET_BIT(CAN1->RF0R, CAN_RF0R_RFOM0);
 
@@ -1040,7 +1058,7 @@ void CAN1_RX1_IRQHandler(void)
 {
         bool yield = false;
 
-        sys_queue_send_from_ISR(CAN->rxqueue_q, &CAN1->sFIFOMailBox[1], &yield);
+        sys_queue_send_from_ISR(CAN_hdl->rxqueue_q, &CAN1->sFIFOMailBox[1], &yield);
 
         SET_BIT(CAN1->RF1R, CAN_RF0R_RFOM0);
 

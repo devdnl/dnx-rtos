@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    cpuctl.h
+@file    clk_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   This file support CPU control
+@brief   PLL configuration file
 
-@note    Copyright (C) 2012 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _SYS_CPUCTL_H_
-#define _SYS_CPUCTL_H_
+#ifndef _CLK_CFG_H_
+#define _CLK_CFG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,27 +36,19 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#define _BYTE_ORDER_LITTLE_ENDIAN       0
-#define _BYTE_ORDER_BIG_ENDIAN          1
-
-#if defined(ARCH_stm32f1)
-#       include "stm32f1/cpuctl.h"
-#elif defined(ARCH_stm32f3)
-#       include "stm32f3/cpuctl.h"
-#elif defined(ARCH_stm32f4)
-#       include "stm32f4/cpuctl.h"
-#elif defined(ARCH_stm32f7)
-#       include "stm32f7/cpuctl.h"
-#elif defined(ARCH_efr32)
-#       include "efr32/cpuctl.h"
-#endif
+#include "config.h"
 
 /*==============================================================================
   Exported symbolic constants/macros
 ==============================================================================*/
+#define _CLK_BAYPASS                    2
 
 /*==============================================================================
   Exported types, enums definitions
+==============================================================================*/
+
+/*==============================================================================
+  Exported object declarations
 ==============================================================================*/
 
 /*==============================================================================
@@ -67,7 +59,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _SYS_CPUCTL_H_ */
+#endif /* _CLK_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
