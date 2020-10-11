@@ -29,33 +29,57 @@ PROVIDE(__process_stack_size = __process_stack_size);
 /*==============================================================================
 available memories definitions
 ==============================================================================*/
-__rom_start = ORIGIN(rom);
-__rom_size  = LENGTH(rom);
-__rom_end   = __rom_start + __rom_size;
+__flash_start = ORIGIN(flash);
+__flash_size  = LENGTH(flash);
+__flash_end   = __flash_start + __flash_size;
 
-__ram_start = ORIGIN(ram1);
-__ram_size  = LENGTH(ram1);
+__ram_start = ORIGIN(axisram);
+__ram_size  = LENGTH(axisram);
 __ram_end   = __ram_start + __ram_size;
 
-__ram2_start = ORIGIN(ram2);
-__ram2_size  = LENGTH(ram2);
+__ram1_start = ORIGIN(sram1);
+__ram1_size  = LENGTH(sram1);
+
+__ram2_start = ORIGIN(sram2);
+__ram2_size  = LENGTH(sram2);
+
+__ram3_start = ORIGIN(sram3);
+__ram3_size  = LENGTH(sram3);
+
+__ram4_start = ORIGIN(sram4);
+__ram4_size  = LENGTH(sram4);
 
 __dtcm_start = ORIGIN(dtcm);
 __dtcm_size  = LENGTH(dtcm);
 
-PROVIDE(__rom_start = __rom_start);
-PROVIDE(__rom_size  = __rom_size);
-PROVIDE(__rom_end   = __rom_end);
+__itcm_start = ORIGIN(itcm);
+__itcm_size  = LENGTH(itcm);
+
+PROVIDE(__flash_start = __flash_start);
+PROVIDE(__flash_size  = __flash_size);
+PROVIDE(__flash_end   = __flash_end);
 
 PROVIDE(__ram_start = __ram_start);
 PROVIDE(__ram_size  = __ram_size);
 PROVIDE(__ram_end   = __ram_end);
 
+PROVIDE(__ram1_start = __ram1_start);
+PROVIDE(__ram1_size  = __ram1_size);
+
 PROVIDE(__ram2_start = __ram2_start);
 PROVIDE(__ram2_size  = __ram2_size);
 
+PROVIDE(__ram3_start = __ram3_start);
+PROVIDE(__ram3_size  = __ram3_size);
+
+PROVIDE(__ram4_start = __ram4_start);
+PROVIDE(__ram4_size  = __ram4_size);
+
 PROVIDE(__dtcm_start = __dtcm_start);
 PROVIDE(__dtcm_size  = __dtcm_size);
+
+PROVIDE(__itcm_start = __itcm_start);
+PROVIDE(__itcm_size  = __itcm_size);
 
 /*==============================================================================
 entry point
@@ -116,7 +140,7 @@ SECTIONS
       . = ALIGN(4);
       __text_end = .;
       PROVIDE(__text_end = __text_end);
-   } > rom AT > rom
+   } > flash AT > flash
 
    . = ALIGN(4);
    __exidx_start = .;
@@ -125,7 +149,7 @@ SECTIONS
    .ARM.exidx :
    {
       *(.ARM.exidx* .gnu.linkonce.armexidx.*);
-   } > rom AT > rom                        /* index entries for section unwinding */
+   } > flash AT > flash                        /* index entries for section unwinding */
 
    . = ALIGN(4);
    __exidx_end = .;
@@ -145,7 +169,7 @@ SECTIONS
       . = ALIGN(4);
       __data_end = .;
       PROVIDE(__data_end = __data_end);
-   } > ram1 AT > rom
+   } > axisram AT > flash
 
    .bss :
    {
@@ -161,7 +185,7 @@ SECTIONS
       . = ALIGN(4);
       __bss_end = .;
       PROVIDE(__bss_end = __bss_end);
-   } > ram1 AT > ram1
+   } > axisram AT > axisram
 
    .stack :
    {
@@ -192,7 +216,7 @@ SECTIONS
       . = ALIGN(8);
       __stack_end = .;
       PROVIDE(__stack_end = __stack_end);
-   } > ram1 AT > ram1
+   } > axisram AT > axisram
 
    . = ALIGN(4);
    __heap_start = .;

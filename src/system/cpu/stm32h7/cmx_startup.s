@@ -2,11 +2,11 @@
 *
 * File is based on Freddie Chopin's startup file
 *
-* chip: ARMv7-M (Cortex-M4)
+* chip: ARMv7-M (Cortex-M7)
 * compiler: arm-none-eabi-gcc
 *
 * description:
-* ARMv7-M (Cortex-M4) assembly startup code
+* ARMv7-M (Cortex-M7) assembly startup code
 *******************************************************************************/
 
 /* CONTROL - The special-purpose control register */

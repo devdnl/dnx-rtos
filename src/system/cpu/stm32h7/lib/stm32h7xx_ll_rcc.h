@@ -35,6 +35,8 @@ extern "C" {
   * @{
   */
 
+#define USE_FULL_LL_DRIVER
+
 #if defined(RCC)
 
 /** @defgroup RCC_LL RCC
@@ -2850,7 +2852,7 @@ __STATIC_INLINE void LL_RCC_ConfigMCO(uint32_t MCOxSource, uint32_t MCOxPrescale
   *         @arg @ref LL_RCC_SAI1_CLKSOURCE_I2S_CKIN
   *         @arg @ref LL_RCC_SAI1_CLKSOURCE_CLKP
   *         @arg @ref LL_RCC_SAI23_CLKSOURCE_PLL1Q (*)
-  *         @arg @ref LL_RCC_SAI23_CLKSOURCE_PLL2P (*) 
+  *         @arg @ref LL_RCC_SAI23_CLKSOURCE_PLL2P (*)
   *         @arg @ref LL_RCC_SAI23_CLKSOURCE_PLL3P (*)
   *         @arg @ref LL_RCC_SAI23_CLKSOURCE_I2S_CKIN (*)
   *         @arg @ref LL_RCC_SAI23_CLKSOURCE_CLKP (*)
@@ -3020,7 +3022,7 @@ __STATIC_INLINE void LL_RCC_SetLPTIMClockSource(uint32_t ClkSource)
   *         @arg @ref LL_RCC_SAI23_CLKSOURCE_PLL1Q (*)
   *         @arg @ref LL_RCC_SAI23_CLKSOURCE_PLL2P (*)
   *         @arg @ref LL_RCC_SAI23_CLKSOURCE_PLL3P (*)
-  *         @arg @ref LL_RCC_SAI23_CLKSOURCE_I2S_CKIN (*) 
+  *         @arg @ref LL_RCC_SAI23_CLKSOURCE_I2S_CKIN (*)
   *         @arg @ref LL_RCC_SAI23_CLKSOURCE_CLKP (*)
   *         @arg @ref LL_RCC_SAI4A_CLKSOURCE_PLL1Q (*)
   *         @arg @ref LL_RCC_SAI4A_CLKSOURCE_PLL2P  (*)

@@ -8,8 +8,8 @@
   *          is using in the C source code, usually in main.c. This file contains:
   *           - Configuration section that allows to select:
   *              - The STM32H7xx device used in the target application
-  *              - To use or not the peripheral’s drivers in application code(i.e.
-  *                code will be based on direct access to peripheral’s registers
+  *              - To use or not the peripheralï¿½s drivers in application code(i.e.
+  *                code will be based on direct access to peripheralï¿½s registers
   *                rather than drivers API), this option is controlled by
   *                "#define USE_HAL_DRIVER"
   *
@@ -41,6 +41,8 @@
 #ifdef __cplusplus
  extern "C" {
 #endif /* __cplusplus */
+
+#ifdef ARCH_stm32h7
 
 /** @addtogroup Library_configuration_section
   * @{
@@ -111,6 +113,8 @@
                                       |(__CMSIS_DEVICE_HAL_VERSION_SUB1 << 16)\
                                       |(__CMSIS_DEVICE_HAL_VERSION_SUB2 << 8 )\
                                       |(__CMSIS_DEVICE_HAL_VERSION_RC))
+
+#define HSE_VALUE ((uint32_t)__CPU_OSC_FREQ__)
 
 /**
   * @}
@@ -223,6 +227,7 @@ typedef enum
  #include "stm32h7xx_hal.h"
 #endif /* USE_HAL_DRIVER */
 
+#endif /* ARCH_stm32h7 */
 
 #ifdef __cplusplus
 }

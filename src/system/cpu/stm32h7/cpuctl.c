@@ -31,8 +31,8 @@
 ==============================================================================*/
 #include "config.h"
 #include "stm32h7/cpuctl.h"
-#include "stm32h7/stm32fhxx.h"
-#include "stm32h7/lib/stm32fhxx_ll_rcc.h"
+#include "stm32h7/stm32h7xx.h"
+#include "stm32h7/lib/stm32h7xx_ll_rcc.h"
 #include "stm32h7/lib/misc.h"
 #include "kernel/kwrapper.h"
 #include "kernel/kpanic.h"
@@ -45,11 +45,17 @@
 #define SCB_SysCtrl             (*((__IO uint32_t *)0xE000ED10))
 #define SysCtrl_SLEEPDEEP       ((uint32_t)0x00000004)
 
+#define RAM1_START              ((void *)&__ram1_start)
+#define RAM1_SIZE               ((size_t)&__ram1_size)
+
 #define RAM2_START              ((void *)&__ram2_start)
 #define RAM2_SIZE               ((size_t)&__ram2_size)
 
-#define DTCM_START              ((void *)&__dtcm_start)
-#define DTCM_SIZE               ((size_t)&__dtcm_size)
+#define RAM3_START              ((void *)&__ram3_start)
+#define RAM3_SIZE               ((size_t)&__ram3_size)
+
+#define RAM4_START              ((void *)&__ram4_start)
+#define RAM4_SIZE               ((size_t)&__ram4_size)
 
 // Memory Management Fault Status Register
 #define NVIC_MFSR               (*(volatile unsigned char*)(0xE000ED28u))
@@ -105,13 +111,19 @@ void get_registers_from_stack(uint32_t *stack_address);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-//extern void *__ram2_start;
-//extern void *__ram2_size;
-//extern void *__dtcm_start;
-//extern void *__dtcm_size;
+extern void *__ram1_start;
+extern void *__ram1_size;
+extern void *__ram2_start;
+extern void *__ram2_size;
+extern void *__ram3_start;
+extern void *__ram3_size;
+extern void *__ram4_start;
+extern void *__ram4_size;
 
-//static _mm_region_t ram2;
-//static _mm_region_t dtcm;
+static _mm_region_t ram1;
+static _mm_region_t ram2;
+static _mm_region_t ram3;
+static _mm_region_t ram4;
 
 static volatile reg_dump_t reg_dump __attribute__ ((section (".noinit")));
 
@@ -143,14 +155,27 @@ void _cpuctl_init(void)
 #endif
 
         /* enable sleep on idle debug */
-        SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
+        SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEPD1);
 
         #if (__OS_MONITOR_CPU_LOAD__ > 0)
         _cpuctl_init_CPU_load_counter();
         #endif
 
-        _mm_register_region(&ram2, RAM2_START, RAM2_SIZE);
-        _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE);
+        if (RAM1_SIZE > 0) {
+                _mm_register_region(&ram1, RAM1_START, RAM1_SIZE);
+        }
+
+        if (RAM2_SIZE > 0) {
+                _mm_register_region(&ram2, RAM2_START, RAM2_SIZE);
+        }
+
+        if (RAM3_SIZE > 0) {
+                _mm_register_region(&ram3, RAM3_START, RAM3_SIZE);
+        }
+
+        if (RAM4_SIZE > 0) {
+                _mm_register_region(&ram4, RAM4_START, RAM4_SIZE);
+        }
 }
 
 //==============================================================================
@@ -172,15 +197,15 @@ void _cpuctl_shutdown_system(void)
 {
         // Note: implementation enters to deep sleep mode.
 
-        /* enable power module */
-        RCC->APB1ENR |= RCC_APB1ENR_PWREN;
-
-        /* Clear Wake-up flag */
-        PWR->CR2 |= PWR_CR2_CWUPF1 | PWR_CR2_CWUPF2 | PWR_CR2_CWUPF3
-                  | PWR_CR2_CWUPF4 | PWR_CR2_CWUPF5 | PWR_CR2_CWUPF6;
-
-        /* Select STANDBY mode */
-        PWR->CR1 |= PWR_CR1_PDDS;
+//        /* enable power module */
+//        RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+//
+//        /* Clear Wake-up flag */
+//        PWR->CR2 |= PWR_CR2_CWUPF1 | PWR_CR2_CWUPF2 | PWR_CR2_CWUPF3
+//                  | PWR_CR2_CWUPF4 | PWR_CR2_CWUPF5 | PWR_CR2_CWUPF6;
+//
+//        /* Select STANDBY mode */
+//        PWR->CR1 |= PWR_CR1_PDDS;
 
         /* Set SLEEPDEEP bit of Cortex System Control Register */
         SCB_SysCtrl |= SysCtrl_SLEEPDEEP;
