@@ -162,18 +162,26 @@ void _cpuctl_init(void)
         #endif
 
         if (RAM1_SIZE > 0) {
+                SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM1EN);
                 _mm_register_region(&ram1, RAM1_START, RAM1_SIZE);
         }
 
         if (RAM2_SIZE > 0) {
+                SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM2EN);
                 _mm_register_region(&ram2, RAM2_START, RAM2_SIZE);
         }
 
         if (RAM3_SIZE > 0) {
+                SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM3EN);
                 _mm_register_region(&ram3, RAM3_START, RAM3_SIZE);
         }
 
         if (RAM4_SIZE > 0) {
+                /*
+                 * As shown in Figure 60, FLASH, AXISRAM, SRAM4, ITCM, DTCM1 and DTCM2 are
+                 * implicitly allocated to the CPU. As a result, there is no enable bit allowing
+                 * the CPU to allocate these memories.
+                 */
                 _mm_register_region(&ram4, RAM4_START, RAM4_SIZE);
         }
 }
