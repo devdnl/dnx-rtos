@@ -1,3 +1,12 @@
+dnx RTOS 2.3.3 Falcon
+=====================
+New Features, Improvements:
+- Removed kworker mode 0 and 1
+- Added heap and process consistency check
+- Added killing program when crashes instead of entire system reboot
+- Added strdup() and strndup() functions
+- Added stm32f3 port
+
 dnx RTOS 2.3.0 Falcon
 =====================
 New Features, Improvements:
