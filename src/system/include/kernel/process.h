@@ -43,11 +43,7 @@ extern "C" {
   Exported symbolic constants/macros
 ==============================================================================*/
 /** STANDARD STACK SIZES */
-#if __OS_TASK_KWORKER_MODE__ == 2
 #define _FS_STACK __OS_IO_STACK_DEPTH__
-#else
-#define _FS_STACK 0
-#endif
 
 #define STACK_DEPTH_MINIMAL             ((1   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (_FS_STACK))
 #define STACK_DEPTH_VERY_LOW            ((2   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (_FS_STACK))
@@ -227,6 +223,10 @@ extern int         _process_thread_kill                 (_process_t*, tid_t);
 extern task_t     *_process_thread_get_task             (_process_t *proc, tid_t tid);
 extern int         _process_thread_get_stat             (pid_t, tid_t tid, thread_stat_t*);
 extern void        _process_syscall_stat_inc            (_process_t *proc, _process_t *kworker);
+extern bool        _process_is_consistent               (bool from_IRQ);
+extern void        _process_enter_kernelspace           (_process_t *proc);
+extern void        _process_exit_kernelspace            (_process_t *proc);
+extern bool        _process_is_kernelspace              (_process_t *proc, tid_t thread);
 extern void        _task_switched_in                    (task_t *task, void *task_tag);
 extern void        _task_switched_out                   (task_t *task, void *task_tag);
 extern void        _calculate_CPU_load                  (void);

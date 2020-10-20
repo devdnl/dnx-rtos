@@ -475,6 +475,7 @@ int _vfs_opendir(const struct vfs_path *path, DIR **dir)
                 }
 
                 if (!err) {
+                        (*dir)->header.self = *dir;
                         (*dir)->header.type = RES_TYPE_DIR;
                 } else {
                         _kfree(_MM_KRN, cast(void**, dir));
@@ -500,6 +501,7 @@ int _vfs_closedir(DIR *dir)
         if (is_dir_valid(dir)) {
                 err = dir->FS_if->fs_closedir(dir->FS_hdl, dir);
                 if (!err) {
+                        dir->header.self = NULL;
                         dir->header.type = RES_TYPE_UNKNOWN;
                         _kfree(_MM_KRN, cast(void**, &dir));
                 }
@@ -910,6 +912,7 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
                                 file_obj->FS_hdl      = fs->handle;
                                 file_obj->FS_if       = fs->interface;
                                 file_obj->f_flag      = f_flags;
+                                file_obj->header.self = file_obj;
                                 file_obj->header.type = RES_TYPE_FILE;
                         }
                 }
@@ -947,8 +950,8 @@ int _vfs_fclose(FILE *file, bool force)
         if (is_file_valid(file) && file->FS_if->fs_close) {
                 err = file->FS_if->fs_close(file->FS_hdl, file->f_hdl, force);
                 if (!err) {
+                        file->header.self = NULL;
                         file->header.type = RES_TYPE_UNKNOWN;
-                        file->FS_hdl      = NULL;
                         file->FS_hdl      = NULL;
                         _kfree(_MM_KRN, cast(void**, &file));
                 }

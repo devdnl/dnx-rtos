@@ -49,6 +49,8 @@ extern "C" {
 #ifndef DOXYGEN
 #define __need_size_t
 #include <stddef.h>
+#include <kernel/syscall.h>
+#include <lib/strlcpy.h>
 #endif
 
 /*==============================================================================
@@ -790,9 +792,6 @@ extern int strcasecmp(const char *s1, const char *s2);
 //==============================================================================
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 
-/*==============================================================================
-  Exported inline functions
-==============================================================================*/
 //==============================================================================
 /**
  * @brief Function returns a pointer to an error string.
@@ -815,6 +814,75 @@ extern int strncasecmp(const char *s1, const char *s2, size_t n);
  */
 //==============================================================================
 extern const char *strerror(int errnum);
+
+/*==============================================================================
+  Exported inline functions
+==============================================================================*/
+//==============================================================================
+/**
+ * @brief The strndup() function is used to duplicate a string of size n.
+ *
+ * This function returns a pointer to a null-terminated byte string, which is
+ * a duplicate of the string pointed to by s. The memory obtained is done
+ * dynamically using malloc and hence it can be freed using free().
+ *
+ * @param s             string
+ * @param n             string size
+ *
+ * @return It returns a pointer to the duplicated string s.
+ *
+ * @b Example
+ * @code
+        // ...
+        char *duplicate = strndup("My string", 4);
+        // duplicate is: "My s"
+        // ...
+        free(duplicate);
+        // ...
+   @endcode
+ *
+ * @see strdup, free
+ */
+//==============================================================================
+static inline char *strndup(const char *s, size_t n)
+{
+        n += 1;
+        char *dup = NULL;
+        syscall(SYSCALL_MALLOC, &dup, &n);
+        if (dup) {
+                _strlcpy(dup, s, n);
+        }
+        return dup;
+}
+
+//==============================================================================
+/**
+ * @brief The strdup() function is used to duplicate a string.
+ *
+ * This function returns a pointer to a null-terminated byte string, which is
+ * a duplicate of the string pointed to by s. The memory obtained is done
+ * dynamically using malloc and hence it can be freed using free().
+ *
+ * @param s             string
+ *
+ * @return It returns a pointer to the duplicated string s.
+ *
+ * @b Example
+ * @code
+        // ...
+        char *duplicate = strdup("My string");
+        // ...
+        free(duplicate);
+        // ...
+   @endcode
+ *
+ * @see strndup, free
+ */
+//==============================================================================
+static inline char *strdup(const char *s)
+{
+        return strndup(s, strlen(s));
+}
 
 #ifdef __cplusplus
 }

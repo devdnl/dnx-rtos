@@ -279,6 +279,7 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
                                 usage = &memory_usage[mpur];
                                 err   = ESUCC;
                                 (*cast(res_header_t**, mem))->next = NULL;
+                                (*cast(res_header_t**, mem))->self = NULL;
                                 (*cast(res_header_t**, mem))->type = RES_TYPE_UNKNOWN;
                         } else {
                                 err = EFAULT;
@@ -480,9 +481,29 @@ bool _mm_is_object_in_heap(void *ptr)
  * @return If pointer is in .text section true is returned, otherwise false.
  */
 //==============================================================================
-bool _mm_is_rom_address(void *ptr)
+bool _mm_is_rom_address(const void *ptr)
 {
         return (ptr != NULL) && (ptr >= TEXT_START) && (ptr <= TEXT_END);
+}
+
+//==============================================================================
+/**
+ * @brief  Function check consistency of all memory regions.
+ *
+ * @return On success true is returned otherwise false.
+ */
+//==============================================================================
+bool _mm_check_consistency(void)
+{
+        bool ok = true;
+
+        for (_mm_region_t *r = &memory_region; r && ok; r = r->next) {
+                _kernel_scheduler_lock();
+                ok = _heap_check_consistency(&r->heap);
+                _kernel_scheduler_unlock();
+        }
+
+        return ok;
 }
 
 //==============================================================================
@@ -576,6 +597,7 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 
                                         if (mpur == _MM_PROG) {
                                                  cast(res_header_t*, blk)->next = NULL;
+                                                 cast(res_header_t*, blk)->self = blk;
                                                  cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
                                         }
 
