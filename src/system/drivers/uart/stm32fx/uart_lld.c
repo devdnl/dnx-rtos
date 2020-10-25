@@ -3,7 +3,7 @@
 
 @author  Daniel Zorychta
 
-@brief   This file support USART peripherals for STM32F1/F4/F7.
+@brief   This file support USART peripherals for STM32F1/F3/F4/F7.
          * STM32F7 architecture is supported without extra features.
 
 @note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
@@ -39,27 +39,36 @@
 #if defined(ARCH_stm32f1)
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
-#define RDR             DR
-#define TDR             DR
+#define RDR                     DR
+#define TDR                     DR
+#define USART_CLKSOURCE_PCLK1   1
+#define USART_CLKSOURCE_PCLK2   2
 #elif defined(ARCH_stm32f3)
 #include "stm32f3/stm32f3xx.h"
 #include "stm32f3/lib/stm32f3xx_ll_rcc.h"
-#define SR              ISR
-#define USART_SR_RXNE   USART_ISR_RXNE
-#define USART_SR_ORE    USART_ISR_ORE
-#define USART_SR_TC     USART_ISR_TC
+#define SR                      ISR
+#define USART_SR_RXNE           USART_ISR_RXNE
+#define USART_SR_ORE            USART_ISR_ORE
+#define USART_SR_TC             USART_ISR_TC
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
-#define RDR             DR
-#define TDR             DR
+#define RDR                     DR
+#define TDR                     DR
 #elif defined(ARCH_stm32f7)
 #include "stm32f7/stm32f7xx.h"
 #include "stm32f7/lib/stm32f7xx_ll_rcc.h"
-#define SR              ISR
-#define USART_SR_RXNE   USART_ISR_RXNE
-#define USART_SR_ORE    USART_ISR_ORE
-#define USART_SR_TC     USART_ISR_TC
+#define SR                      ISR
+#define USART_SR_RXNE           USART_ISR_RXNE
+#define USART_SR_ORE            USART_ISR_ORE
+#define USART_SR_TC             USART_ISR_TC
+#elif defined(ARCH_stm32h7)
+#include "stm32h7/stm32h7xx.h"
+#include "stm32h7/lib/stm32h7xx_ll_rcc.h"
+#define SR                      ISR
+#define USART_SR_RXNE           USART_ISR_RXNE_RXFNE
+#define USART_SR_ORE            USART_ISR_ORE
+#define USART_SR_TC             USART_ISR_TC
 #endif
 
 /*==============================================================================
@@ -77,9 +86,7 @@ typedef struct {
         const uint32_t  APBENR_UARTEN;
         const uint32_t  APBRSTR_UARTRST;
         const IRQn_Type IRQn;
-        #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
         const u32_t     CLKSRC;
-        #endif
 } UART_regs_t;
 
 /*==============================================================================
@@ -94,125 +101,261 @@ static const UART_regs_t UART[] = {
         #if defined(RCC_APB2ENR_USART1EN)
         {
                 .UART            = USART1,
+                .IRQn            = USART1_IRQn,
+                #if defined(ARCH_stm32h7)
                 .APBENR          = &RCC->APB2ENR,
                 .APBRSTR         = &RCC->APB2RSTR,
                 .APBENR_UARTEN   = RCC_APB2ENR_USART1EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART1RST,
-                .IRQn            = USART1_IRQn,
-                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
+                #else
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_USART1EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_USART1RST,
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART_CLKSOURCE_PCLK2,
+                #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART1_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_USART1_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART16_CLKSOURCE,
                 #endif
         },
         #endif
-        #if defined(RCC_APB1ENR_USART2EN)
+        #if defined(RCC_APB1ENR_USART2EN) || defined(RCC_APB1LENR_USART2EN)
         {
                 .UART            = USART2,
+                .IRQn            = USART2_IRQn,
+                #if defined(ARCH_stm32h7)
+                .APBENR          = &RCC->APB1LENR,
+                .APBRSTR         = &RCC->APB1LRSTR,
+                .APBENR_UARTEN   = RCC_APB1LENR_USART2EN,
+                .APBRSTR_UARTRST = RCC_APB1LRSTR_USART2RST,
+                #else
                 .APBENR          = &RCC->APB1ENR,
                 .APBRSTR         = &RCC->APB1RSTR,
                 .APBENR_UARTEN   = RCC_APB1ENR_USART2EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART2RST,
-                .IRQn            = USART2_IRQn,
-                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART_CLKSOURCE_PCLK1,
+                #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART2_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_USART2_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
                 #endif
         },
         #endif
-        #if defined(RCC_APB1ENR_USART3EN)
+        #if defined(RCC_APB1ENR_USART3EN) || defined(RCC_APB1LENR_USART3EN)
         {
                 .UART            = USART3,
+                .IRQn            = USART3_IRQn,
+                #if defined(ARCH_stm32h7)
+                .APBENR          = &RCC->APB1LENR,
+                .APBRSTR         = &RCC->APB1LRSTR,
+                .APBENR_UARTEN   = RCC_APB1LENR_USART3EN,
+                .APBRSTR_UARTRST = RCC_APB1LRSTR_USART3RST,
+                #else
                 .APBENR          = &RCC->APB1ENR,
                 .APBRSTR         = &RCC->APB1RSTR,
                 .APBENR_UARTEN   = RCC_APB1ENR_USART3EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART3RST,
-                .IRQn            = USART3_IRQn,
-                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART_CLKSOURCE_PCLK1,
+                #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART3_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_USART3_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
                 #endif
         },
         #endif
-        #if defined(RCC_APB1ENR_UART4EN)
+        #if defined(RCC_APB1ENR_UART4EN) || defined(RCC_APB1LENR_UART4EN)
         {
                 .UART            = UART4,
+                .IRQn            = UART4_IRQn,
+                #if defined(ARCH_stm32h7)
+                .APBENR          = &RCC->APB1LENR,
+                .APBRSTR         = &RCC->APB1LRSTR,
+                .APBENR_UARTEN   = RCC_APB1LENR_UART4EN,
+                .APBRSTR_UARTRST = RCC_APB1LRSTR_UART4RST,
+                #else
                 .APBENR          = &RCC->APB1ENR,
                 .APBRSTR         = &RCC->APB1RSTR,
                 .APBENR_UARTEN   = RCC_APB1ENR_UART4EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART4RST,
-                .IRQn            = UART4_IRQn,
-                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART_CLKSOURCE_PCLK1,
+                #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART4_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART4_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
                 #endif
         },
         #endif
-        #if defined(RCC_APB1ENR_UART5EN)
+        #if defined(RCC_APB1ENR_UART5EN) || defined(RCC_APB1LENR_UART5EN)
         {
                 .UART            = UART5,
+                .IRQn            = UART5_IRQn,
+                #if defined(ARCH_stm32h7)
+                .APBENR          = &RCC->APB1LENR,
+                .APBRSTR         = &RCC->APB1LRSTR,
+                .APBENR_UARTEN   = RCC_APB1LENR_UART5EN,
+                .APBRSTR_UARTRST = RCC_APB1LRSTR_UART5RST,
+                #else
                 .APBENR          = &RCC->APB1ENR,
                 .APBRSTR         = &RCC->APB1RSTR,
                 .APBENR_UARTEN   = RCC_APB1ENR_UART5EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART5RST,
-                .IRQn            = UART5_IRQn,
-                #if defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART_CLKSOURCE_PCLK1,
+                #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART5_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART5_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
                 #endif
         },
         #endif
         #if defined(RCC_APB2ENR_USART6EN)
         {
                 .UART            = USART6,
+                .IRQn            = USART6_IRQn,
+                #if defined(ARCH_stm32h7)
                 .APBENR          = &RCC->APB2ENR,
                 .APBRSTR         = &RCC->APB2RSTR,
                 .APBENR_UARTEN   = RCC_APB2ENR_USART6EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART6RST,
-                .IRQn            = USART6_IRQn,
-                #if defined(ARCH_stm32f7)
+                #else
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_USART6EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_USART6RST,
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART_CLKSOURCE_PCLK2,
+                #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART6_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_USART6_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART16_CLKSOURCE,
                 #endif
         },
         #endif
-        #if defined(RCC_APB1ENR_UART7EN)
+        #if defined(RCC_APB1ENR_UART7EN) || defined(RCC_APB1LENR_UART7EN)
         {
                 .UART            = UART7,
+                .IRQn            = UART7_IRQn,
+                #if defined(ARCH_stm32h7)
+                .APBENR          = &RCC->APB1LENR,
+                .APBRSTR         = &RCC->APB1LRSTR,
+                .APBENR_UARTEN   = RCC_APB1LENR_UART7EN,
+                .APBRSTR_UARTRST = RCC_APB1LRSTR_UART7RST,
+                #else
                 .APBENR          = &RCC->APB1ENR,
                 .APBRSTR         = &RCC->APB1RSTR,
                 .APBENR_UARTEN   = RCC_APB1ENR_UART7EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART7RST,
-                .IRQn            = UART7_IRQn,
-                #if defined(ARCH_stm32f7)
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART_CLKSOURCE_PCLK1,
+                #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART7_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART7_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
                 #endif
         },
         #endif
-        #if defined(RCC_APB1ENR_UART8EN)
+        #if defined(RCC_APB1ENR_UART8EN) || defined(RCC_APB1LENR_UART8EN)
         {
                 .UART            = UART8,
+                .IRQn            = UART8_IRQn,
+                #if defined(ARCH_stm32h7)
+                .APBENR          = &RCC->APB1LENR,
+                .APBRSTR         = &RCC->APB1LRSTR,
+                .APBENR_UARTEN   = RCC_APB1LENR_UART8EN,
+                .APBRSTR_UARTRST = RCC_APB1LRSTR_UART8RST,
+                #else
                 .APBENR          = &RCC->APB1ENR,
                 .APBRSTR         = &RCC->APB1RSTR,
                 .APBENR_UARTEN   = RCC_APB1ENR_UART8EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART8RST,
-                .IRQn            = UART8_IRQn,
-                #if defined(ARCH_stm32f7)
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART_CLKSOURCE_PCLK1,
+                #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART8_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART8_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
                 #endif
         },
         #endif
         #if defined(RCC_APB2ENR_UART9EN)
         {
                 .UART            = UART9,
+                .IRQn            = UART9_IRQn,
+                #if defined(ARCH_stm32h7)
                 .APBENR          = &RCC->APB2ENR,
                 .APBRSTR         = &RCC->APB2RSTR,
                 .APBENR_UARTEN   = RCC_APB2ENR_UART9EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_UART9RST,
-                .IRQn            = UART9_IRQn,
+                #else
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_UART9EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_UART9RST,
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART9_CLKSOURCE_PCLK1,
+                #elif defined(ARCH_stm32f3)
+                .CLKSRC          = LL_RCC_UART9_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART9_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART16910_CLKSOURCE,
+                #endif
         },
         #endif
-        #if defined(RCC_APB2ENR_UART10EN)
+        #if defined(RCC_APB2ENR_UART10EN) || defined(RCC_APB2ENR_USART10EN)
         {
                 .UART            = UART10,
+                .IRQn            = UART10_IRQn,
+                #if defined(ARCH_stm32h7)
                 .APBENR          = &RCC->APB2ENR,
                 .APBRSTR         = &RCC->APB2RSTR,
                 .APBENR_UARTEN   = RCC_APB2ENR_UART10EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_UART10RST,
-                .IRQn            = UART10_IRQn,
+                #else
+                .APBENR          = &RCC->APB2ENR,
+                .APBRSTR         = &RCC->APB2RSTR,
+                .APBENR_UARTEN   = RCC_APB2ENR_UART10EN,
+                .APBRSTR_UARTRST = RCC_APB2RSTR_UART10RST,
+                #endif
+                #if defined(ARCH_stm32f1)
+                .CLKSRC          = USART_CLKSOURCE_PCLK1,
+                #elif defined(ARCH_stm32f3)
+                .CLKSRC          = LL_RCC_UART10_CLKSOURCE,
+                #elif defined(ARCH_stm32f7)
+                .CLKSRC          = LL_RCC_UART10_CLKSOURCE,
+                #elif defined(ARCH_stm32h7)
+                .CLKSRC          = LL_RCC_USART16910_CLKSOURCE,
+                #endif
         }
         #endif
 };
@@ -330,24 +473,26 @@ void _UART_LLD__rx_hold(u8_t major)
 void _UART_LLD__configure(u8_t major, const struct UART_config *config)
 {
         const UART_regs_t *DEV = &UART[major];
+        u32_t PCLK = 0;
 
         /* set baud */
 #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
         RCC_ClocksTypeDef freq;
         RCC_GetClocksFreq(&freq);
 
-        u32_t PCLK = freq.PCLK1_Frequency;
+        switch (DEV->CLKSRC) {
+        case USART_CLKSOURCE_PCLK1:
+                PCLK = freq.PCLK1_Frequency;
+                break;
 
-        #if defined(USART1)
-        PCLK = (DEV->UART == USART1) ? freq.PCLK2_Frequency : PCLK;
-        #endif
-
-        #if defined(USART6)
-        PCLK = (DEV->UART == USART6) ? freq.PCLK2_Frequency : PCLK;
-        #endif
+        case USART_CLKSOURCE_PCLK2:
+                PCLK = freq.PCLK2_Frequency;
+                break;
+        default:
+                printk("UART: invalid CLKSRC!");
+                break;
+        }
 #elif defined(ARCH_stm32f7) || defined(ARCH_stm32f3)
-        u32_t PCLK = 0;
-
         switch (DEV->CLKSRC) {
         #if defined(LL_RCC_USART1_CLKSOURCE)
         case LL_RCC_USART1_CLKSOURCE:
@@ -381,6 +526,8 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         default:
                 break;
         }
+#elif defined(ARCH_stm32h7)
+        PCLK = LL_RCC_GetUSARTClockFreq(DEV->CLKSRC);
 #endif
 
         DEV->UART->BRR = (PCLK / (config->baud)) + 1;
@@ -529,7 +676,7 @@ void USART1_IRQHandler(void)
  * @brief USART2 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_USART2EN)
+#if defined(RCC_APB1ENR_USART2EN) || defined(RCC_APB1LENR_USART2EN)
 void USART2_IRQHandler(void)
 {
         IRQ_handle(_UART2);
@@ -541,7 +688,7 @@ void USART2_IRQHandler(void)
  * @brief USART3 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_USART3EN)
+#if defined(RCC_APB1ENR_USART3EN) || defined(RCC_APB1LENR_USART3EN)
 void USART3_IRQHandler(void)
 {
         IRQ_handle(_UART3);
@@ -553,7 +700,7 @@ void USART3_IRQHandler(void)
  * @brief UART4 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART4EN)
+#if defined(RCC_APB1ENR_UART4EN) || defined(RCC_APB1LENR_UART4EN)
 void UART4_IRQHandler(void)
 {
         IRQ_handle(_UART4);
@@ -565,7 +712,7 @@ void UART4_IRQHandler(void)
  * @brief UART5 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART5EN)
+#if defined(RCC_APB1ENR_UART5EN) || defined(RCC_APB1LENR_UART5EN)
 void UART5_IRQHandler(void)
 {
         IRQ_handle(_UART5);
@@ -589,7 +736,7 @@ void USART6_IRQHandler(void)
  * @brief UART7 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART7EN)
+#if defined(RCC_APB1ENR_UART7EN) || defined(RCC_APB1LENR_UART7EN)
 void UART7_IRQHandler(void)
 {
         IRQ_handle(_UART7);
@@ -601,7 +748,7 @@ void UART7_IRQHandler(void)
  * @brief UART8 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_UART8EN)
+#if defined(RCC_APB1ENR_UART8EN) || defined(RCC_APB1LENR_UART8EN)
 void UART8_IRQHandler(void)
 {
         IRQ_handle(_UART8);
@@ -625,7 +772,7 @@ void UART9_IRQHandler(void)
  * @brief UART10 Interrupt
  */
 //==============================================================================
-#if defined(RCC_APB2ENR_UART10EN)
+#if defined(RCC_APB2ENR_UART10EN) || defined(RCC_APB2ENR_USART10EN)
 void UART10_IRQHandler(void)
 {
         IRQ_handle(_UART10);
