@@ -42,6 +42,42 @@ this:SetLayout("TitledGridBack", 3, "Home > Microcontroller > CLK",
 this:SetEvent("PostDiscard", function() this:CalculateFreq() end)
 ++*/
 
+//==============================================================================
+// Oscillators Configuration
+//==============================================================================
+/*--
+this:AddExtraWidget("Label", "LABEL_OSCILLATORS", "Oscillators", -1, "bold")
+this:AddExtraWidget("Void", "VoidOsc1")
+this:AddExtraWidget("Void", "VoidOsc2")
+++*/
+/*--
+this:AddWidget("Combobox", "LSI oscillator")
+this:AddItem("Disable", "DISABLE")
+this:AddItem("Enable", "ENABLE")
+this:SetEvent("clicked", function() this.CalculateFreq() end)
+this:AddExtraWidget("Label", "LABEL_LSI_ON", "")
+--*/
+#define __CLK_LSI_ON__ ENABLE
+
+/*--
+this:AddWidget("Combobox", "LSE oscillator")
+this:AddItem("Disable", "DISABLE")
+this:AddItem("Enable", "ENABLE")
+this:AddItem("Baypass", "_CLK_BAYPASS")
+this:SetEvent("clicked", function() this.CalculateFreq() end)
+this:AddExtraWidget("Label", "LABEL_LSE_ON", "")
+--*/
+#define __CLK_LSE_ON__ ENABLE
+
+/*--
+this:AddWidget("Combobox", "HSE oscillator")
+this:AddItem("Disable", "DISABLE")
+this:AddItem("Enable", "ENABLE")
+this:AddItem("Baypass", "_CLK_BAYPASS")
+this:SetEvent("clicked", function() this.CalculateFreq() end)
+this:AddExtraWidget("Label", "LABEL_HSE_ON", "")
+--*/
+#define __CLK_HSE_ON__ _CLK_BAYPASS
 
 #endif /* _CLK_FLAGS_H_ */
 /*==============================================================================

@@ -38,6 +38,8 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+#define TIMEOUT_MS                      250
+#define LSE_TIMEOUT_MS                  5000
 
 /*==============================================================================
   Local types, enums definitions
@@ -78,6 +80,204 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         int err = ESUCC;
 
         LL_RCC_DeInit();
+
+        //----------------------------------------------------------------------
+        // LSI OSCILLATOR
+        //----------------------------------------------------------------------
+        if (__CLK_LSI_ON__) {
+                LL_RCC_LSI_Enable();
+
+                u64_t tref = sys_time_get_reference();
+                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (LL_RCC_LSI_IsReady()) {
+                                break;
+                        }
+                }
+
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: LSI timeout");
+                }
+        }
+
+        //----------------------------------------------------------------------
+        // LSE OSCILLATOR
+        //----------------------------------------------------------------------
+        if (__CLK_LSE_ON__) {
+
+                SET_BIT(PWR->CR1, PWR_CR1_DBP);
+
+                if (!(RCC->BDCR & RCC_BDCR_LSERDY)) {
+
+                        if (__CLK_LSE_ON__ == _CLK_BAYPASS) {
+                                LL_RCC_LSE_EnableBypass();
+
+                        } else {
+                                LL_RCC_LSE_Enable();
+
+                                u64_t tref = sys_time_get_reference();
+                                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                        if (LL_RCC_LSE_IsReady()) {
+                                                break;
+                                        }
+                                }
+
+                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                        printk("CLK: LSE timeout");
+                                }
+                        }
+                }
+        }
+
+        //----------------------------------------------------------------------
+        // HSE OSCILLATOR
+        //----------------------------------------------------------------------
+        if (__CLK_HSE_ON__) {
+
+                if (__CLK_HSE_ON__ == _CLK_BAYPASS) {
+                        LL_RCC_HSE_Enable();
+                        LL_RCC_HSE_EnableBypass();
+
+                } else {
+                        LL_RCC_HSE_Enable();
+
+                        u64_t tref = sys_time_get_reference();
+                        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                if (LL_RCC_HSE_IsReady()) {
+                                        break;
+                                }
+                        }
+
+                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                printk("CLK: HSE timeout");
+                        }
+                }
+        }
+
+        //----------------------------------------------------------------------
+        // PLL1
+        //----------------------------------------------------------------------
+#define __CLK_PLL1_P__ 1
+#define __CLK_PLL1_Q__ 1
+#define __CLK_PLL1_R__ 1
+#define __CLK_PLL1_M__ 8 // 0-63
+#define __CLK_PLL1_N__ 60 // 4-512
+
+        u32_t pllinputfreq = 0;
+
+        switch (LL_RCC_PLL_GetSource()) {
+        case LL_RCC_PLLSOURCE_HSI:
+                if (LL_RCC_HSI_IsReady() != 0U) {
+                        pllinputfreq = HSI_VALUE >> (LL_RCC_HSI_GetDivider() >> RCC_CR_HSIDIV_Pos);
+                }
+                break;
+
+        case LL_RCC_PLLSOURCE_CSI:
+                if (LL_RCC_CSI_IsReady() != 0U) {
+                        pllinputfreq = CSI_VALUE;
+                }
+                break;
+
+        case LL_RCC_PLLSOURCE_HSE:
+                if (LL_RCC_HSE_IsReady() != 0U) {
+                        pllinputfreq = HSE_VALUE;
+                }
+                break;
+        }
+
+        u32_t pll_input_range;
+        u32_t pll_ouput_range;
+
+        if (pllinputfreq >= 8000000) {
+                pll_input_range = LL_RCC_PLLINPUTRANGE_8_16;
+                pll_ouput_range = LL_RCC_PLLVCORANGE_WIDE;
+        } else if (pllinputfreq >= 4000000) {
+                pll_input_range = LL_RCC_PLLINPUTRANGE_4_8;
+                pll_ouput_range = LL_RCC_PLLVCORANGE_WIDE;
+        } else if (pllinputfreq >= 2000000) {
+                pll_input_range = LL_RCC_PLLINPUTRANGE_2_4;
+                pll_ouput_range = LL_RCC_PLLVCORANGE_WIDE;
+        } else {
+                pll_input_range = LL_RCC_PLLINPUTRANGE_1_2;
+                pll_ouput_range = LL_RCC_PLLVCORANGE_MEDIUM;
+        }
+
+
+
+
+        /* Configure voltage regulator */
+        //Set the highest core voltage (Scale 1)
+        SET_BIT(PWR->D3CR, PWR_D3CR_VOS_1 | PWR_D3CR_VOS_0);
+        u64_t tref = sys_time_get_reference();
+        while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: VOSRDY timeout");
+                        break;
+                }
+
+                sys_sleep_ms(1);
+        }
+
+
+        SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
+        SET_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN);
+        tref = sys_time_get_reference();
+        while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: VOSRDY timeout");
+                        break;
+                }
+
+                sys_sleep_ms(1);
+        }
+
+
+
+
+
+
+        LL_RCC_PLL1P_Enable(); // osobne sterowanie
+        LL_RCC_PLL1Q_Enable();
+        LL_RCC_PLL1R_Enable();
+
+        LL_RCC_PLL1_SetP(__CLK_PLL1_P__);
+        LL_RCC_PLL1_SetQ(__CLK_PLL1_Q__);
+        LL_RCC_PLL1_SetR(__CLK_PLL1_R__);
+        LL_RCC_PLL1_SetM(__CLK_PLL1_M__);
+        LL_RCC_PLL1_SetN(__CLK_PLL1_N__);
+
+        LL_RCC_PLL1_SetVCOOutputRange(pll_ouput_range);
+        LL_RCC_PLL1_SetVCOInputRange(pll_input_range);
+
+        LL_RCC_PLL1_Enable();
+
+        tref = sys_time_get_reference();
+        while (not LL_RCC_PLL1_IsReady()) {
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: PLL1 timeout");
+                        break;
+                }
+
+                sys_sleep_ms(1);
+        }
+
+
+
+
+
+
+
+
+        LL_RCC_SetSysPrescaler(LL_RCC_SYSCLK_DIV_1);
+        LL_RCC_SetAHBPrescaler(LL_RCC_AHB_DIV_2);
+        LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_8);
+        LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_8);
+        LL_RCC_SetAPB3Prescaler(LL_RCC_APB3_DIV_8);
+        LL_RCC_SetAPB4Prescaler(LL_RCC_APB4_DIV_8);
+
+        LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL1);
+        while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL1);
+
+
 
         sys_update_system_clocks();
 
