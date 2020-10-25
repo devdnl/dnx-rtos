@@ -3,8 +3,9 @@
 
 @author  Daniel Zorychta
 
-@brief   This file support USART peripherals for STM32F1/F3/F4/F7.
+@brief   This file support USART peripherals for STM32F1/F3/F4/F7/H7.
          * STM32F7 architecture is supported without extra features.
+         * STM32H7 architecture is supported without extra features.
 
 @note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -563,6 +564,11 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         } else {
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_RE);
         }
+
+        /* FIFO enable */
+        #if defined(USART_CR1_FIFOEN)
+        SET_BIT(DEV->UART->CR1, USART_CR1_FIFOEN);
+        #endif
 
         /* enable LIN if configured */
         if (config->LIN_mode_enable) {
