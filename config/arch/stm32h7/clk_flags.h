@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    config.h
+@file    clk_flags.h
 
 @author  Daniel Zorychta
 
-@brief   Global system configuration
+@brief   PLL module configuration flags.
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -26,16 +26,24 @@
 
 *//*==========================================================================*/
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+/*
+ * NOTE: All flags defined as: __FLAG_NAME__ (with doubled underscore as suffix
+ *       and prefix) are exported to the single configuration file
+ *       (by using Configtool) when entire project configuration is exported.
+ *       All other flag definitions and statements are ignored.
+ */
+#ifndef _CLK_FLAGS_H_
+#define _CLK_FLAGS_H_
 
-#include "../../../config/config.h"
+/*--
+this:SetLayout("TitledGridBack", 3, "Home > Microcontroller > CLK",
+               function() this:LoadFile("arch/arch_flags.h") end)
 
-#if _CONFIG_VERSION != 0x94125c76
-#error Configuration version mismatch!
-#endif
+this:SetEvent("PostDiscard", function() this:CalculateFreq() end)
+++*/
 
-#endif /* _CONFIG_H_ */
+
+#endif /* _CLK_FLAGS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

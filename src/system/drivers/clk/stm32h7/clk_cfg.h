@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    config.h
+@file    clk_cfg.h
 
 @author  Daniel Zorychta
 
-@brief   Global system configuration
+@brief   PLL configuration file
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -26,16 +26,39 @@
 
 *//*==========================================================================*/
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef _CLK_CFG_H_
+#define _CLK_CFG_H_
 
-#include "../../../config/config.h"
-
-#if _CONFIG_VERSION != 0x94125c76
-#error Configuration version mismatch!
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#endif /* _CONFIG_H_ */
+/*==============================================================================
+  Include files
+==============================================================================*/
+#include "config.h"
+
+/*==============================================================================
+  Exported symbolic constants/macros
+==============================================================================*/
+
+/*==============================================================================
+  Exported types, enums definitions
+==============================================================================*/
+
+/*==============================================================================
+  Exported object declarations
+==============================================================================*/
+
+/*==============================================================================
+  Exported function prototypes
+==============================================================================*/
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _CLK_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
