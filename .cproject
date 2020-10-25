@@ -16,7 +16,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395" name="Build" parent="cdt.managedbuild.config.gnu.cross.exe.debug">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395" name="Build" optionalBuildProperties="" parent="cdt.managedbuild.config.gnu.cross.exe.debug">
 					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.22955395." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.1557750196" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
 							<option id="cdt.managedbuild.option.gnu.cross.path.834040833" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path" value="/home/dnl/bin/gcc-none-eabi-arm-linaro/bin" valueType="string"/>
@@ -25,12 +25,12 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.987628345" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1945861268" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.debugging.level.266880486" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.include.paths.347086855" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.347086855" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/*/include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
 								</option>
-								<option id="gnu.c.compiler.option.preprocessor.def.symbols.178026589" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.178026589" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
 									<listOptionValue builtIn="false" value="COMPILE_EPOCH_TIME=0"/>
 									<listOptionValue builtIn="false" value="COMMIT_HASH=&quot;00000&quot;"/>
@@ -42,17 +42,17 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.93172562" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
 								<option id="gnu.cpp.compiler.option.optimization.level.2098476275" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.461217302" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.option.preprocessor.def.1619145641" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1619145641" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="&quot;ip_addr_t=struct ip_addr&quot;"/>
 									<listOptionValue builtIn="false" value="COMPILE_EPOCH_TIME=0"/>
 									<listOptionValue builtIn="false" value="COMMIT_HASH=&quot;00000&quot;"/>
 									<listOptionValue builtIn="false" value="size_t=uint32_t"/>
 									<listOptionValue builtIn="false" value="&quot;_Static_assert(_e, _m)&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.include.paths.193515825" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.193515825" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../src/system/include/libc"/>
 									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/arm-none-eabi/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/*/include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${env_var:ARM_GCC_TOOLCHAIN_PATH}/lib/gcc/arm-none-eabi/${env_var:ARM_GCC_TOOLCHAIN_VERSION}/include/&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.356385541" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -275,4 +275,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>
