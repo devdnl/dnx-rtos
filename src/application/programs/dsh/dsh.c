@@ -118,8 +118,8 @@ static void clear_prompt()
 static void print_prompt(void)
 {
         if (global->prompt_enable && global->input == stdin) {
-                printf(VT100_FONT_COLOR_GREEN"%s@%s:%s"VT100_RESET_ATTRIBUTES"\n",
-                       get_user_name(), get_host_name(), global->cwd);
+                printf(VT100_FONT_COLOR_GREEN"%s:%s"VT100_RESET_ATTRIBUTES"\n",
+                       get_host_name(), global->cwd);
 
                 printf(VT100_FONT_COLOR_GREEN"$ "VT100_RESET_ATTRIBUTES);
 

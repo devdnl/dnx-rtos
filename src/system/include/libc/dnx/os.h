@@ -638,33 +638,6 @@ static inline const char *get_host_name(void)
 
 //==============================================================================
 /**
- * @brief Function returns name of current user.
- *
- * The function get_user_name() return name of current user. Function
- * return always "root" string, because user handling is not supported yet.
- *
- * @return Return user name.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("User name: %s\n", get_user_name());
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline const char *get_user_name(void)
-{
-        return "root";
-}
-
-//==============================================================================
-/**
  * @brief Function returns a name of selected module.
  *
  * The function get_module_name() return name of selected module by using
