@@ -250,7 +250,7 @@ __CPU_NAME__=STM32H753ZIxx
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------
-#define _CPU_START_FREQUENCY_           (16000000UL)
+#define _CPU_START_FREQUENCY_           (64000000UL)
 #define _CPU_HEAP_ALIGN_                (4)
 #define _CPU_IRQ_RTOS_KERNEL_PRIORITY_  (__CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__ << 4)
 #define _CPU_IRQ_RTOS_APICALL_PRIORITY_ (__CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ << 4)

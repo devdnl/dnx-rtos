@@ -240,7 +240,7 @@ void _cpuctl_init_CPU_load_counter(void)
 
 //==============================================================================
 /**
- * @brief  Function return valut that was counted from last call of this function.
+ * @brief  Function return value that was counted from last call of this function.
  *         This function must reset timer after read. Function is called from
  *         IRQs.
  *
@@ -305,7 +305,7 @@ void _cpuctl_update_system_clocks(void)
         _critical_section_begin();
         LL_RCC_ClocksTypeDef freq;
         LL_RCC_GetSystemClocksFreq(&freq);
-        SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
+        SysTick_Config((freq.SYSCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
         _critical_section_end();
 }
 

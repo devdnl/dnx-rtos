@@ -121,7 +121,6 @@ extern const uint8_t LL_RCC_PrescTable[16];
 typedef struct
 {
   uint32_t SYSCLK_Frequency;
-  uint32_t CPUCLK_Frequency;
   uint32_t HCLK_Frequency;
   uint32_t PCLK1_Frequency;
   uint32_t PCLK2_Frequency;
