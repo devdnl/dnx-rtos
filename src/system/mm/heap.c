@@ -97,6 +97,8 @@
 #define PROTECT                         _kernel_scheduler_lock
 #define UNPROTECT                       _kernel_scheduler_unlock
 
+#define HEAP_ASSERT(_cond, _msg, _fail_var)        if (!(_cond)) {_fail_var = true; _assert_msg(_cond, _msg);}
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -237,26 +239,34 @@ static int link_valid(_heap_t *heap, struct mem *mem)
  * @brief  Function check heap consistency.
  *
  * @param  heap         heap instance
+ *
+ * @return Return true if sanity correct, otherwise false.
  */
 //==============================================================================
-static void sanity(_heap_t *heap)
+static bool sanity(_heap_t *heap)
 {
-#if __OS_HEAP_SANITY_CHECK__ == _YES_
-        _assert_msg(MEM_ALIGN_SIZE(heap->size) == heap->size, "HEAP: invalid heap size alignment");
+        bool fail = false;
+
+        HEAP_ASSERT(MEM_ALIGN_SIZE(heap->size) == heap->size, "HEAP: invalid heap size alignment", fail);
+        if (fail) return false;
 
         /* begin with first element here */
         struct mem *mem = (struct mem *)heap->ram;
 
-        _assert_msg((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid");
+        HEAP_ASSERT((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid", fail);
+        if (fail) return false;
 
         u8_t last_used = mem->used;
 
-        _assert_msg(mem->prev == 0, "HEAP: element prev ptr not valid");
+        HEAP_ASSERT(mem->prev == 0, "HEAP: element prev ptr not valid", fail);
+        if (fail) return false;
 
-        _assert_msg(mem->next <= heap->size, "HEAP: element next ptr invalid");
+        HEAP_ASSERT(mem->next <= heap->size, "HEAP: element next ptr invalid", fail);
+        if (fail) return false;
 
-        _assert_msg(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->next) == ptr_to_mem(heap, mem->next)),
-                    "HEAP: element next ptr unaligned");
+        HEAP_ASSERT(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->next) == ptr_to_mem(heap, mem->next)),
+                    "HEAP: element next ptr unaligned", fail);
+        if (fail) return false;
 
         /* check all elements before the end of the heap */
         size_t max = heap->size / SIZEOF_STRUCT_MEM;
@@ -265,40 +275,55 @@ static void sanity(_heap_t *heap)
              ((u8_t *) mem > heap->ram) && (mem < heap->ram_end);
              mem = ptr_to_mem(heap, mem->next)) {
 
-                _assert_msg(MEM_ALIGN_SIZE((uintptr_t)mem) == (uintptr_t)mem, "HEAP: element unaligned");
+                HEAP_ASSERT(MEM_ALIGN_SIZE((uintptr_t)mem) == (uintptr_t)mem, "HEAP: element unaligned", fail);
+                if (fail) return false;
 
-                _assert_msg(mem->prev <= heap->size, "HEAP: element prev ptr invalid");
+                HEAP_ASSERT(mem->prev <= heap->size, "HEAP: element prev ptr invalid", fail);
+                if (fail) return false;
 
-                _assert_msg(mem->next <= heap->size, "HEAP: element next ptr invalid");
+                HEAP_ASSERT(mem->next <= heap->size, "HEAP: element next ptr invalid", fail);
+                if (fail) return false;
 
-                _assert_msg(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->prev) == ptr_to_mem(heap, mem->prev)),
-                            "HEAP: element prev ptr unaligned");
+                HEAP_ASSERT(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->prev) == ptr_to_mem(heap, mem->prev)),
+                            "HEAP: element prev ptr unaligned", fail);
+                if (fail) return false;
 
-                _assert_msg(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->next) == ptr_to_mem(heap, mem->next)),
-                            "HEAP: element next ptr unaligned");
+                HEAP_ASSERT(MEM_ALIGN_SIZE(ptr_to_mem(heap, mem->next) == ptr_to_mem(heap, mem->next)),
+                            "HEAP: element next ptr unaligned", fail);
+                if (fail) return false;
 
                 if (last_used == 0) {
                         /* 2 unused elements in a row? */
-                        _assert_msg(mem->used == 1, "HEAP: 2 element unused in row?");
+                        HEAP_ASSERT(mem->used == 1, "HEAP: 2 element unused in row?", fail);
+                        if (fail) return false;
                 } else {
-                        _assert_msg((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid");
+                        HEAP_ASSERT((mem->used == 0) || (mem->used == 1), "HEAP: element used invalid", fail);
+                        if (fail) return false;
                 }
 
-                _assert_msg(link_valid(heap, mem), "HEAP: element link invalid");
+                HEAP_ASSERT(link_valid(heap, mem), "HEAP: element link invalid", fail);
+                if (fail) return false;
 
                 /* used/unused altering */
                 last_used = mem->used;
 
-                _assert_msg(--max > 0, "HEAP: sanity: dead loop");
+                HEAP_ASSERT(--max > 0, "HEAP: sanity: dead loop", fail);
+                if (fail) return false;
         }
 
-        _assert_msg(mem == ptr_to_mem(heap, heap->size), "HEAP: end ptr sanity");
-        _assert_msg(mem->used == 1, "HEAP: element used invalid");
-        _assert_msg(mem->prev == heap->size, "HEAP: element prev ptr invalid");
-        _assert_msg(mem->next == heap->size, "HEAP: element next ptr invalid");
-#else
-        (void)(heap);
-#endif
+        HEAP_ASSERT(mem == ptr_to_mem(heap, heap->size), "HEAP: end ptr sanity", fail);
+        if (fail) return false;
+
+        HEAP_ASSERT(mem->used == 1, "HEAP: element used invalid", fail);
+        if (fail) return false;
+
+        HEAP_ASSERT(mem->prev == heap->size, "HEAP: element prev ptr invalid", fail);
+        if (fail) return false;
+
+        HEAP_ASSERT(mem->next == heap->size, "HEAP: element next ptr invalid", fail);
+        if (fail) return false;
+
+        return true;
 }
 
 #if __OS_HEAP_OVERFLOW_CHECK__ == _YES_
@@ -422,7 +447,9 @@ int _heap_init(_heap_t *heap, void *start, size_t size)
                 heap->ram_end->next = heap->size;
                 heap->ram_end->prev = heap->size;
 
+                #if __OS_HEAP_SANITY_CHECK__ == _YES_
                 sanity(heap);
+                #endif
 
                 /* initialize the lowest-free pointer to the start of the heap */
                 heap->lfree = (struct mem *)heap->ram;
@@ -497,7 +524,9 @@ void _heap_free(_heap_t *heap, void *rmem, size_t *freed)
 
         plug_holes(heap, mem);
 
+        #if __OS_HEAP_SANITY_CHECK__ == _YES_
         sanity(heap);
+        #endif
 
         UNPROTECT();
 }
@@ -616,7 +645,9 @@ void *_heap_alloc(_heap_t *heap, size_t size_in, size_t *allocated)
 
                         overflow_init_element(mem, size_in);
 
+                        #if __OS_HEAP_SANITY_CHECK__ == _YES_
                         sanity(heap);
+                        #endif
 
                         UNPROTECT();
 
@@ -729,6 +760,20 @@ size_t _heap_get_block_size(_heap_t *heap, void *rmem)
         UNPROTECT();
 
         return blksize;
+}
+
+//==============================================================================
+/**
+ * @brief  Function check heap consistency.
+ *
+ * @param  heap         heap object
+ *
+ * @return On success true is returned, otherwise false.
+ */
+//==============================================================================
+bool _heap_check_consistency(_heap_t *heap)
+{
+        return sanity(heap);
 }
 
 /*==============================================================================

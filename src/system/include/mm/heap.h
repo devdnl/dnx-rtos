@@ -69,6 +69,7 @@ extern "C" {
 ==============================================================================*/
 #include <sys/types.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 /*==============================================================================
   Exported symbolic constants/macros
@@ -111,6 +112,7 @@ extern size_t _heap_get_free(_heap_t*);
 extern size_t _heap_get_used(_heap_t*);
 extern size_t _heap_get_size(_heap_t*);
 extern size_t _heap_get_block_size(_heap_t*, void*);
+extern bool   _heap_check_consistency(_heap_t *heap);
 
 #ifdef __cplusplus
 }

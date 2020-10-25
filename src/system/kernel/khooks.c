@@ -54,6 +54,7 @@
   Local object definitions
 ==============================================================================*/
 static u32_t sec_divider;
+static u64_t sanity_check_tref;
 
 /*==============================================================================
   Exported object definitions
@@ -80,6 +81,19 @@ void vApplicationIdleHook(void)
          * idle task priority.
          */
         vTaskPrioritySet(xTaskGetIdleTaskHandle(), 0);
+
+        u64_t now = _kernel_get_time_ms();
+        if (now - sanity_check_tref >= 1000) {
+                sanity_check_tref = now;
+
+                if (!_mm_check_consistency()) {
+                        _printk("Inconsistent heap data!");
+                }
+
+                if (!_process_is_consistent(false)) {
+                        _printk("Inconsistent process list!");
+                }
+        }
 
         /*
          * Sleep CPU for single tick to save energy.

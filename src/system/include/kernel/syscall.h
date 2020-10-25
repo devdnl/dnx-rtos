@@ -164,9 +164,6 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
   Exported objects
 ==============================================================================*/
 extern struct _process *_kworker_proc;
-#if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
-extern pid_t _syscall_client_PID[__OS_TASK_MAX_SYSTEM_THREADS__];
-#endif
 
 /*==============================================================================
   Exported functions

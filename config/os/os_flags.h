@@ -92,43 +92,10 @@ this:SetToolTip("Number of threads that can be started by user process.")
 #define __OS_TASK_MAX_USER_THREADS__ 4
 
 /*--
-this:AddWidget("Combobox", "Mode of kworker syscall threads")
-this:AddItem("Mode 0: Automatic syscall thread allocation", "0")
-this:AddItem("Mode 1: Fixed number of syscall threads", "1")
-this:AddItem("Mode 2: Flat syscalls handling", "2")
-this:SetToolTip("When 'Mode 0: Automatic syscall thread allocation' is enabled then system creates\n"..
-                "syscall threads on demand. This option is slow but if system usage is\n"..
-                "not too intense then this option can limit RAM usage (peek usage can be high).\n\n"..
-                "When 'Mode 1: Fixed number of syscall threads' is used then user define how many\n"..
-                "syscall threads are created at system startup. This option provides\n"..
-                "fast response for syscalls but may use a lot of RAM.\n\n"..
-                "When 'Mode 2: Flat syscalls handling' is used then syscalls are handled directly "..
-                "by client process/thread. This option provides the fastest response for syscalls\n"..
-                "but each process must increase stack size for IO operations e.g. file system.")
---*/
-#define __OS_TASK_KWORKER_MODE__ 2
-
-/*--
 this:AddWidget("Spinbox", 2, 32, "Maximum number of kworker threads")
 this:SetToolTip("Number of threads that can be started by system process.")
 --*/
 #define __OS_TASK_MAX_SYSTEM_THREADS__ 6
-
-/*--
-this:AddWidget("Spinbox", 1, 32, "Number of fixed I/O kworker threads")
-this:SetToolTip("Number of kworker threads for I/O syscall handling.\n"..
-                "Option valid only for 'Mode 1: Fixed number of syscall threads'.")
---*/
-#define __OS_TASK_KWORKER_IO_THREADS__ 4
-
-/*--
-this:AddWidget("Combobox", "Priority management of syscall threads")
-this:AddItem("Equal priority for all", "0")
-this:AddItem("The same as the application thread", "1")
-this:SetToolTip("Number of kworker threads for I/O syscall handling.\n"..
-                "Option valid only for 'Mode 1: Fixed number of syscall threads'.")
---*/
-#define __OS_TASK_KWORKER_THREADS_PRIORITY__ 0
 
 /*--
 this:AddExtraWidget("Label", "LabelFeatures", "\nSystem features (advanced)", -1, "bold")

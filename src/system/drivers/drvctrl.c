@@ -652,11 +652,7 @@ int _device_lock(dev_lock_t *dev_lock)
                 {
                         if (*dev_lock == 0) {
 
-#if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
-                                *dev_lock = _syscall_client_PID[_process_get_active_thread(NULL)];
-#elif (__OS_TASK_KWORKER_MODE__ == 2)
                                 *dev_lock = _process_get_active_process_pid();
-#endif
                                 if (*dev_lock == 0) {
                                         _process_get_pid(_kworker_proc, dev_lock);
                                 }
@@ -695,11 +691,7 @@ int _device_unlock(dev_lock_t *dev_lock, bool force)
                         _process_get_pid(_kworker_proc, &kworker_pid);
 
                         pid_t client_pid = 0;
-#if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
-                        client_pid = _syscall_client_PID[_process_get_active_thread(NULL)];
-#elif (__OS_TASK_KWORKER_MODE__ == 2)
                         client_pid = _process_get_active_process_pid();
-#endif
 
                         if (   force    == true
                            || *dev_lock == client_pid
@@ -739,11 +731,7 @@ int _device_get_access(dev_lock_t *dev_lock)
                         _process_get_pid(_kworker_proc, &kworker_pid);
 
                         pid_t client_pid = 0;
-#if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
-                        client_pid = _syscall_client_PID[_process_get_active_thread(NULL)];
-#elif (__OS_TASK_KWORKER_MODE__ == 2)
                         client_pid = _process_get_active_process_pid();
-#endif
 
                         if (  *dev_lock == client_pid
                            || *dev_lock == kworker_pid) {

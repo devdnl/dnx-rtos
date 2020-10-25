@@ -665,9 +665,9 @@ static inline bool is_object_in_heap(void *ptr)
  * @return If object is in heap then true is returned, otherwise false.
  */
 //==============================================================================
-static inline bool is_rom_address(void *ptr)
+static inline bool is_rom_address(const void *ptr)
 {
-        extern bool _mm_is_rom_address(void *ptr);
+        extern bool _mm_is_rom_address(const void *ptr);
         return _mm_is_rom_address(ptr);
 }
 
