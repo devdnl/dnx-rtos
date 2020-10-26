@@ -41,6 +41,15 @@
 #define TIMEOUT_MS                      250
 #define LSE_TIMEOUT_MS                  5000
 
+#define PWR_D3CR_VOS1                   ((1*PWR_D3CR_VOS_1) | (1*PWR_D3CR_VOS_0))
+#define PWR_D3CR_VOS2                   ((1*PWR_D3CR_VOS_1) | (0*PWR_D3CR_VOS_0))
+#define PWR_D3CR_VOS3                   ((0*PWR_D3CR_VOS_1) | (1*PWR_D3CR_VOS_0))
+
+#define FLASH_ACR_WRHIGHFREQ_MSK        (FLASH_ACR_WRHIGHFREQ_1 | FLASH_ACR_WRHIGHFREQ_0)
+#define FLASH_ACR_WRHIGHFREQ_00         ((0*FLASH_ACR_WRHIGHFREQ_1) | (0*FLASH_ACR_WRHIGHFREQ_0))
+#define FLASH_ACR_WRHIGHFREQ_01         ((0*FLASH_ACR_WRHIGHFREQ_1) | (1*FLASH_ACR_WRHIGHFREQ_0))
+#define FLASH_ACR_WRHIGHFREQ_10         ((1*FLASH_ACR_WRHIGHFREQ_1) | (0*FLASH_ACR_WRHIGHFREQ_0))
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -48,6 +57,9 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static u32_t get_pll_input_freq(void);
+static void get_pll_input_parameters(u32_t *pll_input_freq, u32_t *pll_input_range, u32_t *pll_ouput_range);
+static void configure_core_voltage_and_flash_latency(void);
 
 /*==============================================================================
   Local object definitions
@@ -154,103 +166,36 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         }
 
         //----------------------------------------------------------------------
-        // PLL1
+        // Core voltage regulator setup and FLASH latency
         //----------------------------------------------------------------------
-#define __CLK_PLL1_P__ 1
-#define __CLK_PLL1_Q__ 1
-#define __CLK_PLL1_R__ 1
-#define __CLK_PLL1_M__ 8 // 0-63
-#define __CLK_PLL1_N__ 60 // 4-512
+        configure_core_voltage_and_flash_latency();
 
+        //----------------------------------------------------------------------
+        // Setup PLLs clock source
+        //----------------------------------------------------------------------
+        LL_RCC_PLL_SetSource(__CLK_PLL_SRC__);
         u32_t pllinputfreq = 0;
-
-        switch (LL_RCC_PLL_GetSource()) {
-        case LL_RCC_PLLSOURCE_HSI:
-                if (LL_RCC_HSI_IsReady() != 0U) {
-                        pllinputfreq = HSI_VALUE >> (LL_RCC_HSI_GetDivider() >> RCC_CR_HSIDIV_Pos);
-                }
-                break;
-
-        case LL_RCC_PLLSOURCE_CSI:
-                if (LL_RCC_CSI_IsReady() != 0U) {
-                        pllinputfreq = CSI_VALUE;
-                }
-                break;
-
-        case LL_RCC_PLLSOURCE_HSE:
-                if (LL_RCC_HSE_IsReady() != 0U) {
-                        pllinputfreq = HSE_VALUE;
-                }
-                break;
-        }
-
         u32_t pll_input_range;
         u32_t pll_ouput_range;
+        get_pll_input_parameters(&pllinputfreq, &pll_input_range, &pll_ouput_range);
 
-        if (pllinputfreq >= 8000000) {
-                pll_input_range = LL_RCC_PLLINPUTRANGE_8_16;
-                pll_ouput_range = LL_RCC_PLLVCORANGE_WIDE;
-        } else if (pllinputfreq >= 4000000) {
-                pll_input_range = LL_RCC_PLLINPUTRANGE_4_8;
-                pll_ouput_range = LL_RCC_PLLVCORANGE_WIDE;
-        } else if (pllinputfreq >= 2000000) {
-                pll_input_range = LL_RCC_PLLINPUTRANGE_2_4;
-                pll_ouput_range = LL_RCC_PLLVCORANGE_WIDE;
-        } else {
-                pll_input_range = LL_RCC_PLLINPUTRANGE_1_2;
-                pll_ouput_range = LL_RCC_PLLVCORANGE_MEDIUM;
-        }
-
-
-
-
-        /* Configure voltage regulator */
-        //Set the highest core voltage (Scale 1)
-        SET_BIT(PWR->D3CR, PWR_D3CR_VOS_1 | PWR_D3CR_VOS_0);
-        u64_t tref = sys_time_get_reference();
-        while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
-                        printk("CLK: VOSRDY timeout");
-                        break;
-                }
-
-                sys_sleep_ms(1);
-        }
-
-
-        SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
-        SET_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN);
-        tref = sys_time_get_reference();
-        while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
-                        printk("CLK: VOSRDY timeout");
-                        break;
-                }
-
-                sys_sleep_ms(1);
-        }
-
-
-
-
-
-
-        LL_RCC_PLL1P_Enable(); // osobne sterowanie
-        LL_RCC_PLL1Q_Enable();
-        LL_RCC_PLL1R_Enable();
+        //----------------------------------------------------------------------
+        // PLL1
+        //----------------------------------------------------------------------
+        (__CLK_PLL1_P_ENABLE__ == _YES_) ? LL_RCC_PLL1P_Enable() : LL_RCC_PLL1P_Disable();
+        (__CLK_PLL1_Q_ENABLE__ == _YES_) ? LL_RCC_PLL1Q_Enable() : LL_RCC_PLL1Q_Disable();
+        (__CLK_PLL1_R_ENABLE__ == _YES_) ? LL_RCC_PLL1R_Enable() : LL_RCC_PLL1R_Disable();
 
         LL_RCC_PLL1_SetP(__CLK_PLL1_P__);
         LL_RCC_PLL1_SetQ(__CLK_PLL1_Q__);
         LL_RCC_PLL1_SetR(__CLK_PLL1_R__);
         LL_RCC_PLL1_SetM(__CLK_PLL1_M__);
         LL_RCC_PLL1_SetN(__CLK_PLL1_N__);
-
         LL_RCC_PLL1_SetVCOOutputRange(pll_ouput_range);
         LL_RCC_PLL1_SetVCOInputRange(pll_input_range);
-
         LL_RCC_PLL1_Enable();
 
-        tref = sys_time_get_reference();
+        u64_t tref = sys_time_get_reference();
         while (not LL_RCC_PLL1_IsReady()) {
                 if (sys_time_is_expired(tref, TIMEOUT_MS)) {
                         printk("CLK: PLL1 timeout");
@@ -260,25 +205,77 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                 sys_sleep_ms(1);
         }
 
+        //----------------------------------------------------------------------
+        // PLL2
+        //----------------------------------------------------------------------
+        (__CLK_PLL2_P_ENABLE__ == _YES_) ? LL_RCC_PLL2P_Enable() : LL_RCC_PLL2P_Disable();
+        (__CLK_PLL2_Q_ENABLE__ == _YES_) ? LL_RCC_PLL2Q_Enable() : LL_RCC_PLL2Q_Disable();
+        (__CLK_PLL2_R_ENABLE__ == _YES_) ? LL_RCC_PLL2R_Enable() : LL_RCC_PLL2R_Disable();
 
+        LL_RCC_PLL2_SetP(__CLK_PLL2_P__);
+        LL_RCC_PLL2_SetQ(__CLK_PLL2_Q__);
+        LL_RCC_PLL2_SetR(__CLK_PLL2_R__);
+        LL_RCC_PLL2_SetM(__CLK_PLL2_M__);
+        LL_RCC_PLL2_SetN(__CLK_PLL2_N__);
+        LL_RCC_PLL2_SetVCOOutputRange(pll_ouput_range);
+        LL_RCC_PLL2_SetVCOInputRange(pll_input_range);
+        LL_RCC_PLL2_Enable();
 
+        tref = sys_time_get_reference();
+        while (not LL_RCC_PLL2_IsReady()) {
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: PLL2 timeout");
+                        break;
+                }
 
+                sys_sleep_ms(1);
+        }
 
+        //----------------------------------------------------------------------
+        // PLL3
+        //----------------------------------------------------------------------
+        (__CLK_PLL3_P_ENABLE__ == _YES_) ? LL_RCC_PLL3P_Enable() : LL_RCC_PLL3P_Disable();
+        (__CLK_PLL3_Q_ENABLE__ == _YES_) ? LL_RCC_PLL3Q_Enable() : LL_RCC_PLL3Q_Disable();
+        (__CLK_PLL3_R_ENABLE__ == _YES_) ? LL_RCC_PLL3R_Enable() : LL_RCC_PLL3R_Disable();
 
+        LL_RCC_PLL3_SetP(__CLK_PLL3_P__);
+        LL_RCC_PLL3_SetQ(__CLK_PLL3_Q__);
+        LL_RCC_PLL3_SetR(__CLK_PLL3_R__);
+        LL_RCC_PLL3_SetM(__CLK_PLL3_M__);
+        LL_RCC_PLL3_SetN(__CLK_PLL3_N__);
+        LL_RCC_PLL3_SetVCOOutputRange(pll_ouput_range);
+        LL_RCC_PLL3_SetVCOInputRange(pll_input_range);
+        LL_RCC_PLL3_Enable();
 
+        tref = sys_time_get_reference();
+        while (not LL_RCC_PLL3_IsReady()) {
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: PLL3 timeout");
+                        break;
+                }
 
-        LL_RCC_SetSysPrescaler(LL_RCC_SYSCLK_DIV_1);
-        LL_RCC_SetAHBPrescaler(LL_RCC_AHB_DIV_2);
-        LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_8);
-        LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_8);
-        LL_RCC_SetAPB3Prescaler(LL_RCC_APB3_DIV_8);
-        LL_RCC_SetAPB4Prescaler(LL_RCC_APB4_DIV_8);
+                sys_sleep_ms(1);
+        }
 
-        LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL1);
-        while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL1);
+        //----------------------------------------------------------------------
+        // Clock prescalers
+        //----------------------------------------------------------------------
+        LL_RCC_SetSysPrescaler(__CLK_SYSCLK_DIV__);
+        LL_RCC_SetAHBPrescaler(__CLK_AHB_DIV__);
+        LL_RCC_SetAPB1Prescaler(__CLK_APB1_DIV__);
+        LL_RCC_SetAPB2Prescaler(__CLK_APB2_DIV__);
+        LL_RCC_SetAPB3Prescaler(__CLK_APB3_DIV__);
+        LL_RCC_SetAPB4Prescaler(__CLK_APB4_DIV__);
 
+        //----------------------------------------------------------------------
+        // Clock sources
+        //----------------------------------------------------------------------
+        LL_RCC_SetSysClkSource(__CLK_SYSCLK_SRC__);
+        while (LL_RCC_GetSysClkSource() != __CLK_SYSCLK_SRC_STATUS__);
 
-
+        //----------------------------------------------------------------------
+        // Update OS clocks
+        //----------------------------------------------------------------------
         sys_update_system_clocks();
 
         return err;
@@ -749,15 +746,205 @@ API_MOD_STAT(CLK, void *device_handle, struct vfs_dev_stat *device_stat)
 
 //==============================================================================
 /**
- * @brief Function set flash latency (wait states)
+ * @brief  Function get PLL input frequency (the same for PLL1, PLL2, PLL3).
  *
- * @param latency
+ * @return PLL input frequency.
  */
 //==============================================================================
-static void set_flash_latency(u32_t latency)
+static u32_t get_pll_input_freq(void)
 {
-        CLEAR_BIT(FLASH->ACR, FLASH_ACR_LATENCY);
-        SET_BIT(FLASH->ACR, latency & FLASH_ACR_LATENCY);
+        u32_t pllinputfreq = 0;
+
+        switch (LL_RCC_PLL_GetSource()) {
+        case LL_RCC_PLLSOURCE_HSI:
+                if (LL_RCC_HSI_IsReady() != 0U) {
+                        pllinputfreq = HSI_VALUE >> (LL_RCC_HSI_GetDivider() >> RCC_CR_HSIDIV_Pos);
+                }
+                break;
+
+        case LL_RCC_PLLSOURCE_CSI:
+                if (LL_RCC_CSI_IsReady() != 0U) {
+                        pllinputfreq = CSI_VALUE;
+                }
+                break;
+
+        case LL_RCC_PLLSOURCE_HSE:
+                if (LL_RCC_HSE_IsReady() != 0U) {
+                        pllinputfreq = HSE_VALUE;
+                }
+                break;
+        }
+
+        return pllinputfreq;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return PLL input parameters.
+ *
+ * @param  pllinputfreq         PLL input frequency
+ * @param  pll_input_range      PLL input range
+ * @param  pll_output_range     PLL output range
+ */
+//==============================================================================
+static void get_pll_input_parameters(u32_t *pll_input_freq, u32_t *pll_input_range, u32_t *pll_ouput_range)
+{
+        *pll_input_freq = get_pll_input_freq();
+
+        if (*pll_input_freq >= 8000000) {
+                *pll_input_range = LL_RCC_PLLINPUTRANGE_8_16;
+                *pll_ouput_range = LL_RCC_PLLVCORANGE_WIDE;
+        } else if (*pll_input_freq >= 4000000) {
+                *pll_input_range = LL_RCC_PLLINPUTRANGE_4_8;
+                *pll_ouput_range = LL_RCC_PLLVCORANGE_WIDE;
+        } else if (*pll_input_freq >= 2000000) {
+                *pll_input_range = LL_RCC_PLLINPUTRANGE_2_4;
+                *pll_ouput_range = LL_RCC_PLLVCORANGE_WIDE;
+        } else {
+                *pll_input_range = LL_RCC_PLLINPUTRANGE_1_2;
+                *pll_ouput_range = LL_RCC_PLLVCORANGE_MEDIUM;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function calculate core voltage regulator parameters and flash wait
+ *         states according to target frequency.
+ */
+//==============================================================================
+static void configure_core_voltage_and_flash_latency(void)
+{
+        u32_t sysclk = 0;
+
+        switch (__CLK_SYSCLK_SRC__) {
+        case LL_RCC_SYS_CLKSOURCE_HSI:
+                sysclk = HSI_VALUE;
+                break;
+
+        case LL_RCC_SYS_CLKSOURCE_CSI:
+                sysclk = CSI_VALUE;
+                break;
+
+        case LL_RCC_SYS_CLKSOURCE_HSE:
+                sysclk = HSE_VALUE;
+                break;
+
+        case LL_RCC_SYS_CLKSOURCE_PLL1:
+                sysclk = LL_RCC_CalcPLLClockFreq(get_pll_input_freq(),
+                                                 __CLK_PLL1_M__, __CLK_PLL1_N__,
+                                                 0, __CLK_PLL1_P__);
+                break;
+        }
+
+        u32_t hclk = sysclk;
+        switch (__CLK_AHB_DIV__) {
+        case RCC_D1CFGR_HPRE_DIV1:   hclk /= 1;   break;
+        case RCC_D1CFGR_HPRE_DIV2:   hclk /= 2;   break;
+        case RCC_D1CFGR_HPRE_DIV4:   hclk /= 4;   break;
+        case RCC_D1CFGR_HPRE_DIV8:   hclk /= 8;   break;
+        case RCC_D1CFGR_HPRE_DIV16:  hclk /= 16;  break;
+        case RCC_D1CFGR_HPRE_DIV64:  hclk /= 64;  break;
+        case RCC_D1CFGR_HPRE_DIV128: hclk /= 128; break;
+        case RCC_D1CFGR_HPRE_DIV256: hclk /= 256; break;
+        case RCC_D1CFGR_HPRE_DIV512: hclk /= 512; break;
+        }
+
+        u32_t FLASH_ACR = FLASH_ACR_WRHIGHFREQ_10 | FLASH_ACR_LATENCY_7WS;
+        u32_t VOS   = PWR_D3CR_VOS3;
+        bool  boost = false;
+
+        if (hclk <= 45) {
+                VOS = PWR_D3CR_VOS3;
+                FLASH_ACR = FLASH_ACR_LATENCY_0WS | FLASH_ACR_WRHIGHFREQ_00;
+
+        } else if (hclk <= 55) {
+                VOS = PWR_D3CR_VOS2;
+                FLASH_ACR = FLASH_ACR_LATENCY_0WS | FLASH_ACR_WRHIGHFREQ_00;
+
+        } else if (hclk <= 70) {
+                VOS = PWR_D3CR_VOS1;
+                FLASH_ACR = FLASH_ACR_LATENCY_0WS | FLASH_ACR_WRHIGHFREQ_00;
+
+        } else if ((hclk >= 45) && (hclk <= 90)) {
+                VOS = PWR_D3CR_VOS3;
+                FLASH_ACR = FLASH_ACR_LATENCY_1WS | FLASH_ACR_WRHIGHFREQ_01;
+
+        } else if ((hclk >= 55) && (hclk <= 110)) {
+                VOS = PWR_D3CR_VOS2;
+                FLASH_ACR = FLASH_ACR_LATENCY_1WS | FLASH_ACR_WRHIGHFREQ_01;
+
+        } else if ((hclk >= 70) && (hclk <= 140)) {
+                VOS = PWR_D3CR_VOS1;
+                FLASH_ACR = FLASH_ACR_LATENCY_1WS | FLASH_ACR_WRHIGHFREQ_01;
+
+        } else if ((hclk >= 90) && (hclk <= 135)) {
+                VOS = PWR_D3CR_VOS3;
+                FLASH_ACR = FLASH_ACR_LATENCY_2WS | FLASH_ACR_WRHIGHFREQ_01;
+
+        } else if ((hclk >= 110) && (hclk <= 165)) {
+                VOS = PWR_D3CR_VOS2;
+                FLASH_ACR = FLASH_ACR_LATENCY_2WS | FLASH_ACR_WRHIGHFREQ_01;
+
+        } else if ((hclk >= 135) && (hclk <= 180)) {
+                VOS = PWR_D3CR_VOS3;
+                FLASH_ACR = FLASH_ACR_LATENCY_3WS | FLASH_ACR_WRHIGHFREQ_10;
+
+        } else if ((hclk >= 140) && (hclk <= 185)) {
+                VOS = PWR_D3CR_VOS1;
+                FLASH_ACR = FLASH_ACR_LATENCY_2WS | FLASH_ACR_WRHIGHFREQ_01;
+
+        } else if ((hclk >= 165) && (hclk <= 225)) {
+                VOS = PWR_D3CR_VOS2;
+                FLASH_ACR = FLASH_ACR_LATENCY_3WS | FLASH_ACR_WRHIGHFREQ_10;
+
+        } else if ((hclk >= 180) && (hclk <= 225)) {
+                VOS = PWR_D3CR_VOS3;
+                FLASH_ACR = FLASH_ACR_LATENCY_4WS | FLASH_ACR_WRHIGHFREQ_10;
+
+        } else if ((hclk >= 185) && (hclk <= 210)) {
+                VOS = PWR_D3CR_VOS1;
+                FLASH_ACR = FLASH_ACR_LATENCY_2WS | FLASH_ACR_WRHIGHFREQ_10;
+
+        } else if ((hclk >= 210) && (hclk <= 225)) {
+                VOS = PWR_D3CR_VOS1;
+                FLASH_ACR = FLASH_ACR_LATENCY_3WS | FLASH_ACR_WRHIGHFREQ_10;
+
+        } else {
+                VOS = PWR_D3CR_VOS1;
+                boost = true;
+                FLASH_ACR = FLASH_ACR_LATENCY_4WS | FLASH_ACR_WRHIGHFREQ_10;
+        }
+
+
+        // Set the core voltage
+        SET_BIT(PWR->D3CR, VOS);
+        u64_t tref = sys_time_get_reference();
+        while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
+                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        printk("CLK: VOS3-1 timeout");
+                        break;
+                }
+
+                sys_sleep_ms(1);
+        }
+
+        // Enable core boost voltage
+        if (boost) {
+                SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
+                SET_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN);
+                tref = sys_time_get_reference();
+                while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
+                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                printk("CLK: VOS0 timeout");
+                                break;
+                        }
+
+                        sys_sleep_ms(1);
+                }
+        }
+
+        // flash latency and programming delay
+        WRITE_REG(FLASH->ACR, FLASH_ACR);
 }
 
 /*==============================================================================
