@@ -42,6 +42,8 @@
  extern "C" {
 #endif /* __cplusplus */
 
+#ifdef ARCH_stm32f3
+
 /** @addtogroup Library_configuration_section
   * @{
   */
@@ -214,6 +216,8 @@ typedef enum
 #if defined (USE_HAL_DRIVER)
  #include "stm32f3xx_hal.h"
 #endif /* USE_HAL_DRIVER */
+
+#endif /* #ifdef ARCH_stm32f3 */
 
 #ifdef __cplusplus
 }
