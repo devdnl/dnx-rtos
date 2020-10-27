@@ -182,79 +182,85 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         //----------------------------------------------------------------------
         // PLL1
         //----------------------------------------------------------------------
-        (__CLK_PLL1_P_ENABLE__ == _YES_) ? LL_RCC_PLL1P_Enable() : LL_RCC_PLL1P_Disable();
-        (__CLK_PLL1_Q_ENABLE__ == _YES_) ? LL_RCC_PLL1Q_Enable() : LL_RCC_PLL1Q_Disable();
-        (__CLK_PLL1_R_ENABLE__ == _YES_) ? LL_RCC_PLL1R_Enable() : LL_RCC_PLL1R_Disable();
+        if (__CLK_PLL1_ON__) {
+                (__CLK_PLL1_P_ENABLE__ == _YES_) ? LL_RCC_PLL1P_Enable() : LL_RCC_PLL1P_Disable();
+                (__CLK_PLL1_Q_ENABLE__ == _YES_) ? LL_RCC_PLL1Q_Enable() : LL_RCC_PLL1Q_Disable();
+                (__CLK_PLL1_R_ENABLE__ == _YES_) ? LL_RCC_PLL1R_Enable() : LL_RCC_PLL1R_Disable();
 
-        LL_RCC_PLL1_SetP(__CLK_PLL1_P__);
-        LL_RCC_PLL1_SetQ(__CLK_PLL1_Q__);
-        LL_RCC_PLL1_SetR(__CLK_PLL1_R__);
-        LL_RCC_PLL1_SetM(__CLK_PLL1_M__);
-        LL_RCC_PLL1_SetN(__CLK_PLL1_N__);
-        LL_RCC_PLL1_SetVCOOutputRange(pll_ouput_range);
-        LL_RCC_PLL1_SetVCOInputRange(pll_input_range);
-        LL_RCC_PLL1_Enable();
+                LL_RCC_PLL1_SetP(__CLK_PLL1_P__);
+                LL_RCC_PLL1_SetQ(__CLK_PLL1_Q__);
+                LL_RCC_PLL1_SetR(__CLK_PLL1_R__);
+                LL_RCC_PLL1_SetM(__CLK_PLL1_M__);
+                LL_RCC_PLL1_SetN(__CLK_PLL1_N__);
+                LL_RCC_PLL1_SetVCOOutputRange(pll_ouput_range);
+                LL_RCC_PLL1_SetVCOInputRange(pll_input_range);
+                LL_RCC_PLL1_Enable();
 
-        u64_t tref = sys_time_get_reference();
-        while (not LL_RCC_PLL1_IsReady()) {
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
-                        printk("CLK: PLL1 timeout");
-                        break;
+                u64_t tref = sys_time_get_reference();
+                while (not LL_RCC_PLL1_IsReady()) {
+                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                printk("CLK: PLL1 timeout");
+                                break;
+                        }
+
+                        sys_sleep_ms(1);
                 }
-
-                sys_sleep_ms(1);
         }
 
         //----------------------------------------------------------------------
         // PLL2
         //----------------------------------------------------------------------
-        (__CLK_PLL2_P_ENABLE__ == _YES_) ? LL_RCC_PLL2P_Enable() : LL_RCC_PLL2P_Disable();
-        (__CLK_PLL2_Q_ENABLE__ == _YES_) ? LL_RCC_PLL2Q_Enable() : LL_RCC_PLL2Q_Disable();
-        (__CLK_PLL2_R_ENABLE__ == _YES_) ? LL_RCC_PLL2R_Enable() : LL_RCC_PLL2R_Disable();
+        if (__CLK_PLL2_ON__) {
+                (__CLK_PLL2_P_ENABLE__ == _YES_) ? LL_RCC_PLL2P_Enable() : LL_RCC_PLL2P_Disable();
+                (__CLK_PLL2_Q_ENABLE__ == _YES_) ? LL_RCC_PLL2Q_Enable() : LL_RCC_PLL2Q_Disable();
+                (__CLK_PLL2_R_ENABLE__ == _YES_) ? LL_RCC_PLL2R_Enable() : LL_RCC_PLL2R_Disable();
 
-        LL_RCC_PLL2_SetP(__CLK_PLL2_P__);
-        LL_RCC_PLL2_SetQ(__CLK_PLL2_Q__);
-        LL_RCC_PLL2_SetR(__CLK_PLL2_R__);
-        LL_RCC_PLL2_SetM(__CLK_PLL2_M__);
-        LL_RCC_PLL2_SetN(__CLK_PLL2_N__);
-        LL_RCC_PLL2_SetVCOOutputRange(pll_ouput_range);
-        LL_RCC_PLL2_SetVCOInputRange(pll_input_range);
-        LL_RCC_PLL2_Enable();
+                LL_RCC_PLL2_SetP(__CLK_PLL2_P__);
+                LL_RCC_PLL2_SetQ(__CLK_PLL2_Q__);
+                LL_RCC_PLL2_SetR(__CLK_PLL2_R__);
+                LL_RCC_PLL2_SetM(__CLK_PLL2_M__);
+                LL_RCC_PLL2_SetN(__CLK_PLL2_N__);
+                LL_RCC_PLL2_SetVCOOutputRange(pll_ouput_range);
+                LL_RCC_PLL2_SetVCOInputRange(pll_input_range);
+                LL_RCC_PLL2_Enable();
 
-        tref = sys_time_get_reference();
-        while (not LL_RCC_PLL2_IsReady()) {
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
-                        printk("CLK: PLL2 timeout");
-                        break;
+                u64_t tref = sys_time_get_reference();
+                while (not LL_RCC_PLL2_IsReady()) {
+                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                printk("CLK: PLL2 timeout");
+                                break;
+                        }
+
+                        sys_sleep_ms(1);
                 }
-
-                sys_sleep_ms(1);
         }
 
         //----------------------------------------------------------------------
         // PLL3
         //----------------------------------------------------------------------
-        (__CLK_PLL3_P_ENABLE__ == _YES_) ? LL_RCC_PLL3P_Enable() : LL_RCC_PLL3P_Disable();
-        (__CLK_PLL3_Q_ENABLE__ == _YES_) ? LL_RCC_PLL3Q_Enable() : LL_RCC_PLL3Q_Disable();
-        (__CLK_PLL3_R_ENABLE__ == _YES_) ? LL_RCC_PLL3R_Enable() : LL_RCC_PLL3R_Disable();
+        if (__CLK_PLL3_ON__) {
+                (__CLK_PLL3_P_ENABLE__ == _YES_) ? LL_RCC_PLL3P_Enable() : LL_RCC_PLL3P_Disable();
+                (__CLK_PLL3_Q_ENABLE__ == _YES_) ? LL_RCC_PLL3Q_Enable() : LL_RCC_PLL3Q_Disable();
+                (__CLK_PLL3_R_ENABLE__ == _YES_) ? LL_RCC_PLL3R_Enable() : LL_RCC_PLL3R_Disable();
 
-        LL_RCC_PLL3_SetP(__CLK_PLL3_P__);
-        LL_RCC_PLL3_SetQ(__CLK_PLL3_Q__);
-        LL_RCC_PLL3_SetR(__CLK_PLL3_R__);
-        LL_RCC_PLL3_SetM(__CLK_PLL3_M__);
-        LL_RCC_PLL3_SetN(__CLK_PLL3_N__);
-        LL_RCC_PLL3_SetVCOOutputRange(pll_ouput_range);
-        LL_RCC_PLL3_SetVCOInputRange(pll_input_range);
-        LL_RCC_PLL3_Enable();
+                LL_RCC_PLL3_SetP(__CLK_PLL3_P__);
+                LL_RCC_PLL3_SetQ(__CLK_PLL3_Q__);
+                LL_RCC_PLL3_SetR(__CLK_PLL3_R__);
+                LL_RCC_PLL3_SetM(__CLK_PLL3_M__);
+                LL_RCC_PLL3_SetN(__CLK_PLL3_N__);
+                LL_RCC_PLL3_SetVCOOutputRange(pll_ouput_range);
+                LL_RCC_PLL3_SetVCOInputRange(pll_input_range);
+                LL_RCC_PLL3_Enable();
 
-        tref = sys_time_get_reference();
-        while (not LL_RCC_PLL3_IsReady()) {
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
-                        printk("CLK: PLL3 timeout");
-                        break;
+                u64_t tref = sys_time_get_reference();
+                while (not LL_RCC_PLL3_IsReady()) {
+                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                printk("CLK: PLL3 timeout");
+                                break;
+                        }
+
+                        sys_sleep_ms(1);
                 }
-
-                sys_sleep_ms(1);
         }
 
         //----------------------------------------------------------------------
