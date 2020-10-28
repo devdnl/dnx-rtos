@@ -35,6 +35,7 @@
 #include "kernel/kwrapper.h"
 #include "kernel/process.h"
 #include "kernel/sysfunc.h"
+#include "kernel/khooks.h"
 #include "lib/vt100.h"
 #include "lib/cast.h"
 #include "mm/mm.h"
@@ -171,6 +172,7 @@ bool _kernel_panic_detect(FILE *file)
 //==============================================================================
 void _kernel_panic_report(enum _kernel_panic_desc_cause suggested_cause)
 {
+        _assert_hook_suspend(true);
         _ISR_disable();
 
         _process_t *proc = _process_get_active();
@@ -208,8 +210,9 @@ void _kernel_panic_report(enum _kernel_panic_desc_cause suggested_cause)
                         _process_kill(kpanic_desc.pid);
                         printk("APP CRASH: %s: %d:%d:%s:%s", kpanic_desc.name,
                                kpanic_desc.pid, kpanic_desc.tid,
-                               CAUSE[kpanic_desc.cause], kpanic_desc.kernelspace ? "KS" : "US");
+                               CAUSE[kpanic_desc.cause], kpanic_desc.kernelspace ? "KRN" : "USR");
                         _ISR_enable();
+                        _assert_hook_suspend(false);
                         return;
                 }
         }

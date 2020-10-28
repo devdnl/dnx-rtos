@@ -55,6 +55,7 @@
 ==============================================================================*/
 static u32_t sec_divider;
 static u64_t sanity_check_tref;
+static bool  assert_hook_suspend;
 
 /*==============================================================================
   Exported object definitions
@@ -186,12 +187,26 @@ u32_t _get_uptime_counter(void)
 void _assert_hook(bool assert, const char *msg)
 {
         if (!assert) {
-                if (msg) {
-                        _printk("System assert: %s", msg);
-                } else {
-                        _printk("System assert occurred!");
+                if (!assert_hook_suspend) {
+                        if (msg) {
+                                _printk("System assert: %s", msg);
+                        } else {
+                                _printk("System assert occurred!");
+                        }
                 }
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Function enable/disable assert hook.
+ *
+ * @param  suspend              suspend
+ */
+//==============================================================================
+void _assert_hook_suspend(bool suspend)
+{
+        assert_hook_suspend = suspend;
 }
 #endif
 

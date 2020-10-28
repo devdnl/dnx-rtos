@@ -66,6 +66,7 @@ extern u32_t _get_uptime_counter(void);
 
 #if __OS_ENABLE_SYS_ASSERT__ > 0
 extern void _assert_hook(bool assert, const char *msg);
+extern void _assert_hook_suspend(bool suspend);
 #endif
 
 #ifdef __cplusplus

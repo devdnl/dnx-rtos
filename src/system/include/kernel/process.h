@@ -198,7 +198,6 @@ extern void        _process_clean_up_killed_processes   (void);
 extern int         _process_create                      (const char*, const process_attr_t*, pid_t*);
 extern int         _process_kill                        (pid_t);
 extern void        _process_remove_zombie               (_process_t*, int*);
-extern int         _process_kill                        (pid_t);
 extern void        _process_exit                        (_process_t*, int);
 extern void        _process_abort                       (_process_t*);
 extern const char *_process_get_CWD                     (_process_t*);
