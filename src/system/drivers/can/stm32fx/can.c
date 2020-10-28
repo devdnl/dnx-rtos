@@ -48,7 +48,7 @@ Brief   CAN driver
 ==============================================================================*/
 #define TX_MAILBOXES            3
 #define RX_MAILBOXES            2
-#define RX_FIFO_DEPTH           3
+#define RX_FIFO_DEPTH           8
 #define INIT_TIMEOUT            1000
 #define MTX_TIMEOUT             1000
 
@@ -1060,7 +1060,7 @@ void CAN1_RX1_IRQHandler(void)
 
         sys_queue_send_from_ISR(CAN_hdl->rxqueue_q, &CAN1->sFIFOMailBox[1], &yield);
 
-        SET_BIT(CAN1->RF1R, CAN_RF0R_RFOM0);
+        SET_BIT(CAN1->RF1R, CAN_RF1R_RFOM1);
 
         sys_thread_yield_from_ISR(yield);
 }

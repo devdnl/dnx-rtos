@@ -47,6 +47,7 @@
 #else
 #define _assert(x) (void)(x)
 #define _assert_msg(x, msg) (void)(x)
+#define _assert_hook_suspend(suspend)
 #endif
 
 /*==============================================================================

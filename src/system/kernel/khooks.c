@@ -55,7 +55,10 @@
 ==============================================================================*/
 static u32_t sec_divider;
 static u64_t sanity_check_tref;
+
+#if __OS_ENABLE_SYS_ASSERT__ > 0
 static bool  assert_hook_suspend;
+#endif
 
 /*==============================================================================
   Exported object definitions
