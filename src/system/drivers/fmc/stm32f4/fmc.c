@@ -486,8 +486,8 @@ static int SDRAM_init(void)
          */
         while (FMC_Bank5_6->SDSR & FMC_SDSR_BUSY);
 
-        RCC_ClocksTypeDef freq;
-        RCC_GetClocksFreq(&freq);
+        LL_RCC_ClocksTypeDef freq;
+        LL_RCC_GetSystemClocksFreq(&freq);
 
         i32_t NR  = max((2 << (__FMC_SDRAM_1_NR__ + 10)), (2 << (__FMC_SDRAM_2_NR__ + 10)));
         i32_t MHz = freq.HCLK_Frequency / __FMC_SDRAM_SDCLK__ / 1000000;

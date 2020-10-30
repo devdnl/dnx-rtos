@@ -550,8 +550,8 @@ API_MOD_STAT(PWM, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static u32_t get_timer_frequency(PWM_t *hdl)
 {
-        RCC_ClocksTypeDef freq;
-        RCC_GetClocksFreq(&freq);
+        LL_RCC_ClocksTypeDef freq;
+        LL_RCC_GetSystemClocksFreq(&freq);
 
         if (TIM[hdl->timer].APBENR == &RCC->APB1ENR) {
 

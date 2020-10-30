@@ -253,7 +253,7 @@ uint32_t ETH_Init(ETH_InitTypeDef* ETH_InitStruct, uint16_t PHYAddress)
 {
   uint32_t tmpreg = 0;
 //  __IO uint32_t i = 0;
-  RCC_ClocksTypeDef  rcc_clocks;
+  LL_RCC_ClocksTypeDef  rcc_clocks;
   uint32_t hclk = 60000000;
   __IO uint32_t timeout = 0, err = ETH_SUCCESS;
   /* Check the parameters */
@@ -311,7 +311,7 @@ uint32_t ETH_Init(ETH_InitTypeDef* ETH_InitStruct, uint16_t PHYAddress)
   /* Clear CSR Clock Range CR[2:0] bits */
   tmpreg &= MACMIIAR_CR_MASK;
   /* Get hclk frequency value */
-  RCC_GetClocksFreq(&rcc_clocks);
+  LL_RCC_GetSystemClocksFreq(&rcc_clocks);
   hclk = rcc_clocks.HCLK_Frequency;
 
   /* Set CR bits depending on hclk value */

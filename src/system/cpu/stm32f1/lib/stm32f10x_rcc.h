@@ -49,7 +49,7 @@ typedef struct
   uint32_t PCLK1_Frequency;   /*!< returns PCLK1 clock frequency expressed in Hz */
   uint32_t PCLK2_Frequency;   /*!< returns PCLK2 clock frequency expressed in Hz */
   uint32_t ADCCLK_Frequency;  /*!< returns ADCCLK clock frequency expressed in Hz */
-}RCC_ClocksTypeDef;
+}LL_RCC_ClocksTypeDef;
 
 /**
   * @}
@@ -661,7 +661,7 @@ void RCC_LSEConfig(uint8_t RCC_LSE);
 void RCC_LSICmd(FunctionalState NewState);
 void RCC_RTCCLKConfig(uint32_t RCC_RTCCLKSource);
 void RCC_RTCCLKCmd(FunctionalState NewState);
-void RCC_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks);
+void LL_RCC_GetSystemClocksFreq(LL_RCC_ClocksTypeDef* RCC_Clocks);
 void RCC_AHBPeriphClockCmd(uint32_t RCC_AHBPeriph, FunctionalState NewState);
 void RCC_APB2PeriphClockCmd(uint32_t RCC_APB2Periph, FunctionalState NewState);
 void RCC_APB1PeriphClockCmd(uint32_t RCC_APB1Periph, FunctionalState NewState);

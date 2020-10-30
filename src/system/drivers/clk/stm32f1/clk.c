@@ -327,8 +327,8 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
 
         if (arg) {
                 if (request == IOCTL_CLK__GET_CLK_INFO) {
-                        RCC_ClocksTypeDef freq;
-                        RCC_GetClocksFreq(&freq);
+                        LL_RCC_ClocksTypeDef freq;
+                        LL_RCC_GetSystemClocksFreq(&freq);
 
                         CLK_info_t *clkinf = arg;
 

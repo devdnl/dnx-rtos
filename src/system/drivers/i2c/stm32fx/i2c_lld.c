@@ -407,9 +407,9 @@ int _I2C_LLD__init(u8_t major)
         sys_sleep_ms(10);
         CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_clk_mask);
 
-        RCC_ClocksTypeDef clocks;
-        memset(&clocks, 0, sizeof(RCC_ClocksTypeDef));
-        RCC_GetClocksFreq(&clocks);
+        LL_RCC_ClocksTypeDef clocks;
+        memset(&clocks, 0, sizeof(LL_RCC_ClocksTypeDef));
+        LL_RCC_GetSystemClocksFreq(&clocks);
 
         if (clocks.PCLK1_Frequency < 2000000) {
                 printk("I2C: PCLK1 below recommended 2MHz");

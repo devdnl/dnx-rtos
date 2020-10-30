@@ -52,7 +52,7 @@ typedef struct
   uint32_t HCLK_Frequency;   /*!<  HCLK clock frequency expressed in Hz   */
   uint32_t PCLK1_Frequency;  /*!<  PCLK1 clock frequency expressed in Hz  */
   uint32_t PCLK2_Frequency;  /*!<  PCLK2 clock frequency expressed in Hz  */
-}RCC_ClocksTypeDef;
+}LL_RCC_ClocksTypeDef;
 
 /* Exported constants --------------------------------------------------------*/
 
@@ -939,7 +939,7 @@ uint8_t     RCC_GetSYSCLKSource(void);
 void        RCC_HCLKConfig(uint32_t RCC_SYSCLK);
 void        RCC_PCLK1Config(uint32_t RCC_HCLK);
 void        RCC_PCLK2Config(uint32_t RCC_HCLK);
-void        RCC_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks);
+void        LL_RCC_GetSystemClocksFreq(LL_RCC_ClocksTypeDef* RCC_Clocks);
 
 /* Peripheral clocks configuration functions **********************************/
 void        RCC_RTCCLKConfig(uint32_t RCC_RTCCLKSource);

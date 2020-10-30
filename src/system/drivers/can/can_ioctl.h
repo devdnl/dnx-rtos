@@ -33,6 +33,7 @@ Driver handles CAN controller peripheral existing in microcontroller.
 
 \section drv-can-sup-arch Supported architectures
 \li stm32f1
+\li stm32f3
 \li stm32f4
 \li stm32f7
 

@@ -1421,7 +1421,7 @@ typedef struct
 #define I2C2                ((I2C_t *) I2C2_BASE)
 #define USB                 ((USB_t *) USB_BASE)
 #define CAN1                ((CAN_TypeDef *) CAN1_BASE)
-#define CAN2                ((CAN_t *) CAN2_BASE)
+#define CAN2                ((CAN_TypeDef *) CAN2_BASE)
 #define BKP                 ((BKP_t *) BKP_BASE)
 #define PWR                 ((PWR_t *) PWR_BASE)
 #define DAC                 ((DAC_t *) DAC_BASE)
