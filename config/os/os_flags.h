@@ -313,7 +313,7 @@ this:AddExtraWidget("Void", "VoidMisc")
 this:AddWidget("Editline", true, "Host name")
 this:SetToolTip("This string configures host name in the e.g. network.")
 --*/
-#define __OS_HOSTNAME__ "dnx RTOS"
+#define __OS_HOSTNAME__ "dnxboard"
 
 /*--
 this:AddWidget("Editline", true, "RTC device path")
