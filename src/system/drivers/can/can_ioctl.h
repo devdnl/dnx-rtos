@@ -39,10 +39,11 @@ Driver handles CAN controller peripheral existing in microcontroller.
 
 \section drv-can-ddesc Details
 \subsection drv-can-ddesc-num Meaning of major and minor numbers
-Only CAN1 is supported.
+Major number select CAN peripheral. Minor number has no meaning and should be
+set to 0.
 
 \subsubsection drv-can-ddesc-numres Numeration restrictions
-Both major and minor number should be set to 0.
+Minor number should be set to 0.
 
 \subsection drv-can-ddesc-init Driver initialization
 To initialize driver the following code can be used:
@@ -351,6 +352,27 @@ extern "C" {
  */
 #define IOCTL_CAN__RECV_MSG                     _IOR(CAN, 0x08, CAN_msg_t*)
 
+/**
+ *  @brief  Get receive error counter.
+ *  @param  [RD] @ref u8_t * error counter
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__GET_RECEIVE_ERROR_COUNTER    _IOR(CAN, 0x09, u8_t*)
+
+/**
+ *  @brief  Get transmit error counter.
+ *  @param  [RD] @ref u8_t * error counter
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__GET_TRANSMIT_ERROR_COUNTER   _IOR(CAN, 0x0A, u8_t*)
+
+/**
+ *  @brief  Get bus status.
+ *  @param  [RD] @ref CAN_bus_status_t * bus status
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__GET_BUS_STATUS               _IOR(CAN, 0x0B, CAN_bus_status_t*)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -399,6 +421,16 @@ typedef struct {
         u32_t data_length;              /*!< Data length. */
         u8_t  data[8];                  /*!< Data buffer (8 bytes). */
 } CAN_msg_t;
+
+/**
+ * Type represent bus status.
+ */
+typedef enum {
+        CAN_BUS_STATUS__OK,             /*!< Bus is working without errors */
+        CAN_BUS_STATUS__WARNING,        /*!< Bus receive/transmit some errors */
+        CAN_BUS_STATUS__PASSIVE,        /*!< Bus is in passive mode */
+        CAN_BUS_STATUS__OFF,            /*!< Bus off state */
+} CAN_bus_status_t;
 
 /*==============================================================================
   Exported objects

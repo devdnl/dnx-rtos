@@ -51,7 +51,7 @@ Brief   CAN driver
 ==============================================================================*/
 #define TX_MAILBOXES            3
 #define RX_MAILBOXES            2
-#define RX_FIFO_DEPTH           8
+#define RX_FIFO_DEPTH           16
 #define INIT_TIMEOUT            1000
 #define MTX_TIMEOUT             1000
 
@@ -221,7 +221,7 @@ static const CAN_CFG_t CANX[] = {
                 .RX0_IRQn        = CAN3_RX0_IRQn,
                 .RX1_IRQn        = CAN3_RX1_IRQn,
                 .SCE_IRQn        = CAN3_SCE_IRQn,
-                .FILTERS_COUNT   = 13,
+                .FILTERS_COUNT   = 14,
         },
         #endif
 };
@@ -624,6 +624,41 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
                 }
                 break;
 
+        case IOCTL_CAN__GET_RECEIVE_ERROR_COUNTER:
+                if (arg) {
+                        *cast(u8_t*, arg) = ((CANX[hdl->major].CAN->ESR & CAN_ESR_REC) >> 24);
+                        err = ESUCC;
+                }
+                break;
+
+        case IOCTL_CAN__GET_TRANSMIT_ERROR_COUNTER:
+                if (arg) {
+                        *cast(u8_t*, arg) = ((CANX[hdl->major].CAN->ESR & CAN_ESR_TEC) >> 16);
+                        err = ESUCC;
+                }
+                break;
+
+        case IOCTL_CAN__GET_BUS_STATUS:
+                if (arg) {
+                        CAN_bus_status_t *status = arg;
+
+                        if (CANX[hdl->major].CAN->ESR & CAN_ESR_BOFF) {
+                                *status = CAN_BUS_STATUS__OFF;
+
+                        } else if (CANX[hdl->major].CAN->ESR & CAN_ESR_EPVF) {
+                                *status = CAN_BUS_STATUS__PASSIVE;
+
+                        } else if (CANX[hdl->major].CAN->ESR & CAN_ESR_EWGF) {
+                                *status = CAN_BUS_STATUS__WARNING;
+
+                        } else {
+                                *status = CAN_BUS_STATUS__OK;
+                        }
+
+                        err = ESUCC;
+                }
+                break;
+
         default:
                 err = EBADRQC;
                 break;
@@ -736,12 +771,12 @@ static int configure(CAN_t *hdl, const CAN_config_t *cfg)
         int err = sys_mutex_lock(hdl->config_mtx, MTX_TIMEOUT);
         if (!err) {
                 SET_BIT(CANX[hdl->major].CAN->MCR, (CAN_MCR_DBF * _CAN_CFG__DEBUG_FREEZE)
-                                 | CAN_MCR_TXFP
-                                 | CAN_MCR_RFLM);
+                                                 | CAN_MCR_TXFP
+                                                 | CAN_MCR_RFLM);
 
                 SET_BIT(CANX[hdl->major].CAN->IER, CAN_IER_FMPIE1
-                                 | CAN_IER_FMPIE0
-                                 | CAN_IER_TMEIE);
+                                                 | CAN_IER_FMPIE0
+                                                 | CAN_IER_TMEIE);
 
                 if (cfg->auto_bus_off_management) {
                         SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_ABOM);
@@ -787,25 +822,25 @@ static int configure(CAN_t *hdl, const CAN_config_t *cfg)
                 if ((SJW < 1) || (SJW > 4)) {
                         SJW = min(4, SJW);
                         SJW = max(1, SJW);
-                        printk("%s: SJW out of rage! Changed to %d", GET_MODULE_NAME(), SJW);
+                        printk("%s%d-%d: SJW out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0, SJW);
                 }
 
                 if ((TS1 < 1) || (TS1 > 15)) {
                         TS1 = min(15, TS1);
                         TS1 = max(1, TS1);
-                        printk("%s: TS1 out of rage! Changed to %d", GET_MODULE_NAME(), TS1);
+                        printk("%s%d-%d: TS1 out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0,  TS1);
                 }
 
                 if ((TS2 < 1) || (TS2 > 7)) {
                         TS2 = min(7, TS2);
                         TS2 = max(1, TS2);
-                        printk("%s: TS2 out of rage! Changed to %d", GET_MODULE_NAME(), TS2);
+                        printk("%s%d-%d: TS2 out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0,  TS2);
                 }
 
                 if ((BRP < 1) || (BRP > 1024)) {
                         BRP = min(1024, BRP);
                         BRP = max(1, BRP);
-                        printk("%s: BRP out of rage! Changed to %d", GET_MODULE_NAME(), BRP);
+                        printk("%s%d-%d: BRP out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0,  BRP);
                 }
 
                 CANX[hdl->major].CAN->BTR = (CAN_BTR_LBKM * cfg->loopback)
@@ -820,7 +855,7 @@ static int configure(CAN_t *hdl, const CAN_config_t *cfg)
                 u32_t PCLK = freq.PCLK1_Frequency;
 
                 u32_t baud = PCLK / (cfg->prescaler * (1 + TS1 + TS2));
-                printk("%s: baud rate: %u bps", GET_MODULE_NAME(), baud);
+                printk("%s%d-%d: baud rate: %u bps", GET_MODULE_NAME(), hdl->major, 0,  baud);
 
                 sys_mutex_unlock(hdl->config_mtx);
         }
@@ -1081,7 +1116,7 @@ static int send_msg(CAN_t *hdl, const CAN_msg_t *msg, u32_t timeout_ms)
                                                 err = erri;
 
                                         } else {
-                                                printk("CAN: message send abort");
+                                                printk("%s%d-%d: message send abort", GET_MODULE_NAME(), hdl->major, 0);
                                                 SET_BIT(CANX[hdl->major].CAN->TSR, CAN_TSR_ABRQ0 << (i * 8));
                                                 sys_sleep_ms(1);
                                         }
@@ -1190,9 +1225,16 @@ static bool CAN_TX_IRQ(CAN_t *hdl)
                         int err = EIO;
 
                         if (CANX[hdl->major].CAN->TSR & CAN_TSR_TERR[i]) {
-                                err = EIO;
+
+                                switch ((CANX[hdl->major].CAN->ESR & CAN_ESR_LEC) >> 4) {
+                                case 3:  err = EFAULT; break;
+                                case 6:  err = EILSEQ; break;
+                                default: err = EIO; break;
+                                }
+
                         } else if (CANX[hdl->major].CAN->TSR & CAN_TSR_ALST[i]) {
                                 err = EAGAIN;
+
                         } else if (CANX[hdl->major].CAN->TSR & CAN_TSR_TXOK[i]) {
                                 err = ESUCC;
                         }
