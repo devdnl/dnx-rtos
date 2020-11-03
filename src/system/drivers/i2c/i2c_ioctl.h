@@ -34,7 +34,9 @@ Driver handles I2C peripheral.
 
 \section drv-i2c-sup-arch Supported architectures
 \li stm32f1
+\li stm32f3
 \li stm32f4
+\li stm32f7
 
 \section drv-i2c-ddesc Details
 \subsection drv-i2c-ddesc-num Meaning of major and minor numbers
@@ -93,7 +95,7 @@ static const I2C_config_t cfg = {
       .address       = 0xA0,                          // EEPROM address
       .sub_addr_mode = I2C_SUB_ADDR_MODE__2_BYTES,    // EEPROM up to 64KiB
       .addr_10bit    = false,                         // 7-bit address
-      .slave_mode    = false                          // master mode
+      .mode          = I2C_MODE__MASTER,              // master mode
 };
 
 static const char *dev_path = "/dev/I2C0-0";
@@ -124,7 +126,7 @@ static const I2C_config_t cfg = {
       .address       = 0xA0,                          // microcontroller address
       .sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED,   // don't care in slave mode
       .addr_10bit    = false,                         // 7-bit address
-      .slave_mode    = true                           // slave mode
+      .mode          = I2C_MODE__SLAVE,               // slave mode
 };
 
 static const char *dev_path = "/dev/I2C0-0";
@@ -209,7 +211,7 @@ static const I2C_config_t cfg = {
       .address       = 0xA0,                          // EEPROM address
       .sub_addr_mode = I2C_SUB_ADDR_MODE__2_BYTES,    // EEPROM up to 64KiB
       .addr_10bit    = false,                         // 7-bit address
-      .slave_mode    = false                          // master mode
+      .mode          = I2C_MODE__MASTER,              // master mode
 };
 
 int_main(ee_ex, STACK_DEPTH_MEDIUM, int argc, char *argv[])
@@ -257,7 +259,7 @@ static const I2C_config_t cfg = {
       .address       = 0xA0,                          // microcontroller address
       .sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED,   // don't care in slave mode
       .addr_10bit    = false,                         // 7-bit address
-      .slave_mode    = true                           // slave mode
+      .mode          = I2C_MODE__SLAVE,               // slave mode
 };
 
 int_main(slave, STACK_DEPTH_MEDIUM, int argc, char *argv[])
@@ -335,7 +337,8 @@ static const char *dev_path = "/dev/ee";
 static const I2C_config_t cfg = {
       .address       = 0xA0,                          // EEPROM address
       .sub_addr_mode = I2C_SUB_ADDR_MODE__2_BYTES,    // EEPROM up to 64KiB
-      .addr_10bit    = false                          // 7-bit address
+      .addr_10bit    = false,                         // 7-bit address
+      .mode          = I2C_MODE__MASTER,              // master mode
 };
 
 GLOBAL_VARIABLES_SECTION {
@@ -388,7 +391,7 @@ static const I2C_config_t cfg = {
       .address       = 0xA0,                          // microcontroller address
       .sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED,   // don't care in slave mode
       .addr_10bit    = false,                         // 7-bit address
-      .slave_mode    = true                           // slave mode
+      .mode          = I2C_MODE__SLAVE,               // slave mode
 };
 
 int_main(slave, STACK_DEPTH_MEDIUM, int argc, char *argv[])
@@ -473,8 +476,17 @@ typedef enum {
         I2C_SUB_ADDR_MODE__DISABLED = 0,        //!< Sub-addressing disabled.
         I2C_SUB_ADDR_MODE__1_BYTE   = 1,        //!< Sub-address is 1 byte long.
         I2C_SUB_ADDR_MODE__2_BYTES  = 2,        //!< Sub-address is 2 byte long.
-        I2C_SUB_ADDR_MODE__3_BYTES  = 3         //!< Sub-address is 3 byte long.
+        I2C_SUB_ADDR_MODE__3_BYTES  = 3,        //!< Sub-address is 3 byte long.
+        I2C_SUB_ADDR_MODE__4_BYTES  = 4,        //!< Sub-address is 4 byte long.
 } I2C_sub_addr_mode_t;
+
+/**
+ * Type represent I2C peripheral mode.
+ */
+typedef enum {
+        I2C_MODE__MASTER,
+        I2C_MODE__SLAVE,
+} I2C_mode_t;
 
 /**
  * Type represents I2C peripheral configuration.
@@ -483,7 +495,7 @@ typedef struct {
         u16_t               address;            /*!< Device address 8 or 10 bit.*/
         I2C_sub_addr_mode_t sub_addr_mode;      /*!< Number of bytes of sub-address (EEPROM, RTC).*/
         bool                addr_10bit;         /*!< @b true: 10 bit addressing enabled.*/
-        bool                slave_mode;         /*!< @b true: slave moce enabled.*/
+        I2C_mode_t          mode;               /*!< I2C peripheral mode*/
 } I2C_config_t;
 
 /**

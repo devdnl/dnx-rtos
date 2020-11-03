@@ -31,12 +31,12 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include "../STM32F1F4/i2c_cfg.h"
+#include "../STM32F1F4/i2c_regs.h"
 #include "drivers/driver.h"
-#include "stm32fx/i2c_cfg.h"
 #include "gpio_ddi.h"
 #include "i2c_ioctl.h"
 #include "i2c.h"
-#include "i2c_regs.h"
 
 #if defined(ARCH_stm32f1)
 #include "lib/stm32f10x_rcc.h"
@@ -243,7 +243,7 @@ static void reset(I2C_dev_t *hdl, bool reinit)
                 i2c->OAR1 = OAR1;
         }
 
-        _I2C_LLD__stop(hdl);
+        _I2C_LLD__master_stop(hdl);
 
 
         I2C_recovery_t *recovery = &_I2C[hdl->major]->recovery;
@@ -483,7 +483,7 @@ void _I2C_LLD__release(u8_t major)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _I2C_LLD__start(I2C_dev_t *hdl)
+int _I2C_LLD__master_start(I2C_dev_t *hdl)
 {
         I2C_periph_t *i2c = get_I2C(hdl);
 
@@ -506,7 +506,7 @@ int _I2C_LLD__start(I2C_dev_t *hdl)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
+int _I2C_LLD__master_repeat_start(I2C_dev_t *hdl)
 {
         I2C_periph_t *i2c = get_I2C(hdl);
 
@@ -524,7 +524,7 @@ int _I2C_LLD__repeat_start(I2C_dev_t *hdl)
  * @param  hdl                  device handle
  */
 //==============================================================================
-void _I2C_LLD__stop(I2C_dev_t *hdl)
+void _I2C_LLD__master_stop(I2C_dev_t *hdl)
 {
         I2C_periph_t *i2c = get_I2C(hdl);
 
@@ -545,7 +545,7 @@ void _I2C_LLD__stop(I2C_dev_t *hdl)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write, size_t count)
+int _I2C_LLD__master_send_address(I2C_dev_t *hdl, bool write, size_t count)
 {
         I2C_periph_t *i2c = get_I2C(hdl);
 
@@ -578,7 +578,7 @@ int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write, size_t count)
                 if (err) goto finish;
 
                 // send repeat start
-                err = _I2C_LLD__repeat_start(hdl);
+                err = _I2C_LLD__master_repeat_start(hdl);
                 if (err) goto finish;
 
                 // send header
@@ -636,7 +636,7 @@ int _I2C_LLD__send_address(I2C_dev_t *hdl, bool write, size_t count)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
+int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
 {
         int      err = EIO;
         ssize_t  n   = 0;
@@ -806,11 +806,14 @@ int _I2C_LLD__receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
  * @param  src                  data source
  * @param  count                number of bytes to transfer
  * @param  wrcnt                number of written bytes
+ * @param  subaddr              subaddress transfer
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _I2C_LLD__transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt)
+int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt, bool subaddr)
 {
+        UNUSED_ARG1(subaddr);
+
         int     err  = EIO;
         ssize_t n    = 0;
         I2C_periph_t  *i2c  = get_I2C(hdl);
@@ -922,7 +925,7 @@ int _I2C_LLD__slave_mode_setup(I2C_dev_t *hdl)
 {
         I2C_periph_t *i2c = get_I2C(hdl);
 
-        if (hdl->config.slave_mode) {
+        if (hdl->config.mode == I2C_MODE__SLAVE) {
 
                 i2c->OAR1 = (1 << 14) // not used but documentation say to set this bit...
                           | (hdl->config.address & 0x3FF)
@@ -1011,7 +1014,7 @@ int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size
 
                 } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
                         printk("I2C%d: slave transmit timeout", hdl->major);
-                        _I2C_LLD__stop(hdl);
+                        _I2C_LLD__master_stop(hdl);
                         err = ETIME;
                         break;
 
@@ -1074,7 +1077,7 @@ int _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdc
 
                 } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
                         printk("I2C%d: slave receive timeout", hdl->major);
-                        _I2C_LLD__stop(hdl);
+                        _I2C_LLD__master_stop(hdl);
                         err = ETIME;
                         break;
 
