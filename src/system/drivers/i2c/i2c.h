@@ -162,12 +162,12 @@ extern int  _I2C_LLD__master_start(I2C_dev_t *hdl);
 extern int  _I2C_LLD__master_repeat_start(I2C_dev_t *hdl);
 extern void _I2C_LLD__master_stop(I2C_dev_t *hdl);
 extern int  _I2C_LLD__master_send_address(I2C_dev_t *hdl, bool write, size_t count);
-extern int  _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt);
-extern int  _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt, bool subaddr);
+extern int  _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdctr);
+extern int  _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrctr, bool subaddr);
 extern int  _I2C_LLD__slave_mode_setup(I2C_dev_t *hdl);
 extern int  _I2C_LLD__slave_wait_for_selection(I2C_dev_t *hdl, I2C_selection_t *event);
-extern int  _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt);
-extern int  _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt);
+extern int  _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrctr);
+extern int  _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdctr);
 
 /*==============================================================================
   Exported inline functions

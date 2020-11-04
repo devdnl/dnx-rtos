@@ -123,6 +123,7 @@ static const I2C_info_t I2C_HW[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .APB1RSTR_I2CRST   = RCC_APB1RSTR_I2C1RST,
                 .IRQ_EV_n          = I2C1_EV_IRQn,
                 .IRQ_ER_n          = I2C1_ER_IRQn,
+                .IRQ_priority      = __I2C1_IRQ_PRIORITY__,
                 .clk_src           = LL_RCC_I2C1_CLKSOURCE
         },
         #endif
@@ -139,6 +140,7 @@ static const I2C_info_t I2C_HW[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .APB1RSTR_I2CRST   = RCC_APB1RSTR_I2C2RST,
                 .IRQ_EV_n          = I2C2_EV_IRQn,
                 .IRQ_ER_n          = I2C2_ER_IRQn,
+                .IRQ_priority      = __I2C2_IRQ_PRIORITY__,
                 .clk_src           = LL_RCC_I2C2_CLKSOURCE
         },
         #endif
@@ -155,6 +157,7 @@ static const I2C_info_t I2C_HW[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .APB1RSTR_I2CRST   = RCC_APB1RSTR_I2C3RST,
                 .IRQ_EV_n          = I2C3_EV_IRQn,
                 .IRQ_ER_n          = I2C3_ER_IRQn,
+                .IRQ_priority      = __I2C3_IRQ_PRIORITY__,
                 .clk_src           = LL_RCC_I2C3_CLKSOURCE
         },
         #endif
@@ -171,6 +174,7 @@ static const I2C_info_t I2C_HW[_I2C_NUMBER_OF_PERIPHERALS] = {
                 .APB1RSTR_I2CRST   = RCC_APB1RSTR_I2C4RST,
                 .IRQ_EV_n          = I2C4_EV_IRQn,
                 .IRQ_ER_n          = I2C4_ER_IRQn,
+                .IRQ_priority      = __I2C4_IRQ_PRIORITY__,
                 .clk_src           = LL_RCC_I2C4_CLKSOURCE
         },
         #endif
@@ -219,7 +223,8 @@ static void reset(I2C_dev_t *hdl, bool reinit)
 
         I2C_recovery_t *recovery = &_I2C[hdl->major]->recovery;
 
-        if (recovery->enable) {
+        if (recovery->enable && (hdl->config.mode == I2C_MODE__MASTER)) {
+
                 i8_t state = _GPIO_DDI_get_pin(recovery->SDA.port_idx,
                                                recovery->SDA.pin_idx);
                 int SCL_mode = 0;
@@ -236,11 +241,10 @@ static void reset(I2C_dev_t *hdl, bool reinit)
                         printk("I2C%d:%d detected SDA low - bus recovery",
                                hdl->major, hdl->minor);
 
-                        #if defined(ARCH_stm32f3)
-                        int mode = GPIO_MODE__OD;
-                        #elif defined(ARCH_stm32f7)
+                        #if defined(ARCH_stm32f3) || defined(ARCH_stm32f7)
                         int mode = GPIO_MODE__OD;
                         #endif
+
                         _GPIO_DDI_set_pin_mode(recovery->SCL.port_idx,
                                                recovery->SCL.pin_idx,
                                                mode);
@@ -484,13 +488,12 @@ int _I2C_LLD__master_send_address(I2C_dev_t *hdl, bool write, size_t count)
  * @param  hdl                  device handle
  * @param  dst                  destination buffer
  * @param  count                number of bytes to receive
- * @param  rdcnt                number of read bytes
+ * @param  rdctr                number of read bytes
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdcnt)
+int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdctr)
 {
-        int          err = EIO;
         I2C_TypeDef *i2c = get_I2C(hdl);
 
         /*
@@ -520,6 +523,8 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
         _I2C[hdl->major]->subaddr_len = hdl->config.sub_addr_mode;
         _I2C[hdl->major]->subaddr_buf = _I2C[hdl->major]->subaddr;
 
+        WRITE_REG(i2c->ICR, I2C_ICR_NACKCF | I2C_ICR_STOPCF);
+
         if (_I2C[hdl->major]->subaddr_len > 0) {
                 /*
                  * The first transfer is subaddress.
@@ -544,7 +549,7 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
 
                 SET_BIT(i2c->CR2, I2C_CR2_RD_WRN);
 
-                _I2C[hdl->major]->restart_receive = true;
+                _I2C[hdl->major]->restart_receive = false;
 
                 nbytes = _I2C[hdl->major]->buf_len;
         }
@@ -567,7 +572,7 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
          * Wait for transaction to be finished.
          */
         u32_t event;
-        err = sys_queue_receive(_I2C[hdl->major]->event, &event, I2C_TRANSFER_TIMEOUT);
+        int err = sys_queue_receive(_I2C[hdl->major]->event, &event, I2C_TRANSFER_TIMEOUT);
         if (!err) {
                 if (event & I2C_ISR_BERR) {
                         err = EFAULT;
@@ -583,7 +588,7 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                 }
 
                 if (!err) {
-                        *rdcnt = count - _I2C[hdl->major]->buf_len;
+                        *rdctr = count - _I2C[hdl->major]->buf_len;
                 }
         } else {
                 reset(hdl, false);
@@ -598,14 +603,13 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
  * @param  hdl                  device handle
  * @param  src                  data source
  * @param  count                number of bytes to transfer
- * @param  wrcnt                number of written bytes
+ * @param  wrctr                number of written bytes
  * @param  subaddr              subaddress transfer
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrcnt, bool subaddr)
+int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrctr, bool subaddr)
 {
-        int          err = EIO;
         I2C_TypeDef *i2c = get_I2C(hdl);
 
         /*
@@ -638,6 +642,7 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
         /*
          * Configure transfer (number of bytes to send, IRQs, etc).
          */
+        WRITE_REG(i2c->ICR, I2C_ICR_NACKCF | I2C_ICR_STOPCF);
         SET_BIT(i2c->CR1, I2C_CR1_ERRIE | I2C_CR1_TCIE | I2C_CR1_STOPIE | I2C_CR1_NACKIE | I2C_CR1_TXIE);
 
         _I2C[hdl->major]->buf = const_cast(u8_t*, src);
@@ -664,7 +669,7 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
          * Wait for transaction to be finished.
          */
         u32_t event;
-        err = sys_queue_receive(_I2C[hdl->major]->event, &event, I2C_TRANSFER_TIMEOUT);
+        int err = sys_queue_receive(_I2C[hdl->major]->event, &event, I2C_TRANSFER_TIMEOUT);
         if (!err) {
                 if (event & I2C_ISR_BERR) {
                         err = EFAULT;
@@ -680,7 +685,7 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                 }
 
                 if (!err) {
-                        *wrcnt = count - _I2C[hdl->major]->buf_len;
+                        *wrctr = count - _I2C[hdl->major]->buf_len;
                 }
         } else {
                 reset(hdl, false);
@@ -708,10 +713,10 @@ int _I2C_LLD__slave_mode_setup(I2C_dev_t *hdl)
                 i2c->OAR2 = 0;
 
                 SET_BIT(i2c->OAR1, I2C_OAR1_OA1EN);
-                SET_BIT(i2c->CR1, I2C_CR1_SBC | I2C_CR1_ADDRIE);
+                SET_BIT(i2c->CR1, I2C_CR1_ADDRIE);
 
         } else {
-                CLEAR_BIT(i2c->CR1, I2C_CR1_SBC | I2C_CR1_ADDRIE);
+                CLEAR_BIT(i2c->CR1, I2C_CR1_ADDRIE);
                 i2c->OAR1 = 0;
                 i2c->OAR2 = 0;
         }
@@ -729,6 +734,10 @@ int _I2C_LLD__slave_mode_setup(I2C_dev_t *hdl)
 //==============================================================================
 int _I2C_LLD__slave_wait_for_selection(I2C_dev_t *hdl, I2C_selection_t *event)
 {
+        I2C_TypeDef *i2c = get_I2C(hdl);
+
+        SET_BIT(i2c->CR1, I2C_CR1_ADDRIE);
+
         u32_t ISR;
         int err = sys_queue_receive(_I2C[hdl->major]->event, &ISR, event->timeout_ms);
         if (!err) {
@@ -757,53 +766,43 @@ int _I2C_LLD__slave_wait_for_selection(I2C_dev_t *hdl, I2C_selection_t *event)
 int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size_t *wrctr)
 {
         I2C_TypeDef *i2c = get_I2C(hdl);
-        int    err = ESUCC;
 
         *wrctr = 0;
 
-//        u32_t tref = sys_time_get_reference();
-//
-//        clear_address_event(hdl);
-//
-//        while (true) {
-//                if ((i2c->SR1 & PI2C_SR1_TXE)) {
-//                        if (count > 0) {
-//                                i2c->DR = *src++;
-//                                count--;
-//                                (*wrctr)++;
-//                        } else {
-//                                i2c->DR = 0;
-//                        }
-//
-//                } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
-//                        printk("I2C%d: slave transmit timeout", hdl->major);
-//                        _I2C_LLD__stop(hdl);
-//                        err = ETIME;
-//                        break;
-//
-//                } else {
-//                        if (i2c->SR1 & PI2C_SR1_AF) {
-//                                /*
-//                                 * TXE flag is set always when shift buffer is
-//                                 * empty. In this case CPU write next byte but
-//                                 * there is possibility that there is a stop
-//                                 * condition so written byte is not send to
-//                                 * master device. In this case the number of
-//                                 * sent bytes should be corrected by 1 byte.
-//                                 */
-//                                if (!(i2c->SR1 & PI2C_SR1_TXE)) {
-//                                        if (*wrctr > 1) {
-//                                                (*wrctr)--;
-//                                        }
-//                                }
-//
-//                                break;
-//                        }
-//                }
-//        }
-//
-//        // clear AF flag
-//        i2c->SR1 = 0;
+        _I2C[hdl->major]->buf = const_cast(u8_t*, src);
+        _I2C[hdl->major]->buf_len = count;
+        _I2C[hdl->major]->subaddr_len = 0;
+        _I2C[hdl->major]->subaddr_buf = NULL;
+        _I2C[hdl->major]->restart_receive = false;
+
+        WRITE_REG(i2c->ICR, I2C_ICR_ADDRCF | I2C_ICR_STOPCF);
+        CLEAR_BIT(i2c->CR1, I2C_CR1_ERRIE | I2C_CR1_STOPIE | I2C_CR1_NACKIE | I2C_CR1_TXIE);
+        SET_BIT(i2c->CR1, I2C_CR1_ERRIE | I2C_CR1_STOPIE | I2C_CR1_TXIE);
+
+        /*
+         * Wait for transaction to be finished.
+         */
+        u32_t event;
+        int err = sys_queue_receive(_I2C[hdl->major]->event, &event, I2C_TRANSFER_TIMEOUT);
+        if (!err) {
+                if (event & I2C_ISR_BERR) {
+                        err = EFAULT;
+
+                } else if (event & I2C_ISR_ARLO) {
+                        err = EAGAIN;
+
+                } else if (event & I2C_ISR_STOPF) {
+                        err = ESUCC;
+                }
+
+                if (!err) {
+                        *wrctr = count - _I2C[hdl->major]->buf_len;
+                }
+        } else {
+                reset(hdl, false);
+        }
+
+        CLEAR_BIT(i2c->CR1, I2C_CR1_ERRIE | I2C_CR1_STOPIE | I2C_CR1_NACKIE | I2C_CR1_TXIE);
 
         return err;
 }
@@ -821,56 +820,43 @@ int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size
 int _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdctr)
 {
         I2C_TypeDef *i2c = get_I2C(hdl);
-        int    err = ESUCC;
 
         *rdctr = 0;
 
-//        u32_t tref = sys_time_get_reference();
-//
-//        while (true) {
-//                if (i2c->SR1 & PI2C_SR1_RXNE) {
-//                        if (count > 0) {
-//                                *dst++ = i2c->DR;
-//                                count--;
-//                                (*rdctr)++;
-//                        } else {
-//                                u8_t tmp = i2c->DR;
-//                                (void)tmp;
-//                        }
-//
-//                } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
-//                        printk("I2C%d: slave receive timeout", hdl->major);
-//                        _I2C_LLD__stop(hdl);
-//                        err = ETIME;
-//                        break;
-//
-//                } else {
-//                        if (i2c->SR1 & (PI2C_SR1_ADDR | PI2C_SR1_STOPF)) {
-//                                if (i2c->SR1 & PI2C_SR1_RXNE) {
-//                                       if (count > 0) {
-//                                               *dst++ = i2c->DR;
-//                                               count--;
-//                                               (*rdctr)++;
-//                                       } else {
-//                                               u8_t tmp = i2c->DR;
-//                                               (void)tmp;
-//                                       }
-//
-//                                }
-//                                break;
-//                        }
-//                }
-//                sys_sleep_ms(1);
-//        }
-//
-//        // clear STOPF flag
-//        sys_critical_section_begin();
-//        {
-//                u8_t tmp = i2c->SR1;
-//                (void)tmp;
-//                SET_BIT(i2c->CR1, PI2C_CR1_PE);
-//        }
-//        sys_critical_section_end();
+        _I2C[hdl->major]->buf = dst;
+        _I2C[hdl->major]->buf_len = count;
+        _I2C[hdl->major]->subaddr_len = 0;
+        _I2C[hdl->major]->subaddr_buf = NULL;
+        _I2C[hdl->major]->restart_receive = false;
+
+        WRITE_REG(i2c->ICR, I2C_ICR_ADDRCF);
+        CLEAR_BIT(i2c->CR1, I2C_CR1_ERRIE | I2C_CR1_STOPIE | I2C_CR1_NACKIE | I2C_CR1_TXIE);
+        SET_BIT(i2c->CR1, I2C_CR1_ERRIE | I2C_CR1_STOPIE | I2C_CR1_RXIE);
+
+        /*
+         * Wait for transaction to be finished.
+         */
+        u32_t event;
+        int err = sys_queue_receive(_I2C[hdl->major]->event, &event, I2C_TRANSFER_TIMEOUT);
+        if (!err) {
+                if (event & I2C_ISR_BERR) {
+                        err = EFAULT;
+
+                } else if (event & I2C_ISR_ARLO) {
+                        err = EAGAIN;
+
+                } else if (event & I2C_ISR_STOPF) {
+                        err = ESUCC;
+                }
+
+                if (!err) {
+                        *rdctr = count - _I2C[hdl->major]->buf_len;
+                }
+        } else {
+                reset(hdl, false);
+        }
+
+        CLEAR_BIT(i2c->CR1, I2C_CR1_ERRIE | I2C_CR1_STOPIE | I2C_CR1_NACKIE | I2C_CR1_RXIE);
 
         return err;
 }
@@ -888,19 +874,27 @@ static void IRQ_EV_handler(u8_t major)
         I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
         u16_t  ISR = i2c->ISR;
 
+        if (major == 1) {
+                __asm volatile("nop");
+        }
+
         /*
          * Handle slave NACK response.
          */
         if (ISR & I2C_ISR_NACKF) {
                 WRITE_REG(i2c->ICR, I2C_ICR_NACKCF);
-                u32_t event = I2C_ISR_NACKF;
-                sys_queue_send_from_ISR(_I2C[major]->event, &event, &woken);
+                CLEAR_BIT(i2c->CR1, I2C_CR1_TXIE);
+
+                if (i2c->CR1 & I2C_CR1_NACKIE) {
+                        u32_t event = I2C_ISR_NACKF;
+                        sys_queue_send_from_ISR(_I2C[major]->event, &event, &woken);
+                }
         }
 
         /*
          * Handle Tx register empty.
          */
-        if (ISR & I2C_ISR_TXIS) {
+        if ((ISR & I2C_ISR_TXIS) && (i2c->CR1 & I2C_CR1_TXIE)) {
                 u8_t byte;
 
                 if (_I2C[major]->subaddr_len > 0) {
@@ -910,6 +904,7 @@ static void IRQ_EV_handler(u8_t major)
                 } else if (_I2C[major]->buf_len > 0) {
                         byte = *_I2C[major]->buf++;
                         _I2C[major]->buf_len--;
+
                 } else {
                         byte = 0;
                 }
@@ -920,7 +915,7 @@ static void IRQ_EV_handler(u8_t major)
         /*
          * Handle Rx register not empty.
          */
-        if (ISR & I2C_ISR_RXNE) {
+        if ((ISR & I2C_ISR_RXNE) && (i2c->CR1 & I2C_CR1_RXIE)) {
                 u8_t byte = i2c->RXDR;
 
                 if (_I2C[major]->buf_len > 0) {
@@ -933,23 +928,23 @@ static void IRQ_EV_handler(u8_t major)
          * Handle transfer complete reload. This flag is set when NBYTES field
          * is 0. Flag setup new amount of data to be send.
          */
-        if (ISR & I2C_ISR_TCR) {
+        if ((ISR & I2C_ISR_TCR) && (i2c->CR1 & I2C_CR1_TCIE)) {
 
-                CLEAR_BIT(i2c->CR2, I2C_CR2_RELOAD);
+                u32_t nbytes = min(MAX_TRANSFER_SIZE, _I2C[major]->buf_len);
                 CLEAR_BIT(i2c->CR2, I2C_CR2_NBYTES);
+                SET_BIT(i2c->CR2, (nbytes << I2C_CR2_NBYTES_Pos) & I2C_CR2_NBYTES);
 
-                size_t nbytes = _I2C[major]->buf_len;
-                if (nbytes > MAX_TRANSFER_SIZE) {
+                if (_I2C[major]->buf_len > MAX_TRANSFER_SIZE) {
                         SET_BIT(i2c->CR2, I2C_CR2_RELOAD);
+                } else {
+                        CLEAR_BIT(i2c->CR2, I2C_CR2_RELOAD);
                 }
-
-                SET_BIT(i2c->CR2, (min(MAX_TRANSFER_SIZE, nbytes) << I2C_CR2_NBYTES_Pos) & I2C_CR2_NBYTES);
         }
 
         /*
          * Handle transfer complete. Flag is set when transfer tx/rx is complete.
          */
-        if (ISR & I2C_ISR_TC) {
+        if ((ISR & I2C_ISR_TC) && (i2c->CR1 & I2C_CR1_TCIE)) {
 
                 if (_I2C[major]->restart_receive) {
                         /*
@@ -980,20 +975,24 @@ static void IRQ_EV_handler(u8_t major)
         /*
          * STOP signal generated. After this operation entire transfer is complete.
          */
-        if (ISR & I2C_ISR_STOPF) {
+        if ((ISR & I2C_ISR_STOPF) && (i2c->CR1 & I2C_CR1_STOPIE)) {
                 WRITE_REG(i2c->ICR, I2C_ICR_STOPCF);
 
-                CLEAR_BIT(i2c->CR1, I2C_CR1_ERRIE | I2C_CR1_TCIE | I2C_CR1_STOPIE | I2C_CR1_NACKIE | I2C_CR1_TXIE);
+                CLEAR_BIT(i2c->CR1, I2C_CR1_ERRIE  | I2C_CR1_TCIE | I2C_CR1_STOPIE
+                                  | I2C_CR1_NACKIE | I2C_CR1_TXIE | I2C_CR1_RXIE);
 
                 u32_t event = I2C_ISR_STOPF;
                 sys_queue_send_from_ISR(_I2C[major]->event, &event, &woken);
         }
 
         /*
-         * Handle adress selection flag.
+         * Handle address selection flag.
          */
-        if (ISR & I2C_ISR_ADDR) {
-                u32_t event = ISR & (I2C_ISR_ADDR | I2C_ISR_DIR);
+        if ((ISR & I2C_ISR_ADDR) && (i2c->CR1 & I2C_CR1_ADDRIE)) {
+                SET_BIT(i2c->ISR, I2C_ISR_TXE);
+                CLEAR_BIT(i2c->CR1, I2C_CR1_ADDRIE);
+
+                u32_t event = i2c->ISR;
                 sys_queue_send_from_ISR(_I2C[major]->event, &event, &woken);
         }
 
