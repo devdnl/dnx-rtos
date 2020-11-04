@@ -141,6 +141,8 @@ not initialized then pin behavior is undefined (depends on microcontroller).
         #include "stm32f3/gpio_cfg.h"
 #elif defined(ARCH_stm32f4)
         #include "stm32f4/gpio_cfg.h"
+#elif defined(ARCH_stm32f7)
+        #include "stm32f7/gpio_cfg.h"
 #elif defined(ARCH_efr32)
         #include "efr32/gpio_cfg.h"
 #endif

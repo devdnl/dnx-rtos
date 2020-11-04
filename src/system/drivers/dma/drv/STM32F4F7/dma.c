@@ -5,7 +5,7 @@ Author   Daniel Zorychta
 
 Brief    General usage DMA driver.
 
-         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -28,9 +28,8 @@ Brief    General usage DMA driver.
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f4/dma_ddi.h"
-#include "stm32f4/stm32f4xx.h"
-#include "../dma_ioctl.h"
+#include "dma_ddi.h"
+#include "dma/dma_ioctl.h"
 
 /*==============================================================================
   Local macros
