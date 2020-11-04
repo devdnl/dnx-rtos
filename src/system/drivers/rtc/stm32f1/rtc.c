@@ -30,7 +30,6 @@
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f1/rtc_cfg.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #include "../rtc_ioctl.h"

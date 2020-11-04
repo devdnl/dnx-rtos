@@ -5,7 +5,7 @@ Author  Daniel Zorychta
 
 Brief   Real-Time Clock Module
 
-        Copyright (C) 2018 Daniel Zorychta <daniel.zorychta@gmail.com>
+        Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
         This program is free software; you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ Brief   Real-Time Clock Module
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f4/stm32f4xx.h"
-#include "stm32f4/lib/stm32f4xx_rcc.h"
+#include "stm32f7/stm32f7xx.h"
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #include "../rtc_ioctl.h"
 
 /*==============================================================================
@@ -41,7 +41,8 @@ Brief   Real-Time Clock Module
 
 #define RTC_WRITE_ATTEMPTS      65536
 #define TIMEOUT_LSE             5000
-#define HSE_RTCDIV              ((((__CLK_RTC_CLK_SRC__) >> 16) >= 2) ? ((__CLK_RTC_CLK_SRC__) >> 16) : 2)
+#define RTCDIV                  ((__CLK_RTC_HSE_DIV__ >> RCC_CFGR_RTCPRE_Pos) & RCC_CFGR_RTCPRE_Pos)
+#define HSE_RTCDIV              ((RTCDIV >= 2) ? RTCDIV : 2)
 
 /*==============================================================================
   Local object types
@@ -106,7 +107,6 @@ API_MOD_INIT(RTC, void **device_handle, u8_t major, u8_t minor, const void *conf
         int err = ESUCC;
 
         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
-        SET_BIT(PWR->CR, PWR_CR_DBP);
 
         if (!(RCC->BDCR & RCC_BDCR_RTCEN)) {
 

@@ -190,7 +190,7 @@ __CPU_NAME__=STM32F756ZGxx
 # this:AddWidget("Combobox", "Max RTOS API call IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ 12
+#define __CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ 14
 
 #/*--
 # this:AddWidget("Combobox", "Default IRQ priority")
