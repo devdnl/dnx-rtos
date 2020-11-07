@@ -101,7 +101,6 @@ end
 /*--
 if this:PortExist(1) then
     this:AddWidget("Spinbox", 1e3, 400e3, "SCL frequency [Hz]")
-    uC.AddPriorityItems(this)
 end
 --*/
 #define __I2C1_SCL_FREQ__ 100000
@@ -130,7 +129,6 @@ end
 /*--
 if this:PortExist(2) then
     this:AddWidget("Spinbox", 1e3, 400e3, "SCL frequency [Hz]")
-    uC.AddPriorityItems(this)
 end
 --*/
 #define __I2C2_SCL_FREQ__ 100000

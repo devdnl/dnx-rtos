@@ -373,6 +373,13 @@ extern "C" {
  */
 #define IOCTL_CAN__GET_BUS_STATUS               _IOR(CAN, 0x0B, CAN_bus_status_t*)
 
+/**
+ *  @brief  Get RX FIFO overrun counter.
+ *  @param  [RD] @ref u32_t* RX FIFO overrun counter
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__GET_RX_FIFO_OVERRUN_COUNTER  _IOR(CAN, 0x0C, u32_t*)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/

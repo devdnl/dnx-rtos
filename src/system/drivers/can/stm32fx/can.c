@@ -51,9 +51,9 @@ Brief   CAN driver
 ==============================================================================*/
 #define TX_MAILBOXES            3
 #define RX_MAILBOXES            2
-#define RX_FIFO_DEPTH           16
-#define INIT_TIMEOUT            1000
-#define MTX_TIMEOUT             1000
+#define RX_FIFO_DEPTH           __CAN_CFG_RX_FIFO_SIZE__
+#define INIT_TIMEOUT            2000
+#define MTX_TIMEOUT             2000
 
 #if defined(ARCH_stm32f1)
 #if defined(STM32F10X_LD) || defined(STM32F10X_MD) || defined(STM32F10X_HD)\
@@ -145,6 +145,7 @@ typedef struct {
         mutex_t *txmbox_mtx[TX_MAILBOXES];
         queue_t *txrdy_q[TX_MAILBOXES];
         queue_t *rxqueue_q;
+        u32_t    rx_overrun;
 } CAN_t;
 
 /* CAN registers */
@@ -259,7 +260,7 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
 
                         hdl->major        = major;
                         hdl->recv_timeout = MAX_DELAY_MS;
-                        hdl->send_timeout = 0;
+                        hdl->send_timeout = MAX_DELAY_MS;
 
                         err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->config_mtx);
                         if (err) {
@@ -655,6 +656,13 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
                                 *status = CAN_BUS_STATUS__OK;
                         }
 
+                        err = ESUCC;
+                }
+                break;
+
+        case IOCTL_CAN__GET_RX_FIFO_OVERRUN_COUNTER:
+                if (arg) {
+                        *cast(u32_t*, arg) = hdl->rx_overrun;
                         err = ESUCC;
                 }
                 break;
@@ -1265,9 +1273,15 @@ static bool CAN_RX_IRQ(CAN_t *hdl, u8_t fifo)
 {
         bool yield = false;
 
-        sys_queue_send_from_ISR(hdl->rxqueue_q, &CANX[hdl->major].CAN->sFIFOMailBox[fifo], &yield);
+        if (sys_queue_send_from_ISR(hdl->rxqueue_q, &CANX[hdl->major].CAN->sFIFOMailBox[fifo], &yield) != 0) {
+                hdl->rx_overrun++;
+        }
 
-        SET_BIT(CANX[hdl->major].CAN->RF0R, CAN_RF0R_RFOM0);
+        if (fifo == 0) {
+                SET_BIT(CANX[hdl->major].CAN->RF0R, CAN_RF0R_RFOM0);
+        } else {
+                SET_BIT(CANX[hdl->major].CAN->RF1R, CAN_RF1R_RFOM1);
+        }
 
         return yield;
 }
