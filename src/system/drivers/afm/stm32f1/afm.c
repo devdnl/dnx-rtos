@@ -37,7 +37,6 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define EXTICR(e3, e2, e1, e0) ( (((e3) & 0xF) << 12) | (((e2) & 0xF) << 8) | (((e1) & 0xF) << 4) | (((e0) & 0xF) << 0) )
 
 /*==============================================================================
   Local types, enums definitions
@@ -156,11 +155,6 @@ static const uint32_t MAPR2   = 0
                               #endif
                               ;
 
-static const uint32_t EXTICR1 = EXTICR(_AFM_EXTI3_PORT,  _AFM_EXTI2_PORT,  _AFM_EXTI1_PORT,  _AFM_EXTI0_PORT );
-static const uint32_t EXTICR2 = EXTICR(_AFM_EXTI7_PORT,  _AFM_EXTI6_PORT,  _AFM_EXTI5_PORT,  _AFM_EXTI4_PORT );
-static const uint32_t EXTICR3 = EXTICR(_AFM_EXTI11_PORT, _AFM_EXTI10_PORT, _AFM_EXTI9_PORT,  _AFM_EXTI8_PORT );
-static const uint32_t EXTICR4 = EXTICR(_AFM_EXTI15_PORT, _AFM_EXTI14_PORT, _AFM_EXTI13_PORT, _AFM_EXTI12_PORT);
-
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
@@ -186,21 +180,13 @@ API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor, const void *conf
         UNUSED_ARG2(device_handle, config);
 
         if (major == 0 && minor == 0) {
-                if (!(RCC->APB2ENR & RCC_APB2ENR_AFIOEN)) {
-                        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_AFIOEN);
+                SET_BIT(RCC->APB2ENR, RCC_APB2ENR_AFIOEN);
 
-                        AFIO->EVCR      = EVCR;
-                        AFIO->MAPR      = MAPR;
-                        AFIO->MAPR2     = MAPR2;
-                        AFIO->EXTICR[0] = EXTICR1;
-                        AFIO->EXTICR[1] = EXTICR2;
-                        AFIO->EXTICR[2] = EXTICR3;
-                        AFIO->EXTICR[3] = EXTICR4;
+                AFIO->EVCR  = EVCR;
+                AFIO->MAPR  = MAPR;
+                AFIO->MAPR2 = MAPR2;
 
-                        return ESUCC;
-                } else {
-                        return EADDRINUSE;
-                }
+                return ESUCC;
         } else {
                 return ENODEV;
         }

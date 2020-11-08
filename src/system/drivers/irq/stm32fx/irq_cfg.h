@@ -38,8 +38,12 @@ extern "C" {
 #if defined(ARCH_stm32f1)
 #include "stm32f1/stm32f10x.h"
 typedef enum IRQn IRQn_Type;
+#elif defined(ARCH_stm32f3)
+#include "stm32f3/stm32f3xx.h"
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
+#elif defined(ARCH_stm32f7)
+#include "stm32f7/stm32f7xx.h"
 #endif
 
 /*==============================================================================
@@ -75,6 +79,86 @@ enum _IRQ_MODE {
 #define _IRQ_LINE_13_MODE               __IRQ_LINE_13_MODE__
 #define _IRQ_LINE_14_MODE               __IRQ_LINE_14_MODE__
 #define _IRQ_LINE_15_MODE               __IRQ_LINE_15_MODE__
+
+/**
+ * EXTI0 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI0_PORT                __IRQ_EXTI0_PORT__
+
+/**
+ * EXTI1 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI1_PORT                __IRQ_EXTI1_PORT__
+
+/**
+ * EXTI2 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI2_PORT                __IRQ_EXTI2_PORT__
+
+/**
+ * EXTI3 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI3_PORT                __IRQ_EXTI3_PORT__
+
+/**
+ * EXTI4 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI4_PORT                __IRQ_EXTI4_PORT__
+
+/**
+ * EXTI5 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI5_PORT                __IRQ_EXTI5_PORT__
+
+/**
+ * EXTI6 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI6_PORT                __IRQ_EXTI6_PORT__
+
+/**
+ * EXTI7 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI7_PORT                __IRQ_EXTI7_PORT__
+
+/**
+ * EXTI8 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI8_PORT                __IRQ_EXTI8_PORT__
+
+/**
+ * EXTI9 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI9_PORT                __IRQ_EXTI9_PORT__
+
+/**
+ * EXTI10 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI10_PORT               __IRQ_EXTI10_PORT__
+
+/**
+ * EXTI11 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI11_PORT               __IRQ_EXTI11_PORT__
+
+/**
+ * EXTI12 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI12_PORT               __IRQ_EXTI12_PORT__
+
+/**
+ * EXTI13 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI13_PORT               __IRQ_EXTI13_PORT__
+
+/**
+ * EXTI14 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI14_PORT               __IRQ_EXTI14_PORT__
+
+/**
+ * EXTI15 PORT SELECTION: 0-6 for PA-PG
+ */
+#define _IRQ_EXTI15_PORT               __IRQ_EXTI15_PORT__
 
 /*==============================================================================
   Exported types, enums definitions
