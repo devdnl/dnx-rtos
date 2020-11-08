@@ -33,7 +33,10 @@ Driver handles timer in PWM mode. When timer is used by this driver then is not
 possible to use timer as e.g. counter or in other usages.
 
 \section drv-pwm-sup-arch Supported architectures
+\li stm32f1
+\li stm32f3
 \li stm32f4
+\li stm32f7
 
 \section drv-pwm-ddesc Details
 \subsection drv-pwm-ddesc-num Meaning of major and minor numbers
