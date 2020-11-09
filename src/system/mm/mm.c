@@ -540,7 +540,7 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                         if ((modid < 0) || (modid > cast(i32_t, _drvreg_number_of_modules))) {
                                 return EINVAL;
 
-                        } else  if (modid < _drvreg_number_of_modules) {
+                        } else  if (modid < cast(i32_t, _drvreg_number_of_modules)) {
                                 usage = &module_memory_usage[modid];
                         }
                         break;

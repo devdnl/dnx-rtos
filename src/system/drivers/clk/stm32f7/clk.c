@@ -482,25 +482,30 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                         switch (clkinf->iterator) {
                         case 0:
                                 clkinf->freq_Hz = freq.SYSCLK_Frequency;
-                                clkinf->name = "SYSCLK";
+                                clkinf->name = "CPUCLK";
                                 break;
 
                         case 1:
+                                clkinf->freq_Hz = freq.SYSCLK_Frequency;
+                                clkinf->name = "SYSCLK";
+                                break;
+
+                        case 2:
                                 clkinf->freq_Hz = freq.HCLK_Frequency;
                                 clkinf->name = "HCLK";
                                 break;
 
-                        case 2:
+                        case 3:
                                 clkinf->freq_Hz = freq.PCLK1_Frequency;
                                 clkinf->name = "PCLK1";
                                 break;
 
-                        case 3:
+                        case 4:
                                 clkinf->freq_Hz = freq.PCLK2_Frequency;
                                 clkinf->name = "PCLK2";
                                 break;
 
-                        case 4:
+                        case 5:
                                 if (is_APB1_divided()) {
                                         clkinf->freq_Hz = freq.PCLK1_Frequency * 2;
                                 } else {
@@ -509,7 +514,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "PCLK1_TIM";
                                 break;
 
-                        case 5:
+                        case 6:
                                 if (is_APB2_divided()) {
                                         clkinf->freq_Hz = freq.PCLK2_Frequency * 2;
                                 } else {
@@ -518,77 +523,77 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "PCLK2_TIM";
                                 break;
 
-                        case 6:
+                        case 7:
                                 clkinf->freq_Hz = LL_RCC_GetLPTIMClockFreq(LL_RCC_LPTIM1_CLKSOURCE);
                                 clkinf->name = "LPTIM";
                                 break;
 
-                        case 7:
+                        case 8:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART1_CLKSOURCE);
                                 clkinf->name = "USART1";
                                 break;
 
-                        case 8:
+                        case 9:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART2_CLKSOURCE);
                                 clkinf->name = "USART2";
                                 break;
 
-                        case 9:
+                        case 10:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART3_CLKSOURCE);
                                 clkinf->name = "USART3";
                                 break;
 
-                        case 10:
+                        case 11:
                                 clkinf->freq_Hz = LL_RCC_GetUARTClockFreq(LL_RCC_UART4_CLKSOURCE);
                                 clkinf->name = "UART4";
                                 break;
 
-                        case 11:
+                        case 12:
                                 clkinf->freq_Hz = LL_RCC_GetUARTClockFreq(LL_RCC_UART5_CLKSOURCE);
                                 clkinf->name = "UART5";
                                 break;
 
-                        case 12:
+                        case 13:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART6_CLKSOURCE);
                                 clkinf->name = "USART6";
                                 break;
 
-                        case 13:
+                        case 14:
                                 clkinf->freq_Hz = LL_RCC_GetUARTClockFreq(LL_RCC_UART7_CLKSOURCE);
                                 clkinf->name = "UART7";
                                 break;
 
-                        case 14:
+                        case 15:
                                 clkinf->freq_Hz = LL_RCC_GetUARTClockFreq(LL_RCC_UART8_CLKSOURCE);
                                 clkinf->name = "UART8";
                                 break;
 
-                        case 15:
+                        case 16:
                                 clkinf->freq_Hz = LL_RCC_GetI2CClockFreq(LL_RCC_I2C1_CLKSOURCE);
                                 clkinf->name = "I2C1";
                                 break;
 
-                        case 16:
+                        case 17:
                                 clkinf->freq_Hz = LL_RCC_GetI2CClockFreq(LL_RCC_I2C2_CLKSOURCE);
                                 clkinf->name = "I2C2";
                                 break;
 
-                        case 17:
+                        case 18:
                                 clkinf->freq_Hz = LL_RCC_GetI2CClockFreq(LL_RCC_I2C3_CLKSOURCE);
                                 clkinf->name = "I2C3";
                                 break;
 
-                        case 18:
+                        case 19:
                                 clkinf->freq_Hz = LL_RCC_GetI2CClockFreq(LL_RCC_I2C4_CLKSOURCE);
                                 clkinf->name = "I2C4";
                                 break;
 
-                        case 19:
+                        case 20:
                                 clkinf->freq_Hz = LL_RCC_GetSDMMCClockFreq(LL_RCC_SDMMC1_CLKSOURCE);
                                 clkinf->name = "SDMMC1";
                                 break;
 
-                        case 20:
+                        case 21:
                                 #if defined(SDMMC2)
                                 clkinf->freq_Hz = LL_RCC_GetSDMMCClockFreq(LL_RCC_SDMMC2_CLKSOURCE);
                                 #else
@@ -597,12 +602,12 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "SDMMC2";
                                 break;
 
-                        case 21:
+                        case 22:
                                 clkinf->freq_Hz = LL_RCC_GetCECClockFreq(LL_RCC_CEC_CLKSOURCE);
                                 clkinf->name = "CEC";
                                 break;
 
-                        case 22:
+                        case 23:
                                 #if defined(DFSDM1_Channel0)
                                 clkinf->freq_Hz = LL_RCC_GetDFSDMAudioClockFreq(LL_RCC_DFSDM1_AUDIO_CLKSOURCE);
                                 #else
@@ -611,7 +616,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "DFSDM Audio";
                                 break;
 
-                        case 23:
+                        case 24:
                                 #if defined(DFSDM1_Channel0)
                                 clkinf->freq_Hz = LL_RCC_GetDFSDMClockFreq(LL_RCC_DFSDM1_CLKSOURCE);
                                 #else
@@ -620,7 +625,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "DFSDM";
                                 break;
 
-                        case 24:
+                        case 25:
                                 #if defined(DSI)
                                 clkinf->freq_Hz = LL_RCC_GetDSIClockFreq(LL_RCC_DSI_CLKSOURCE);
                                 #else
@@ -629,12 +634,12 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "DSI";
                                 break;
 
-                        case 25:
+                        case 26:
                                 clkinf->freq_Hz = LL_RCC_GetUSBClockFreq(LL_RCC_USB_CLKSOURCE);
                                 clkinf->name = "USB/RNG";
                                 break;
 
-                        case 26:
+                        case 27:
                                 #if defined(SPDIFRX)
                                 clkinf->freq_Hz = LL_RCC_GetSPDIFRXClockFreq(LL_RCC_SPDIFRX1_CLKSOURCE);
                                 #else
@@ -643,17 +648,17 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "SPDIF";
                                 break;
 
-                        case 27:
+                        case 28:
                                 clkinf->freq_Hz = LL_RCC_GetI2SClockFreq(LL_RCC_I2S1_CLKSOURCE);
                                 clkinf->name = "I2S";
                                 break;
 
-                        case 28:
+                        case 29:
                                 clkinf->freq_Hz = LL_RCC_GetSAIClockFreq(LL_RCC_SAI1_CLKSOURCE);
                                 clkinf->name = "SAI1";
                                 break;
 
-                        case 29:
+                        case 30:
                                 clkinf->freq_Hz = LL_RCC_GetSAIClockFreq(LL_RCC_SAI2_CLKSOURCE);
                                 clkinf->name = "SAI2";
                                 break;

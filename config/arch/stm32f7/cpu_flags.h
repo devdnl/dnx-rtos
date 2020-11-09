@@ -206,6 +206,21 @@ __CPU_NAME__=STM32F756ZGxx
 #define __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ _YES_
 
 #/*--
+# this:AddWidget("Combobox", "ICACHE")
+# this:AddItem("Enable", "_YES_")
+# this:AddItem("Disable", "_NO_")
+#--*/
+#define __CPU_ICACHE_ENABLE__ _NO_
+
+#/*--
+# this:AddWidget("Combobox", "DCACHE")
+# this:AddItem("Enable", "_YES_")
+# this:AddItem("Disable", "_NO_")
+# this:SetToolTip("This option can introduce cache coherency issues!")
+#--*/
+#define __CPU_DCACHE_ENABLE__ _NO_
+
+#/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")
 #--*/
 #define __CPU_VTOR_TAB_POSITION__ 0x00000
