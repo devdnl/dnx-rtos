@@ -726,7 +726,6 @@ static void set_flash_latency(u32_t latency)
 //==============================================================================
 static void enable_prefetch_buffer(void)
 {
-
         SET_BIT(FLASH->ACR, FLASH_ACR_PRFTEN | FLASH_ACR_ARTEN);
 }
 

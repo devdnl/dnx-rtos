@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    ethmac_cfg.h
+@file    ETH_cfg.h
 
 @author  Daniel Zorychta
 
@@ -26,8 +26,8 @@
 
 *//*==========================================================================*/
 
-#ifndef _ETHMAC_CFG_H_
-#define _ETHMAC_CFG_H_
+#ifndef _ETH_CFG_H_
+#define _ETH_CFG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,37 +44,37 @@ extern "C" {
 /*
  * Enable (1) or disable (0) hardware checksum calculation
  */
-#define ETHMAC_CHECKSUM_BY_HARDWARE     __ETHMAC_CHECKSUM_BY_HARDWARE__
+#define ETH_CHECKSUM_BY_HARDWARE     __ETH_CHECKSUM_BY_HARDWARE__
 
 /*
  * Ethernet MAC speed (ETH_Speed_100M or ETH_Speed_10M)
  */
-#define ETHMAC_SPEED                    __ETHMAC_SPEED__
+#define ETH_SPEED                    __ETH_SPEED__
 
 /*
  * Rx buffer count
  */
-#define ETHMAC_RXBUFNB                  __ETHMAC_RXBUFNB__
+#define ETH_RXBUFNB                  __ETH_RXBUFNB__
 
 /*
  * Tx buffer count
  */
-#define ETHMAC_TXBUFNB                  __ETHMAC_TXBUFNB__
+#define ETH_TXBUFNB                  __ETH_TXBUFNB__
 
 /*
  * PHY address
  */
-#define ETHMAC_PHY_ADDRESS              __ETHMAC_PHY_ADDRESS__
+#define ETH_PHY_ADDRESS              __ETH_PHY_ADDRESS__
 
 /*
  * PHY reset delay [ms]
  */
-#define ETHMAC_PHY_RESET_DELAY          __ETHMAC_PHY_RESET_DELAY__
+#define ETH_PHY_RESET_DELAY          __ETH_PHY_RESET_DELAY__
 
 /*
  * PHY configuration apply delay [ms]
  */
-#define ETHMAC_PHY_CONFIG_DELAY         __ETHMAC_PHY_CONFIG_DELAY__
+#define ETH_PHY_CONFIG_DELAY         __ETH_PHY_CONFIG_DELAY__
 
 /*
  * Transceiver Status Register address
@@ -82,7 +82,7 @@ extern "C" {
  * For DP83848: 16
  * For LAN8700: 31
  */
-#define ETHMAC_PHY_SR                   __ETHMAC_PHY_SR__
+#define ETH_PHY_SR                   __ETH_PHY_SR__
 
 /*
  * PHY speed status 16-bit mask
@@ -90,7 +90,7 @@ extern "C" {
  * For DP83848: 0x0002
  * For LAN8700: 0x0004
  */
-#define ETHMAC_PHY_SPEED_STATUS_BM      __ETHMAC_PHY_SPEED_STATUS_BM__
+#define ETH_PHY_SPEED_STATUS_BM      __ETH_PHY_SPEED_STATUS_BM__
 
 /*
  * PHY duplex status 16-bit mask
@@ -98,12 +98,12 @@ extern "C" {
  * For DP83848: 0x0004
  * For LAN8700: 0x0010
  */
-#define ETHMAC_PHY_DUPLEX_STATUS_BM     __ETHMAC_PHY_DUPLEX_STATUS_BM__
+#define ETH_PHY_DUPLEX_STATUS_BM     __ETH_PHY_DUPLEX_STATUS_BM__
 
 /*
  * PHY link auto negotiation
  */
-#define ETHMAC_PHY_AUTONEGOTIATION      __ETHMAC_PHY_AUTONEGOTIATION__
+#define ETH_PHY_AUTONEGOTIATION      __ETH_PHY_AUTONEGOTIATION__
 
 /*==============================================================================
   Exported object types
@@ -125,7 +125,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _ETHMAC_CFG_H_ */
+#endif /* _ETH_CFG_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

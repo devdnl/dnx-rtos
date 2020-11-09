@@ -40,8 +40,10 @@
 #include "stm32f10x.h"
 #elif defined(ARCH_stm32f4)
 #include "stm32f4xx.h"
+#elif defined(ARCH_stm32f7)
+#include "stm32f7xx.h"
 #endif
-#include "ethmac_cfg.h"
+#include "eth_cfg.h"
 
 /** @addtogroup STM32F4x7_ETH_Driver
   * @{
@@ -297,9 +299,6 @@ typedef struct  {
     The configured value for ETH_RX_BUF_SIZE and ETH_RXBUFNB are only provided as
     example, they can be reconfigured in the application layer to fit the application
     needs */
-
-#define ETH_RXBUFNB ETHMAC_RXBUFNB
-#define ETH_TXBUFNB ETHMAC_TXBUFNB
 
 /* Here we configure each Ethernet driver receive buffer to fit the Max size Ethernet
    packet */
@@ -1766,8 +1765,8 @@ typedef struct  {
   #define _eth_delay_    ETH_Delay /*!< Default _eth_delay_ function with less precise timing */
 #endif
 
-#define PHY_RESET_DELAY                 ETHMAC_PHY_RESET_DELAY
-#define PHY_CONFIG_DELAY                ETHMAC_PHY_CONFIG_DELAY
+#define PHY_RESET_DELAY                 ETH_PHY_RESET_DELAY
+#define PHY_CONFIG_DELAY                ETH_PHY_CONFIG_DELAY
 #define ETH_REG_WRITE_DELAY             1
 #define PHY_SR                          ETHMAC_PHY_SR
 #define PHY_DUPLEX_SPEED_STATUS_MASK    (ETHMAC_PHY_SPEED_STATUS_BM | ETHMAC_PHY_DUPLEX_STATUS_BM)

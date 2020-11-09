@@ -410,12 +410,22 @@ int _syscall_kworker_process(int argc, char *argv[])
 
         u64_t sync_period_ref = _kernel_get_time_ms();
 
+        bool network_initialized = false;
+
         for (;;) {
                 _sleep_ms(1000);
 
                 if ( (_kernel_get_time_ms() - sync_period_ref) >= FS_CACHE_SYNC_PERIOD_MS) {
                         _vfs_sync();
                         sync_period_ref = _kernel_get_time_ms();
+                }
+
+                if (not network_initialized) {
+                        network_initialized = true;
+
+                        for (NET_family_t netf = 0; netf < _NET_FAMILY__COUNT; netf++) {
+                                _net_ifup(netf, NULL);
+                        }
                 }
         }
 

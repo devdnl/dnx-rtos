@@ -435,11 +435,11 @@ static void input_thread(void *arg)
                 int err = sys_fopen(__NETWORK_SIPC_INTERFACE_PATH__, "r+", &sipc->if_file);
 
                 if (err && !msg) {
-                        printk("SIPC: interface file error (%s)", strerror(err));
+                        printk("SIPC: waiting for interface file...");
                         msg = true;
                 }
 
-                sys_sleep_ms(100);
+                sys_sleep_ms(1000);
         }
 
         while (true) {
@@ -713,12 +713,15 @@ static int stack_init(void)
 //==============================================================================
 int SIPC_ifup(const NET_SIPC_config_t *cfg)
 {
-        UNUSED_ARG1(cfg);
-
         int err = stack_init();
         if (!err) {
-                sipc->conf.MTU = max(64, cfg->MTU);
-                sipc->state = NET_SIPC_STATE__UP;
+                if (cfg) {
+                        sipc->conf.MTU = max(64, cfg->MTU);
+                        sipc->state = NET_SIPC_STATE__UP;
+                } else {
+                        sipc->conf.MTU = 64;
+                        sipc->state = NET_SIPC_STATE__DOWN;
+                }
         }
 
         return err;

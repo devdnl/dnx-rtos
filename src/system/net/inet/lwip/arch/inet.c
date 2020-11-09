@@ -200,11 +200,11 @@ static void network_interface_thread(void *arg)
                 int err = sys_fopen(__NETWORK_TCPIP_DEVICE_PATH__, "r+", &inet->if_file);
 
                 if (err && !msg) {
-                        printk("INET: interface file error (%s)", strerror(err));
+                        printk("INET: waiting for interface file...");
                         msg = true;
                 }
 
-                sys_msleep(100);
+                sys_msleep(1000);
         }
 
         /* initialize interface */
@@ -541,32 +541,34 @@ int INET_ifup(const NET_INET_config_t *cfg)
 
         inet->disconnected = not _inetdrv_is_link_connected(inet);
 
-        switch (cfg->mode) {
-        case NET_INET_MODE__STATIC: {
-                ip_addr_t addr, mask, gateway;
-                create_lwIP_addr(&addr, &cfg->address);
-                create_lwIP_addr(&mask, &cfg->mask);
-                create_lwIP_addr(&gateway, &cfg->gateway);
+        if (cfg) {
+                switch (cfg->mode) {
+                case NET_INET_MODE__STATIC: {
+                        ip_addr_t addr, mask, gateway;
+                        create_lwIP_addr(&addr, &cfg->address);
+                        create_lwIP_addr(&mask, &cfg->mask);
+                        create_lwIP_addr(&gateway, &cfg->gateway);
 
-                err = apply_static_IP_configuration(&addr, &mask, &gateway);
+                        err = apply_static_IP_configuration(&addr, &mask, &gateway);
 
-                break;
-        }
+                        break;
+                }
 
-        case NET_INET_MODE__DHCP_START:
-                err = DHCP_start_client();
-                break;
+                case NET_INET_MODE__DHCP_START:
+                        err = DHCP_start_client();
+                        break;
 
-        case NET_INET_MODE__DHCP_INFORM:
-                err = DHCP_inform_server();
-                break;
+                case NET_INET_MODE__DHCP_INFORM:
+                        err = DHCP_inform_server();
+                        break;
 
-        case NET_INET_MODE__DHCP_RENEW:
-                err = DHCP_renew_connection();
-                break;
+                case NET_INET_MODE__DHCP_RENEW:
+                        err = DHCP_renew_connection();
+                        break;
 
-        default:
-                err = EINVAL;
+                default:
+                        err = EINVAL;
+                }
         }
 
         return err;

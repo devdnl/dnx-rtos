@@ -1,7 +1,7 @@
 dnx RTOS 2.3.x Falcon
 =====================
 New Features, Improvements:
-- Added DMA, RTC, SPI, I2C drivers to stm32f7 port
+- Added DMA, RTC, SPI, I2C, ETH drivers to stm32f7 port
 - Improvements in CAN driver
 - Added IRQ, PWM drivers for stm32f3 & stm32f7 ports
 - Removed configuration of EXTI lines in AFM driver
