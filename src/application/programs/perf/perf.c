@@ -92,7 +92,9 @@ int main(int argc, char *argv[])
                 CLK_info_t ck;
                 ck.iterator = 0;
                 while ((ioctl(fileno(clk), IOCTL_CLK__GET_CLK_INFO, &ck) == 0)) {
-                        if (strcmp(ck.name, "CPUCLK") == 0) {
+                        if (ck.name == NULL) {
+                                break;
+                        } else if (strcmp(ck.name, "CPUCLK") == 0) {
                                 global->cpu_freq = ck.freq_Hz;
                                 break;
                         } else {
@@ -111,6 +113,8 @@ int main(int argc, char *argv[])
                 printf("To perform test /dev/clk driver is required.");
                 return EXIT_FAILURE;
         }
+
+        puts("CPU performance test in progress...");
 
         static const thread_attr_t THREAD_ATTR = {
                 .stack_depth = STACK_DEPTH_LOW,
