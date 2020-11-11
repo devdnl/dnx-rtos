@@ -89,7 +89,7 @@ __NETWORK_TCPIP_STACK__=__STACK_LWIP__
 # this:AddExtraWidget("Void", "VoidEth0", "")
 # this:AddExtraWidget("Void", "VoidEth1", "")
 #--*/
-#define __NETWORK_TCPIP_DEVICE_PATH__ "/dev/ethmac"
+#define __NETWORK_TCPIP_DEVICE_PATH__ "/dev/eth"
 
 
 

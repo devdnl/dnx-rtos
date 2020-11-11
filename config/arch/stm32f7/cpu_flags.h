@@ -190,7 +190,7 @@ __CPU_NAME__=STM32F756ZGxx
 # this:AddWidget("Combobox", "Max RTOS API call IRQ priority")
 # uC.AddPriorityItems(this, true)
 #--*/
-#define __CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ 12
+#define __CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__ 14
 
 #/*--
 # this:AddWidget("Combobox", "Default IRQ priority")
@@ -204,6 +204,21 @@ __CPU_NAME__=STM32F756ZGxx
 # this:AddItem("Disable", "_YES_")
 #--*/
 #define __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ _YES_
+
+#/*--
+# this:AddWidget("Combobox", "ICACHE")
+# this:AddItem("Enable", "_YES_")
+# this:AddItem("Disable", "_NO_")
+#--*/
+#define __CPU_ICACHE_ENABLE__ _NO_
+
+#/*--
+# this:AddWidget("Combobox", "DCACHE")
+# this:AddItem("Enable", "_YES_")
+# this:AddItem("Disable", "_NO_")
+# this:SetToolTip("This option can introduce cache coherency issues!")
+#--*/
+#define __CPU_DCACHE_ENABLE__ _NO_
 
 #/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")

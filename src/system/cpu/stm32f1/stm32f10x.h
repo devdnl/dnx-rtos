@@ -1245,7 +1245,7 @@ typedef struct
   uint16_t  RESERVED18;
   __IO uint16_t DMAR;
   uint16_t  RESERVED19;
-} TIM_t;
+} TIM_TypeDef;
 
 /**
   * @brief Universal Synchronous Asynchronous Receiver Transmitter
@@ -1399,15 +1399,15 @@ typedef struct
   * @{
   */
 
-#define TIM2                ((TIM_t *) TIM2_BASE)
-#define TIM3                ((TIM_t *) TIM3_BASE)
-#define TIM4                ((TIM_t *) TIM4_BASE)
-#define TIM5                ((TIM_t *) TIM5_BASE)
-#define TIM6                ((TIM_t *) TIM6_BASE)
-#define TIM7                ((TIM_t *) TIM7_BASE)
-#define TIM12               ((TIM_t *) TIM12_BASE)
-#define TIM13               ((TIM_t *) TIM13_BASE)
-#define TIM14               ((TIM_t *) TIM14_BASE)
+#define TIM2                ((TIM_TypeDef *) TIM2_BASE)
+#define TIM3                ((TIM_TypeDef *) TIM3_BASE)
+#define TIM4                ((TIM_TypeDef *) TIM4_BASE)
+#define TIM5                ((TIM_TypeDef *) TIM5_BASE)
+#define TIM6                ((TIM_TypeDef *) TIM6_BASE)
+#define TIM7                ((TIM_TypeDef *) TIM7_BASE)
+#define TIM12               ((TIM_TypeDef *) TIM12_BASE)
+#define TIM13               ((TIM_TypeDef *) TIM13_BASE)
+#define TIM14               ((TIM_TypeDef *) TIM14_BASE)
 #define RTC                 ((RTC_t *) RTC_BASE)
 #define WWDG                ((WWDG_t *) WWDG_BASE)
 #define IWDG                ((IWDG_t *) IWDG_BASE)
@@ -1421,7 +1421,7 @@ typedef struct
 #define I2C2                ((I2C_t *) I2C2_BASE)
 #define USB                 ((USB_t *) USB_BASE)
 #define CAN1                ((CAN_TypeDef *) CAN1_BASE)
-#define CAN2                ((CAN_t *) CAN2_BASE)
+#define CAN2                ((CAN_TypeDef *) CAN2_BASE)
 #define BKP                 ((BKP_t *) BKP_BASE)
 #define PWR                 ((PWR_t *) PWR_BASE)
 #define DAC                 ((DAC_t *) DAC_BASE)
@@ -1437,17 +1437,17 @@ typedef struct
 #define GPIOG               ((GPIO_t *) GPIOG_BASE)
 #define ADC1                ((ADC_t *) ADC1_BASE)
 #define ADC2                ((ADC_t *) ADC2_BASE)
-#define TIM1                ((TIM_t *) TIM1_BASE)
+#define TIM1                ((TIM_TypeDef *) TIM1_BASE)
 #define SPI1                ((SPI_TypeDef *) SPI1_BASE)
-#define TIM8                ((TIM_t *) TIM8_BASE)
+#define TIM8                ((TIM_TypeDef *) TIM8_BASE)
 #define USART1              ((USART_TypeDef *) USART1_BASE)
 #define ADC3                ((ADC_t *) ADC3_BASE)
-#define TIM15               ((TIM_t *) TIM15_BASE)
-#define TIM16               ((TIM_t *) TIM16_BASE)
-#define TIM17               ((TIM_t *) TIM17_BASE)
-#define TIM9                ((TIM_t *) TIM9_BASE)
-#define TIM10               ((TIM_t *) TIM10_BASE)
-#define TIM11               ((TIM_t *) TIM11_BASE)
+#define TIM15               ((TIM_TypeDef *) TIM15_BASE)
+#define TIM16               ((TIM_TypeDef *) TIM16_BASE)
+#define TIM17               ((TIM_TypeDef *) TIM17_BASE)
+#define TIM9                ((TIM_TypeDef *) TIM9_BASE)
+#define TIM10               ((TIM_TypeDef *) TIM10_BASE)
+#define TIM11               ((TIM_TypeDef *) TIM11_BASE)
 #define SDIO                ((SDIO_t *) SDIO_BASE)
 #define DMA1                ((DMA_t *) DMA1_BASE)
 #define DMA2                ((DMA_t *) DMA2_BASE)

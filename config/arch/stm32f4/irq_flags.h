@@ -39,8 +39,8 @@ Brief   This driver support external interrupts (EXTI).
 this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > IRQ",
                function() this:LoadFile("arch/arch_flags.h") end)
 
-this:AddExtraWidget("Label", "LabelLine", "Line")
-this:AddExtraWidget("Label", "LabelMode", "Trigger")
+this:AddExtraWidget("Label", "LabelLine", "Line", -1, "bold")
+this:AddExtraWidget("Label", "LabelMode", "Trigger", -1, "bold")
 
 this.AddIrqMode = function(this)
     this:AddItem("Disabled", "_IRQ_MODE_DISABLED")
@@ -152,6 +152,107 @@ this:AddWidget("Combobox", "IRQ 15")
 this:AddIrqMode()
 --*/
 #define __IRQ_LINE_15_MODE__ _IRQ_MODE_DISABLED
+
+
+/*--
+this:AddExtraWidget("Label", "LabelEXTI", "\nEXTI ports", -1, "bold")
+this:AddExtraWidget("Void", "VoidEXTI")
+++*/
+/*--
+this:AddWidget("Combobox", "EXTI0 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."0", "("..tostring(i).." << 0)") end
+--*/
+#define __IRQ_EXTI0_PORT__ (0 << 0)
+
+/*--
+this:AddWidget("Combobox", "EXTI1 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."1", "("..tostring(i).." << 4)") end
+--*/
+#define __IRQ_EXTI1_PORT__ (0 << 4)
+
+/*--
+this:AddWidget("Combobox", "EXTI2 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."2", "("..tostring(i).." << 8)") end
+--*/
+#define __IRQ_EXTI2_PORT__ (0 << 8)
+
+/*--
+this:AddWidget("Combobox", "EXTI3 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."3", "("..tostring(i).." << 12)") end
+--*/
+#define __IRQ_EXTI3_PORT__ (0 << 12)
+
+/*--
+this:AddWidget("Combobox", "EXTI4 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."4", "("..tostring(i).." << 0)") end
+--*/
+#define __IRQ_EXTI4_PORT__ (0 << 0)
+
+/*--
+this:AddWidget("Combobox", "EXTI5 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."5", "("..tostring(i).." << 4)") end
+--*/
+#define __IRQ_EXTI5_PORT__ (0 << 4)
+
+/*--
+this:AddWidget("Combobox", "EXTI6 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."6", "("..tostring(i).." << 8)") end
+--*/
+#define __IRQ_EXTI6_PORT__ (0 << 8)
+
+/*--
+this:AddWidget("Combobox", "EXTI7 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."7", "("..tostring(i).." << 12)") end
+--*/
+#define __IRQ_EXTI7_PORT__ (0 << 12)
+
+/*--
+this:AddWidget("Combobox", "EXTI8 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."8", "("..tostring(i).." << 0)") end
+--*/
+#define __IRQ_EXTI8_PORT__ (0 << 0)
+
+/*--
+this:AddWidget("Combobox", "EXTI9 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."9", "("..tostring(i).." << 4)") end
+--*/
+#define __IRQ_EXTI9_PORT__ (0 << 4)
+
+/*--
+this:AddWidget("Combobox", "EXTI10 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."10", "("..tostring(i).." << 8)") end
+--*/
+#define __IRQ_EXTI10_PORT__ (0 << 8)
+
+/*--
+this:AddWidget("Combobox", "EXTI11 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."11", "("..tostring(i).." << 12)") end
+--*/
+#define __IRQ_EXTI11_PORT__ (0 << 12)
+
+/*--
+this:AddWidget("Combobox", "EXTI12 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."12", "("..tostring(i).." << 0)") end
+--*/
+#define __IRQ_EXTI12_PORT__ (0 << 0)
+
+/*--
+this:AddWidget("Combobox", "EXTI13 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."13", "("..tostring(i).." << 4)") end
+--*/
+#define __IRQ_EXTI13_PORT__ (0 << 4)
+
+/*--
+this:AddWidget("Combobox", "EXTI14 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."14", "("..tostring(i).." << 8)") end
+--*/
+#define __IRQ_EXTI14_PORT__ (0 << 8)
+
+/*--
+this:AddWidget("Combobox", "EXTI15 port")
+for i = 0, 9 do local c = string.char(65 + i) this:AddItem("P"..c.."15", "("..tostring(i).." << 12)") end
+--*/
+#define __IRQ_EXTI15_PORT__ (0 << 12)
 
 #endif /* _IRQ_FLAGS_H_ */
 /*==============================================================================

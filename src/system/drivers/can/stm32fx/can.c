@@ -34,10 +34,13 @@ Brief   CAN driver
 
 #if defined(ARCH_stm32f1)
 #include "stm32f1/stm32f10x.h"
+#include "stm32f1/lib/stm32f10x_rcc.h"
 #elif defined(ARCH_stm32f3)
 #include "stm32f3/stm32f3xx.h"
+#include "stm32f3/lib/stm32f3xx_ll_rcc.h"
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
+#include "stm32f4/lib/stm32f4xx_rcc.h"
 #elif defined(ARCH_stm32f7)
 #include "stm32f7/stm32f7xx.h"
 #include "stm32f7/lib/stm32f7xx_ll_rcc.h"
@@ -48,65 +51,92 @@ Brief   CAN driver
 ==============================================================================*/
 #define TX_MAILBOXES            3
 #define RX_MAILBOXES            2
-#define RX_FIFO_DEPTH           3
-#define INIT_TIMEOUT            1000
-#define MTX_TIMEOUT             1000
+#define RX_FIFO_DEPTH           __CAN_CFG_RX_FIFO_SIZE__
+#define INIT_TIMEOUT            2000
+#define MTX_TIMEOUT             2000
 
 #if defined(ARCH_stm32f1)
 #if defined(STM32F10X_LD) || defined(STM32F10X_MD) || defined(STM32F10X_HD)\
  || defined(STM32F10X_XL)
-#define CAN1_TX_IRQN            USB_HP_CAN1_TX_IRQn
-#define CAN1_RX0_IRQN           USB_LP_CAN1_RX0_IRQn
+#define CAN1_TX_IRQn            USB_HP_CAN1_TX_IRQn
+#define CAN1_RX0_IRQn           USB_LP_CAN1_RX0_IRQn
 #define CAN1_TX_IRQHANDLER      USB_HP_CAN1_TX_IRQHandler
 #define CAN1_RX0_IRQHANDLER     USB_LP_CAN1_RX0_IRQHandler
-#define FILTERS_COUNT           14
+#define CAN1_RX1_IRQHANDLER     CAN1_RX1_IRQHandler
+#define CAN1_SCE_IRQHANDLER     CAN1_SCE_IRQHandler
 #endif
 
 #ifdef STM32F10X_CL
-#define CAN1_TX_IRQN            CAN1_TX_IRQn
-#define CAN1_RX0_IRQN           CAN1_RX0_IRQn
 #define CAN1_TX_IRQHANDLER      CAN1_TX_IRQHandler
 #define CAN1_RX0_IRQHANDLER     CAN1_RX0_IRQHandler
-#define FILTERS_COUNT           28
+#define CAN1_RX1_IRQHANDLER     CAN1_RX1_IRQHandler
+#define CAN1_SCE_IRQHANDLER     CAN1_SCE_IRQHandler
+#define CAN2_TX_IRQHANDLER      CAN2_TX_IRQHandler
+#define CAN2_RX0_IRQHANDLER     CAN2_RX0_IRQHandler
+#define CAN2_RX1_IRQHANDLER     CAN2_RX1_IRQHandler
+#define CAN2_SCE_IRQHANDLER     CAN2_SCE_IRQHandler
 #endif
 #endif
 
 #if defined(ARCH_stm32f3)
-#define CAN1_TX_IRQN            CAN_TX_IRQn
-#define CAN1_RX0_IRQN           CAN_RX0_IRQn
+#define CAN1_TX_IRQn            CAN_TX_IRQn
+#define CAN1_RX0_IRQn           CAN_RX0_IRQn
 #define CAN1_TX_IRQHANDLER      USB_HP_CAN_TX_IRQHandler
 #define CAN1_RX0_IRQHANDLER     USB_LP_CAN_RX0_IRQHandler
-#define CAN1_RX1_IRQHandler     CAN_RX1_IRQHandler
+#define CAN1_RX1_IRQHANDLER     CAN_RX1_IRQHandler
 #define CAN1_SCE_IRQHandler     CAN_SCE_IRQHandler
-#define FILTERS_COUNT           14
 #define RCC_APB1ENR_CAN1EN      RCC_APB1ENR_CANEN
 #define RCC_APB1RSTR_CAN1RST    RCC_APB1RSTR_CANRST
 #define RCC_APB1RSTR_CAN1RST    RCC_APB1RSTR_CANRST
-#define CAN1                    CAN
+#define CAN1_RX0_IRQn           CAN_RX0_IRQn
 #define CAN1_RX1_IRQn           CAN_RX1_IRQn
 #define CAN1_SCE_IRQn           CAN_SCE_IRQn
 #endif
 
 #if defined(ARCH_stm32f4)
-#define CAN1_TX_IRQN            CAN1_TX_IRQn
-#define CAN1_RX0_IRQN           CAN1_RX0_IRQn
 #define CAN1_TX_IRQHANDLER      CAN1_TX_IRQHandler
 #define CAN1_RX0_IRQHANDLER     CAN1_RX0_IRQHandler
-#define FILTERS_COUNT           28
+#define CAN1_RX1_IRQHANDLER     CAN1_RX1_IRQHandler
+#define CAN1_SCE_IRQHANDLER     CAN1_SCE_IRQHandler
+#define CAN2_TX_IRQHANDLER      CAN2_TX_IRQHandler
+#define CAN2_RX0_IRQHANDLER     CAN2_RX0_IRQHandler
+#define CAN2_RX1_IRQHANDLER     CAN2_RX1_IRQHandler
+#define CAN2_SCE_IRQHANDLER     CAN2_SCE_IRQHandler
 #endif
 
 #if defined(ARCH_stm32f7)
-#define CAN1_TX_IRQN            CAN1_TX_IRQn
-#define CAN1_RX0_IRQN           CAN1_RX0_IRQn
 #define CAN1_TX_IRQHANDLER      CAN1_TX_IRQHandler
 #define CAN1_RX0_IRQHANDLER     CAN1_RX0_IRQHandler
-#define FILTERS_COUNT           28
+#define CAN1_RX1_IRQHANDLER     CAN1_RX1_IRQHandler
+#define CAN1_SCE_IRQHANDLER     CAN1_SCE_IRQHandler
+#define CAN2_TX_IRQHANDLER      CAN2_TX_IRQHandler
+#define CAN2_RX0_IRQHANDLER     CAN2_RX0_IRQHandler
+#define CAN2_RX1_IRQHANDLER     CAN2_RX1_IRQHandler
+#define CAN2_SCE_IRQHANDLER     CAN2_SCE_IRQHandler
+#define CAN3_TX_IRQHANDLER      CAN3_TX_IRQHandler
+#define CAN3_RX0_IRQHANDLER     CAN3_RX0_IRQHandler
+#define CAN3_RX1_IRQHANDLER     CAN3_RX1_IRQHandler
+#define CAN3_SCE_IRQHANDLER     CAN3_SCE_IRQHandler
 #endif
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
+enum CAN_COUNT {
+        #if defined(RCC_APB1ENR_CAN1EN)
+        _CAN1,
+        #endif
+        #if defined(RCC_APB1ENR_CAN2EN)
+        _CAN2,
+        #endif
+        #if defined(RCC_APB1ENR_CAN3EN)
+        _CAN3,
+        #endif
+        _CAN_COUNT
+};
+
 typedef struct {
+        u8_t     major;
         u32_t    send_timeout;
         u32_t    recv_timeout;
         u32_t    txpend_ctr;
@@ -115,7 +145,22 @@ typedef struct {
         mutex_t *txmbox_mtx[TX_MAILBOXES];
         queue_t *txrdy_q[TX_MAILBOXES];
         queue_t *rxqueue_q;
+        u32_t    rx_overrun;
 } CAN_t;
+
+/* CAN registers */
+typedef struct {
+        CAN_TypeDef   *CAN;
+        __IO uint32_t *APBENR;
+        __IO uint32_t *APBRSTR;
+        uint32_t       APBENR_CANEN;
+        uint32_t       APBRSTR_CANRSTR;
+        IRQn_Type      TX_IRQn;
+        IRQn_Type      RX0_IRQn;
+        IRQn_Type      RX1_IRQn;
+        IRQn_Type      SCE_IRQn;
+        u8_t           FILTERS_COUNT;
+} CAN_CFG_t;
 
 /*==============================================================================
   Local function prototypes
@@ -126,7 +171,7 @@ static int set_init_mode(CAN_t *hdl);
 static int set_normal_mode(CAN_t *hdl);
 static int set_sleep_mode(CAN_t *hdl);
 static int set_filter(CAN_t *hdl, const CAN_filter_t *filter);
-static int disable_filter(CAN_t *hdl, u32_t filter);
+static int disable_filter(CAN_t *hdl, u32_t filter_no);
 static int send_msg(CAN_t *hdl, const CAN_msg_t *msg, u32_t timeout_ms);
 static int recv_msg(CAN_t *hdl, CAN_msg_t *msg, u32_t timeout_ms);
 
@@ -135,7 +180,52 @@ static int recv_msg(CAN_t *hdl, CAN_msg_t *msg, u32_t timeout_ms);
 ==============================================================================*/
 MODULE_NAME(CAN);
 
-static CAN_t *CAN_hdl;
+static CAN_t *CAN_HDL[_CAN_COUNT];
+
+static const CAN_CFG_t CANX[] = {
+        #if defined(RCC_APB1ENR_CAN1EN)
+        {
+                .CAN             = CAN1,
+                .APBENR          = &RCC->APB1ENR,
+                .APBRSTR         = &RCC->APB1RSTR,
+                .APBENR_CANEN    = RCC_APB1ENR_CAN1EN,
+                .APBRSTR_CANRSTR = RCC_APB1RSTR_CAN1RST,
+                .TX_IRQn         = CAN1_TX_IRQn,
+                .RX0_IRQn        = CAN1_RX0_IRQn,
+                .RX1_IRQn        = CAN1_RX1_IRQn,
+                .SCE_IRQn        = CAN1_SCE_IRQn,
+                .FILTERS_COUNT   = 14,
+        },
+        #endif
+        #if defined(RCC_APB1ENR_CAN2EN)
+        {
+                .CAN             = CAN2,
+                .APBENR          = &RCC->APB1ENR,
+                .APBRSTR         = &RCC->APB1RSTR,
+                .APBENR_CANEN    = RCC_APB1ENR_CAN2EN,
+                .APBRSTR_CANRSTR = RCC_APB1RSTR_CAN2RST,
+                .TX_IRQn         = CAN2_TX_IRQn,
+                .RX0_IRQn        = CAN2_RX0_IRQn,
+                .RX1_IRQn        = CAN2_RX1_IRQn,
+                .SCE_IRQn        = CAN2_SCE_IRQn,
+                .FILTERS_COUNT   = 14,
+        },
+        #endif
+        #if defined(RCC_APB1ENR_CAN3EN)
+        {
+                .CAN             = CAN3,
+                .APBENR          = &RCC->APB1ENR,
+                .APBRSTR         = &RCC->APB1RSTR,
+                .APBENR_CANEN    = RCC_APB1ENR_CAN3EN,
+                .APBRSTR_CANRSTR = RCC_APB1RSTR_CAN3RST,
+                .TX_IRQn         = CAN3_TX_IRQn,
+                .RX0_IRQn        = CAN3_RX0_IRQn,
+                .RX1_IRQn        = CAN3_RX1_IRQn,
+                .SCE_IRQn        = CAN3_SCE_IRQn,
+                .FILTERS_COUNT   = 14,
+        },
+        #endif
+};
 
 /*==============================================================================
   Exported object
@@ -161,15 +251,16 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
 {
         int err = EINVAL;
 
-        if (major == 0 && minor == 0) {
+        if (major < _CAN_COUNT && minor == 0) {
 
                 err = sys_zalloc(sizeof(CAN_t), device_handle);
                 if (!err) {
 
                         CAN_t *hdl = *device_handle;
 
+                        hdl->major        = major;
                         hdl->recv_timeout = MAX_DELAY_MS;
-                        hdl->send_timeout = 0;
+                        hdl->send_timeout = MAX_DELAY_MS;
 
                         err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->config_mtx);
                         if (err) {
@@ -195,28 +286,45 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
                                 }
                         }
 
-                        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_CAN1EN);
-                        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_CAN1RST);
-                        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_CAN1RST);
+                        #if defined(RCC_APB1ENR_CAN2EN)
+                        if (major == _CAN2) {
+                                // CAN2 is slave of CAN1, this means that CAN1
+                                // should be enabled to get filter access
+                                SET_BIT(*CANX[_CAN1].APBENR, CANX[_CAN1].APBENR_CANEN);
+                        }
+                        #endif
 
-                        SET_BIT(CAN1->MCR, CAN_MCR_RESET);
-                        CLEAR_BIT(CAN1->MCR, CAN_MCR_RESET);
+                        SET_BIT(*CANX[hdl->major].APBENR, CANX[hdl->major].APBENR_CANEN);
 
-                        NVIC_ClearPendingIRQ(CAN1_TX_IRQN);
-                        NVIC_EnableIRQ(CAN1_TX_IRQN);
-                        NVIC_SetPriority(CAN1_TX_IRQN, _CPU_IRQ_SAFE_PRIORITY_);
+                        #if defined(RCC_APB1ENR_CAN2EN)
+                        if ((major == _CAN1) && (*CANX[_CAN2].APBENR & CANX[_CAN2].APBENR_CANEN)) {
+                                // when CAN2 is already used then CAN1 cannot be reset
 
-                        NVIC_ClearPendingIRQ(CAN1_RX0_IRQN);
-                        NVIC_EnableIRQ(CAN1_RX0_IRQN);
-                        NVIC_SetPriority(CAN1_RX0_IRQN, _CPU_IRQ_SAFE_PRIORITY_);
+                        } else
+                        #endif
+                        {
+                                SET_BIT(*CANX[hdl->major].APBRSTR, CANX[hdl->major].APBRSTR_CANRSTR);
+                                CLEAR_BIT(*CANX[hdl->major].APBRSTR, CANX[hdl->major].APBRSTR_CANRSTR);
+                        }
 
-                        NVIC_ClearPendingIRQ(CAN1_RX1_IRQn);
-                        NVIC_EnableIRQ(CAN1_RX1_IRQn);
-                        NVIC_SetPriority(CAN1_RX1_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                        SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_RESET);
+                        CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_RESET);
 
-                        NVIC_ClearPendingIRQ(CAN1_SCE_IRQn);
-                        NVIC_EnableIRQ(CAN1_SCE_IRQn);
-                        NVIC_SetPriority(CAN1_SCE_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+                        NVIC_ClearPendingIRQ(CANX[hdl->major].TX_IRQn);
+                        NVIC_EnableIRQ(CANX[hdl->major].TX_IRQn);
+                        NVIC_SetPriority(CANX[hdl->major].TX_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+
+                        NVIC_ClearPendingIRQ(CANX[hdl->major].RX0_IRQn);
+                        NVIC_EnableIRQ(CANX[hdl->major].RX0_IRQn);
+                        NVIC_SetPriority(CANX[hdl->major].RX0_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+
+                        NVIC_ClearPendingIRQ(CANX[hdl->major].RX1_IRQn);
+                        NVIC_EnableIRQ(CANX[hdl->major].RX1_IRQn);
+                        NVIC_SetPriority(CANX[hdl->major].RX1_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+
+                        NVIC_ClearPendingIRQ(CANX[hdl->major].SCE_IRQn);
+                        NVIC_EnableIRQ(CANX[hdl->major].SCE_IRQn);
+                        NVIC_SetPriority(CANX[hdl->major].SCE_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
 
                         err = set_init_mode(hdl);
                         if (err) {
@@ -229,7 +337,7 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
 
                         finish:
                         if (!err) {
-                                CAN_hdl = hdl;
+                                CAN_HDL[major] = hdl;
 
                         } else {
                                 relese_resources(hdl);
@@ -254,8 +362,21 @@ API_MOD_RELEASE(CAN, void *device_handle)
         CAN_t *hdl = device_handle;
 
         // lock access to module
-        CAN_hdl = NULL;
+        NVIC_ClearPendingIRQ(CANX[hdl->major].TX_IRQn);
+        NVIC_DisableIRQ(CANX[hdl->major].TX_IRQn);
+
+        NVIC_ClearPendingIRQ(CANX[hdl->major].RX0_IRQn);
+        NVIC_DisableIRQ(CANX[hdl->major].RX0_IRQn);
+
+        NVIC_ClearPendingIRQ(CANX[hdl->major].RX1_IRQn);
+        NVIC_DisableIRQ(CANX[hdl->major].RX1_IRQn);
+
+        NVIC_ClearPendingIRQ(CANX[hdl->major].SCE_IRQn);
+        NVIC_DisableIRQ(CANX[hdl->major].SCE_IRQn);
+
         sys_sleep_ms(100);
+
+        CAN_HDL[hdl->major] = NULL;
 
         // finish TX pending transfers
         int err = ECANCELED;
@@ -302,7 +423,7 @@ API_MOD_OPEN(CAN, void *device_handle, u32_t flags)
 {
         UNUSED_ARG2(device_handle, flags);
 
-        return CAN_hdl ? ESUCC : ENXIO;
+        return ESUCC;
 }
 
 //==============================================================================
@@ -348,22 +469,17 @@ API_MOD_WRITE(CAN,
 
         CAN_t *hdl = device_handle;
 
-        if (CAN_hdl == NULL) {
-                return ENXIO;
-        }
-
         int err = EINVAL;
 
         if ((count % sizeof(CAN_msg_t)) == 0) {
 
                 while (count >= sizeof(CAN_msg_t)) {
 
-                        CAN_msg_t msg;
-                        memcpy(&msg, src, sizeof(CAN_msg_t));
+                        const CAN_msg_t *msg = (void*)src;
 
                         u32_t timeout_ms = fattr.non_blocking_wr ? 0 : hdl->send_timeout;
 
-                        err = send_msg(hdl, &msg, timeout_ms);
+                        err = send_msg(hdl, msg, timeout_ms);
 
                         if (!err) {
                                 *wrcnt += sizeof(CAN_msg_t);
@@ -403,10 +519,6 @@ API_MOD_READ(CAN,
         UNUSED_ARG1(fpos);
 
         CAN_t *hdl = device_handle;
-
-        if (CAN_hdl == NULL) {
-                return ENXIO;
-        }
 
         int err = EINVAL;
 
@@ -449,10 +561,6 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
 {
         CAN_t *hdl = device_handle;
 
-        if (CAN_hdl == NULL) {
-                return ENXIO;
-        }
-
         int err = EINVAL;
 
         switch (request) {
@@ -476,7 +584,7 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
 
         case IOCTL_CAN__GET_NUMBER_OF_FILTERS:
                 if (arg) {
-                        *cast(u32_t*, arg) = FILTERS_COUNT;
+                        *cast(u32_t*, arg) = CANX[hdl->major].FILTERS_COUNT;
                         err = ESUCC;
                 }
                 break;
@@ -514,6 +622,48 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
         case IOCTL_CAN__RECV_MSG:
                 if (arg) {
                         err = recv_msg(hdl, arg, hdl->recv_timeout);
+                }
+                break;
+
+        case IOCTL_CAN__GET_RECEIVE_ERROR_COUNTER:
+                if (arg) {
+                        *cast(u8_t*, arg) = ((CANX[hdl->major].CAN->ESR & CAN_ESR_REC) >> 24);
+                        err = ESUCC;
+                }
+                break;
+
+        case IOCTL_CAN__GET_TRANSMIT_ERROR_COUNTER:
+                if (arg) {
+                        *cast(u8_t*, arg) = ((CANX[hdl->major].CAN->ESR & CAN_ESR_TEC) >> 16);
+                        err = ESUCC;
+                }
+                break;
+
+        case IOCTL_CAN__GET_BUS_STATUS:
+                if (arg) {
+                        CAN_bus_status_t *status = arg;
+
+                        if (CANX[hdl->major].CAN->ESR & CAN_ESR_BOFF) {
+                                *status = CAN_BUS_STATUS__OFF;
+
+                        } else if (CANX[hdl->major].CAN->ESR & CAN_ESR_EPVF) {
+                                *status = CAN_BUS_STATUS__PASSIVE;
+
+                        } else if (CANX[hdl->major].CAN->ESR & CAN_ESR_EWGF) {
+                                *status = CAN_BUS_STATUS__WARNING;
+
+                        } else {
+                                *status = CAN_BUS_STATUS__OK;
+                        }
+
+                        err = ESUCC;
+                }
+                break;
+
+        case IOCTL_CAN__GET_RX_FIFO_OVERRUN_COUNTER:
+                if (arg) {
+                        *cast(u32_t*, arg) = hdl->rx_overrun;
+                        err = ESUCC;
                 }
                 break;
 
@@ -572,18 +722,26 @@ API_MOD_STAT(CAN, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static void relese_resources(CAN_t *hdl)
 {
-        NVIC_DisableIRQ(CAN1_TX_IRQN);
-        NVIC_DisableIRQ(CAN1_RX0_IRQN);
-        NVIC_DisableIRQ(CAN1_RX1_IRQn);
-        NVIC_DisableIRQ(CAN1_SCE_IRQn);
+        SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_RESET);
+        CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_RESET);
 
-        SET_BIT(CAN1->MCR, CAN_MCR_RESET);
-        CLEAR_BIT(CAN1->MCR, CAN_MCR_RESET);
+        #if defined(RCC_APB1ENR_CAN2EN)
+        if ((hdl->major == _CAN1) && (*CANX[_CAN2].APBENR & CANX[_CAN2].APBENR_CANEN)) {
+                // when CAN2 is already used then CAN1 cannot be reset
 
-        SET_BIT(RCC->APB1RSTR, RCC_APB1RSTR_CAN1RST);
-        CLEAR_BIT(RCC->APB1RSTR, RCC_APB1RSTR_CAN1RST);
+        } else
+        #endif
+        {
+                SET_BIT(*CANX[hdl->major].APBRSTR, CANX[hdl->major].APBRSTR_CANRSTR);
+                CLEAR_BIT(*CANX[hdl->major].APBRSTR, CANX[hdl->major].APBRSTR_CANRSTR);
+                CLEAR_BIT(*CANX[hdl->major].APBENR, CANX[hdl->major].APBENR_CANEN);
 
-        CLEAR_BIT(RCC->APB1ENR, RCC_APB1ENR_CAN1EN);
+                #if defined(RCC_APB1ENR_CAN2EN)
+                if ((hdl->major == _CAN2) && (CAN_HDL[_CAN1] == NULL)) {
+                        CLEAR_BIT(*CANX[_CAN1].APBENR, CANX[_CAN1].APBENR_CANEN);
+                }
+                #endif
+        }
 
         if (hdl->config_mtx) {
                 sys_mutex_destroy(hdl->config_mtx);
@@ -620,58 +778,92 @@ static int configure(CAN_t *hdl, const CAN_config_t *cfg)
 {
         int err = sys_mutex_lock(hdl->config_mtx, MTX_TIMEOUT);
         if (!err) {
-                SET_BIT(CAN1->MCR, (CAN_MCR_DBF * _CAN_CFG__DEBUG_FREEZE)
-                                 | CAN_MCR_TXFP
-                                 | CAN_MCR_RFLM);
+                SET_BIT(CANX[hdl->major].CAN->MCR, (CAN_MCR_DBF * _CAN_CFG__DEBUG_FREEZE)
+                                                 | CAN_MCR_TXFP
+                                                 | CAN_MCR_RFLM);
 
-                SET_BIT(CAN1->IER, CAN_IER_FMPIE1
-                                 | CAN_IER_FMPIE0
-                                 | CAN_IER_TMEIE);
+                SET_BIT(CANX[hdl->major].CAN->IER, CAN_IER_FMPIE1
+                                                 | CAN_IER_FMPIE0
+                                                 | CAN_IER_TMEIE);
 
                 if (cfg->auto_bus_off_management) {
-                        SET_BIT(CAN1->MCR, CAN_MCR_ABOM);
+                        SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_ABOM);
                 } else {
-                        CLEAR_BIT(CAN1->MCR, CAN_MCR_ABOM);
+                        CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_ABOM);
                 }
 
                 if (cfg->auto_retransmission) {
-                        CLEAR_BIT(CAN1->MCR, CAN_MCR_NART);
+                        CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_NART);
                 } else {
-                        SET_BIT(CAN1->MCR, CAN_MCR_NART);
+                        SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_NART);
                 }
 
                 if (cfg->auto_wake_up) {
-                        SET_BIT(CAN1->MCR, CAN_MCR_AWUM);
+                        SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_AWUM);
                 } else {
-                        CLEAR_BIT(CAN1->MCR, CAN_MCR_AWUM);
+                        CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_AWUM);
                 }
 
                 if (cfg->time_triggered_comm) {
-                        SET_BIT(CAN1->MCR, CAN_MCR_TTCM);
+                        SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_TTCM);
                 } else {
-                        CLEAR_BIT(CAN1->MCR, CAN_MCR_TTCM);
+                        CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_TTCM);
                 }
 
                 if (cfg->loopback) {
-                        SET_BIT(CAN1->BTR, CAN_BTR_LBKM);
+                        SET_BIT(CANX[hdl->major].CAN->BTR, CAN_BTR_LBKM);
                 } else {
-                        CLEAR_BIT(CAN1->BTR, CAN_BTR_LBKM);
+                        CLEAR_BIT(CANX[hdl->major].CAN->BTR, CAN_BTR_LBKM);
                 }
 
                 if (cfg->silent) {
-                        SET_BIT(CAN1->BTR, CAN_BTR_SILM);
+                        SET_BIT(CANX[hdl->major].CAN->BTR, CAN_BTR_SILM);
                 } else {
-                        CLEAR_BIT(CAN1->BTR, CAN_BTR_SILM);
+                        CLEAR_BIT(CANX[hdl->major].CAN->BTR, CAN_BTR_SILM);
                 }
 
-                u32_t SJW = min(3, cfg->SJW - 1) << 24;
-                u32_t TS2 = min(7, cfg->TS2 - 1) << 20;
-                u32_t TS1 = min(15, cfg->TS1 - 1) << 16;
-                u32_t BRP = min(1023, cfg->prescaler - 1);
+                u32_t SJW = cfg->SJW;
+                u32_t TS1 = cfg->TS1;
+                u32_t TS2 = cfg->TS2;
+                u32_t BRP = cfg->prescaler;
 
-                CAN1->BTR = (CAN_BTR_LBKM * cfg->loopback)
-                          | (CAN_BTR_SILM * cfg->silent)
-                          | SJW | TS2 | TS1 | BRP;
+                if ((SJW < 1) || (SJW > 4)) {
+                        SJW = min(4, SJW);
+                        SJW = max(1, SJW);
+                        printk("%s%d-%d: SJW out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0, SJW);
+                }
+
+                if ((TS1 < 1) || (TS1 > 15)) {
+                        TS1 = min(15, TS1);
+                        TS1 = max(1, TS1);
+                        printk("%s%d-%d: TS1 out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0,  TS1);
+                }
+
+                if ((TS2 < 1) || (TS2 > 7)) {
+                        TS2 = min(7, TS2);
+                        TS2 = max(1, TS2);
+                        printk("%s%d-%d: TS2 out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0,  TS2);
+                }
+
+                if ((BRP < 1) || (BRP > 1024)) {
+                        BRP = min(1024, BRP);
+                        BRP = max(1, BRP);
+                        printk("%s%d-%d: BRP out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0,  BRP);
+                }
+
+                CANX[hdl->major].CAN->BTR = (CAN_BTR_LBKM * cfg->loopback)
+                                          | (CAN_BTR_SILM * cfg->silent)
+                                          | ((SJW - 1) << 24)
+                                          | ((TS2 - 1) << 20)
+                                          | ((TS1 - 1) << 16)
+                                          | ((BRP - 1) <<  0);
+
+                LL_RCC_ClocksTypeDef freq;
+                LL_RCC_GetSystemClocksFreq(&freq);
+                u32_t PCLK = freq.PCLK1_Frequency;
+
+                u32_t baud = PCLK / (cfg->prescaler * (1 + TS1 + TS2));
+                printk("%s%d-%d: baud rate: %u bps", GET_MODULE_NAME(), hdl->major, 0,  baud);
 
                 sys_mutex_unlock(hdl->config_mtx);
         }
@@ -696,11 +888,11 @@ static int set_init_mode(CAN_t *hdl)
 
                 u32_t tref = sys_get_uptime_ms();
 
-                CLEAR_BIT(CAN1->MCR, CAN_MCR_SLEEP);
-                SET_BIT(CAN1->MCR, CAN_MCR_INRQ);
+                CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_SLEEP);
+                SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_INRQ);
 
                 while (not sys_time_is_expired(tref, INIT_TIMEOUT)) {
-                        if (CAN1->MSR & CAN_MSR_INAK) {
+                        if (CANX[hdl->major].CAN->MSR & CAN_MSR_INAK) {
                                 err = ESUCC;
                                 break;
                         }
@@ -729,11 +921,11 @@ static int set_normal_mode(CAN_t *hdl)
 
                 u32_t tref = sys_get_uptime_ms();
 
-                CLEAR_BIT(CAN1->FMR, CAN_FMR_FINIT);
-                CLEAR_BIT(CAN1->MCR, CAN_MCR_INRQ | CAN_MCR_SLEEP);
+                CLEAR_BIT(CANX[hdl->major].CAN->FMR, CAN_FMR_FINIT);
+                CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_INRQ | CAN_MCR_SLEEP);
 
                 while (not sys_time_is_expired(tref, INIT_TIMEOUT)) {
-                        if (!(CAN1->MSR & CAN_MSR_INAK)) {
+                        if (!(CANX[hdl->major].CAN->MSR & CAN_MSR_INAK)) {
                                 err = ESUCC;
                                 break;
                         }
@@ -758,7 +950,7 @@ static int set_sleep_mode(CAN_t *hdl)
 {
         int err = sys_mutex_lock(hdl->config_mtx, MTX_TIMEOUT);
         if (!err) {
-                SET_BIT(CAN1->MCR, CAN_MCR_SLEEP);
+                SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_SLEEP);
                 sys_mutex_unlock(hdl->config_mtx);
         }
 
@@ -777,35 +969,47 @@ static int set_sleep_mode(CAN_t *hdl)
 //==============================================================================
 static int set_filter(CAN_t *hdl, const CAN_filter_t *filter)
 {
-        if (filter->number >= FILTERS_COUNT) {
+        if (filter->number >= CANX[hdl->major].FILTERS_COUNT) {
                 return EINVAL;
         }
 
         int err = sys_mutex_lock(hdl->config_mtx, MTX_TIMEOUT);
         if (!err) {
-                u32_t CAN2SB = FILTERS_COUNT;
-                CAN1->FMR = (CAN2SB << 8) | CAN_FMR_FINIT;
+                u8_t major = hdl->major;
+                u8_t filter_no = filter->number;
+
+                #if defined(RCC_APB1ENR_CAN2EN)
+                // CAN2 is slave of CAN1
+                // CAN1 and CAN2 have common registers
+                if (hdl->major == _CAN2) {
+                        filter_no += CANX[_CAN1].FILTERS_COUNT;
+                        major = _CAN1;
+                }
+                #endif
+
+                // CAN2 filter offset + filter initialization bit
+                CANX[major].CAN->FMR = (CANX[_CAN1].FILTERS_COUNT << 8) | CAN_FMR_FINIT;
 
                 // mask mode
-                CLEAR_BIT(CAN1->FM1R, CAN_FM1R_FBM0 << filter->number);
+                CLEAR_BIT(CANX[major].CAN->FM1R, CAN_FM1R_FBM0 << filter_no);
 
                 // 32b ID
-                SET_BIT(CAN1->FS1R, CAN_FS1R_FSC0 << filter->number);
+                SET_BIT(CANX[major].CAN->FS1R, CAN_FS1R_FSC0 << filter_no);
 
                 // FIFO0: odd filters, FIFO1: even filters)
-                WRITE_REG(CAN1->FFA1R, 0xAAAAAAAA);
+                WRITE_REG(CANX[major].CAN->FFA1R, 0xAAAAAAAA);
 
                 // set ID and mask
                 if (filter->extended_ID) {
-                        CAN1->sFilterRegister[filter->number].FR1 = (filter->ID << 3) | CAN_TI0R_IDE;
-                        CAN1->sFilterRegister[filter->number].FR2 = (filter->mask << 3) | CAN_TI0R_IDE;
+                        CANX[major].CAN->sFilterRegister[filter_no].FR1 = (filter->ID << 3) | CAN_TI0R_IDE;
+                        CANX[major].CAN->sFilterRegister[filter_no].FR2 = (filter->mask << 3) | CAN_TI0R_IDE;
 
                 } else {
-                        CAN1->sFilterRegister[filter->number].FR1 = (filter->ID << 21);
-                        CAN1->sFilterRegister[filter->number].FR2 = (filter->mask << 21);
+                        CANX[major].CAN->sFilterRegister[filter_no].FR1 = (filter->ID << 21);
+                        CANX[major].CAN->sFilterRegister[filter_no].FR2 = (filter->mask << 21);
                 }
 
-                SET_BIT(CAN1->FA1R, CAN_FA1R_FACT0 << filter->number);
+                SET_BIT(CANX[major].CAN->FA1R, CAN_FA1R_FACT0 << filter_no);
 
                 sys_mutex_unlock(hdl->config_mtx);
         }
@@ -818,24 +1022,35 @@ static int set_filter(CAN_t *hdl, const CAN_filter_t *filter)
  * @brief  Function disable selected filter number. To disable filter INIT mode
  *         must be activated.
  *
- * @param  hdl          module instance
- * @param  filter       filter number
+ * @param  hdl                  module instance
+ * @param  filter_no            filter number
  *
  * @return One of errno value.
  */
 //==============================================================================
-static int disable_filter(CAN_t *hdl, u32_t filter)
+static int disable_filter(CAN_t *hdl, u32_t filter_no)
 {
         int err = EINVAL;
 
-        if (filter < FILTERS_COUNT) {
+        if (filter_no < CANX[hdl->major].FILTERS_COUNT) {
 
                 err = sys_mutex_lock(hdl->config_mtx, MTX_TIMEOUT);
                 if (!err) {
-                        u32_t CAN2SB = FILTERS_COUNT;
-                        CAN1->FMR = (CAN2SB << 8) | CAN_FMR_FINIT;
+                        u8_t major = hdl->major;
 
-                        CLEAR_BIT(CAN1->FA1R, CAN_FA1R_FACT0 << filter);
+                        #if defined(RCC_APB1ENR_CAN2EN)
+                        // CAN2 is slave of CAN1
+                        // CAN1 and CAN2 have common registers
+                        if (hdl->major == _CAN2) {
+                                filter_no += CANX[_CAN1].FILTERS_COUNT;
+                                major = _CAN1;
+                        }
+                        #endif
+
+                        // CAN2 filter offset + filter initialization bit
+                        CANX[major].CAN->FMR = (CANX[_CAN1].FILTERS_COUNT << 8) | CAN_FMR_FINIT;
+
+                        CLEAR_BIT(CANX[major].CAN->FA1R, CAN_FA1R_FACT0 << filter_no);
 
                         sys_mutex_unlock(hdl->config_mtx);
                 }
@@ -850,7 +1065,7 @@ static int disable_filter(CAN_t *hdl, u32_t filter)
  *
  * @param  hdl          module instance
  * @param  msg          message to send
- * @param  timeout_ms   timeout in miliseconds
+ * @param  timeout_ms   timeout in milliseconds
  *
  * @return One of errno value.
  */
@@ -867,15 +1082,15 @@ static int send_msg(CAN_t *hdl, const CAN_msg_t *msg, u32_t timeout_ms)
 
         u32_t tref = sys_get_uptime_ms();
 
-        while (CAN_hdl && loop && !sys_time_is_expired(tref, timeout)) {
+        while (loop && !sys_time_is_expired(tref, timeout)) {
 
                 err = ETIME;
 
-                for (int i = 0; CAN_hdl && loop && (i < TX_MAILBOXES); i++) {
+                for (int i = 0; loop && (i < TX_MAILBOXES); i++) {
 
                         err = sys_mutex_trylock(hdl->txmbox_mtx[i]);
                         if (!err) {
-                                CAN_TxMailBox_TypeDef *mbox = &CAN1->sTxMailBox[i];
+                                CAN_TxMailBox_TypeDef *mbox = &CANX[hdl->major].CAN->sTxMailBox[i];
 
                                 if (!(mbox->TIR & CAN_TI0R_TXRQ)) {
                                         mbox->TIR = CAN_TI0R_RTR * msg->remote_transmission;
@@ -909,8 +1124,8 @@ static int send_msg(CAN_t *hdl, const CAN_msg_t *msg, u32_t timeout_ms)
                                                 err = erri;
 
                                         } else {
-                                                printk("CAN: message send abort");
-                                                SET_BIT(CAN1->TSR, CAN_TSR_ABRQ0 << (i * 8));
+                                                printk("%s%d-%d: message send abort", GET_MODULE_NAME(), hdl->major, 0);
+                                                SET_BIT(CANX[hdl->major].CAN->TSR, CAN_TSR_ABRQ0 << (i * 8));
                                                 sys_sleep_ms(1);
                                         }
 
@@ -984,10 +1199,14 @@ static int recv_msg(CAN_t *hdl, CAN_msg_t *msg, u32_t timeout_ms)
 
 //==============================================================================
 /**
- * @brief CAN TX ready IRQ.
+ * @brief  CAN Tx handle function.
+ *
+ * @param  hdl          driver handle
+ *
+ * @return True if yield needed.
  */
 //==============================================================================
-void CAN1_TX_IRQHANDLER(void)
+static bool CAN_TX_IRQ(CAN_t *hdl)
 {
         bool yield = false;
 
@@ -1009,71 +1228,243 @@ void CAN1_TX_IRQHANDLER(void)
 
         for (int i = 0; i < TX_MAILBOXES; i++) {
 
-                if (CAN1->TSR & CAN_TSR_RQCP[i]) {
+                if (CANX[hdl->major].CAN->TSR & CAN_TSR_RQCP[i]) {
 
                         int err = EIO;
 
-                        if (CAN1->TSR & CAN_TSR_TERR[i]) {
-                                err = EIO;
-                        } else if (CAN1->TSR & CAN_TSR_ALST[i]) {
+                        if (CANX[hdl->major].CAN->TSR & CAN_TSR_TERR[i]) {
+
+                                switch ((CANX[hdl->major].CAN->ESR & CAN_ESR_LEC) >> 4) {
+                                case 3:  err = EFAULT; break;
+                                case 6:  err = EILSEQ; break;
+                                default: err = EIO; break;
+                                }
+
+                        } else if (CANX[hdl->major].CAN->TSR & CAN_TSR_ALST[i]) {
                                 err = EAGAIN;
-                        } else if (CAN1->TSR & CAN_TSR_TXOK[i]) {
+
+                        } else if (CANX[hdl->major].CAN->TSR & CAN_TSR_TXOK[i]) {
                                 err = ESUCC;
                         }
 
-                        SET_BIT(CAN1->TSR, CAN_TSR_RQCP[i]);
+                        SET_BIT(CANX[hdl->major].CAN->TSR, CAN_TSR_RQCP[i]);
 
                         bool woken = false;
-                        sys_queue_send_from_ISR(CAN_hdl->txrdy_q[i], &err, &woken);
+                        sys_queue_send_from_ISR(hdl->txrdy_q[i], &err, &woken);
 
                         yield |= woken;
                 }
         }
 
-        sys_thread_yield_from_ISR(yield);
+        return yield;
 }
 
 //==============================================================================
 /**
- * @brief CAN FIFO0 Rx IRQ.
+ * @brief  Function receive FIFO message.
+ *
+ * @param  hdl          driver handle
+ * @param  fifo         fifo number
+ *
+ * @return True if yield needed.
  */
 //==============================================================================
+static bool CAN_RX_IRQ(CAN_t *hdl, u8_t fifo)
+{
+        bool yield = false;
+
+        if (sys_queue_send_from_ISR(hdl->rxqueue_q, &CANX[hdl->major].CAN->sFIFOMailBox[fifo], &yield) != 0) {
+                hdl->rx_overrun++;
+        }
+
+        if (fifo == 0) {
+                SET_BIT(CANX[hdl->major].CAN->RF0R, CAN_RF0R_RFOM0);
+        } else {
+                SET_BIT(CANX[hdl->major].CAN->RF1R, CAN_RF1R_RFOM1);
+        }
+
+        return yield;
+}
+
+//==============================================================================
+/**
+ * @brief CAN1 TX ready IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN1EN)
+void CAN1_TX_IRQHANDLER(void)
+{
+        CAN_t *hdl = CAN_HDL[_CAN1];
+        if (hdl) {
+                bool yield = CAN_TX_IRQ(hdl);
+                sys_thread_yield_from_ISR(yield);
+        }
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief CAN1 FIFO0 Rx IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN1EN)
 void CAN1_RX0_IRQHANDLER(void)
 {
-        bool yield = false;
-
-        sys_queue_send_from_ISR(CAN_hdl->rxqueue_q, &CAN1->sFIFOMailBox[0], &yield);
-
-        SET_BIT(CAN1->RF0R, CAN_RF0R_RFOM0);
-
-        sys_thread_yield_from_ISR(yield);
+        CAN_t *hdl = CAN_HDL[_CAN1];
+        if (hdl) {
+                bool yield = CAN_RX_IRQ(hdl, 0);
+                sys_thread_yield_from_ISR(yield);
+        }
 }
+#endif
 
 //==============================================================================
 /**
- * @brief CAN FIFO1 Rx IRQ.
+ * @brief CAN1 FIFO1 Rx IRQ.
  */
 //==============================================================================
-void CAN1_RX1_IRQHandler(void)
+#if defined(RCC_APB1ENR_CAN1EN)
+void CAN1_RX1_IRQHANDLER(void)
 {
-        bool yield = false;
-
-        sys_queue_send_from_ISR(CAN_hdl->rxqueue_q, &CAN1->sFIFOMailBox[1], &yield);
-
-        SET_BIT(CAN1->RF1R, CAN_RF0R_RFOM0);
-
-        sys_thread_yield_from_ISR(yield);
+        CAN_t *hdl = CAN_HDL[_CAN1];
+        if (hdl) {
+                bool yield = CAN_RX_IRQ(hdl, 1);
+                sys_thread_yield_from_ISR(yield);
+        }
 }
+#endif
 
 //==============================================================================
 /**
- * @brief Bus change IRQ.
+ * @brief CAN1 status change IRQ.
  */
 //==============================================================================
-void CAN1_SCE_IRQHandler(void)
+#if defined(RCC_APB1ENR_CAN1EN)
+void CAN1_SCE_IRQHANDLER(void)
 {
 
 }
+#endif
+
+//==============================================================================
+/**
+ * @brief CAN2 TX ready IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN2EN)
+void CAN2_TX_IRQHANDLER(void)
+{
+        CAN_t *hdl = CAN_HDL[_CAN2];
+        if (hdl) {
+                bool yield = CAN_TX_IRQ(hdl);
+                sys_thread_yield_from_ISR(yield);
+        }
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief CAN2 FIFO0 Rx IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN2EN)
+void CAN2_RX0_IRQHANDLER(void)
+{
+        CAN_t *hdl = CAN_HDL[_CAN2];
+        if (hdl) {
+                bool yield = CAN_RX_IRQ(hdl, 0);
+                sys_thread_yield_from_ISR(yield);
+        }
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief CAN2 FIFO1 Rx IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN2EN)
+void CAN2_RX1_IRQHANDLER(void)
+{
+        CAN_t *hdl = CAN_HDL[_CAN2];
+        if (hdl) {
+                bool yield = CAN_RX_IRQ(hdl, 1);
+                sys_thread_yield_from_ISR(yield);
+        }
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief CAN2 status change IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN2EN)
+void CAN2_SCE_IRQHANDLER(void)
+{
+
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief CAN3 FIFO0 Rx IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN3EN)
+void CAN3_RX0_IRQHANDLER(void)
+{
+        CAN_t *hdl = CAN_HDL[_CAN3];
+        if (hdl) {
+                bool yield = CAN_RX_IRQ(hdl, 0);
+                sys_thread_yield_from_ISR(yield);
+        }
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief CAN3 TX ready IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN3EN)
+void CAN3_TX_IRQHANDLER(void)
+{
+        CAN_t *hdl = CAN_HDL[_CAN3];
+        if (hdl) {
+                bool yield = CAN_TX_IRQ(hdl);
+                sys_thread_yield_from_ISR(yield);
+        }
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief CAN3 FIFO1 Rx IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN3EN)
+void CAN3_RX1_IRQHANDLER(void)
+{
+        CAN_t *hdl = CAN_HDL[_CAN3];
+        if (hdl) {
+                bool yield = CAN_RX_IRQ(hdl, 1);
+                sys_thread_yield_from_ISR(yield);
+        }
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief CAN3 status change IRQ.
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_CAN3EN)
+void CAN3_SCE_IRQHANDLER(void)
+{
+
+}
+#endif
 
 /*==============================================================================
   End of file

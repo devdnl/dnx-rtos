@@ -32,6 +32,8 @@
 #include "lib/stm32f10x_rcc.h"
 #elif defined(ARCH_stm32f4)
 #include "lib/stm32f4xx_rcc.h"
+#elif defined(ARCH_stm32f7)
+#include "lib/stm32f7xx_ll_rcc.h"
 #endif
 #include <string.h>
 
@@ -120,6 +122,9 @@ static void ETH_Delay(__IO uint32_t nCount)
 #elif defined(ARCH_stm32f4)
 #define RCC_AHBxPeriph_ETH_MAC          RCC_AHB1Periph_ETH_MAC
 #define RCC_AHBxPeriphResetCmd          RCC_AHB1PeriphResetCmd
+#elif defined(ARCH_stm32f7)
+#define RCC_AHBxPeriph_ETH_MAC          RCC_AHB1RSTR_ETHMACRST
+#define RCC_AHBxPeriphResetCmd(bit, mode) if (mode == ENABLE) SET_BIT(RCC->AHB1RSTR, RCC_AHBxPeriph_ETH_MAC); else CLEAR_BIT(RCC->AHB1RSTR, RCC_AHBxPeriph_ETH_MAC);
 #endif
 
 
@@ -253,7 +258,7 @@ uint32_t ETH_Init(ETH_InitTypeDef* ETH_InitStruct, uint16_t PHYAddress)
 {
   uint32_t tmpreg = 0;
 //  __IO uint32_t i = 0;
-  RCC_ClocksTypeDef  rcc_clocks;
+  LL_RCC_ClocksTypeDef  rcc_clocks;
   uint32_t hclk = 60000000;
   __IO uint32_t timeout = 0, err = ETH_SUCCESS;
   /* Check the parameters */
@@ -311,7 +316,7 @@ uint32_t ETH_Init(ETH_InitTypeDef* ETH_InitStruct, uint16_t PHYAddress)
   /* Clear CSR Clock Range CR[2:0] bits */
   tmpreg &= MACMIIAR_CR_MASK;
   /* Get hclk frequency value */
-  RCC_GetClocksFreq(&rcc_clocks);
+  LL_RCC_GetSystemClocksFreq(&rcc_clocks);
   hclk = rcc_clocks.HCLK_Frequency;
 
   /* Set CR bits depending on hclk value */
@@ -335,9 +340,9 @@ uint32_t ETH_Init(ETH_InitTypeDef* ETH_InitStruct, uint16_t PHYAddress)
     /* CSR Clock Range between 100-150 MHz */
     tmpreg |= (uint32_t)ETH_MACMIIAR_CR_Div62;
   }
-  else /* ((hclk >= 150000000)&&(hclk <= 168000000)) */
+  else /* ((hclk >= 150000000)&&(hclk <= 216000000)) */
   {
-    /* CSR Clock Range between 150-168 MHz */
+    /* CSR Clock Range between 150-216 MHz */
     tmpreg |= (uint32_t)ETH_MACMIIAR_CR_Div102;
   }
 
@@ -2248,6 +2253,8 @@ void ETH_SetReceiveWatchdogTimer(uint8_t Value)
   (void)Value;
 #elif defined(ARCH_stm32f4)
   ETH->DMARSWTR = Value;
+#elif defined(ARCH_stm32f7)
+  ETH->DMARSWTR = Value;
 #endif
 }
 
@@ -2600,6 +2607,8 @@ void ETH_MMCCounterFullPreset(void)
 #if defined(ARCH_stm32f1)
 #elif defined(ARCH_stm32f4)
   ETH->MMCCR |= ETH_MMCCR_MCFHP | ETH_MMCCR_MCP;
+#elif defined(ARCH_stm32f7)
+  ETH->MMCCR |= ETH_MMCCR_MCFHP | ETH_MMCCR_MCP;
 #endif
 }
 
@@ -2612,6 +2621,12 @@ void ETH_MMCCounterHalfPreset(void)
 {
 #if defined(ARCH_stm32f1)
 #elif defined(ARCH_stm32f4)
+  /* Preset the MMC counters to almost-full value */
+  ETH->MMCCR &= ~ETH_MMCCR_MCFHP;
+
+  /* Initialize the MMC counters to almost-half value */
+  ETH->MMCCR |= ETH_MMCCR_MCP;
+#elif defined(ARCH_stm32f7)
   /* Preset the MMC counters to almost-full value */
   ETH->MMCCR &= ~ETH_MMCCR_MCFHP;
 

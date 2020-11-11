@@ -1,5 +1,5 @@
 /*=========================================================================*//**
-@file    ethmac_ioctl.h
+@file    ETH_ioctl.h
 
 @author  Daniel Zorychta
 
@@ -27,60 +27,61 @@
 *//*==========================================================================*/
 
 /**
-@defgroup drv-ethmac ETHMAC Driver
+@defgroup drv-ETH ETH Driver
 
-\section drv-ethmac-desc Description
+\section drv-ETH-desc Description
 Driver handles Ethernet MAC peripheral. In general usage this driver is handled
 directly by protocol stack.
 
-\section drv-ethmac-sup-arch Supported architectures
+\section drv-ETH-sup-arch Supported architectures
 \li stm32f1
 \li stm32f4
+\li stm32f7
 
-\section drv-ethmac-ddesc Details
-\subsection drv-ethmac-ddesc-num Meaning of major and minor numbers
+\section drv-ETH-ddesc Details
+\subsection drv-ETH-ddesc-num Meaning of major and minor numbers
 The major number determines selection of Ethernet peripheral. Minor number
 has no meaning and should be set to 0.
 
-\subsection drv-ethmac-ddesc-init Driver initialization
+\subsection drv-ETH-ddesc-init Driver initialization
 To initialize driver the following code can be used:
 
 @code
-driver_init("ETHMAC", 0, 0, "/dev/eth0");
+driver_init("ETH", 0, 0, "/dev/eth0");
 @endcode
 
-\subsection drv-ethmac-ddesc-release Driver release
+\subsection drv-ETH-ddesc-release Driver release
 To release driver the following code can be used:
 @code
-driver_release("ETHMAC", 0, 0);
+driver_release("ETH", 0, 0);
 @endcode
 
-\subsection drv-ethmac-ddesc-cfg Driver configuration
+\subsection drv-ETH-ddesc-cfg Driver configuration
 Entire driver configuration is realized by using configuration files in
 the <tt>./config</tt> directory or by using Configtool.
 
-\subsection drv-ethmac-ddesc-write Data write
+\subsection drv-ETH-ddesc-write Data write
 Data to driver can be written as for regular file but if buffer is bigger than
 MTU then buffer is send is few parts. In general case this method is not
 recommended to handle communication protocol. To handle driver more efficient
 please use ioctl() family requests.
 
-\subsection drv-ethmac-ddesc-read Data read
+\subsection drv-ETH-ddesc-read Data read
 Data from driver can be received as from regular file but with exception that
 read data buffer should be a size of ETH_MAX_PACKET_SIZE. In general case this
 method is not recommended to handle communication protocol. To handle driver more
 efficient please use ioctl() family requests.
 
-\subsection drv-ethmac-ddesc-conf Peripheral start
+\subsection drv-ETH-ddesc-conf Peripheral start
 There are only two steps that should be done to start Ethernet peripheral:
 
-\li MAC address configuration (@ref IOCTL_ETHMAC__SET_MAC_ADDR),
-\li Ethernet peripheral start (@ref IOCTL_ETHMAC__ETHERNET_START).
+\li MAC address configuration (@ref IOCTL_ETH__SET_MAC_ADDR),
+\li Ethernet peripheral start (@ref IOCTL_ETH__ETHERNET_START).
 
 After this operations packets will be received and transmitted.
 
-\subsection drv-ethmac-ddesc-pkthdl Packet handling
-To send and receive packets driver uses special data chains (@ref ETHMAC_packet_chain_t).
+\subsection drv-ETH-ddesc-pkthdl Packet handling
+To send and receive packets driver uses special data chains (@ref ETH_packet_chain_t).
 This object is a chain buffer that sum of all chain links payloads is a size of
 entire packet. Object can contain only single packet. In both cases, receiving
 and transmitting, the chain buffer should be created by user.
@@ -90,12 +91,12 @@ need to allocate a single packet buffer, thus payload data can originate from e.
 different memories (RAM, ROM, etc). The chain buffer behave as simple one
 direction linked list.
 
-\subsubsection drv-ethmac-ddesc-pktrcv Packet receiving
+\subsubsection drv-ETH-ddesc-pktrcv Packet receiving
 To receive packet one should wait for reception of Ethernet peripheral. To check
-this event the ioctl() request should be used: @ref IOCTL_ETHMAC__WAIT_FOR_PACKET.
+this event the ioctl() request should be used: @ref IOCTL_ETH__WAIT_FOR_PACKET.
 User should specify the timeout value. If packet is received then
-@ref ETHMAC_packet_wait_t object indicate a size of packet. This information should
-be used to create specified @ref ETHMAC_packet_chain_t object. The object should
+@ref ETH_packet_wait_t object indicate a size of packet. This information should
+be used to create specified @ref ETH_packet_chain_t object. The object should
 be prepared by application that receive packet, example:
 \code
 // initialization
@@ -108,20 +109,20 @@ FILE *eth = fopen(...);
 // reception thread
 while (true) {
         // wait for packet to be received
-        ETHMAC_packet_wait_t wait = {.timeout  = MAX_DELAY_MS, .pkt_size = 0};
+        ETH_packet_wait_t wait = {.timeout  = MAX_DELAY_MS, .pkt_size = 0};
 
-        if (ioctl(fileno(eth), IOCTL_ETHMAC__WAIT_FOR_PACKET, &wait) != 0) {
+        if (ioctl(fileno(eth), IOCTL_ETH__WAIT_FOR_PACKET, &wait) != 0) {
                 // ... error handling
         }
 
         // receive packet from peripheral buffer
-        ETHMAC_packet_chain_t bufch;
+        ETH_packet_chain_t bufch;
         bufch.next         = NULL;                     // there is single chain
         bufch.payload      = malloc(wait.pkt_size);    // allocate memory for packet
         bufch.total_size   = wait.pkt_size;            // total size, packet size
         bufch.payload_size = wait.pkt_size;            // one chain has size the same as total size
 
-        if (ioctl(fileno(eth), IOCTL_ETHMAC__RECEIVE_PACKET_TO_CHAIN, &bufch) != 0) {
+        if (ioctl(fileno(eth), IOCTL_ETH__RECEIVE_PACKET_TO_CHAIN, &bufch) != 0) {
                 // ... error handling
         }
 
@@ -136,7 +137,7 @@ size can be much bigger than received packet. The driver will fill the chain
 buffer by packet data and will set correct total size value. Only the first
 chain link has updated the total_size value.
 
-\subsubsection drv-ethmac-ddesc-pktrans Packet transmitting
+\subsubsection drv-ETH-ddesc-pktrans Packet transmitting
 To transmit packet the chain buffer should be used. The operation is opposite to
 packet receive but data sending is handled by the same chain buffer object type.
 The packet can be divided to many small parts. Packet sending example:
@@ -153,13 +154,13 @@ while (true) {
         // ... data to send should be prepared earlier
 
         // buffer prepare - buffer can be created dynamically
-        ETHMAC_packet_chain_t bufch;
+        ETH_packet_chain_t bufch;
         bufch.next         = NULL;        // there is single chain
         bufch.payload      = data_ptr;    // pointer to data buffer
         bufch.total_size   = data_len;    // total size - packet size
         bufch.payload_size = data_len;    // one chain has size the same as total size
 
-        if (ioctl(fileno(eth), IOCTL_ETHMAC__SEND_PACKET_FROM_CHAIN, &bufch) != 0) {
+        if (ioctl(fileno(eth), IOCTL_ETH__SEND_PACKET_FROM_CHAIN, &bufch) != 0) {
                 // ... error handling
         }
 
@@ -176,8 +177,8 @@ ignored by driver.
 @{
 */
 
-#ifndef _ETHMAC_IOCTL_H_
-#define _ETHMAC_IOCTL_H_
+#ifndef _ETH_IOCTL_H_
+#define _ETH_IOCTL_H_
 
 /*==============================================================================
   Include files
@@ -193,57 +194,57 @@ extern "C" {
 ==============================================================================*/
 /**
  * @brief  Wait for receive of Rx packet.
- * @param  [WR,RD] @ref ETHMAC_packet_wait_t*        timeout value and received size.
+ * @param  [WR,RD] @ref ETH_packet_wait_t*        timeout value and received size.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__WAIT_FOR_PACKET                   _IOWR(ETHMAC, 0x00, ethmac_packet_wait_t*)
+#define IOCTL_ETH__WAIT_FOR_PACKET                   _IOWR(ETH, 0x00, ETH_packet_wait_t*)
 
 /**
  * @brief  Set MAC address.
  * @param  [WR] @ref u8_t[6]: pointer to buffer of 6 elements.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__SET_MAC_ADDR                      _IOW(ETHMAC, 0x01, u8_t*)
+#define IOCTL_ETH__SET_MAC_ADDR                      _IOW(ETH, 0x01, u8_t*)
 
 /**
  * @brief  Get MAC address.
  * @param  [RD] @ref u8_t[6]: pointer to buffer of 6 elements.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__GET_MAC_ADDR                      _IOR(ETHMAC, 0x02, u8_t*)
+#define IOCTL_ETH__GET_MAC_ADDR                      _IOR(ETH, 0x02, u8_t*)
 
 /**
  * @brief  Send packet from chain buffer.
- * @param  [WR] @ref ETHMAC_packet_chain_t*       chain buffer reference.
+ * @param  [WR] @ref ETH_packet_chain_t*       chain buffer reference.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__SEND_PACKET                       _IOW(ETHMAC, 0x03, ethmac_packet_t*)
+#define IOCTL_ETH__SEND_PACKET                       _IOW(ETH, 0x03, ETH_packet_t*)
 
 /**
  * @brief  Receive packet to chain buffer.
- * @param  [RD] @ref ETHMAC_packet_chain_t*       chain buffer reference (each chain must have allocated memory!).
+ * @param  [RD] @ref ETH_packet_chain_t*       chain buffer reference (each chain must have allocated memory!).
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__RECEIVE_PACKET                    _IOR(ETHMAC, 0x04, ethmac_packet_t*)
+#define IOCTL_ETH__RECEIVE_PACKET                    _IOR(ETH, 0x04, ETH_packet_t*)
 
 /**
  * @brief  Starts Ethernet interface.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__ETHERNET_START                    _IO(ETHMAC, 0x05)
+#define IOCTL_ETH__ETHERNET_START                    _IO(ETH, 0x05)
 
 /**
  * @brief  Stop Ethernet interface.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__ETHERNET_STOP                     _IO(ETHMAC, 0x06)
+#define IOCTL_ETH__ETHERNET_STOP                     _IO(ETH, 0x06)
 
 /**
  * @brief  Return link status.
- * @param  [RD] @ref ETHMAC_link_status_t*        link status.
+ * @param  [RD] @ref ETH_link_status_t*        link status.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETHMAC__GET_LINK_STATUS                   _IOR(ETHMAC, 0x07, ETHMAC_link_status_t*)
+#define IOCTL_ETH__GET_LINK_STATUS                   _IOR(ETH, 0x07, ETH_link_status_t*)
 
 /*==============================================================================
   Exported object types
@@ -251,18 +252,18 @@ extern "C" {
 /**
  * Type represent packet chain.
  */
-typedef struct ETHMAC_packet_chain {
+typedef struct {
         void  *payload;         /*!< Payload.*/
         u16_t  payload_size;    /*!< Payload size.*/
-} ETHMAC_packet_t;
+} ETH_packet_t;
 
 /**
  * Type represent link status.
  */
 typedef enum {
-        ETHMAC_LINK_STATUS__CONNECTED,          /*!< Link connected.*/
-        ETHMAC_LINK_STATUS__DISCONNECTED        /*!< Link disconnected.*/
-} ETHMAC_link_status_t;
+        ETH_LINK_STATUS__CONNECTED,          /*!< Link connected.*/
+        ETH_LINK_STATUS__DISCONNECTED        /*!< Link disconnected.*/
+} ETH_link_status_t;
 
 /**
  * Type represent packet waiting with selected timeout.
@@ -270,7 +271,7 @@ typedef enum {
 typedef struct {
         uint32_t timeout;    /*!< Timeout value in milliseconds. Value is set by user at request.*/
         size_t   pkt_size;   /*!< Size of received packet. Value is set by driver at response.*/
-} ETHMAC_packet_wait_t;
+} ETH_packet_wait_t;
 
 /*==============================================================================
   Exported objects
@@ -288,7 +289,7 @@ typedef struct {
 }
 #endif
 
-#endif /* _ETHMAC_IOCTL_H_ */
+#endif /* _ETH_IOCTL_H_ */
 /**@}*/
 /*==============================================================================
   End of file

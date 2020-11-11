@@ -477,33 +477,38 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
 
         if (arg) {
                 if (request == IOCTL_CLK__GET_CLK_INFO) {
-                        RCC_ClocksTypeDef freq;
-                        RCC_GetClocksFreq(&freq);
+                        LL_RCC_ClocksTypeDef freq;
+                        LL_RCC_GetSystemClocksFreq(&freq);
 
                         CLK_info_t *clkinf = arg;
 
                         switch (clkinf->iterator) {
                         case 0:
                                 clkinf->freq_Hz = freq.SYSCLK_Frequency;
-                                clkinf->name = "SYSCLK";
+                                clkinf->name = "CPUCLK";
                                 break;
 
                         case 1:
+                                clkinf->freq_Hz = freq.SYSCLK_Frequency;
+                                clkinf->name = "SYSCLK";
+                                break;
+
+                        case 2:
                                 clkinf->freq_Hz = freq.HCLK_Frequency;
                                 clkinf->name = "HCLK";
                                 break;
 
-                        case 2:
+                        case 3:
                                 clkinf->freq_Hz = freq.PCLK1_Frequency;
                                 clkinf->name = "PCLK1";
                                 break;
 
-                        case 3:
+                        case 4:
                                 clkinf->freq_Hz = freq.PCLK2_Frequency;
                                 clkinf->name = "PCLK2";
                                 break;
 
-                        case 4:
+                        case 5:
                                 if (is_APB1_divided()) {
                                         clkinf->freq_Hz = freq.PCLK1_Frequency * 2;
                                 } else {
@@ -512,7 +517,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "PCLK1_TIM";
                                 break;
 
-                        case 5:
+                        case 6:
                                 if (is_APB2_divided()) {
                                         clkinf->freq_Hz = freq.PCLK2_Frequency * 2;
                                 } else {

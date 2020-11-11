@@ -76,64 +76,48 @@ API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor, const void *conf
 
         if (major == 0 && minor == 0) {
 
-                if (!(RCC->APB2ENR & RCC_APB2ENR_SYSCFGEN)) {
-                        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
+                SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
 
-                        SYSCFG->MEMRMP |= __AFM_SWP_FMC__
-                                        #ifdef SYSCFG_MEMRMP_SWP_FB_Pos
-                                        | __AFM_SWP_FB__
-                                        #endif
-                                        | __AFM_MEM_BOOT__;
+                SYSCFG->MEMRMP |= __AFM_SWP_FMC__
+                                #ifdef SYSCFG_MEMRMP_SWP_FB_Pos
+                                | __AFM_SWP_FB__
+                                #endif
+                                | __AFM_MEM_BOOT__;
 
-                        SYSCFG->PMC |= __AFM_MII_RMII_SEL__
-                                     #ifdef SYSCFG_PMC_PB9_FMP_Pos
-                                     | __AFM_PB9_FMP__
-                                     #endif
-                                     #ifdef SYSCFG_PMC_PB8_FMP_Pos
-                                     | __AFM_PB8_FMP__
-                                     #endif
-                                     #ifdef SYSCFG_PMC_PB7_FMP_Pos
-                                     | __AFM_PB7_FMP__
-                                     #endif
-                                     #ifdef SYSCFG_PMC_PB6_FMP_Pos
-                                     | __AFM_PB6_FMP__
-                                     #endif
-                                     #ifdef SYSCFG_PMC_I2C4_FMP_Pos
-                                     | __AFM_I2C4_FMP__
-                                     #endif
-                                     #ifdef SYSCFG_PMC_I2C3_FMP_Pos
-                                     | __AFM_I2C3_FMP__
-                                     #endif
-                                     #ifdef SYSCFG_PMC_I2C2_FMP_Pos
-                                     | __AFM_I2C2_FMP__
-                                     #endif
-                                     #ifdef SYSCFG_PMC_I2C1_FMP_Pos
-                                     | __AFM_I2C1_FMP__
-                                     #endif
-                                     | __AFM_ADCxDC2__;
+                SYSCFG->PMC |= __AFM_MII_RMII_SEL__
+                             #ifdef SYSCFG_PMC_PB9_FMP_Pos
+                             | __AFM_PB9_FMP__
+                             #endif
+                             #ifdef SYSCFG_PMC_PB8_FMP_Pos
+                             | __AFM_PB8_FMP__
+                             #endif
+                             #ifdef SYSCFG_PMC_PB7_FMP_Pos
+                             | __AFM_PB7_FMP__
+                             #endif
+                             #ifdef SYSCFG_PMC_PB6_FMP_Pos
+                             | __AFM_PB6_FMP__
+                             #endif
+                             #ifdef SYSCFG_PMC_I2C4_FMP_Pos
+                             | __AFM_I2C4_FMP__
+                             #endif
+                             #ifdef SYSCFG_PMC_I2C3_FMP_Pos
+                             | __AFM_I2C3_FMP__
+                             #endif
+                             #ifdef SYSCFG_PMC_I2C2_FMP_Pos
+                             | __AFM_I2C2_FMP__
+                             #endif
+                             #ifdef SYSCFG_PMC_I2C1_FMP_Pos
+                             | __AFM_I2C1_FMP__
+                             #endif
+                             | __AFM_ADCxDC2__;
 
-                        SYSCFG->EXTICR[0] |= __AFM_EXTI0_PORT__ | __AFM_EXTI1_PORT__
-                                           | __AFM_EXTI2_PORT__ | __AFM_EXTI3_PORT__;
+                #if defined(SYSCFG_CBR_CLL) || defined(SYSCFG_CBR_PVDL)
+                SYSCFG->CBR = __AFM_PVDL__ | __AFM_CLL__;
+                #endif
 
-                        SYSCFG->EXTICR[1] |= __AFM_EXTI4_PORT__ | __AFM_EXTI5_PORT__
-                                           | __AFM_EXTI6_PORT__ | __AFM_EXTI7_PORT__;
+                SYSCFG->CMPCR = __AFM_CMP_PD__;
 
-                        SYSCFG->EXTICR[2] |= __AFM_EXTI8_PORT__  | __AFM_EXTI9_PORT__
-                                           | __AFM_EXTI10_PORT__ | __AFM_EXTI11_PORT__;
-
-                        SYSCFG->EXTICR[3] |= __AFM_EXTI12_PORT__ | __AFM_EXTI13_PORT__
-                                           | __AFM_EXTI14_PORT__ | __AFM_EXTI15_PORT__;
-
-                        #if defined(SYSCFG_CBR_CLL) || defined(SYSCFG_CBR_PVDL)
-                        SYSCFG->CBR = __AFM_PVDL__ | __AFM_CLL__;
-                        #endif
-
-                        SYSCFG->CMPCR = __AFM_CMP_PD__;
-
-                        return ESUCC;
-                } else {
-                        return EADDRINUSE;
-                }
+                return ESUCC;
         } else {
                 return ENODEV;
         }

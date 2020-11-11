@@ -42,8 +42,14 @@ this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > CAN",
 
 /*--
 this:AddWidget("Checkbox", "Debug freeze")
+this:AddExtraWidget("Void", "LabelVoid1")
 --*/
 #define __CAN_CFG_DEBUG_FREEZE__ _YES_
+
+/*--
+this:AddWidget("Spinbox", 8, 4096, "RX FIFO size (messages)")
+--*/
+#define __CAN_CFG_RX_FIFO_SIZE__ 16
 
 #endif /* _CAN_FLAGS_H_ */
 /*==============================================================================

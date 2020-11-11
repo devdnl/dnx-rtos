@@ -478,8 +478,8 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
 
         /* set baud */
 #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
-        RCC_ClocksTypeDef freq;
-        RCC_GetClocksFreq(&freq);
+        LL_RCC_ClocksTypeDef freq;
+        LL_RCC_GetSystemClocksFreq(&freq);
 
         switch (DEV->CLKSRC) {
         case USART_CLKSOURCE_PCLK1:

@@ -5,7 +5,7 @@ Author  Daniel Zorychta
 
 Brief   General usage DMA driver.
 
-        Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+        Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
         This program is free software; you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ is a hardware limitation.
 \section drv-dma-sup-arch Supported architectures
 \li stm32f1
 \li stm32f4
+\li stm32f7
 
 \section drv-dma-ddesc Details
 \subsection drv-dma-ddesc-num Meaning of major and minor numbers

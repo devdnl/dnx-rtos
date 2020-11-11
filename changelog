@@ -1,3 +1,11 @@
+dnx RTOS 2.3.x Falcon
+=====================
+New Features, Improvements:
+- Added DMA, RTC, SPI, I2C, ETH drivers to stm32f7 port
+- Improvements in CAN driver
+- Added IRQ, PWM drivers for stm32f3 & stm32f7 ports
+- Removed configuration of EXTI lines in AFM driver
+
 dnx RTOS 2.3.3 Falcon
 =====================
 New Features, Improvements:
@@ -12,7 +20,7 @@ dnx RTOS 2.3.0 Falcon
 New Features, Improvements:
 - Updated many drivers
 - Added syscall mode 2 (flat syscall handling)
-- Context switch optimizations 
+- Context switch optimizations
 - EXT4FS fixes
 - Updated FAT32 library
 - Updated heap library (added memory consistency checker)
@@ -56,7 +64,7 @@ Fixed Bugs:
 - Removed file system cache subsystem - many problems and errors, very slow
 - Fixed SDIO write and read when buffer size is bigger than DMA transfer
 - Process context switch
-- Get semaphore counter value 
+- Get semaphore counter value
 
 dnx RTOS 2.2.0 Eagle
 ====================

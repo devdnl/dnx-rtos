@@ -287,8 +287,6 @@ static void SIPC_status(void)
                        (uint)ifstat.rx_packets, cast(uint, ifstat.rx_bytes), rx_unit,
                        (uint)ifstat.tx_packets, cast(uint, ifstat.tx_bytes), tx_unit
                );
-        } else {
-                perror("SIPC");
         }
 }
 

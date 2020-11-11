@@ -192,7 +192,7 @@ int _net_ifup(NET_family_t family, const NET_generic_config_t *config)
                 #endif
         };
 
-        if (family < _NET_FAMILY__COUNT && config) {
+        if (family < _NET_FAMILY__COUNT) {
                 return call_proxy_function(family, config);
         } else {
                 return EINVAL;

@@ -39,6 +39,10 @@ Brief   SPI driver.
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/dma_ddi.h"
+#elif defined(ARCH_stm32f7)
+#include "stm32f7/stm32f7xx.h"
+#include "stm32f7/dma_ddi.h"
+#define SPI_CR1_DFF SPI_CR1_CRCL
 #endif
 
 /*==============================================================================
@@ -76,7 +80,7 @@ struct SPI_info {
 #if USE_DMA > 0
 #if defined(ARCH_stm32f1)
 static bool DMA_callback(DMA_Channel_t *stream, u8_t SR, void *arg);
-#elif defined(ARCH_stm32f4)
+#elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 #endif
 #endif
@@ -138,7 +142,7 @@ static const struct SPI_info SPI_HW[_NUMBER_OF_SPI_PERIPHERALS] = {
                 #endif
         }
         #endif
-#elif defined(ARCH_stm32f4)
+#elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
         #if defined(RCC_APB2ENR_SPI1EN)
         {
                 .SPI                    = SPI1,
@@ -169,7 +173,7 @@ static const struct SPI_info SPI_HW[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .DMA_tx_stream_pri      = 4,
                 .DMA_tx_stream_alt      = 4,
                 .DMA_rx_stream_pri      = 3,
-                .DMA_rx_stream_alt      = 6,
+                .DMA_rx_stream_alt      = 3,
                 .DMA_channel            = 0,
                 .DMA_major              = 0,
                 #endif
@@ -338,7 +342,7 @@ void _SPI_LLD__apply_config(struct SPI_slave *hdl)
         /* configure SPI mode */
         SET_BIT(SPI->CR1, spi_mode_mask[hdl->config.mode]);
 
-        /* 8-bit mode */
+        /* CRC 8-bit length */
         CLEAR_BIT(SPI->CR1, SPI_CR1_DFF);
 
         /* set MSB/LSB */
@@ -353,6 +357,10 @@ void _SPI_LLD__apply_config(struct SPI_slave *hdl)
 
         /* set SPI as master */
         SET_BIT(SPI->CR1, SPI_CR1_MSTR);
+
+#if defined(ARCH_stm32f7)
+        WRITE_REG(SPI->CR2, SPI_CR2_FRXTH | SPI_CR2_DS_2 | SPI_CR2_DS_1 | SPI_CR2_DS_0);
+#endif
 
         /* enable peripheral */
         SET_BIT(SPI->CR1, SPI_CR1_SPE);
@@ -431,7 +439,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                                            | DMA_CCRx_MSIZE_BYTE
                                            | DMA_CCRx_PSIZE_BYTE;
 
-#elif defined(ARCH_stm32f4)
+#elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
                         config_tx.MA[0]    = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
                         config_tx.FC       = 0;
                         config_tx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
@@ -455,7 +463,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                                            | DMA_CCRx_DIR_P2M
                                            | DMA_CCRx_MSIZE_BYTE
                                            | DMA_CCRx_PSIZE_BYTE;
-#elif defined(ARCH_stm32f4)
+#elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
                         config_rx.MA[0]    = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
                         config_rx.FC       = 0;
                         config_rx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
@@ -516,9 +524,21 @@ static void handle_SPI_IRQ(u8_t major)
 
                 if (_SPI[major]->count > 0) {
                         if (_SPI[major]->tx_buffer) {
-                                spi->DR = *(_SPI[major]->tx_buffer++);
+                                u8_t byte = *(_SPI[major]->tx_buffer++);
+#if defined(ARCH_stm32f7)
+                                uint8_t *DR = (uint8_t*)&spi->DR;
+                                *DR = byte;
+#else
+                                spi->DR = byte;
+#endif
                         } else {
-                                spi->DR = _SPI[major]->flush_byte;
+                                u8_t byte = _SPI[major]->flush_byte;
+#if defined(ARCH_stm32f7)
+                                uint8_t *DR = (uint8_t*)&spi->DR;
+                                *DR = byte;
+#else
+                                spi->DR = byte;
+#endif
                         }
                 }
 
@@ -562,7 +582,7 @@ static void handle_SPI_IRQ(u8_t major)
 //==============================================================================
 #if defined(ARCH_stm32f1)
 static bool DMA_callback(DMA_Channel_t *stream, u8_t SR, void *arg)
-#elif defined(ARCH_stm32f4)
+#elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 #endif
 {

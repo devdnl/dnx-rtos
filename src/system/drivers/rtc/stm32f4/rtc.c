@@ -29,7 +29,6 @@ Brief   Real-Time Clock Module
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f4/rtc_cfg.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
 #include "../rtc_ioctl.h"

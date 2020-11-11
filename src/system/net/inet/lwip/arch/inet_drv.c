@@ -78,14 +78,14 @@
 int _inetdrv_hardware_init(inet_t *inet)
 {
         /* set MAC address */
-        int err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__GET_MAC_ADDR, inet->netif.hwaddr);
+        int err = sys_ioctl(inet->if_file, IOCTL_ETH__GET_MAC_ADDR, inet->netif.hwaddr);
         if (err) {
                 LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_init: MAC set fail\n"));
                 return err;
         }
 
         /* start Ethernet interface */
-        err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__ETHERNET_START);
+        err = sys_ioctl(inet->if_file, IOCTL_ETH__ETHERNET_START);
         if (err) {
                 LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_init: start fail\n"));
                 return err;
@@ -107,7 +107,7 @@ int _inetdrv_hardware_init(inet_t *inet)
 //==============================================================================
 int _inetdrv_hardware_deinit(inet_t *inet)
 {
-        int err = sys_ioctl(inet->if_file, IOCTL_ETHMAC__ETHERNET_STOP);
+        int err = sys_ioctl(inet->if_file, IOCTL_ETH__ETHERNET_STOP);
         if (err) {
                 LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_deinit: stop fail\n"));
         }
@@ -135,18 +135,17 @@ int _inetdrv_hardware_deinit(inet_t *inet)
 //==============================================================================
 void _inetdrv_handle_input(inet_t *inet, u32_t timeout)
 {
-        ETHMAC_packet_wait_t pw = {.timeout = timeout};
-        int r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
+        ETH_packet_wait_t pw = {.timeout = timeout};
+        int r = sys_ioctl(inet->if_file, IOCTL_ETH__WAIT_FOR_PACKET, &pw);
 
         while (r == 0 && pw.pkt_size > 0) {
-                // NOTE: subtract packet size by 4 to discard CRC32
-                struct pbuf *p = pbuf_alloc(PBUF_RAW, pw.pkt_size - 4, PBUF_RAM);
+                struct pbuf *p = pbuf_alloc(PBUF_RAW, pw.pkt_size, PBUF_RAM);
                 if (p) {
-                        ETHMAC_packet_t pkt;
+                        ETH_packet_t pkt;
                         pkt.payload = p->payload;
                         pkt.payload_size = p->len;
 
-                        r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__RECEIVE_PACKET, &pkt);
+                        r = sys_ioctl(inet->if_file, IOCTL_ETH__RECEIVE_PACKET, &pkt);
 
                         if (r == 0) {
                                 LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_input: received = %d\n", p->tot_len));
@@ -162,7 +161,7 @@ void _inetdrv_handle_input(inet_t *inet, u32_t timeout)
                                 pbuf_free(p);
                         }
 
-                        r = sys_ioctl(inet->if_file, IOCTL_ETHMAC__WAIT_FOR_PACKET, &pw);
+                        r = sys_ioctl(inet->if_file, IOCTL_ETH__WAIT_FOR_PACKET, &pw);
                 } else {
                         LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_input: not enough free memory\n"));
                         sys_sleep_ms(10);
@@ -198,11 +197,11 @@ err_t _inetdrv_handle_output(struct netif *netif, struct pbuf *p)
 
       LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_output: packet size %d\n", p->tot_len));
 
-      ETHMAC_packet_t pkt;
+      ETH_packet_t pkt;
       pkt.payload = p->payload;
       pkt.payload_size = p->len;
 
-      if (sys_ioctl(inet->if_file, IOCTL_ETHMAC__SEND_PACKET, &pkt) == 0) {
+      if (sys_ioctl(inet->if_file, IOCTL_ETH__SEND_PACKET, &pkt) == 0) {
               inet->tx_packets++;
               inet->tx_bytes += pkt.payload_size;
               return ERR_OK;
@@ -229,9 +228,9 @@ err_t _inetdrv_handle_output(struct netif *netif, struct pbuf *p)
 //==============================================================================
 bool _inetdrv_is_link_connected(inet_t *inet)
 {
-        ETHMAC_link_status_t linkstat;
-        if (sys_ioctl(inet->if_file, IOCTL_ETHMAC__GET_LINK_STATUS, &linkstat) == 0) {
-                return linkstat == ETHMAC_LINK_STATUS__CONNECTED;
+        ETH_link_status_t linkstat;
+        if (sys_ioctl(inet->if_file, IOCTL_ETH__GET_LINK_STATUS, &linkstat) == 0) {
+                return linkstat == ETH_LINK_STATUS__CONNECTED;
         } else {
                 return false;
         }

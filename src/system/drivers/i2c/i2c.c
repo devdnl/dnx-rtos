@@ -61,7 +61,7 @@ static const I2C_config_t I2C_DEFAULT_CFG = {
         .address       = 0x00,
         .addr_10bit    = false,
         .sub_addr_mode = I2C_SUB_ADDR_MODE__DISABLED,
-        .slave_mode    = false
+        .mode          = I2C_MODE__MASTER
 };
 
 /// main memory of module
@@ -107,7 +107,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor, const void *conf
                         goto finish;
                 }
 
-                err = sys_queue_create(1, sizeof(int), &_I2C[major]->event);
+                err = sys_queue_create(1, sizeof(u32_t), &_I2C[major]->event);
                 if (err) {
                         goto finish;
                 }
@@ -234,17 +234,17 @@ API_MOD_WRITE(I2C,
 
         int err = sys_mutex_lock(_I2C[hdl->major]->lock_mtx, ACCESS_TIMEOUT);
         if (!err) {
-                if (hdl->config.slave_mode) {
+                if (hdl->config.mode == I2C_MODE__SLAVE) {
                         err = _I2C_LLD__slave_transmit(hdl, src, count, wrcnt);
 
                 } else {
-                        err = _I2C_LLD__start(hdl);
+                        err = _I2C_LLD__master_start(hdl);
                         if (err) {
                                 printk("I2C%d:%d start error", hdl->major, hdl->minor);
                                 goto error;
                         }
 
-                        err = _I2C_LLD__send_address(hdl, true, count);
+                        err = _I2C_LLD__master_send_address(hdl, true, count);
                         if (err) {
                                 printk("I2C%d:%d address %Xh error",
                                        hdl->major, hdl->minor, hdl->config.address);
@@ -259,10 +259,10 @@ API_MOD_WRITE(I2C,
                                 }
                         }
 
-                        err = _I2C_LLD__transmit(hdl, src, count, wrcnt);
+                        err = _I2C_LLD__master_transmit(hdl, src, count, wrcnt, false);
 
                         error:
-                        _I2C_LLD__stop(hdl);
+                        _I2C_LLD__master_stop(hdl);
                 }
 
                 sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
@@ -303,18 +303,18 @@ API_MOD_READ(I2C,
 
         int err = sys_mutex_lock(_I2C[hdl->major]->lock_mtx, ACCESS_TIMEOUT);
         if (!err) {
-                if (hdl->config.slave_mode) {
+                if (hdl->config.mode == I2C_MODE__SLAVE) {
                         err = _I2C_LLD__slave_receive(hdl, dst, count, rdcnt);
 
                 } else {
                         if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
-                                err = _I2C_LLD__start(hdl);
+                                err = _I2C_LLD__master_start(hdl);
                                 if (err) {
                                         printk("I2C%d:%d start error", hdl->major, hdl->minor, err);
                                         goto error;
                                 }
 
-                                err = _I2C_LLD__send_address(hdl, true, count);
+                                err = _I2C_LLD__master_send_address(hdl, true, count);
                                 if (err) {
                                         printk("I2C%d:%d address %Xh error",
                                                hdl->major, hdl->minor, hdl->config.address);
@@ -328,26 +328,26 @@ API_MOD_READ(I2C,
                                 }
                         }
 
-                        err = _I2C_LLD__repeat_start(hdl);
+                        err = _I2C_LLD__master_repeat_start(hdl);
                         if (err) {
                                 printk("I2C%d:%d repeat start error", hdl->major, hdl->minor);
                                 goto error;
                         }
 
-                        err = _I2C_LLD__send_address(hdl, false, count);
+                        err = _I2C_LLD__master_send_address(hdl, false, count);
                         if (err) {
                                 printk("I2C%d:%d address %Xh error",
                                        hdl->major, hdl->minor, hdl->config.address);
                                 goto error;
                         }
 
-                        err = _I2C_LLD__receive(hdl, dst, count, rdcnt);
+                        err = _I2C_LLD__master_receive(hdl, dst, count, rdcnt);
                         if (err) {
                                 printk("I2C%d:%d receive error", hdl->major, hdl->minor);
                         }
 
                         error:
-                        _I2C_LLD__stop(hdl);
+                        _I2C_LLD__master_stop(hdl);
                 }
 
                 sys_mutex_unlock(_I2C[hdl->major]->lock_mtx);
@@ -397,7 +397,7 @@ API_MOD_IOCTL(I2C, void *device_handle, int request, void *arg)
                         if (!err) {
                                 hdl->config.addr_10bit    = sys_stropt_get_bool(arg, "addr_10bit", false);
                                 hdl->config.address       = sys_stropt_get_int(arg, "address", 0);
-                                hdl->config.slave_mode    = sys_stropt_get_bool(arg, "slave_mode", false);
+                                hdl->config.mode          = sys_stropt_get_bool(arg, "slave", false) ? I2C_MODE__SLAVE : I2C_MODE__MASTER;
                                 hdl->config.sub_addr_mode = sys_stropt_get_int(arg, "sub_addr_mode", 0);
 
                                 err = _I2C_LLD__slave_mode_setup(hdl);
@@ -504,6 +504,10 @@ static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mo
         u8_t n   = 0;
         u8_t addr[4];
 
+        if (mode >= I2C_SUB_ADDR_MODE__4_BYTES) {
+                addr[n++] = address >> 24;
+        }
+
         if (mode >= I2C_SUB_ADDR_MODE__3_BYTES) {
                 addr[n++] = address >> 16;
         }
@@ -516,7 +520,7 @@ static int send_subaddress(I2C_dev_t *hdl, u32_t address, I2C_sub_addr_mode_t mo
                 addr[n++] = address & 0xFF;
 
                 size_t wrcnt = 0;
-                err = _I2C_LLD__transmit(hdl, addr, n, &wrcnt);
+                err = _I2C_LLD__master_transmit(hdl, addr, n, &wrcnt, true);
         }
 
         return err;

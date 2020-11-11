@@ -269,8 +269,8 @@ void _cpuctl_update_system_clocks(void)
 
         /* update context switch counter frequency */
         _critical_section_begin();
-        RCC_ClocksTypeDef freq;
-        RCC_GetClocksFreq(&freq);
+        LL_RCC_ClocksTypeDef freq;
+        LL_RCC_GetSystemClocksFreq(&freq);
         SysTick_Config((freq.HCLK_Frequency / (u32_t)__OS_TASK_SCHED_FREQ__) - 1);
         _critical_section_end();
 }

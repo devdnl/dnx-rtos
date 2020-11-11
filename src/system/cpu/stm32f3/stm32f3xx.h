@@ -217,7 +217,7 @@ typedef enum
  #include "stm32f3xx_hal.h"
 #endif /* USE_HAL_DRIVER */
 
-#endif /* #ifdef ARCH_stm32f3 */
+#endif /* ARCH_stm32f3 */
 
 #ifdef __cplusplus
 }

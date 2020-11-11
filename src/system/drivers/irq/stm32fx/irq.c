@@ -32,6 +32,20 @@ Brief   This driver support external interrupts (EXTI).
 #include "stm32fx/irq_cfg.h"
 #include "../irq_ioctl.h"
 
+#if defined(ARCH_stm32f1)
+#define RCC_APB2ENR_IRQEN       RCC_APB2ENR_AFIOEN
+#define IRQCFG                  AFIO
+#elif defined(ARCH_stm32f3)
+#define RCC_APB2ENR_IRQEN       RCC_APB2ENR_SYSCFGEN
+#define IRQCFG                  SYSCFG
+#elif defined(ARCH_stm32f4)
+#define RCC_APB2ENR_IRQEN       RCC_APB2ENR_SYSCFGEN
+#define IRQCFG                  SYSCFG
+#elif defined(ARCH_stm32f7)
+#define RCC_APB2ENR_IRQEN       RCC_APB2ENR_SYSCFGEN
+#define IRQCFG                  SYSCFG
+#endif
+
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
@@ -109,6 +123,22 @@ API_MOD_INIT(IRQ, void **device_handle, u8_t major, u8_t minor, const void *conf
         if (major == 0 && minor < NUMBER_OF_IRQs) {
                 if (IRQ == NULL) {
                         err = sys_zalloc(sizeof(IRQ_t), cast(void*, &IRQ));
+
+                        if (!err) {
+                                SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IRQEN);
+
+                                IRQCFG->EXTICR[0] |= _IRQ_EXTI0_PORT  | _IRQ_EXTI1_PORT
+                                                   | _IRQ_EXTI2_PORT  | _IRQ_EXTI3_PORT;
+
+                                IRQCFG->EXTICR[1] |= _IRQ_EXTI4_PORT  | _IRQ_EXTI5_PORT
+                                                   | _IRQ_EXTI6_PORT  | _IRQ_EXTI7_PORT;
+
+                                IRQCFG->EXTICR[2] |= _IRQ_EXTI8_PORT  | _IRQ_EXTI9_PORT
+                                                   | _IRQ_EXTI10_PORT | _IRQ_EXTI11_PORT;
+
+                                IRQCFG->EXTICR[3] |= _IRQ_EXTI12_PORT | _IRQ_EXTI13_PORT
+                                                   | _IRQ_EXTI14_PORT | _IRQ_EXTI15_PORT;
+                        }
                 }
 
                 if (IRQ) {

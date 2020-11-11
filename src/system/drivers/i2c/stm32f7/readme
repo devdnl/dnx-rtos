@@ -1,0 +1,2 @@
+STM32F7 architecture use common STM32F3F7 driver in drv directory.
+Do not remove this directory due to build system compatibility.

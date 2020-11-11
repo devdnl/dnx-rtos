@@ -151,6 +151,14 @@ void _cpuctl_init(void)
 
         _mm_register_region(&ram2, RAM2_START, RAM2_SIZE);
         _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE);
+
+        if (__CPU_ICACHE_ENABLE__) {
+                SCB_EnableICache();
+        }
+
+        if (__CPU_DCACHE_ENABLE__) {
+                SCB_EnableDCache();
+        }
 }
 
 //==============================================================================

@@ -536,8 +536,11 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
 
                 switch (mpur) {
                 case _MM_MOD: {
-                        size_t modid = cast(size_t, arg);
-                        if (modid < _drvreg_number_of_modules) {
+                        i32_t modid = cast(i32_t, arg);
+                        if ((modid < 0) || (modid > cast(i32_t, _drvreg_number_of_modules))) {
+                                return EINVAL;
+
+                        } else  if (modid < cast(i32_t, _drvreg_number_of_modules)) {
                                 usage = &module_memory_usage[modid];
                         }
                         break;

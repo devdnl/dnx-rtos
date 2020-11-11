@@ -35,9 +35,15 @@ Brief   PWM driver
 #if defined(ARCH_stm32f1)
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #include "stm32f1/stm32f10x.h"
+#elif defined(ARCH_stm32f3)
+#include "stm32f3/lib/stm32f3xx_ll_rcc.h"
+#include "stm32f3/stm32f3xx.h"
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/lib/stm32f4xx_rcc.h"
 #include "stm32f4/stm32f4xx.h"
+#elif defined(ARCH_stm32f7)
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
+#include "stm32f7/stm32f7xx.h"
 #endif
 
 /*==============================================================================
@@ -48,11 +54,6 @@ Brief   PWM driver
 /*==============================================================================
   Local object types
 ==============================================================================*/
-#if defined(ARCH_stm32f1)
-typedef TIM_t TIM_TypeDef;
-#elif defined(ARCH_stm32f4)
-#endif
-
 typedef struct {
         TIM_TypeDef   *reg;
         __IO uint32_t *APBENR;
@@ -550,8 +551,8 @@ API_MOD_STAT(PWM, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static u32_t get_timer_frequency(PWM_t *hdl)
 {
-        RCC_ClocksTypeDef freq;
-        RCC_GetClocksFreq(&freq);
+        LL_RCC_ClocksTypeDef freq;
+        LL_RCC_GetSystemClocksFreq(&freq);
 
         if (TIM[hdl->timer].APBENR == &RCC->APB1ENR) {
 
