@@ -416,11 +416,19 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 LL_RCC_ClocksTypeDef freq;
                                 LL_RCC_GetSystemClocksFreq(&freq);
                                 clkinf->freq_Hz = freq.SYSCLK_Frequency;
-                                clkinf->name = "SYSCLK";
+                                clkinf->name = "CPUCLK";
                                 break;
                         }
 
                         case 1: {
+                                LL_RCC_ClocksTypeDef freq;
+                                LL_RCC_GetSystemClocksFreq(&freq);
+                                clkinf->freq_Hz = freq.SYSCLK_Frequency;
+                                clkinf->name = "SYSCLK";
+                                break;
+                        }
+
+                        case 2: {
                                 LL_RCC_ClocksTypeDef freq;
                                 LL_RCC_GetSystemClocksFreq(&freq);
                                 clkinf->freq_Hz = freq.HCLK_Frequency;
@@ -428,7 +436,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 2: {
+                        case 3: {
                                 LL_RCC_ClocksTypeDef freq;
                                 LL_RCC_GetSystemClocksFreq(&freq);
                                 clkinf->freq_Hz = freq.PCLK1_Frequency;
@@ -436,7 +444,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 3: {
+                        case 4: {
                                 LL_RCC_ClocksTypeDef freq;
                                 LL_RCC_GetSystemClocksFreq(&freq);
                                 clkinf->freq_Hz = freq.PCLK2_Frequency;
@@ -444,7 +452,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 4: {
+                        case 5: {
                                 LL_RCC_ClocksTypeDef freq;
                                 LL_RCC_GetSystemClocksFreq(&freq);
                                 clkinf->freq_Hz = freq.PCLK3_Frequency;
@@ -452,7 +460,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 5: {
+                        case 6: {
                                 LL_RCC_ClocksTypeDef freq;
                                 LL_RCC_GetSystemClocksFreq(&freq);
                                 clkinf->freq_Hz = freq.PCLK4_Frequency;
@@ -460,7 +468,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 6: {
+                        case 7: {
                                 LL_PLL_ClocksTypeDef pll;
                                 LL_RCC_GetPLL1ClockFreq(&pll);
                                 clkinf->freq_Hz = pll.PLL_P_Frequency;
@@ -468,7 +476,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 7: {
+                        case 8: {
                                 LL_PLL_ClocksTypeDef pll;
                                 LL_RCC_GetPLL1ClockFreq(&pll);
                                 clkinf->freq_Hz = pll.PLL_Q_Frequency;
@@ -476,7 +484,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 8: {
+                        case 9: {
                                 LL_PLL_ClocksTypeDef pll;
                                 LL_RCC_GetPLL1ClockFreq(&pll);
                                 clkinf->freq_Hz = pll.PLL_R_Frequency;
@@ -484,7 +492,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 9: {
+                        case 10: {
                                 LL_PLL_ClocksTypeDef pll;
                                 LL_RCC_GetPLL2ClockFreq(&pll);
                                 clkinf->freq_Hz = pll.PLL_P_Frequency;
@@ -492,7 +500,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 10: {
+                        case 11: {
                                 LL_PLL_ClocksTypeDef pll;
                                 LL_RCC_GetPLL2ClockFreq(&pll);
                                 clkinf->freq_Hz = pll.PLL_Q_Frequency;
@@ -500,7 +508,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 11: {
+                        case 12: {
                                 LL_PLL_ClocksTypeDef pll;
                                 LL_RCC_GetPLL2ClockFreq(&pll);
                                 clkinf->freq_Hz = pll.PLL_R_Frequency;
@@ -508,7 +516,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 12: {
+                        case 13: {
                                 LL_PLL_ClocksTypeDef pll;
                                 LL_RCC_GetPLL3ClockFreq(&pll);
                                 clkinf->freq_Hz = pll.PLL_P_Frequency;
@@ -516,7 +524,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 13: {
+                        case 14: {
                                 LL_PLL_ClocksTypeDef pll;
                                 LL_RCC_GetPLL3ClockFreq(&pll);
                                 clkinf->freq_Hz = pll.PLL_Q_Frequency;
@@ -524,7 +532,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 14: {
+                        case 15: {
                                 LL_PLL_ClocksTypeDef pll;
                                 LL_RCC_GetPLL3ClockFreq(&pll);
                                 clkinf->freq_Hz = pll.PLL_R_Frequency;
@@ -532,172 +540,172 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 break;
                         }
 
-                        case 15:
+                        case 16:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART16_CLKSOURCE);
                                 clkinf->name = "USART1";
                                 break;
 
-                        case 16:
+                        case 17:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART234578_CLKSOURCE);
                                 clkinf->name = "USART2";
                                 break;
 
-                        case 17:
+                        case 18:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART234578_CLKSOURCE);
                                 clkinf->name = "USART3";
                                 break;
 
-                        case 18:
+                        case 19:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART234578_CLKSOURCE);
                                 clkinf->name = "UART4";
                                 break;
 
-                        case 19:
+                        case 20:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART234578_CLKSOURCE);
                                 clkinf->name = "UART5";
                                 break;
 
-                        case 20:
+                        case 21:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART16_CLKSOURCE);
                                 clkinf->name = "USART6";
                                 break;
 
-                        case 21:
+                        case 22:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART234578_CLKSOURCE);
                                 clkinf->name = "UART7";
                                 break;
 
-                        case 22:
+                        case 23:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART234578_CLKSOURCE);
                                 clkinf->name = "UART8";
                                 break;
 
-                        case 23:
+                        case 24:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART16_CLKSOURCE);
                                 clkinf->name = "UART9";
                                 break;
 
-                        case 24:
+                        case 25:
                                 clkinf->freq_Hz = LL_RCC_GetUSARTClockFreq(LL_RCC_USART16_CLKSOURCE);
                                 clkinf->name = "USART10";
                                 break;
 
-                        case 25:
+                        case 26:
                                 clkinf->freq_Hz = LL_RCC_GetLPUARTClockFreq(LL_RCC_LPUART1_CLKSOURCE);
                                 clkinf->name = "LPUART1";
                                 break;
 
-                        case 26:
+                        case 27:
                                 clkinf->freq_Hz = LL_RCC_GetI2CClockFreq(LL_RCC_I2C123_CLKSOURCE);
                                 clkinf->name = "I2C1";
                                 break;
 
-                        case 27:
+                        case 28:
                                 clkinf->freq_Hz = LL_RCC_GetI2CClockFreq(LL_RCC_I2C123_CLKSOURCE);
                                 clkinf->name = "I2C2";
                                 break;
 
-                        case 28:
+                        case 29:
                                 clkinf->freq_Hz = LL_RCC_GetI2CClockFreq(LL_RCC_I2C123_CLKSOURCE);
                                 clkinf->name = "I2C3";
                                 break;
 
-                        case 29:
+                        case 30:
                                 clkinf->freq_Hz = LL_RCC_GetI2CClockFreq(LL_RCC_I2C4_CLKSOURCE);
                                 clkinf->name = "I2C4";
                                 break;
 
-                        case 30:
+                        case 31:
                                 clkinf->freq_Hz = LL_RCC_GetI2CClockFreq(LL_RCC_I2C123_CLKSOURCE);
                                 clkinf->name = "I2C5";
                                 break;
 
-                        case 31:
+                        case 32:
                                 clkinf->freq_Hz = LL_RCC_GetLPTIMClockFreq(LL_RCC_LPTIM1_CLKSOURCE);
                                 clkinf->name = "LPTIM1";
                                 break;
 
-                        case 32:
+                        case 33:
                                 clkinf->freq_Hz = LL_RCC_GetLPTIMClockFreq(LL_RCC_LPTIM2_CLKSOURCE);
                                 clkinf->name = "LPTIM2";
                                 break;
 
-                        case 33:
+                        case 34:
                                 clkinf->freq_Hz = LL_RCC_GetLPTIMClockFreq(LL_RCC_LPTIM345_CLKSOURCE);
                                 clkinf->name = "LPTIM3";
                                 break;
 
-                        case 34:
+                        case 35:
                                 clkinf->freq_Hz = LL_RCC_GetLPTIMClockFreq(LL_RCC_LPTIM345_CLKSOURCE);
                                 clkinf->name = "LPTIM4";
                                 break;
 
-                        case 35:
+                        case 36:
                                 clkinf->freq_Hz = LL_RCC_GetLPTIMClockFreq(LL_RCC_LPTIM345_CLKSOURCE);
                                 clkinf->name = "LPTIM5";
                                 break;
 
-                        case 36:
+                        case 37:
                                 clkinf->freq_Hz = LL_RCC_GetADCClockFreq(LL_RCC_ADC_CLKSOURCE);
                                 clkinf->name = "ADC";
                                 break;
 
-                        case 37:
+                        case 38:
                                 clkinf->freq_Hz = LL_RCC_GetSDMMCClockFreq(LL_RCC_SDMMC_CLKSOURCE);
                                 clkinf->name = "SDMMC";
                                 break;
 
-                        case 38:
+                        case 39:
                                 clkinf->freq_Hz = LL_RCC_GetRNGClockFreq(LL_RCC_RNG_CLKSOURCE);
                                 clkinf->name = "RNG";
                                 break;
 
-                        case 39:
+                        case 40:
                                 clkinf->freq_Hz = LL_RCC_GetCECClockFreq(LL_RCC_CEC_CLKSOURCE);
                                 clkinf->name = "CEC";
                                 break;
 
-                        case 40:
+                        case 41:
                                 clkinf->freq_Hz = LL_RCC_GetUSBClockFreq(LL_RCC_USB_CLKSOURCE);
                                 clkinf->name = "USB";
                                 break;
 
-                        case 41:
+                        case 42:
                                 clkinf->freq_Hz = LL_RCC_GetDFSDMClockFreq(LL_RCC_DFSDM1_CLKSOURCE);
                                 clkinf->name = "DFSDM1";
                                 break;
 
-                        case 42:
+                        case 43:
                                 clkinf->freq_Hz = LL_RCC_GetSPIClockFreq(LL_RCC_SPI123_CLKSOURCE);
                                 clkinf->name = "SPI1";
                                 break;
 
-                        case 43:
+                        case 44:
                                 clkinf->freq_Hz = LL_RCC_GetSPIClockFreq(LL_RCC_SPI123_CLKSOURCE);
                                 clkinf->name = "SPI2";
                                 break;
 
-                        case 44:
+                        case 45:
                                 clkinf->freq_Hz = LL_RCC_GetSPIClockFreq(LL_RCC_SPI123_CLKSOURCE);
                                 clkinf->name = "SPI3";
                                 break;
 
-                        case 45:
+                        case 46:
                                 clkinf->freq_Hz = LL_RCC_GetSPIClockFreq(LL_RCC_SPI45_CLKSOURCE);
                                 clkinf->name = "SPI4";
                                 break;
 
-                        case 46:
+                        case 47:
                                 clkinf->freq_Hz = LL_RCC_GetSPIClockFreq(LL_RCC_SPI45_CLKSOURCE);
                                 clkinf->name = "SPI5";
                                 break;
 
-                        case 47:
+                        case 48:
                                 clkinf->freq_Hz = LL_RCC_GetSPIClockFreq(LL_RCC_SPI6_CLKSOURCE);
                                 clkinf->name = "SPI6";
                                 break;
 
-                        case 48:
+                        case 49:
                                 clkinf->freq_Hz = LL_RCC_GetFMCClockFreq(LL_RCC_FMC_CLKSOURCE);
                                 clkinf->name = "FMC";
                                 break;

@@ -184,6 +184,14 @@ void _cpuctl_init(void)
                  */
                 _mm_register_region(&ram4, RAM4_START, RAM4_SIZE);
         }
+
+        if (__CPU_ICACHE_ENABLE__) {
+                SCB_EnableICache();
+        }
+
+        if (__CPU_DCACHE_ENABLE__) {
+                SCB_EnableDCache();
+        }
 }
 
 //==============================================================================
