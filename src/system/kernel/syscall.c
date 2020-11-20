@@ -423,7 +423,8 @@ int _syscall_kworker_process(int argc, char *argv[])
                 if (not network_initialized) {
                         network_initialized = true;
 
-                        for (NET_family_t netf = 0; netf < _NET_FAMILY__COUNT; netf++) {
+                        size_t n = _NET_FAMILY__COUNT;
+                        for (NET_family_t netf = 0; netf < n; netf++) {
                                 _net_ifup(netf, NULL);
                         }
                 }

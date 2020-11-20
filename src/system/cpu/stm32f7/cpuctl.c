@@ -150,7 +150,7 @@ void _cpuctl_init(void)
         #endif
 
         _mm_register_region(&ram2, RAM2_START, RAM2_SIZE, true, "RAM2");
-        _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, true, "DTCM");
+        _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, true, _CPUCTL_FAST_MEM);
 
         if (__CPU_ICACHE_ENABLE__) {
                 SCB_EnableICache();
