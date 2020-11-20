@@ -55,8 +55,8 @@ static void perf_thread(void *arg);
   Local objects
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION_BEGIN
-u8_t   buf[256];
-u8_t   hash[SHA256_BLOCK_SIZE];
+u8_t  buf[256];
+u8_t  hash[SHA256_BLOCK_SIZE];
 u32_t cpu_freq;
 GLOBAL_VARIABLES_SECTION_END
 

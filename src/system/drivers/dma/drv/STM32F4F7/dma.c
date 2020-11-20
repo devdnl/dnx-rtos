@@ -501,6 +501,10 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
                 return EINVAL;
         }
 
+        if (!sys_is_mem_dma_capable(dst) || !sys_is_mem_dma_capable(src)) {
+                return EIO;
+        }
+
         int err = EBUSY;
 
         u32_t dmad   = 0;

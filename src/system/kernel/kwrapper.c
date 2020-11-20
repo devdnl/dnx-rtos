@@ -504,7 +504,7 @@ int _semaphore_create(size_t cnt_max, size_t cnt_init, sem_t **sem)
         int err = EINVAL;
 
         if (cnt_max > 0 && sem) {
-                err = _kzalloc(_MM_KRN, sizeof(sem_t), cast(void**, sem));
+                err = _kzalloc(_MM_KRN, sizeof(sem_t), _CPUCTL_FAST_MEM, false, cast(void**, sem));
                 if (err == ESUCC) {
 
                         if (cnt_max == 1) {
@@ -689,7 +689,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
         int err = EINVAL;
 
         if (type <= MUTEX_TYPE_NORMAL && mtx) {
-                err = _kzalloc(_MM_KRN, sizeof(mutex_t), cast(void**, mtx));
+                err = _kzalloc(_MM_KRN, sizeof(mutex_t), _CPUCTL_FAST_MEM, false, cast(void**, mtx));
                 if (err == ESUCC) {
                         if (type == MUTEX_TYPE_RECURSIVE) {
                                 (*mtx)->object    = xSemaphoreCreateRecursiveMutexStatic(&(*mtx)->buffer);
@@ -803,7 +803,7 @@ int _flag_create(flag_t **flag)
         int err = EINVAL;
 
         if (flag) {
-                err = _kzalloc(_MM_KRN, sizeof(flag_t), cast(void**, flag));
+                err = _kzalloc(_MM_KRN, sizeof(flag_t), _CPUCTL_FAST_MEM, false, cast(void**, flag));
                 if (err == ESUCC) {
                         (*flag)->object = xEventGroupCreateStatic(&(*flag)->buffer);
 
@@ -963,7 +963,8 @@ int _queue_create(size_t length, size_t item_size, queue_t **queue)
         int err = EINVAL;
 
         if (length && item_size && queue) {
-                err = _kzalloc(_MM_KRN, sizeof(queue_t) + (length * item_size), cast(void**, queue));
+                err = _kzalloc(_MM_KRN, sizeof(queue_t) + (length * item_size),
+                               _CPUCTL_FAST_MEM, false, cast(void**, queue));
                 if (err == ESUCC) {
                         (*queue)->object = xQueueCreateStatic(length,
                                                               item_size,

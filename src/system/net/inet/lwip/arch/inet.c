@@ -45,7 +45,7 @@ Brief    Network management.
 ==============================================================================*/
 #define MAXIMUM_SAFE_UDP_PAYLOAD        1024
 
-#define zalloc(_size, _pptr)            _kzalloc(_MM_NET, _size, _pptr)
+#define zalloc(_size, _pptr)            _kzalloc(_MM_NET, _size, NULL, true, _pptr)
 #define zfree(_pptr)                    _kfree(_MM_NET, _pptr)
 
 /*==============================================================================

@@ -45,6 +45,9 @@
 #define SCB_SysCtrl             (*((__IO uint32_t *)0xE000ED10))
 #define SysCtrl_SLEEPDEEP       ((uint32_t)0x00000004)
 
+#define CCM_START               ((void *)&__ccm_start)
+#define CCM_SIZE                ((size_t)&__ccm_size)
+
 // Memory Management Fault Status Register
 #define NVIC_MFSR               (*(volatile unsigned char*)(0xE000ED28u))
 
@@ -99,6 +102,11 @@ void get_registers_from_stack(uint32_t *stack_address);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+extern void *__ccm_start;
+extern void *__ccm_size;
+
+static _mm_region_t ccm;
+
 static volatile reg_dump_t reg_dump __attribute__ ((section (".noinit")));
 
 /*==============================================================================
@@ -134,6 +142,10 @@ void _cpuctl_init(void)
         #if (__OS_MONITOR_CPU_LOAD__ > 0)
         _cpuctl_init_CPU_load_counter();
         #endif
+
+        if (CCM_SIZE > 0) {
+                _mm_register_region(&ccm, CCM_START, CCM_SIZE, false, _CPUCTL_FAST_MEM);
+        }
 }
 
 //==============================================================================

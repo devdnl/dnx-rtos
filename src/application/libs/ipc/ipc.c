@@ -247,7 +247,7 @@ int ipc_client_connect(ipc_host_t *host, ipc_client_t **client, size_t cmd_data_
                         clt->cmd_data = calloc(1, cmd_data_len);
                         clt->ans_data = calloc(1, ans_data_len);
                         clt->ans_sem  = semaphore_new(1, 0);
-                        clt->mtx      = mutex_new(MUTEX_TYPE_NORMAL);
+                        clt->mtx      = mutex_new(MUTEX_TYPE_RECURSIVE);
 
                         if (clt->ans_sem && clt->mtx && clt->cmd_data && clt->ans_data) {
                                 clt->this = clt;
@@ -360,6 +360,40 @@ int ipc_client_call(ipc_client_t *client)
         IPC_DEBUG("client call", err, client->host, client);
 
         return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function lock client object.
+ *
+ * @param  client       client object
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int ipc_client_lock(ipc_client_t *client)
+{
+        int err = EINVAL;
+
+        if (client) {
+                err = mutex_lock(client->mtx, MAX_DELAY_MS) ? ESUCC : ETIME;
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function unlock client object.
+ *
+ * @param  client       client object
+ */
+//==============================================================================
+void ipc_client_unlock(ipc_client_t *client)
+{
+        if (client) {
+                mutex_unlock(client->mtx);
+        }
 }
 
 //==============================================================================

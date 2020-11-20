@@ -51,6 +51,9 @@
 #define RAM3_START              ((void *)&__ram3_start)
 #define RAM3_SIZE               ((size_t)&__ram3_size)
 
+#define CCM_START               ((void *)&__ccm_start)
+#define CCM_SIZE                ((size_t)&__ccm_size)
+
 // Memory Management Fault Status Register
 #define NVIC_MFSR               (*(volatile unsigned char*)(0xE000ED28u))
 
@@ -109,9 +112,12 @@ extern void *__ram2_start;
 extern void *__ram2_size;
 extern void *__ram3_start;
 extern void *__ram3_size;
+extern void *__ccm_start;
+extern void *__ccm_size;
 
 static _mm_region_t ram2;
 static _mm_region_t ram3;
+static _mm_region_t ccm;
 
 static volatile reg_dump_t reg_dump __attribute__ ((section (".noinit")));
 
@@ -149,8 +155,12 @@ void _cpuctl_init(void)
         _cpuctl_init_CPU_load_counter();
         #endif
 
-        _mm_register_region(&ram2, RAM2_START, RAM2_SIZE);
-        _mm_register_region(&ram3, RAM3_START, RAM3_SIZE);
+        _mm_register_region(&ram2, RAM2_START, RAM2_SIZE, true, "RAM2");
+        _mm_register_region(&ram3, RAM3_START, RAM3_SIZE, true, "RAM3");
+
+        if (CCM_SIZE > 0) {
+                _mm_register_region(&ccm, CCM_START, CCM_SIZE, false, _CPUCTL_FAST_MEM);
+        }
 }
 
 //==============================================================================

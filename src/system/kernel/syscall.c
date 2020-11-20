@@ -1024,7 +1024,7 @@ static void syscall_malloc(syscallrq_t *rq)
         GETARG(size_t *, size);
 
         void *mem = NULL;
-        int   err = _kmalloc(_MM_PROG, *size, &mem);
+        int   err = _kmalloc(_MM_PROG, *size, NULL, true, &mem);
         if (err == ESUCC) {
                 err = _process_register_resource(GETPROCESS(), mem);
                 if (err != ESUCC) {
@@ -1048,7 +1048,7 @@ static void syscall_zalloc(syscallrq_t *rq)
         GETARG(size_t *, size);
 
         void *mem = NULL;
-        int   err = _kzalloc(_MM_PROG, *size, &mem);
+        int   err = _kzalloc(_MM_PROG, *size, NULL, true, &mem);
         if (err == ESUCC) {
                 err = _process_register_resource(GETPROCESS(), mem);
                 if (err != ESUCC) {

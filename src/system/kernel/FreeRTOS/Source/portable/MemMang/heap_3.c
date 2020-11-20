@@ -100,7 +100,7 @@ task.h is included from an application file. */
 void *pvPortMalloc( size_t xWantedSize )
 {
         void *pvReturn = NULL;
-        _kmalloc(_MM_KRN, xWantedSize, &pvReturn);
+        _kmalloc(_MM_KRN, xWantedSize, _CPUCTL_FAST_MEM, false, &pvReturn);
         return pvReturn;
 }
 /*-----------------------------------------------------------*/

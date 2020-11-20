@@ -149,8 +149,8 @@ void _cpuctl_init(void)
         _cpuctl_init_CPU_load_counter();
         #endif
 
-        _mm_register_region(&ram2, RAM2_START, RAM2_SIZE);
-        _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE);
+        _mm_register_region(&ram2, RAM2_START, RAM2_SIZE, true, "RAM2");
+        _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, true, "DTCM");
 
         if (__CPU_ICACHE_ENABLE__) {
                 SCB_EnableICache();

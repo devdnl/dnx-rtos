@@ -165,7 +165,7 @@ int _llist_create_krn(enum _mm_mem        mem,
         int err = EINVAL;
 
         if (list && mem != _MM_MOD && mem < _MM_COUNT) {
-                err = _kzalloc(mem, sizeof(llist_t), cast(void*, list));
+                err = _kzalloc(mem, sizeof(llist_t), NULL, false, cast(void*, list));
                 if (!err) {
                         (*list)->malloc      = krnmalloc;
                         (*list)->free        = krnfree;
@@ -205,7 +205,7 @@ int _llist_create_mod(size_t              modid,
         int err = EINVAL;
 
         if (list) {
-                err = _kzalloc(_MM_MOD, sizeof(llist_t), cast(void*, list), modid);
+                err = _kzalloc(_MM_MOD, sizeof(llist_t), NULL, false, cast(void*, list), modid);
                 if (!err) {
                         (*list)->malloc      = modmalloc;
                         (*list)->free        = modfree;
@@ -1323,7 +1323,7 @@ static void usrfree(void *mem, void *freectx)
 static void *krnmalloc(size_t size, void *allocctx)
 {
         void *mem = NULL;
-        _kmalloc(cast(enum _mm_mem, allocctx), size, &mem);
+        _kmalloc(cast(enum _mm_mem, allocctx), size, NULL, false, &mem);
         return mem;
 }
 
@@ -1355,7 +1355,7 @@ static void krnfree(void *mem, void *freectx)
 static void *modmalloc(size_t size, void *allocctx)
 {
         void *mem = NULL;
-        _kmalloc(_MM_MOD, size, &mem, cast(size_t, allocctx));
+        _kmalloc(_MM_MOD, size, NULL, false, &mem, cast(size_t, allocctx));
         return mem;
 }
 

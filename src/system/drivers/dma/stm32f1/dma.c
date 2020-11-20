@@ -510,6 +510,10 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
                 return ENXIO;
         }
 
+        if (!sys_is_mem_dma_capable(dst) || !sys_is_mem_dma_capable(src)) {
+                return EIO;
+        }
+
         DMA_RT_t *hdl = DMA_RT[1];
         if (!hdl || !dst || !src || !size) {
                 return EINVAL;

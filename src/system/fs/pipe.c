@@ -104,8 +104,8 @@ int _pipe_create(pipe_t **pipe)
         int err = EINVAL;
 
         if (pipe) {
-                err = _kmalloc(_MM_KRN, sizeof(pipe_t), cast(void**, pipe));
-                if (err == ESUCC) {
+                err = _kmalloc(_MM_KRN, sizeof(pipe_t), NULL, false, cast(void**, pipe));
+                if (!err) {
 
                         err = _queue_create(__OS_PIPE_LENGTH__, sizeof(u8_t), &(*pipe)->queue);
                         if (err == ESUCC) {

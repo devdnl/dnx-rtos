@@ -129,7 +129,7 @@ static int socket_alloc(SOCKET **socket, NET_family_t family)
 
         int err = _kzalloc(_MM_NET,
                            _mm_align(sizeof(SOCKET)) + net_socket_size[family],
-                           cast(void**, socket));
+                           NULL, false, cast(void**, socket));
         if (!err) {
                 (*socket)->header.self = *socket;
                 (*socket)->header.type = RES_TYPE_SOCKET;

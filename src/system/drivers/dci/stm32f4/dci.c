@@ -303,6 +303,11 @@ API_MOD_READ(DCI,
                 return ESPIPE;
         }
 
+        if (not sys_is_mem_dma_capable(dst)) {
+                printk("DCI: destination address not DMA capable");
+                return EFAULT;
+        }
+
         u32_t dmad = _DMA_DDI_reserve(1, DMA_STREAM_PRI);
         if (dmad == 0) {
                 dmad = _DMA_DDI_reserve(1, DMA_STREAM_AUX);
