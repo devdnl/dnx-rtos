@@ -398,13 +398,13 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
         int err = EIO;
         _SPI[hdl->major]->slave = hdl;
 
+#if USE_DMA > 0
         bool dma_capable = true;
 
         if ((txbuf && !sys_is_mem_dma_capable(txbuf)) || (rxbuf && !sys_is_mem_dma_capable(rxbuf)) ) {
                 dma_capable = false;
         }
 
-#if USE_DMA > 0
         // try to send/receive buffers by using DMA
         if (SPI_HW[hdl->major].use_DMA && dma_capable) {
                 // reserve TX stream

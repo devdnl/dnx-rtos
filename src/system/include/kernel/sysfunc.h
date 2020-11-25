@@ -4999,6 +4999,20 @@ static inline bool sys_is_mem_dma_capable(const void *ptr)
 
 //==============================================================================
 /**
+ * @brief  Function return region name of selected address.
+ *
+ * @param  ptr          address to examine
+ *
+ * @return Pointer to name reference.
+ */
+//==============================================================================
+static inline const char *sys_get_region_name(const void *ptr)
+{
+        return _mm_get_region_name(ptr);
+}
+
+//==============================================================================
+/**
  * @brief  Function return used memory in bytes.
  *
  * @note Function can be used only by file system or driver code.

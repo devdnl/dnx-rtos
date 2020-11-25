@@ -545,6 +545,32 @@ bool _mm_is_dma_capable(const void *ptr)
 
 //==============================================================================
 /**
+ * @brief  Function return region name of selected address.
+ *
+ * @param  ptr          address to examine
+ *
+ * @return Pointer to name reference.
+ */
+//==============================================================================
+const char *_mm_get_region_name(const void *ptr)
+{
+        if (ptr == NULL) {
+                return NULL;
+        }
+
+        for (_mm_region_t *r = &memory_region; r; r = r->next) {
+                if (  (cast(uintptr_t, ptr) >= cast(uintptr_t, r->heap.ram))
+                   && (cast(uintptr_t, ptr) <= cast(uintptr_t, r->heap.ram_end)) ) {
+
+                        return r->name_ref;
+                }
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
  * @brief  Allocate memory
  *
  * _MM_PROG:

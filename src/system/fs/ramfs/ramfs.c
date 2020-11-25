@@ -936,7 +936,7 @@ API_FS_WRITE(ramfs,
 
                                return err;
 
-                       } else if (S_ISREG(node->mode)) {
+                        } else if (S_ISREG(node->mode)) {
                                err = write_regular_file(node, src, count, *fpos, wrcnt);
                         }
                 }

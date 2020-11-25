@@ -209,7 +209,7 @@ static void initialize_additional_drivers(void)
         /*
          * 3. If needed the Ethernet driver is initialized.
          */
-        driver_init("ETHMAC", 0, 0, "/dev/ethmac");
+        driver_init("ETH", 0, 0, "/dev/eth");
 }
 
 //==============================================================================

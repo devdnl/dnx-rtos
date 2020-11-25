@@ -43,6 +43,10 @@ Brief    General usage DMA driver.
 
 #define M2M_TRANSFER_TIMEOUT            5000
 
+#define ALIGN_32(size)                  (((size) + 32 - 1) & ~(32-1))
+#define ALIGN_ADDR(addr)                ALIGN_32((addr)-31)
+#define ALIGN_SIZE(addr, size)          (size + (ALIGN_32(addr) - addr))
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -58,6 +62,9 @@ typedef struct {
         _DMA_cb_t       cb_next;
         u32_t           dmad;
         bool            release;
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+        u32_t           transfer_len;   // bytes
+#endif
 } DMA_RT_stream_t;
 
 typedef struct {
@@ -470,6 +477,36 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                         NVIC_SetPriority(IRQn, config->IRQ_priority);
                         NVIC_EnableIRQ(IRQn);
 
+                        #if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+                        switch (config->CR & DMA_SxCR_MSIZE) {
+                        case DMA_SxCR_MSIZE_BYTE:
+                                RT_stream->transfer_len = config->NDT * sizeof(uint8_t);
+                                break;
+                        case DMA_SxCR_MSIZE_HALFWORD:
+                                RT_stream->transfer_len = config->NDT * sizeof(uint16_t);
+                                break;
+                        case DMA_SxCR_MSIZE_WORD:
+                                RT_stream->transfer_len = config->NDT * sizeof(uint32_t);
+                                break;
+                        default:
+                                return EINVAL;
+                        }
+
+                        if (  ((config->CR & DMA_SxCR_DIR) == DMA_SxCR_DIR_M2P)
+                           || ((config->CR & DMA_SxCR_DIR) == DMA_SxCR_DIR_M2M) ) {
+
+                                if (config->MA[0]) {
+                                        SCB_CleanDCache_by_Addr(cast(u32_t*, ALIGN_ADDR(DMA_Stream->M0AR)),
+                                                                ALIGN_SIZE(DMA_Stream->M0AR, RT_stream->transfer_len));
+                                }
+
+                                if (config->MA[1]) {
+                                        SCB_CleanDCache_by_Addr(cast(u32_t*, ALIGN_ADDR(DMA_Stream->M1AR)),
+                                                                ALIGN_SIZE(DMA_Stream->M1AR, RT_stream->transfer_len));
+                                }
+                        }
+                        #endif
+
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_TCIE | DMA_SxCR_TEIE);
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_EN);
 
@@ -645,7 +682,7 @@ static bool M2M_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 //==============================================================================
 static void IRQ_handle(u8_t major, u8_t stream)
 {
-        DMA_Stream_TypeDef *DMA_Stream = DMA_HW[major].stream[stream];
+        DMA_Stream_TypeDef *DMA_stream = DMA_HW[major].stream[stream];
         DMA_RT_stream_t    *RT_stream  = &DMA_RT[major]->stream[stream];
 
         bool  yield = false;
@@ -661,13 +698,29 @@ static void IRQ_handle(u8_t major, u8_t stream)
         case 3: SR >>= 22; break;
         }
 
+        #if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+        if (  ((DMA_stream->CR & DMA_SxCR_DIR) == DMA_SxCR_DIR_P2M)
+           || ((DMA_stream->CR & DMA_SxCR_DIR) == DMA_SxCR_DIR_M2M) ) {
+
+                if (DMA_stream->M0AR) {
+                        SCB_InvalidateDCache_by_Addr(cast(u32_t*, ALIGN_ADDR(DMA_stream->M0AR)),
+                                                     ALIGN_SIZE(DMA_stream->M0AR, RT_stream->transfer_len));
+                }
+
+                if (DMA_stream->M1AR) {
+                        SCB_InvalidateDCache_by_Addr(cast(u32_t*, ALIGN_ADDR(DMA_stream->M1AR)),
+                                                     ALIGN_SIZE(DMA_stream->M1AR, RT_stream->transfer_len));
+                }
+        }
+        #endif
+
         if (RT_stream->callback) {
                 yield = RT_stream->callback(DMA_HW[major].stream[stream],
                                             SR & 0x3F, RT_stream->arg);
         }
 
-        if (!(DMA_Stream->CR & DMA_SxCR_CIRC)) {
-                DMA_Stream->CR = 0;
+        if (!(DMA_stream->CR & DMA_SxCR_CIRC)) {
+                DMA_stream->CR = 0;
 
                 RT_stream->callback = NULL;
 
@@ -683,7 +736,7 @@ static void IRQ_handle(u8_t major, u8_t stream)
                  * ready to be configured. It is therefore necessary to wait for
                  * the EN bit to be  cleared before starting any stream configuration.
                  */
-                while (DMA_Stream->CR & DMA_SxCR_EN);
+                while (DMA_stream->CR & DMA_SxCR_EN);
         }
 
         clear_DMA_IRQ_flags(major, stream);

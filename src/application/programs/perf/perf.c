@@ -138,10 +138,10 @@ static void perf_thread(void *arg)
 {
         UNUSED_ARG1(arg);
 
-        size_t n = 0;
-        u64_t tref = get_time_ms();
+        u32_t n = 0;
+        u64_t tstart = get_time_ms();
 
-        while (get_time_ms() - tref < 10000) {
+        while (get_time_ms() - tstart < 10000) {
 
                 for (size_t i = 0; i < sizeof(global->buf); i++) {
                         global->buf[i] = rand();
@@ -161,15 +161,19 @@ static void perf_thread(void *arg)
                 double d2 = (double)global->buf[3];
                 snprintf((char*)global->buf, sizeof(global->buf), "%f", d1 / d2);
 
-                float f1 = (double)global->hash[2];
-                float f2 = (double)global->buf[5];
+                float f1 = (float)global->hash[2];
+                float f2 = (float)global->buf[5];
                 snprintf((char*)global->buf, sizeof(global->buf), "%f", f1 / f2);
 
                 n++;
         }
 
-        printf("Result: %u pt, %0.3f pt/MHz\n",
-               n, (float)n / ((float)global->cpu_freq / 1000000.0f));
+        u64_t tstop = get_time_ms();
+        float dt = (tstop - tstart) / 1000.0;
+        float pt = (double)n / dt;
+
+        printf("Result: %.1f pt, %0.3f pt/MHz\n",
+               pt, pt / (float)((double)global->cpu_freq / 1e6));
 }
 
 /*==============================================================================

@@ -153,12 +153,23 @@ void _cpuctl_init(void)
         _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, true, _CPUCTL_FAST_MEM);
 
         if (__CPU_ICACHE_ENABLE__) {
+                _ISR_disable();
+                SCB_InvalidateICache();
                 SCB_EnableICache();
+                _ISR_enable();
+                printk("CPU: ICACHE enabled");
         }
 
         if (__CPU_DCACHE_ENABLE__) {
+                _ISR_disable();
+                SCB_InvalidateDCache();
                 SCB_EnableDCache();
+                _ISR_enable();
+                printk("CPU: DCACHE enabled");
         }
+
+        static const char *FPU_TYPE[] = {"none", "single", "double"};
+        printk("CPU: FPU type %s", FPU_TYPE[SCB_GetFPUType()]);
 }
 
 //==============================================================================
