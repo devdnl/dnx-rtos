@@ -279,6 +279,57 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         LL_RCC_SetSysClkSource(__CLK_SYSCLK_SRC__);
         while (LL_RCC_GetSysClkSource() != __CLK_SYSCLK_SRC_STATUS__);
 
+        LL_RCC_SetUSARTClockSource(__CLK_SRC_UART16__);
+        LL_RCC_SetUSARTClockSource(__CLK_SRC_UART234578__);
+        LL_RCC_SetLPUARTClockSource(__CLK_SRC_LPUART1__);
+        LL_RCC_SetI2CClockSource(__CLK_SRC_I2C123__);
+        LL_RCC_SetI2CClockSource(__CLK_SRC_I2C4__);
+        LL_RCC_SetLPTIMClockSource(__CLK_SRC_LPTIM1__);
+        LL_RCC_SetLPTIMClockSource(__CLK_SRC_LPTIM2__);
+        LL_RCC_SetLPTIMClockSource(__CLK_SRC_LPTIM345__);
+        LL_RCC_SetCLKPClockSource(__CLK_SRC_CLKP__);
+        LL_RCC_SetSPDIFClockSource(__CLK_SRC_SPDIF__);
+#if defined(RCC_D2CCIP1R_SAI1SEL)
+        LL_RCC_SetSAIClockSource(__CLK_SRC_SAI1__);
+#endif
+#if defined(SAI3)
+        LL_RCC_SetSAIClockSource(__CLK_SRC_SAI23__);
+#endif
+#if defined(RCC_CDCCIP1R_SAI2ASEL)
+        LL_RCC_SetSAIClockSource(__CLK_SRC_SAI2A__);
+#endif
+#if defined(RCC_CDCCIP1R_SAI2BSEL)
+        LL_RCC_SetSAIClockSource(__CLK_SRC_SAI2B__);
+#endif
+#if defined(SAI4_Block_A)
+        LL_RCC_SetSAIClockSource(__CLK_SRC_SAI4A__);
+#endif
+#if defined(SAI4_Block_B)
+        LL_RCC_SetSAIClockSource(__CLK_SRC_SAI4B__);
+#endif
+        LL_RCC_SetSDMMCClockSource(__CLK_SRC_SDMMC__);
+        LL_RCC_SetRNGClockSource(__CLK_SRC_RNG__);
+        LL_RCC_SetUSBClockSource(__CLK_SRC_USB__);
+        LL_RCC_SetCECClockSource(__CLK_SRC_CEC__);
+        LL_RCC_SetDFSDMClockSource(__CLK_SRC_DFSDM1__);
+#if defined(DFSDM2_BASE)
+        LL_RCC_SetDFSDM2ClockSource(__CLK_SRC_DFSDM2__);
+#endif
+        LL_RCC_SetFMCClockSource(__CLK_SRC_FMC__);
+        LL_RCC_SetQSPIClockSource(__CLK_SRC_QSPI__);
+#if defined(OCTOSPI1) || defined(OCTOSPI2)
+        LL_RCC_SetOSPIClockSource(__CLK_SRC_OSPI__);
+#endif
+#if defined(DSI)
+        LL_RCC_SetDSIClockSource(__CLK_SRC_DSI__);
+#endif
+        LL_RCC_SetSPIClockSource(__CLK_SRC_SPI123__);
+        LL_RCC_SetSPIClockSource(__CLK_SRC_SPI45__);
+        LL_RCC_SetSPIClockSource(__CLK_SRC_SPI6__);
+        LL_RCC_SetFDCANClockSource(__CLK_SRC_FDCAN__);
+        LL_RCC_SetSWPClockSource(__CLK_SRC_SWP__);
+        LL_RCC_SetADCClockSource(__CLK_SRC_ADC__);
+
         //----------------------------------------------------------------------
         // Update OS clocks
         //----------------------------------------------------------------------

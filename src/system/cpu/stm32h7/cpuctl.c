@@ -57,6 +57,9 @@
 #define RAM4_START              ((void *)&__ram4_start)
 #define RAM4_SIZE               ((size_t)&__ram4_size)
 
+#define DTCM_START              ((void *)&__dtcm_start)
+#define DTCM_SIZE               ((size_t)&__dtcm_size)
+
 // Memory Management Fault Status Register
 #define NVIC_MFSR               (*(volatile unsigned char*)(0xE000ED28u))
 
@@ -119,11 +122,14 @@ extern void *__ram3_start;
 extern void *__ram3_size;
 extern void *__ram4_start;
 extern void *__ram4_size;
+extern void *__dtcm_start;
+extern void *__dtcm_size;
 
 static _mm_region_t ram1;
 static _mm_region_t ram2;
 static _mm_region_t ram3;
 static _mm_region_t ram4;
+static _mm_region_t dtcm;
 
 static volatile reg_dump_t reg_dump __attribute__ ((section (".noinit")));
 
@@ -149,10 +155,10 @@ void _cpuctl_init(void)
         /* enable FPU */
         SCB->CPACR |= ((3 << 20)|(3 << 22));
 
-#if __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ == _YES_
+        #if __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ == _YES_
         /* disable interrupting multi-cycle instructions */
         SCnSCB->ACTLR |= SCnSCB_ACTLR_DISMCYCINT_Msk;
-#endif
+        #endif
 
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEPD1);
@@ -161,19 +167,23 @@ void _cpuctl_init(void)
         _cpuctl_init_CPU_load_counter();
         #endif
 
+        if (DTCM_SIZE > 0) {
+                _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, true, _CPUCTL_FAST_MEM);
+        }
+
         if (RAM1_SIZE > 0) {
                 SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM1EN);
-                _mm_register_region(&ram1, RAM1_START, RAM1_SIZE);
+                _mm_register_region(&ram1, RAM1_START, RAM1_SIZE, true, "RAM1");
         }
 
         if (RAM2_SIZE > 0) {
                 SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM2EN);
-                _mm_register_region(&ram2, RAM2_START, RAM2_SIZE);
+                _mm_register_region(&ram2, RAM2_START, RAM2_SIZE, true, "RAM2");
         }
 
         if (RAM3_SIZE > 0) {
                 SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM3EN);
-                _mm_register_region(&ram3, RAM3_START, RAM3_SIZE);
+                _mm_register_region(&ram3, RAM3_START, RAM3_SIZE, true, "RAM3");
         }
 
         if (RAM4_SIZE > 0) {
@@ -182,16 +192,27 @@ void _cpuctl_init(void)
                  * implicitly allocated to the CPU. As a result, there is no enable bit allowing
                  * the CPU to allocate these memories.
                  */
-                _mm_register_region(&ram4, RAM4_START, RAM4_SIZE);
+                _mm_register_region(&ram4, RAM4_START, RAM4_SIZE, true, "RAM4");
         }
 
         if (__CPU_ICACHE_ENABLE__) {
+                _ISR_disable();
+                SCB_InvalidateICache();
                 SCB_EnableICache();
+                _ISR_enable();
+                printk("CPU: ICACHE enabled");
         }
 
         if (__CPU_DCACHE_ENABLE__) {
+                _ISR_disable();
+                SCB_InvalidateDCache();
                 SCB_EnableDCache();
+                _ISR_enable();
+                printk("CPU: DCACHE enabled");
         }
+
+        static const char *FPU_TYPE[] = {"none", "single", "double"};
+        printk("CPU: FPU type %s", FPU_TYPE[SCB_GetFPUType()]);
 }
 
 //==============================================================================

@@ -137,10 +137,10 @@ void _cpuctl_init(void)
         /* enable FPU */
         SCB->CPACR |= ((3 << 20)|(3 << 22));
 
-#if __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ == _YES_
+        #if __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ == _YES_
         /* disable interrupting multi-cycle instructions */
         SCnSCB->ACTLR |= SCnSCB_ACTLR_DISMCYCINT_Msk;
-#endif
+        #endif
 
         /* enable sleep on idle debug */
         SET_BIT(DBGMCU->CR, DBGMCU_CR_DBG_SLEEP);
