@@ -87,14 +87,14 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *arg);
+static int kalloc(enum _mm_mem mpur, size_t size, bool clear, const char *prefreg, bool dma_capable, void **mem, void *arg);
 
 /*==============================================================================
   Local objects
 ==============================================================================*/
 #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
-static const char  *REGISTERED_REGION_STR  = "Registered memory region @ 0x%X of size %d bytes";
-static const char  *REGISTRATION_ERROR_STR = "Memory region registration error (%d) @ 0x%X of size %d bytes";
+static const char  *REGISTERED_REGION_STR  = "Registered %s region @ 0x%X of size %d bytes";
+static const char  *REGISTRATION_ERROR_STR = "Memory %s registration error (%d) @ 0x%X of size %d bytes";
 #endif
 static _mm_region_t memory_region;
 static i32_t        memory_usage[_MM_COUNT - 1];
@@ -140,11 +140,14 @@ int _mm_init(void)
 {
         int err = _heap_init(&memory_region.heap, HEAP_START, HEAP_SIZE);
         if (!err) {
-                printk(REGISTERED_REGION_STR, HEAP_START, HEAP_SIZE);
+                memory_region.dma_capable = true;
+                memory_region.name_ref    = "RAM";
+
+                printk(REGISTERED_REGION_STR, memory_region.name_ref, HEAP_START, HEAP_SIZE);
 
                 err = _kzalloc(_MM_KRN,
                                _drvreg_number_of_modules * sizeof(i32_t),
-                               cast(void*, &module_memory_usage));
+                               _CPUCTL_FAST_MEM, false, cast(void*, &module_memory_usage));
         }
 
         return err;
@@ -157,15 +160,17 @@ int _mm_init(void)
  * @param  region       region to register
  * @param  start        region start address
  * @param  size         region size
+ * @param  dma_capable  DMA capable region
+ * @param  name         region name
  *
  * @return One of errno values.
  */
 //==============================================================================
-int _mm_register_region(_mm_region_t *region, void *start, size_t size)
+int _mm_register_region(_mm_region_t *region, void *start, size_t size, bool dma_capable, const char *name)
 {
         int err = EINVAL;
 
-        if (region && start && size) {
+        if (region && start && size && name) {
                 // check if memory region is already used
                 for (_mm_region_t *r = &memory_region; r; r = r->next) {
                         if (r->heap.ram == start) {
@@ -180,6 +185,8 @@ int _mm_register_region(_mm_region_t *region, void *start, size_t size)
                                 region->next = NULL;
                                 err = _heap_init(&region->heap, start, size);
                                 if (!err) {
+                                        region->dma_capable = dma_capable;
+                                        region->name_ref = name;
                                         r->next = region;
                                 }
                                 break;
@@ -188,9 +195,9 @@ int _mm_register_region(_mm_region_t *region, void *start, size_t size)
 
                 finish:
                 if (!err) {
-                        printk(REGISTERED_REGION_STR, start, size);
+                        printk(REGISTERED_REGION_STR, name, start, size);
                 } else {
-                        printk(REGISTRATION_ERROR_STR, err, start, size);
+                        printk(REGISTRATION_ERROR_STR, name, err, start, size);
                 }
         }
 
@@ -203,20 +210,22 @@ int _mm_register_region(_mm_region_t *region, void *start, size_t size)
  *
  * @param[in]  mpur             memory purpose
  * @param[in]  size             object size
+ * @param[in]  prefreg          preferred region name
+ * @param[in]  dma_capable      DMA capable region required
  * @param[out] mem              pointer to memory block pointer
  * @param[in]  ...              module ID if _MM_MOD selected
  *
  * @return One of errno values.
  */
 //==============================================================================
-int _kzalloc(enum _mm_mem mpur, const size_t size, void **mem, ...)
+int _kzalloc(enum _mm_mem mpur, size_t size, const char *prefreg, bool dma_capable, void **mem, ...)
 {
         va_list vaarg;
         va_start(vaarg, mem);
         void *arg = va_arg(vaarg, void*);
         va_end(vaarg);
 
-        return kalloc(mpur, size, true, mem, arg);
+        return kalloc(mpur, size, true, prefreg, dma_capable, mem, arg);
 }
 
 //==============================================================================
@@ -225,20 +234,22 @@ int _kzalloc(enum _mm_mem mpur, const size_t size, void **mem, ...)
  *
  * @param[in]  mpur             memory purpose
  * @param[in]  size             object size
+ * @param[in]  prefreg          preferred region name
+ * @param[in]  dma_capable      DMA capable region required
  * @param[out] mem              pointer to memory block pointer
  * @param[in]  ...              module ID if _MM_MOD selected
  *
  * @return One of errno values.
  */
 //==============================================================================
-int _kmalloc(enum _mm_mem mpur, const size_t size, void **mem, ...)
+int _kmalloc(enum _mm_mem mpur, size_t size, const char *prefreg, bool dma_capable, void **mem, ...)
 {
         va_list vaarg;
         va_start(vaarg, mem);
         void *arg = va_arg(vaarg, void*);
         va_end(vaarg);
 
-        return kalloc(mpur, size, false, mem, arg);
+        return kalloc(mpur, size, false, prefreg, dma_capable, mem, arg);
 }
 
 //==============================================================================
@@ -463,7 +474,7 @@ bool _mm_is_object_in_heap(void *ptr)
 
         for (_mm_region_t *r = &memory_region; r; r = r->next) {
                 if (  (cast(uintptr_t, ptr) >= cast(uintptr_t, r->heap.ram))
-                   && (cast(uintptr_t, ptr) <= cast(uintptr_t, r->heap.ram_end  )) ) {
+                   && (cast(uintptr_t, ptr) <= cast(uintptr_t, r->heap.ram_end)) ) {
 
                         return true;
                 }
@@ -508,6 +519,58 @@ bool _mm_check_consistency(void)
 
 //==============================================================================
 /**
+ * @brief  Function check if address is DMA capable.
+ *
+ * @param  ptr          address to examine
+ *
+ * @return DMA capable flag.
+ */
+//==============================================================================
+bool _mm_is_dma_capable(const void *ptr)
+{
+        if (ptr == NULL) {
+                return false;
+        }
+
+        for (_mm_region_t *r = &memory_region; r; r = r->next) {
+                if (  (cast(uintptr_t, ptr) >= cast(uintptr_t, r->heap.ram))
+                   && (cast(uintptr_t, ptr) <= cast(uintptr_t, r->heap.ram_end)) ) {
+
+                        return r->dma_capable;
+                }
+        }
+
+        return false;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return region name of selected address.
+ *
+ * @param  ptr          address to examine
+ *
+ * @return Pointer to name reference.
+ */
+//==============================================================================
+const char *_mm_get_region_name(const void *ptr)
+{
+        if (ptr == NULL) {
+                return NULL;
+        }
+
+        for (_mm_region_t *r = &memory_region; r; r = r->next) {
+                if (  (cast(uintptr_t, ptr) >= cast(uintptr_t, r->heap.ram))
+                   && (cast(uintptr_t, ptr) <= cast(uintptr_t, r->heap.ram_end)) ) {
+
+                        return r->name_ref;
+                }
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
  * @brief  Allocate memory
  *
  * _MM_PROG:
@@ -521,15 +584,22 @@ bool _mm_check_consistency(void)
  * @param[in]      mpur             memory purpose
  * @param[in]      size             object size
  * @param[in]      clear            clear allocated block
+ * @param[in]      prefreg          preferred memory region (reference name)
+ * @param[in]      dma_capable      DMA capable region required
  * @param[out]     mem              pointer to memory block pointer
  * @param[out,in]  arg              argument depending on selected memory region
  *
  * @return One of errno values.
  */
 //==============================================================================
-static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *arg)
+static int kalloc(enum _mm_mem mpur, size_t size, bool clear, const char *prefreg,
+                  bool dma_capable, void **mem, void *arg)
 {
         int err = EINVAL;
+
+        if (prefreg && prefreg[0] == '\0') {
+                prefreg = NULL;
+        }
 
         if (mpur < _MM_COUNT && size && mem) {
                 i32_t *usage = NULL;
@@ -583,33 +653,48 @@ static int kalloc(enum _mm_mem mpur, size_t size, bool clear, void **mem, void *
                 void  *blk       = NULL;
                        err       = ENOMEM;
 
-                for (_mm_region_t *r = &memory_region; r; r = r->next) {
-
-                        if (_heap_get_free(&r->heap) >= size) {
-
-                                blk = _heap_alloc(&r->heap, size, &allocated);
-
-                                if (blk) {
-                                        _kernel_scheduler_lock();
-                                        *usage += allocated;
-                                        _kernel_scheduler_unlock();
-
-                                        if (clear) {
-                                                memset(blk, 0, size);
+                if (prefreg) {
+                        for (_mm_region_t *r = &memory_region; r; r = r->next) {
+                                if (prefreg == r->name_ref) {
+                                        if ((dma_capable == r->dma_capable) || !dma_capable) {
+                                                if (_heap_get_free(&r->heap) >= size) {
+                                                        blk = _heap_alloc(&r->heap, size, &allocated);
+                                                }
                                         }
-
-                                        if (mpur == _MM_PROG) {
-                                                 cast(res_header_t*, blk)->next = NULL;
-                                                 cast(res_header_t*, blk)->self = blk;
-                                                 cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
-                                        }
-
-                                        *mem = blk;
-
-                                        err = ESUCC;
-                                        goto finish;
+                                        break;
                                 }
                         }
+                }
+
+                if (!blk) {
+                        for (_mm_region_t *r = &memory_region; r && !blk; r = r->next) {
+                                if ((dma_capable == r->dma_capable) || !dma_capable) {
+                                        if (_heap_get_free(&r->heap) >= size) {
+                                                blk = _heap_alloc(&r->heap, size, &allocated);
+                                                if (blk) break;
+                                        }
+                                }
+                        }
+                }
+
+                if (blk) {
+                        _kernel_scheduler_lock();
+                        *usage += allocated;
+                        _kernel_scheduler_unlock();
+
+                        if (clear) {
+                                memset(blk, 0, size);
+                        }
+
+                        if (mpur == _MM_PROG) {
+                                 cast(res_header_t*, blk)->next = NULL;
+                                 cast(res_header_t*, blk)->self = blk;
+                                 cast(res_header_t*, blk)->type = RES_TYPE_MEMORY;
+                        }
+
+                        *mem = blk;
+
+                        err = ESUCC;
                 }
         }
 

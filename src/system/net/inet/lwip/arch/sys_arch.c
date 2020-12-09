@@ -637,7 +637,7 @@ void *sys_malloc(size_t blksz)
 {
         void *mem = NULL;
 
-        if (_kmalloc(_MM_NET, blksz, &mem) == 0) {
+        if (_kmalloc(_MM_NET, blksz, NULL, true, &mem) == 0) {
                 return mem;
         } else {
                 return NULL;
@@ -658,7 +658,7 @@ void *sys_calloc(size_t n, size_t blksz)
 {
         void *mem = NULL;
 
-        if (_kzalloc(_MM_NET, blksz * n, &mem) == 0) {
+        if (_kzalloc(_MM_NET, blksz * n, NULL, true, &mem) == 0) {
                 return mem;
         } else {
                 return NULL;

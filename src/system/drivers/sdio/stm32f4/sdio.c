@@ -967,7 +967,9 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
         int err = EIO;
 
 #if USE_DMA != USE_DMA_NEVER
-        if (hdl->ctrl->dmad) {
+        bool dma_capable = sys_is_mem_dma_capable(buf);
+
+        if (hdl->ctrl->dmad && dma_capable) {
                 _DMA_DDI_config_t config;
                 config.callback = DMA_finished;
                 config.cb_next  = NULL;
@@ -1073,7 +1075,8 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
                 }
         }
 #endif
-#if USE_DMA != USE_DMA_ALWAYS
+
+        /* IRQ transfer if DMA not capable or DMA disabled */
         {
                 hdl->ctrl->buf   = cast(u32_t*, buf);
                 hdl->ctrl->count = (count * SECTOR_SIZE) / sizeof(SDIO->FIFO);
@@ -1150,7 +1153,7 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
                         printk("SDIO: error %d", err);
                 }
         }
-#endif
+
         return err;
 }
 
@@ -1203,7 +1206,6 @@ static int MBR_detect_partitions(SDIO_t *hdl)
  * @brief SDIO IRQ handler.
  */
 //==============================================================================
-#if USE_DMA != USE_DMA_ALWAYS
 void SDIO_IRQHandler(void)
 {
         bool yield = false;
@@ -1276,7 +1278,6 @@ void SDIO_IRQHandler(void)
 
         sys_thread_yield_from_ISR(yield);
 }
-#endif
 
 //==============================================================================
 /**

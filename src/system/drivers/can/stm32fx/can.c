@@ -310,6 +310,9 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
                         SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_RESET);
                         CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_RESET);
 
+                        //  Priority driven TX FIFO by the request order (chronologically)
+                        SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_TXFP);
+
                         NVIC_ClearPendingIRQ(CANX[hdl->major].TX_IRQn);
                         NVIC_EnableIRQ(CANX[hdl->major].TX_IRQn);
                         NVIC_SetPriority(CANX[hdl->major].TX_IRQn, _CPU_IRQ_SAFE_PRIORITY_);

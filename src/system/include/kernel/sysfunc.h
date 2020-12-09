@@ -4984,6 +4984,35 @@ static inline size_t sys_get_free_mem(void)
 
 //==============================================================================
 /**
+ * @brief  Function check if selected address is DMA capable.
+ *
+ * @param  ptr          address to examine
+ *
+ * @return If ptr is DMA capable then true is returned, otherwise false.
+ *         NULL address is not DMA capable.
+ */
+//==============================================================================
+static inline bool sys_is_mem_dma_capable(const void *ptr)
+{
+        return _mm_is_dma_capable(ptr);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return region name of selected address.
+ *
+ * @param  ptr          address to examine
+ *
+ * @return Pointer to name reference.
+ */
+//==============================================================================
+static inline const char *sys_get_region_name(const void *ptr)
+{
+        return _mm_get_region_name(ptr);
+}
+
+//==============================================================================
+/**
  * @brief  Function return used memory in bytes.
  *
  * @note Function can be used only by file system or driver code.
@@ -5731,6 +5760,8 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
  * @param  region       region object (initialized by system)
  * @param  start        region start address
  * @param  size         region size
+ * @param  dma_capable  DMA capable region
+ * @param  name         region name
  *
  * @return One of errno value.
  *
@@ -5740,7 +5771,7 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
 
         mem_region_t ram2;
 
-        int err = sys_memory_register(&ram2, 0x20001000, 16384);
+        int err = sys_memory_register(&ram2, 0x20001000, 16384, true, "RAM2");
         if (!err) {
                 // ...
         }
@@ -5750,9 +5781,10 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
  *
  */
 //==============================================================================
-static inline int sys_memory_register(mem_region_t *region, void *start, size_t size)
+static inline int sys_memory_register(mem_region_t *region, void *start,
+                                      size_t size, bool dma_capable, const char *name)
 {
-        return _mm_register_region(region, start, size);
+        return _mm_register_region(region, start, size, dma_capable, name);
 }
 
 //==============================================================================

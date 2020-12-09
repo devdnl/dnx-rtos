@@ -103,7 +103,7 @@ void dnxinit(void *arg)
          * this option.
          */
         static _mm_region_t main_stack;
-        _mm_register_region(&main_stack, STACK_START, STACK_SIZE);
+        _mm_register_region(&main_stack, STACK_START, STACK_SIZE, true, "STARTSTACK");
 
         _task_exit();
 }

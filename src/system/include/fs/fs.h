@@ -616,7 +616,7 @@ struct vfs_fattr {
 //==============================================================================
 static inline int sys_malloc(size_t size, void **mem)
 {
-        return _kmalloc(_MM_FS, size, mem);
+        return _kmalloc(_MM_FS, size, NULL, true, mem);
 }
 
 //==============================================================================
@@ -631,7 +631,7 @@ static inline int sys_malloc(size_t size, void **mem)
 //==============================================================================
 static inline int sys_zalloc(size_t size, void **mem)
 {
-        return _kzalloc(_MM_FS, size, mem);
+        return _kzalloc(_MM_FS, size, NULL, true, mem);
 }
 
 //==============================================================================

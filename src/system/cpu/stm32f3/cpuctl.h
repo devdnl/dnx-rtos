@@ -52,6 +52,9 @@ extern "C" {
 #define xPortSysTickHandler                     SysTick_Handler
 #define vPortSVCHandler                         SVC_Handler
 
+/* names of memory regions used by kernel */
+#define _CPUCTL_FAST_MEM                        "CCM"
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

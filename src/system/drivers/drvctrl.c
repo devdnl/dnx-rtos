@@ -155,7 +155,7 @@ static int driver__register(u16_t modno, u8_t major, u8_t minor, drvmem_t **drv)
 
                         // create new driver chain
                         if (!err) {
-                                err = _kzalloc(_MM_KRN, sizeof(drvmem_t), cast(void *, drv));
+                                err = _kzalloc(_MM_KRN, sizeof(drvmem_t), _CPUCTL_FAST_MEM, false, cast(void *, drv));
                                 if (!err) {
                                         (*drv)->devid = _dev_t__create(modno, major, minor);
                                         (*drv)->mem   = NULL;
@@ -273,7 +273,7 @@ int _driver_init(const char *module, u8_t major, u8_t minor, const char *node_pa
         // allocate modules memory handles
         if (drvmem == NULL) {
                 err = _kzalloc(_MM_KRN, _drvreg_number_of_modules * sizeof(drvmem_t*),
-                                  cast(void *,&drvmem));
+                               _CPUCTL_FAST_MEM, false, cast(void *,&drvmem));
 
                 if (err) {
                         return err;

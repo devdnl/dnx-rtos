@@ -303,6 +303,7 @@ API_MOD_WRITE(SND,
         SND_t *hdl = device_handle;
 
         int err = (not hdl->configured) ? EIO : ESUCC;
+            err = (not sys_is_mem_dma_capable(src) ? err : EFAULT);
 
         if (!err) {
                 buf_t buf;
@@ -496,11 +497,12 @@ static int configure(SND_t *hdl, const SND_config_t *config)
 
 //==============================================================================
 /**
- * @brief
+ * @brief  Function start DMA transfer.
  *
- * @param  ?
+ * @param  hdl          driver instance
+ * @param  buf          buffer to send
  *
- * @return ?
+ * @return One of errno value (errno.h).
  */
 //==============================================================================
 static int DMA_start(SND_t *hdl, const buf_t *buf)

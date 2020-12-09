@@ -40,6 +40,7 @@
 #include "stm32f4xx.h"
 #elif defined(ARCH_stm32f7)
 #include "stm32f7xx.h"
+// TODO cache clear/invalidate
 #endif
 
 /*==============================================================================

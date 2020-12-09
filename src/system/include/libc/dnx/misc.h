@@ -551,7 +551,11 @@ extern "C" {
  * @brief Macro tells compiler that selected structure is packed.
  */
 //==============================================================================
+#if defined (__GNUC__)
 #define PACKED __attribute__((packed))
+#else
+#error UNKNOWN COMPILER
+#endif
 
 //==============================================================================
 /**
