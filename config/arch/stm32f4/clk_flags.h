@@ -746,6 +746,11 @@ this:AddWidget("Value")
 --*/
 #define __CLK_FLASH_LATENCY__ 5
 
+/*--
+-- Value calculated automatically
+this:AddWidget("Value")
+--*/
+#define __CLK_HCLK_FREQ__ 168000000
 
 //==============================================================================
 // Calculation script
@@ -1379,6 +1384,8 @@ this.CalculateFreq = function(self)
     if freq.FLASHLATENCY < 0 then freq.FLASHLATENCY = 0 end
     this:SetFlagValue("LABEL_FLASH_LATENCY", freq.FLASHLATENCY.." Flash wait-states")
     this:SetFlagValue("__CLK_FLASH_LATENCY__", tostring(freq.FLASHLATENCY))
+
+    this:SetFlagValue("__CLK_HCLK_FREQ__", tostring(freq.HCLK))
 end
 
 -- trigger frequency calculation after loading all flags

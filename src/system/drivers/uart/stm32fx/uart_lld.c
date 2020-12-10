@@ -56,6 +56,8 @@
 #include "stm32f4/lib/stm32f4xx_rcc.h"
 #define RDR                     DR
 #define TDR                     DR
+#define USART_CLKSOURCE_PCLK1   1
+#define USART_CLKSOURCE_PCLK2   2
 #elif defined(ARCH_stm32f7)
 #include "stm32f7/stm32f7xx.h"
 #include "stm32f7/lib/stm32f7xx_ll_rcc.h"
@@ -114,7 +116,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_USART1EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART1RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK2,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART1_CLKSOURCE,
@@ -140,7 +142,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_USART2EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART2RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART2_CLKSOURCE,
@@ -166,7 +168,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_USART3EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_USART3RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART3_CLKSOURCE,
@@ -192,7 +194,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART4EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART4RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART4_CLKSOURCE,
@@ -218,7 +220,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART5EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART5RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART5_CLKSOURCE,
@@ -244,7 +246,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_USART6EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART6RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK2,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_USART6_CLKSOURCE,
@@ -270,7 +272,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART7EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART7RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART7_CLKSOURCE,
@@ -296,7 +298,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB1ENR_UART8EN,
                 .APBRSTR_UARTRST = RCC_APB1RSTR_UART8RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART8_CLKSOURCE,
@@ -322,7 +324,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_UART9EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_UART9RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART9_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART9_CLKSOURCE,
@@ -348,7 +350,7 @@ static const UART_regs_t UART[] = {
                 .APBENR_UARTEN   = RCC_APB2ENR_UART10EN,
                 .APBRSTR_UARTRST = RCC_APB2RSTR_UART10RST,
                 #endif
-                #if defined(ARCH_stm32f1)
+                #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC          = LL_RCC_UART10_CLKSOURCE,

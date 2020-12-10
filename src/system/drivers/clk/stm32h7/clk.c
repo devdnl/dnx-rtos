@@ -41,9 +41,10 @@
 #define TIMEOUT_MS                      250
 #define LSE_TIMEOUT_MS                  5000
 
-#define PWR_D3CR_VOS1                   ((1*PWR_D3CR_VOS_1) | (1*PWR_D3CR_VOS_0))
-#define PWR_D3CR_VOS2                   ((1*PWR_D3CR_VOS_1) | (0*PWR_D3CR_VOS_0))
-#define PWR_D3CR_VOS3                   ((0*PWR_D3CR_VOS_1) | (1*PWR_D3CR_VOS_0))
+#define PWR_REGULATOR_VOLTAGE_SCALE0    (0)
+#define PWR_REGULATOR_VOLTAGE_SCALE1    ((1*PWR_D3CR_VOS_1) | (1*PWR_D3CR_VOS_0))
+#define PWR_REGULATOR_VOLTAGE_SCALE2    ((1*PWR_D3CR_VOS_1) | (0*PWR_D3CR_VOS_0))
+#define PWR_REGULATOR_VOLTAGE_SCALE3    ((0*PWR_D3CR_VOS_1) | (1*PWR_D3CR_VOS_0))
 
 #define FLASH_ACR_WRHIGHFREQ_MSK        (FLASH_ACR_WRHIGHFREQ_1 | FLASH_ACR_WRHIGHFREQ_0)
 #define FLASH_ACR_WRHIGHFREQ_00         ((0*FLASH_ACR_WRHIGHFREQ_1) | (0*FLASH_ACR_WRHIGHFREQ_0))
@@ -58,8 +59,8 @@
   Local function prototypes
 ==============================================================================*/
 static u32_t get_pll_input_freq(void);
-static void get_pll_input_parameters(u32_t *pll_input_freq, u32_t *pll_input_range, u32_t *pll_ouput_range);
-static void configure_core_voltage_and_flash_latency(void);
+static void  get_pll_input_parameters(u32_t *pll_input_freq, u32_t *pll_input_range, u32_t *pll_ouput_range);
+static int   configure_core_voltage_and_flash_latency(void);
 
 /*==============================================================================
   Local object definitions
@@ -168,7 +169,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         //----------------------------------------------------------------------
         // Core voltage regulator setup and FLASH latency
         //----------------------------------------------------------------------
-        configure_core_voltage_and_flash_latency();
+        err = configure_core_voltage_and_flash_latency();
+        if (err) {
+                goto finish;
+        }
 
         //----------------------------------------------------------------------
         // Setup PLLs clock source
@@ -335,6 +339,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         //----------------------------------------------------------------------
         sys_update_system_clocks();
 
+        finish:
         return err;
 }
 
@@ -875,141 +880,126 @@ static void get_pll_input_parameters(u32_t *pll_input_freq, u32_t *pll_input_ran
 /**
  * @brief  Function calculate core voltage regulator parameters and flash wait
  *         states according to target frequency.
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-static void configure_core_voltage_and_flash_latency(void)
+static int configure_core_voltage_and_flash_latency(void)
 {
-        u32_t sysclk = 0;
+        int   err  = 0;
 
-        switch (__CLK_SYSCLK_SRC__) {
-        case LL_RCC_SYS_CLKSOURCE_HSI:
-                sysclk = HSI_VALUE;
-                break;
-
-        case LL_RCC_SYS_CLKSOURCE_CSI:
-                sysclk = CSI_VALUE;
-                break;
-
-        case LL_RCC_SYS_CLKSOURCE_HSE:
-                sysclk = HSE_VALUE;
-                break;
-
-        case LL_RCC_SYS_CLKSOURCE_PLL1:
-                sysclk = LL_RCC_CalcPLLClockFreq(get_pll_input_freq(),
-                                                 __CLK_PLL1_M__, __CLK_PLL1_N__,
-                                                 0, __CLK_PLL1_P__);
-                break;
-        }
-
-        u32_t hclk = sysclk;
-        switch (__CLK_AHB_DIV__) {
-        case RCC_D1CFGR_HPRE_DIV1:   hclk /= 1;   break;
-        case RCC_D1CFGR_HPRE_DIV2:   hclk /= 2;   break;
-        case RCC_D1CFGR_HPRE_DIV4:   hclk /= 4;   break;
-        case RCC_D1CFGR_HPRE_DIV8:   hclk /= 8;   break;
-        case RCC_D1CFGR_HPRE_DIV16:  hclk /= 16;  break;
-        case RCC_D1CFGR_HPRE_DIV64:  hclk /= 64;  break;
-        case RCC_D1CFGR_HPRE_DIV128: hclk /= 128; break;
-        case RCC_D1CFGR_HPRE_DIV256: hclk /= 256; break;
-        case RCC_D1CFGR_HPRE_DIV512: hclk /= 512; break;
-        }
+        u32_t hclk = __CLK_HCLK_FREQ__ / 1000000;
 
         u32_t FLASH_ACR = FLASH_ACR_WRHIGHFREQ_10 | FLASH_ACR_LATENCY_7WS;
-        u32_t VOS   = PWR_D3CR_VOS3;
-        bool  boost = false;
+        u32_t VOS = PWR_REGULATOR_VOLTAGE_SCALE3;
 
         if (hclk <= 45) {
-                VOS = PWR_D3CR_VOS3;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE3;
                 FLASH_ACR = FLASH_ACR_LATENCY_0WS | FLASH_ACR_WRHIGHFREQ_00;
 
         } else if (hclk <= 55) {
-                VOS = PWR_D3CR_VOS2;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE2;
                 FLASH_ACR = FLASH_ACR_LATENCY_0WS | FLASH_ACR_WRHIGHFREQ_00;
 
         } else if (hclk <= 70) {
-                VOS = PWR_D3CR_VOS1;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE1;
                 FLASH_ACR = FLASH_ACR_LATENCY_0WS | FLASH_ACR_WRHIGHFREQ_00;
 
         } else if ((hclk >= 45) && (hclk <= 90)) {
-                VOS = PWR_D3CR_VOS3;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE3;
                 FLASH_ACR = FLASH_ACR_LATENCY_1WS | FLASH_ACR_WRHIGHFREQ_01;
 
         } else if ((hclk >= 55) && (hclk <= 110)) {
-                VOS = PWR_D3CR_VOS2;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE2;
                 FLASH_ACR = FLASH_ACR_LATENCY_1WS | FLASH_ACR_WRHIGHFREQ_01;
 
         } else if ((hclk >= 70) && (hclk <= 140)) {
-                VOS = PWR_D3CR_VOS1;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE1;
                 FLASH_ACR = FLASH_ACR_LATENCY_1WS | FLASH_ACR_WRHIGHFREQ_01;
 
         } else if ((hclk >= 90) && (hclk <= 135)) {
-                VOS = PWR_D3CR_VOS3;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE3;
                 FLASH_ACR = FLASH_ACR_LATENCY_2WS | FLASH_ACR_WRHIGHFREQ_01;
 
         } else if ((hclk >= 110) && (hclk <= 165)) {
-                VOS = PWR_D3CR_VOS2;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE2;
                 FLASH_ACR = FLASH_ACR_LATENCY_2WS | FLASH_ACR_WRHIGHFREQ_01;
 
         } else if ((hclk >= 135) && (hclk <= 180)) {
-                VOS = PWR_D3CR_VOS3;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE3;
                 FLASH_ACR = FLASH_ACR_LATENCY_3WS | FLASH_ACR_WRHIGHFREQ_10;
 
         } else if ((hclk >= 140) && (hclk <= 185)) {
-                VOS = PWR_D3CR_VOS1;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE1;
                 FLASH_ACR = FLASH_ACR_LATENCY_2WS | FLASH_ACR_WRHIGHFREQ_01;
 
         } else if ((hclk >= 165) && (hclk <= 225)) {
-                VOS = PWR_D3CR_VOS2;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE2;
                 FLASH_ACR = FLASH_ACR_LATENCY_3WS | FLASH_ACR_WRHIGHFREQ_10;
 
         } else if ((hclk >= 180) && (hclk <= 225)) {
-                VOS = PWR_D3CR_VOS3;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE3;
                 FLASH_ACR = FLASH_ACR_LATENCY_4WS | FLASH_ACR_WRHIGHFREQ_10;
 
         } else if ((hclk >= 185) && (hclk <= 210)) {
-                VOS = PWR_D3CR_VOS1;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE1;
                 FLASH_ACR = FLASH_ACR_LATENCY_2WS | FLASH_ACR_WRHIGHFREQ_10;
 
         } else if ((hclk >= 210) && (hclk <= 225)) {
-                VOS = PWR_D3CR_VOS1;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE1;
                 FLASH_ACR = FLASH_ACR_LATENCY_3WS | FLASH_ACR_WRHIGHFREQ_10;
 
         } else {
-                VOS = PWR_D3CR_VOS1;
-                boost = true;
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE0;
                 FLASH_ACR = FLASH_ACR_LATENCY_4WS | FLASH_ACR_WRHIGHFREQ_10;
         }
 
-
         // Set the core voltage
-        SET_BIT(PWR->D3CR, VOS);
-        u64_t tref = sys_time_get_reference();
-        while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
-                        printk("CLK: VOS3-1 timeout");
-                        break;
-                }
+        if ((PWR->CSR1 & PWR_CSR1_ACTVOS) != VOS) {
+                SET_BIT(PWR->CR3, PWR_CR3_LDOEN);
 
-                sys_sleep_ms(1);
-        }
-
-        // Enable core boost voltage
-        if (boost) {
-                SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
-                SET_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN);
-                tref = sys_time_get_reference();
+                u32_t VOS_tmp = (VOS == PWR_REGULATOR_VOLTAGE_SCALE0) ? PWR_REGULATOR_VOLTAGE_SCALE1 : VOS;
+                MODIFY_REG(PWR->D3CR, PWR_D3CR_VOS_Msk, VOS_tmp);
+                u64_t tref = sys_time_get_reference();
                 while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
                         if (sys_time_is_expired(tref, TIMEOUT_MS)) {
-                                printk("CLK: VOS0 timeout");
+                                printk("CLK: VOS1-3 timeout");
+                                err = ETIME;
                                 break;
                         }
 
                         sys_sleep_ms(1);
                 }
+
+                // Enable core boost voltage
+                if (!err && (VOS == PWR_REGULATOR_VOLTAGE_SCALE0)) {
+                        SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
+                        SET_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN);
+                        tref = sys_time_get_reference();
+                        while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
+                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                        printk("CLK: VOS0 timeout");
+                                        err = ETIME;
+                                        break;
+                                }
+
+                                sys_sleep_ms(1);
+                        }
+                }
         }
 
         // flash latency and programming delay
-        WRITE_REG(FLASH->ACR, FLASH_ACR);
+        if (!err) {
+                u64_t tref = sys_time_get_reference();
+                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        WRITE_REG(FLASH->ACR, FLASH_ACR);
+                        if ((FLASH->ACR & FLASH_ACR_LATENCY_Msk) == FLASH_ACR) {
+                                break;
+                        }
+                }
+        }
+
+        return err;
 }
 
 /*==============================================================================

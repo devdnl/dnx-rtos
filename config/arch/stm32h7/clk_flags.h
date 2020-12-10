@@ -816,6 +816,9 @@ this:AddExtraWidget("Label", "LABEL_CLK_SRC_ADC", "")
 // Value is calculated according to SYSCLK source selection
 #define __CLK_SYSCLK_SRC_STATUS__ LL_RCC_SYS_CLKSOURCE_STATUS_PLL1
 
+// Value is calculated according to SYSCLK source selection
+#define __CLK_HCLK_FREQ__ 240000000
+
 //==============================================================================
 // Calculation script
 //==============================================================================
@@ -1163,6 +1166,7 @@ this.CalculateFreq = function(self)
 
     -- end calculations
     this:SetFlagValue("__CLK_SYSCLK_SRC_STATUS__", "LL_RCC_SYS_CLKSOURCE_STATUS_"..SYSCLKSRC)
+    this:SetFlagValue("__CLK_HCLK_FREQ__", tostring(freq.HCLK))
 end
 
 -- trigger frequency calculation after loading all flags
