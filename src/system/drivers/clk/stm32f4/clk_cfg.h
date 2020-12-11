@@ -417,7 +417,7 @@ extern "C" {
  *          frequency ranges from 1 to 2 MHz. It is recommended to select a frequency
  *          of 2 MHz to limit PLLI2S jitter.
  */
-#define _CLK_CFG__PLLI2S_M              __CLK_PLLI2S_M__
+#define _CLK_CFG__PLLI2S_M              __CLK_PLL_SRC_DIV_M__
 
 /*
  * PLLI2S multiplication factor
@@ -483,7 +483,7 @@ extern "C" {
  *          frequency ranges from 1 to 2 MHz. It is recommended to select a frequency
  *          of 2 MHz to limit PLLSAI jitter.
  */
-#define _CLK_CFG__PLLSAI_M              __CLK_PLLSAI_M__
+#define _CLK_CFG__PLLSAI_M              __CLK_PLL_SRC_DIV_M__
 
 /*
  * PLLSAI multiplication factor
