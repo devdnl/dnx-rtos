@@ -140,7 +140,9 @@ this:AddExtraWidget("Label", "LABEL_PLL1_P_ON", "")
 #define __CLK_PLL1_P_ENABLE__ _YES_
 
 /*--
-this:AddWidget("Spinbox", 1, 128, "PLL divider P (pll1_p_ck)")
+this:AddWidget("Combobox", "PLL divider P (pll1_p_ck)")
+this:AddItem("1", "1")
+for i = 2, 128, 2 do this:AddItem(tostring(i), tostring(i)) end
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_PLL1_P", "")
 --*/
@@ -874,15 +876,6 @@ this.CalculateFreq = function(self)
     local PLLPON = iff(this:GetFlagValue("__CLK_PLL1_P_ENABLE__") == "_NO_", 0, 1)
     local PLLQON = iff(this:GetFlagValue("__CLK_PLL1_Q_ENABLE__") == "_NO_", 0, 1)
     local PLLRON = iff(this:GetFlagValue("__CLK_PLL1_R_ENABLE__") == "_NO_", 0, 1)
-
-    if tonumber(DIVP1) >= 2 then
-        local p = tostring(DIVP1)
-        if p % 2 == 1 then
-            p = p + 1
-        end
-        this:SetFlagValue("__CLK_PLL1_P__", tostring(p))
-        DIVP1 = tostring(p)
-    end
 
     freq.pll1_ck = freq.ref_ck / tonumber(DIVM1) * tonumber(MULN1) * PLL1ON
 
