@@ -691,7 +691,7 @@ if this:PinExist("A", 9) then
     this:AddProposals(PA9, "A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_NAME__ USART1_TX
+#define __GPIO_PA_PIN_9_NAME__ PA9_NC
 
 /*--
 if this:PinExist("A", 9) then
@@ -707,7 +707,7 @@ if this:PinExist("A", 9) then
     this:AddPinMode("A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_MODE__ _GPIO_MODE_AF_PP
+#define __GPIO_PA_PIN_9_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 9) then
@@ -715,7 +715,7 @@ if this:PinExist("A", 9) then
     this:AddPinAF("A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_AF__ 7
+#define __GPIO_PA_PIN_9_AF__ 0
 
 /*--
 if this:PinExist("A", 9) then
@@ -739,7 +739,7 @@ if this:PinExist("A", 10) then
     this:AddProposals(PA10, "A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_NAME__ USART1_RX
+#define __GPIO_PA_PIN_10_NAME__ PA10_NC
 
 /*--
 if this:PinExist("A", 10) then
@@ -755,7 +755,7 @@ if this:PinExist("A", 10) then
     this:AddPinMode("A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_MODE__ _GPIO_MODE_AF_PP_PU
+#define __GPIO_PA_PIN_10_MODE__ _GPIO_MODE_IN
 
 /*--
 if this:PinExist("A", 10) then
@@ -763,7 +763,7 @@ if this:PinExist("A", 10) then
     this:AddPinAF("A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_AF__ 7
+#define __GPIO_PA_PIN_10_AF__ 0
 
 /*--
 if this:PinExist("A", 10) then
