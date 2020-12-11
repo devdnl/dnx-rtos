@@ -2766,7 +2766,7 @@
 			};
 			[3.000000]={
 				["key"]="__CLK_HSE_ON__";
-				["value"]="RCC_HSE_ON";
+				["value"]="RCC_HSE_OFF";
 			};
 			[4.000000]={
 				["key"]="__CLK_PREDIV2_VAL__";
@@ -2806,7 +2806,7 @@
 			};
 			[13.000000]={
 				["key"]="__CLK_PLL_SRC__";
-				["value"]="RCC_PLLSource_HSE_Div1";
+				["value"]="RCC_PLLSource_HSI_Div2";
 			};
 			[14.000000]={
 				["key"]="__CLK_PLL_MUL_CL__";
@@ -2814,7 +2814,7 @@
 			};
 			[15.000000]={
 				["key"]="__CLK_PLL_MUL__";
-				["value"]="RCC_PLLMul_9";
+				["value"]="RCC_PLLMul_12";
 			};
 			[16.000000]={
 				["key"]="__CLK_SYS_CLK_SRC__";
@@ -2822,7 +2822,7 @@
 			};
 			[17.000000]={
 				["key"]="__CLK_RTC_CLK_SRC__";
-				["value"]="RCC_RTCCLKSource_HSE_Div128";
+				["value"]="RCC_RTCCLKSource_LSE";
 			};
 			[18.000000]={
 				["key"]="__CLK_MCO_SRC_CL__";
@@ -2838,7 +2838,7 @@
 			};
 			[21.000000]={
 				["key"]="__CLK_USB_DIV__";
-				["value"]="RCC_USBCLKSource_PLLCLK_1Div5";
+				["value"]="RCC_USBCLKSource_PLLCLK_Div1";
 			};
 			[22.000000]={
 				["key"]="__CLK_I2S2_SRC__";
@@ -2854,19 +2854,19 @@
 			};
 			[25.000000]={
 				["key"]="__CLK_APB1_PRE__";
-				["value"]="RCC_HCLK_Div4";
+				["value"]="RCC_HCLK_Div2";
 			};
 			[26.000000]={
 				["key"]="__CLK_APB2_PRE__";
-				["value"]="RCC_HCLK_Div4";
+				["value"]="RCC_HCLK_Div2";
 			};
 			[27.000000]={
 				["key"]="__CLK_ADC_PRE__";
-				["value"]="RCC_PCLK2_Div2";
+				["value"]="RCC_PCLK2_Div4";
 			};
 			[28.000000]={
 				["key"]="__CLK_FLASH_LATENCY__";
-				["value"]="2";
+				["value"]="1";
 			};
 		};
 		["arch/stm32f1/cpu_flags.h"]={
@@ -3060,27 +3060,27 @@
 			};
 			[28.000000]={
 				["key"]="__GPIO_PA_PIN_9_NAME__";
-				["value"]="USART1_TX";
+				["value"]="PA9_NC";
 			};
 			[29.000000]={
 				["key"]="__GPIO_PA_PIN_9_MODE__";
-				["value"]="_GPIO_ALT_OUT_PUSH_PULL_10MHZ";
+				["value"]="_GPIO_ANALOG";
 			};
 			[30.000000]={
 				["key"]="__GPIO_PA_PIN_9_STATE__";
-				["value"]="_HIGH";
+				["value"]="_LOW";
 			};
 			[31.000000]={
 				["key"]="__GPIO_PA_PIN_10_NAME__";
-				["value"]="USART1_RX";
+				["value"]="PA10_NC";
 			};
 			[32.000000]={
 				["key"]="__GPIO_PA_PIN_10_MODE__";
-				["value"]="_GPIO_IN_PULLED";
+				["value"]="_GPIO_ANALOG";
 			};
 			[33.000000]={
 				["key"]="__GPIO_PA_PIN_10_STATE__";
-				["value"]="_HIGH";
+				["value"]="_LOW";
 			};
 			[34.000000]={
 				["key"]="__GPIO_PA_PIN_11_NAME__";
@@ -4710,7 +4710,7 @@
 			};
 			[6.000000]={
 				["key"]="__CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__";
-				["value"]="12";
+				["value"]="13";
 			};
 			[7.000000]={
 				["key"]="__CPU_DEFAULT_IRQ_PRIORITY__";
@@ -4908,7 +4908,7 @@
 			};
 			[46.000000]={
 				["key"]="__GPIO_PA_PIN_9_NAME__";
-				["value"]="USART1_TX";
+				["value"]="PA9_NC";
 			};
 			[47.000000]={
 				["key"]="__GPIO_PA_PIN_9_SPEED__";
@@ -4916,11 +4916,11 @@
 			};
 			[48.000000]={
 				["key"]="__GPIO_PA_PIN_9_MODE__";
-				["value"]="_GPIO_MODE_AF_PP";
+				["value"]="_GPIO_MODE_IN";
 			};
 			[49.000000]={
 				["key"]="__GPIO_PA_PIN_9_AF__";
-				["value"]="7";
+				["value"]="0";
 			};
 			[50.000000]={
 				["key"]="__GPIO_PA_PIN_9_STATE__";
@@ -4928,7 +4928,7 @@
 			};
 			[51.000000]={
 				["key"]="__GPIO_PA_PIN_10_NAME__";
-				["value"]="USART1_RX";
+				["value"]="PA10_NC";
 			};
 			[52.000000]={
 				["key"]="__GPIO_PA_PIN_10_SPEED__";
@@ -4936,11 +4936,11 @@
 			};
 			[53.000000]={
 				["key"]="__GPIO_PA_PIN_10_MODE__";
-				["value"]="_GPIO_MODE_AF_PP_PU";
+				["value"]="_GPIO_MODE_IN";
 			};
 			[54.000000]={
 				["key"]="__GPIO_PA_PIN_10_AF__";
-				["value"]="7";
+				["value"]="0";
 			};
 			[55.000000]={
 				["key"]="__GPIO_PA_PIN_10_STATE__";
@@ -5848,7 +5848,7 @@
 			};
 			[281.000000]={
 				["key"]="__GPIO_PD_PIN_8_NAME__";
-				["value"]="PD8_NC";
+				["value"]="USART3_TX";
 			};
 			[282.000000]={
 				["key"]="__GPIO_PD_PIN_8_SPEED__";
@@ -5856,11 +5856,11 @@
 			};
 			[283.000000]={
 				["key"]="__GPIO_PD_PIN_8_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[284.000000]={
 				["key"]="__GPIO_PD_PIN_8_AF__";
-				["value"]="0";
+				["value"]="7";
 			};
 			[285.000000]={
 				["key"]="__GPIO_PD_PIN_8_STATE__";
@@ -5868,7 +5868,7 @@
 			};
 			[286.000000]={
 				["key"]="__GPIO_PD_PIN_9_NAME__";
-				["value"]="PD9_NC";
+				["value"]="USART3_RX";
 			};
 			[287.000000]={
 				["key"]="__GPIO_PD_PIN_9_SPEED__";
@@ -5876,11 +5876,11 @@
 			};
 			[288.000000]={
 				["key"]="__GPIO_PD_PIN_9_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[289.000000]={
 				["key"]="__GPIO_PD_PIN_9_AF__";
-				["value"]="0";
+				["value"]="7";
 			};
 			[290.000000]={
 				["key"]="__GPIO_PD_PIN_9_STATE__";
@@ -10166,7 +10166,7 @@
 			};
 			[281.000000]={
 				["key"]="__GPIO_PD_PIN_8_NAME__";
-				["value"]="PD8_NC";
+				["value"]="USART3_TX";
 			};
 			[282.000000]={
 				["key"]="__GPIO_PD_PIN_8_SPEED__";
@@ -10174,11 +10174,11 @@
 			};
 			[283.000000]={
 				["key"]="__GPIO_PD_PIN_8_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[284.000000]={
 				["key"]="__GPIO_PD_PIN_8_AF__";
-				["value"]="0";
+				["value"]="7";
 			};
 			[285.000000]={
 				["key"]="__GPIO_PD_PIN_8_STATE__";
@@ -10186,7 +10186,7 @@
 			};
 			[286.000000]={
 				["key"]="__GPIO_PD_PIN_9_NAME__";
-				["value"]="PD9_NC";
+				["value"]="USART3_RX";
 			};
 			[287.000000]={
 				["key"]="__GPIO_PD_PIN_9_SPEED__";
@@ -10194,11 +10194,11 @@
 			};
 			[288.000000]={
 				["key"]="__GPIO_PD_PIN_9_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[289.000000]={
 				["key"]="__GPIO_PD_PIN_9_AF__";
-				["value"]="0";
+				["value"]="7";
 			};
 			[290.000000]={
 				["key"]="__GPIO_PD_PIN_9_STATE__";
@@ -13234,11 +13234,11 @@
 			};
 			[4.000000]={
 				["key"]="__CLK_PLL_SRC__";
-				["value"]="LL_RCC_PLLSOURCE_HSI";
+				["value"]="LL_RCC_PLLSOURCE_HSE";
 			};
 			[5.000000]={
 				["key"]="__CLK_PLL_SRC_DIV_M__";
-				["value"]="LL_RCC_PLLM_DIV_8";
+				["value"]="LL_RCC_PLLM_DIV_4";
 			};
 			[6.000000]={
 				["key"]="__CLK_PLL_ON__";
@@ -13258,11 +13258,11 @@
 			};
 			[10.000000]={
 				["key"]="__CLK_PLL_R__";
-				["value"]="LL_RCC_PLLR_DIV_7";
+				["value"]="LL_RCC_PLLR_DIV_6";
 			};
 			[11.000000]={
 				["key"]="__CLK_PLLI2S_ON__";
-				["value"]="ENABLE";
+				["value"]="DISABLE";
 			};
 			[12.000000]={
 				["key"]="__CLK_PLLI2S_N__";
@@ -13286,7 +13286,7 @@
 			};
 			[17.000000]={
 				["key"]="__CLK_PLLSAI_ON__";
-				["value"]="ENABLE";
+				["value"]="DISABLE";
 			};
 			[18.000000]={
 				["key"]="__CLK_PLLSAI_N__";
@@ -13326,7 +13326,7 @@
 			};
 			[27.000000]={
 				["key"]="__CLK_APB2_PRE__";
-				["value"]="LL_RCC_APB2_DIV_2";
+				["value"]="LL_RCC_APB2_DIV_4";
 			};
 			[28.000000]={
 				["key"]="__CLK_RTC_SRC__";
@@ -13450,11 +13450,11 @@
 			};
 			[58.000000]={
 				["key"]="__CLK_FLASH_LATENCY__";
-				["value"]="4";
+				["value"]="7";
 			};
 			[59.000000]={
 				["key"]="__CLK_HCLK_FREQ__";
-				["value"]="108000000";
+				["value"]="216000000";
 			};
 		};
 		["arch/stm32f7/cpu_flags.h"]={
@@ -13492,7 +13492,7 @@
 			};
 			[9.000000]={
 				["key"]="__CPU_ICACHE_ENABLE__";
-				["value"]="_NO_";
+				["value"]="_YES_";
 			};
 			[10.000000]={
 				["key"]="__CPU_DCACHE_ENABLE__";
@@ -14676,7 +14676,7 @@
 			};
 			[281.000000]={
 				["key"]="__GPIO_PD_PIN_8_NAME__";
-				["value"]="PD8_NC";
+				["value"]="USART3_TX";
 			};
 			[282.000000]={
 				["key"]="__GPIO_PD_PIN_8_SPEED__";
@@ -14684,11 +14684,11 @@
 			};
 			[283.000000]={
 				["key"]="__GPIO_PD_PIN_8_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[284.000000]={
 				["key"]="__GPIO_PD_PIN_8_AF__";
-				["value"]="0";
+				["value"]="7";
 			};
 			[285.000000]={
 				["key"]="__GPIO_PD_PIN_8_STATE__";
@@ -14696,7 +14696,7 @@
 			};
 			[286.000000]={
 				["key"]="__GPIO_PD_PIN_9_NAME__";
-				["value"]="PD9_NC";
+				["value"]="USART3_RX";
 			};
 			[287.000000]={
 				["key"]="__GPIO_PD_PIN_9_SPEED__";
@@ -14704,11 +14704,11 @@
 			};
 			[288.000000]={
 				["key"]="__GPIO_PD_PIN_9_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[289.000000]={
 				["key"]="__GPIO_PD_PIN_9_AF__";
-				["value"]="0";
+				["value"]="7";
 			};
 			[290.000000]={
 				["key"]="__GPIO_PD_PIN_9_STATE__";
@@ -22270,7 +22270,7 @@
 			};
 			[3.000000]={
 				["key"]="__CPU_ARCH__";
-				["value"]="stm32f1";
+				["value"]="stm32f3";
 			};
 			[4.000000]={
 				["key"]="__CPU_OSC_FREQ__";
@@ -22278,7 +22278,7 @@
 			};
 			[5.000000]={
 				["key"]="__CPU_UART_TERM__";
-				["value"]="0";
+				["value"]="2";
 			};
 		};
 	};

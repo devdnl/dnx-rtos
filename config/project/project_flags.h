@@ -102,6 +102,12 @@ __CPU_ARCH__=stm32f1
 #--*/
 #define __CPU_OSC_FREQ__ 8000000
 
+#/*--
+# this:AddWidget("Spinbox", 0, 16, "Terminal UART")
+# this:SetToolTip("This value set UART terminal. This is UART major number.")
+#--*/
+#define __CPU_UART_TERM__ 0
+
 #endif /* _PROJECT_FLAGS_H_ */
 #/*=============================================================================
 #  End of file
