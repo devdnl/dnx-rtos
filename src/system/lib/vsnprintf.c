@@ -384,16 +384,24 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         {
                 if (chr == 'f' || chr == 'F') {
 #if __OS_PRINTF_FLOAT_ENABLE__ == _YES_
-                        char result[32];
-                        int  prec = arg_size <= 0 ? 6 : arg_size;
-                        int  len = _dtoa(va_arg(arg, double), result, prec, sizeof(result));
-
-                        for (int i = 0; i < len; i++) {
-                                if (!put_char(result[i])) {
-                                        break;
+                        char result[65];
+                        int  prec = (arg_size <= 0) ? 0 : arg_size;
+                        if (prec) {
+                                int len = _dtoa(va_arg(arg, double), result, prec, sizeof(result));
+                                for (int i = 0; i < len; i++) {
+                                        if (!put_char(result[i])) {
+                                                break;
+                                        }
+                                }
+                        } else {
+                                double val = va_arg(arg, double);
+                                char *result_ptr = _itoa(val, result, 10, false, 0);
+                                while ((chr = *result_ptr++)) {
+                                        if (!put_char(chr)) {
+                                                break;
+                                        }
                                 }
                         }
-
 #else
                         double val = va_arg(arg, double);
                         (void)val;

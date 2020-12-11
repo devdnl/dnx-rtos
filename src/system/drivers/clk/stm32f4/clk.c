@@ -41,6 +41,11 @@
 #define TIMEOUT_MS                      250
 #define LSE_TIMEOUT_MS                  5000
 
+#define PWR_REGULATOR_VOLTAGE_SCALE0    (0)
+#define PWR_REGULATOR_VOLTAGE_SCALE1    ((1*PWR_CR_VOS_1) | (1*PWR_CR_VOS_0))
+#define PWR_REGULATOR_VOLTAGE_SCALE2    ((1*PWR_CR_VOS_1) | (0*PWR_CR_VOS_0))
+#define PWR_REGULATOR_VOLTAGE_SCALE3    ((0*PWR_CR_VOS_1) | (1*PWR_CR_VOS_0))
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -48,11 +53,11 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void set_flash_latency       (u32_t latency);
-static void enable_prefetch_buffer  (void);
-static int  wait_for_flag           (u32_t flag, u32_t timeout);
-static bool is_APB1_divided         (void);
-static bool is_APB2_divided         (void);
+static int  configure_core_voltage_and_flash_latency(void);
+static void enable_prefetch_buffer(void);
+static int  wait_for_flag(u32_t flag, u32_t timeout);
+static bool is_APB1_divided(void);
+static bool is_APB2_divided(void);
 
 /*==============================================================================
   Local object definitions
@@ -84,10 +89,13 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
 
         RCC_DeInit();
 
-        set_flash_latency(_CLK_CFG__FLASH_LATENCY);
-        enable_prefetch_buffer();
+        int err = 0;
+        err = configure_core_voltage_and_flash_latency();
+        if (err) {
+                return err;
+        }
 
-        int err = ESUCC;
+        enable_prefetch_buffer();
 
         //----------------------------------------------------------------------
         // MCOx clock sources and prescalers
@@ -578,13 +586,60 @@ API_MOD_STAT(CLK, void *device_handle, struct vfs_dev_stat *device_stat)
 /**
  * @brief Function set flash latency (wait states)
  *
- * @param latency
+ * @return One of errno value.
  */
 //==============================================================================
-static void set_flash_latency(u32_t latency)
+static int configure_core_voltage_and_flash_latency(void)
 {
-        CLEAR_BIT(FLASH->ACR, FLASH_ACR_LATENCY);
-        SET_BIT(FLASH->ACR, latency & FLASH_ACR_LATENCY);
+        int err = 0;
+
+        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
+
+        u32_t hclk = __CLK_HCLK_FREQ__ / 1000000;
+
+        u32_t VOS;
+        if (hclk <= 144) {
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE2;
+        } else if (hclk <= 168) {
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE1;
+        } else {
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE0;
+        }
+
+        // Set the core voltage
+        if ((PWR->CR & PWR_CR_VOS) != VOS) {
+                u32_t VOS_tmp = (VOS == PWR_REGULATOR_VOLTAGE_SCALE0) ? PWR_REGULATOR_VOLTAGE_SCALE1 : VOS;
+                MODIFY_REG(PWR->CR, PWR_CR_VOS_Msk, VOS_tmp);
+
+                // Enable core boost voltage
+                #if defined(PWR_CR_ODEN)
+                if (!err && (VOS == PWR_REGULATOR_VOLTAGE_SCALE0)) {
+                        SET_BIT(PWR->CR, PWR_CR_ODEN);
+                        u64_t tref = sys_time_get_reference();
+                        while (not (PWR->CSR & PWR_CSR_ODRDY)) {
+                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                        printk("CLK: VOS0 timeout");
+                                        err = ETIME;
+                                        break;
+                                }
+
+                                sys_sleep_ms(1);
+                        }
+                }
+                #endif
+        }
+
+        if (!err) {
+                u64_t tref = sys_time_get_reference();
+                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY_Msk, _CLK_CFG__FLASH_LATENCY);
+                        if ((FLASH->ACR & FLASH_ACR_LATENCY_Msk) == _CLK_CFG__FLASH_LATENCY) {
+                                break;
+                        }
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================

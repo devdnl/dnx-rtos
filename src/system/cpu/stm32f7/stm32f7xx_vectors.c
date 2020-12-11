@@ -1,5 +1,5 @@
 /*==============================================================================
-File     stm32f4xx_vectors.c
+File     stm32f7xx_vectors.c
 
 Author   Daniel Zorychta
 

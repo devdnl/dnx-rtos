@@ -662,7 +662,13 @@ this:AddExtraWidget("Label", "LABEL_FLASH_LATENCY", "")
 -- Value calculated automatically
 this:AddWidget("Value")
 --*/
-#define __CLK_FLASH_LATENCY__ 7
+#define __CLK_FLASH_LATENCY__ 4
+
+/*--
+-- Value calculated automatically
+this:AddWidget("Value")
+--*/
+#define __CLK_HCLK_FREQ__ 108000000
 
 
 //==============================================================================
@@ -941,6 +947,7 @@ this.CalculateFreq = function(self)
     this:SetFlagValue("LABEL_FLASH_LATENCY", freq.FLASHLATENCY.." Flash wait-states")
     this:SetFlagValue("__CLK_FLASH_LATENCY__", tostring(freq.FLASHLATENCY))
 
+    this:SetFlagValue("__CLK_HCLK_FREQ__", tostring(freq.HCLK))
 end
 
 -- trigger frequency calculation after loading all flags

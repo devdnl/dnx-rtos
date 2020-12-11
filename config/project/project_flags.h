@@ -80,6 +80,7 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 #define stm32f3 0x483962d4
 #define stm32f4 0x8dd787b6
 #define stm32f7 0x3cb2ba7c
+#define stm32h7 0x56A5cde6
 #define efr32   0xcd975039
 #/*--
 # this:AddWidget("Combobox", "CPU architecture")
@@ -87,6 +88,7 @@ __PROJECT_TOOLCHAIN__=arm-none-eabi-
 # this:AddItem("STMicroelectronics STM32F3", "stm32f3")
 # this:AddItem("STMicroelectronics STM32F4", "stm32f4")
 # this:AddItem("STMicroelectronics STM32F7", "stm32f7")
+# this:AddItem("STMicroelectronics STM32H7", "stm32h7")
 # this:AddItem("Silicon Labs EFR32 Mighty Gecko (experimental)", "efr32")
 #--*/
 #define __CPU_ARCH__ stm32f1
@@ -99,6 +101,12 @@ __CPU_ARCH__=stm32f1
 # this:SetToolTip("This is a frequency of a connected to the microcontroller external generator or crystal.")
 #--*/
 #define __CPU_OSC_FREQ__ 8000000
+
+#/*--
+# this:AddWidget("Spinbox", 0, 16, "Terminal UART")
+# this:SetToolTip("This value set UART terminal. This is UART major number.")
+#--*/
+#define __CPU_UART_TERM__ 0
 
 #endif /* _PROJECT_FLAGS_H_ */
 #/*=============================================================================

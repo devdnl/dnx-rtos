@@ -130,7 +130,7 @@ static void initialize_basic_drivers(void)
          * NOTE: make sure that UART1 is used as terminal output!
          *       Some BSPs use UART2 as default terminal output.
          */
-        driver_init("UART", 0, 0, "/dev/ttyS0");        // UART1 will be used as TTY I/O
+        driver_init("UART", __CPU_UART_TERM__, 0, "/dev/ttyS0");        // UART1 will be used as TTY I/O
 
         static const TTY_config_t TTY_config = {
                 .input_file   = "/dev/ttyS0",

@@ -44,6 +44,17 @@ HDRLOC_ARCH += cpu/stm32f7
 HDRLOC_ARCH += cpu/lib/CMSIS
 endif
 
+ifeq ($(TARGET), stm32h7)
+ASRC_ARCH   += cpu/stm32h7/cmx_startup.s
+CSRC_ARCH   += cpu/stm32h7/cpuctl.c
+CSRC_ARCH   += cpu/stm32h7/stm32h7xx_vectors.c
+CSRC_ARCH   += cpu/stm32h7/lib/misc.c
+CSRC_ARCH   += cpu/stm32h7/lib/stm32h7xx_ll_rcc.c
+HDRLOC_ARCH += cpu/stm32h7/stm32h7xx
+HDRLOC_ARCH += cpu/stm32h7
+HDRLOC_ARCH += cpu/lib/CMSIS
+endif
+
 ifeq ($(TARGET), efr32)
 ASRC_ARCH   += cpu/efr32/cmx_startup.s
 CSRC_ARCH   += cpu/efr32/cpuctl.c
