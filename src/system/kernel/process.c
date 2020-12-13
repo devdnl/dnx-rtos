@@ -1369,18 +1369,14 @@ USERSPACE int _get_average_CPU_load(avg_CPU_load_t *avg)
 /**
  * @brief  Function check if all processes are consistent.
  *
- * @param  from_IRQ             IRQ call
- *
  * @return Return true if all is consistent, otherwise false.
  */
 //==============================================================================
-KERNELSPACE bool _process_is_consistent(bool from_IRQ)
+KERNELSPACE bool _process_is_consistent(void)
 {
         bool sanity_ok = true;
 
-        if (!from_IRQ) {
-                _kernel_scheduler_lock();
-        }
+        _kernel_scheduler_lock();
         {
                 sanity_ok = (PID_cnt >= PID_MIN) && (PID_cnt <= PID_MAX);
                 if (!sanity_ok) goto end;
@@ -1518,9 +1514,7 @@ KERNELSPACE bool _process_is_consistent(bool from_IRQ)
         }
 
         end:
-        if (!from_IRQ) {
-                _kernel_scheduler_unlock();
-        }
+        _kernel_scheduler_unlock();
 
         return sanity_ok;
 }

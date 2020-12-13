@@ -376,7 +376,7 @@ void HardFault_Handler(void)
 //==============================================================================
 void MemManage_Handler(void)
 {
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+        _kernel_panic_report_from_ISR(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 //==============================================================================
@@ -386,7 +386,7 @@ void MemManage_Handler(void)
 //==============================================================================
 void BusFault_Handler(void)
 {
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+        _kernel_panic_report_from_ISR(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 //==============================================================================
@@ -396,7 +396,7 @@ void BusFault_Handler(void)
 //==============================================================================
 void UsageFault_Handler(void)
 {
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+        _kernel_panic_report_from_ISR(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 //==============================================================================
@@ -425,7 +425,43 @@ void get_registers_from_stack(uint32_t *stack_address)
         reg_dump.AFSR = NVIC_AFSR;
         reg_dump.MFAR = NVIC_MFAR;
 
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+        _kernel_panic_report_from_ISR(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+}
+
+//==============================================================================
+/**
+ * @brief  Function clean/flush DCACHE.
+ */
+//==============================================================================
+void _cpuctl_clean_dcache(void)
+{
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+        SCB_CleanDCache();
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function clean/flush and invalidate/reset DCACHE.
+ */
+//==============================================================================
+void _cpuctl_clean_invalidate_dcache(void)
+{
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+        SCB_CleanInvalidateDCache();
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function invalidate/reset DCACHE.
+ */
+//==============================================================================
+void _cpuctl_invalidate_dcache(void)
+{
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+        SCB_InvalidateDCache();
+#endif
 }
 
 /*==============================================================================

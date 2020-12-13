@@ -63,11 +63,13 @@ struct kernel_panic_desc {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static void catch_process(enum _kernel_panic_desc_cause suggested_cause);
 
 /*==============================================================================
   Local objects
 ==============================================================================*/
 static struct kernel_panic_desc kpanic_desc __attribute__ ((section (".noinit")));
+static u32_t kpanic_ctr;
 
 #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 static const char *CAUSE[] = {
@@ -78,6 +80,7 @@ static const char *CAUSE[] = {
        "INTERNAL2",
        "INTERNAL3",
        "INTERNAL4",
+       "PANICLOOP",
        "UNKNOWN"
 };
 #endif
@@ -85,6 +88,7 @@ static const char *CAUSE[] = {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+_process_t *_kernel_panic_trap_proc;
 
 /*==============================================================================
   External objects
@@ -166,61 +170,102 @@ bool _kernel_panic_detect(FILE *file)
 //==============================================================================
 /**
  * @brief  Function report kernel panic
- * @param  suggest_cause        suggested cause (STACKOVF has priority)
- * @return None
+ *
+ * @param  suggest_cause        suggested cause
  */
 //==============================================================================
 void _kernel_panic_report(enum _kernel_panic_desc_cause suggested_cause)
 {
-        _assert_hook_suspend(true);
         _ISR_disable();
+        catch_process(suggested_cause);
+        _ISR_enable();
+        _task_yield();
+}
 
-        _process_t *proc = _process_get_active();
+//==============================================================================
+/**
+ * @brief  Function report kernel panic
+ *
+ * @param  suggest_cause        suggested cause
+ */
+//==============================================================================
+void _kernel_panic_report_from_ISR(enum _kernel_panic_desc_cause suggested_cause)
+{
+        catch_process(suggested_cause);
+        _task_yield_from_ISR(true);
+}
 
-        if (proc) {
-                kpanic_desc.name = _process_get_name(proc);
-                kpanic_desc.tid  = _process_get_active_thread(proc);
-                _process_get_pid(proc, &kpanic_desc.pid);
-                kpanic_desc.kernelspace = _process_is_kernelspace(proc, kpanic_desc.tid);
+//==============================================================================
+/**
+ * @brief  Function catch current process.
+ *
+ * @param  suggest_cause        suggested cause
+ */
+//==============================================================================
+static void catch_process(enum _kernel_panic_desc_cause suggested_cause)
+{
+        kpanic_ctr++;
 
-        } else {
-                if (_task_get_handle() == _kernel_get_idle_task_handle()) {
-                        kpanic_desc.name = "IDLE";
+        if (!_kernel_panic_trap_proc) {
+                kpanic_desc.cause = suggested_cause;
+                _kernel_panic_trap_proc = _process_get_active();
+        }
+        _assert_hook_suspend(true);
+        _task_set_priority(_kernel_get_idle_task_handle(), PRIORITY_HIGHEST);
+        _assert_hook_suspend(false);
+
+        if (kpanic_ctr > 1000000) {
+                kpanic_desc.cause = _KERNEL_PANIC_DESC_CAUSE_PANICLOOP;
+                _kernel_panic_handle(false);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function handle kernel panic. Function is executed in IDLE task.
+ *
+ * @param  system_consistent    system is consistent
+ */
+//==============================================================================
+void _kernel_panic_handle(bool system_consistent)
+{
+        if (_kernel_panic_trap_proc) {
+                _process_t *proc = _kernel_panic_trap_proc;
+
+                if (proc) {
+                        kpanic_desc.name = _process_get_name(proc);
+                        kpanic_desc.tid  = _process_get_active_thread(proc);
+                        _process_get_pid(proc, &kpanic_desc.pid);
+                        kpanic_desc.kernelspace = _process_is_kernelspace(proc, kpanic_desc.tid);
+
+                } else {
+                        kpanic_desc.name = "<NULL>";
                         kpanic_desc.pid  = 0;
                         kpanic_desc.tid  = 0;
-                } else {
-                        kpanic_desc.name = NULL;
-                        kpanic_desc.pid  = -1;
-                        kpanic_desc.tid  = -1;
+                        kpanic_desc.kernelspace = true;
+                        system_consistent = false;
                 }
 
-                kpanic_desc.kernelspace = true;
-        }
+                if (system_consistent && (kpanic_desc.pid > 1)) {
 
-        if (suggested_cause == _KERNEL_PANIC_DESC_CAUSE_STACKOVF || _task_get_free_stack(_THIS_TASK) == 0) {
-                kpanic_desc.cause = _KERNEL_PANIC_DESC_CAUSE_STACKOVF;
-        } else {
-                kpanic_desc.cause = suggested_cause;
-        }
+                        _printk("APP CRASH <%s> %d:%d:%s:%s\n",
+                                kpanic_desc.name,
+                                kpanic_desc.pid, kpanic_desc.tid,
+                                CAUSE[kpanic_desc.cause],
+                                kpanic_desc.kernelspace ? "KRN" : "USR");
 
-        // consistency check - if everything looks good then kill program
-        if (kpanic_desc.pid > 1) {
-
-                if (_mm_check_consistency() && _process_is_consistent(true)) {
                         _process_kill(kpanic_desc.pid);
-                        printk("APP CRASH: %s: %d:%d:%s:%s", kpanic_desc.name,
-                               kpanic_desc.pid, kpanic_desc.tid,
-                               CAUSE[kpanic_desc.cause], kpanic_desc.kernelspace ? "KRN" : "USR");
-                        _ISR_enable();
-                        _assert_hook_suspend(false);
-                        return;
+
+                } else {
+                        kpanic_desc.valid1 = _KERNEL_PANIC_DESC_VALID1;
+                        kpanic_desc.valid2 = _KERNEL_PANIC_DESC_VALID2;
+                        _cpuctl_clean_dcache();
+                        _cpuctl_restart_system();
                 }
+
+                kpanic_ctr = 0;
+                _kernel_panic_trap_proc = NULL;
         }
-
-        kpanic_desc.valid1 = _KERNEL_PANIC_DESC_VALID1;
-        kpanic_desc.valid2 = _KERNEL_PANIC_DESC_VALID2;
-
-        _cpuctl_restart_system();
 }
 
 /*==============================================================================

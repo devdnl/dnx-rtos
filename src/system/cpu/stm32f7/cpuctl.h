@@ -75,6 +75,11 @@ extern void  _cpuctl_init_CPU_load_counter      (void);
 extern u32_t _cpuctl_get_CPU_load_counter_delta (void);
 #endif
 
+/* cache mangement functions */
+extern void  _cpuctl_clean_dcache               (void);
+extern void  _cpuctl_clean_invalidate_dcache    (void);
+extern void  _cpuctl_invalidate_dcache          (void);
+
 #ifdef __cplusplus
 }
 #endif

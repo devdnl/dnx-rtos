@@ -63,9 +63,10 @@ static bool  assert_hook_suspend;
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-u32_t        _uptime_counter_sec = 0;
-u64_t        _tick_counter = 0;
+u32_t _uptime_counter_sec = 0;
+u64_t _tick_counter = 0;
 extern u32_t _CPU_total_time;
+extern _process_t *_kernel_panic_trap_proc;
 
 /*==============================================================================
   Function definitions
@@ -84,18 +85,26 @@ void vApplicationIdleHook(void)
          * priority to release finished tasks. This function restore original
          * idle task priority.
          */
-        vTaskPrioritySet(xTaskGetIdleTaskHandle(), 0);
+        if (!_kernel_panic_trap_proc) {
+                vTaskPrioritySet(xTaskGetIdleTaskHandle(), 0);
+        }
 
         u64_t now = _kernel_get_time_ms();
-        if (now - sanity_check_tref >= 1000) {
+        if ((now - sanity_check_tref >= 1000) || _kernel_panic_trap_proc) {
                 sanity_check_tref = now;
 
-                if (!_mm_check_consistency()) {
+                bool mm_consistent = _mm_check_consistency();
+                if (!mm_consistent) {
                         _printk("Inconsistent heap data!");
                 }
 
-                if (!_process_is_consistent(false)) {
+                bool proc_consistent = _process_is_consistent();
+                if (!proc_consistent) {
                         _printk("Inconsistent process list!");
+                }
+
+                if (_kernel_panic_trap_proc) {
+                        _kernel_panic_handle(mm_consistent && proc_consistent);
                 }
         }
 
@@ -115,7 +124,7 @@ void vApplicationIdleHook(void)
 void vApplicationStackOverflowHook(TaskHandle_t taskHdl, char *taskName)
 {
         UNUSED_ARG2(taskHdl, taskName);
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_STACKOVF);
+        _kernel_panic_report_from_ISR(_KERNEL_PANIC_DESC_CAUSE_STACKOVF);
 }
 
 //==============================================================================

@@ -55,6 +55,11 @@ extern "C" {
 /* names of memory regions used by kernel */
 #define _CPUCTL_FAST_MEM                        "CCM"
 
+/* cache mangement functions */
+#define _cpuctl_clean_dcache()
+#define _cpuctl_clean_invalidate_dcache()
+#define _cpuctl_invalidate_dcache()
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
