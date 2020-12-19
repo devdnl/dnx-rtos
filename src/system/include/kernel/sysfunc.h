@@ -3184,7 +3184,7 @@ static inline int sys_rewind(FILE *file)
    @endcode
  */
 //==============================================================================
-static inline void sys_sync()
+static inline void sys_sync(void)
 {
         _vfs_sync();
 }
@@ -3733,7 +3733,7 @@ static inline int sys_vsscanf(const char *str, const char *format, va_list args)
  * @code
         // ...
 
-        u32_t tref = sys_time_get_reference();
+        u64_t tref = sys_time_get_reference();
 
         while (!sys_time_is_expired(tref, 2000)) {
                 // ...
@@ -3745,7 +3745,7 @@ static inline int sys_vsscanf(const char *str, const char *format, va_list args)
  * @see sys_time_is_expired(), sys_time_set_expired(), sys_time_diff()
  */
 //==============================================================================
-static inline u32_t sys_time_get_reference()
+static inline u64_t sys_time_get_reference(void)
 {
         return _kernel_get_time_ms();
 }
@@ -3765,7 +3765,7 @@ static inline u32_t sys_time_get_reference()
  * @code
         // ...
 
-        u32_t tref = sys_time_get_reference();
+        u64_t tref = sys_time_get_reference();
 
         while (!sys_time_is_expired(tref, 2000)) {
                 // ...
@@ -3777,7 +3777,7 @@ static inline u32_t sys_time_get_reference()
  * @see sys_time_get_reference(), sys_time_set_expired(), sys_time_diff()
  */
 //==============================================================================
-static inline bool sys_time_is_expired(u32_t time_ref, u32_t time)
+static inline bool sys_time_is_expired(u64_t time_ref, u64_t time)
 {
         return (_kernel_get_time_ms() - time_ref >= time);
 }
@@ -3794,7 +3794,7 @@ static inline bool sys_time_is_expired(u32_t time_ref, u32_t time)
  * @code
         // ...
 
-        u32_t tref = sys_time_set_expired();
+        u64_t tref = sys_time_set_expired();
 
         while (!sys_time_is_expired(tref, 2000)) {
                 // this code will not be executed because time expired
@@ -3807,9 +3807,9 @@ static inline bool sys_time_is_expired(u32_t time_ref, u32_t time)
  * @see sys_time_get_reference(), sys_time_is_expired(), sys_time_diff()
  */
 //==============================================================================
-static inline u32_t sys_time_set_expired()
+static inline u64_t sys_time_set_expired(void)
 {
-        return UINT32_MAX;
+        return UINT64_MAX;
 }
 
 //==============================================================================
@@ -4977,9 +4977,38 @@ static inline int sys_queue_get_space_available(queue_t *queue, size_t *items)
  * @see sys_get_used_mem(), sys_get_mem_size()
  */
 //==============================================================================
-static inline size_t sys_get_free_mem()
+static inline size_t sys_get_free_mem(void)
 {
         return _mm_get_mem_free();
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if selected address is DMA capable.
+ *
+ * @param  ptr          address to examine
+ *
+ * @return If ptr is DMA capable then true is returned, otherwise false.
+ *         NULL address is not DMA capable.
+ */
+//==============================================================================
+static inline bool sys_is_mem_dma_capable(const void *ptr)
+{
+        return _mm_is_dma_capable(ptr);
+}
+
+//==============================================================================
+/**
+ * @brief  Function return region name of selected address.
+ *
+ * @param  ptr          address to examine
+ *
+ * @return Pointer to name reference.
+ */
+//==============================================================================
+static inline const char *sys_get_region_name(const void *ptr)
+{
+        return _mm_get_region_name(ptr);
 }
 
 //==============================================================================
@@ -4993,7 +5022,7 @@ static inline size_t sys_get_free_mem()
  * @see sys_get_free_mem(), sys_get_mem_size()
  */
 //==============================================================================
-static inline size_t sys_get_used_mem()
+static inline size_t sys_get_used_mem(void)
 {
         return _mm_get_mem_usage();
 }
@@ -5009,7 +5038,7 @@ static inline size_t sys_get_used_mem()
  * @see sys_get_free_mem(), sys_get_used_mem()
  */
 //==============================================================================
-static inline size_t sys_get_mem_size()
+static inline size_t sys_get_mem_size(void)
 {
         return _mm_get_mem_size();
 }
@@ -5025,7 +5054,7 @@ static inline size_t sys_get_mem_size()
  * @see sys_get_tick_counter()
  */
 //==============================================================================
-static inline u32_t sys_get_uptime_ms()
+static inline u64_t sys_get_uptime_ms(void)
 {
         return _kernel_get_time_ms();
 }
@@ -5036,7 +5065,7 @@ static inline u32_t sys_get_uptime_ms()
  *
  * The tick counter is incremented every context switch interrupt. If context switch
  * frequency is set to 1000Hz then counter is incremented every 1ms. To get value
- * of system time in milliseconds use sys_get_time_ms() functions.
+ * of system time in milliseconds use sys_get_time_ms() function.
  *
  * @note Function can be used only by file system or driver code.
  *
@@ -5045,7 +5074,7 @@ static inline u32_t sys_get_uptime_ms()
  * @see sys_gettime_ms(), sys_sleep_until(), sys_sleep_until_ms()
  */
 //==============================================================================
-static inline u32_t sys_get_tick_counter()
+static inline u64_t sys_get_tick_counter(void)
 {
         return _kernel_get_tick_counter();
 }
@@ -5062,7 +5091,7 @@ static inline u32_t sys_get_tick_counter()
  * @return Number of tasks.
  */
 //==============================================================================
-static inline int sys_get_number_of_tasks()
+static inline int sys_get_number_of_tasks(void)
 {
         return _kernel_get_number_of_tasks();
 }
@@ -5196,7 +5225,7 @@ static inline void sys_thread_suspend(tid_t tid)
  * @note Function can be used only by file system or driver code.
  */
 //==============================================================================
-static inline void sys_thread_suspend_now()
+static inline void sys_thread_suspend_now(void)
 {
         _task_suspend(_THIS_TASK);
 }
@@ -5258,7 +5287,7 @@ static inline int sys_thread_resume_from_ISR(tid_t tid, bool *task_woken)
  * @note Function can be used only by file system or driver code.
  */
 //==============================================================================
-static inline void sys_thread_yield()
+static inline void sys_thread_yield(void)
 {
         _task_yield();
 }
@@ -5316,7 +5345,7 @@ static inline void sys_thread_set_priority(const int priority)
  * @return Thread priority.
  */
 //==============================================================================
-static inline int sys_thread_get_priority()
+static inline int sys_thread_get_priority(void)
 {
         return _task_get_priority(_THIS_TASK);
 }
@@ -5330,7 +5359,7 @@ static inline int sys_thread_get_priority()
  * @return Free stack level.
  */
 //==============================================================================
-static inline int sys_thread_get_free_stack()
+static inline int sys_thread_get_free_stack(void)
 {
         return _task_get_free_stack(_THIS_TASK);
 }
@@ -5344,7 +5373,7 @@ static inline int sys_thread_get_free_stack()
  * @see sys_critical_section_end()
  */
 //==============================================================================
-static inline void sys_critical_section_begin()
+static inline void sys_critical_section_begin(void)
 {
         _critical_section_begin();
 }
@@ -5358,7 +5387,7 @@ static inline void sys_critical_section_begin()
  * @see sys_critical_section_begin()
  */
 //==============================================================================
-static inline void sys_critical_section_end()
+static inline void sys_critical_section_end(void)
 {
         _critical_section_end();
 }
@@ -5372,7 +5401,7 @@ static inline void sys_critical_section_end()
  * @see sys_ISR_enable()
  */
 //==============================================================================
-static inline void sys_ISR_disable()
+static inline void sys_ISR_disable(void)
 {
         _ISR_disable();
 }
@@ -5386,7 +5415,7 @@ static inline void sys_ISR_disable()
  * @see sys_ISR_disable()
  */
 //==============================================================================
-static inline void sys_ISR_enable()
+static inline void sys_ISR_enable(void)
 {
         _ISR_enable();
 }
@@ -5400,7 +5429,7 @@ static inline void sys_ISR_enable()
  * @see sys_context_switch_unlock()
  */
 //==============================================================================
-static inline void sys_context_switch_lock()
+static inline void sys_context_switch_lock(void)
 {
         _kernel_scheduler_lock();
 }
@@ -5414,7 +5443,7 @@ static inline void sys_context_switch_lock()
  * @see sys_context_switch_lock()
  */
 //==============================================================================
-static inline void sys_context_switch_unlock()
+static inline void sys_context_switch_unlock(void)
 {
         _kernel_scheduler_unlock();
 }
@@ -5546,7 +5575,7 @@ static inline void sys_sleep_until(const u32_t seconds, u32_t *ref_time_ticks)
  * @note Function can be used only by file system or driver code.
  */
 //==============================================================================
-static inline void sys_update_system_clocks()
+static inline void sys_update_system_clocks(void)
 {
         _cpuctl_update_system_clocks();
 }
@@ -5731,6 +5760,8 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
  * @param  region       region object (initialized by system)
  * @param  start        region start address
  * @param  size         region size
+ * @param  flags        region features
+ * @param  name         region name
  *
  * @return One of errno value.
  *
@@ -5740,7 +5771,7 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
 
         mem_region_t ram2;
 
-        int err = sys_memory_register(&ram2, 0x20001000, 16384);
+        int err = sys_register_region(&ram2, 0x20001000, 16384, true, "RAM2");
         if (!err) {
                 // ...
         }
@@ -5750,9 +5781,10 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
  *
  */
 //==============================================================================
-static inline int sys_memory_register(mem_region_t *region, void *start, size_t size)
+static inline int sys_register_region(mem_region_t *region, void *start,
+                                      size_t size, u32_t flags, const char *name)
 {
-        return _mm_register_region(region, start, size);
+        return _mm_register_region(region, start, size, flags, name);
 }
 
 //==============================================================================
@@ -5855,14 +5887,15 @@ static inline bool sys_stropt_is_flag(const char *opts, const char *flag)
  * @param [IN]  module              module name
  * @param [IN]  major               major number
  * @param [IN]  minor               minor number
+ * @param [IN]  config              module configuration object (optional, can be NULL)
  * @param [OUT] id                  module id (can be NULL)
  *
  * @return One of error code (errno)
  */
 //==============================================================================
-static inline int sys_driver_init(const char *module, u8_t major, u8_t minor, dev_t *id)
+static inline int sys_driver_init(const char *module, u8_t major, u8_t minor, const void *config, dev_t *id)
 {
-        return _driver_init(module, major, minor, NULL, id);
+        return _driver_init(module, major, minor, NULL, config, id);
 }
 
 //==============================================================================

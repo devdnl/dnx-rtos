@@ -1,2 +1,3 @@
-/ioctl_groups.h
-/ioctl_requests.h
+ioctl_groups.h
+ioctl_requests.h
+driver_registration.h

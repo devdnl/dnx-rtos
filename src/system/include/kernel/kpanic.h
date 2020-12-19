@@ -47,11 +47,15 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 enum _kernel_panic_desc_cause {
-        _KERNEL_PANIC_DESC_CAUSE_SEGFAULT = 0,
-        _KERNEL_PANIC_DESC_CAUSE_STACKOVF = 1,
-        _KERNEL_PANIC_DESC_CAUSE_CPUFAULT = 2,
-        _KERNEL_PANIC_DESC_CAUSE_INTERNAL = 3,
-        _KERNEL_PANIC_DESC_CAUSE_UNKNOWN  = 4
+        _KERNEL_PANIC_DESC_CAUSE_SEGFAULT   = 0,
+        _KERNEL_PANIC_DESC_CAUSE_STACKOVF   = 1,
+        _KERNEL_PANIC_DESC_CAUSE_CPUFAULT   = 2,
+        _KERNEL_PANIC_DESC_CAUSE_INTERNAL_1 = 3,
+        _KERNEL_PANIC_DESC_CAUSE_INTERNAL_2 = 4,
+        _KERNEL_PANIC_DESC_CAUSE_INTERNAL_3 = 5,
+        _KERNEL_PANIC_DESC_CAUSE_INTERNAL_4 = 6,
+        _KERNEL_PANIC_DESC_CAUSE_PANICLOOP  = 7,
+        _KERNEL_PANIC_DESC_CAUSE_UNKNOWN    = 8
 };
 
 /*==============================================================================
@@ -64,6 +68,8 @@ enum _kernel_panic_desc_cause {
 extern int  _kernel_panic_init();
 extern bool _kernel_panic_detect(FILE*);
 extern void _kernel_panic_report(enum _kernel_panic_desc_cause);
+extern void _kernel_panic_report_from_ISR(enum _kernel_panic_desc_cause);
+extern void _kernel_panic_handle(bool system_consistent);
 
 /*==============================================================================
   Exported inline functions

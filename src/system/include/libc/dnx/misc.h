@@ -46,6 +46,7 @@ dnx RTOS miscellaneous macros and functions.
 #include <lib/unarg.h>
 #include <lib/strlcat.h>
 #include <lib/strlcpy.h>
+#include <kernel/syscall.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -550,7 +551,11 @@ extern "C" {
  * @brief Macro tells compiler that selected structure is packed.
  */
 //==============================================================================
+#if defined (__GNUC__)
 #define PACKED __attribute__((packed))
+#else
+#error UNKNOWN COMPILER
+#endif
 
 //==============================================================================
 /**
@@ -657,6 +662,21 @@ static inline bool is_object_in_heap(void *ptr)
 
 //==============================================================================
 /**
+ * @brief  Function check if selected address is in .text section.
+ *
+ * @param  ptr          object's pointer
+ *
+ * @return If object is in heap then true is returned, otherwise false.
+ */
+//==============================================================================
+static inline bool is_rom_address(const void *ptr)
+{
+        extern bool _mm_is_rom_address(const void *ptr);
+        return _mm_is_rom_address(ptr);
+}
+
+//==============================================================================
+/**
  * @brief  Function replace characters in string.
  *
  * @param  str          string (in/out buffer)
@@ -671,6 +691,22 @@ static inline int strchrrep(char *str, char from, char to)
         extern int _strchrrep(char *str, char from, char to);
         return _strchrrep(str, from, to);
 }
+
+//==============================================================================
+/**
+ * @brief Function receive string from selected file using buffer 'buf' of size
+ *        'buflen'.
+ *
+ * @param[out] *str          buffer with string
+ * @param[in]   size         buffer size
+ * @param[in]  *stream       source stream
+ * @param[in]  *buf          buffer
+ * @param[in]   buflen       buffer length
+ *
+ * @retval NULL if error, otherwise pointer to str.
+ */
+//==============================================================================
+extern char *fgets_buffered(char *str, int size, FILE *stream, char *buf, size_t buflen);
 
 /*==============================================================================
   Exported inline functions

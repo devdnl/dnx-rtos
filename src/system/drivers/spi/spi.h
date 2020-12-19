@@ -38,13 +38,17 @@ extern "C" {
 #include "spi_ioctl.h"
 
 #if defined(ARCH_stm32f1)
-#include "stm32f1/spi_cfg.h"
+#include "stm32fx/spi_cfg.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #elif defined(ARCH_stm32f4)
-#include "stm32f4/spi_cfg.h"
+#include "stm32fx/spi_cfg.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
+#elif defined(ARCH_stm32f7)
+#include "stm32fx/spi_cfg.h"
+#include "stm32f7/stm32f7xx.h"
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #endif
 
 /*==============================================================================
@@ -69,6 +73,28 @@ enum {
         _NUMBER_OF_SPI_PERIPHERALS
 };
 #elif defined(ARCH_stm32f4)
+enum {
+    #if defined(RCC_APB2ENR_SPI1EN)
+        _SPI1,
+    #endif
+    #if defined(RCC_APB1ENR_SPI2EN)
+        _SPI2,
+    #endif
+    #if defined(RCC_APB1ENR_SPI3EN)
+        _SPI3,
+    #endif
+    #if defined(RCC_APB2ENR_SPI4EN)
+        _SPI4,
+    #endif
+    #if defined(RCC_APB2ENR_SPI5EN)
+        _SPI5,
+    #endif
+    #if defined(RCC_APB2ENR_SPI6EN)
+        _SPI6,
+    #endif
+        _NUMBER_OF_SPI_PERIPHERALS
+};
+#elif defined(ARCH_stm32f7)
 enum {
     #if defined(RCC_APB2ENR_SPI1EN)
         _SPI1,

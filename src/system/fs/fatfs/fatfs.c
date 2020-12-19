@@ -150,11 +150,12 @@ API_FS_RELEASE(fatfs, void *fs_handle)
 
         if ((hdl->opened_dirs == 0) && (sys_llist_size(hdl->file_list) == 0)) {
                 err = faterr_2_errno(f_unmount(&hdl->fatfs));
-                if (!err) {
+                if (!err or hdl->read_only) {
                         sys_fclose(hdl->fsfile);
                         sys_mutex_destroy(hdl->mutex);
                         sys_llist_destroy(hdl->file_list);
                         sys_free(&fs_handle);
+                        err = 0;
                 }
         }
 
@@ -262,10 +263,11 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *fhdl, bool force)
         int err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT);
         if (!err) {
                 err = faterr_2_errno(f_close(fatfile));
-                if (!err) {
+                if (!err or hdl->read_only) {
                         int pos = sys_llist_find_begin(hdl->file_list, fatfile);
                         sys_llist_take(hdl->file_list, pos);
                         sys_free(&fhdl);
+                        err = 0;
                 }
 
                 sys_mutex_unlock(hdl->mutex);
@@ -691,6 +693,7 @@ API_FS_FSTAT(fatfs, void *fs_handle, void *fhdl, struct stat *stat)
         stat->st_gid   = 0;
         stat->st_mode  = S_IFREG | S_IRWXU | S_IRWXG | S_IRWXO;
         stat->st_mtime = time_fat2unix((fat_file->obj.fdate << 16) | fat_file->obj.ftime);
+        stat->st_ctime = stat->st_mtime;
         stat->st_size  = f_size(fat_file);
         stat->st_uid   = 0;
 
@@ -718,6 +721,7 @@ API_FS_STAT(fatfs, void *fs_handle, const char *path, struct stat *stat)
                 stat->st_dev   = 0;
                 stat->st_gid   = 0;
                 stat->st_mtime = time_fat2unix((file_info.fdate << 16) | file_info.ftime);
+                stat->st_ctime = stat->st_mtime;
                 stat->st_size  = file_info.fsize;
                 stat->st_uid   = 0;
                 stat->st_mode  = (S_IRWXU | S_IRWXG | S_IRWXO)

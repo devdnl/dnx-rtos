@@ -64,6 +64,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(initd, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -129,9 +130,14 @@ static void initialize_basic_drivers(void)
          * NOTE: make sure that UART1 is used as terminal output!
          *       Some BSPs use UART2 as default terminal output.
          */
-        driver_init("UART", 0, 0, "/dev/ttyS0");        // UART1 will be used as TTY I/O
+        driver_init("UART", __CPU_UART_TERM__, 0, "/dev/ttyS0");        // UART1 will be used as TTY I/O
 
-        driver_init("TTY", 0, 0, "/dev/tty0");          // first user terminal
+        static const TTY_config_t TTY_config = {
+                .input_file   = "/dev/ttyS0",
+                .output_file  = "/dev/ttyS0",
+                .clear_screen = true,
+        };
+        driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config);     // first user terminal
 
         /*
          * NOTE: Drivers that are initialized in this stage can be reduced or
@@ -191,9 +197,9 @@ static void initialize_additional_drivers(void)
          *    by using Configtool. Number of terminals depends on user needs.
          *    In special cases TTY terminals does not need to be initialized.
          */
-        driver_init("TTY", 1, 0, "/dev/tty1");
-        driver_init("TTY", 2, 0, "/dev/tty2");
-        driver_init("TTY", 3, 0, "/dev/tty3");
+        driver_init("TTY", 0, 1, "/dev/tty1");
+        driver_init("TTY", 0, 2, "/dev/tty2");
+        driver_init("TTY", 0, 3, "/dev/tty3");
 
         /*
          * 2. If real time clock is needed then RTC driver should be initialized.
@@ -203,7 +209,7 @@ static void initialize_additional_drivers(void)
         /*
          * 3. If needed the Ethernet driver is initialized.
          */
-        driver_init("ETHMAC", 0, 0, "/dev/ethmac");
+        driver_init("ETH", 0, 0, "/dev/eth");
 }
 
 //==============================================================================
@@ -408,7 +414,7 @@ static void start_user_programs(void)
  * @return program status
  */
 //==============================================================================
-int_main(initd, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 cd $(dirname $0)
 
 PROGNAME=$(echo "$1" | sed 's/[-+/*,."!\@#$%^&*()+-]/_/g')
@@ -72,6 +74,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+PROGRAM_PARAMS(${PROGNAME,,}, STACK_DEPTH_VERY_LOW);
 
 /*==============================================================================
   External objects
@@ -91,7 +94,7 @@ GLOBAL_VARIABLES_SECTION {
  * @param argv      arguments
  */
 //==============================================================================
-int_main(${PROGNAME,,}, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         puts("Hello world!");
         return EXIT_SUCCESS;

@@ -59,6 +59,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
     #endif
         SYSCALL_PROCESSGETSYNCFLAG,     // | int            | pid_t *pid                | flag_t **obj                        |                           |                           |                                           |
         SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat                |                           |                           |                                           |
+        SYSCALL_THREADSTAT,             // | int            | pid_t *pid                | tid_t *tid                          | thread_stat_t *stat       |                           |                                           |
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat                |                           |                           |                                           |
         SYSCALL_PROCESSGETPID,          // | pid_t          |                           |                                     |                           |                           |                                           |
         SYSCALL_PROCESSGETPRIO,         // | int            | pid_t *pid                |                                     |                           |                           |                                           |
@@ -131,7 +132,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_GETTIME,                // | int            | struct timeval *          |                                     |                           |                           |                                           |
         SYSCALL_SETTIME,                // | int            | time_t *time              |                                     |                           |                           |                                           |
     #endif
-        SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                | const char *node_path     |                                           |
+        SYSCALL_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                | const char *node_path     | const void *config                        |
         SYSCALL_DRIVERRELEASE,          // | int            | const char *mod_name      | int *major                          | int *minor                |                           |                                           |
         SYSCALL_KERNELPANICDETECT,      // | bool           | FILE *file                |                                     |                           |                           |                                           |
     #if __ENABLE_NETWORK__ == _YES_
@@ -163,9 +164,6 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
   Exported objects
 ==============================================================================*/
 extern struct _process *_kworker_proc;
-#if (__OS_TASK_KWORKER_MODE__ == 0) || (__OS_TASK_KWORKER_MODE__ == 1)
-extern pid_t _syscall_client_PID[__OS_TASK_MAX_SYSTEM_THREADS__];
-#endif
 
 /*==============================================================================
   Exported functions

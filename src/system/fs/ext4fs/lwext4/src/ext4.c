@@ -786,6 +786,7 @@ static int ext4_trunc_dir(struct ext4_mountpoint *mp,
 			  struct ext4_inode_ref *parent,
 			  struct ext4_inode_ref *dir)
 {
+        (void)parent;
 	int r = EOK;
 	bool is_dir = ext4_inode_is_type(&mp->fs.sb, dir->inode,
 			EXT4_INODE_MODE_DIRECTORY);

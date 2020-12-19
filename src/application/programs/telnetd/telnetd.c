@@ -84,6 +84,7 @@ static const thread_attr_t thread_attr = {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(telnetd, STACK_DEPTH_VERY_LOW);
 
 /*==============================================================================
   Function definitions
@@ -282,7 +283,7 @@ exit:
  * @return program status
  */
 //==============================================================================
-int_main(telnetd, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         (void) argc;
         (void) argv;

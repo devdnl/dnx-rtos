@@ -94,6 +94,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(dsh, STACK_DEPTH_LOW);
 
 /*==============================================================================
   Function definitions
@@ -117,8 +118,8 @@ static void clear_prompt()
 static void print_prompt(void)
 {
         if (global->prompt_enable && global->input == stdin) {
-                printf(VT100_FONT_COLOR_GREEN"%s@%s:%s"VT100_RESET_ATTRIBUTES"\n",
-                       get_user_name(), get_host_name(), global->cwd);
+                printf(VT100_FONT_COLOR_GREEN"%s:%s"VT100_RESET_ATTRIBUTES"\n",
+                       get_host_name(), global->cwd);
 
                 printf(VT100_FONT_COLOR_GREEN"$ "VT100_RESET_ATTRIBUTES);
 
@@ -480,8 +481,8 @@ static bool start_program(char *master, char *slave, char *std_in,
         if (master && slave) {
                 pipe_name = calloc(sizeof(char), strlen(global->pipe_file) + 7);
                 if (pipe_name) {
-                        u32_t uptime = get_time_ms();
-                        snprintf(pipe_name, strlen(global->pipe_file) + 7, "%s%x", global->pipe_file, uptime);
+                        u64_t uptime = get_time_ms();
+                        snprintf(pipe_name, strlen(global->pipe_file) + 7, "%s%lx", global->pipe_file, uptime);
 
                         if (mkfifo(pipe_name, 0666)) {
                                 perror("sh");
@@ -774,7 +775,7 @@ static bool analyze_line(char *cmd)
  * @brief Terminal main function
  */
 //==============================================================================
-int_main(dsh, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         global->prompt_enable = true;
         global->input         = stdin;

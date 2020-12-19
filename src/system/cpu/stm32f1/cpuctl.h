@@ -52,6 +52,15 @@ extern "C" {
 #define xPortSysTickHandler                     SysTick_Handler
 #define vPortSVCHandler                         SVC_Handler
 
+/* names of memory regions used by kernel */
+#define _CPUCTL_FAST_MEM                        NULL
+#define _CPUCTL_STACK_REGION_FLAGS              _MM_FLAG__DMA_CAPABLE
+
+/* cache mangement functions */
+#define _cpuctl_clean_dcache()
+#define _cpuctl_clean_invalidate_dcache()
+#define _cpuctl_invalidate_dcache()
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -65,6 +74,7 @@ extern void  _cpuctl_shutdown_system            (void);
 extern void  _cpuctl_sleep                      (void);
 extern void  _cpuctl_update_system_clocks       (void);
 extern void  _cpuctl_delay_us                   (u16_t);
+extern void  _cpuctl_print_exception            (void *file);
 
 #if (__OS_MONITOR_CPU_LOAD__ > 0)
 extern void  _cpuctl_init_CPU_load_counter      (void);

@@ -454,7 +454,7 @@ int _vfs_opendir(const struct vfs_path *path, DIR **dir)
                 return EINVAL;
         }
 
-        int err = _kmalloc(_MM_KRN, sizeof(DIR), cast(void**, dir));
+        int err = _kmalloc(_MM_KRN, sizeof(DIR), NULL, 0, 0, cast(void**, dir));
         if (!err) {
                 char *cwd_path;
                 err = new_absolute_path(path, ADD_SLASH, &cwd_path);
@@ -475,6 +475,7 @@ int _vfs_opendir(const struct vfs_path *path, DIR **dir)
                 }
 
                 if (!err) {
+                        (*dir)->header.self = *dir;
                         (*dir)->header.type = RES_TYPE_DIR;
                 } else {
                         _kfree(_MM_KRN, cast(void**, dir));
@@ -500,6 +501,7 @@ int _vfs_closedir(DIR *dir)
         if (is_dir_valid(dir)) {
                 err = dir->FS_if->fs_closedir(dir->FS_hdl, dir);
                 if (!err) {
+                        dir->header.self = NULL;
                         dir->header.type = RES_TYPE_UNKNOWN;
                         _kfree(_MM_KRN, cast(void**, &dir));
                 }
@@ -874,7 +876,7 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
         }
 
         FILE *file_obj = NULL;
-        err = _kzalloc(_MM_KRN, sizeof(FILE), cast(void**, &file_obj));
+        err = _kzalloc(_MM_KRN, sizeof(FILE), NULL, 0, 0, cast(void**, &file_obj));
         if (!err && file_obj) {
 
                 const char *external_path;
@@ -910,6 +912,7 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
                                 file_obj->FS_hdl      = fs->handle;
                                 file_obj->FS_if       = fs->interface;
                                 file_obj->f_flag      = f_flags;
+                                file_obj->header.self = file_obj;
                                 file_obj->header.type = RES_TYPE_FILE;
                         }
                 }
@@ -947,8 +950,8 @@ int _vfs_fclose(FILE *file, bool force)
         if (is_file_valid(file) && file->FS_if->fs_close) {
                 err = file->FS_if->fs_close(file->FS_hdl, file->f_hdl, force);
                 if (!err) {
+                        file->header.self = NULL;
                         file->header.type = RES_TYPE_UNKNOWN;
-                        file->FS_hdl      = NULL;
                         file->FS_hdl      = NULL;
                         _kfree(_MM_KRN, cast(void**, &file));
                 }
@@ -1335,7 +1338,7 @@ static int new_FS_entry(FS_entry_t         *parent_FS,
                         FS_entry_t         **fs_entry)
 {
         FS_entry_t *new_FS = NULL;
-        int err = _kmalloc(_MM_KRN, sizeof(FS_entry_t), cast(void**, &new_FS));
+        int err = _kmalloc(_MM_KRN, sizeof(FS_entry_t), NULL, 0, 0, cast(void**, &new_FS));
         if (!err) {
                 err = fs_interface->fs_init(&new_FS->handle, fs_src_file, opts);
                 if (!err) {
@@ -1565,7 +1568,7 @@ static int new_absolute_path(const struct vfs_path *path, enum path_correction c
 
         // memory allocation
         char *abspath;
-        int err = _kzalloc(_MM_KRN, abslen, cast(void*, &abspath));
+        int err = _kzalloc(_MM_KRN, abslen, _CPUCTL_FAST_MEM, 0, 0, cast(void*, &abspath));
         if (!err) {
                 if (path->PATH[0] == '/') {
                         strcpy(abspath, path->PATH);
@@ -1584,7 +1587,7 @@ static int new_absolute_path(const struct vfs_path *path, enum path_correction c
                 size_t plen = strsize(abspath);
 
                 if (_mm_align(plen) < _mm_align(abslen)) {
-                        if (_kzalloc(_MM_KRN, plen, cast(void**, new_path)) == 0) {
+                        if (_kzalloc(_MM_KRN, plen, _CPUCTL_FAST_MEM, 0, 0, cast(void**, new_path)) == 0) {
                                 strcpy(*new_path, abspath);
                                 _kfree(_MM_KRN, cast(void*, &abspath));
                                 abspath = *new_path;

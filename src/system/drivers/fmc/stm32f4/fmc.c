@@ -87,12 +87,15 @@ static mem_region_t sdram2;
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_INIT(FMC, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(FMC, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
+        UNUSED_ARG1(config);
+
         int err = EFAULT;
 
         if (major == 0 && minor == 0) {
@@ -259,6 +262,77 @@ API_MOD_STAT(FMC, void *device_handle, struct vfs_dev_stat *device_stat)
 
 //==============================================================================
 /**
+ * @brief  Function test RAM memory.
+ *
+ * @param  address      address
+ * @param  size         size (bytes)
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
+static int ram_test(void *address, size_t size)
+{
+        static const u32_t PATTERN[] = {
+                0x08080808,
+                0x80008000,
+                0xAAAA5555,
+                0x5555AAAA,
+        };
+
+        int err = 0;
+
+        printk("FMC: memory test @ %p of %u bytes", address, size);
+
+        for (size_t i = 0; i < ARRAY_SIZE(PATTERN); i++) {
+
+                u32_t *ptr = address;
+                size_t len = size / sizeof(u32_t);
+
+                while (len) {
+                        *ptr++ = PATTERN[i];
+                        len--;
+                }
+
+                ptr = address;
+                len = size / sizeof(u32_t);
+                while (len) {
+                        if (*ptr != PATTERN[i]) {
+                                printk("FMC: error @ %p", ptr);
+                                err = EFAULT;
+                                break;
+                        }
+                        ptr++;
+                        len--;
+                }
+        }
+
+        u32_t *ptr = address;
+        size_t len = size / sizeof(u32_t);
+
+        while (len) {
+                *ptr++ = len;
+                len--;
+        }
+
+        ptr = address;
+        len = size / sizeof(u32_t);
+        while (len) {
+                if (*ptr != len) {
+                        printk("FMC: error @ %p", ptr);
+                        err = EFAULT;
+                        break;
+                }
+                ptr++;
+                len--;
+        }
+
+        printk("FMC: memory test done.");
+
+        return err;
+}
+
+//==============================================================================
+/**
  * @brief Function initialize SDRAM controller.
  *
  * @return One of errno value (errno.h).
@@ -412,8 +486,8 @@ static int SDRAM_init(void)
          */
         while (FMC_Bank5_6->SDSR & FMC_SDSR_BUSY);
 
-        RCC_ClocksTypeDef freq;
-        RCC_GetClocksFreq(&freq);
+        LL_RCC_ClocksTypeDef freq;
+        LL_RCC_GetSystemClocksFreq(&freq);
 
         i32_t NR  = max((2 << (__FMC_SDRAM_1_NR__ + 10)), (2 << (__FMC_SDRAM_2_NR__ + 10)));
         i32_t MHz = freq.HCLK_Frequency / __FMC_SDRAM_SDCLK__ / 1000000;
@@ -435,21 +509,31 @@ static int SDRAM_init(void)
         int err2 = ESUCC;
 
 #if __FMC_SDRAM_1_ENABLE__ > 0
-        err1 = sys_memory_register(&sdram1, (void*)0xC0000000,
-                                     (2 << (__FMC_SDRAM_1_NR__ + 10)) // Row bits (0 - 11 bits: A10)
-                                   * (2 << (__FMC_SDRAM_1_NC__ +  7)) // Col bits (0 - 8 bits:  A7)
-                                   * (2 << (__FMC_SDRAM_1_NB__     )) // Banks (2 or 4)
-                                   * (8 << (__FMC_SDRAM_1_MWID__   )) // Bus width
-                                   / (8));                            // Bits per byte
+        size_t mem_size1 = (2 << (__FMC_SDRAM_1_NR__ + 10))      // Row bits (0 - 11 bits: A10)
+                         * (2 << (__FMC_SDRAM_1_NC__ +  7))      // Col bits (0 - 8 bits:  A7)
+                         * (2 << (__FMC_SDRAM_1_NB__     ))      // Banks (2 or 4)
+                         * (8 << (__FMC_SDRAM_1_MWID__   ))      // Bus width
+                         / (8);                                  // Bits per byte
+
+        err1 = ram_test((void*)0xC0000000, mem_size1);
+        if (!err1) {
+                err1 = sys_register_region(&sdram1, (void*)0xC0000000, mem_size1,
+                                           _MM_FLAG__DMA_CAPABLE, "SDRAM1");
+        }
 #endif
 
 #if __FMC_SDRAM_2_ENABLE__ > 0
-        err2 = sys_memory_register(&sdram2, (void*)0xD0000000,
-                                     (2 << (__FMC_SDRAM_2_NR__ + 10)) // Row bits (0 - 11 bits: A10)
-                                   * (2 << (__FMC_SDRAM_2_NC__ +  7)) // Col bits (0 - 8 bits:  A7)
-                                   * (2 << (__FMC_SDRAM_2_NB__     )) // Banks (2 or 4)
-                                   * (8 << (__FMC_SDRAM_2_MWID__   )) // Bus width
-                                   / (8));                            // Bits per byte
+        size_t mem_size2 = (2 << (__FMC_SDRAM_2_NR__ + 10))     // Row bits (0 - 11 bits: A10)
+                         * (2 << (__FMC_SDRAM_2_NC__ +  7))     // Col bits (0 - 8 bits:  A7)
+                         * (2 << (__FMC_SDRAM_2_NB__     ))     // Banks (2 or 4)
+                         * (8 << (__FMC_SDRAM_2_MWID__   ))     // Bus width
+                         / (8));
+
+        err2 = ram_test((void*)0xD0000000, mem_size2);
+        if (!err2) {
+                err2 = sys_register_region(&sdram2, (void*)0xD0000000, mem_size2,
+                                           _MM_FLAG__DMA_CAPABLE, "SDRAM2");
+        }
 #endif
 
         return err1 ? err1 : (err2 ? err2 : ESUCC);

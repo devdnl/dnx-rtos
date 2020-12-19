@@ -57,6 +57,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+PROGRAM_PARAMS(more, STACK_DEPTH_LOW);
 
 /*==============================================================================
   External objects
@@ -74,7 +75,7 @@ GLOBAL_VARIABLES_SECTION {
  * @param argv      arguments
  */
 //==============================================================================
-int_main(more, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         FILE *file;
 

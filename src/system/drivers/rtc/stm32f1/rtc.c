@@ -30,7 +30,6 @@
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f1/rtc_cfg.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #include "../rtc_ioctl.h"
@@ -77,16 +76,18 @@ MODULE_NAME(RTC);
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(RTC, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(RTC, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG1(device_handle);
-        UNUSED_ARG1(major);
-        UNUSED_ARG1(minor);
-        UNUSED_ARG1(_module_name_);
+        UNUSED_ARG3(device_handle, config, _module_name_);
+
+        if (major != 0 or minor != 0) {
+                return ENODEV;
+        }
 
         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
         SET_BIT(PWR->CR, PWR_CR_DBP);

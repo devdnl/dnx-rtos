@@ -83,19 +83,10 @@ this:AddExtraWidget("Label", "LABEL_HSE_ON", "")
 // PLL Configuration
 //==============================================================================
 /*--
-this:AddExtraWidget("Label", "LABEL_PLL", "\nMain PLL Configuration", -1, "bold")
-this:AddExtraWidget("Void", "VoidPLL1")
-this:AddExtraWidget("Void", "VoidPLL2")
+this:AddExtraWidget("Label", "LABEL_PLL_CLKSRC", "\nPLLs clock source", -1, "bold")
+this:AddExtraWidget("Void", "VoidPLLSRC1")
+this:AddExtraWidget("Void", "VoidPLLSRC2")
 ++*/
-/*--
-this:AddWidget("Combobox", "PLL")
-this:AddItem("Enable",  "ENABLE")
-this:AddItem("Disable", "DISABLE")
-this:SetEvent("clicked", function() this.CalculateFreq() end)
-this:AddExtraWidget("Label", "LABEL_PLL_ON", "")
---*/
-#define __CLK_PLL_ON__ ENABLE
-
 /*--
 this:AddWidget("Combobox", "Clock source")
 this:AddItem("HSI",  "RCC_PLLSource_HSI")
@@ -108,9 +99,23 @@ this:AddExtraWidget("Label", "LABEL_PLL_SRC", "")
 /*--
 this:AddWidget("Spinbox", 2, 63, "Clock divider (M)")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
-this:AddExtraWidget("Label", "LABEL_PLL_M", "")
+this:AddExtraWidget("Label", "LABEL_PLL_SRC_DIV_M", "")
 --*/
-#define __CLK_PLL_M__ 4
+#define __CLK_PLL_SRC_DIV_M__ 4
+
+/*--
+this:AddExtraWidget("Label", "LABEL_PLL", "\nMain PLL Configuration", -1, "bold")
+this:AddExtraWidget("Void", "VoidPLL1")
+this:AddExtraWidget("Void", "VoidPLL2")
+++*/
+/*--
+this:AddWidget("Combobox", "PLL")
+this:AddItem("Enable",  "ENABLE")
+this:AddItem("Disable", "DISABLE")
+this:SetEvent("clicked", function() this.CalculateFreq() end)
+this:AddExtraWidget("Label", "LABEL_PLL_ON", "")
+--*/
+#define __CLK_PLL_ON__ ENABLE
 
 /*--
 this:AddWidget("Spinbox", 50, 432, "Clock multiplier (N)")
@@ -155,7 +160,7 @@ this.is_PLLI2S =  uC.NAME:match("STM32F40") or uC.NAME:match("STM32F41") or uC.N
                or uC.NAME:match("STM32F423") or uC.NAME:match("STM32F446")
 
 if this.is_PLLI2S ~= nil then
-    this:AddExtraWidget("Label", "LABEL_PLLI2S", "\nI2S PLL Configuration", -1, "bold")
+    this:AddExtraWidget("Label", "LABEL_PLLI2S", "\nPLLI2S Configuration", -1, "bold")
     this:AddExtraWidget("Void", "VoidPLLI2S1")
     this:AddExtraWidget("Void", "VoidPLLI2S2")
 end
@@ -169,16 +174,7 @@ if this.is_PLLI2S ~= nil then
     this:AddExtraWidget("Label", "LABEL_PLLI2S_ON", "")
 end
 --*/
-#define __CLK_PLLI2S_ON__ ENABLE
-
-/*--
-if this.is_PLLI2S ~= nil then
-    this:AddWidget("Spinbox", 2, 63, "Clock divider (M)")
-    this:SetEvent("clicked", function() this.CalculateFreq() end)
-    this:AddExtraWidget("Label", "LABEL_PLLI2S_M", "")
-end
---*/
-#define __CLK_PLLI2S_M__ 4
+#define __CLK_PLLI2S_ON__ DISABLE
 
 /*--
 if this.is_PLLI2S ~= nil then
@@ -231,7 +227,7 @@ this.is_PLLSAI =  uC.NAME:match("STM32F469") or uC.NAME:match("STM32F479")
                or uC.NAME:match("STM32F439")
 
 if this.is_PLLSAI ~= nil then
-        this:AddExtraWidget("Label", "LABEL_PLLSAI", "\nSAI PLL Configuration", -1, "bold")
+        this:AddExtraWidget("Label", "LABEL_PLLSAI", "\nPLLSAI Configuration", -1, "bold")
         this:AddExtraWidget("Void", "VoidPLLSAI1")
         this:AddExtraWidget("Void", "VoidPLLSAI2")
 end
@@ -245,16 +241,7 @@ if this.is_PLLSAI ~= nil then
     this:AddExtraWidget("Label", "LABEL_PLLSAI_ON", "")
 end
 --*/
-#define __CLK_PLLSAI_ON__ ENABLE
-
-/*--
-if this.is_PLLSAI ~= nil then
-    this:AddWidget("Spinbox", 2, 63, "Clock divider (M)")
-    this:SetEvent("clicked", function() this.CalculateFreq() end)
-    this:AddExtraWidget("Label", "LABEL_PLLSAI_M", "")
-end
---*/
-#define __CLK_PLLSAI_M__ 4
+#define __CLK_PLLSAI_ON__ DISABLE
 
 /*--
 if this.is_PLLSAI ~= nil then
@@ -263,7 +250,7 @@ if this.is_PLLSAI ~= nil then
     this:AddExtraWidget("Label", "LABEL_PLLSAI_N", "")
 end
 --*/
-#define __CLK_PLLSAI_N__ 192
+#define __CLK_PLLSAI_N__ 203
 
 /*--
 if this.is_PLLSAI ~= nil then
@@ -276,7 +263,7 @@ if this.is_PLLSAI ~= nil then
     this:AddExtraWidget("Label", "LABEL_PLLSAI_P", "")
 end
 --*/
-#define __CLK_PLLSAI_P__ 2
+#define __CLK_PLLSAI_P__ 8
 
 /*--
 if this.is_PLLSAI ~= nil then
@@ -285,7 +272,7 @@ if this.is_PLLSAI ~= nil then
     this:AddExtraWidget("Label", "LABEL_PLLSAI_Q", "")
 end
 --*/
-#define __CLK_PLLSAI_Q__ 2
+#define __CLK_PLLSAI_Q__ 12
 
 /*--
 if this.is_PLLSAI ~= nil then
@@ -294,7 +281,7 @@ if this.is_PLLSAI ~= nil then
     this:AddExtraWidget("Label", "LABEL_PLLSAI_R", "")
 end
 --*/
-#define __CLK_PLLSAI_R__ 2
+#define __CLK_PLLSAI_R__ 7
 
 //==============================================================================
 // Clock Sources Configuration
@@ -344,7 +331,7 @@ this:AddItem("PLLCLK", "RCC_MCO1Source_PLLCLK")
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO1_SRC", "")
 --*/
-#define __CLK_MC01_CLK_SRC__ RCC_MCO1Source_HSI
+#define __CLK_MC01_CLK_SRC__ RCC_MCO1Source_HSE
 
 /*--
 this:AddWidget("Combobox", "MCO1 Clock divisor (output)")
@@ -352,7 +339,7 @@ for i = 1, 5 do this:AddItem("MCO divided by "..i, "RCC_MCO1Div_"..tostring(i)) 
 this:SetEvent("clicked", function() this.CalculateFreq() end)
 this:AddExtraWidget("Label", "LABEL_MCO1_DIV", "")
 --*/
-#define __CLK_MC01_CLK_DIV__ RCC_MCO1Div_1
+#define __CLK_MC01_CLK_DIV__ RCC_MCO1Div_2
 
 /*--
 this:AddWidget("Combobox", "MCO2 Clock source")
@@ -466,7 +453,7 @@ if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
     this:AddExtraWidget("Label", "LABEL_SAI_PLLSAI_CLK_DIV", "")
 end
 --*/
-#define __CLK_SAI_PLLSAI_CLK_DIV__ 1
+#define __CLK_SAI_PLLSAI_CLK_DIV__ 3
 
 /*--
 if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
@@ -522,7 +509,7 @@ elseif uC.NAME:match("STM32F413") or uC.NAME:match("STM32F423") then
     this:AddExtraWidget("Label", "LABEL_SAI_BLOCK_A_CLK_SRC", "")
 end
 --*/
-#define __CLK_SAI_BLOCK_A_CLK_SRC__ RCC_SAIACLKSource_PLLI2S
+#define __CLK_SAI_BLOCK_A_CLK_SRC__ RCC_SAIACLKSource_PLLSAI
 
 /*--
 if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
@@ -547,7 +534,7 @@ elseif uC.NAME:match("STM32F413") or uC.NAME:match("STM32F423") then
     this:AddExtraWidget("Label", "LABEL_SAI_BLOCK_B_CLK_SRC", "")
 end
 --*/
-#define __CLK_SAI_BLOCK_B_CLK_SRC__ RCC_SAIBCLKSource_PLLI2S
+#define __CLK_SAI_BLOCK_B_CLK_SRC__ RCC_SAIBCLKSource_PLLSAI
 
 /*--
 if   uC.NAME:match("STM32F427") or uC.NAME:match("STM32F437")
@@ -759,6 +746,11 @@ this:AddWidget("Value")
 --*/
 #define __CLK_FLASH_LATENCY__ 5
 
+/*--
+-- Value calculated automatically
+this:AddWidget("Value")
+--*/
+#define __CLK_HCLK_FREQ__ 168000000
 
 //==============================================================================
 // Calculation script
@@ -767,23 +759,21 @@ this:AddWidget("Value")
 this.CalculateFreq = function(self)
     local PLLON         = iff(this:GetFlagValue("__CLK_PLL_ON__") == "ENABLE", 1, 0)
     local PLLSRC        = this:GetFlagValue("__CLK_PLL_SRC__")
-    local PLLM          = this:GetFlagValue("__CLK_PLL_M__")
+    local PLLM          = this:GetFlagValue("__CLK_PLL_SRC_DIV_M__")
     local PLLN          = this:GetFlagValue("__CLK_PLL_N__")
     local PLLP          = this:GetFlagValue("__CLK_PLL_P__")
     local PLLQ          = this:GetFlagValue("__CLK_PLL_Q__")
     local PLLR          = this:GetFlagValue("__CLK_PLL_R__")
 
     local PLLI2SON      = iff(this:GetFlagValue("__CLK_PLLI2S_ON__") == "ENABLE", 1, 0)
-    local PLLI2SSRC     = this:GetFlagValue("__CLK_PLLI2S_SRC__")
-    local PLLI2SM       = this:GetFlagValue("__CLK_PLLI2S_M__")
+    local PLLI2SM       = this:GetFlagValue("__CLK_PLL_SRC_DIV_M__")
     local PLLI2SN       = this:GetFlagValue("__CLK_PLLI2S_N__")
     local PLLI2SP       = this:GetFlagValue("__CLK_PLLI2S_P__")
     local PLLI2SQ       = this:GetFlagValue("__CLK_PLLI2S_Q__")
     local PLLI2SR       = this:GetFlagValue("__CLK_PLLI2S_R__")
 
     local PLLSAION      = iff(this:GetFlagValue("__CLK_PLLSAI_ON__") == "ENABLE", 1, 0)
-    local PLLSAISRC     = this:GetFlagValue("__CLK_PLLSAI_SRC__")
-    local PLLSAIM       = this:GetFlagValue("__CLK_PLLSAI_M__")
+    local PLLSAIM       = this:GetFlagValue("__CLK_PLL_SRC_DIV_M__")
     local PLLSAIN       = this:GetFlagValue("__CLK_PLLSAI_N__")
     local PLLSAIP       = this:GetFlagValue("__CLK_PLLSAI_P__")
     local PLLSAIQ       = this:GetFlagValue("__CLK_PLLSAI_Q__")
@@ -911,9 +901,9 @@ this.CalculateFreq = function(self)
         end
 
         if freq.PLLM < 1e6 or freq.PLLM > 2e6 then
-           this:SetFlagValue("LABEL_PLL_M", PrintFrequency(freq.PLLM).." [Keep in range 1-2MHz]")
+           this:SetFlagValue("LABEL_PLL_SRC_DIV_M", PrintFrequency(freq.PLLM).." [Keep in range 1-2MHz]")
         else
-           this:SetFlagValue("LABEL_PLL_M", PrintFrequency(freq.PLLM))
+           this:SetFlagValue("LABEL_PLL_SRC_DIV_M", PrintFrequency(freq.PLLM))
         end
 
         freq.PLLVCO = freq.PLLM * PLLN
@@ -934,7 +924,7 @@ this.CalculateFreq = function(self)
         this:SetFlagValue("LABEL_PLL_R", PrintFrequency(freq.PLLR))
     else
         this:SetFlagValue("LABEL_PLL_SRC", "")
-        this:SetFlagValue("LABEL_PLL_M", "")
+        this:SetFlagValue("LABEL_PLL_SRC_DIV_M", "")
         this:SetFlagValue("LABEL_PLL_N", "")
         this:SetFlagValue("LABEL_PLL_P", "")
         this:SetFlagValue("LABEL_PLL_Q", "")
@@ -950,12 +940,6 @@ this.CalculateFreq = function(self)
             else
                this:SetFlagValue("LABEL_PLL_SRC", PrintFrequency(freq.HSE))
                freq.PLLI2SM = freq.HSE / PLLI2SM
-            end
-
-            if freq.PLLI2SM < 1e6 or freq.PLLI2SM > 2e6 then
-               this:SetFlagValue("LABEL_PLLI2S_M", PrintFrequency(freq.PLLI2SM).." [Keep in range: 1-2MHz]")
-            else
-               this:SetFlagValue("LABEL_PLLI2S_M", PrintFrequency(freq.PLLI2SM))
             end
 
             freq.PLLI2SVCO = freq.PLLI2SM * PLLI2SN
@@ -978,7 +962,6 @@ this.CalculateFreq = function(self)
                 this:SetFlagValue("LABEL_PLLI2S_R", PrintFrequency(freq.PLLI2SR).." (PLLI2SCLK)")
             end
         else
-            this:SetFlagValue("LABEL_PLLI2S_M", "")
             this:SetFlagValue("LABEL_PLLI2S_N", "")
             this:SetFlagValue("LABEL_PLLI2S_P", "")
             this:SetFlagValue("LABEL_PLLI2S_Q", "")
@@ -997,12 +980,6 @@ this.CalculateFreq = function(self)
                freq.PLLSAIM = freq.HSE / PLLSAIM
             end
 
-            if freq.PLLSAIM < 1e6 or freq.PLLSAIM > 2e6 then
-               this:SetFlagValue("LABEL_PLLSAI_M", PrintFrequency(freq.PLLSAIM).." [Keep in range: 1-2MHz]")
-            else
-               this:SetFlagValue("LABEL_PLLSAI_M", PrintFrequency(freq.PLLSAIM))
-            end
-
             freq.PLLSAIVCO = freq.PLLSAIM * PLLSAIN
             if freq.PLLSAIVCO < 100e6 or freq.PLLSAIVCO > 432e6 then
                this:SetFlagValue("LABEL_PLLSAI_N", PrintFrequency(freq.PLLSAIVCO).." [Keep in range 100-432MHz]")
@@ -1019,7 +996,6 @@ this.CalculateFreq = function(self)
             freq.PLLSAIR = freq.PLLSAIVCO / PLLSAIR
             this:SetFlagValue("LABEL_PLLSAI_R", PrintFrequency(freq.PLLSAIR).." (PLLLCDCLK)")
         else
-            this:SetFlagValue("LABEL_PLLSAI_M", "")
             this:SetFlagValue("LABEL_PLLSAI_N", "")
             this:SetFlagValue("LABEL_PLLSAI_P", "")
             this:SetFlagValue("LABEL_PLLSAI_Q", "")
@@ -1404,10 +1380,12 @@ this.CalculateFreq = function(self)
         FLV = 20e6
     end
 
-    freq.FLASHLATENCY = math.ceil(freq.SYSCLK / FLV) - 1
+    freq.FLASHLATENCY = math.ceil(freq.HCLK / FLV) - 1
     if freq.FLASHLATENCY < 0 then freq.FLASHLATENCY = 0 end
-    this:SetFlagValue("LABEL_FLASH_LATENCY", freq.FLASHLATENCY.." Flash delay cycles")
+    this:SetFlagValue("LABEL_FLASH_LATENCY", freq.FLASHLATENCY.." Flash wait-states")
     this:SetFlagValue("__CLK_FLASH_LATENCY__", tostring(freq.FLASHLATENCY))
+
+    this:SetFlagValue("__CLK_HCLK_FREQ__", tostring(freq.HCLK))
 end
 
 -- trigger frequency calculation after loading all flags

@@ -135,7 +135,7 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path, const char *opts)
                         ext4_recover(hdl->mp);
                         ext4_journal_start(hdl->mp);
 
-                        ext4_cache_write_back(true, hdl->mp);
+                        ext4_cache_write_back(__EXT4FS_CFG_WR_BUF_STRATEGY__, hdl->mp);
 
                         if (read_only) {
                                 printk("EXTFS: read only file system");
@@ -765,7 +765,7 @@ API_FS_SYNC(ext4fs, void *fs_handle)
         int err = ext4_cache_write_back(false, hdl->mp);
         if (!err) {
                 err = ext4_cache_flush(hdl->mp);
-                ext4_cache_write_back(true, hdl->mp);
+                ext4_cache_write_back(__EXT4FS_CFG_WR_BUF_STRATEGY__, hdl->mp);
         }
 
         return err;

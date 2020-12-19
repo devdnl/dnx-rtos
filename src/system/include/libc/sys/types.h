@@ -93,6 +93,9 @@ typedef int ssize_t;
 /** @brief File descriptor. */
 typedef intptr_t fd_t;
 
+/** @brief File offset. */
+typedef ssize_t off_t;
+
 /**
  * @brief File mode.
  * @see S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRO, S_IWGRO, S_IXGRO, S_IROTH, S_IWOTH, S_IXOTH
@@ -147,7 +150,7 @@ struct tm {
 
 #ifndef DOXYGEN /* Doxygen description in time.h */
 /** @brief Clock representation type. */
-typedef u32_t clock_t;
+typedef u64_t clock_t;
 #define __CLOCK_TYPE_DEFINED__
 #endif /* DOXYGEN */
 

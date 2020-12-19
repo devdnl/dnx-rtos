@@ -38,6 +38,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+PROGRAM_PARAMS(tmux, STACK_DEPTH_LOW);
 
 /*==============================================================================
   External objects
@@ -55,7 +56,7 @@ GLOBAL_VARIABLES_SECTION {
  * @param argv      arguments
  */
 //==============================================================================
-int_main(tmux, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         if (argc == 1) {
                 printf("Usage: %s <term-no>\n", argv[0]);

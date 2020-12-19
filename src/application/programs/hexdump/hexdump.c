@@ -59,6 +59,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+PROGRAM_PARAMS(hexdump, STACK_DEPTH_LOW);
 
 /*==============================================================================
   External objects
@@ -78,7 +79,7 @@ GLOBAL_VARIABLES_SECTION {
  * @param argv      arguments
  */
 //==============================================================================
-int_main(hexdump, STACK_DEPTH_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         if (argc < 2) {
                 printf("Usage: %s <file> [seek] [bytes]\n", argv[0]);

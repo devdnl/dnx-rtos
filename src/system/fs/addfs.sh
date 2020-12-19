@@ -5,8 +5,6 @@ Makefile_name="Makefile.in"
 Regfile_name="fs_registration.c"
 
 # variables
-Makefile_path=
-Regfile_path=
 list=
 
 #-------------------------------------------------------------------------------
@@ -18,8 +16,8 @@ function check_args()
 {
     local args="$1"
 
-    if [ "$args" == "" ]; then
-        echo "Usage: $args <path_to_scan>"
+    if [ "$1" == "" ] || [ "$2" == "" ]; then
+        echo "Usage: $args <path_to_scan> <output_path>"
         exit 1
     fi
 }
@@ -170,14 +168,12 @@ function create_registration_file()
 #-------------------------------------------------------------------------------
 function main()
 {
-    check_args "$1"
+    check_args "$1" "$2"
 
-    Makefile_path="$1/$Makefile_name"
-    Regfile_path="$1/$Regfile_name"
     list=$(get_list "$1")
 
-    create_makefile > "$Makefile_path"
-    create_registration_file > "$Regfile_path"
+    create_makefile > "$2/$Makefile_name"
+    create_registration_file > "$2/$Regfile_name"
 }
 
-main "$1"
+main "$1" "$2"

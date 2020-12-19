@@ -33,13 +33,17 @@ Driver handles CAN controller peripheral existing in microcontroller.
 
 \section drv-can-sup-arch Supported architectures
 \li stm32f1
+\li stm32f3
+\li stm32f4
+\li stm32f7
 
 \section drv-can-ddesc Details
 \subsection drv-can-ddesc-num Meaning of major and minor numbers
-Only CAN1 is supported.
+Major number select CAN peripheral. Minor number has no meaning and should be
+set to 0.
 
 \subsubsection drv-can-ddesc-numres Numeration restrictions
-Both major and minor number should be set to 0.
+Minor number should be set to 0.
 
 \subsection drv-can-ddesc-init Driver initialization
 To initialize driver the following code can be used:
@@ -152,7 +156,6 @@ if (f) {
         msg.data[1] = 0x02;
         msg.data_length = 2;
         msg.remote_transmission = false;
-        msg.timeout_ms = 2000;
 
         if (fwrite(&msg, sizeof(msg), 1, f) == 1) {
 
@@ -186,7 +189,6 @@ if (f) {
         msg.data[1] = 0x02;
         msg.data_length = 2;
         msg.remote_transmission = false;
-        msg.timeout_ms = 2000;
 
         if (ioctl(fileno(f), IOCTL_CAN__SEND_MSG, &msg) == 0) {
 
@@ -220,7 +222,6 @@ Example code using fread() function
 FILE *f = fopen("/dev/can", "r+");
 if (f) {
         CAN_msg_t msg;
-        msg.timeout_ms = 2000;
 
         if (fread(&msg, sizeof(msg), 1, f) == 1) {
 
@@ -248,7 +249,6 @@ Example code using ioctl() function
 FILE *f = fopen("/dev/can", "r+");
 if (f) {
         CAN_msg_t msg;
-        msg.timeout_ms = 2000;
 
         if (ioctl(fileno(f), IOCTL_CAN__RECV_MSG, &msg) == 0) {
 
@@ -352,6 +352,34 @@ extern "C" {
  */
 #define IOCTL_CAN__RECV_MSG                     _IOR(CAN, 0x08, CAN_msg_t*)
 
+/**
+ *  @brief  Get receive error counter.
+ *  @param  [RD] @ref u8_t * error counter
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__GET_RECEIVE_ERROR_COUNTER    _IOR(CAN, 0x09, u8_t*)
+
+/**
+ *  @brief  Get transmit error counter.
+ *  @param  [RD] @ref u8_t * error counter
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__GET_TRANSMIT_ERROR_COUNTER   _IOR(CAN, 0x0A, u8_t*)
+
+/**
+ *  @brief  Get bus status.
+ *  @param  [RD] @ref CAN_bus_status_t * bus status
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__GET_BUS_STATUS               _IOR(CAN, 0x0B, CAN_bus_status_t*)
+
+/**
+ *  @brief  Get RX FIFO overrun counter.
+ *  @param  [RD] @ref u32_t* RX FIFO overrun counter
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_CAN__GET_RX_FIFO_OVERRUN_COUNTER  _IOR(CAN, 0x0C, u32_t*)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -399,8 +427,17 @@ typedef struct {
         bool  remote_transmission;      /*!< Remote transmission (true). */
         u32_t data_length;              /*!< Data length. */
         u8_t  data[8];                  /*!< Data buffer (8 bytes). */
-        u32_t timeout_ms;               /*!< Timeout in milliseconds. */
 } CAN_msg_t;
+
+/**
+ * Type represent bus status.
+ */
+typedef enum {
+        CAN_BUS_STATUS__OK,             /*!< Bus is working without errors */
+        CAN_BUS_STATUS__WARNING,        /*!< Bus receive/transmit some errors */
+        CAN_BUS_STATUS__PASSIVE,        /*!< Bus is in passive mode */
+        CAN_BUS_STATUS__OFF,            /*!< Bus off state */
+} CAN_bus_status_t;
 
 /*==============================================================================
   Exported objects

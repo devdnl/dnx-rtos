@@ -61,23 +61,6 @@ this:AddWidget("Spinbox", 1, 12, "Number of terminals")
 --*/
 #define __TTY_NUMBER_OF_TERM__ 2
 
-/*--
-this:AddWidget("Editline", true, "Terminal input file")
---*/
-#define __TTY_TERM_IN_FILE__ "/dev/ttyS0"
-
-/*--
-this:AddWidget("Editline", true, "Terminal output file")
---*/
-#define __TTY_TERM_OUT_FILE__ "/dev/ttyS0"
-
-/*--
-this:AddWidget("Combobox", "Clear screen at initialization")
-this:AddItem("No", "_NO_")
-this:AddItem("Yes", "_YES_")
---*/
-#define __TTY_CLR_SCR_AT_INIT__ _YES_
-
 #endif /* _TTY_FLAGS_H_ */
 /*==============================================================================
   End of file

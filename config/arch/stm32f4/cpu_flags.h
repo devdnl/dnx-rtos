@@ -270,7 +270,7 @@ __CPU_NAME__=STM32F429BIxx
 #/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")
 #--*/
-#define __CPU_VTOR_TAB_POSITION__ 0x40000
+#define __CPU_VTOR_TAB_POSITION__ 0x00000
 
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable

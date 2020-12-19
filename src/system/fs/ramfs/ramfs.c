@@ -916,28 +916,27 @@ API_FS_WRITE(ramfs,
                         sys_gettime(&node->mtime);
 
                         if (S_ISDEV(node->mode)) {
+                                dev_t dev = node->data.dev_t;
                                 sys_mutex_unlock(hdl->resource_mtx);
-                                return sys_driver_write(node->data.dev_t, src,
-                                                        count, fpos, wrcnt, fattr);
+                                return sys_driver_write(dev, src, count, fpos, wrcnt, fattr);
 
                         } else if (S_ISFIFO(node->mode)) {
-                               sys_mutex_unlock(hdl->resource_mtx);
+                                pipe_t *pipe = node->data.pipe_t;
+                                sys_mutex_unlock(hdl->resource_mtx);
 
-                               err = sys_pipe_write(node->data.pipe_t, src,
-                                                    count, wrcnt, fattr.non_blocking_wr);
-                               if (!err) {
-                                       if (*wrcnt > 0) {
-                                               size_t size = 0;
-                                               err = sys_pipe_get_length(node->data.pipe_t,
-                                                                         &size);
-                                               node->size = size;
-                                       }
-                               }
+                                err = sys_pipe_write(pipe, src, count, wrcnt, fattr.non_blocking_wr);
+                                if (!err) {
+                                        if (*wrcnt > 0) {
+                                                size_t size = 0;
+                                                err = sys_pipe_get_length(pipe, &size);
+                                                node->size = size;
+                                        }
+                                }
 
-                               return err;
+                                return err;
 
-                       } else if (S_ISREG(node->mode)) {
-                               err = write_regular_file(node, src, count, *fpos, wrcnt);
+                        } else if (S_ISREG(node->mode)) {
+                                err = write_regular_file(node, src, count, *fpos, wrcnt);
                         }
                 }
 
@@ -983,20 +982,19 @@ API_FS_READ(ramfs,
                         node_t *node = opened_file->child;
 
                         if (S_ISDEV(node->mode)) {
+                                dev_t dev = node->data.dev_t;
                                 sys_mutex_unlock(hdl->resource_mtx);
-                                return sys_driver_read(node->data.dev_t, dst,
-                                                       count, fpos, rdcnt, fattr);
+                                return sys_driver_read(dev, dst, count, fpos, rdcnt, fattr);
 
                         } else if (S_ISFIFO(node->mode)) {
+                                pipe_t *pipe = node->data.pipe_t;
                                 sys_mutex_unlock(hdl->resource_mtx);
 
-                                err = sys_pipe_read(node->data.pipe_t, dst,
-                                                    count, rdcnt, fattr.non_blocking_rd);
+                                err = sys_pipe_read(pipe, dst, count, rdcnt, fattr.non_blocking_rd);
                                 if (!err) {
                                         if (*rdcnt > 0) {
                                                 size_t size;
-                                                err = sys_pipe_get_length(node->data.pipe_t,
-                                                                          &size);
+                                                err = sys_pipe_get_length(pipe, &size);
                                                 node->size = size;
                                         }
                                 }
@@ -1038,24 +1036,30 @@ API_FS_IOCTL(ramfs, void *fs_handle, void *fhdl, int request, void *arg)
                 struct opened_file_info *opened_file = fhdl;
                 if (opened_file && opened_file->child) {
                         if (S_ISDEV(opened_file->child->mode)) {
+                                dev_t dev = opened_file->child->data.dev_t;
                                 sys_mutex_unlock(hdl->resource_mtx);
-                                return sys_driver_ioctl(opened_file->child->data.dev_t,
-                                                        request, arg);
+                                return sys_driver_ioctl(dev, request, arg);
 
                         } else if (S_ISFIFO(opened_file->child->mode)) {
 
                                 switch (request) {
-                                case IOCTL_PIPE__CLOSE:
+                                case IOCTL_PIPE__CLOSE: {
+                                        pipe_t *pipe = opened_file->child->data.pipe_t;
                                         sys_mutex_unlock(hdl->resource_mtx);
-                                        return sys_pipe_close(opened_file->child->data.pipe_t);
+                                        return sys_pipe_close(pipe);
+                                }
 
-                                case IOCTL_PIPE__CLEAR:
+                                case IOCTL_PIPE__CLEAR: {
+                                        pipe_t *pipe = opened_file->child->data.pipe_t;
                                         sys_mutex_unlock(hdl->resource_mtx);
-                                        return sys_pipe_clear(opened_file->child->data.pipe_t);
+                                        return sys_pipe_clear(pipe);
+                                }
 
-                                case IOCTL_PIPE__PERMANENT:
+                                case IOCTL_PIPE__PERMANENT: {
+                                        pipe_t *pipe = opened_file->child->data.pipe_t;
                                         sys_mutex_unlock(hdl->resource_mtx);
-                                        return sys_pipe_permanent(opened_file->child->data.pipe_t);
+                                        return sys_pipe_permanent(pipe);
+                                }
 
                                 default:
                                         err = EBADRQC;

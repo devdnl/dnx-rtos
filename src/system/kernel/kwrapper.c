@@ -58,6 +58,7 @@
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+extern u64_t _tick_counter;
 
 /*==============================================================================
   Function definitions
@@ -71,7 +72,10 @@
 //==============================================================================
 static bool is_semaphore_valid(sem_t *sem)
 {
-        return _mm_is_object_in_heap(sem) && sem->header.type == RES_TYPE_SEMAPHORE && sem->object;
+        return _mm_is_object_in_heap(sem)
+            && (sem->header.self == sem)
+            && (sem->header.type == RES_TYPE_SEMAPHORE)
+            && sem->object;
 }
 
 //==============================================================================
@@ -83,7 +87,10 @@ static bool is_semaphore_valid(sem_t *sem)
 //==============================================================================
 static bool is_mutex_valid(mutex_t *mtx)
 {
-        return _mm_is_object_in_heap(mtx) && mtx->header.type == RES_TYPE_MUTEX && mtx->object;
+        return _mm_is_object_in_heap(mtx)
+            && (mtx->header.self == mtx)
+            && (mtx->header.type == RES_TYPE_MUTEX)
+            && mtx->object;
 }
 
 //==============================================================================
@@ -95,7 +102,10 @@ static bool is_mutex_valid(mutex_t *mtx)
 //==============================================================================
 static bool is_queue_valid(queue_t *queue)
 {
-        return _mm_is_object_in_heap(queue) && queue->header.type == RES_TYPE_QUEUE && queue->object;
+        return _mm_is_object_in_heap(queue)
+            && (queue->header.self == queue)
+            && (queue->header.type == RES_TYPE_QUEUE)
+            && queue->object;
 }
 
 //==============================================================================
@@ -107,7 +117,10 @@ static bool is_queue_valid(queue_t *queue)
 //==============================================================================
 static bool is_flag_valid(flag_t *flag)
 {
-        return _mm_is_object_in_heap(flag) && flag->header.type == RES_TYPE_FLAG && flag->object;
+        return _mm_is_object_in_heap(flag)
+            && (flag->header.self == flag)
+            && (flag->header.type == RES_TYPE_FLAG)
+            && flag->object;
 }
 
 //==============================================================================
@@ -127,9 +140,9 @@ void _kernel_start(void)
  * @return a OS time in milliseconds
  */
 //==============================================================================
-u32_t _kernel_get_time_ms(void)
+u64_t _kernel_get_time_ms(void)
 {
-        return (xTaskGetTickCount() * (1000/(configTICK_RATE_HZ)));
+        return (_tick_counter * (1000/(configTICK_RATE_HZ)));
 }
 
 //==============================================================================
@@ -139,9 +152,9 @@ u32_t _kernel_get_time_ms(void)
  * @return a tick counter value
  */
 //==============================================================================
-u32_t _kernel_get_tick_counter(void)
+u64_t _kernel_get_tick_counter(void)
 {
-        return (u32_t)xTaskGetTickCount();
+        return _tick_counter;
 }
 
 //==============================================================================
@@ -491,7 +504,7 @@ int _semaphore_create(size_t cnt_max, size_t cnt_init, sem_t **sem)
         int err = EINVAL;
 
         if (cnt_max > 0 && sem) {
-                err = _kzalloc(_MM_KRN, sizeof(sem_t), cast(void**, sem));
+                err = _kzalloc(_MM_KRN, sizeof(sem_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, sem));
                 if (err == ESUCC) {
 
                         if (cnt_max == 1) {
@@ -512,6 +525,7 @@ int _semaphore_create(size_t cnt_max, size_t cnt_init, sem_t **sem)
                         }
 
                         if ((*sem)->object) {
+                                (*sem)->header.self = *sem;
                                 (*sem)->header.type = RES_TYPE_SEMAPHORE;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, sem));
@@ -535,6 +549,7 @@ int _semaphore_create(size_t cnt_max, size_t cnt_init, sem_t **sem)
 int _semaphore_destroy(sem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
+                sem->header.self = NULL;
                 sem->header.type = RES_TYPE_UNKNOWN;
                 vSemaphoreDelete(sem->object);
                 sem->object = NULL;
@@ -674,7 +689,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
         int err = EINVAL;
 
         if (type <= MUTEX_TYPE_NORMAL && mtx) {
-                err = _kzalloc(_MM_KRN, sizeof(mutex_t), cast(void**, mtx));
+                err = _kzalloc(_MM_KRN, sizeof(mutex_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, mtx));
                 if (err == ESUCC) {
                         if (type == MUTEX_TYPE_RECURSIVE) {
                                 (*mtx)->object    = xSemaphoreCreateRecursiveMutexStatic(&(*mtx)->buffer);
@@ -685,6 +700,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
                         }
 
                         if ((*mtx)->object) {
+                                (*mtx)->header.self = *mtx;
                                 (*mtx)->header.type = RES_TYPE_MUTEX;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, mtx));
@@ -708,6 +724,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
 int _mutex_destroy(mutex_t *mutex)
 {
         if (is_mutex_valid(mutex)) {
+                mutex->header.self = NULL;
                 mutex->header.type = RES_TYPE_UNKNOWN;
                 vSemaphoreDelete(mutex->object);
                 mutex->object = NULL;
@@ -786,11 +803,12 @@ int _flag_create(flag_t **flag)
         int err = EINVAL;
 
         if (flag) {
-                err = _kzalloc(_MM_KRN, sizeof(flag_t), cast(void**, flag));
+                err = _kzalloc(_MM_KRN, sizeof(flag_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, flag));
                 if (err == ESUCC) {
                         (*flag)->object = xEventGroupCreateStatic(&(*flag)->buffer);
 
                         if ((*flag)->object) {
+                                (*flag)->header.self = *flag;
                                 (*flag)->header.type = RES_TYPE_FLAG;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, flag));
@@ -945,13 +963,15 @@ int _queue_create(size_t length, size_t item_size, queue_t **queue)
         int err = EINVAL;
 
         if (length && item_size && queue) {
-                err = _kzalloc(_MM_KRN, sizeof(queue_t) + (length * item_size), cast(void**, queue));
+                err = _kzalloc(_MM_KRN, sizeof(queue_t) + (length * item_size),
+                               _CPUCTL_FAST_MEM, 0, 0, cast(void**, queue));
                 if (err == ESUCC) {
                         (*queue)->object = xQueueCreateStatic(length,
                                                               item_size,
                                                               cast(uint8_t*, &(*queue)[1]),
                                                               &(*queue)->buffer);
                         if ((*queue)->object) {
+                                (*queue)->header.self = *queue;
                                 (*queue)->header.type = RES_TYPE_QUEUE;
                         } else {
                                 _kfree(_MM_KRN, cast(void**, &queue));
@@ -975,6 +995,7 @@ int _queue_create(size_t length, size_t item_size, queue_t **queue)
 int _queue_destroy(queue_t *queue)
 {
         if (is_queue_valid(queue)) {
+                queue->header.self = NULL;
                 queue->header.type = RES_TYPE_UNKNOWN;
                 vQueueDelete(queue->object);
                 queue->object = NULL;

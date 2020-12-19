@@ -79,8 +79,8 @@ DATA      -----------> store data
 #define PACKET_TYPE_BIND                6
 #define _PACKET_TYPE_COUNT              7
 
-#define zalloc(_size, _pptr) _kzalloc(_MM_NET, _size, _pptr)
-#define kalloc(_size, _pptr) _kmalloc(_MM_NET, _size, _pptr)
+#define zalloc(_size, _pptr) _kzalloc(_MM_NET, _size, NULL, true, _pptr)
+#define kalloc(_size, _pptr) _kmalloc(_MM_NET, _size, NULL, true, _pptr)
 #define zfree(_pptr) _kfree(_MM_NET, _pptr)
 
 #if __NETWORK_SIPC_DEBUG_ON__ > 0
@@ -435,11 +435,11 @@ static void input_thread(void *arg)
                 int err = sys_fopen(__NETWORK_SIPC_INTERFACE_PATH__, "r+", &sipc->if_file);
 
                 if (err && !msg) {
-                        printk("SIPC: interface file error (%s)", strerror(err));
+                        printk("SIPC: waiting for interface file...");
                         msg = true;
                 }
 
-                sys_sleep_ms(100);
+                sys_sleep_ms(1000);
         }
 
         while (true) {
@@ -696,6 +696,8 @@ static int stack_init(void)
                         printk("SIPC: stack initialization error");
 
                         err = ENOMEM;
+                } else {
+                        printk("SIPC: thread ID: %u", sipc->if_thread);
                 }
         }
 
@@ -711,12 +713,15 @@ static int stack_init(void)
 //==============================================================================
 int SIPC_ifup(const NET_SIPC_config_t *cfg)
 {
-        UNUSED_ARG1(cfg);
-
         int err = stack_init();
         if (!err) {
-                sipc->conf.MTU = max(64, cfg->MTU);
-                sipc->state = NET_SIPC_STATE__UP;
+                if (cfg) {
+                        sipc->conf.MTU = max(64, cfg->MTU);
+                        sipc->state = NET_SIPC_STATE__UP;
+                } else {
+                        sipc->conf.MTU = 64;
+                        sipc->state = NET_SIPC_STATE__DOWN;
+                }
         }
 
         return err;

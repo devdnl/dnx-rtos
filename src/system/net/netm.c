@@ -129,8 +129,9 @@ static int socket_alloc(SOCKET **socket, NET_family_t family)
 
         int err = _kzalloc(_MM_NET,
                            _mm_align(sizeof(SOCKET)) + net_socket_size[family],
-                           cast(void**, socket));
+                           NULL, false, cast(void**, socket));
         if (!err) {
+                (*socket)->header.self = *socket;
                 (*socket)->header.type = RES_TYPE_SOCKET;
                 (*socket)->family      = family;
                 (*socket)->ctx         = cast(void *,
@@ -149,6 +150,7 @@ static int socket_alloc(SOCKET **socket, NET_family_t family)
 //==============================================================================
 static void socket_free(SOCKET **socket)
 {
+        (*socket)->header.self = NULL;
         (*socket)->header.type = RES_TYPE_UNKNOWN;
         _kfree(_MM_NET, cast(void**, socket));
         *socket = NULL;
@@ -165,6 +167,7 @@ static bool is_socket_valid(SOCKET *socket)
 {
         return _mm_is_object_in_heap(socket)
             && (socket->header.type == RES_TYPE_SOCKET)
+            && (socket->header.self == socket)
             && (socket->family < _NET_FAMILY__COUNT)
             && (socket->ctx == cast(void *, cast(size_t, socket)
                                           + _mm_align(sizeof(SOCKET))));
@@ -189,7 +192,7 @@ int _net_ifup(NET_family_t family, const NET_generic_config_t *config)
                 #endif
         };
 
-        if (family < _NET_FAMILY__COUNT && config) {
+        if (family < _NET_FAMILY__COUNT) {
                 return call_proxy_function(family, config);
         } else {
                 return EINVAL;

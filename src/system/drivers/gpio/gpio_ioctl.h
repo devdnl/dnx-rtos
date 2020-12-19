@@ -34,7 +34,10 @@ Driver handles GPIO peripheral.
 
 \section drv-gpio-sup-arch Supported architectures
 \li stm32f1
+\li stm32f3
 \li stm32f4
+\li stm32f7
+\li stm32h7
 \li efr32
 
 \section drv-gpio-ddesc Details
@@ -135,8 +138,14 @@ not initialized then pin behavior is undefined (depends on microcontroller).
 // PIN names definitions (IOCTL_GPIO_PIN__name and IOCTL_GPIO_PIN_MASK__name)
 #if defined(ARCH_stm32f1)
         #include "stm32f1/gpio_cfg.h"
+#elif defined(ARCH_stm32f3)
+        #include "stm32f3/gpio_cfg.h"
 #elif defined(ARCH_stm32f4)
         #include "stm32f4/gpio_cfg.h"
+#elif defined(ARCH_stm32f7)
+        #include "stm32f7/gpio_cfg.h"
+#elif defined(ARCH_stm32h7)
+        #include "stm32h7/gpio_cfg.h"
 #elif defined(ARCH_efr32)
         #include "efr32/gpio_cfg.h"
 #endif

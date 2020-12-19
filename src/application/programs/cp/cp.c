@@ -61,6 +61,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(cp, STACK_DEPTH_MEDIUM);
 
 /*==============================================================================
   Function definitions
@@ -71,7 +72,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Cat main function
  */
 //==============================================================================
-int_main(cp, STACK_DEPTH_MEDIUM, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         if (argc != 3) {
                 printf("Usage: %s <source file> <destination file>\n", argv[0]);

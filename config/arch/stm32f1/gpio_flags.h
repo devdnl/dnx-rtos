@@ -567,7 +567,7 @@ if this:PinExist("A", 9) then
     this:AddProposals(PA9, "A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_NAME__ USART1_TX
+#define __GPIO_PA_PIN_9_NAME__ PA9_NC
 
 /*--
 if this:PinExist("A", 9) then
@@ -575,7 +575,7 @@ if this:PinExist("A", 9) then
     this:AddPinMode("A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_MODE__ _GPIO_ALT_OUT_PUSH_PULL_10MHZ
+#define __GPIO_PA_PIN_9_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 9) then
@@ -583,7 +583,7 @@ if this:PinExist("A", 9) then
     this:AddPinState("A", 9)
 end
 --*/
-#define __GPIO_PA_PIN_9_STATE__ _HIGH
+#define __GPIO_PA_PIN_9_STATE__ _LOW
 
 /*--
 if this:PinExist("A", 10) then
@@ -599,7 +599,7 @@ if this:PinExist("A", 10) then
     this:AddProposals(PA10, "A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_NAME__ USART1_RX
+#define __GPIO_PA_PIN_10_NAME__ PA10_NC
 
 /*--
 if this:PinExist("A", 10) then
@@ -607,7 +607,7 @@ if this:PinExist("A", 10) then
     this:AddPinMode("A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_MODE__ _GPIO_IN_PULLED
+#define __GPIO_PA_PIN_10_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("A", 10) then
@@ -615,7 +615,7 @@ if this:PinExist("A", 10) then
     this:AddPinState("A", 10)
 end
 --*/
-#define __GPIO_PA_PIN_10_STATE__ _HIGH
+#define __GPIO_PA_PIN_10_STATE__ _LOW
 
 /*--
 if this:PinExist("A", 11) then
@@ -857,7 +857,7 @@ if this:PinExist("B", 2) then
     this:AddProposals(PB2, "B", 2)
 end
 --*/
-#define __GPIO_PB_PIN_2_NAME__ BOOT1
+#define __GPIO_PB_PIN_2_NAME__ PB2_NC
 
 /*--
 if this:PinExist("B", 2) then
@@ -865,7 +865,7 @@ if this:PinExist("B", 2) then
     this:AddPinMode("B", 2)
 end
 --*/
-#define __GPIO_PB_PIN_2_MODE__ _GPIO_IN_FLOAT
+#define __GPIO_PB_PIN_2_MODE__ _GPIO_ANALOG
 
 /*--
 if this:PinExist("B", 2) then
@@ -873,7 +873,7 @@ if this:PinExist("B", 2) then
     this:AddPinState("B", 2)
 end
 --*/
-#define __GPIO_PB_PIN_2_STATE__ _FLOAT
+#define __GPIO_PB_PIN_2_STATE__ _LOW
 
 /*--
 if this:PinExist("B", 3) then

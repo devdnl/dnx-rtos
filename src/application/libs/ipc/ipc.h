@@ -50,6 +50,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define ipc_client_atomic(_client) for (int __ = 0; __ == 0;) for (int _e = ipc_client_lock(_client); _e == 0 && __ == 0; ipc_client_unlock(_client), __++)
 
 /*==============================================================================
   Exported object types
@@ -78,6 +79,8 @@ extern int   ipc_host_send_response(ipc_client_t*);
 extern int   ipc_client_connect(ipc_host_t*, ipc_client_t**, size_t, size_t);
 extern void  ipc_client_disconnect(ipc_client_t*);
 extern int   ipc_client_call(ipc_client_t*);
+extern int   ipc_client_lock(ipc_client_t*);
+extern void  ipc_client_unlock(ipc_client_t*);
 extern void *ipc_get_cmd_data(ipc_client_t*);
 extern void *ipc_get_ans_data(ipc_client_t*);
 

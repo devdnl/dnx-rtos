@@ -67,6 +67,7 @@ typedef enum {
 
 /** KERNELSPACE: object header (must be the first in object) */
 typedef struct res_header {
+        void              *self;
         struct res_header *next;
         res_type_t         type;
 } res_header_t;

@@ -73,26 +73,29 @@ static bool is_APB2_divided         (void);
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG3(device_handle, major, minor);
+        UNUSED_ARG4(device_handle, major, minor, config);
 
         RCC_DeInit();
 
         set_flash_latency(_CLK_CFG__FLASH_LATENCY);
         enable_prefetch_buffer();
 
-        int status = ESUCC;
+        int err = ESUCC;
 
         if (_CLK_CFG__LSI_ON) {
                 RCC_LSICmd(_CLK_CFG__LSI_ON);
-                status = wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS);
-                if (status != ESUCC)
-                        return status;
+                err = wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS);
+                if (err) {
+                        printk("CLK: LSI timeout");
+                        return err;
+                }
         }
 
         if (_CLK_CFG__LSE_ON) {
@@ -104,17 +107,21 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
                         RCC_LSEConfig(_CLK_CFG__LSE_ON);
 
                         if (_CLK_CFG__LSE_ON != RCC_LSE_Bypass) {
-                                wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS);
-                                // this oscillator not causes an error because is not a main osc.
+                                if (wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS) != ESUCC) {
+                                        // this oscillator not causes an error because is not a main osc.
+                                        printk("CLK: LSE timeout");
+                                }
                         }
                 }
         }
 
         if (_CLK_CFG__HSE_ON) {
                 RCC_HSEConfig(_CLK_CFG__HSE_ON);
-                status = wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS);
-                if (status != ESUCC)
-                        return status;
+                err = wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS);
+                if (err) {
+                        printk("CLK: HSE timeout");
+                        return err;
+                }
         }
 
         if (  (  (_CLK_CFG__RTCCLK_SRC == RCC_RTCCLKSource_LSE        && _CLK_CFG__LSE_ON)
@@ -134,17 +141,21 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         if (_CLK_CFG__PLL2_ON) {
                 RCC_PLL2Config(_CLK_CFG__PLL2_MUL);
                 RCC_PLL2Cmd(_CLK_CFG__PLL2_ON);
-                status = wait_for_flag(RCC_FLAG_PLL2RDY, TIMEOUT_MS);
-                if (status != ESUCC)
-                        return status;
+                err = wait_for_flag(RCC_FLAG_PLL2RDY, TIMEOUT_MS);
+                if (err) {
+                        printk("CLK: PLL2 timeout");
+                        return err;
+                }
         }
 
         if (_CLK_CFG__PLL3_ON) {
                 RCC_PLL3Config(_CLK_CFG__PLL3_MUL);
                 RCC_PLL3Cmd(_CLK_CFG__PLL3_ON);
-                status = wait_for_flag(RCC_FLAG_PLL3RDY, TIMEOUT_MS);
-                if (status != ESUCC)
-                        return status;
+                err = wait_for_flag(RCC_FLAG_PLL3RDY, TIMEOUT_MS);
+                if (err) {
+                        printk("CLK: PLL3 timeout");
+                        return err;
+                }
         }
 
         RCC_I2S2CLKConfig(_CLK_CFG__I2S2_SRC);
@@ -159,7 +170,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PLLConfig(_CLK_CFG__PLL_SRC, _CLK_CFG__PLL_MUL);
         RCC_PLLCmd(_CLK_CFG__PLL_ON);
         if (_CLK_CFG__PLL_ON) {
-                status = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
+                err = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
+                if (err)  {
+                        printk("CLK: PLL timeout");
+                }
         }
 
         RCC_ADCCLKConfig(_CLK_CFG__ADC_PRE);
@@ -172,7 +186,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
 
         sys_update_system_clocks();
 
-        return status;
+        return err;
 }
 
 //==============================================================================
@@ -313,38 +327,43 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
 
         if (arg) {
                 if (request == IOCTL_CLK__GET_CLK_INFO) {
-                        RCC_ClocksTypeDef freq;
-                        RCC_GetClocksFreq(&freq);
+                        LL_RCC_ClocksTypeDef freq;
+                        LL_RCC_GetSystemClocksFreq(&freq);
 
                         CLK_info_t *clkinf = arg;
 
                         switch (clkinf->iterator) {
                         case 0:
                                 clkinf->freq_Hz = freq.SYSCLK_Frequency;
-                                clkinf->name = "SYSCLK";
+                                clkinf->name = "CPUCLK";
                                 break;
 
                         case 1:
+                                clkinf->freq_Hz = freq.SYSCLK_Frequency;
+                                clkinf->name = "SYSCLK";
+                                break;
+
+                        case 2:
                                 clkinf->freq_Hz = freq.HCLK_Frequency;
                                 clkinf->name = "HCLK";
                                 break;
 
-                        case 2:
+                        case 3:
                                 clkinf->freq_Hz = freq.PCLK1_Frequency;
                                 clkinf->name = "PCLK1";
                                 break;
 
-                        case 3:
+                        case 4:
                                 clkinf->freq_Hz = freq.PCLK2_Frequency;
                                 clkinf->name = "PCLK2";
                                 break;
 
-                        case 4:
+                        case 5:
                                 clkinf->freq_Hz = freq.ADCCLK_Frequency;
                                 clkinf->name = "ADCCLK";
                                 break;
 
-                        case 5:
+                        case 6:
                                 if (is_APB1_divided()) {
                                         clkinf->freq_Hz = freq.PCLK1_Frequency * 2;
                                 } else {
@@ -353,7 +372,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "PCLK1_TIM";
                                 break;
 
-                        case 6:
+                        case 7:
                                 if (is_APB2_divided()) {
                                         clkinf->freq_Hz = freq.PCLK2_Frequency * 2;
                                 } else {

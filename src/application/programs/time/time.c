@@ -64,6 +64,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+PROGRAM_PARAMS(time, STACK_DEPTH_VERY_LOW);
 
 /*==============================================================================
   Function definitions
@@ -73,7 +74,7 @@ GLOBAL_VARIABLES_SECTION {
  * @brief Program main function
  */
 //==============================================================================
-int_main(time, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         if (argc == 1) {
                 printf("Usage: %s [program]\n", argv[0]);
@@ -93,7 +94,7 @@ int_main(time, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
 
         errno = 0;
 
-        u32_t start_time = get_time_ms();
+        u64_t start_time = get_time_ms();
 
         process_attr_t attr;
         memset(&attr, 0, sizeof(attr));

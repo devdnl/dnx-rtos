@@ -81,12 +81,15 @@ static DCI_t *DCI;
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_INIT(DCI, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(DCI, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
+        UNUSED_ARG1(config);
+
         int err = EFAULT;
 
         if (major == 0 && minor == 0) {
@@ -300,6 +303,11 @@ API_MOD_READ(DCI,
                 return ESPIPE;
         }
 
+        if (not sys_is_mem_dma_capable(dst)) {
+                printk("DCI: destination address not DMA capable");
+                return EFAULT;
+        }
+
         u32_t dmad = _DMA_DDI_reserve(1, DMA_STREAM_PRI);
         if (dmad == 0) {
                 dmad = _DMA_DDI_reserve(1, DMA_STREAM_AUX);
@@ -315,6 +323,7 @@ API_MOD_READ(DCI,
         config.NDT          = hdl->TSIZEW;
         config.arg          = DCI;
         config.callback     = DMA_callback;
+        config.cb_next      = NULL;
         config.release      = false;
         config.FC           = DMA_SxFCR_FTH_FULL | DMA_SxFCR_FS_EMPTY | DMA_SxFCR_DMDIS_YES;
         config.CR           = DMA_SxCR_CHSEL_SEL(DMA_CHANNEL)

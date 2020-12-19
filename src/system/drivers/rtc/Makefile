@@ -10,4 +10,8 @@ ifeq ($(__ENABLE_RTC__), _YES_)
       CSRC_ARCH   += drivers/rtc/$(TARGET)/rtc.c
    	CXXSRC_ARCH += 
    endif
+   ifeq ($(TARGET), stm32f7)
+      CSRC_ARCH   += drivers/rtc/$(TARGET)/rtc.c
+   	CXXSRC_ARCH += 
+   endif
 endif

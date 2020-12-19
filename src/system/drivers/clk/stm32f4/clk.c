@@ -41,6 +41,11 @@
 #define TIMEOUT_MS                      250
 #define LSE_TIMEOUT_MS                  5000
 
+#define PWR_REGULATOR_VOLTAGE_SCALE0    (0)
+#define PWR_REGULATOR_VOLTAGE_SCALE1    ((1*PWR_CR_VOS_1) | (1*PWR_CR_VOS_0))
+#define PWR_REGULATOR_VOLTAGE_SCALE2    ((1*PWR_CR_VOS_1) | (0*PWR_CR_VOS_0))
+#define PWR_REGULATOR_VOLTAGE_SCALE3    ((0*PWR_CR_VOS_1) | (1*PWR_CR_VOS_0))
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -48,11 +53,11 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void set_flash_latency       (u32_t latency);
-static void enable_prefetch_buffer  (void);
-static int  wait_for_flag           (u32_t flag, u32_t timeout);
-static bool is_APB1_divided         (void);
-static bool is_APB2_divided         (void);
+static int  configure_core_voltage_and_flash_latency(void);
+static void enable_prefetch_buffer(void);
+static int  wait_for_flag(u32_t flag, u32_t timeout);
+static bool is_APB1_divided(void);
+static bool is_APB2_divided(void);
 
 /*==============================================================================
   Local object definitions
@@ -73,20 +78,24 @@ static bool is_APB2_divided         (void);
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG3(device_handle, major, minor);
+        UNUSED_ARG4(device_handle, major, minor, config);
 
         RCC_DeInit();
 
-        set_flash_latency(_CLK_CFG__FLASH_LATENCY);
-        enable_prefetch_buffer();
+        int err = 0;
+        err = configure_core_voltage_and_flash_latency();
+        if (err) {
+                return err;
+        }
 
-        int err = ESUCC;
+        enable_prefetch_buffer();
 
         //----------------------------------------------------------------------
         // MCOx clock sources and prescalers
@@ -100,8 +109,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         if (_CLK_CFG__LSI_ON) {
                 RCC_LSICmd(_CLK_CFG__LSI_ON);
                 err = wait_for_flag(RCC_FLAG_LSIRDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: LSI timeout");
                         return err;
+                }
         }
 
         //----------------------------------------------------------------------
@@ -119,7 +130,8 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
                         if (_CLK_CFG__LSE_ON != RCC_LSE_Bypass) {
                                 // this oscillator not causes an error because is not a main osc.
                                 if (wait_for_flag(RCC_FLAG_LSERDY, LSE_TIMEOUT_MS) != ESUCC) {
-                                        printk("LSE oscillator start error");
+                                        // this oscillator not causes an error because is not a main osc.
+                                        printk("CLK: LSE timeout");
                                 }
                         }
                 }
@@ -131,8 +143,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         if (_CLK_CFG__HSE_ON) {
                 RCC_HSEConfig(_CLK_CFG__HSE_ON);
                 err = wait_for_flag(RCC_FLAG_HSERDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: HSE timeout");
                         return err;
+                }
         }
 
         //----------------------------------------------------------------------
@@ -239,7 +253,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         //----------------------------------------------------------------------
 #if defined(STM32F410xx) || defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx) || defined(STM32F469_479xx)
         RCC_PLLConfig(_CLK_CFG__PLL_SRC,
-                      _CLK_CFG__PLL_M,
+                      _CLK_CFG__PLL_SRC_DIV_M,
                       _CLK_CFG__PLL_N,
                       _CLK_CFG__PLL_P,
                       _CLK_CFG__PLL_Q,
@@ -248,7 +262,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
 
 #if defined(STM32F40_41xxx) || defined(STM32F427_437xx) || defined(STM32F429_439xx) || defined(STM32F401xx) || defined(STM32F411xE)
         RCC_PLLConfig(_CLK_CFG__PLL_SRC,
-                      _CLK_CFG__PLL_M,
+                      _CLK_CFG__PLL_SRC_DIV_M,
                       _CLK_CFG__PLL_N,
                       _CLK_CFG__PLL_P,
                       _CLK_CFG__PLL_Q);
@@ -257,8 +271,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PLLCmd(_CLK_CFG__PLL_ON);
         if (_CLK_CFG__PLL_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLRDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: PLL timeout");
                         return err;
+                }
         }
 
         //----------------------------------------------------------------------
@@ -285,8 +301,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PLLI2SCmd(_CLK_CFG__PLLI2S_ON);
         if (_CLK_CFG__PLLI2S_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLI2SRDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: PLLI2S timeout");
                         return err;
+                }
         }
 #endif
 
@@ -309,8 +327,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor)
         RCC_PLLSAICmd(_CLK_CFG__PLLSAI_ON);
         if (_CLK_CFG__PLLSAI_ON) {
                 err = wait_for_flag(RCC_FLAG_PLLSAIRDY, TIMEOUT_MS);
-                if (err)
+                if (err) {
+                        printk("CLK: PLLSAI timeout");
                         return err;
+                }
         }
 #endif
 
@@ -465,33 +485,38 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
 
         if (arg) {
                 if (request == IOCTL_CLK__GET_CLK_INFO) {
-                        RCC_ClocksTypeDef freq;
-                        RCC_GetClocksFreq(&freq);
+                        LL_RCC_ClocksTypeDef freq;
+                        LL_RCC_GetSystemClocksFreq(&freq);
 
                         CLK_info_t *clkinf = arg;
 
                         switch (clkinf->iterator) {
                         case 0:
                                 clkinf->freq_Hz = freq.SYSCLK_Frequency;
-                                clkinf->name = "SYSCLK";
+                                clkinf->name = "CPUCLK";
                                 break;
 
                         case 1:
+                                clkinf->freq_Hz = freq.SYSCLK_Frequency;
+                                clkinf->name = "SYSCLK";
+                                break;
+
+                        case 2:
                                 clkinf->freq_Hz = freq.HCLK_Frequency;
                                 clkinf->name = "HCLK";
                                 break;
 
-                        case 2:
+                        case 3:
                                 clkinf->freq_Hz = freq.PCLK1_Frequency;
                                 clkinf->name = "PCLK1";
                                 break;
 
-                        case 3:
+                        case 4:
                                 clkinf->freq_Hz = freq.PCLK2_Frequency;
                                 clkinf->name = "PCLK2";
                                 break;
 
-                        case 4:
+                        case 5:
                                 if (is_APB1_divided()) {
                                         clkinf->freq_Hz = freq.PCLK1_Frequency * 2;
                                 } else {
@@ -500,7 +525,7 @@ API_MOD_IOCTL(CLK, void *device_handle, int request, void *arg)
                                 clkinf->name = "PCLK1_TIM";
                                 break;
 
-                        case 5:
+                        case 6:
                                 if (is_APB2_divided()) {
                                         clkinf->freq_Hz = freq.PCLK2_Frequency * 2;
                                 } else {
@@ -561,13 +586,60 @@ API_MOD_STAT(CLK, void *device_handle, struct vfs_dev_stat *device_stat)
 /**
  * @brief Function set flash latency (wait states)
  *
- * @param latency
+ * @return One of errno value.
  */
 //==============================================================================
-static void set_flash_latency(u32_t latency)
+static int configure_core_voltage_and_flash_latency(void)
 {
-        CLEAR_BIT(FLASH->ACR, FLASH_ACR_LATENCY);
-        SET_BIT(FLASH->ACR, latency & FLASH_ACR_LATENCY);
+        int err = 0;
+
+        SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
+
+        u32_t hclk = __CLK_HCLK_FREQ__ / 1000000;
+
+        u32_t VOS;
+        if (hclk <= 144) {
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE2;
+        } else if (hclk <= 168) {
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE1;
+        } else {
+                VOS = PWR_REGULATOR_VOLTAGE_SCALE0;
+        }
+
+        // Set the core voltage
+        if ((PWR->CR & PWR_CR_VOS) != VOS) {
+                u32_t VOS_tmp = (VOS == PWR_REGULATOR_VOLTAGE_SCALE0) ? PWR_REGULATOR_VOLTAGE_SCALE1 : VOS;
+                MODIFY_REG(PWR->CR, PWR_CR_VOS_Msk, VOS_tmp);
+
+                // Enable core boost voltage
+                #if defined(PWR_CR_ODEN)
+                if (!err && (VOS == PWR_REGULATOR_VOLTAGE_SCALE0)) {
+                        SET_BIT(PWR->CR, PWR_CR_ODEN);
+                        u64_t tref = sys_time_get_reference();
+                        while (not (PWR->CSR & PWR_CSR_ODRDY)) {
+                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                        printk("CLK: VOS0 timeout");
+                                        err = ETIME;
+                                        break;
+                                }
+
+                                sys_sleep_ms(1);
+                        }
+                }
+                #endif
+        }
+
+        if (!err) {
+                u64_t tref = sys_time_get_reference();
+                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY_Msk, _CLK_CFG__FLASH_LATENCY);
+                        if ((FLASH->ACR & FLASH_ACR_LATENCY_Msk) == _CLK_CFG__FLASH_LATENCY) {
+                                break;
+                        }
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================

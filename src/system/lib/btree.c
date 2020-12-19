@@ -170,7 +170,7 @@ int _btree_create_krn(enum _mm_mem        mem,
         int err = EINVAL;
 
         if (btree && mem != _MM_MOD && mem < _MM_COUNT) {
-                err = _kzalloc(mem, sizeof(btree_t), cast(void**, btree));
+                err = _kzalloc(mem, sizeof(btree_t), NULL, 0, 0, cast(void**, btree));
                 if (!err) {
                         (*btree)->malloc   = malloc_krn;
                         (*btree)->free     = free_krn;
@@ -208,7 +208,7 @@ int _btree_create_mod(size_t              modid,
         int err = EINVAL;
 
         if (btree) {
-                err = _kzalloc(_MM_MOD, sizeof(btree_t), cast(void**, btree), modid);
+                err = _kzalloc(_MM_MOD, sizeof(btree_t), NULL, 0, 0, cast(void**, btree), modid);
                 if (!err) {
                         (*btree)->malloc   = malloc_mod;
                         (*btree)->free     = free_mod;
@@ -715,7 +715,7 @@ static void free_usr(void *mem, void *freectx)
 static void *malloc_krn(size_t size, void *allocctx)
 {
         void *mem = NULL;
-        _kmalloc(cast(enum _mm_mem, allocctx), size, &mem);
+        _kmalloc(cast(enum _mm_mem, allocctx), size, NULL, 0, 0, &mem);
         return mem;
 }
 
@@ -745,7 +745,7 @@ static void free_krn(void *mem, void *freectx)
 static void *malloc_mod(size_t size, void *allocctx)
 {
         void *mem = NULL;
-        _kmalloc(_MM_MOD, size, &mem, cast(size_t, allocctx));
+        _kmalloc(_MM_MOD, size, NULL, 0, 0, &mem, cast(size_t, allocctx));
         return mem;
 }
 

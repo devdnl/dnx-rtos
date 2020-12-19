@@ -228,7 +228,7 @@ void _cpuctl_delay_us(u16_t microseconds)
 //==============================================================================
 void HardFault_Handler(void)
 {
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
+        _kernel_panic_report_from_ISR(_KERNEL_PANIC_DESC_CAUSE_SEGFAULT);
 }
 
 //==============================================================================
@@ -238,7 +238,7 @@ void HardFault_Handler(void)
 //==============================================================================
 void MemManage_Handler(void)
 {
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+        _kernel_panic_report_from_ISR(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 //==============================================================================
@@ -248,7 +248,7 @@ void MemManage_Handler(void)
 //==============================================================================
 void BusFault_Handler(void)
 {
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+        _kernel_panic_report_from_ISR(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 //==============================================================================
@@ -258,7 +258,7 @@ void BusFault_Handler(void)
 //==============================================================================
 void UsageFault_Handler(void)
 {
-        _kernel_panic_report(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
+        _kernel_panic_report_from_ISR(_KERNEL_PANIC_DESC_CAUSE_CPUFAULT);
 }
 
 /*==============================================================================

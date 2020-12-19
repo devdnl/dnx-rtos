@@ -57,6 +57,7 @@ GLOBAL_VARIABLES_SECTION {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+PROGRAM_PARAMS(chmod, STACK_DEPTH_VERY_LOW);
 
 /*==============================================================================
   External objects
@@ -90,7 +91,7 @@ static void print_help(const char *name)
  * @param argv      arguments
  */
 //==============================================================================
-int_main(chmod, STACK_DEPTH_VERY_LOW, int argc, char *argv[])
+int main(int argc, char *argv[])
 {
         int err = EXIT_FAILURE;
 

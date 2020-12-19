@@ -835,11 +835,11 @@ void RCC_RTCCLKCmd(FunctionalState NewState)
 
 /**
   * @brief  Returns the frequencies of different on chip clocks.
-  * @param  RCC_Clocks: pointer to a RCC_ClocksTypeDef structure which will hold
+  * @param  RCC_Clocks: pointer to a LL_RCC_ClocksTypeDef structure which will hold
   *   the clocks frequencies.
   * @retval None
   */
-void RCC_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks)
+void LL_RCC_GetSystemClocksFreq(LL_RCC_ClocksTypeDef* RCC_Clocks)
 {
   uint32_t tmp = 0, pllmull = 0, pllsource = 0, presc = 0;
 

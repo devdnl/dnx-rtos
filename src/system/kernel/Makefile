@@ -23,12 +23,27 @@ CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c
 HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM3
 endif
 
+ifeq ($(TARGET), stm32f3)
+CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM4F
+endif
+
 ifeq ($(TARGET), stm32f4)
 CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
 HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM4F
 endif
 
+ifeq ($(TARGET), stm32f7)
+CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/port.c
+HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1
+endif
+
+ifeq ($(TARGET), stm32h7)
+CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/port.c
+HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1
+endif
+
 ifeq ($(TARGET), efr32)
-CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
-HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM4F
+CSRC_ARCH   += kernel/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/port.c
+HDRLOC_CORE += kernel/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1
 endif

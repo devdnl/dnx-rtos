@@ -332,7 +332,10 @@ static inline int process_kill(pid_t pid)
 {
         int r = -1;
         syscall(SYSCALL_PROCESSKILL, &r, &pid);
-        syscall(SYSCALL_PROCESSCLEANZOMBIE, &r, &pid, NULL);
+
+        int _;
+        syscall(SYSCALL_PROCESSCLEANZOMBIE, &_, &pid, NULL);
+
         return r;
 }
 
@@ -828,6 +831,48 @@ static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
 static inline int thread_join(tid_t tid)
 {
         return thread_join2(tid, MAX_DELAY_MS);
+}
+
+//==============================================================================
+/**
+ * @brief Function returns statistics of selected thread.
+ *
+ * The function thread_stat() return statistics of thread selected by <i>tid</i>.
+ *
+ * @param pid       process ID
+ * @param tid       thread ID
+ * @param stat      statistics
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
+ *
+ * @return Return 0 on success. On error, -1 is returned, and
+ * <b>errno</b> is set appropriately.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+
+        // ...
+
+        thread_stat_t stat;
+
+        if (thread_stat(getpid(), 0, &stat) == 0) {
+                printf("CPU load: %d\n", stat.CPU_load);
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see process_stat()
+ */
+//==============================================================================
+static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
+{
+        int r = -1;
+        syscall(SYSCALL_THREADSTAT, &r, &pid, &tid, stat);
+        return r;
 }
 
 //==============================================================================

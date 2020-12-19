@@ -217,12 +217,15 @@ static const u32_t EP1_7_DATA_STAGE_TRANSMIT_TIMEOUT_ms = 4500;
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(USBD, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(USBD, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
+        UNUSED_ARG1(config);
+
         int err = ENODEV;
 
         if (major == _USBD_MAJOR_NUMBER && minor <= _USBD_MINOR_NUMBER_EP_7) {

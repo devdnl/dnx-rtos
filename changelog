@@ -1,9 +1,28 @@
+dnx RTOS 2.4.0 Goose
+====================
+New Features, Improvements:
+- Added stm32f3 port with basic drivers
+- Added stm32f7 port with basic drivers
+- Added stm32h7 port with basic drivers
+- Added new BSPs (nucleo boards)
+- Removed kworker mode 0 and 1
+- Added heap and process consistency check
+- Added killing program when crashes instead of entire system reboot
+- Added strdup() and strndup() functions
+- Added DMA, RTC, SPI, I2C, ETH drivers to stm32f7 port
+- Improved heap memory managemnt
+- Improved CAN driver
+- Added IRQ, PWM drivers for stm32f3 & stm32f7 ports
+- Removed configuration of EXTI lines in AFM driver
+- Moved all generated files to build directory.
+- and more...
+
 dnx RTOS 2.3.0 Falcon
 =====================
 New Features, Improvements:
 - Updated many drivers
 - Added syscall mode 2 (flat syscall handling)
-- Context switch optimizations 
+- Context switch optimizations
 - EXT4FS fixes
 - Updated FAT32 library
 - Updated heap library (added memory consistency checker)
@@ -47,7 +66,7 @@ Fixed Bugs:
 - Removed file system cache subsystem - many problems and errors, very slow
 - Fixed SDIO write and read when buffer size is bigger than DMA transfer
 - Process context switch
-- Get semaphore counter value 
+- Get semaphore counter value
 
 dnx RTOS 2.2.0 Eagle
 ====================

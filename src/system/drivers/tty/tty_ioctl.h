@@ -101,74 +101,98 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
+ *  @brief  Set TTY configuration
+ *  @param  [WR] TTY_config_t * terminal configuration
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_TTY__CONFIGURE                    _IOW(TTY, 0x00, const TTY_config_t*)
+
+/**
  *  @brief  Gets current TTY number.
  *  @param  [RD] int * terminal number
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__GET_CURRENT_TTY              _IOR(TTY, 0x00, int*)
+#define IOCTL_TTY__GET_CURRENT_TTY              _IOR(TTY, 0x01, int*)
 
 /**
  *  @brief  Switch terminal to selected one.
  *  @param  [WR] int * terminal number
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__SWITCH_TTY_TO                _IOW(TTY, 0x01, int*)
+#define IOCTL_TTY__SWITCH_TTY_TO                _IOW(TTY, 0x02, int*)
 
 /**
  *  @brief  Gets number of columns.
  *  @param  [RD] int * number of columns
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__GET_COL                      _IOR(TTY, 0x02, int*)
+#define IOCTL_TTY__GET_COL                      _IOR(TTY, 0x03, int*)
 
 /**
  *  @brief  Gets number of rows.
  *  @param  [RD] int * number of rows
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__GET_ROW                      _IOR(TTY, 0x03, int*)
+#define IOCTL_TTY__GET_ROW                      _IOR(TTY, 0x04, int*)
 
 /**
  *  @brief  Clear screen.
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__CLEAR_SCR                    _IO(TTY, 0x04)
+#define IOCTL_TTY__CLEAR_SCR                    _IO(TTY, 0x05)
 
 /**
  *  @brief  Enable terminal echo.
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__ECHO_ON                      _IO(TTY, 0x05)
+#define IOCTL_TTY__ECHO_ON                      _IO(TTY, 0x06)
 
 /**
  *  @brief  Disable terminal echo.
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__ECHO_OFF                     _IO(TTY, 0x06)
+#define IOCTL_TTY__ECHO_OFF                     _IO(TTY, 0x07)
 
 /**
  *  @brief  Set edit line to specified user's text (string).
  *  @param  [WR] const char * string passed to edit line
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__SET_EDITLINE                 _IOW(TTY, 0x07, const char*)
+#define IOCTL_TTY__SET_EDITLINE                 _IOW(TTY, 0x08, const char*)
 
 /**
  *  @brief  Gets number of virtual terminals.
  *  @param  [RD] int * number of virtual terminals
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__GET_NUMBER_OF_TTYS           _IOR(TTY, 0x08, int*)
+#define IOCTL_TTY__GET_NUMBER_OF_TTYS           _IOR(TTY, 0x09, int*)
 
 /**
  *  @brief  Refreshes last line.
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_TTY__REFRESH_LAST_LINE            _IO(TTY, 0x09)
+#define IOCTL_TTY__REFRESH_LAST_LINE            _IO(TTY, 0x0A)
+
+/**
+ *  @brief  Read buffer.
+ *  @param  [RD, WR] TTY_buffer_t*      buffer descriptor
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_TTY__READ_BUFFER                  _IOWR(TTY, 0x0B, TTY_buffer_t*)
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct {
+        const char *input_file;         //!< input file path
+        const char *output_file;        //!< output file path
+        bool        clear_screen;       //!< clear screen at initialization
+} TTY_config_t;
+
+typedef struct {
+        char  *ptr;     //!< pointer to buffer
+        size_t size;    //!< buffer size and bytes left after ioctl()
+} TTY_buffer_t;
 
 /*==============================================================================
   Exported objects

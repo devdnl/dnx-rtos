@@ -41,69 +41,50 @@
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
-enum cmd {
-        CMD_INPUT,
-        CMD_SWITCH_TTY,
-        CMD_CLEAR_TTY,
-        CMD_LINE_ADDED,
-        CMD_REFRESH_LAST_LINE
-};
+struct tty_io;
 
 typedef struct {
-        enum cmd        cmd : 8;
-        u8_t            arg;
-} tty_cmd_t;
-
-typedef struct {
-       queue_t         *queue_out;
-       mutex_t         *secure_mtx;
-       ttybfr_t        *screen;
-       ttyedit_t       *editline;
-       ttycmd_t        *vtcmd;
-       bool             flushed;
-       u8_t             major;
+        struct tty_io *io;
+        queue_t       *queue_out;
+        mutex_t       *secure_mtx;
+        ttybfr_t      *screen;
+        ttyedit_t     *editline;
+        ttycmd_t      *vtcmd;
+        bool           flushed;
+        u8_t           major;
+        u8_t           minor;
 } tty_t;
 
-struct module {
-        FILE           *infile;
-        FILE           *outfile;
-        queue_t        *queue_cmd;
-        tty_t          *tty[_TTY_NUMBER_OF_VT];
-        tid_t           service_out;
-        tid_t           service_in;
-        int             current_tty;
-};
+typedef struct tty_io {
+        FILE  *infile;
+        FILE  *outfile;
+        tty_t *tty[_TTY_NUMBER_OF_VT];
+        tid_t  service_in;
+        u8_t   current_tty;
+        bool   clear_at_init;
+} tty_io_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void     service_out             (void *arg);
+static int      configure               (tty_t *tty, const TTY_config_t *conf);
 static void     service_in              (void *arg);
-static void     send_cmd                (enum cmd cmd, u8_t arg);
-static void     vt100_init              ();
-static void     vt100_analyze           (const char c);
+static void     vt100_init              (tty_io_t *io);
+static void     vt100_analyze           (tty_io_t *io, char c);
 static void     copy_string_to_queue    (const char *str, queue_t *queue, bool lfend, uint timeout);
-static void     switch_terminal         (int term_no);
+static int      switch_terminal         (tty_io_t *io, int term_no);
 static void     handle_new_line         (tty_t *tty);
+static int      show_fresh_line         (tty_t *tty);
+static int      clear_tty               (tty_t *tty);
+static int      refresh_last_line       (tty_t *tty);
+static int      dump_tty_buffer         (tty_t *tty, char *dst, size_t *size);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 MODULE_NAME(TTY);
 
-static struct module *tty_module;
-
-static const int    SERVICE_IN_PRIORITY  = PRIORITY_NORMAL;
-static const int    SERVICE_OUT_PRIORITY = PRIORITY_NORMAL;
-static const size_t QUEUE_CMD_LEN        = _TTY_TERMINAL_ROWS;
-
 static const thread_attr_t SERVICE_IN_ATTR = {
-        .stack_depth = STACK_DEPTH_LOW,
-        .priority    = PRIORITY_NORMAL,
-        .detached    = true
-};
-
-static const thread_attr_t SERVICE_OUT_ATTR = {
         .stack_depth = STACK_DEPTH_LOW,
         .priority    = PRIORITY_NORMAL,
         .detached    = true
@@ -120,118 +101,127 @@ static const thread_attr_t SERVICE_OUT_ATTR = {
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(TTY, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG1(minor);
-
         int err = ENODEV;
 
-        if (major >= _TTY_NUMBER_OF_VT || minor != 0) {
+        if (minor >= _TTY_NUMBER_OF_VT) {
                 return err;
         }
 
         /* initialize module base */
-        if (!tty_module) {
-                err = sys_zalloc(sizeof(struct module), cast(void**, &tty_module));
-                if (err != ESUCC)
-                        return err;
+        tty_io_t *io  = NULL;
+        tty_t    *tty = NULL;
 
-                err = sys_fopen(_TTY_IN_FILE, "r", &tty_module->infile);
-                if (err != ESUCC)
-                        goto module_alloc_finish;
+        if (minor == 0) {
+                err = sys_zalloc(sizeof(tty_io_t), cast(void**, &io));
 
-                err = sys_fopen(_TTY_OUT_FILE, "w", &tty_module->outfile);
-                if (err != ESUCC)
-                        goto module_alloc_finish;
-
-                err = sys_thread_create(service_in, &SERVICE_IN_ATTR, NULL, &tty_module->service_in);
-                if (err != ESUCC)
-                        goto module_alloc_finish;
-
-                err = sys_thread_create(service_out, &SERVICE_OUT_ATTR, NULL, &tty_module->service_out);
-                if (err != ESUCC)
-                        goto module_alloc_finish;
-
-                err = sys_queue_create(QUEUE_CMD_LEN, sizeof(tty_cmd_t), &tty_module->queue_cmd);
-
-                module_alloc_finish:
-                if (err != ESUCC) {
-                        if (tty_module->infile)
-                                sys_fclose(tty_module->infile);
-
-                        if (tty_module->outfile)
-                                sys_fclose(tty_module->outfile);
-
-                        if (sys_thread_is_valid(tty_module->service_in))
-                                sys_thread_destroy(tty_module->service_in);
-
-                        if (sys_thread_is_valid(tty_module->service_out))
-                                sys_thread_destroy(tty_module->service_out);
-
-                        if (tty_module->queue_cmd)
-                                sys_queue_destroy(tty_module->queue_cmd);
-
-                        if (tty_module)
-                                sys_free(cast(void**, &tty_module));
+                if (!err) {
+                        err = sys_thread_create(service_in, &SERVICE_IN_ATTR, io, &io->service_in);
                 }
+
+                if (err) {
+                        if (sys_thread_is_valid(io->service_in)) {
+                                sys_thread_destroy(io->service_in);
+                        }
+
+                        if (io) {
+                                sys_free(cast(void**, &io));
+                        }
+                } else {
+                        printk("TTY: thread ID: %u", io->service_in);
+                }
+
         } else {
-                err = ESUCC;
+                tty_t *tty0 = NULL;
+                err = sys_module_get_instance(major, 0, (void**)&tty0);
+
+                if (!err) {
+                        io = tty0->io;
+
+                        if (io == NULL) {
+                                err = EFAULT;
+                        }
+                }
         }
 
-        /* initialize selected TTY */
-        if (err == ESUCC) {
+        if (!err && io) {
                 err = sys_zalloc(sizeof(tty_t), device_handle);
-                if (err != ESUCC)
-                        return err;
+                if (err) {
+                        goto tty_alloc_finish;
+                }
 
-                tty_t *tty = *device_handle;
+                tty = *device_handle;
 
                 err = sys_queue_create(_TTY_STREAM_SIZE, sizeof(char), &tty->queue_out);
-                if (err != ESUCC)
+                if (err) {
                         goto tty_alloc_finish;
+                }
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &tty->secure_mtx);
-                if (err != ESUCC)
+                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &tty->secure_mtx);
+                if (err) {
                         goto tty_alloc_finish;
+                }
 
                 err = ttybfr_create(&tty->screen);
-                if (err != ESUCC)
+                if (err) {
                         goto tty_alloc_finish;
+                }
 
-                err = ttyedit_create(tty_module->outfile, &tty->editline);
-                if (err != ESUCC)
+                err = ttyedit_create(&io->outfile, &tty->editline);
+                if (err) {
                         goto tty_alloc_finish;
+                }
 
                 err = ttycmd_create(&tty->vtcmd);
-                if (err != ESUCC)
+                if (err) {
                         goto tty_alloc_finish;
+                }
 
-                tty->major             = major;
-                tty_module->tty[major] = tty;
+                tty->io        = io;
+                tty->major     = major;
+                tty->minor     = minor;
+                io->tty[minor] = tty;
+
+                if (!err && config) {
+                        err = configure(tty, config);
+                }
 
                 tty_alloc_finish:
-                if (err != ESUCC) {
-                        if (tty->vtcmd)
+                if (err && tty) {
+                        if (tty->vtcmd) {
                                 ttycmd_destroy(tty->vtcmd);
+                        }
 
-                        if (tty->editline)
+                        if (tty->editline) {
                                 ttyedit_destroy(tty->editline);
+                        }
 
-                        if (tty->screen)
+                        if (tty->screen) {
                                 ttybfr_destroy(tty->screen);
+                        }
 
-                        if (tty->secure_mtx)
+                        if (tty->secure_mtx) {
                                 sys_mutex_destroy(tty->secure_mtx);
+                        }
 
-                        if (tty->queue_out)
+                        if (tty->queue_out) {
                                 sys_queue_destroy(tty->queue_out);
+                        }
 
-                        if (device_handle)
+                        if (device_handle) {
                                 sys_free(device_handle);
+                        }
+
+                        if (minor == 0) {
+                                sys_thread_destroy(io->service_in);
+                                sys_free(cast(void**, &io));
+                        }
                 }
         }
 
@@ -258,23 +248,29 @@ API_MOD_RELEASE(TTY, void *device_handle)
                 ttybfr_destroy(tty->screen);
                 ttyedit_destroy(tty->editline);
                 ttycmd_destroy(tty->vtcmd);
-                tty_module->tty[tty->major] = NULL;
-                sys_free(&device_handle);
+                tty->io->tty[tty->minor] = NULL;
 
-                /* de-initialize entire module if all TTYs are released */
+                /* release IO if all TTYs are released */
                 bool release_TTY = true;
                 for (int i = 0; i < _TTY_NUMBER_OF_VT && release_TTY; i++) {
-                        release_TTY = !tty_module->tty[i];
+                        release_TTY = !tty->io->tty[i];
                 }
 
                 if (release_TTY) {
-                        sys_thread_destroy(tty_module->service_in);
-                        sys_thread_destroy(tty_module->service_out);
-                        sys_fclose(tty_module->infile);
-                        sys_fclose(tty_module->outfile);
-                        sys_queue_destroy(tty_module->queue_cmd);
-                        sys_free(cast(void**, &tty_module));
+                        sys_thread_destroy(tty->io->service_in);
+
+                        if (tty->io->infile) {
+                                sys_fclose(tty->io->infile);
+                        }
+
+                        if (tty->io->outfile) {
+                                sys_fclose(tty->io->outfile);
+                        }
+
+                        sys_free(cast(void**, &tty->io));
                 }
+
+                sys_free(&device_handle);
         }
 
         return err;
@@ -341,10 +337,10 @@ API_MOD_WRITE(TTY,
         tty_t *tty = device_handle;
 
         int err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
-        if (err == ESUCC) {
+        if (!err) {
                 ttybfr_put(tty->screen, cast(const char *, src), count);
+                err = show_fresh_line(tty);
                 sys_mutex_unlock(tty->secure_mtx);
-                send_cmd(CMD_LINE_ADDED, tty->major);
 
                 *wrcnt = count;
         }
@@ -424,9 +420,15 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
         int    err = EINVAL;
 
         switch (request) {
+        case IOCTL_TTY__CONFIGURE:
+                if (arg) {
+                        err = configure(tty, arg);
+                }
+                break;
+
         case IOCTL_TTY__GET_CURRENT_TTY:
                 if (arg) {
-                        *cast(int*, arg) = tty_module->current_tty;
+                        *cast(int*, arg) = tty->io->current_tty;
                         err = ESUCC;
                 }
                 break;
@@ -449,30 +451,28 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 if (arg) {
                         err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
                         if (err == ESUCC) {
-                                ttyedit_set_value(tty->editline, arg, tty_module->current_tty == tty->major);
+                                ttyedit_set_value(tty->editline, arg, tty->io->current_tty == tty->minor);
                                 sys_mutex_unlock(tty->secure_mtx);
                         }
                 }
                 break;
 
         case IOCTL_TTY__SWITCH_TTY_TO:
-                send_cmd(CMD_SWITCH_TTY, *cast(int*, arg));
-                err = ESUCC;
+                if (arg) {
+                        err = switch_terminal(tty->io, *cast(int*, arg));
+                }
                 break;
 
         case IOCTL_TTY__CLEAR_SCR:
-                send_cmd(CMD_CLEAR_TTY, tty->major);
-                err = ESUCC;
+                err = clear_tty(tty);
                 break;
 
         case IOCTL_TTY__ECHO_ON:
-                ttyedit_enable_echo(tty->editline);
-                err = ESUCC;
+                err = ttyedit_enable_echo(tty->editline);
                 break;
 
         case IOCTL_TTY__ECHO_OFF:
-                ttyedit_disable_echo(tty->editline);
-                err = ESUCC;
+                err = ttyedit_disable_echo(tty->editline);
                 break;
 
         case IOCTL_TTY__GET_NUMBER_OF_TTYS:
@@ -482,8 +482,15 @@ API_MOD_IOCTL(TTY, void *device_handle, int request, void *arg)
                 break;
 
         case IOCTL_TTY__REFRESH_LAST_LINE:
-                send_cmd(CMD_REFRESH_LAST_LINE, tty->major);
-                err = ESUCC;
+                err = refresh_last_line(tty);
+                break;
+
+        case IOCTL_TTY__READ_BUFFER:
+                err = EINVAL;
+                TTY_buffer_t *buf = arg;
+                if (buf && buf->ptr && buf->size) {
+                        err = dump_tty_buffer(tty, buf->ptr, &buf->size);
+                }
                 break;
 
         default:
@@ -508,9 +515,9 @@ API_MOD_FLUSH(TTY, void *device_handle)
         tty_t *tty = device_handle;
 
         int err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
-        if (err == ESUCC) {
+        if (!err) {
                 ttybfr_flush(tty->screen);
-                send_cmd(CMD_REFRESH_LAST_LINE, tty->major);
+                err = refresh_last_line(tty);
                 sys_mutex_unlock(tty->secure_mtx);
         }
 
@@ -533,27 +540,79 @@ API_MOD_STAT(TTY, void *device_handle, struct vfs_dev_stat *device_stat)
 
         device_stat->st_size  = 0;
         device_stat->st_major = tty->major;
-        device_stat->st_minor = 0;
+        device_stat->st_minor = tty->minor;
 
         return ESUCC;
 }
 
 //==============================================================================
 /**
+ * @brief  Function configure TTY IO.
+ *
+ * @param  tty          tty instance
+ * @param  conf         configuration
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+static int configure(tty_t *tty, const TTY_config_t *conf)
+{
+        FILE *in, *out;
+
+        int err = sys_fopen(conf->input_file, "r+", &in);
+
+        if (!err) {
+                if (strcmp(conf->input_file, conf->output_file) == 0) {
+                        out = in;
+                } else {
+                        err = sys_fopen(conf->output_file, "r", &out);
+                }
+        }
+
+        if (!err && tty->io->infile) {
+                sys_fclose(tty->io->infile);
+        }
+
+        if (!err && tty->io->outfile && (tty->io->outfile != tty->io->infile)) {
+                sys_fclose(tty->io->outfile);
+        }
+
+        if (!err) {
+                tty->io->infile  = in;
+                tty->io->outfile = out;
+                tty->io->clear_at_init = conf->clear_screen;
+
+                vt100_init(tty->io);
+
+        } else {
+                if (in) {
+                        sys_fclose(in);
+                }
+
+                if (out && (out != in)) {
+                        sys_fclose(out);
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
  * @brief TTY input service (helper task)
+ *
+ * @param arg           tty io
  */
 //==============================================================================
 static void service_in(void *arg)
 {
-        UNUSED_ARG1(arg);
+        tty_io_t *io = arg;
 
         bool last_CR = false;
 
-        sys_thread_set_priority(SERVICE_IN_PRIORITY);
-
         for (;;) {
                 char c = '\0'; size_t rdcnt;
-                if (sys_fread(&c, 1, &rdcnt, tty_module->infile) == ESUCC) {
+                if (sys_fread(&c, 1, &rdcnt, io->infile) == ESUCC) {
                         /*
                          * Standard TTY protocol is to sent a CR from the keyboard
                          * when the user has finished typing and for the computer
@@ -563,171 +622,47 @@ static void service_in(void *arg)
 
                         last_CR = (c == '\r');
 
-                        sys_thread_set_priority(PRIORITY_HIGHEST);
-                        send_cmd(CMD_INPUT, c);
-                        sys_thread_set_priority(SERVICE_IN_PRIORITY);
+                        vt100_analyze(io, c);
+                } else {
+                        sys_sleep_ms(100);
                 }
         }
-}
-
-//==============================================================================
-/**
- * @brief TTY output service (main task)
- */
-//==============================================================================
-static void service_out(void *arg)
-{
-        UNUSED_ARG1(arg);
-
-        sys_thread_set_priority(SERVICE_OUT_PRIORITY);
-
-        vt100_init();
-
-        for (;;) {
-                tty_cmd_t rq;
-
-                if (sys_queue_receive(tty_module->queue_cmd, &rq, MAX_DELAY_MS) == ESUCC) {
-                        switch (rq.cmd) {
-                        case CMD_INPUT: {
-                                vt100_analyze(rq.arg);
-                                break;
-                        }
-
-                        case CMD_CLEAR_TTY: {
-                                if (rq.arg < _TTY_NUMBER_OF_VT && tty_module->tty[rq.arg]) {
-                                        tty_t *tty = tty_module->tty[rq.arg];
-
-                                        if (sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
-                                                ttybfr_clear(tty->screen);
-
-                                                if (tty_module->current_tty == tty->major) {
-                                                        vt100_init();
-                                                }
-
-                                                sys_mutex_unlock(tty->secure_mtx);
-                                        }
-                                }
-                                break;
-                        }
-
-                        case CMD_SWITCH_TTY: {
-                                switch_terminal(rq.arg);
-                                break;
-                        }
-
-                        case CMD_LINE_ADDED: {
-                                if (rq.arg < _TTY_NUMBER_OF_VT && tty_module->tty[rq.arg] && rq.arg == tty_module->current_tty) {
-                                        tty_t *tty = tty_module->tty[rq.arg];
-
-                                        if (sys_mutex_lock(tty->secure_mtx, 100) == ESUCC) {
-                                                const char *str;
-                                                while ((str = ttybfr_get_fresh_line(tty->screen))) {
-                                                        size_t wrcnt;
-
-                                                        if (tty->flushed) {
-                                                                sys_fwrite(VT100_CLEAR_LINE,
-                                                                           strlen(VT100_CLEAR_LINE),
-                                                                           &wrcnt,
-                                                                           tty_module->outfile);
-
-                                                                tty->flushed = false;
-                                                        }
-
-                                                        sys_fwrite(str,
-                                                                   strlen(str),
-                                                                   &wrcnt,
-                                                                   tty_module->outfile);
-                                                }
-
-                                                sys_mutex_unlock(tty->secure_mtx);
-                                        }
-                                }
-                                break;
-                        }
-
-                        case CMD_REFRESH_LAST_LINE: {
-                                tty_t *tty = tty_module->tty[rq.arg];
-
-                                if (  rq.arg == tty_module->current_tty
-                                   && sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS) == ESUCC) {
-                                        size_t wrcnt;
-
-                                        sys_fwrite(VT100_CLEAR_LINE,
-                                                   strlen(VT100_CLEAR_LINE),
-                                                   &wrcnt,
-                                                   tty_module->outfile);
-
-                                        const char *last_line = ttybfr_get_line(tty->screen, 0);
-                                        sys_fwrite(last_line,
-                                                   strlen(last_line),
-                                                   &wrcnt,
-                                                   tty_module->outfile);
-
-                                        const char *editline = ttyedit_get_value(tty->editline);
-                                        sys_fwrite(editline,
-                                                   strlen(editline),
-                                                   &wrcnt,
-                                                   tty_module->outfile);
-
-                                        tty->flushed = true;
-
-                                        sys_mutex_unlock(tty->secure_mtx);
-                                }
-                                break;
-                        }
-
-                        default:
-                                break;
-                        }
-                }
-        }
-}
-
-//==============================================================================
-/**
- * @brief Send command to main service
- *
- * @param cmd           a command
- * @param arg           an argument
- */
-//==============================================================================
-static void send_cmd(enum cmd cmd, u8_t arg)
-{
-        tty_cmd_t rq;
-        rq.cmd = cmd;
-        rq.arg = arg;
-
-        sys_queue_send(tty_module->queue_cmd, &rq, MAX_DELAY_MS);
 }
 
 //==============================================================================
 /**
  * @brief Configure VT100 terminal
+ *
+ * @param io    TTY io
  */
 //==============================================================================
-static void vt100_init()
+static void vt100_init(tty_io_t *io)
 {
-        const char *cmd = VT100_RESET_ATTRIBUTES
-                        #if _TTY_CLR_SCR_AT_INIT == _YES_
-                          VT100_CLEAR_SCREEN
-                          VT100_CURSOR_HOME
-                        #endif
-                          VT100_DISABLE_LINE_WRAP;
-
         size_t wrcnt;
-        sys_fwrite(cmd, strlen(cmd), &wrcnt, tty_module->outfile);
+
+        const char *cmd = VT100_RESET_ATTRIBUTES;
+        sys_fwrite(cmd, strlen(cmd), &wrcnt, io->outfile);
+
+        if (io->clear_at_init) {
+                cmd = VT100_CLEAR_SCREEN VT100_CURSOR_HOME;
+                sys_fwrite(cmd, strlen(cmd), &wrcnt, io->outfile);
+        }
+
+        cmd = VT100_DISABLE_LINE_WRAP;
+        sys_fwrite(cmd, strlen(cmd), &wrcnt, io->outfile);
 }
 
 //==============================================================================
 /**
- * @brief Control analyzis of VT100 input stream
+ * @brief Control analysis of VT100 input stream
  *
+ * @param io            tty io
  * @param c             input character
  */
 //==============================================================================
-static void vt100_analyze(const char c)
+static void vt100_analyze(tty_io_t *io, char c)
 {
-        tty_t *tty = tty_module->tty[tty_module->current_tty];
+        tty_t *tty = io->tty[io->current_tty];
         if (!tty)
                 return;
 
@@ -784,7 +719,7 @@ static void vt100_analyze(const char c)
                 break;
 
         case TTYCMD_KEY_F1...TTYCMD_KEY_F12:
-                switch_terminal(resp - TTYCMD_KEY_F1);
+                switch_terminal(tty->io, resp - TTYCMD_KEY_F1);
                 break;
 
         default:
@@ -820,22 +755,38 @@ static void copy_string_to_queue(const char *str, queue_t *queue, bool lfend, ui
 /**
  * @brief Switch terminal
  *
+ * @param io            tty io
  * @param term_no       terminal number
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-static void switch_terminal(int term_no)
+static int switch_terminal(tty_io_t *io, int term_no)
 {
-        if (term_no < _TTY_NUMBER_OF_VT && tty_module->tty[term_no] && tty_module->current_tty != term_no) {
-                tty_t *tty = tty_module->tty[tty_module->current_tty];
+        int err = EINVAL;
 
-                if (ttycmd_is_idle(tty->vtcmd)) {
-                        tty_module->current_tty = term_no;
+        if (term_no < _TTY_NUMBER_OF_VT && io->tty[term_no] && (io->current_tty != term_no)) {
 
-                        tty_t *tty = tty_module->tty[tty_module->current_tty];
+                err = EBUSY;
 
-                        vt100_init();
+                tty_t *tty = io->tty[io->current_tty];
 
-                        if (sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS) == ESUCC) {
+                u64_t tref = sys_time_get_reference();
+
+                while (not ttycmd_is_idle(tty->vtcmd) && not sys_time_is_expired(tref, 1000)) {
+                        sys_sleep_ms(50);
+                }
+
+                if (not sys_time_is_expired(tref, 1000)) {
+
+                        io->current_tty = term_no;
+
+                        tty_t *tty = io->tty[io->current_tty];
+
+                        vt100_init(io);
+
+                        err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+                        if (!err) {
                                 size_t      wrcnt;
                                 const char *str;
 
@@ -843,24 +794,21 @@ static void switch_terminal(int term_no)
                                         str = ttybfr_get_line(tty->screen, i);
 
                                         if (str) {
-                                                sys_fwrite(str,
-                                                            strlen(str),
-                                                            &wrcnt,
-                                                            tty_module->outfile);
+                                                sys_fwrite(str, strlen(str), &wrcnt,
+                                                           io->outfile);
                                         }
                                 }
 
                                 str = ttyedit_get_value(tty->editline);
-                                sys_fwrite(str, strlen(str), &wrcnt, tty_module->outfile);
+                                sys_fwrite(str, strlen(str), &wrcnt, io->outfile);
                                 ttybfr_clear_fresh_line_counter(tty->screen);
 
                                 sys_mutex_unlock(tty->secure_mtx);
                         }
-                } else {
-                        /* try later */
-                        send_cmd(CMD_SWITCH_TTY, term_no);
                 }
         }
+
+        return err;
 }
 
 //==============================================================================
@@ -884,7 +832,7 @@ static void handle_new_line(tty_t *tty)
 
                         const char *crlf = "\r\n";
                         size_t      wrcnt;
-                        sys_fwrite(crlf, strlen(crlf), &wrcnt, tty_module->outfile);
+                        sys_fwrite(crlf, strlen(crlf), &wrcnt, tty->io->outfile);
 
                 }
 
@@ -894,6 +842,153 @@ static void handle_new_line(tty_t *tty)
 
                 sys_mutex_unlock(tty->secure_mtx);
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Function show fresh line.
+ *
+ * @param  tty          TTY instance
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int show_fresh_line(tty_t *tty)
+{
+        int err = ESUCC;
+
+        if (tty->minor == tty->io->current_tty) {
+                err = sys_mutex_lock(tty->secure_mtx, 100);
+                if (!err) {
+
+                        const char *str;
+                        while ((str = ttybfr_get_fresh_line(tty->screen))) {
+                                size_t wrcnt;
+
+                                if (tty->flushed) {
+                                        sys_fwrite(VT100_CLEAR_LINE,
+                                                   strlen(VT100_CLEAR_LINE),
+                                                   &wrcnt,
+                                                   tty->io->outfile);
+
+                                        tty->flushed = false;
+                                }
+
+                                sys_fwrite(str, strlen(str), &wrcnt, tty->io->outfile);
+                        }
+
+                        sys_mutex_unlock(tty->secure_mtx);
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Clear TTY output.
+ *
+ * @param  tty          TTY instance
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int clear_tty(tty_t *tty)
+{
+        int err = sys_mutex_lock(tty->secure_mtx, 100);
+        if (!err) {
+                ttybfr_clear(tty->screen);
+
+                if (tty->minor == tty->io->current_tty) {
+                        vt100_init(tty->io);
+                }
+
+                sys_mutex_unlock(tty->secure_mtx);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Refresh last line.
+ *
+ * @param  tty          TTY instance
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int refresh_last_line(tty_t *tty)
+{
+        int err = EINVAL;
+
+        if (tty->minor == tty->io->current_tty) {
+
+                err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+                if (!err) {
+                        size_t wrcnt;
+
+                        sys_fwrite(VT100_CLEAR_LINE, strlen(VT100_CLEAR_LINE),
+                                   &wrcnt, tty->io->outfile);
+
+                        const char *last_line = ttybfr_get_line(tty->screen, 0);
+                        sys_fwrite(last_line, strlen(last_line),
+                                   &wrcnt, tty->io->outfile);
+
+                        const char *editline = ttyedit_get_value(tty->editline);
+                        sys_fwrite(editline, strlen(editline),
+                                   &wrcnt, tty->io->outfile);
+
+                        tty->flushed = true;
+
+                        sys_mutex_unlock(tty->secure_mtx);
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Dump TTY buffer.
+ *
+ * @param  tty          TTY instance
+ * @param  dst          destination buffer
+ * @param  size         destination buffer size
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int dump_tty_buffer(tty_t *tty, char *dst, size_t *size)
+{
+        int err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
+        if (!err) {
+
+                dst[0] = '\0';
+
+                for (int i = _TTY_TERMINAL_ROWS - 1; i >= 0; i--) {
+
+                        const char *str = ttybfr_get_line(tty->screen, i);
+                        if (str) {
+
+                                size_t len = min(*size, strlen(str));
+                                if (len) {
+                                        strlcat(dst, str, len);
+                                        dst   += len - 2;
+                                        *dst++ = '\n';
+                                        *dst   = '\0';
+                                        *size -= len - 1;
+
+                                } else {
+                                        break;
+                                }
+                        }
+                }
+
+                sys_mutex_unlock(tty->secure_mtx);
+        }
+
+        return err;
 }
 
 /*==============================================================================

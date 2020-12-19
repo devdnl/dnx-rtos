@@ -88,7 +88,8 @@ int _vfprintf(FILE *file, const char *format, va_list arg)
                 va_end(carg);
 
                 char *str = NULL;
-                int err = _kzalloc(_MM_KRN, size, cast(void*, &str));
+                int err = _kzalloc(_MM_KRN, size, NULL, _MM_FLAG__DMA_CAPABLE,
+                                   _MM_FLAG__DMA_CAPABLE, cast(void*, &str));
                 if (!err && str) {
                         n = _vsnprintf(str, size, format, arg);
 

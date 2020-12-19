@@ -911,7 +911,7 @@ void RCC_MCO2Config(uint32_t RCC_MCO2Source, uint32_t RCC_MCO2Div)
           on AHB bus (DMA, GPIO...). APB1 (PCLK1) and APB2 (PCLK2) clocks are derived
           from AHB clock through configurable prescalers and used to clock
           the peripherals mapped on these busses. You can use
-          "RCC_GetClocksFreq()" function to retrieve the frequencies of these clocks.
+          "LL_RCC_GetSystemClocksFreq()" function to retrieve the frequencies of these clocks.
 
       -@- All the peripheral clocks are derived from the System clock (SYSCLK) except:
         (+@) I2S: the I2S clock can be derived either from a specific PLL (PLLI2S) or
@@ -1210,7 +1210,7 @@ void RCC_PCLK2Config(uint32_t RCC_HCLK)
   * @note   The result of this function could be not correct when using fractional
   *         value for HSE crystal.
   *
-  * @param  RCC_Clocks: pointer to a RCC_ClocksTypeDef structure which will hold
+  * @param  RCC_Clocks: pointer to a LL_RCC_ClocksTypeDef structure which will hold
   *          the clocks frequencies.
   *
   * @note   This function can be used by the user application to compute the
@@ -1221,7 +1221,7 @@ void RCC_PCLK2Config(uint32_t RCC_HCLK)
   *
   * @retval None
   */
-void RCC_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks)
+void LL_RCC_GetSystemClocksFreq(LL_RCC_ClocksTypeDef* RCC_Clocks)
 {
   uint32_t tmp = 0, presc = 0, pllvco = 0, pllp = 2, pllsource = 0, pllm = 2;
 #if defined(STM32F412xG) || defined(STM32F413_423xx) || defined(STM32F446xx)

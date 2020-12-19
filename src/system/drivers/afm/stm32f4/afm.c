@@ -65,42 +65,27 @@
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG1(device_handle);
+        UNUSED_ARG2(device_handle, config);
 
         if (major == 0 && minor == 0) {
 
-                if (!(RCC->APB2ENR & RCC_APB2ENR_SYSCFGEN)) {
-                        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
+                SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
 
-                        u32_t MEM_MODE = (_AFM_MEM_MODE == _AFM_MEM_MODE_AUTO) ?
-                                         0 : _AFM_MEM_MODE;
+                u32_t MEM_MODE = (_AFM_MEM_MODE == _AFM_MEM_MODE_AUTO) ?
+                                 0 : _AFM_MEM_MODE;
 
-                        SYSCFG->MEMRMP    |= _AFM_SWP_FMC | _AFM_FB_MODE | MEM_MODE;
+                SYSCFG->MEMRMP    |= _AFM_SWP_FMC | _AFM_FB_MODE | MEM_MODE;
 
-                        SYSCFG->PMC       |= _AFM_MII_RMII_SEL;
+                SYSCFG->PMC       |= _AFM_MII_RMII_SEL;
 
-                        SYSCFG->EXTICR[0] |= _AFM_EXTI0_PORT  | _AFM_EXTI1_PORT
-                                           | _AFM_EXTI2_PORT  | _AFM_EXTI3_PORT;
-
-                        SYSCFG->EXTICR[1] |= _AFM_EXTI4_PORT  | _AFM_EXTI5_PORT
-                                           | _AFM_EXTI6_PORT  | _AFM_EXTI7_PORT;
-
-                        SYSCFG->EXTICR[2] |= _AFM_EXTI8_PORT  | _AFM_EXTI9_PORT
-                                           | _AFM_EXTI10_PORT | _AFM_EXTI11_PORT;
-
-                        SYSCFG->EXTICR[3] |= _AFM_EXTI12_PORT | _AFM_EXTI13_PORT
-                                           | _AFM_EXTI14_PORT | _AFM_EXTI15_PORT;
-
-                        return ESUCC;
-                } else {
-                        return EADDRINUSE;
-                }
+                return ESUCC;
         } else {
                 return ENODEV;
         }

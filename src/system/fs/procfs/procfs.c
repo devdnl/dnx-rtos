@@ -78,7 +78,9 @@ static int    procfs_readdir_root(struct procfs *hdl, DIR *dir);
 static int    procfs_readdir_pid (struct procfs *hdl, DIR *dir);
 static int    procfs_readdir_bin (struct procfs *hdl, DIR *dir);
 static int    add_file_to_list   (struct procfs *hdl, int16_t arg, enum path_content content, void **object);
-static size_t get_file_content   (struct file_info *file_info, char *buff, size_t size);
+static size_t get_file_content   (struct file_info *file, u8_t *buff, size_t size, i32_t seek);
+static void   buf_snprintf(u8_t *buf, size_t *size, size_t *clen, i32_t *seek, const char *fmt, ...);
+static size_t get_file_size(struct file_info *file);
 
 /*==============================================================================
   Local object definitions
@@ -372,22 +374,8 @@ API_FS_READ(procfs,
         int               err  = ENOENT;
 
         if (file && file->content < _FILE_CONTENT_COUNT) {
-
-                char *content;
-                err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
-                if (!err) {
-                        size_t data_size = get_file_content(file, content, FILE_BUFFER);
-                        size_t seek      = min(*fpos, SIZE_MAX);
-                        if (seek > data_size) {
-                                *rdcnt = 0;
-                        } else {
-                                size_t n = (data_size - seek <= count) ? data_size - seek : count;
-                                strncpy((char *)dst, content + seek, n);
-                                *rdcnt = n;
-                        }
-
-                        sys_free(cast(void**, &content));
-                }
+                *rdcnt = get_file_content(file, dst, count, *fpos);
+                err = 0;
         }
 
         return err;
@@ -454,36 +442,33 @@ API_FS_FSTAT(procfs, void *fs_handle, void *fhdl, struct stat *stat)
         stat->st_gid   = 0;
         stat->st_uid   = 0;
 
-        char *content;
-        int err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
-        if (!err) {
+        int err = EINVAL;
 
-                if (file->content < _FILE_CONTENT_COUNT) {
+        if (file->content < _FILE_CONTENT_COUNT) {
 
-                        if (file->arg >= 0) {
-                                stat->st_size  = get_file_content(file, content, FILE_BUFFER);
-                                stat->st_mode |= S_IFREG;
+                if (file->arg >= 0) {
+                        stat->st_size  = get_file_size(file);
+                        stat->st_mode |= S_IFREG;
 
-                                if (  (file->content == FILE_CONTENT_PID)
-                                   || (file->content == FILE_CONTENT_CPUINFO) ) {
+                        if (  (file->content == FILE_CONTENT_PID)
+                           || (file->content == FILE_CONTENT_CPUINFO) ) {
 
-                                        time_t t = 0;
-                                        sys_gettime(&t);
+                                time_t t = 0;
+                                sys_gettime(&t);
 
-                                        stat->st_mtime = t;
-                                        stat->st_ctime = t;
-                                }
-
-                                if (file->content == FILE_CONTENT_BIN) {
-                                        stat->st_mode |= S_IFPROG;
-                                        stat->st_mode |= S_IXUSR;
-                                }
-                        } else {
-                                stat->st_mode |= S_IFDIR;
+                                stat->st_mtime = t;
+                                stat->st_ctime = t;
                         }
+
+                        if (file->content == FILE_CONTENT_BIN) {
+                                stat->st_mode |= S_IFPROG;
+                                stat->st_mode |= S_IXUSR;
+                        }
+                } else {
+                        stat->st_mode |= S_IFDIR;
                 }
 
-                sys_free(cast(void**, &content));
+                err = ESUCC;
         }
 
         return err;
@@ -824,16 +809,10 @@ static int procfs_readdir_root(struct procfs *hdl, DIR *dir)
                 break;
 
         case 2: {
-                char *content;
-                err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
-                if (!err) {
-                        struct file_info file = {.content = FILE_CONTENT_CPUINFO, .arg = 0};
-                        dir->dirent.d_name = "cpuinfo";
-                        dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IFREG;
-                        dir->dirent.size   = get_file_content(&file, content, FILE_BUFFER);
-
-                        sys_free(cast(void**, &content));
-                }
+                struct file_info file = {.content = FILE_CONTENT_CPUINFO, .arg = 0};
+                dir->dirent.d_name = "cpuinfo";
+                dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IFREG;
+                dir->dirent.size   = get_file_size(&file);
                 break;
         }
 
@@ -861,26 +840,19 @@ static int procfs_readdir_pid(struct procfs *hdl, DIR *dir)
 
         process_stat_t stat;
         int err = sys_process_get_stat_seek(dir->d_seek++, &stat);
-        if (err == ESUCC) {
+        if (!err) {
 
-                char *content;
-                err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
-                if (!err) {
+                struct dir_info *dirinfo = dir->d_hdl;
 
-                        struct dir_info *dirinfo = dir->d_hdl;
+                sys_snprintf(dirinfo->name, sizeof(dirinfo->name),
+                             "%u", stat.pid);
 
-                        sys_snprintf(dirinfo->name, sizeof(dirinfo->name),
-                                     "%u", stat.pid);
+                dir->dirent.d_name = dirinfo->name;
+                dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IFREG;
+                dir->dirent.dev    = 0;
 
-                        dir->dirent.d_name = dirinfo->name;
-                        dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IFREG;
-                        dir->dirent.dev    = 0;
-
-                        struct file_info file = {.arg = stat.pid, .content = FILE_CONTENT_PID};
-                        dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
-
-                        err = sys_free(cast(void**, &content));
-                }
+                struct file_info file = {.arg = stat.pid, .content = FILE_CONTENT_PID};
+                dir->dirent.size      = get_file_size(&file);
         }
 
         return err;
@@ -904,20 +876,15 @@ static int procfs_readdir_bin(struct procfs *hdl, DIR *dir)
 
         if (dir->d_seek < (size_t)sys_get_programs_table_size()) {
 
-                char *content;
-                err = sys_zalloc(FILE_BUFFER, cast(void**, &content));
-                if (!err) {
+                dir->dirent.d_name = sys_get_programs_table()[dir->d_seek].name;
+                dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IFPROG;
 
-                        dir->dirent.d_name = sys_get_programs_table()[dir->d_seek].name;
-                        dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IFPROG;
+                struct file_info file = {.arg = dir->d_seek, .content = FILE_CONTENT_BIN};
+                dir->dirent.size      = get_file_size(&file);
 
-                        struct file_info file = {.arg = dir->d_seek, .content = FILE_CONTENT_BIN};
-                        dir->dirent.size      = get_file_content(&file, content, FILE_BUFFER);
+                dir->d_seek++;
 
-                        dir->d_seek++;
-
-                        err = sys_free(cast(void**, &content));
-                }
+                err = ESUCC;
         }
 
         return err;
@@ -962,6 +929,21 @@ static int add_file_to_list(struct procfs *hdl, int16_t arg,
 
 //==============================================================================
 /**
+ * @brief  Return file size
+ *
+ * @param  ?
+ *
+ * @return ?
+ */
+//==============================================================================
+static size_t get_file_size(struct file_info *file)
+{
+        size_t size = UINT16_MAX;
+        return get_file_content(file, NULL, size, 0);
+}
+
+//==============================================================================
+/**
  * @brief Function return file content and size
  *
  * @param file          file information
@@ -971,56 +953,41 @@ static int add_file_to_list(struct procfs *hdl, int16_t arg,
  * @return number of bytes written to buffer
  */
 //==============================================================================
-static size_t get_file_content(struct file_info *file, char *buff, size_t size)
+static size_t get_file_content(struct file_info *file, u8_t *buff, size_t size, i32_t seek)
 {
-        size_t         len = 0;
-        process_stat_t stat;
+        size_t clen = 0;
 
         switch (file->content) {
-        case FILE_CONTENT_PID:
+        case FILE_CONTENT_PID: {
+                process_stat_t stat;
                 if (sys_process_get_stat_pid(file->arg, &stat) == ESUCC) {
-                        len = sys_snprintf(buff, size,
-                                           "Name: %s\n"
-                                           "PID: %d\n"
-                                           "Memory usage: %d bytes\n"
-                                           "Memory Block Count: %d\n"
-                                           "Open Files: %d\n"
-                                           "Open Dirs: %d\n"
-                                           "Open Mutexes: %d\n"
-                                           "Open Semaphores: %d\n"
-                                           "Open Queues: %d\n"
-                                           "Open Sockets: %d\n"
-                                           "Threads: %d\n"
-                                           "CPU Load: %d.%d%%\n"
-                                           "Stack Size: %d\n"
-                                           "Stack Usage: %d\n"
-                                           "Priority: %d\n"
-                                           "Syscalls: %u\n",
-                                           stat.name,
-                                           stat.pid,
-                                           stat.memory_usage,
-                                           stat.memory_block_count,
-                                           stat.files_count,
-                                           stat.dir_count,
-                                           stat.mutexes_count,
-                                           stat.semaphores_count,
-                                           stat.queue_count,
-                                           stat.socket_count,
-                                           stat.threads_count,
-                                           stat.CPU_load / 10, stat.CPU_load % 10,
-                                           stat.stack_size,
-                                           stat.stack_max_usage,
-                                           stat.priority,
-                                           stat.syscalls);
+
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Name: %s\n", stat.name);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "PID: %d\n", stat.pid);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Memory usage: %d bytes\n", stat.memory_usage);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Memory Block Count: %d\n", stat.memory_block_count);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Open Files: %d\n", stat.files_count);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Open Dirs: %d\n", stat.dir_count);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Open Mutexes: %d\n", stat.mutexes_count);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Open Semaphores: %d\n", stat.semaphores_count);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Open Queues: %d\n", stat.queue_count);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Open Sockets: %d\n", stat.socket_count);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Threads: %d\n", stat.threads_count);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "CPU Load: %d.%d%%\n", stat.CPU_load / 10, stat.CPU_load % 10);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Stack Size: %d\n", stat.stack_size);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Stack Usage: %d\n", stat.stack_max_usage);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Priority: %d\n", stat.priority);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Syscalls/s: %u\n", stat.syscalls);
                 }
                 break;
+        }
 
         case FILE_CONTENT_CPUINFO:
-                len = sys_snprintf(buff, size,
-                                    "CPU name  : %s\n"
-                                    "CPU vendor: %s\n",
-                                    _CPUCTL_PLATFORM_NAME,
-                                    _CPUCTL_VENDOR_NAME);
+                buf_snprintf(buff, &size,&clen, &seek,
+                             "CPU name  : %s\n"
+                             "CPU vendor: %s\n",
+                             _CPUCTL_PLATFORM_NAME,
+                             _CPUCTL_VENDOR_NAME);
 
                 FILE *pll;
                 if (sys_fopen(CLK_FILE_PATH, "r+", &pll) == ESUCC) {
@@ -1028,20 +995,20 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                         CLK_info_t clkinf;
                         clkinf.iterator = 0;
 
-                        while (  sys_ioctl(pll, IOCTL_CLK__GET_CLK_INFO, &clkinf) == ESUCC
+                        while ( size > 0
+                              && sys_ioctl(pll, IOCTL_CLK__GET_CLK_INFO, &clkinf) == ESUCC
                               && clkinf.name) {
 
-                                len += sys_snprintf(buff + len,
-                                                     size - len,
-                                                     "%16s: %d Hz\n",
-                                                     clkinf.name,
-                                                     cast(int, clkinf.freq_Hz));
+                                buf_snprintf(buff, &size, &clen, &seek,
+                                             "%16s: %d Hz\n",
+                                             clkinf.name,
+                                             cast(int, clkinf.freq_Hz));
                         }
 
                         sys_fclose(pll);
                 } else {
-                        len += sys_snprintf(buff + len, size - len,
-                                            "Warning: no '"CLK_FILE_PATH"' file to read clocks\n");
+                        buf_snprintf(buff, &size, &clen, &seek,
+                                     "Warning: no '"CLK_FILE_PATH"' file to read clocks\n");
                 }
                 break;
 
@@ -1049,7 +1016,9 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
         case FILE_CONTENT_BIN: {
                 const struct _prog_data *pdata = sys_get_programs_table();
                 if (file->arg < sys_get_programs_table_size()) {
-                        len = sys_snprintf(buff, size, "#!%s\n", pdata[file->arg].name);
+
+                        buf_snprintf(buff, &size, &clen, &seek,
+                                     "#!%s\n", pdata[file->arg].name);
                 }
                 break;
         }
@@ -1059,7 +1028,44 @@ static size_t get_file_content(struct file_info *file, char *buff, size_t size)
                 break;
         }
 
-        return len;
+        return clen;
+}
+
+//==============================================================================
+/**
+ * @brief  Function fill buffer with text according to file position and buffer size.
+ *
+ * @param  buf          destination buffer (can be null)
+ * @param  size         destination buffer size
+ * @param  clen         content length (output)
+ * @param  seek         file position
+ * @param  fmt          printf() format
+ * @param  ...          printf() arguments
+ */
+//==============================================================================
+static void buf_snprintf(u8_t *buf, size_t *size, size_t *clen, i32_t *seek, const char *fmt, ...)
+{
+        char line[128];
+
+        va_list arg;
+        va_start(arg, fmt);
+        i32_t len = sys_vsnprintf(line, sizeof(line), fmt, arg);
+        va_end(arg);
+
+        if (len - *seek > 0) {
+                len -= *seek;
+                len = min(len, (i32_t)*size);
+
+                if (buf) {
+                        memcpy(buf + *clen, line + *seek, len);
+                }
+
+                *clen += len;
+                *size -= len;
+                *seek  = 0;
+        } else {
+                *seek -= min(*seek, len);
+        }
 }
 
 /*==============================================================================
