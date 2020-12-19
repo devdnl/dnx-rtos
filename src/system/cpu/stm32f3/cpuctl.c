@@ -45,6 +45,9 @@
 #define SCB_SysCtrl             (*((__IO uint32_t *)0xE000ED10))
 #define SysCtrl_SLEEPDEEP       ((uint32_t)0x00000004)
 
+#define SRAM_HEAP_START         ((void *)&__heap_start)
+#define SRAM_HEAP_SIZE          ((size_t)&__heap_size)
+
 #define CCM_START               ((void *)&__ccm_start)
 #define CCM_SIZE                ((size_t)&__ccm_size)
 
@@ -102,9 +105,12 @@ void get_registers_from_stack(uint32_t *stack_address);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+extern void *__heap_start;
+extern void *__heap_size;
 extern void *__ccm_start;
 extern void *__ccm_size;
 
+static _mm_region_t sram;
 static _mm_region_t ccm;
 
 static volatile reg_dump_t reg_dump __attribute__ ((section (".noinit")));
@@ -143,8 +149,10 @@ void _cpuctl_init(void)
         _cpuctl_init_CPU_load_counter();
         #endif
 
+        _mm_register_region(&sram, SRAM_HEAP_START, SRAM_HEAP_SIZE, _MM_FLAG__DMA_CAPABLE, "SRAM");
+
         if (CCM_SIZE > 0) {
-                _mm_register_region(&ccm, CCM_START, CCM_SIZE, false, _CPUCTL_FAST_MEM);
+                _mm_register_region(&ccm, CCM_START, CCM_SIZE, 0, _CPUCTL_FAST_MEM);
         }
 }
 

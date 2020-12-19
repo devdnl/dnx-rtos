@@ -43,7 +43,10 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _mm_align(_size)         (((_size) + _HEAP_ALIGN_ - 1) & ~(_HEAP_ALIGN_-1))
+#define _mm_align(_size)        (((_size) + _HEAP_ALIGN_ - 1) & ~(_HEAP_ALIGN_-1))
+
+#define _MM_FLAG__DMA_CAPABLE   (1 << 0)
+#define _MM_FLAG__CACHEABLE     (1 << 1)
 
 /*==============================================================================
   Exported object types
@@ -74,7 +77,7 @@ typedef struct _mm_region {
         _heap_t            heap;
         struct _mm_region *next;
         const char        *name_ref;
-        bool               dma_capable;
+        u32_t              flags;
 } _mm_region_t;
 
 /*==============================================================================
@@ -85,7 +88,7 @@ typedef struct _mm_region {
   Exported functions
 ==============================================================================*/
 extern int    _mm_init(void);
-extern int    _mm_register_region(_mm_region_t*, void*, size_t, bool, const char*);
+extern int    _mm_register_region(_mm_region_t*, void*, size_t, u32_t, const char*);
 extern int    _mm_get_mem_usage_details(_mm_mem_usage_t*);
 extern int    _mm_get_module_mem_usage(uint module, i32_t *usage);
 extern size_t _mm_get_block_size(void*);
@@ -96,9 +99,10 @@ extern bool   _mm_is_object_in_heap(void *ptr);
 extern bool   _mm_is_rom_address(const void *ptr);
 extern bool   _mm_check_consistency(void);
 extern bool   _mm_is_dma_capable(const void *ptr);
+extern bool   _mm_is_cacheable(const void *ptr);
 extern const char *_mm_get_region_name(const void *ptr);
-extern int    _kzalloc(enum _mm_mem, size_t, const char*, bool, void**, ...);
-extern int    _kmalloc(enum _mm_mem, size_t, const char*, bool, void**, ...);
+extern int    _kzalloc(enum _mm_mem, size_t, const char*, u32_t, u32_t, void**, ...);
+extern int    _kmalloc(enum _mm_mem, size_t, const char*, u32_t, u32_t, void**, ...);
 extern int    _kfree(enum _mm_mem, void**, ...);
 
 /*==============================================================================

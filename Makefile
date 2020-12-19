@@ -71,6 +71,7 @@ CFLAGS   = -c \
            -Werror=overflow \
            -include ./config/config.h \
            -include ./build/defs.h \
+           -I./build\
            -Wno-main\
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            $(CPUCONFIG_CFLAGS)
@@ -99,6 +100,7 @@ CXXFLAGS = -c \
            -include ./config/config.h \
            -DCOMPILE_EPOCH_TIME=$(shell $(DATE) "+%s") \
            -include ./build/defs.h \
+           -I./build\
            $(CPUCONFIG_CXXFLAGS)
 
 LFLAGS   = -g \
@@ -124,6 +126,9 @@ AS_EXT  = s
 #---------------------------------------------------------------------------------------------------
 # defines project path with binaries
 TARGET_DIR_NAME = build
+GEN_DRIVERS_DIR = $(TARGET_DIR_NAME)/drivers
+GEN_FS_DIR      = $(TARGET_DIR_NAME)/fs
+GEN_PROG_DIR    = $(TARGET_DIR_NAME)/program
 
 # defines object folder name
 OBJ_DIR_NAME    = obj
@@ -215,7 +220,7 @@ TARGET_PATH = $(TARGET_DIR_NAME)/$(TARGET)
 OBJ_PATH = $(TARGET_DIR_NAME)/$(TARGET)/$(OBJ_DIR_NAME)
 
 # list of sources to compile
--include $(APP_LOC)/Makefile   # file is created in the addapps script
+-include $(GEN_PROG_DIR)/Makefile   # file is created in the addapps script
 include $(SYS_LOC)/Makefile
 
 # defines objects localizations
@@ -386,14 +391,17 @@ status :
 generate :
 	@$(MKDIR) $(TARGET_PATH)
 
+	@$(MKDIR) $(GEN_PROG_DIR)
 	@$(ECHO) "Adding user's programs and libraries to the project..."
-	@$(SHELL) $(ADDAPPS) ./$(APP_LOC)
+	@$(SHELL) $(ADDAPPS) ./$(APP_LOC) $(GEN_PROG_DIR)
 
 	@$(ECHO) "Adding file systems to the project..."
-	@$(SHELL) $(ADDFS) ./$(SYS_FS_LOC)
+	@$(MKDIR) $(GEN_FS_DIR)
+	@$(SHELL) $(ADDFS) ./$(SYS_FS_LOC) $(GEN_FS_DIR)
 
 	@$(ECHO) "Adding drivers to the project..."
-	@$(SHELL) $(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(SYS_DRV_INC_LOC)
+	@$(MKDIR) $(GEN_DRIVERS_DIR)
+	@$(SHELL) $(ADDDRIVERS) ./$(SYS_DRV_LOC) ./$(GEN_DRIVERS_DIR)
 
 	@$(ECHO) "Obtaining git hash..."
 	@$(ECHO) "#define COMMIT_HASH \"$(shell git rev-parse --short HEAD 2>/dev/null)"\" > build/defs.h

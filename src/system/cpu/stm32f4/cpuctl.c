@@ -45,11 +45,14 @@
 #define SCB_SysCtrl             (*((__IO uint32_t *)0xE000ED10))
 #define SysCtrl_SLEEPDEEP       ((uint32_t)0x00000004)
 
-#define RAM2_START              ((void *)&__ram2_start)
-#define RAM2_SIZE               ((size_t)&__ram2_size)
+#define SRAM1_HEAP_START        ((void *)&__heap_start)
+#define SRAM1_HEAP_SIZE         ((size_t)&__heap_size)
 
-#define RAM3_START              ((void *)&__ram3_start)
-#define RAM3_SIZE               ((size_t)&__ram3_size)
+#define SRAM2_START             ((void *)&__ram2_start)
+#define SRAM2_SIZE              ((size_t)&__ram2_size)
+
+#define SRAM3_START             ((void *)&__ram3_start)
+#define SRAM3_SIZE              ((size_t)&__ram3_size)
 
 #define CCM_START               ((void *)&__ccm_start)
 #define CCM_SIZE                ((size_t)&__ccm_size)
@@ -108,6 +111,8 @@ void get_registers_from_stack(uint32_t *stack_address);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+extern void *__heap_start;
+extern void *__heap_size;
 extern void *__ram2_start;
 extern void *__ram2_size;
 extern void *__ram3_start;
@@ -115,8 +120,9 @@ extern void *__ram3_size;
 extern void *__ccm_start;
 extern void *__ccm_size;
 
-static _mm_region_t ram2;
-static _mm_region_t ram3;
+static _mm_region_t sram1;
+static _mm_region_t sram2;
+static _mm_region_t sram3;
 static _mm_region_t ccm;
 
 static volatile reg_dump_t reg_dump __attribute__ ((section (".noinit")));
@@ -155,11 +161,12 @@ void _cpuctl_init(void)
         _cpuctl_init_CPU_load_counter();
         #endif
 
-        _mm_register_region(&ram2, RAM2_START, RAM2_SIZE, true, "RAM2");
-        _mm_register_region(&ram3, RAM3_START, RAM3_SIZE, true, "RAM3");
+        _mm_register_region(&sram1, SRAM1_HEAP_START, SRAM1_HEAP_SIZE, _MM_FLAG__DMA_CAPABLE, "SRAM1");
+        _mm_register_region(&sram2, SRAM2_START, SRAM2_SIZE, _MM_FLAG__DMA_CAPABLE, "SRAM2");
+        _mm_register_region(&sram3, SRAM3_START, SRAM3_SIZE, _MM_FLAG__DMA_CAPABLE, "SRAM3");
 
         if (CCM_SIZE > 0) {
-                _mm_register_region(&ccm, CCM_START, CCM_SIZE, false, _CPUCTL_FAST_MEM);
+                _mm_register_region(&ccm, CCM_START, CCM_SIZE, 0, _CPUCTL_FAST_MEM);
         }
 }
 

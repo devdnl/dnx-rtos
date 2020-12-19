@@ -45,6 +45,9 @@
 #define SCB_SysCtrl             (*((__IO uint32_t *)0xE000ED10))
 #define SysCtrl_SLEEPDEEP       ((uint32_t)0x00000004)
 
+#define SRAM_HEAP_START         ((void *)&__heap_start)
+#define SRAM_HEAP_SIZE          ((size_t)&__heap_size)
+
 // Memory Management Fault Status Register
 #define NVIC_MFSR               (*(volatile unsigned char*)(0xE000ED28u))
 
@@ -100,6 +103,11 @@ void get_registers_from_stack(uint32_t *stack_address);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+extern void *__heap_start;
+extern void *__heap_size;
+
+static _mm_region_t sram;
+
 static u32_t ticks_per_us;
 
 static volatile reg_dump_t reg_dump __attribute__ ((section (".noinit")));
@@ -134,6 +142,8 @@ void _cpuctl_init(void)
         #if (__OS_MONITOR_CPU_LOAD__ > 0)
         _cpuctl_init_CPU_load_counter();
         #endif
+
+        _mm_register_region(&sram, SRAM_HEAP_START, SRAM_HEAP_SIZE, _MM_FLAG__DMA_CAPABLE, "SRAM");
 }
 
 //==============================================================================

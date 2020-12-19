@@ -206,7 +206,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
 
         char       *cmdarg = NULL;
         _process_t *proc   = NULL;
-        int err = _kzalloc(_MM_KRN, sizeof(_process_t), _CPUCTL_FAST_MEM, false, cast(void**, &proc));
+        int err = _kzalloc(_MM_KRN, sizeof(_process_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, &proc));
         if (!err) {
                 proc->header.self = proc;
                 proc->header.type = RES_TYPE_PROCESS;
@@ -255,7 +255,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                 }
 
                 err = _kzalloc(_MM_KRN, sizeof(task_data_t) * PROC_MAX_THREADS(proc),
-                               _CPUCTL_FAST_MEM, false, cast(void*, &proc->taskdata));
+                               _CPUCTL_FAST_MEM, 0, 0, cast(void*, &proc->taskdata));
                 if (err) goto finish;
 
                 ATOMIC(process_mtx) {
@@ -533,7 +533,7 @@ KERNELSPACE int _process_set_CWD(_process_t *proc, const char *CWD)
 
         if (is_proc_valid(proc) && CWD && CWD[0] == '/') {
                 char *cwd;
-                err = _kmalloc(_MM_KRN, strsize(CWD), NULL, false, cast(void*, &cwd));
+                err = _kmalloc(_MM_KRN, strsize(CWD), NULL, 0, 0, cast(void*, &cwd));
                 if (!err) {
                         strcpy(cwd, CWD);
                         _vfs_realpath(cwd, SUB_SLASH);
@@ -1081,7 +1081,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                 if (id < threads) {
 
                         thread_args_t *args = NULL;
-                        err = _kmalloc(_MM_KRN, sizeof(thread_args_t), _CPUCTL_FAST_MEM, false, cast(void*, &args));
+                        err = _kmalloc(_MM_KRN, sizeof(thread_args_t), _CPUCTL_FAST_MEM, 0, 0, cast(void*, &args));
                         if (!err) {
 
                                 args->func = func;
@@ -1837,7 +1837,7 @@ static int process_apply_attributes(_process_t *proc, const process_attr_t *attr
                  */
                 size_t cwdlen = attr->cwd ? strsize(attr->cwd) : strsize("/");
 
-                err = _kmalloc(_MM_KRN, cwdlen, NULL, false, cast(void*, &proc->cwd));
+                err = _kmalloc(_MM_KRN, cwdlen, NULL, 0, 0, cast(void*, &proc->cwd));
                 if (!err) {
                         if (attr->cwd && attr->cwd[0] == '/') {
                                 strcpy(proc->cwd, attr->cwd);
@@ -2237,7 +2237,7 @@ static int argtab_create(const char *str, u8_t *argc, char **argv[])
 
                                 // add argument to list
                                 char *arg;
-                                err = _kmalloc(_MM_KRN, str_len + 1, NULL, false, cast(void**, &arg));
+                                err = _kmalloc(_MM_KRN, str_len + 1, NULL, 0, 0, cast(void**, &arg));
                                 if (!err) {
                                         _strlcpy(arg, start, str_len + 1);
 
@@ -2258,7 +2258,7 @@ static int argtab_create(const char *str, u8_t *argc, char **argv[])
                         *argc = no_of_args;
 
                         char **arg = NULL;
-                        err = _kmalloc(_MM_KRN, (no_of_args + 1) * sizeof(char*), NULL, false, cast(void*, &arg));
+                        err = _kmalloc(_MM_KRN, (no_of_args + 1) * sizeof(char*), NULL, 0, 0, cast(void*, &arg));
                         if (!err) {
                                 for (int i = 0; i < no_of_args; i++) {
                                         arg[i] = _llist_take_front(largs);
@@ -2350,7 +2350,7 @@ static int allocate_process_globals(_process_t *proc, const struct _prog_data *u
 
         if (*usrprog->globals_size > 0) {
                 res_header_t *mem;
-                err = _kzalloc(_MM_PROG, *usrprog->globals_size, NULL, false, cast(void*, &mem));
+                err = _kzalloc(_MM_PROG, *usrprog->globals_size, NULL, 0, 0, cast(void*, &mem));
                 if (!err) {
                         proc->globals = &mem[1];
                         _process_register_resource(proc, mem);

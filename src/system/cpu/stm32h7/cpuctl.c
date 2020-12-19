@@ -45,17 +45,20 @@
 #define SCB_SysCtrl             (*((__IO uint32_t *)0xE000ED10))
 #define SysCtrl_SLEEPDEEP       ((uint32_t)0x00000004)
 
-#define RAM1_START              ((void *)&__ram1_start)
-#define RAM1_SIZE               ((size_t)&__ram1_size)
+#define AXISRAM_HEAP_START      ((void *)&__heap_start)
+#define AXISRAM_HEAP_SIZE       ((size_t)&__heap_size)
 
-#define RAM2_START              ((void *)&__ram2_start)
-#define RAM2_SIZE               ((size_t)&__ram2_size)
+#define SRAM1_START             ((void *)&__ram1_start)
+#define SRAM1_SIZE              ((size_t)&__ram1_size)
 
-#define RAM3_START              ((void *)&__ram3_start)
-#define RAM3_SIZE               ((size_t)&__ram3_size)
+#define SRAM2_START             ((void *)&__ram2_start)
+#define SRAM2_SIZE              ((size_t)&__ram2_size)
 
-#define RAM4_START              ((void *)&__ram4_start)
-#define RAM4_SIZE               ((size_t)&__ram4_size)
+#define SRAM3_START             ((void *)&__ram3_start)
+#define SRAM3_SIZE              ((size_t)&__ram3_size)
+
+#define SRAM4_START             ((void *)&__ram4_start)
+#define SRAM4_SIZE              ((size_t)&__ram4_size)
 
 #define DTCM_START              ((void *)&__dtcm_start)
 #define DTCM_SIZE               ((size_t)&__dtcm_size)
@@ -125,10 +128,11 @@ extern void *__ram4_size;
 extern void *__dtcm_start;
 extern void *__dtcm_size;
 
-static _mm_region_t ram1;
-static _mm_region_t ram2;
-static _mm_region_t ram3;
-static _mm_region_t ram4;
+static _mm_region_t axisram;
+static _mm_region_t sram1;
+static _mm_region_t sram2;
+static _mm_region_t sram3;
+static _mm_region_t sram4;
 static _mm_region_t dtcm;
 
 static volatile reg_dump_t reg_dump __attribute__ ((section (".noinit")));
@@ -167,32 +171,34 @@ void _cpuctl_init(void)
         _cpuctl_init_CPU_load_counter();
         #endif
 
+        _mm_register_region(&axisram, AXISRAM_HEAP_START, AXISRAM_HEAP_SIZE, true, "AXISRAM");
+
         if (DTCM_SIZE > 0) {
                 _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, true, _CPUCTL_FAST_MEM);
         }
 
-        if (RAM1_SIZE > 0) {
+        if (SRAM1_SIZE > 0) {
                 SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM1EN);
-                _mm_register_region(&ram1, RAM1_START, RAM1_SIZE, true, "RAM1");
+                _mm_register_region(&sram1, SRAM1_START, SRAM1_SIZE, true, "SRAM1");
         }
 
-        if (RAM2_SIZE > 0) {
+        if (SRAM2_SIZE > 0) {
                 SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM2EN);
-                _mm_register_region(&ram2, RAM2_START, RAM2_SIZE, true, "RAM2");
+                _mm_register_region(&sram2, SRAM2_START, SRAM2_SIZE, true, "SRAM2");
         }
 
-        if (RAM3_SIZE > 0) {
+        if (SRAM3_SIZE > 0) {
                 SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM3EN);
-                _mm_register_region(&ram3, RAM3_START, RAM3_SIZE, true, "RAM3");
+                _mm_register_region(&sram3, SRAM3_START, SRAM3_SIZE, true, "SRAM3");
         }
 
-        if (RAM4_SIZE > 0) {
+        if (SRAM4_SIZE > 0) {
                 /*
                  * As shown in Figure 60, FLASH, AXISRAM, SRAM4, ITCM, DTCM1 and DTCM2 are
                  * implicitly allocated to the CPU. As a result, there is no enable bit allowing
                  * the CPU to allocate these memories.
                  */
-                _mm_register_region(&ram4, RAM4_START, RAM4_SIZE, true, "RAM4");
+                _mm_register_region(&sram4, SRAM4_START, SRAM4_SIZE, true, "SRAM4");
         }
 
         if (__CPU_ICACHE_ENABLE__) {

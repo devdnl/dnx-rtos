@@ -454,7 +454,7 @@ int _vfs_opendir(const struct vfs_path *path, DIR **dir)
                 return EINVAL;
         }
 
-        int err = _kmalloc(_MM_KRN, sizeof(DIR), NULL, false, cast(void**, dir));
+        int err = _kmalloc(_MM_KRN, sizeof(DIR), NULL, 0, 0, cast(void**, dir));
         if (!err) {
                 char *cwd_path;
                 err = new_absolute_path(path, ADD_SLASH, &cwd_path);
@@ -876,7 +876,7 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
         }
 
         FILE *file_obj = NULL;
-        err = _kzalloc(_MM_KRN, sizeof(FILE), NULL, false, cast(void**, &file_obj));
+        err = _kzalloc(_MM_KRN, sizeof(FILE), NULL, 0, 0, cast(void**, &file_obj));
         if (!err && file_obj) {
 
                 const char *external_path;
@@ -1338,7 +1338,7 @@ static int new_FS_entry(FS_entry_t         *parent_FS,
                         FS_entry_t         **fs_entry)
 {
         FS_entry_t *new_FS = NULL;
-        int err = _kmalloc(_MM_KRN, sizeof(FS_entry_t), NULL, false, cast(void**, &new_FS));
+        int err = _kmalloc(_MM_KRN, sizeof(FS_entry_t), NULL, 0, 0, cast(void**, &new_FS));
         if (!err) {
                 err = fs_interface->fs_init(&new_FS->handle, fs_src_file, opts);
                 if (!err) {
@@ -1568,7 +1568,7 @@ static int new_absolute_path(const struct vfs_path *path, enum path_correction c
 
         // memory allocation
         char *abspath;
-        int err = _kzalloc(_MM_KRN, abslen, _CPUCTL_FAST_MEM, false, cast(void*, &abspath));
+        int err = _kzalloc(_MM_KRN, abslen, _CPUCTL_FAST_MEM, 0, 0, cast(void*, &abspath));
         if (!err) {
                 if (path->PATH[0] == '/') {
                         strcpy(abspath, path->PATH);
@@ -1587,7 +1587,7 @@ static int new_absolute_path(const struct vfs_path *path, enum path_correction c
                 size_t plen = strsize(abspath);
 
                 if (_mm_align(plen) < _mm_align(abslen)) {
-                        if (_kzalloc(_MM_KRN, plen, _CPUCTL_FAST_MEM, false, cast(void**, new_path)) == 0) {
+                        if (_kzalloc(_MM_KRN, plen, _CPUCTL_FAST_MEM, 0, 0, cast(void**, new_path)) == 0) {
                                 strcpy(*new_path, abspath);
                                 _kfree(_MM_KRN, cast(void*, &abspath));
                                 abspath = *new_path;

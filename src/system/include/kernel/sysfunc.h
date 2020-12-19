@@ -5760,7 +5760,7 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
  * @param  region       region object (initialized by system)
  * @param  start        region start address
  * @param  size         region size
- * @param  dma_capable  DMA capable region
+ * @param  flags        region features
  * @param  name         region name
  *
  * @return One of errno value.
@@ -5771,7 +5771,7 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
 
         mem_region_t ram2;
 
-        int err = sys_memory_register(&ram2, 0x20001000, 16384, true, "RAM2");
+        int err = sys_register_region(&ram2, 0x20001000, 16384, true, "RAM2");
         if (!err) {
                 // ...
         }
@@ -5781,10 +5781,10 @@ static inline struct tm *sys_localtime_r(const time_t *timer, struct tm *tm)
  *
  */
 //==============================================================================
-static inline int sys_memory_register(mem_region_t *region, void *start,
-                                      size_t size, bool dma_capable, const char *name)
+static inline int sys_register_region(mem_region_t *region, void *start,
+                                      size_t size, u32_t flags, const char *name)
 {
-        return _mm_register_region(region, start, size, dma_capable, name);
+        return _mm_register_region(region, start, size, flags, name);
 }
 
 //==============================================================================

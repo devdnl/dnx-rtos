@@ -447,6 +447,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
 
 #elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
                         config_tx.MA[0]    = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
+                        config_tx.MA[1]    = 0;
                         config_tx.FC       = 0;
                         config_tx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
                                            | (txbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)
@@ -471,6 +472,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                                            | DMA_CCRx_PSIZE_BYTE;
 #elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
                         config_rx.MA[0]    = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
+                        config_rx.MA[1]    = 0;
                         config_rx.FC       = 0;
                         config_rx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
                                            | (rxbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)

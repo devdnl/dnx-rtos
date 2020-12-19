@@ -54,6 +54,7 @@ extern "C" {
 
 /* names of memory regions used by kernel */
 #define _CPUCTL_FAST_MEM                        "DTCM"
+#define _CPUCTL_STACK_REGION_FLAGS              _MM_FLAG__DMA_CAPABLE | _MM_FLAG__CACHEABLE
 
 /*==============================================================================
   Exported types, enums definitions

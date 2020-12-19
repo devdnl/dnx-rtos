@@ -62,6 +62,7 @@
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+static _mm_region_t main_stack;
 
 /*==============================================================================
   Exported object definitions
@@ -102,8 +103,7 @@ void dnxinit(void *arg)
          * If cause problems (strange system behaviour, kernel panics) disable
          * this option.
          */
-        static _mm_region_t main_stack;
-        _mm_register_region(&main_stack, STACK_START, STACK_SIZE, true, "STARTSTACK");
+        _mm_register_region(&main_stack, STACK_START, STACK_SIZE, _CPUCTL_STACK_REGION_FLAGS, "STARTSTACK");
 
         _task_exit();
 }

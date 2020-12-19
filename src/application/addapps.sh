@@ -10,8 +10,6 @@ Makefile_name="Makefile"
 program_registration_file_name="program_registration.c"
 
 # variables
-Makefile_path=
-program_registration_path=
 program_list=
 
 #-------------------------------------------------------------------------------
@@ -23,8 +21,8 @@ function check_args()
 {
     local args="$1"
 
-    if [ "$args" == "" ]; then
-        echo "Usage: $args <path_to_scan>"
+    if [ "$1" == "" ] || [ "$2" == "" ]; then
+        echo "Usage: $args <path_to_scan> <output_path>"
         exit 1
     fi
 }
@@ -61,7 +59,7 @@ function create_makefile_programs()
     echo '# Makefile for GNU make - file generated at build process'
     echo ''
 
-    echo 'CSRC_PROGRAMS += ../program_registration.c'
+    echo 'CSRC_PROGRAMS += ../../../$(GEN_PROG_DIR)/program_registration.c'
     echo 'HDRLOC_PROGRAMS += ../programs'
     for prog in $program_list; do
         echo '-include $(APP_PRG_LOC)/'"$prog"'/Makefile'
@@ -121,18 +119,15 @@ function create_program_registration_file()
 #-------------------------------------------------------------------------------
 function main()
 {
-    check_args "$1"
+    check_args "$1" "$2"
 
-    Makefile_path="$1/$Makefile_name"
-
-    program_registration_path="$1/$program_registration_file_name"
     program_list=$(get_program_list "$1")
 
-    create_makefile_programs > "$Makefile_path"
-    create_program_registration_file > "$program_registration_path"
+    create_makefile_programs > "$2/$Makefile_name"
+    create_program_registration_file > "$2/$program_registration_file_name"
 
     library_list=$(get_library_list "$1")
-    create_makefile_libs >> "$Makefile_path"
+    create_makefile_libs >> "$2/$Makefile_name"
 }
 
-main "$1"
+main "$1" "$2"
