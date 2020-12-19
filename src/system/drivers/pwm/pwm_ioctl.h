@@ -78,7 +78,7 @@ Write data to set PWM output value.
 \subsection drv-pwm-ddesc-read Data read
 Read data to get PWM output value.
 
-\subsection drv-pwm-ddesc-cfg Driver configuration
+\subsection drv-pwm-ddesc-conf Driver configuration
 To configure driver the ioctl() function should be used:
 
 @code

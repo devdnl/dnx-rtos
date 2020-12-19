@@ -495,7 +495,7 @@ static inline uid_t getuid(void)
  *
  * @param  path         file path
  * @param  flags        file open flags
- * @param  mode         optional mode
+ * @param  ...          optional mode
  *
  * @return On success file descriptor is returned (fd >= 0), otherwise -1.
  */

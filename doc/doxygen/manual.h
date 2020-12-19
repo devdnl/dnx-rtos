@@ -96,7 +96,7 @@ drivers configuration, and starting needed applications/daemons.
 \li \subpage drv-afm
 \li \subpage drv-crc
 \li \subpage drv-dht11
-\li \subpage drv-ethmac
+\li \subpage drv-eth
 \li \subpage drv-gpio
 \li \subpage drv-i2c
 \li \subpage drv-i2cee

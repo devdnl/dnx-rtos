@@ -5884,11 +5884,11 @@ static inline bool sys_stropt_is_flag(const char *opts, const char *flag)
  *
  * @note Function can be used only by driver code.
  *
- * @param [IN]  module              module name
- * @param [IN]  major               major number
- * @param [IN]  minor               minor number
- * @param [IN]  config              module configuration object (optional, can be NULL)
- * @param [OUT] id                  module id (can be NULL)
+ * @param module              module name
+ * @param major               major number
+ * @param minor               minor number
+ * @param config              module configuration object (optional, can be NULL)
+ * @param id                  module id (can be NULL)
  *
  * @return One of error code (errno)
  */
