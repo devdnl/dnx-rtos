@@ -117,6 +117,8 @@ void get_registers_from_stack(uint32_t *stack_address);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+extern void *__heap_start;
+extern void *__heap_size;
 extern void *__ram1_start;
 extern void *__ram1_size;
 extern void *__ram2_start;
