@@ -58,6 +58,7 @@ typedef struct {
         _DMA_cb_t       cb_next;
         u32_t           dmad;
         bool            release;
+        bool            flush_cache;
 } DMA_RT_stream_t;
 
 typedef struct {
@@ -470,7 +471,18 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                         NVIC_SetPriority(IRQn, config->IRQ_priority);
                         NVIC_EnableIRQ(IRQn);
 
-                        _cpuctl_clean_dcache();
+                        RT_stream->flush_cache = (  _mm_is_cacheable((void*)config->MA[0])
+                                                 || _mm_is_cacheable((void*)config->MA[1]));
+
+                        if (RT_stream->flush_cache) {
+
+                                if (  ((config->CR & DMA_SxCR_DIR_Msk) == DMA_SxCR_DIR_M2P)
+                                   || ((config->CR & DMA_SxCR_DIR_Msk) == DMA_SxCR_DIR_M2M) ) {
+
+                                        _cpuctl_clean_dcache();
+                                        RT_stream->flush_cache = false;
+                                }
+                        }
 
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_TCIE | DMA_SxCR_TEIE);
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_EN);
@@ -647,10 +659,12 @@ static bool M2M_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 //==============================================================================
 static void IRQ_handle(u8_t major, u8_t stream)
 {
-        _cpuctl_clean_invalidate_dcache();
-
         DMA_Stream_TypeDef *DMA_stream = DMA_HW[major].stream[stream];
         DMA_RT_stream_t    *RT_stream  = &DMA_RT[major]->stream[stream];
+
+        if (RT_stream->flush_cache) {
+                _cpuctl_clean_invalidate_dcache();
+        }
 
         bool  yield = false;
         u32_t LISR  = DMA_HW[major].DMA->LISR;

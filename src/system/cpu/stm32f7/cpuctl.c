@@ -81,74 +81,74 @@
 /*
  * MPU Definitions
  */
-//#define MPU_HFNMI_PRIVDEF_NONE          ((uint32_t)0x00000000U)
-//#define MPU_HARDFAULT_NMI               ((uint32_t)0x00000002U)
-//#define MPU_PRIVILEGED_DEFAULT          ((uint32_t)0x00000004U)
-//#define MPU_HFNMI_PRIVDEF               ((uint32_t)0x00000006U)
-//
-//#define MPU_REGION_ENABLE               ((uint8_t)0x01U)
-//#define MPU_REGION_DISABLE              ((uint8_t)0x00U)
-//
-//#define MPU_INSTRUCTION_ACCESS_ENABLE   ((uint8_t)0x00U)
-//#define MPU_INSTRUCTION_ACCESS_DISABLE  ((uint8_t)0x01U)
-//
-//#define MPU_ACCESS_SHAREABLE            ((uint8_t)0x01U)
-//#define MPU_ACCESS_NOT_SHAREABLE        ((uint8_t)0x00U)
-//
-//#define MPU_ACCESS_CACHEABLE            ((uint8_t)0x01U)
-//#define MPU_ACCESS_NOT_CACHEABLE        ((uint8_t)0x00U)
-//
-//#define MPU_ACCESS_BUFFERABLE           ((uint8_t)0x01U)
-//#define MPU_ACCESS_NOT_BUFFERABLE       ((uint8_t)0x00U)
-//
-//#define MPU_TEX_LEVEL0                  ((uint8_t)0x00U)
-//#define MPU_TEX_LEVEL1                  ((uint8_t)0x01U)
-//#define MPU_TEX_LEVEL2                  ((uint8_t)0x02U)
-//
-//#define MPU_REGION_SIZE_32B             ((uint8_t)0x04U)
-//#define MPU_REGION_SIZE_64B             ((uint8_t)0x05U)
-//#define MPU_REGION_SIZE_128B            ((uint8_t)0x06U)
-//#define MPU_REGION_SIZE_256B            ((uint8_t)0x07U)
-//#define MPU_REGION_SIZE_512B            ((uint8_t)0x08U)
-//#define MPU_REGION_SIZE_1KiB            ((uint8_t)0x09U)
-//#define MPU_REGION_SIZE_2KiB            ((uint8_t)0x0AU)
-//#define MPU_REGION_SIZE_4KiB            ((uint8_t)0x0BU)
-//#define MPU_REGION_SIZE_8KiB            ((uint8_t)0x0CU)
-//#define MPU_REGION_SIZE_16KiB           ((uint8_t)0x0DU)
-//#define MPU_REGION_SIZE_32KiB           ((uint8_t)0x0EU)
-//#define MPU_REGION_SIZE_64KiB           ((uint8_t)0x0FU)
-//#define MPU_REGION_SIZE_128KiB          ((uint8_t)0x10U)
-//#define MPU_REGION_SIZE_256KiB          ((uint8_t)0x11U)
-//#define MPU_REGION_SIZE_512KiB          ((uint8_t)0x12U)
-//#define MPU_REGION_SIZE_1MiB            ((uint8_t)0x13U)
-//#define MPU_REGION_SIZE_2MiB            ((uint8_t)0x14U)
-//#define MPU_REGION_SIZE_4MiB            ((uint8_t)0x15U)
-//#define MPU_REGION_SIZE_8MiB            ((uint8_t)0x16U)
-//#define MPU_REGION_SIZE_16MiB           ((uint8_t)0x17U)
-//#define MPU_REGION_SIZE_32MiB           ((uint8_t)0x18U)
-//#define MPU_REGION_SIZE_64MiB           ((uint8_t)0x19U)
-//#define MPU_REGION_SIZE_128MiB          ((uint8_t)0x1AU)
-//#define MPU_REGION_SIZE_256MiB          ((uint8_t)0x1BU)
-//#define MPU_REGION_SIZE_512MiB          ((uint8_t)0x1CU)
-//#define MPU_REGION_SIZE_1GiB            ((uint8_t)0x1DU)
-//#define MPU_REGION_SIZE_2GiB            ((uint8_t)0x1EU)
-//#define MPU_REGION_SIZE_4GiB            ((uint8_t)0x1FU)
-//
-//#define MPU_REGION_NO_ACCESS            ((uint8_t)0x00U)
-//#define MPU_REGION_PRIV_RW              ((uint8_t)0x01U)
-//#define MPU_REGION_PRIV_RW_URO          ((uint8_t)0x02U)
-//#define MPU_REGION_FULL_ACCESS          ((uint8_t)0x03U)
-//#define MPU_REGION_PRIV_RO              ((uint8_t)0x05U)
-//#define MPU_REGION_PRIV_RO_URO          ((uint8_t)0x06U)
-//
-//#define MPU_REGION_NUMBER0              ((uint8_t)0x00U)
-//#define MPU_REGION_NUMBER1              ((uint8_t)0x01U)
-//#define MPU_REGION_NUMBER2              ((uint8_t)0x02U)
-//#define MPU_REGION_NUMBER3              ((uint8_t)0x03U)
-//#define MPU_REGION_NUMBER4              ((uint8_t)0x04U)
-//#define MPU_REGION_NUMBER5              ((uint8_t)0x05U)
-//#define MPU_REGION_NUMBER6              ((uint8_t)0x06U)
-//#define MPU_REGION_NUMBER7              ((uint8_t)0x07U)
+#define MPU_HFNMI_PRIVDEF_NONE          ((uint32_t)0x00000000U)
+#define MPU_HARDFAULT_NMI               ((uint32_t)0x00000002U)
+#define MPU_PRIVILEGED_DEFAULT          ((uint32_t)0x00000004U)
+#define MPU_HFNMI_PRIVDEF               ((uint32_t)0x00000006U)
+
+#define MPU_REGION_ENABLE               ((uint8_t)0x01U)
+#define MPU_REGION_DISABLE              ((uint8_t)0x00U)
+
+#define MPU_INSTRUCTION_ACCESS_ENABLE   ((uint8_t)0x00U)
+#define MPU_INSTRUCTION_ACCESS_DISABLE  ((uint8_t)0x01U)
+
+#define MPU_ACCESS_SHAREABLE            ((uint8_t)0x01U)
+#define MPU_ACCESS_NOT_SHAREABLE        ((uint8_t)0x00U)
+
+#define MPU_ACCESS_CACHEABLE            ((uint8_t)0x01U)
+#define MPU_ACCESS_NOT_CACHEABLE        ((uint8_t)0x00U)
+
+#define MPU_ACCESS_BUFFERABLE           ((uint8_t)0x01U)
+#define MPU_ACCESS_NOT_BUFFERABLE       ((uint8_t)0x00U)
+
+#define MPU_TEX_LEVEL0                  ((uint8_t)0x00U)
+#define MPU_TEX_LEVEL1                  ((uint8_t)0x01U)
+#define MPU_TEX_LEVEL2                  ((uint8_t)0x02U)
+
+#define MPU_REGION_SIZE_32B             ((uint8_t)0x04U)
+#define MPU_REGION_SIZE_64B             ((uint8_t)0x05U)
+#define MPU_REGION_SIZE_128B            ((uint8_t)0x06U)
+#define MPU_REGION_SIZE_256B            ((uint8_t)0x07U)
+#define MPU_REGION_SIZE_512B            ((uint8_t)0x08U)
+#define MPU_REGION_SIZE_1KiB            ((uint8_t)0x09U)
+#define MPU_REGION_SIZE_2KiB            ((uint8_t)0x0AU)
+#define MPU_REGION_SIZE_4KiB            ((uint8_t)0x0BU)
+#define MPU_REGION_SIZE_8KiB            ((uint8_t)0x0CU)
+#define MPU_REGION_SIZE_16KiB           ((uint8_t)0x0DU)
+#define MPU_REGION_SIZE_32KiB           ((uint8_t)0x0EU)
+#define MPU_REGION_SIZE_64KiB           ((uint8_t)0x0FU)
+#define MPU_REGION_SIZE_128KiB          ((uint8_t)0x10U)
+#define MPU_REGION_SIZE_256KiB          ((uint8_t)0x11U)
+#define MPU_REGION_SIZE_512KiB          ((uint8_t)0x12U)
+#define MPU_REGION_SIZE_1MiB            ((uint8_t)0x13U)
+#define MPU_REGION_SIZE_2MiB            ((uint8_t)0x14U)
+#define MPU_REGION_SIZE_4MiB            ((uint8_t)0x15U)
+#define MPU_REGION_SIZE_8MiB            ((uint8_t)0x16U)
+#define MPU_REGION_SIZE_16MiB           ((uint8_t)0x17U)
+#define MPU_REGION_SIZE_32MiB           ((uint8_t)0x18U)
+#define MPU_REGION_SIZE_64MiB           ((uint8_t)0x19U)
+#define MPU_REGION_SIZE_128MiB          ((uint8_t)0x1AU)
+#define MPU_REGION_SIZE_256MiB          ((uint8_t)0x1BU)
+#define MPU_REGION_SIZE_512MiB          ((uint8_t)0x1CU)
+#define MPU_REGION_SIZE_1GiB            ((uint8_t)0x1DU)
+#define MPU_REGION_SIZE_2GiB            ((uint8_t)0x1EU)
+#define MPU_REGION_SIZE_4GiB            ((uint8_t)0x1FU)
+
+#define MPU_REGION_NO_ACCESS            ((uint8_t)0x00U)
+#define MPU_REGION_PRIV_RW              ((uint8_t)0x01U)
+#define MPU_REGION_PRIV_RW_URO          ((uint8_t)0x02U)
+#define MPU_REGION_FULL_ACCESS          ((uint8_t)0x03U)
+#define MPU_REGION_PRIV_RO              ((uint8_t)0x05U)
+#define MPU_REGION_PRIV_RO_URO          ((uint8_t)0x06U)
+
+#define MPU_REGION_NUMBER0              ((uint8_t)0x00U)
+#define MPU_REGION_NUMBER1              ((uint8_t)0x01U)
+#define MPU_REGION_NUMBER2              ((uint8_t)0x02U)
+#define MPU_REGION_NUMBER3              ((uint8_t)0x03U)
+#define MPU_REGION_NUMBER4              ((uint8_t)0x04U)
+#define MPU_REGION_NUMBER5              ((uint8_t)0x05U)
+#define MPU_REGION_NUMBER6              ((uint8_t)0x06U)
+#define MPU_REGION_NUMBER7              ((uint8_t)0x07U)
 
 /*==============================================================================
   Local types, enums definitions
@@ -172,28 +172,31 @@ typedef struct {
         uint32_t MFAR;  // MemManage Fault Address Register
 } reg_dump_t;
 
-//typedef struct
-//{
-//        uint8_t  enable;                /*!< Specifies the status of the region.*/
-//        uint8_t  number;                /*!< Specifies the number of the region to protect.*/
-//        uint32_t base_address;          /*!< Specifies the base address of the region to protect.*/
-//        uint8_t  size;                  /*!< Specifies the size of the region to protect.*/
-//        uint8_t  sub_region_disable;    /*!< Specifies the number of the subregion protection to disable.*/
-//        uint8_t  type_ext_field;        /*!< Specifies the TEX field level.*/
-//        uint8_t  access_permission;     /*!< Specifies the region access permission type.*/
-//        uint8_t  disable_exec;          /*!< Specifies the instruction access status.*/
-//        uint8_t  is_shareable;          /*!< Specifies the shareability status of the protected region.*/
-//        uint8_t  is_cacheable;          /*!< Specifies the cacheable status of the region protected.*/
-//        uint8_t  is_bufferable;         /*!< Specifies the bufferable status of the protected region.*/
-//} MPU_region_t;
+typedef struct
+{
+        uint8_t  enable;                /*!< Specifies the status of the region.*/
+        uint8_t  number;                /*!< Specifies the number of the region to protect.*/
+        uint32_t base_address;          /*!< Specifies the base address of the region to protect.*/
+        uint8_t  size;                  /*!< Specifies the size of the region to protect.*/
+        uint8_t  sub_region_disable;    /*!< Specifies the number of the subregion protection to disable.*/
+        uint8_t  type_ext_field;        /*!< Specifies the TEX field level.*/
+        uint8_t  access_permission;     /*!< Specifies the region access permission type.*/
+        uint8_t  disable_exec;          /*!< Specifies the instruction access status.*/
+        uint8_t  is_shareable;          /*!< Specifies the shareability status of the protected region.*/
+        uint8_t  is_cacheable;          /*!< Specifies the cacheable status of the region protected.*/
+        uint8_t  is_bufferable;         /*!< Specifies the bufferable status of the protected region.*/
+} MPU_region_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
 void get_registers_from_stack(uint32_t *stack_address);
-//static void MPU_disable(void);
-//static void MPU_enable(uint32_t MPU_Control);
-//static void MPU_conf_region(MPU_region_t *mpu_region);
+
+#if __CPU_RAM1_RAM2_CACHE_DISABLE__ == _YES_
+static void MPU_disable(void);
+static void MPU_enable(uint32_t MPU_Control);
+static void MPU_conf_region(MPU_region_t *mpu_region);
+#endif
 
 /*==============================================================================
   Local object definitions
@@ -245,8 +248,29 @@ void _cpuctl_init(void)
         _cpuctl_init_CPU_load_counter();
         #endif
 
-        _mm_register_region(&sram1, SRAM1_HEAP_START, SRAM1_HEAP_SIZE, _MM_FLAG__DMA_CAPABLE | _MM_FLAG__CACHEABLE, "SRAM1");
-        _mm_register_region(&sram2, SRAM2_START, SRAM2_SIZE, _MM_FLAG__DMA_CAPABLE | _MM_FLAG__CACHEABLE, "SRAM2");
+        #if __CPU_RAM1_RAM2_CACHE_DISABLE__ == _YES_
+        MPU_disable();
+        MPU_region_t mpu;
+        mpu.enable = MPU_REGION_ENABLE;
+        mpu.access_permission = MPU_REGION_FULL_ACCESS;
+        mpu.base_address = 0x20010000; // SRAM1 start
+        mpu.disable_exec = MPU_INSTRUCTION_ACCESS_ENABLE;
+        mpu.type_ext_field = MPU_TEX_LEVEL1;
+        mpu.is_bufferable = MPU_ACCESS_NOT_BUFFERABLE;
+        mpu.is_cacheable = MPU_ACCESS_NOT_CACHEABLE;
+        mpu.is_shareable = MPU_ACCESS_SHAREABLE;
+        mpu.number = MPU_REGION_NUMBER0;
+        mpu.size = MPU_REGION_SIZE_512KiB;
+        mpu.sub_region_disable = 0;
+        MPU_conf_region(&mpu);
+        MPU_enable(MPU_PRIVILEGED_DEFAULT);
+        #endif
+
+        u32_t ram1_ram2_flags = (__CPU_RAM1_RAM2_CACHE_DISABLE__ ? 0 : _MM_FLAG__CACHEABLE)
+                              | _MM_FLAG__DMA_CAPABLE;
+
+        _mm_register_region(&sram1, SRAM1_HEAP_START, SRAM1_HEAP_SIZE, ram1_ram2_flags, "SRAM1");
+        _mm_register_region(&sram2, SRAM2_START, SRAM2_SIZE, ram1_ram2_flags, "SRAM2");
         _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, _MM_FLAG__DMA_CAPABLE, _CPUCTL_FAST_MEM);
 
         if (__CPU_ICACHE_ENABLE__) {
@@ -532,8 +556,8 @@ void get_registers_from_stack(uint32_t *stack_address)
 //==============================================================================
 void _cpuctl_clean_dcache(void)
 {
-#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
-        SCB_CleanDCache();
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__ && !__CPU_RAM1_RAM2_CACHE_DISABLE__
+       SCB_CleanDCache();
 #endif
 }
 
@@ -544,7 +568,7 @@ void _cpuctl_clean_dcache(void)
 //==============================================================================
 void _cpuctl_clean_invalidate_dcache(void)
 {
-#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__ && !__CPU_RAM1_RAM2_CACHE_DISABLE__
         SCB_CleanInvalidateDCache();
 #endif
 }
@@ -556,81 +580,83 @@ void _cpuctl_clean_invalidate_dcache(void)
 //==============================================================================
 void _cpuctl_invalidate_dcache(void)
 {
-#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__ && !__CPU_RAM1_RAM2_CACHE_DISABLE__
         SCB_InvalidateDCache();
 #endif
 }
 
-////==============================================================================
-///**
-// * @brief  Disables the MPU
-// */
-////==============================================================================
-//static void MPU_disable(void)
-//{
-//        /* Make sure outstanding transfers are done */
-//        __DMB();
-//
-//        /* Disable fault exceptions */
-//        SCB->SHCSR &= ~SCB_SHCSR_MEMFAULTENA_Msk;
-//
-//        /* Disable the MPU and clear the control register*/
-//        MPU->CTRL = 0;
-//}
-//
-////==============================================================================
-///**
-// * @brief  Enables the MPU
-// * @param  MPU_Control Specifies the control mode of the MPU during hard fault,
-// *         NMI, FAULTMASK and privileged access to the default memory
-// *         This parameter can be one of the following values:
-// *         @arg MPU_HFNMI_PRIVDEF_NONE
-// *         @arg MPU_HARDFAULT_NMI
-// *         @arg MPU_PRIVILEGED_DEFAULT
-// *         @arg MPU_HFNMI_PRIVDEF
-// * @retval None
-// */
-////==============================================================================
-//static void MPU_enable(uint32_t MPU_Control)
-//{
-//        /* Enable the MPU */
-//        MPU->CTRL = MPU_Control | MPU_CTRL_ENABLE_Msk;
-//
-//        /* Enable fault exceptions */
-//        SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;
-//
-//        /* Ensure MPU setting take effects */
-//        __DSB();
-//        __ISB();
-//}
-//
-////==============================================================================
-///**
-// * @brief  Initializes and configures the Region and the memory to be protected.
-// * @param  MPU_Init Pointer to a MPU_Region_InitTypeDef structure that contains
-// *                the initialization and configuration information.
-// */
-////==============================================================================
-//static void MPU_conf_region(MPU_region_t *mpu_region)
-//{
-//        MPU->RNR = mpu_region->number;
-//
-//        if (mpu_region->enable) {
-//                MPU->RBAR = mpu_region->base_address;
-//                MPU->RASR = ((uint32_t)mpu_region->disable_exec << MPU_RASR_XN_Pos)
-//                          | ((uint32_t)mpu_region->access_permission << MPU_RASR_AP_Pos)
-//                          | ((uint32_t)mpu_region->type_ext_field << MPU_RASR_TEX_Pos)
-//                          | ((uint32_t)mpu_region->is_shareable << MPU_RASR_S_Pos)
-//                          | ((uint32_t)mpu_region->is_cacheable << MPU_RASR_C_Pos)
-//                          | ((uint32_t)mpu_region->is_bufferable << MPU_RASR_B_Pos)
-//                          | ((uint32_t)mpu_region->sub_region_disable << MPU_RASR_SRD_Pos)
-//                          | ((uint32_t)mpu_region->size << MPU_RASR_SIZE_Pos)
-//                          | ((uint32_t)mpu_region->enable << MPU_RASR_ENABLE_Pos);
-//        } else {
-//                MPU->RBAR = 0x00;
-//                MPU->RASR = 0x00;
-//        }
-//}
+#if __CPU_RAM1_RAM2_CACHE_DISABLE__ == _YES_
+//==============================================================================
+/**
+ * @brief  Disables the MPU
+ */
+//==============================================================================
+static void MPU_disable(void)
+{
+        /* Make sure outstanding transfers are done */
+        __DMB();
+
+        /* Disable fault exceptions */
+        SCB->SHCSR &= ~SCB_SHCSR_MEMFAULTENA_Msk;
+
+        /* Disable the MPU and clear the control register*/
+        MPU->CTRL = 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Enables the MPU
+ * @param  MPU_Control Specifies the control mode of the MPU during hard fault,
+ *         NMI, FAULTMASK and privileged access to the default memory
+ *         This parameter can be one of the following values:
+ *         @arg MPU_HFNMI_PRIVDEF_NONE
+ *         @arg MPU_HARDFAULT_NMI
+ *         @arg MPU_PRIVILEGED_DEFAULT
+ *         @arg MPU_HFNMI_PRIVDEF
+ * @retval None
+ */
+//==============================================================================
+static void MPU_enable(uint32_t MPU_Control)
+{
+        /* Enable the MPU */
+        MPU->CTRL = MPU_Control | MPU_CTRL_ENABLE_Msk;
+
+        /* Enable fault exceptions */
+        SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;
+
+        /* Ensure MPU setting take effects */
+        __DSB();
+        __ISB();
+}
+
+//==============================================================================
+/**
+ * @brief  Initializes and configures the Region and the memory to be protected.
+ * @param  MPU_Init Pointer to a MPU_Region_InitTypeDef structure that contains
+ *                the initialization and configuration information.
+ */
+//==============================================================================
+static void MPU_conf_region(MPU_region_t *mpu_region)
+{
+        MPU->RNR = mpu_region->number;
+
+        if (mpu_region->enable) {
+                MPU->RBAR = mpu_region->base_address;
+                MPU->RASR = ((uint32_t)mpu_region->disable_exec << MPU_RASR_XN_Pos)
+                          | ((uint32_t)mpu_region->access_permission << MPU_RASR_AP_Pos)
+                          | ((uint32_t)mpu_region->type_ext_field << MPU_RASR_TEX_Pos)
+                          | ((uint32_t)mpu_region->is_shareable << MPU_RASR_S_Pos)
+                          | ((uint32_t)mpu_region->is_cacheable << MPU_RASR_C_Pos)
+                          | ((uint32_t)mpu_region->is_bufferable << MPU_RASR_B_Pos)
+                          | ((uint32_t)mpu_region->sub_region_disable << MPU_RASR_SRD_Pos)
+                          | ((uint32_t)mpu_region->size << MPU_RASR_SIZE_Pos)
+                          | ((uint32_t)mpu_region->enable << MPU_RASR_ENABLE_Pos);
+        } else {
+                MPU->RBAR = 0x00;
+                MPU->RASR = 0x00;
+        }
+}
+#endif
 
 /*==============================================================================
   End of file

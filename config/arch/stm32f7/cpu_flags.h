@@ -216,9 +216,18 @@ __CPU_NAME__=STM32F756ZGxx
 # this:AddWidget("Combobox", "DCACHE")
 # this:AddItem("Enable", "_YES_")
 # this:AddItem("Disable", "_NO_")
-# this:SetToolTip("This option can introduce cache coherency issues!")
+# this:SetToolTip("This option enables L1 data cache.")
 #--*/
 #define __CPU_DCACHE_ENABLE__ _NO_
+
+#/*--
+# this:AddWidget("Combobox", "RAM1 and RAM2 cache strategy")
+# this:AddItem("Non-cachable", "_YES_")
+# this:AddItem("Cacheable", "_NO_")
+# this:SetToolTip("Non-cacheable option disable RAM1 and RAM2 cache, boosting DMA transfers but decrease general CPU performance.\n"..
+#                 "Option is useful in DMA-intense applications.")
+#--*/
+#define __CPU_RAM1_RAM2_CACHE_DISABLE__ _NO_
 
 #/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")

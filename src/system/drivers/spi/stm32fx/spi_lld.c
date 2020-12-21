@@ -401,7 +401,9 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
 #if USE_DMA > 0
         bool dma_capable = true;
 
-        if ((txbuf && !sys_is_mem_dma_capable(txbuf)) || (rxbuf && !sys_is_mem_dma_capable(rxbuf)) ) {
+        if (  (count < 16)
+           || (txbuf && !sys_is_mem_dma_capable(txbuf))
+           || (rxbuf && !sys_is_mem_dma_capable(rxbuf)) ) {
                 dma_capable = false;
         }
 
