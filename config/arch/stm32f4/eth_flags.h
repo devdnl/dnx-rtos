@@ -82,13 +82,15 @@ this:AddWidget("Combobox", "Device")
 this:AddItem("DP83848", "DP83848")
 this:AddItem("LAN8700", "LAN8700")
 this:AddItem("STE100P", "STE100P")
+this:AddItem("LAN8742A", "LAN8742A")
 this:SetEvent("clicked",
     function()
         local dev    = this:GetFlagValue("__ETH_DEVICE__")
         local DEVICE = {}
-        DEVICE["DP83848"] = {SR = "16", SPEED_BM = "0x0002", DUPLEX_BM = "0x0004"}
-        DEVICE["LAN8700"] = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
-        DEVICE["STE100P"] = {SR = "19", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
+        DEVICE["DP83848"]  = {SR = "16", SPEED_BM = "0x0002", DUPLEX_BM = "0x0004"}
+        DEVICE["LAN8700"]  = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
+        DEVICE["STE100P"]  = {SR = "19", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
+        DEVICE["LAN8742A"] = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
 
         this:SetFlagValue("__ETH_PHY_SR__", DEVICE[dev].SR)
         this:SetFlagValue("__ETH_PHY_SPEED_STATUS_BM__", DEVICE[dev].SPEED_BM)
@@ -96,22 +98,22 @@ this:SetEvent("clicked",
     end
 )
 --*/
-#define __ETH_DEVICE__ DP83848
+#define __ETH_DEVICE__ LAN8742A
 
 /*-- Value set by __ETH_DEVICE__ event
 this:AddWidget("Value")
 --*/
-#define __ETH_PHY_SR__ 16
+#define __ETH_PHY_SR__ 31
 
 /*-- Value set by __ETH_DEVICE__ event
 this:AddWidget("Value")
 --*/
-#define __ETH_PHY_SPEED_STATUS_BM__ 0x0002
+#define __ETH_PHY_SPEED_STATUS_BM__ 0x0004
 
 /*-- Value set by __ETH_DEVICE__ event
 this:AddWidget("Value")
 --*/
-#define __ETH_PHY_DUPLEX_STATUS_BM__ 0x0004
+#define __ETH_PHY_DUPLEX_STATUS_BM__ 0x0010
 
 /*--
 this:AddWidget("Spinbox", 0, 255, "Address")

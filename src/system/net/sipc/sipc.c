@@ -79,8 +79,8 @@ DATA      -----------> store data
 #define PACKET_TYPE_BIND                6
 #define _PACKET_TYPE_COUNT              7
 
-#define zalloc(_size, _pptr) _kzalloc(_MM_NET, _size, NULL, true, _pptr)
-#define kalloc(_size, _pptr) _kmalloc(_MM_NET, _size, NULL, true, _pptr)
+#define zalloc(_size, _pptr) _kzalloc(_MM_NET, _size, 0, 0, true, _pptr)
+#define kalloc(_size, _pptr) _kmalloc(_MM_NET, _size, 0, 0, true, _pptr)
 #define zfree(_pptr) _kfree(_MM_NET, _pptr)
 
 #if __NETWORK_SIPC_DEBUG_ON__ > 0

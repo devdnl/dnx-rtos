@@ -114,11 +114,17 @@ static void initialize_basic_drivers(void)
          *    If file is not needed (because port is not used from application)
          *    then node is not necessary (use NULL or empty string as file name).
          */
-        driver_init("GPIO", 0, 0, "/dev/GPIOA");
-        driver_init("GPIO", 1, 0, "/dev/GPIOB");
-        driver_init("GPIO", 2, 0, "/dev/GPIOC");
-        driver_init("GPIO", 3, 0, "/dev/GPIOD");
-        driver_init("GPIO", 4, 0, "/dev/GPIOE");
+        driver_init("GPIO", 0, 0, "/dev/gpio");
+        driver_init("GPIO", 1, 0, NULL);
+        driver_init("GPIO", 2, 0, NULL);
+        driver_init("GPIO", 3, 0, NULL);
+        driver_init("GPIO", 5, 0, NULL);
+        driver_init("GPIO", 6, 0, NULL);
+        driver_init("GPIO", 7, 0, NULL);
+        driver_init("GPIO", 8, 0, NULL);
+        driver_init("GPIO", 9, 0, NULL);
+        driver_init("GPIO", 10, 0, NULL);
+        driver_init("GPIO", 11, 0, NULL);
 
         /*
          * 2. Next part of drivers that can be initialized at this early stage.
@@ -191,6 +197,8 @@ static void show_kernel_panic_message(void)
 //==============================================================================
 static void initialize_additional_drivers(void)
 {
+        fd_t fd;
+
         /*
          * 1. Initialize next terminals that can be used to hold user applications.
          *    Number of terminals can be configured in the TTY module configuration
@@ -210,6 +218,16 @@ static void initialize_additional_drivers(void)
          * 3. If needed the Ethernet driver is initialized.
          */
         driver_init("ETH", 0, 0, "/dev/eth");
+        fd = open("/dev/eth", O_RDWR);
+        if (fd) {
+                u8_t MAC[6] = {0xC2, 0x70, 0x50, 0xFF, 0xFF, 0x78};
+                ioctl(fd, IOCTL_ETH__SET_MAC_ADDR, MAC);
+
+                #if !__ENABLE_NETWORK__
+                ioctl(fd, IOCTL_ETH__ETHERNET_START);
+                #endif
+                close(fd);
+        }
 }
 
 //==============================================================================
@@ -311,6 +329,7 @@ static void print_system_log_messages(void)
 //==============================================================================
 static void start_DHCP_client(void)
 {
+        #if __ENABLE_NETWORK__
         /*
          * 1. The DHCP configuration should be prepared to get network address.
          *    The static IP configuration can be used as well.
@@ -331,9 +350,7 @@ static void start_DHCP_client(void)
         if (ifup(NET_FAMILY__INET, &cfg_dhcp) != 0) {
                 perror("ifup");
         }
-
-        // 1 second delay to network setup.
-        sleep(1);
+        #endif
 }
 
 //==============================================================================

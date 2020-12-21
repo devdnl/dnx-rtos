@@ -91,7 +91,7 @@ int sipcbuf__create(sipcbuf_t **sipcbuf, size_t max_capacity)
 {
         sipcbuf_t *this = NULL;
 
-        int err = _kzalloc(_MM_NET, sizeof(sipcbuf_t), NULL, false, (void*)&this);
+        int err = _kzalloc(_MM_NET, sizeof(sipcbuf_t), 0, 0, false, (void*)&this);
 
         if (!err) {
                 err = sys_mutex_create(MUTEX_TYPE_NORMAL, &this->access);
@@ -151,7 +151,7 @@ int sipcbuf__write(sipcbuf_t *sipcbuf, const u8_t *data, size_t size, bool refer
                 if (!err) {
                         data_chain_t *chain = NULL;
 
-                        err = _kzalloc(_MM_NET, sizeof(data_chain_t), NULL, false, (void*)&chain);
+                        err = _kzalloc(_MM_NET, sizeof(data_chain_t), 0, 0, false, (void*)&chain);
 
                         if (!err) {
                                 chain->len = size;
