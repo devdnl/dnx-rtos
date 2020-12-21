@@ -232,7 +232,7 @@ static void initialize_additional_drivers(void)
 
 //==============================================================================
 /**
- * @brief
+ * @brief Mount SD card connected to SPI bus.
  */
 //==============================================================================
 static void mount_SD_card(void)
