@@ -76,7 +76,7 @@ efficient please use ioctl() family requests.
 There are only two steps that should be done to start Ethernet peripheral:
 
 \li MAC address configuration (@ref IOCTL_ETH__SET_MAC_ADDR),
-\li Ethernet peripheral start (@ref IOCTL_ETH__ETHERNET_START).
+\li Ethernet peripheral start (@ref IOCTL_ETH__START).
 
 After this operations packets will be received and transmitted.
 
@@ -195,58 +195,51 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 /**
+ * @brief  Set MAC address.
+ * @param  [WR] @ref ETH_config_t: pointer to configuration object.
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
+ */
+#define IOCTL_ETH__CONFIGURE                    _IOW(ETH, 0x00, ETH_config_t*)
+
+/**
  * @brief  Wait for receive of Rx packet.
  * @param  [WR,RD] @ref ETH_packet_wait_t*        timeout value and received size.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__WAIT_FOR_PACKET                   _IOWR(ETH, 0x00, ETH_packet_wait_t*)
-
-/**
- * @brief  Set MAC address.
- * @param  [WR] @ref u8_t[6]: pointer to buffer of 6 elements.
- * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
- */
-#define IOCTL_ETH__SET_MAC_ADDR                      _IOW(ETH, 0x01, u8_t*)
-
-/**
- * @brief  Get MAC address.
- * @param  [RD] @ref u8_t[6]: pointer to buffer of 6 elements.
- * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
- */
-#define IOCTL_ETH__GET_MAC_ADDR                      _IOR(ETH, 0x02, u8_t*)
-
-/**
- * @brief  Send packet from chain buffer.
- * @param  [WR] @ref ETH_packet_t*              chain buffer reference.
- * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
- */
-#define IOCTL_ETH__SEND_PACKET                       _IOW(ETH, 0x03, ETH_packet_t*)
+#define IOCTL_ETH__WAIT_FOR_PACKET              _IOWR(ETH, 0x01, ETH_packet_wait_t*)
 
 /**
  * @brief  Receive packet to chain buffer.
  * @param  [RD] @ref ETH_packet_t*       chain buffer reference (each chain must have allocated memory!).
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__RECEIVE_PACKET                    _IOR(ETH, 0x04, ETH_packet_t*)
+#define IOCTL_ETH__RECEIVE_PACKET               _IOR(ETH, 0x02, ETH_packet_t*)
+
+/**
+ * @brief  Send packet from chain buffer.
+ * @param  [WR] @ref ETH_packet_t*              chain buffer reference.
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
+ */
+#define IOCTL_ETH__SEND_PACKET                  _IOW(ETH, 0x03, ETH_packet_t*)
 
 /**
  * @brief  Starts Ethernet interface.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__ETHERNET_START                    _IO(ETH, 0x05)
+#define IOCTL_ETH__START                        _IO(ETH, 0x04)
 
 /**
  * @brief  Stop Ethernet interface.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__ETHERNET_STOP                     _IO(ETH, 0x06)
+#define IOCTL_ETH__STOP                         _IO(ETH, 0x05)
 
 /**
  * @brief  Return link status.
- * @param  [RD] @ref ETH_link_status_t*        link status.
+ * @param  [RD] @ref ETH_status_t*        link status.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__GET_LINK_STATUS                   _IOR(ETH, 0x07, ETH_link_status_t*)
+#define IOCTL_ETH__GET_STATUS                   _IOR(ETH, 0x06, ETH_status_t*)
 
 /*==============================================================================
   Exported object types
@@ -256,16 +249,39 @@ extern "C" {
  */
 typedef struct {
         void  *payload;         /*!< Payload.*/
-        u16_t  payload_size;    /*!< Payload size.*/
+        u16_t  lenght;          /*!< Payload size.*/
 } ETH_packet_t;
 
 /**
- * Type represent link status.
+ * Type represent configuration.
  */
-typedef enum {
-        ETH_LINK_STATUS__CONNECTED,          /*!< Link connected.*/
-        ETH_LINK_STATUS__DISCONNECTED        /*!< Link disconnected.*/
-} ETH_link_status_t;
+typedef struct {
+        u8_t MAC[6];
+} ETH_config_t;
+
+/**
+ * Type represent ethernet status.
+ */
+typedef struct {
+        enum {
+                ETH_STATE__RESET,
+                ETH_STATE__READY,
+                ETH_STATE__ERROR,
+        } state;
+
+        enum {
+                ETH_LINK_STATUS__CONNECTED,          /*!< Link connected.*/
+                ETH_LINK_STATUS__DISCONNECTED        /*!< Link disconnected.*/
+        } link_status;
+
+        u8_t  MAC[6];
+        u64_t rx_packets;
+        u64_t tx_packets;
+        u64_t rx_bytes;
+        u64_t tx_bytes;
+        u32_t rx_missed_frames_mfa;
+        u32_t rx_missed_frames_mfc;
+} ETH_status_t;
 
 /**
  * Type represent packet waiting with selected timeout.

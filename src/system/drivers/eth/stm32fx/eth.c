@@ -78,6 +78,13 @@ struct eth {
         sem_t               *semaphore;
         uint8_t             MAC_addr[6];
         bool                irq_yield;
+
+        struct {
+                u32_t rx_packets;
+                u32_t tx_packets;
+                u64_t rx_bytes;
+                u64_t tx_bytes;
+        } stats;
 };
 
 /*==============================================================================
@@ -326,17 +333,8 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case IOCTL_ETH__SET_MAC_ADDR:
+        case IOCTL_ETH__CONFIGURE:
                 if (arg) {
-                }
-                break;
-
-        case IOCTL_ETH__GET_MAC_ADDR:
-                if (arg) {
-                        memcpy(arg, hdl->MAC_addr, sizeof(hdl->MAC_addr));
-                        return ESUCC;
-                } else {
-                        return EINVAL;
                 }
                 break;
 
@@ -358,25 +356,55 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case IOCTL_ETH__ETHERNET_START:
+        case IOCTL_ETH__START:
 //                HAL_ETH_Start(&hdl->eth);
                 return ESUCC;
 
-        case IOCTL_ETH__ETHERNET_STOP:
+        case IOCTL_ETH__STOP:
 //                HAL_ETH_Stop(&hdl->eth);
                 return ESUCC;
 
-        case IOCTL_ETH__GET_LINK_STATUS:
+        case IOCTL_ETH__GET_STATUS:
                 if (arg) {
-                        ETH_link_status_t *linkstat = cast(ETH_link_status_t*, arg);
+                        ETH_status_t *status = cast(ETH_status_t*, arg);
 
-                        u32_t reg;
-                        err = HAL_ETH_ReadPHYRegister(__ETH_PHY_ADDRESS__, PHY_BSR, &reg);
-                        if (reg & PHY_BSR_LINK_STATUS) {
-                                *linkstat = ETH_LINK_STATUS__CONNECTED;
-                        } else {
-                                *linkstat = ETH_LINK_STATUS__DISCONNECTED;
+//                        u32_t reg;
+//                        err = HAL_ETH_ReadPHYRegister(__ETH_PHY_ADDRESS__, PHY_BSR, &reg);
+//                        if (reg & PHY_BSR_LINK_STATUS) {
+//                                status->link_status = ETH_LINK_STATUS__CONNECTED;
+//                        } else {
+//                                status->link_status = ETH_LINK_STATUS__DISCONNECTED;
+//                        }
+
+                        memcpy(status->MAC, hdl->MAC_addr, sizeof(status->MAC));
+                        status->rx_bytes   = hdl->stats.rx_bytes;
+                        status->tx_bytes   = hdl->stats.tx_bytes;
+                        status->rx_packets = hdl->stats.rx_packets;
+                        status->tx_packets = hdl->stats.tx_packets;
+
+                        switch (HAL_ETH_GetState(&hdl->eth)) {
+                        case HAL_ETH_STATE_RESET:
+                                status->state = ETH_STATE__RESET;
+                                break;
+
+                        case HAL_ETH_STATE_READY:
+                        case HAL_ETH_STATE_BUSY:
+                        case HAL_ETH_STATE_BUSY_TX:
+                        case HAL_ETH_STATE_BUSY_RX:
+                        case HAL_ETH_STATE_BUSY_TX_RX:
+                        case HAL_ETH_STATE_BUSY_WR:
+                        case HAL_ETH_STATE_BUSY_RD:
+                                status->state = ETH_STATE__READY;
+                                break;
+
+                        case HAL_ETH_STATE_TIMEOUT:
+                        case HAL_ETH_STATE_ERROR:
+                                status->state = ETH_STATE__ERROR;
+                                break;
                         }
+
+                        status->rx_missed_frames_mfa = (ETH->DMAMFBOCR & ETH_DMAMFBOCR_MFA) >> ETH_DMAMFBOCR_MFA_Pos;
+                        status->rx_missed_frames_mfc = (ETH->DMAMFBOCR & ETH_DMAMFBOCR_MFC) >> ETH_DMAMFBOCR_MFC_Pos;
 
                         return ESUCC;
                 } else {
@@ -454,10 +482,10 @@ static int packet_send(struct eth *hdl, ETH_packet_t *pkt)
         }
 
         /* Copy the remaining bytes */
-        memcpy(buffer, pkt->payload, pkt->payload_size);
+        memcpy(buffer, pkt->payload, pkt->lenght);
 
         /* Prepare transmit descriptors to give to DMA */
-        err = HAL_ETH_TransmitFrame(&hdl->eth, pkt->payload_size);
+        err = HAL_ETH_TransmitFrame(&hdl->eth, pkt->lenght);
 
         /* When Transmit Underflow flag is set, clear it and issue a Transmit Poll Demand to resume transmission */
         if ((hdl->eth.Instance->DMASR & ETH_DMASR_TUS) != (uint32_t) RESET) {
@@ -493,7 +521,7 @@ static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
         uint8_t *buffer = (uint8_t*)hdl->eth.RxFrameInfos.buffer;
 
         if (len > 0) {
-                pkt->payload_size = len;
+                pkt->lenght = len;
                 memcpy(pkt->payload, buffer, len);
         }
 

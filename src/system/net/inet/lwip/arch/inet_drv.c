@@ -228,7 +228,7 @@ err_t _inetdrv_handle_output(struct netif *netif, struct pbuf *p)
 //==============================================================================
 bool _inetdrv_is_link_connected(inet_t *inet)
 {
-        ETH_link_status_t linkstat;
+        ETH_status_t linkstat;
         if (sys_ioctl(inet->if_file, IOCTL_ETH__GET_LINK_STATUS, &linkstat) == 0) {
                 return linkstat == ETH_LINK_STATUS__CONNECTED;
         } else {
