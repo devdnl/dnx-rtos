@@ -9,7 +9,7 @@ ifeq ($(__ENABLE_ETH__), _YES_)
    endif
 	ifeq ($(TARGET), stm32f4)
       CSRC_ARCH   += drivers/eth/stm32fx/eth.c
-      CSRC_ARCH   += drivers/eth/stm32fx/stm32f4x7_eth.c
+      CSRC_ARCH   += drivers/eth/stm32fx/stm32f4xx_hal_eth.c
       CXXSRC_ARCH += 
    endif
 	ifeq ($(TARGET), stm32f7)

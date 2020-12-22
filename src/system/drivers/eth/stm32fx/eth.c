@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    ethmac.c
+@file    eth.c
 
 @author  Daniel Zorychta
 
 @brief   This driver support Ethernet interface.
 
-@note    Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -30,9 +30,8 @@
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "eth_cfg.h"
 #include "eth_ioctl.h"
-#include "stm32f4x7_eth.h"
+#include "stm32f4xx_hal_eth.h"
 
 #if defined(ARCH_stm32f1)
 #include "stm32f10x.h"
@@ -70,26 +69,22 @@
   Local object types
 ==============================================================================*/
 struct eth {
-        sem_t              *rx_data_ready;
-        mutex_t            *rx_access;
-        mutex_t            *tx_access;
         dev_lock_t          dev_lock;
-        ETH_DMADESCTypeDef  DMA_tx_descriptor[ETH_TXBUFNB];
-        ETH_DMADESCTypeDef  DMA_rx_descriptor[ETH_RXBUFNB];
-        u8_t                tx_buffer[ETH_TXBUFNB][ETH_MAX_PACKET_SIZE];
-        u8_t                rx_buffer[ETH_RXBUFNB][ETH_MAX_PACKET_SIZE];
+        ETH_HandleTypeDef   eth;
+        ETH_DMADescTypeDef  DMARxDscrTab[__ETH_RXBUFNB__];
+        ETH_DMADescTypeDef  DMATxDscrTab[__ETH_TXBUFNB__];
+        uint8_t             Rx_Buff[__ETH_RXBUFNB__][ETH_RX_BUF_SIZE];
+        uint8_t             Tx_Buff[__ETH_TXBUFNB__][ETH_TX_BUF_SIZE];
+        sem_t               *semaphore;
+        uint8_t             MAC_addr[6];
+        bool                irq_yield;
 };
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static bool   is_Ethernet_started       (void);
-static void   send_packet               (size_t size);
-static size_t wait_for_packet           (struct eth *hdl, uint32_t timeout);
-static void   give_Rx_buffer_to_DMA     (void);
-static bool   is_buffer_owned_by_DMA    (ETH_DMADESCTypeDef *DMA_descriptor);
-static void   make_Rx_buffer_available  (void);
-static u8_t  *get_buffer_address        (ETH_DMADESCTypeDef *DMA_descriptor);
+static int packet_receive(struct eth *hdl, ETH_packet_t *pkt);
+static int packet_send(struct eth *hdl, ETH_packet_t *pkt);
 
 /*==============================================================================
   Local objects
@@ -105,8 +100,6 @@ static struct eth *eth;
 /*==============================================================================
   External objects
 ==============================================================================*/
-extern ETH_DMADESCTypeDef *DMARxDescToGet;
-extern ETH_DMADESCTypeDef *DMATxDescToSet;
 
 /*==============================================================================
   Function definitions
@@ -136,113 +129,45 @@ API_MOD_INIT(ETH, void **device_handle, u8_t major, u8_t minor, const void *conf
         if (!err) {
                 struct eth *hdl = *device_handle;
 
-                err = sys_semaphore_create(1, 0, &hdl->rx_data_ready);
-                if (err != ESUCC)
-                        goto finish;
+                hdl->MAC_addr[0] = 0xC2; // FIXME adres musi być już załadowany, albo przerobić init na konfigurację
+                hdl->MAC_addr[1] = 0x70;
+                hdl->MAC_addr[2] = 0x50;
+                hdl->MAC_addr[3] = 0xFF;
+                hdl->MAC_addr[4] = 0xFF;
+                hdl->MAC_addr[5] = 0x78;
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->rx_access);
-                if (err != ESUCC)
-                        goto finish;
+                hdl->eth.Instance = ETH;
+                hdl->eth.Init.MACAddr = hdl->MAC_addr; // FIXME adres musi być już załadowany
+                hdl->eth.Init.AutoNegotiation = __ETH_PHY_AUTONEGOTIATION__;
+                hdl->eth.Init.Speed = __ETH_SPEED__;
+                hdl->eth.Init.DuplexMode = ETH_MODE_FULLDUPLEX;
+                hdl->eth.Init.RxMode = ETH_RXINTERRUPT_MODE;
+                hdl->eth.Init.ChecksumMode = __ETH_CHECKSUM_BY_HARDWARE__;
+                hdl->eth.Init.PhyAddress = __ETH_PHY_ADDRESS__;
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->tx_access);
-                if (err != ESUCC)
-                        goto finish;
+                err = HAL_ETH_Init(&hdl->eth);
+                if (!err) {
+                        /* Initialize Tx Descriptors list: Chain Mode */
+                        HAL_ETH_DMATxDescListInit(&hdl->eth, hdl->DMATxDscrTab,
+                                                  &hdl->Tx_Buff[0][0], __ETH_TXBUFNB__);
 
-                // reset Ethernet
-                ETH_DeInit();
-                ETH_SoftwareReset();
+                        /* Initialize Rx Descriptors list: Chain Mode  */
+                        HAL_ETH_DMARxDescListInit(&hdl->eth, hdl->DMARxDscrTab,
+                                                  &hdl->Rx_Buff[0][0], __ETH_RXBUFNB__);
 
-                u32_t timeout = sys_time_get_reference();
-                while (  ETH_GetSoftwareResetStatus() == SET
-                      && !sys_time_is_expired(timeout, INIT_TIMEOUT));
-
-                if (sys_time_is_expired(timeout, INIT_TIMEOUT)) {
-                        err = ETIME;
-                        goto finish;
+                        err = sys_semaphore_create(1000, 0, &hdl->semaphore);
+                        if (!err) {
+                                eth = hdl;
+                                HAL_ETH_Start(&hdl->eth);
+                        }
                 }
 
-                // enable interrupts
-                SET_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACRXEN | RCC_AHBxENR_ETHMACTXEN | RCC_AHBxENR_ETHMACEN);
-
-                NVIC_EnableIRQ(ETH_IRQn);
-                NVIC_SetPriority(ETH_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
-
-                /* MAC configuration */
-                /*
-                 * Ethernet DMA configuration
-                 * When we use the Checksum offload feature, we need to enable the Store and Forward mode:
-                 * the store and forward guarantee that a whole frame is stored in the FIFO, so the MAC can
-                 * insert/verify the checksum, if the checksum is OK the DMA can handle the frame otherwise
-                 * the frame is dropped
-                 */
-                ETH_InitTypeDef ETH_InitStructure;
-                ETH_StructInit(&ETH_InitStructure);
-                ETH_InitStructure.ETH_AutoNegotiation             = ETH_PHY_AUTONEGOTIATION;
-                ETH_InitStructure.ETH_LoopbackMode                = ETH_LoopbackMode_Disable;
-                ETH_InitStructure.ETH_RetryTransmission           = ETH_RetryTransmission_Disable;
-                ETH_InitStructure.ETH_AutomaticPadCRCStrip        = ETH_AutomaticPadCRCStrip_Disable;
-                ETH_InitStructure.ETH_ReceiveAll                  = ETH_ReceiveAll_Disable;
-                ETH_InitStructure.ETH_BroadcastFramesReception    = ETH_BroadcastFramesReception_Enable;
-                ETH_InitStructure.ETH_PromiscuousMode             = ETH_PromiscuousMode_Disable;
-                ETH_InitStructure.ETH_MulticastFramesFilter       = ETH_MulticastFramesFilter_Perfect;
-                ETH_InitStructure.ETH_UnicastFramesFilter         = ETH_UnicastFramesFilter_Perfect;
-                ETH_InitStructure.ETH_Speed                       = ETH_SPEED;
-                ETH_InitStructure.ETH_ChecksumOffload             = ETH_CHECKSUM_BY_HARDWARE ? ETH_ChecksumOffload_Enable : 0;
-                ETH_InitStructure.ETH_DropTCPIPChecksumErrorFrame = ETH_DropTCPIPChecksumErrorFrame_Enable;
-                ETH_InitStructure.ETH_ReceiveStoreForward         = ETH_ReceiveStoreForward_Enable;
-                ETH_InitStructure.ETH_TransmitStoreForward        = ETH_TransmitStoreForward_Enable;
-                ETH_InitStructure.ETH_ForwardErrorFrames          = ETH_ForwardErrorFrames_Disable;
-                ETH_InitStructure.ETH_ForwardUndersizedGoodFrames = ETH_ForwardUndersizedGoodFrames_Disable;
-                ETH_InitStructure.ETH_SecondFrameOperate          = ETH_SecondFrameOperate_Enable;
-                ETH_InitStructure.ETH_AddressAlignedBeats         = ETH_AddressAlignedBeats_Enable;
-                ETH_InitStructure.ETH_FixedBurst                  = ETH_FixedBurst_Enable;
-                ETH_InitStructure.ETH_RxDMABurstLength            = ETH_RxDMABurstLength_32Beat;
-                ETH_InitStructure.ETH_TxDMABurstLength            = ETH_TxDMABurstLength_32Beat;
-                ETH_InitStructure.ETH_DMAArbitration              = ETH_DMAArbitration_RoundRobin_RxTx_2_1;
-
-                if (ETH_Init(&ETH_InitStructure, ETH_PHY_ADDRESS)) {
-
-                        eth = hdl;
-
-                        ETH_DMAITConfig(ETH_DMA_IT_NIS | ETH_DMA_IT_R, ENABLE);
-
-                        ETH_DMATxDescChainInit(eth->DMA_tx_descriptor,
-                                               &eth->tx_buffer[0][0],
-                                               ETH_TXBUFNB);
-
-                        ETH_DMARxDescChainInit(eth->DMA_rx_descriptor,
-                                               &eth->rx_buffer[0][0],
-                                               ETH_RXBUFNB);
-
-                        if (__ETH_CHECKSUM_BY_HARDWARE__ != 0) {
-                                for (uint i = 0; i < ETH_TXBUFNB; i++) {
-                                        ETH_DMATxDescChecksumInsertionConfig(&eth->DMA_tx_descriptor[i],
-                                                                             ETH_DMATxDesc_ChecksumTCPUDPICMPFull);
-                                }
+                if (err) {
+                        if (hdl->semaphore) {
+                                sys_semaphore_destroy(hdl->semaphore);
                         }
 
-                        for (uint i = 0; i < ETH_RXBUFNB; i++) {
-                                ETH_DMARxDescReceiveITConfig(&eth->DMA_rx_descriptor[i], ENABLE);
-                        }
-
-                        sys_sleep_ms(ETH_PHY_CONFIG_DELAY);
-                } else {
-                        err = EIO;
-                }
-
-                finish:
-                if (err != ESUCC) {
-                        if (hdl->rx_data_ready)
-                                sys_semaphore_destroy(hdl->rx_data_ready);
-
-                        if (hdl->rx_access)
-                                sys_mutex_destroy(hdl->rx_access);
-
-                        if (hdl->tx_access)
-                                sys_mutex_destroy(hdl->tx_access);
-
-                        if (device_handle)
-                                sys_free(device_handle);
+                        sys_free(device_handle);
                 }
         }
 
@@ -264,14 +189,13 @@ API_MOD_RELEASE(ETH, void *device_handle)
 
         int err = sys_device_lock(&hdl->dev_lock);
         if (!err) {
-                ETH_DeInit();
+                HAL_ETH_Stop(&hdl->eth);
+                HAL_ETH_DeInit(&hdl->eth);
                 NVIC_DisableIRQ(ETH_IRQn);
                 CLEAR_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACRXEN
                                       | RCC_AHBxENR_ETHMACTXEN
                                       | RCC_AHBxENR_ETHMACEN);
-                sys_semaphore_destroy(hdl->rx_data_ready);
-                sys_mutex_destroy(hdl->rx_access);
-                sys_mutex_destroy(hdl->tx_access);
+
                 sys_free(&device_handle);
                 eth = NULL;
         }
@@ -347,47 +271,7 @@ API_MOD_WRITE(ETH,
 
         struct eth *hdl = device_handle;
 
-        if (is_Ethernet_started()) {
-
-                if (sys_mutex_lock(hdl->tx_access, fattr.non_blocking_wr ? 0 : MAX_DELAY_MS) == ESUCC) {
-
-                        *wrcnt = 0;
-                        int err;
-
-                        while (count) {
-                                while (is_buffer_owned_by_DMA(DMATxDescToSet)) {
-
-                                        if (fattr.non_blocking_wr) {
-                                                err = EAGAIN;
-                                                goto exit;
-                                        }
-
-                                        sys_sleep_ms(1);
-                                }
-
-                                size_t packet_size = min(count, ETH_MAX_PACKET_SIZE);
-
-                                u8_t *buffer = get_buffer_address(DMATxDescToSet);
-                                memcpy(buffer, src, packet_size);
-                                send_packet(packet_size);
-
-                                *wrcnt += packet_size;
-                                count  -= packet_size;
-                        }
-
-                        err = ESUCC;
-
-                        exit:
-                        sys_mutex_unlock(hdl->tx_access);
-
-                        return err;
-                } else {
-                        return EAGAIN;
-                }
-
-        } else {
-                return EIO;
-        }
+        return EIO;
 }
 
 //==============================================================================
@@ -416,40 +300,7 @@ API_MOD_READ(ETH,
 
         struct eth *hdl = device_handle;
 
-        if (is_Ethernet_started()) {
-                if (count % ETH_MAX_PACKET_SIZE == 0) {
-
-                        *rdcnt = 0;
-
-                        if (sys_mutex_lock(hdl->rx_access, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS) == ESUCC) {
-                                size_t pkts = count / ETH_MAX_PACKET_SIZE;
-                                while (pkts--) {
-                                        size_t pkt_size = wait_for_packet(hdl, fattr.non_blocking_rd ? 0 : MAX_DELAY_MS);
-                                        if (pkt_size) {
-                                                u8_t *src = get_buffer_address(DMARxDescToGet);
-
-                                                memcpy(dst, src, min(pkt_size, count));
-                                                give_Rx_buffer_to_DMA();
-                                                make_Rx_buffer_available();
-
-                                                *rdcnt += pkt_size;
-                                        } else {
-                                                break;
-                                        }
-                                }
-
-                                sys_mutex_unlock(hdl->rx_access);
-
-                                return ESUCC;
-                        } else {
-                                return EAGAIN;
-                        }
-                } else {
-                        return EINVAL;
-                }
-        } else {
-                return EIO;
-        }
+        return EIO;
 }
 
 //==============================================================================
@@ -467,40 +318,22 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
 {
         struct eth *hdl = device_handle;
 
-        int err;
+        int err = EINVAL;
 
         switch (request) {
         case IOCTL_ETH__WAIT_FOR_PACKET:
-
                 if (arg) {
-                        ETH_packet_wait_t *pw = cast(ETH_packet_wait_t*, arg);
-                        pw->pkt_size = wait_for_packet(hdl, pw->timeout);
-                        return ESUCC;
-                } else {
-                        return EINVAL;
                 }
                 break;
 
         case IOCTL_ETH__SET_MAC_ADDR:
                 if (arg) {
-                        ETH_MACAddressConfig(ETH_MAC_Address0, arg);
-                        return ESUCC;
-                } else {
-                        return EINVAL;
                 }
                 break;
 
         case IOCTL_ETH__GET_MAC_ADDR:
                 if (arg) {
-                        u8_t *MAC = arg;
-
-                        MAC[5] = ETH->MACA0HR >> 8;
-                        MAC[4] = ETH->MACA0HR;
-                        MAC[3] = ETH->MACA0LR >> 24;
-                        MAC[2] = ETH->MACA0LR >> 16;
-                        MAC[1] = ETH->MACA0LR >> 8;
-                        MAC[0] = ETH->MACA0LR;
-
+                        memcpy(arg, hdl->MAC_addr, sizeof(hdl->MAC_addr));
                         return ESUCC;
                 } else {
                         return EINVAL;
@@ -509,95 +342,37 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
 
         case IOCTL_ETH__SEND_PACKET:
                 if (arg) {
-                        if (sys_mutex_lock(hdl->tx_access, MAX_DELAY_MS) == ESUCC) {
-                                ETH_packet_t *pkt = arg;
-
-                                while (is_buffer_owned_by_DMA(DMATxDescToSet)) {
-                                        sys_sleep_ms(1);
-                                }
-
-                                if (  !is_buffer_owned_by_DMA(DMATxDescToSet)
-                                   && pkt->payload
-                                   && pkt->payload_size <= ETH_MAX_PACKET_SIZE) {
-
-                                        u8_t *buffer = get_buffer_address(DMATxDescToSet);
-
-                                        memcpy(buffer, pkt->payload, pkt->payload_size);
-
-                                        send_packet(pkt->payload_size);
-
-                                        err = ESUCC;
-                                } else {
-                                        printk("ETH: payload size too big or NULL");
-                                        err = EAGAIN;
-                                }
-
-                                sys_mutex_unlock(hdl->tx_access);
-                        } else {
-                                err = EAGAIN;
-                        }
-                } else {
-                        err = EINVAL;
+                        ETH_packet_t *pkt = arg;
+                        err = packet_send(hdl, pkt);
                 }
                 break;
 
         case IOCTL_ETH__RECEIVE_PACKET:
                 if (arg) {
-                        if (sys_mutex_lock(hdl->rx_access, MAX_DELAY_MS) == ESUCC) {
-                                ETH_packet_t *pkt = arg;
+                        ETH_packet_t *pkt = arg;
 
-                                if (  pkt->payload
-                                   && pkt->payload_size <= ETH_MAX_PACKET_SIZE) {
-
-                                        // TEST check solution in tests
-                                        while (is_buffer_owned_by_DMA(DMARxDescToGet)) {
-                                                sys_sleep_ms(1);
-                                        }
-
-                                        if (ETH_GetRxPktSize(DMARxDescToGet) > 0) {
-
-                                                u8_t *buffer = get_buffer_address(DMARxDescToGet);
-
-                                                memcpy(pkt->payload, buffer, pkt->payload_size);
-
-                                                give_Rx_buffer_to_DMA();
-
-                                                err = ESUCC;
-                                        } else {
-                                                printk("ETH: received empty packet!");
-                                                give_Rx_buffer_to_DMA();
-
-                                                err = EIO;
-                                        }
-
-                                        make_Rx_buffer_available();
-
-                                } else {
-                                        err = EINVAL;
-                                }
-
-                                sys_mutex_unlock(hdl->rx_access);
-                        } else {
-                                err = EAGAIN;
+                        err = sys_semaphore_wait(hdl->semaphore, MAX_DELAY_MS);
+                        if (!err) {
+                                err = packet_receive(hdl, pkt);
                         }
-                } else {
-                        err = EINVAL;
                 }
                 break;
 
         case IOCTL_ETH__ETHERNET_START:
-                ETH_Start();
+//                HAL_ETH_Start(&hdl->eth);
                 return ESUCC;
 
         case IOCTL_ETH__ETHERNET_STOP:
-                ETH_Stop();
+//                HAL_ETH_Stop(&hdl->eth);
                 return ESUCC;
 
         case IOCTL_ETH__GET_LINK_STATUS:
                 if (arg) {
                         ETH_link_status_t *linkstat = cast(ETH_link_status_t*, arg);
 
-                        if (ETH_ReadPHYRegister(ETH_PHY_ADDRESS, PHY_BSR) & PHY_BSR_LINK_STATUS) {
+                        u32_t reg;
+                        err = HAL_ETH_ReadPHYRegister(__ETH_PHY_ADDRESS__, PHY_BSR, &reg);
+                        if (reg & PHY_BSR_LINK_STATUS) {
                                 *linkstat = ETH_LINK_STATUS__CONNECTED;
                         } else {
                                 *linkstat = ETH_LINK_STATUS__DISCONNECTED;
@@ -607,6 +382,7 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
                 } else {
                         return EINVAL;
                 }
+                break;
 
         default:
                 return EBADRQC;
@@ -627,10 +403,6 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
 API_MOD_FLUSH(ETH, void *device_handle)
 {
         UNUSED_ARG1(device_handle);
-
-        if (is_Ethernet_started()) {
-                ETH_FlushTransmitFIFO();
-        }
 
         return ESUCC;
 }
@@ -658,144 +430,138 @@ API_MOD_STAT(ETH, void *device_handle, struct vfs_dev_stat *device_stat)
 
 //==============================================================================
 /**
- * @brief  Function check if ethernet interface is started
- * @param  None
- * @return If started then true is returned, otherwise false
+ * @brief
+ *
+ * @param  ?
+ *
+ * @return ?
  */
 //==============================================================================
-static bool is_Ethernet_started(void)
+static int packet_send(struct eth *hdl, ETH_packet_t *pkt)
 {
-        return (ETH->MACCR & ETH_MACCR_TE) && (ETH->MACCR & ETH_MACCR_RE);
-}
+        int err;
+        __IO ETH_DMADescTypeDef *DmaTxDesc = hdl->eth.TxDesc;
+        uint8_t *buffer = (uint8_t*) (DmaTxDesc->Buffer1Addr);
 
-//==============================================================================
-/**
- * @brief  Send packet from current Tx buffer
- * @param  size         packet size
- * @return None
- */
-//==============================================================================
-static void send_packet(size_t size)
-{
-        sys_critical_section_begin();
+        /* Is this buffer available? If not, goto error */
+//        if ((DmaTxDesc->Status & ETH_DMATXDESC_OWN) != (uint32_t) RESET) {
+//                err = EBUSY;
+//                goto error;
+//        }
+        // FIXME timeout
+        while ((DmaTxDesc->Status & ETH_DMATXDESC_OWN) != (uint32_t) RESET) {
+                sys_sleep_ms(1);
+        }
 
-        /* Setting the Frame Length: bits[12:0] */
-        DMATxDescToSet->ControlBufferSize = (size & ETH_DMATxDesc_TBS1);
+        /* Copy the remaining bytes */
+        memcpy(buffer, pkt->payload, pkt->payload_size);
 
-        /* Setting the last segment and first segment bits (in this case a frame is transmitted in one descriptor) */
-        DMATxDescToSet->Status |= ETH_DMATxDesc_LS | ETH_DMATxDesc_FS;
+        /* Prepare transmit descriptors to give to DMA */
+        err = HAL_ETH_TransmitFrame(&hdl->eth, pkt->payload_size);
 
-        /* Set Own bit of the Tx descriptor Status: gives the buffer back to ETHERNET DMA */
-        DMATxDescToSet->Status |= ETH_DMATxDesc_OWN;
-
-        /* When Tx Buffer unavailable flag is set: clear it and resume transmission */
-        if (ETH->DMASR & ETH_DMASR_TBUS) {
-                /* Clear TBUS ETHERNET DMA flag */
-                ETH->DMASR = ETH_DMASR_TBUS;
+        /* When Transmit Underflow flag is set, clear it and issue a Transmit Poll Demand to resume transmission */
+        if ((hdl->eth.Instance->DMASR & ETH_DMASR_TUS) != (uint32_t) RESET) {
+                /* Clear TUS ETHERNET DMA flag */
+                hdl->eth.Instance->DMASR = ETH_DMASR_TUS;
 
                 /* Resume DMA transmission*/
-                ETH->DMATPDR = 0;
+                hdl->eth.Instance->DMATPDR = 0;
         }
 
-        /* Update the ETHERNET DMA global Tx descriptor with next Tx decriptor */
-        /* Chained Mode */
-        /* Selects the next DMA Tx descriptor list for next buffer to send */
-        DMATxDescToSet = cast(ETH_DMADESCTypeDef*, DMATxDescToSet->Buffer2NextDescAddr);
-
-        sys_critical_section_end();
+        return err;
 }
 
 //==============================================================================
 /**
- * @brief  Function waits for a packet and return a size of recived packet
- * @param  hdl          driver context
- * @param  timeout      packet wait timeout
- * @return Size of received packet
+ * @brief
+ *
+ * @param  ?
+ *
+ * @return ?
  */
 //==============================================================================
-static size_t wait_for_packet(struct eth *hdl, uint32_t timeout)
+static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
 {
-        bool is_owned_by_DMA = is_buffer_owned_by_DMA(DMARxDescToGet);
-        sys_semaphore_wait(hdl->rx_data_ready, is_owned_by_DMA ? timeout : 0);
-        return ETH_GetRxPktSize(DMARxDescToGet);
-}
-
-//==============================================================================
-/**
- * @brief  Give a current read buffer to the DMA controller
- * @param  None
- * @return None
- */
-//==============================================================================
-static void give_Rx_buffer_to_DMA(void)
-{
-        sys_critical_section_begin();
-
-        /* Set Own bit of the Rx descriptor Status: gives the buffer back to ETHERNET DMA */
-        DMARxDescToGet->Status = ETH_DMARxDesc_OWN;
-
-        /* Update the ETHERNET DMA global Rx descriptor with next Rx descriptor */
-        /* Selects the next DMA Rx descriptor list for next buffer to read */
-        DMARxDescToGet = cast(ETH_DMADESCTypeDef*, DMARxDescToGet->Buffer2NextDescAddr);
-
-        sys_critical_section_end();
-}
-
-//==============================================================================
-/**
- * @brief  Function checks if buffer is owned by the DMA controller
- * @param  DMA_descriptor       DMA descriptor (Rx or Tx)
- * @return If buffer is owned the true is returned, otherwise false
- */
-//==============================================================================
-static bool is_buffer_owned_by_DMA(ETH_DMADESCTypeDef *DMA_descriptor)
-{
-        return DMA_descriptor->Status & ETH_DMARxDesc_OWN; // ETH_DMATxDesc_OWN
-}
-
-//==============================================================================
-/**
- * @brief  Function makes Rx buffer available for the DMA controller and resume packet reception
- * @param  None
- * @return None
- */
-//==============================================================================
-static void make_Rx_buffer_available(void)
-{
-        sys_critical_section_begin();
-
-        if (ETH->DMASR & ETH_DMASR_RBUS) {
-                ETH_DMAClearFlag(ETH_DMA_FLAG_RBU);
-                ETH_ResumeDMAReception();
+        /* get received frame */
+        if (HAL_ETH_GetReceivedFrame_IT(&hdl->eth) != HAL_OK) {
+                printk("ETH: frame receive error");
+                return EIO;
         }
 
-        sys_critical_section_end();
+        /* Obtain the size of the packet and put it into the "len" variable. */
+        uint16_t len = hdl->eth.RxFrameInfos.length;
+        uint8_t *buffer = (uint8_t*)hdl->eth.RxFrameInfos.buffer;
+
+        if (len > 0) {
+                pkt->payload_size = len;
+                memcpy(pkt->payload, buffer, len);
+        }
+
+        /* Release descriptors to DMA */
+        __IO ETH_DMADescTypeDef *dmarxdesc = hdl->eth.RxFrameInfos.FSRxDesc;
+
+        /* Set Own bit in Rx descriptors: gives the buffers back to DMA */
+        for (u32_t i = 0; i < hdl->eth.RxFrameInfos.SegCount; i++) {
+                dmarxdesc->Status |= ETH_DMARXDESC_OWN;
+                dmarxdesc = (ETH_DMADescTypeDef*)(dmarxdesc->Buffer2NextDescAddr);
+        }
+
+        /* Clear Segment_Count */
+        hdl->eth.RxFrameInfos.SegCount = 0;
+
+        /* When Rx Buffer unavailable flag is set: clear it and resume reception */
+        if ((hdl->eth.Instance->DMASR & ETH_DMASR_RBUS) != (uint32_t) RESET) {
+                /* Clear RBUS ETHERNET DMA flag */
+                hdl->eth.Instance->DMASR = ETH_DMASR_RBUS;
+                /* Resume DMA reception */
+                hdl->eth.Instance->DMARPDR = 0;
+        }
+
+        return 0;
 }
 
 //==============================================================================
 /**
- * @brief  Function returns buffer address of a selected DMA descriptor
- * @param  DMA_descriptor       DMA descriptor
- * @return Buffer address of selected DMA
+ * @brief
+ *
+ * @param  ?
+ *
+ * @return ?
  */
 //==============================================================================
-static u8_t *get_buffer_address(ETH_DMADESCTypeDef *DMA_descriptor)
+void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
 {
-        return cast(u8_t*, DMA_descriptor->Buffer1Addr);
+        UNUSED_ARG1(heth);
+
+        /* Enable the Ethernet global Interrupt */
+        NVIC_SetPriority(ETH_IRQn, _CPU_IRQ_SAFE_PRIORITY_);
+        NVIC_EnableIRQ(ETH_IRQn);
+
+        SET_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACEN);
+        volatile u32_t tmp = READ_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACEN);
+
+        SET_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACTXEN);
+        tmp = READ_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACTXEN);
+
+        SET_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACRXEN);
+        tmp = READ_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACRXEN);
+
+        UNUSED_ARG1(tmp);
 }
 
 //==============================================================================
 /**
- * @brief  Function get speed and duplex from PHY
- * @param  PHYAddress           PHY address
- * @param  ETH_InitStruct       ETH init structure
- * @return Buffer address of selected DMA
+ * @brief
+ *
+ * @param  ?
+ *
+ * @return ?
  */
 //==============================================================================
-void ETH_EXTERN_GetSpeedAndDuplex(uint32_t PHYAddress, ETH_InitTypeDef *ETH_InitStruct)
+void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *heth)
 {
-        UNUSED_ARG2(PHYAddress, ETH_InitStruct);
-        // empty
+        UNUSED_ARG1(heth);
+        sys_semaphore_signal_from_ISR(eth->semaphore, &eth->irq_yield);
 }
 
 //==============================================================================
@@ -807,15 +573,8 @@ void ETH_EXTERN_GetSpeedAndDuplex(uint32_t PHYAddress, ETH_InitTypeDef *ETH_Init
 //==============================================================================
 void ETH_IRQHandler(void)
 {
-        if (ETH_GetDMAFlagStatus(ETH_DMA_FLAG_R)) {
-
-                bool woken = false;
-                sys_semaphore_signal_from_ISR(eth->rx_data_ready, &woken);
-
-                ETH_DMAClearITPendingBit(ETH_DMA_IT_NIS | ETH_DMA_IT_R);
-
-                sys_thread_yield_from_ISR(woken);
-        }
+        HAL_ETH_IRQHandler(&eth->eth);
+        sys_thread_yield_from_ISR(eth->irq_yield);
 }
 
 /*==============================================================================
