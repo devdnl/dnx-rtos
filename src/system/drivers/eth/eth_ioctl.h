@@ -202,44 +202,51 @@ extern "C" {
 #define IOCTL_ETH__CONFIGURE                    _IOW(ETH, 0x00, ETH_config_t*)
 
 /**
- * @brief  Wait for receive of Rx packet.
- * @param  [WR,RD] @ref ETH_packet_wait_t*        timeout value and received size.
- * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
- */
-#define IOCTL_ETH__WAIT_FOR_PACKET              _IOWR(ETH, 0x01, ETH_packet_wait_t*)
-
-/**
  * @brief  Receive packet to chain buffer.
  * @param  [RD] @ref ETH_packet_t*       chain buffer reference (each chain must have allocated memory!).
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__RECEIVE_PACKET               _IOR(ETH, 0x02, ETH_packet_t*)
+#define IOCTL_ETH__RECEIVE_PACKET               _IOR(ETH, 0x01, ETH_packet_t*)
 
 /**
  * @brief  Send packet from chain buffer.
  * @param  [WR] @ref ETH_packet_t*              chain buffer reference.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__SEND_PACKET                  _IOW(ETH, 0x03, ETH_packet_t*)
+#define IOCTL_ETH__SEND_PACKET                  _IOW(ETH, 0x02, ETH_packet_t*)
 
 /**
  * @brief  Starts Ethernet interface.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__START                        _IO(ETH, 0x04)
+#define IOCTL_ETH__START                        _IO(ETH, 0x03)
 
 /**
  * @brief  Stop Ethernet interface.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__STOP                         _IO(ETH, 0x05)
+#define IOCTL_ETH__STOP                         _IO(ETH, 0x04)
 
 /**
  * @brief  Return link status.
  * @param  [RD] @ref ETH_status_t*        link status.
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_ETH__GET_STATUS                   _IOR(ETH, 0x06, ETH_status_t*)
+#define IOCTL_ETH__GET_STATUS                   _IOR(ETH, 0x05, ETH_status_t*)
+
+/**
+ * @brief  Set RX timeout.
+ * @param  [RD] @ref u32_t* rx timeout in milliseconds.
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
+ */
+#define IOCTL_ETH__SET_RX_TIMEOUT               _IOW(ETH, 0x06, const u32_t*)
+
+/**
+ * @brief  Set RX timeout.
+ * @param  [RD] @ref u32_t* tx timeout in milliseconds.
+ * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
+ */
+#define IOCTL_ETH__SET_TX_TIMEOUT               _IOW(ETH, 0x07, const u32_t*)
 
 /*==============================================================================
   Exported object types
@@ -249,7 +256,7 @@ extern "C" {
  */
 typedef struct {
         void  *payload;         /*!< Payload.*/
-        u16_t  lenght;          /*!< Payload size.*/
+        u16_t  length;          /*!< Payload length.*/
 } ETH_packet_t;
 
 /**
@@ -270,8 +277,9 @@ typedef struct {
         } state;
 
         enum {
+                ETH_LINK_STATUS__DISCONNECTED,       /*!< Link disconnected.*/
                 ETH_LINK_STATUS__CONNECTED,          /*!< Link connected.*/
-                ETH_LINK_STATUS__DISCONNECTED        /*!< Link disconnected.*/
+                ETH_LINK_STATUS__PHY_ERROR,          /*!< PHY error.*/
         } link_status;
 
         u8_t  MAC[6];
@@ -279,16 +287,15 @@ typedef struct {
         u64_t tx_packets;
         u64_t rx_bytes;
         u64_t tx_bytes;
-        u32_t rx_missed_frames_mfa;
-        u32_t rx_missed_frames_mfc;
+        u32_t rx_dropped_frames;
 } ETH_status_t;
 
 /**
  * Type represent packet waiting with selected timeout.
  */
 typedef struct {
-        uint32_t timeout;    /*!< Timeout value in milliseconds. Value is set by user at request.*/
-        size_t   pkt_size;   /*!< Size of received packet. Value is set by driver at response.*/
+        uint32_t wait_timeout;          /*!< Timeout value in milliseconds. Value is set by user at request.*/
+        uint16_t packet_length;         /*!< Size of received packet. Value is set by driver at response.*/
 } ETH_packet_wait_t;
 
 /*==============================================================================

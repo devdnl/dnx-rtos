@@ -65,13 +65,13 @@ this:AddItem("100 Mbps", "ETH_SPEED_100M")
 this:AddWidget("Spinbox", 3, 256, "Number of RX buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
-#define __ETH_RXBUFNB__ 50
+#define __ETH_RXBUFNB__ 10
 
 /*--
 this:AddWidget("Spinbox", 2, 256, "Number of Tx buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
-#define __ETH_TXBUFNB__ 2
+#define __ETH_TXBUFNB__ 3
 
 /*--
 this:AddExtraWidget("Label", "LabelPHY", "\nPHY", -1, "bold")
