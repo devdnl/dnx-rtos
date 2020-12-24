@@ -8744,11 +8744,11 @@
 			};
 			[49.000000]={
 				["key"]="__CLK_APB1_PRE__";
-				["value"]="RCC_HCLK_Div2";
+				["value"]="RCC_HCLK_Div4";
 			};
 			[50.000000]={
 				["key"]="__CLK_APB2_PRE__";
-				["value"]="RCC_HCLK_Div2";
+				["value"]="RCC_HCLK_Div4";
 			};
 			[51.000000]={
 				["key"]="__CLK_CPU_VOLTAGE__";
@@ -8902,11 +8902,11 @@
 		["arch/stm32f4/eth_flags.h"]={
 			[1.000000]={
 				["key"]="__ETH_CHECKSUM_BY_HARDWARE__";
-				["value"]="_YES_";
+				["value"]="ETH_CHECKSUM_BY_HARDWARE";
 			};
 			[2.000000]={
 				["key"]="__ETH_SPEED__";
-				["value"]="ETH_Speed_100M";
+				["value"]="ETH_SPEED_100M";
 			};
 			[3.000000]={
 				["key"]="__ETH_RXBUFNB__";
@@ -8914,7 +8914,7 @@
 			};
 			[4.000000]={
 				["key"]="__ETH_TXBUFNB__";
-				["value"]="10";
+				["value"]="3";
 			};
 			[5.000000]={
 				["key"]="__ETH_DEVICE__";
@@ -8934,7 +8934,7 @@
 			};
 			[9.000000]={
 				["key"]="__ETH_PHY_ADDRESS__";
-				["value"]="1";
+				["value"]="0";
 			};
 			[10.000000]={
 				["key"]="__ETH_PHY_RESET_DELAY__";
@@ -8946,7 +8946,7 @@
 			};
 			[12.000000]={
 				["key"]="__ETH_PHY_AUTONEGOTIATION__";
-				["value"]="ETH_AutoNegotiation_Disable";
+				["value"]="ETH_AUTONEGOTIATION_DISABLE";
 			};
 		};
 		["arch/stm32f4/fmc_flags.h"]={
@@ -9050,7 +9050,7 @@
 			};
 			[2.000000]={
 				["key"]="__GPIO_PA_PIN_0_SPEED__";
-				["value"]="_GPIO_SPEED_VERY_HIGH";
+				["value"]="_GPIO_SPEED_LOW";
 			};
 			[3.000000]={
 				["key"]="__GPIO_PA_PIN_0_MODE__";
@@ -9686,7 +9686,7 @@
 			};
 			[161.000000]={
 				["key"]="__GPIO_PC_PIN_0_NAME__";
-				["value"]="ETH_MDC";
+				["value"]="PC0_NC";
 			};
 			[162.000000]={
 				["key"]="__GPIO_PC_PIN_0_SPEED__";
@@ -9694,11 +9694,11 @@
 			};
 			[163.000000]={
 				["key"]="__GPIO_PC_PIN_0_MODE__";
-				["value"]="_GPIO_MODE_AF_PP";
+				["value"]="_GPIO_MODE_IN";
 			};
 			[164.000000]={
 				["key"]="__GPIO_PC_PIN_0_AF__";
-				["value"]="11";
+				["value"]="0";
 			};
 			[165.000000]={
 				["key"]="__GPIO_PC_PIN_0_STATE__";
@@ -9706,19 +9706,19 @@
 			};
 			[166.000000]={
 				["key"]="__GPIO_PC_PIN_1_NAME__";
-				["value"]="PC1_NC";
+				["value"]="ETH_MDC";
 			};
 			[167.000000]={
 				["key"]="__GPIO_PC_PIN_1_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[168.000000]={
 				["key"]="__GPIO_PC_PIN_1_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[169.000000]={
 				["key"]="__GPIO_PC_PIN_1_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[170.000000]={
 				["key"]="__GPIO_PC_PIN_1_STATE__";
@@ -22054,11 +22054,11 @@
 		["network/network_flags.h"]={
 			[1.000000]={
 				["key"]="__ENABLE_NETWORK__";
-				["value"]="_YES_";
+				["value"]="_NO_";
 			};
 			[2.000000]={
 				["key"]="__ENABLE_TCPIP_STACK__";
-				["value"]="_YES_";
+				["value"]="_NO_";
 			};
 			[3.000000]={
 				["key"]="__ENABLE_SIPC_STACK__";
