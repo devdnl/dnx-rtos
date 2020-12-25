@@ -282,6 +282,16 @@ typedef struct {
                 ETH_LINK_STATUS__PHY_ERROR,          /*!< PHY error.*/
         } link_status;
 
+        enum {
+                ETH_SPEED__10Mbps,
+                ETH_SPEED__100Mbps,
+        } speed;
+
+        enum {
+                ETH_DUPLEX__HALF,
+                ETH_DUPLEX__FULL,
+        } duplex;
+
         u8_t  MAC[6];
         u64_t rx_packets;
         u64_t tx_packets;

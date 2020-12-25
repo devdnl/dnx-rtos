@@ -396,6 +396,23 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
                                 status->link_status = ETH_LINK_STATUS__PHY_ERROR;
                         }
 
+                        if (HAL_ETH_ReadPHYRegister(&hdl->eth, __ETH_PHY_SR__, &reg) == HAL_OK) {
+
+                                if (reg & __ETH_PHY_SPEED_STATUS_BM__) {
+                                        status->speed = ETH_SPEED__10Mbps;
+                                } else {
+                                        status->speed = ETH_SPEED__100Mbps;
+                                }
+
+                                if (reg & __ETH_PHY_DUPLEX_STATUS_BM__) {
+                                        status->speed = ETH_DUPLEX__FULL;
+                                } else {
+                                        status->speed = ETH_DUPLEX__HALF;
+                                }
+                        } else {
+                                status->link_status = ETH_LINK_STATUS__PHY_ERROR;
+                        }
+
                         memcpy(status->MAC, hdl->MAC_addr, sizeof(status->MAC));
 
                         status->rx_bytes   = hdl->stats.rx_bytes;
