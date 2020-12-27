@@ -62,20 +62,16 @@ the <tt>./config</tt> directory or by using Configtool.
 
 \subsection drv-eth-ddesc-write Data write
 Data to driver can be written as for regular file but if buffer is bigger than
-MTU then buffer is send is few parts. In general case this method is not
-recommended to handle communication protocol. To handle driver more efficient
-please use ioctl() family requests.
+MTU then buffer is send in few parts.
 
 \subsection drv-eth-ddesc-read Data read
-Data from driver can be received as from regular file but with exception that
-read data buffer should be a size of ETH_MAX_PACKET_SIZE. In general case this
-method is not recommended to handle communication protocol. To handle driver more
-efficient please use ioctl() family requests.
+Data from driver can be received as regular file but with exception that
+read data buffer should be a size of ETH_MAX_PACKET_SIZE.
 
 \subsection drv-eth-ddesc-conf Peripheral start
 There are only two steps that should be done to start Ethernet peripheral:
 
-\li MAC address configuration (@ref IOCTL_ETH__SET_MAC_ADDR),
+\li Ethernet device configuration (@ref IOCTL_ETH__CONFIGURE),
 \li Ethernet peripheral start (@ref IOCTL_ETH__START).
 
 After this operations packets will be received and transmitted.
@@ -86,18 +82,8 @@ This object is a chain buffer that sum of all chain links payloads is a size of
 entire packet. Object can contain only single packet. In both cases, receiving
 and transmitting, the chain buffer should be created by user.
 
-There is a big advantage of placing packets in to chain buffers -- there is no
-need to allocate a single packet buffer, thus payload data can originate from e.g.
-different memories (RAM, ROM, etc). The chain buffer behave as simple one
-direction linked list.
-
 \subsubsection drv-eth-ddesc-pktrcv Packet receiving
-To receive packet one should wait for reception of Ethernet peripheral. To check
-this event the ioctl() request should be used: @ref IOCTL_ETH__WAIT_FOR_PACKET.
-User should specify the timeout value. If packet is received then
-@ref ETH_packet_wait_t object indicate a size of packet. This information should
-be used to create specified @ref ETH_packet_t object. The object should
-be prepared by application that receive packet, example:
+Packet receive example code:
 \code
 // initialization
 // ...
@@ -108,38 +94,23 @@ FILE *eth = fopen(...);
 
 // reception thread
 while (true) {
-        // wait for packet to be received
-        ETH_packet_wait_t wait = {.timeout  = MAX_DELAY_MS, .pkt_size = 0};
-
-        if (ioctl(fileno(eth), IOCTL_ETH__WAIT_FOR_PACKET, &wait) != 0) {
-                // ... error handling
-        }
-
         // receive packet from peripheral buffer
-        uint8_t buf[1520];
+        uint8_t buf[ETH_MAX_PACKET_SIZE];
         ETH_packet_t pkt;
         pkt.payload = buf;
-        pkt.payload_size = sizeof(buf);
+        pkt.length  = sizeof(buf);         // maximal size
 
         if (ioctl(fileno(eth), IOCTL_ETH__RECEIVE_PACKET, &pkt) != 0) {
                 // ... error handling
         }
 
         // ... received data handling
-
-        free(bufch.payload); // can be allocated only one time below the loop.
+        // size_t len = pkt.length;     // real size of received packet
 }
 \endcode
 
-The input buffer can be created by using many chain links and the total chain
-size can be much bigger than received packet. The driver will fill the chain
-buffer by packet data and will set correct total size value. Only the first
-chain link has updated the total_size value.
-
 \subsubsection drv-eth-ddesc-pktrans Packet transmitting
-To transmit packet the chain buffer should be used. The operation is opposite to
-packet receive but data sending is handled by the same chain buffer object type.
-The packet can be divided to many small parts. Packet sending example:
+Packet sending example:
 \code
 // initialization
 // ...
@@ -153,7 +124,7 @@ while (true) {
         // ... data to send should be prepared earlier
 
         // buffer prepare - buffer can be created dynamically
-        uint8_t buf[1520];
+        uint8_t buf[ETH_MAX_PACKET_SIZE];
         buf[0] = ...;
         buf[1] = ...;
         buf[...] = ...;
@@ -169,13 +140,6 @@ while (true) {
         // ... packet transmitted
 }
 \endcode
-
-The best solution is to create specified packets dynamically at runtime. When
-data successively is added to chain buffer then new payload chains can be
-allocated and added to the buffer. The single chain will contain only small part
-of data. One should keep in mind that total_size field in first chain should be
-updated when new chain link is added, this field in other chain links is
-ignored by driver.
 @{
 */
 
@@ -194,6 +158,13 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+/**
+ * Max packet size
+ */
+#ifndef ETH_MAX_PACKET_SIZE
+#define ETH_MAX_PACKET_SIZE                     1524U
+#endif
+
 /**
  * @brief  Set MAC address.
  * @param  [WR] @ref ETH_config_t: pointer to configuration object.

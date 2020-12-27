@@ -95,7 +95,7 @@ struct eth {
   Local function prototypes
 ==============================================================================*/
 static int packet_receive(struct eth *hdl, ETH_packet_t *pkt);
-static int packet_send(struct eth *hdl, ETH_packet_t *pkt);
+static int packet_send(struct eth *hdl, const ETH_packet_t *pkt);
 static void update_dropped_rx_frames(struct eth *hdl);
 
 /*==============================================================================
@@ -144,39 +144,17 @@ API_MOD_INIT(ETH, void **device_handle, u8_t major, u8_t minor, const void *conf
                 hdl->rx_timeout_ms = MAX_DELAY_MS;
                 hdl->tx_timeout_ms = MAX_DELAY_MS;
 
-                hdl->MAC_addr[0] = 0xC2; // FIXME adres musi być już załadowany, albo przerobić init na konfigurację
-                hdl->MAC_addr[1] = 0x70;
-                hdl->MAC_addr[2] = 0x50;
-                hdl->MAC_addr[3] = 0xFF;
-                hdl->MAC_addr[4] = 0xFF;
-                hdl->MAC_addr[5] = 0x78;
-
-                hdl->eth.Instance = ETH;
-                hdl->eth.Init.MACAddr = hdl->MAC_addr; // FIXME adres musi być już załadowany
-                hdl->eth.Init.AutoNegotiation = __ETH_PHY_AUTONEGOTIATION__;
-                hdl->eth.Init.Speed = __ETH_SPEED__;
-                hdl->eth.Init.DuplexMode = ETH_MODE_FULLDUPLEX;
-                hdl->eth.Init.RxMode = ETH_RXINTERRUPT_MODE;
-                hdl->eth.Init.ChecksumMode = __ETH_CHECKSUM_BY_HARDWARE__;
-                hdl->eth.Init.PhyAddress = __ETH_PHY_ADDRESS__;
-
-                err = HAL_ETH_Init(&hdl->eth);
+                err = sys_semaphore_create(__ETH_RXBUFNB__, 0, &hdl->semaphore);
                 if (!err) {
-                        /* Initialize Tx Descriptors list: Chain Mode */
-                        HAL_ETH_DMATxDescListInit(&hdl->eth, hdl->DMATxDscrTab,
-                                                  &hdl->Tx_Buff[0][0], __ETH_TXBUFNB__);
-
-                        /* Initialize Rx Descriptors list: Chain Mode  */
-                        HAL_ETH_DMARxDescListInit(&hdl->eth, hdl->DMARxDscrTab,
-                                                  &hdl->Rx_Buff[0][0], __ETH_RXBUFNB__);
-
-                        err = sys_semaphore_create(1000, 0, &hdl->semaphore);
-                        if (!err) {
-                                eth = hdl;
-                                HAL_ETH_Start(&hdl->eth);
+                        if (config) {
+                                const ETH_config_t *conf = config;
+                                memcpy(hdl->MAC_addr, conf->MAC, sizeof(hdl->MAC_addr));
                         }
+
+                        eth = hdl;
                 }
 
+                // error check
                 if (err) {
                         if (hdl->semaphore) {
                                 sys_semaphore_destroy(hdl->semaphore);
@@ -262,7 +240,7 @@ API_MOD_CLOSE(ETH, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
- * @param[out]          *wrcnt                  number of written bytes
+ * @param[out]          *wrctr                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
  * @return One of errno value (errno.h)
@@ -273,14 +251,35 @@ API_MOD_WRITE(ETH,
               const u8_t       *src,
               size_t            count,
               fpos_t           *fpos,
-              size_t           *wrcnt,
+              size_t           *wrctr,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG1(fpos);
+        UNUSED_ARG2(fpos, fattr);
 
         struct eth *hdl = device_handle;
 
-        return EIO;
+        int err  = EPERM;
+        size_t n = 0;
+
+        while (count > 0) {
+                size_t len = min(count, ETH_MAX_PACKET_SIZE);
+
+                ETH_packet_t pkt;
+                pkt.payload = const_cast(u8_t*, src);
+                pkt.length  = len;
+                err = packet_send(hdl, &pkt);
+                if (!err) {
+                        src   += len;
+                        count -= len;
+                        n     += len;
+                } else {
+                        break;
+                }
+        }
+
+        *wrctr = n;
+
+        return err;
 }
 
 //==============================================================================
@@ -291,7 +290,7 @@ API_MOD_WRITE(ETH,
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
- * @param[out]          *rdcnt                  number of read bytes
+ * @param[out]          *rdctr                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
  * @return One of errno value (errno.h)
@@ -302,14 +301,24 @@ API_MOD_READ(ETH,
              u8_t            *dst,
              size_t           count,
              fpos_t          *fpos,
-             size_t          *rdcnt,
+             size_t          *rdctr,
              struct vfs_fattr fattr)
 {
-        UNUSED_ARG1(fpos);
+        UNUSED_ARG2(fpos, fattr);
 
         struct eth *hdl = device_handle;
 
-        return EIO;
+        int err = EPERM;
+
+        ETH_packet_t pkt;
+        pkt.payload = dst;
+        pkt.length  = min(count, ETH_MAX_PACKET_SIZE);
+        err = packet_receive(hdl, &pkt);
+        if (!err) {
+                *rdctr = pkt.length;
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -332,11 +341,38 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
         switch (request) {
         case IOCTL_ETH__CONFIGURE:
                 if (arg) {
-                        ETH_config_t *conf = arg;
+                        if (not hdl->run) {
+                                if (hdl->configured) {
+                                        HAL_ETH_DeInit(&hdl->eth);
+                                }
 
-                        // TODO
+                                const ETH_config_t *conf = arg;
 
-                        eth->configured = true;
+                                memcpy(hdl->MAC_addr, conf->MAC, sizeof(hdl->MAC_addr));
+
+                                hdl->eth.Instance = ETH;
+                                hdl->eth.Init.MACAddr = hdl->MAC_addr;
+                                hdl->eth.Init.AutoNegotiation = __ETH_PHY_AUTONEGOTIATION__;
+                                hdl->eth.Init.Speed = __ETH_SPEED__;
+                                hdl->eth.Init.DuplexMode = ETH_MODE_FULLDUPLEX;
+                                hdl->eth.Init.RxMode = ETH_RXINTERRUPT_MODE;
+                                hdl->eth.Init.ChecksumMode = __ETH_CHECKSUM_BY_HARDWARE__;
+                                hdl->eth.Init.PhyAddress = __ETH_PHY_ADDRESS__;
+
+                                err = HAL_ETH_Init(&hdl->eth);
+                                if (!err) {
+                                        /* Initialize Tx Descriptors list: Chain Mode */
+                                        HAL_ETH_DMATxDescListInit(&hdl->eth, hdl->DMATxDscrTab,
+                                                                  &hdl->Tx_Buff[0][0], __ETH_TXBUFNB__);
+
+                                        /* Initialize Rx Descriptors list: Chain Mode  */
+                                        HAL_ETH_DMARxDescListInit(&hdl->eth, hdl->DMARxDscrTab,
+                                                                  &hdl->Rx_Buff[0][0], __ETH_RXBUFNB__);
+                                        eth->configured = true;
+                                }
+                        } else {
+                                err = EBUSY;
+                        }
                 }
                 break;
 
@@ -367,6 +403,9 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
         case IOCTL_ETH__START:
                 if (not hdl->run and hdl->configured) {
                         err = HAL_ETH_Start(&hdl->eth);
+                        if (!err) {
+                                hdl->run = true;
+                        }
                 } else {
                         err = EPERM;
                 }
@@ -375,6 +414,9 @@ API_MOD_IOCTL(ETH, void *device_handle, int request, void *arg)
         case IOCTL_ETH__STOP:
                 if (hdl->run) {
                         err = HAL_ETH_Stop(&hdl->eth);
+                        if (!err) {
+                                hdl->run = false;
+                        }
                 } else {
                         err = EPERM;
                 }
@@ -501,8 +543,12 @@ API_MOD_STAT(ETH, void *device_handle, struct vfs_dev_stat *device_stat)
  * @return ?
  */
 //==============================================================================
-static int packet_send(struct eth *hdl, ETH_packet_t *pkt)
+static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
 {
+        if (not hdl->run) {
+                return EPERM;
+        }
+
         __IO ETH_DMADescTypeDef *DmaTxDesc = hdl->eth.TxDesc;
         uint8_t *buffer = (uint8_t*) (DmaTxDesc->Buffer1Addr);
 
@@ -548,6 +594,10 @@ static int packet_send(struct eth *hdl, ETH_packet_t *pkt)
 //==============================================================================
 static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
 {
+        if (not hdl->run) {
+                return EPERM;
+        }
+
         int err = sys_semaphore_wait(hdl->semaphore, hdl->rx_timeout_ms);
         if (!err) {
                 /* get received frame */
