@@ -263,6 +263,7 @@ typedef struct {
                 ETH_DUPLEX__FULL,
         } duplex;
 
+        bool  configured;
         u8_t  MAC[6];
         u64_t rx_packets;
         u64_t tx_packets;

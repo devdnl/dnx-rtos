@@ -77,15 +77,29 @@
 //==============================================================================
 int _inetdrv_hardware_init(inet_t *inet)
 {
-        /* set MAC address */
-        int err = sys_ioctl(inet->if_file, IOCTL_ETH__GET_MAC_ADDR, inet->netif.hwaddr);
-        if (err) {
-                LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_init: MAC set fail\n"));
-                return err;
+        int err;
+        ETH_status_t status;
+
+        /* wait for Ethernet interface to be configured */
+        while (true) {
+                err = sys_ioctl(inet->if_file, IOCTL_ETH__GET_STATUS, &status);
+                if (!err) {
+                        if (status.configured) {
+                                break;
+                        } else {
+                                sys_sleep_ms(500);
+                        }
+                } else {
+                        LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_init: MAC get fail\n"));
+                        return err;
+                }
         }
 
+        /* copy MAC address to lwip library */
+        memcpy(inet->netif.hwaddr, status.MAC, sizeof(inet->netif.hwaddr));
+
         /* start Ethernet interface */
-        err = sys_ioctl(inet->if_file, IOCTL_ETH__ETHERNET_START);
+        err = sys_ioctl(inet->if_file, IOCTL_ETH__START);
         if (err) {
                 LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_init: start fail\n"));
                 return err;
@@ -107,7 +121,7 @@ int _inetdrv_hardware_init(inet_t *inet)
 //==============================================================================
 int _inetdrv_hardware_deinit(inet_t *inet)
 {
-        int err = sys_ioctl(inet->if_file, IOCTL_ETH__ETHERNET_STOP);
+        int err = sys_ioctl(inet->if_file, IOCTL_ETH__STOP);
         if (err) {
                 LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_deinit: stop fail\n"));
         }
@@ -135,40 +149,35 @@ int _inetdrv_hardware_deinit(inet_t *inet)
 //==============================================================================
 void _inetdrv_handle_input(inet_t *inet, u32_t timeout)
 {
-        ETH_packet_wait_t pw = {.timeout = timeout};
-        int r = sys_ioctl(inet->if_file, IOCTL_ETH__WAIT_FOR_PACKET, &pw);
+        sys_ioctl(inet->if_file, IOCTL_ETH__SET_RX_TIMEOUT, &timeout);
 
-        while (r == 0 && pw.pkt_size > 0) {
-                struct pbuf *p = pbuf_alloc(PBUF_RAW, pw.pkt_size, PBUF_RAM);
-                if (p) {
-                        ETH_packet_t pkt;
-                        pkt.payload = p->payload;
-                        pkt.payload_size = p->len;
+        while (true) {
+                ETH_packet_t pkt;
+                pkt.payload = inet->frame;
+                pkt.length  = sizeof(inet->frame);
 
-                        r = sys_ioctl(inet->if_file, IOCTL_ETH__RECEIVE_PACKET, &pkt);
+                int err = sys_ioctl(inet->if_file, IOCTL_ETH__RECEIVE_PACKET, &pkt);
+                if (!err) {
+                        LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_input: received = %d\n", pkt.length));
 
-                        if (r == 0) {
-                                LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_input: received = %d\n", p->tot_len));
+                        struct pbuf *p = pbuf_alloc(PBUF_RAW, pkt.length, PBUF_RAM);
+                        if (p) {
+                                memcpy(p->payload, pkt.payload, pkt.length);
 
                                 inet->rx_packets++;
-                                inet->rx_bytes += p->tot_len;
+                                inet->rx_bytes += pkt.length;
 
                                 if (inet->netif.input(p, &inet->netif) != ERR_OK) {
                                         pbuf_free(p);
                                 }
                         } else {
-                                LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_input: receive error\n"));
-                                pbuf_free(p);
+                                LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_input: pbuf allocate error\n"));
                         }
-
-                        r = sys_ioctl(inet->if_file, IOCTL_ETH__WAIT_FOR_PACKET, &pw);
                 } else {
-                        LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_input: not enough free memory\n"));
-                        sys_sleep_ms(10);
+                        LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_input: packet receive timeout\n"));
+                        break;
                 }
         }
-
-        LWIP_DEBUGF(INET_DEBUG, ("_inetdrv_handle_input: packet receive timeout\n"));
 }
 
 //==============================================================================
@@ -199,11 +208,11 @@ err_t _inetdrv_handle_output(struct netif *netif, struct pbuf *p)
 
       ETH_packet_t pkt;
       pkt.payload = p->payload;
-      pkt.payload_size = p->len;
+      pkt.length  = p->len;
 
       if (sys_ioctl(inet->if_file, IOCTL_ETH__SEND_PACKET, &pkt) == 0) {
               inet->tx_packets++;
-              inet->tx_bytes += pkt.payload_size;
+              inet->tx_bytes += pkt.length;
               return ERR_OK;
       } else {
               LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_handle_output: packet send error\n"));
@@ -228,9 +237,10 @@ err_t _inetdrv_handle_output(struct netif *netif, struct pbuf *p)
 //==============================================================================
 bool _inetdrv_is_link_connected(inet_t *inet)
 {
-        ETH_status_t linkstat;
-        if (sys_ioctl(inet->if_file, IOCTL_ETH__GET_LINK_STATUS, &linkstat) == 0) {
-                return linkstat == ETH_LINK_STATUS__CONNECTED;
+        ETH_status_t status;
+        int err = sys_ioctl(inet->if_file, IOCTL_ETH__GET_STATUS, &status);
+        if (!err) {
+                return status.link_status == ETH_LINK_STATUS__CONNECTED;
         } else {
                 return false;
         }

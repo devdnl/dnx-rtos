@@ -22054,11 +22054,11 @@
 		["network/network_flags.h"]={
 			[1.000000]={
 				["key"]="__ENABLE_NETWORK__";
-				["value"]="_NO_";
+				["value"]="_YES_";
 			};
 			[2.000000]={
 				["key"]="__ENABLE_TCPIP_STACK__";
-				["value"]="_NO_";
+				["value"]="_YES_";
 			};
 			[3.000000]={
 				["key"]="__ENABLE_SIPC_STACK__";

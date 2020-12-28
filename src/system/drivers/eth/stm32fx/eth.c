@@ -598,6 +598,7 @@ static int eth_get_info(struct eth *hdl, ETH_status_t *status)
 
                 memcpy(status->MAC, hdl->MAC_addr, sizeof(status->MAC));
 
+                status->configured = hdl->configured;
                 status->rx_bytes   = hdl->stats.rx_bytes;
                 status->tx_bytes   = hdl->stats.tx_bytes;
                 status->rx_packets = hdl->stats.rx_packets;

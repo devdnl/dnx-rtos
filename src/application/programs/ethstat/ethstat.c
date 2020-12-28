@@ -95,6 +95,7 @@ int main(int argc, char *argv[])
 
                         if (ioctl(fd, IOCTL_ETH__GET_STATUS, &global->status) == 0) {
 
+                                printf("Configured: %s\n", global->status.configured ? "YES" : "NO");
                                 printf("State     : %16s\n", ETH_STATE[global->status.state]);
                                 printf("Link      : %16s\n", ETH_LINK[global->status.link_status]);
                                 printf("Duplex    : %16s\n", ETH_DUPLEX[global->status.duplex]);
