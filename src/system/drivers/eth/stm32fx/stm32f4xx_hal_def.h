@@ -38,9 +38,17 @@ Detailed Doxygen description.
   Include files
 ==============================================================================*/
 #include <stddef.h>
-#include "stm32f4xx.h"
 #include "drivers/driver.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f10x.h"
+#elif defined(ARCH_stm32f4)
+#include "stm32f4xx.h"
+#elif defined(ARCH_stm32f7)
+#include "stm32f7xx.h"
+// TODO cache clear/invalidate
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,12 +58,12 @@ extern "C" {
   Exported macros
 ==============================================================================*/
 #define assert_param(...)
-#define HAL_GetTick()   sys_get_uptime_ms()
-#define HAL_Delay(_ms)  sys_sleep_ms(_ms)
-#define __HAL_UNLOCK(heth)  (heth->Lock = HAL_UNLOCKED)
-#define __HAL_LOCK(heth)  (heth->Lock = HAL_LOCKED)
-#define __weak __attribute__ ((weak))
-#define UNUSED(_x) UNUSED_ARG1(_x)
+#define HAL_GetTick()                   sys_get_uptime_ms()
+#define HAL_Delay(_ms)                  sys_sleep_ms(_ms)
+#define __HAL_UNLOCK(heth)              (heth->Lock = HAL_UNLOCKED)
+#define __HAL_LOCK(heth)                (heth->Lock = HAL_LOCKED)
+#define __weak                          __attribute__ ((weak))
+#define UNUSED(_x)                      UNUSED_ARG1(_x)
 
 /* Definition of the Ethernet driver buffers size and count */
 #define ETH_RX_BUF_SIZE                 ETH_MAX_PACKET_SIZE /* buffer size for receive               */
