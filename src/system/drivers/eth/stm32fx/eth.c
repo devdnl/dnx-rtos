@@ -823,6 +823,31 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
 
 //==============================================================================
 /**
+ * @brief  Low level Ethernet deinitialization (library callback).
+ *
+ * @param  heth         hal ethernet handler
+ */
+//==============================================================================
+void HAL_ETH_MspDeInit(ETH_HandleTypeDef *heth)
+{
+        UNUSED_ARG1(heth);
+
+        NVIC_DisableIRQ(ETH_IRQn);
+
+        CLEAR_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACEN);
+        volatile u32_t tmp = READ_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACEN);
+
+        CLEAR_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACTXEN);
+        tmp = READ_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACTXEN);
+
+        CLEAR_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACRXEN);
+        tmp = READ_BIT(RCC->AHBxENR, RCC_AHBxENR_ETHMACRXEN);
+
+        UNUSED_ARG1(tmp);
+}
+
+//==============================================================================
+/**
  * @brief  Packet receive complete callback (library callback).
  *
  * @param  heth         hal ethernet handler
