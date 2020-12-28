@@ -588,9 +588,9 @@ static int eth_get_info(struct eth *hdl, ETH_status_t *status)
                         }
 
                         if (reg & __ETH_PHY_DUPLEX_STATUS_BM__) {
-                                status->speed = ETH_DUPLEX__FULL;
+                                status->duplex = ETH_DUPLEX__FULL;
                         } else {
-                                status->speed = ETH_DUPLEX__HALF;
+                                status->duplex = ETH_DUPLEX__HALF;
                         }
                 } else {
                         status->link_status = ETH_LINK_STATUS__PHY_ERROR;
