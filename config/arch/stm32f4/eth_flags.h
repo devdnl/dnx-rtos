@@ -71,7 +71,7 @@ this:SetToolTip("Each buffer is 1524 B long.")
 this:AddWidget("Spinbox", 2, 256, "Number of Tx buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
-#define __ETH_TXBUFNB__ 3
+#define __ETH_TXBUFNB__ 10
 
 /*--
 this:AddExtraWidget("Label", "LabelPHY", "\nPHY", -1, "bold")
@@ -116,7 +116,7 @@ this:AddWidget("Value")
 #define __ETH_PHY_DUPLEX_STATUS_BM__ 0x0010
 
 /*--
-this:AddWidget("Spinbox", 0, 255, "Address")
+this:AddWidget("Spinbox", 0, 31, "Address")
 --*/
 #define __ETH_PHY_ADDRESS__ 0
 
