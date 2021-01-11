@@ -2902,11 +2902,11 @@
 		["arch/stm32f1/eth_flags.h"]={
 			[1.000000]={
 				["key"]="__ETH_CHECKSUM_BY_HARDWARE__";
-				["value"]="_YES_";
+				["value"]="ETH_CHECKSUM_BY_HARDWARE";
 			};
 			[2.000000]={
 				["key"]="__ETH_SPEED__";
-				["value"]="ETH_Speed_100M";
+				["value"]="ETH_SPEED_100M";
 			};
 			[3.000000]={
 				["key"]="__ETH_RXBUFNB__";
@@ -2914,7 +2914,7 @@
 			};
 			[4.000000]={
 				["key"]="__ETH_TXBUFNB__";
-				["value"]="2";
+				["value"]="3";
 			};
 			[5.000000]={
 				["key"]="__ETH_DEVICE__";
@@ -2934,7 +2934,7 @@
 			};
 			[9.000000]={
 				["key"]="__ETH_PHY_ADDRESS__";
-				["value"]="1";
+				["value"]="0";
 			};
 			[10.000000]={
 				["key"]="__ETH_PHY_RESET_DELAY__";
@@ -2946,7 +2946,7 @@
 			};
 			[12.000000]={
 				["key"]="__ETH_PHY_AUTONEGOTIATION__";
-				["value"]="ETH_AutoNegotiation_Disable";
+				["value"]="ETH_AUTONEGOTIATION_ENABLE";
 			};
 		};
 		["arch/stm32f1/gpio_flags.h"]={
@@ -8902,11 +8902,11 @@
 		["arch/stm32f4/eth_flags.h"]={
 			[1.000000]={
 				["key"]="__ETH_CHECKSUM_BY_HARDWARE__";
-				["value"]="_YES_";
+				["value"]="ETH_CHECKSUM_BY_HARDWARE";
 			};
 			[2.000000]={
 				["key"]="__ETH_SPEED__";
-				["value"]="ETH_Speed_100M";
+				["value"]="ETH_SPEED_100M";
 			};
 			[3.000000]={
 				["key"]="__ETH_RXBUFNB__";
@@ -8918,23 +8918,23 @@
 			};
 			[5.000000]={
 				["key"]="__ETH_DEVICE__";
-				["value"]="DP83848";
+				["value"]="LAN8742A";
 			};
 			[6.000000]={
 				["key"]="__ETH_PHY_SR__";
-				["value"]="16";
+				["value"]="31";
 			};
 			[7.000000]={
 				["key"]="__ETH_PHY_SPEED_STATUS_BM__";
-				["value"]="0x0002";
+				["value"]="0x0004";
 			};
 			[8.000000]={
 				["key"]="__ETH_PHY_DUPLEX_STATUS_BM__";
-				["value"]="0x0004";
+				["value"]="0x0010";
 			};
 			[9.000000]={
 				["key"]="__ETH_PHY_ADDRESS__";
-				["value"]="1";
+				["value"]="0";
 			};
 			[10.000000]={
 				["key"]="__ETH_PHY_RESET_DELAY__";
@@ -8946,7 +8946,7 @@
 			};
 			[12.000000]={
 				["key"]="__ETH_PHY_AUTONEGOTIATION__";
-				["value"]="ETH_AutoNegotiation_Disable";
+				["value"]="ETH_AUTONEGOTIATION_DISABLE";
 			};
 		};
 		["arch/stm32f4/fmc_flags.h"]={
@@ -13122,7 +13122,7 @@
 			};
 			[11.000000]={
 				["key"]="__UART_IRQ_PRIORITY__";
-				["value"]="13";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 			};
 		};
 		["arch/stm32f4/wdg_flags.h"]={
@@ -13499,6 +13499,10 @@
 				["value"]="_NO_";
 			};
 			[11.000000]={
+				["key"]="__CPU_RAM1_RAM2_CACHE_DISABLE__";
+				["value"]="_NO_";
+			};
+			[12.000000]={
 				["key"]="__CPU_VTOR_TAB_POSITION__";
 				["value"]="0x00000";
 			};
@@ -13506,11 +13510,11 @@
 		["arch/stm32f7/eth_flags.h"]={
 			[1.000000]={
 				["key"]="__ETH_CHECKSUM_BY_HARDWARE__";
-				["value"]="_YES_";
+				["value"]="ETH_CHECKSUM_BY_HARDWARE";
 			};
 			[2.000000]={
 				["key"]="__ETH_SPEED__";
-				["value"]="ETH_Speed_100M";
+				["value"]="ETH_SPEED_100M";
 			};
 			[3.000000]={
 				["key"]="__ETH_RXBUFNB__";
@@ -13538,7 +13542,7 @@
 			};
 			[9.000000]={
 				["key"]="__ETH_PHY_ADDRESS__";
-				["value"]="1";
+				["value"]="0";
 			};
 			[10.000000]={
 				["key"]="__ETH_PHY_RESET_DELAY__";
@@ -13550,7 +13554,7 @@
 			};
 			[12.000000]={
 				["key"]="__ETH_PHY_AUTONEGOTIATION__";
-				["value"]="ETH_AutoNegotiation_Disable";
+				["value"]="ETH_AUTONEGOTIATION_ENABLE";
 			};
 		};
 		["arch/stm32f7/gpio_flags.h"]={
@@ -22275,6 +22279,10 @@
 			[4.000000]={
 				["key"]="__CPU_OSC_FREQ__";
 				["value"]="8000000";
+			};
+			[5.000000]={
+				["key"]="__CPU_UART_TERM__";
+				["value"]="0";
 			};
 		};
 	};
