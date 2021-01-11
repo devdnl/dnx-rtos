@@ -385,7 +385,7 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         /// @return If format was found then true is returned, otherwise false.
         bool put_float()
         {
-                if (chr == 'f' || chr == 'F') {
+                if (chr == 'f' || chr == 'F' || chr == 'g' || chr == 'G') {
 #if __OS_PRINTF_FLOAT_ENABLE__ == _YES_
                         char result[65];
                         arg_size = !point ? 10 : arg_size;
