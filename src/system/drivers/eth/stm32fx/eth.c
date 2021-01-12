@@ -70,7 +70,7 @@
 #endif
 
 #if CPU_CACHE_ALIGN != ETH_CPU_CACHE_ALIGN
-#error "CPU cache alignements are different!"
+#error "CPU cache alignments are different!"
 #endif
 
 #define DMA_BUFFER_MASK         (CPU_CACHE_ALIGN - 1)
