@@ -49,17 +49,17 @@ this:AddExtraWidget("Void", "VoidGeneral")
 ++*/
 /*--
 this:AddWidget("Combobox", "Hardware checksum")
-this:AddItem("No", "_NO_")
-this:AddItem("Yes", "_YES_")
+this:AddItem("No", "ETH_CHECKSUM_BY_SOFTWARE")
+this:AddItem("Yes", "ETH_CHECKSUM_BY_HARDWARE")
 --*/
-#define __ETH_CHECKSUM_BY_HARDWARE__ _YES_
+#define __ETH_CHECKSUM_BY_HARDWARE__ ETH_CHECKSUM_BY_HARDWARE
 
 /*--
 this:AddWidget("Combobox", "Link speed")
-this:AddItem("10 Mbps", "ETH_Speed_10M")
-this:AddItem("100 Mbps", "ETH_Speed_100M")
+this:AddItem("10 Mbps", "ETH_SPEED_10M")
+this:AddItem("100 Mbps", "ETH_SPEED_100M")
 --*/
-#define __ETH_SPEED__ ETH_Speed_100M
+#define __ETH_SPEED__ ETH_SPEED_100M
 
 /*--
 this:AddWidget("Spinbox", 3, 256, "Number of RX buffers")
@@ -71,7 +71,7 @@ this:SetToolTip("Each buffer is 1524 B long.")
 this:AddWidget("Spinbox", 2, 256, "Number of Tx buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
-#define __ETH_TXBUFNB__ 2
+#define __ETH_TXBUFNB__ 3
 
 /*--
 this:AddExtraWidget("Label", "LabelPHY", "\nPHY", -1, "bold")
@@ -82,13 +82,15 @@ this:AddWidget("Combobox", "Device")
 this:AddItem("DP83848", "DP83848")
 this:AddItem("LAN8700", "LAN8700")
 this:AddItem("STE100P", "STE100P")
+this:AddItem("LAN8742A", "LAN8742A")
 this:SetEvent("clicked",
     function()
         local dev    = this:GetFlagValue("__ETH_DEVICE__")
         local DEVICE = {}
-        DEVICE["DP83848"] = {SR = "16", SPEED_BM = "0x0002", DUPLEX_BM = "0x0004"}
-        DEVICE["LAN8700"] = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
-        DEVICE["STE100P"] = {SR = "19", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
+        DEVICE["DP83848"]  = {SR = "16", SPEED_BM = "0x0002", DUPLEX_BM = "0x0004"}
+        DEVICE["LAN8700"]  = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
+        DEVICE["STE100P"]  = {SR = "19", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
+        DEVICE["LAN8742A"] = {SR = "31", SPEED_BM = "0x0004", DUPLEX_BM = "0x0010"}
 
         this:SetFlagValue("__ETH_PHY_SR__", DEVICE[dev].SR)
         this:SetFlagValue("__ETH_PHY_SPEED_STATUS_BM__", DEVICE[dev].SPEED_BM)
@@ -114,9 +116,9 @@ this:AddWidget("Value")
 #define __ETH_PHY_DUPLEX_STATUS_BM__ 0x0004
 
 /*--
-this:AddWidget("Spinbox", 0, 255, "Address")
+this:AddWidget("Spinbox", 0, 31, "Address")
 --*/
-#define __ETH_PHY_ADDRESS__ 1
+#define __ETH_PHY_ADDRESS__ 0
 
 /*--
 this:AddWidget("Spinbox", 100, 2000, "Reset delay [ms]")
@@ -130,12 +132,12 @@ this:AddWidget("Spinbox", 100, 2000, "Setup delay [ms]")
 
 /*--
 this:AddWidget("Combobox", "Auto negotiation")
-this:AddItem("Disable", "ETH_AutoNegotiation_Disable")
-this:AddItem("Enable", "ETH_AutoNegotiation_Enable")
+this:AddItem("Disable", "ETH_AUTONEGOTIATION_DISABLE")
+this:AddItem("Enable", "ETH_AUTONEGOTIATION_ENABLE")
 this:SetToolTip("If auto negotiation is enabled then link should be connected to PHY. "..
                 "If link is not connected then module does not initialize.")
 --*/
-#define __ETH_PHY_AUTONEGOTIATION__ ETH_AutoNegotiation_Disable
+#define __ETH_PHY_AUTONEGOTIATION__ ETH_AUTONEGOTIATION_ENABLE
 
 #endif /* _ETH_FLAGS_H_ */
 /*==============================================================================

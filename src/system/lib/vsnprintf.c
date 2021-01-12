@@ -129,6 +129,7 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         bool   loop_break   = false;
         bool   long_long    = false;
         bool   arg_size_str = false;
+        bool   point        = false;
 
         /// @brief  Function break loop
         /// @param  None
@@ -190,6 +191,8 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
                 // check argument size modifier
                 if (chr == '.') {
+                        point = true;
+
                         if (!get_format_char()) {
                                 return false;
                         }
@@ -382,12 +385,13 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         /// @return If format was found then true is returned, otherwise false.
         bool put_float()
         {
-                if (chr == 'f' || chr == 'F') {
+                if (chr == 'f' || chr == 'F' || chr == 'g' || chr == 'G') {
 #if __OS_PRINTF_FLOAT_ENABLE__ == _YES_
                         char result[65];
-                        int  prec = (arg_size <= 0) ? 0 : arg_size;
-                        if (prec) {
-                                int len = _dtoa(va_arg(arg, double), result, prec, sizeof(result));
+                        arg_size = !point ? 10 : arg_size;
+                        if (arg_size > 0) {
+                                int prec = (arg_size <= 0) ? 10 : arg_size;
+                                int len  = _dtoa(va_arg(arg, double), result, prec, sizeof(result));
                                 for (int i = 0; i < len; i++) {
                                         if (!put_char(result[i])) {
                                                 break;

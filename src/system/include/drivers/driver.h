@@ -62,22 +62,28 @@ extern "C" {
 
 #ifndef DOXYGEN /* Doxygen documentation in sysfunc.h */
 #undef  sys_zalloc
-#define sys_zalloc(size_t__size, void__ppmem)                           _kzalloc(_MM_MOD, size_t__size, NULL, _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, void__ppmem, _module_get_ID(_module_name_))
+#define sys_zalloc(size_t__size, void__ppmem)\
+        _kzalloc(_MM_MOD, size_t__size, NULL, _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  sys_malloc
-#define sys_malloc(size_t__size, void__ppmem)                           _kmalloc(_MM_MOD, size_t__size, NULL, _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, void__ppmem, _module_get_ID(_module_name_))
+#define sys_malloc(size_t__size, void__ppmem)\
+        _kmalloc(_MM_MOD, size_t__size, NULL, _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  sys_zalloc2
-#define sys_zalloc2(size_t__size, prefreg, dma_capable, void__ppmem)    _kzalloc(_MM_MOD, size_t__size, prefreg, dma_capable, void__ppmem, _module_get_ID(_module_name_))
+#define sys_zalloc2(size_t__size, prefreg, required, required_mask, void__ppmem)\
+        _kzalloc(_MM_MOD, size_t__size, prefreg, required, required_mask, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  sys_malloc2
-#define sys_malloc2(size_t__size, prefreg, dma_capable, void__ppmem)    _kzalloc(_MM_MOD, size_t__size, prefreg, dma_capable, void__ppmem, _module_get_ID(_module_name_))
+#define sys_malloc2(size_t__size, prefreg, required, required_mask, void__ppmem)\
+        _kzalloc(_MM_MOD, size_t__size, prefreg, required, required_mask, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  sys_free
-#define sys_free(void__ppmem)                                           _kfree(_MM_MOD, void__ppmem, _module_get_ID(_module_name_))
+#define sys_free(void__ppmem)\
+        _kfree(_MM_MOD, void__ppmem, _module_get_ID(_module_name_))
 
 #undef sys_get_driver_instance
-#define sys_module_get_instance(u8_t__major, u8_t__minor, void_pp__mem) _module_get_instance(_module_name_, u8_t__major, u8_t__minor, void_pp__mem)
+#define sys_module_get_instance(u8_t__major, u8_t__minor, void_pp__mem)\
+        _module_get_instance(_module_name_, u8_t__major, u8_t__minor, void_pp__mem)
 
 #undef  sys_llist_create
 #define sys_llist_create(llist_cmp_functor_t__functor, llist_obj_dtor_t__obj_dtor, llist_t__pplist)\

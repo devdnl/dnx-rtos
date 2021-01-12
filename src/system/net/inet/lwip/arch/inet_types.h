@@ -42,6 +42,7 @@ Detailed Doxygen description.
 #include <stdbool.h>
 #include "kernel/sysfunc.h"
 #include "lwip/netif.h"
+#include "drivers/ioctl_requests.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,6 +67,7 @@ typedef struct {
         bool            ready:1;
         bool            disconnected:1;
         bool            configured:1;
+        u8_t            frame[ETH_MAX_PACKET_SIZE];
 } inet_t;
 
 /*==============================================================================

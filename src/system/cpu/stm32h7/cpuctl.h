@@ -76,10 +76,13 @@ extern void  _cpuctl_init_CPU_load_counter      (void);
 extern u32_t _cpuctl_get_CPU_load_counter_delta (void);
 #endif
 
-/* cache mangement functions */
-extern void  _cpuctl_clean_dcache               (void);
-extern void  _cpuctl_clean_invalidate_dcache    (void);
-extern void  _cpuctl_invalidate_dcache          (void);
+/* cache management functions */
+extern void  _cpuctl_clean_dcache                       (void);
+extern void  _cpuctl_clean_invalidate_dcache            (void);
+extern void  _cpuctl_invalidate_dcache                  (void);
+extern void  _cpuctl_invalidate_dcache_by_addr          (u32_t *addr, u32_t size);
+extern void  _cpuctl_clean_dcache_by_addr               (u32_t *addr, u32_t size);
+extern void  _cpuctl_clean_invalidate_dcache_by_addr    (u32_t *addr, u32_t size);
 
 #ifdef __cplusplus
 }

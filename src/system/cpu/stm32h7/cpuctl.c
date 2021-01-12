@@ -173,25 +173,27 @@ void _cpuctl_init(void)
         _cpuctl_init_CPU_load_counter();
         #endif
 
-        _mm_register_region(&axisram, AXISRAM_HEAP_START, AXISRAM_HEAP_SIZE, true, "AXISRAM");
+        u32_t dma_cache = _MM_FLAG__DMA_CAPABLE | _MM_FLAG__CACHEABLE;
+
+        _mm_register_region(&axisram, AXISRAM_HEAP_START, AXISRAM_HEAP_SIZE, dma_cache, "AXISRAM");
 
         if (DTCM_SIZE > 0) {
-                _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, true, _CPUCTL_FAST_MEM);
+                _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, _MM_FLAG__DMA_CAPABLE, _CPUCTL_FAST_MEM);
         }
 
         if (SRAM1_SIZE > 0) {
                 SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM1EN);
-                _mm_register_region(&sram1, SRAM1_START, SRAM1_SIZE, true, "SRAM1");
+                _mm_register_region(&sram1, SRAM1_START, SRAM1_SIZE, dma_cache, "SRAM1");
         }
 
         if (SRAM2_SIZE > 0) {
                 SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM2EN);
-                _mm_register_region(&sram2, SRAM2_START, SRAM2_SIZE, true, "SRAM2");
+                _mm_register_region(&sram2, SRAM2_START, SRAM2_SIZE, dma_cache, "SRAM2");
         }
 
         if (SRAM3_SIZE > 0) {
                 SET_BIT(RCC->AHB2ENR, RCC_AHB2ENR_SRAM3EN);
-                _mm_register_region(&sram3, SRAM3_START, SRAM3_SIZE, true, "SRAM3");
+                _mm_register_region(&sram3, SRAM3_START, SRAM3_SIZE, dma_cache, "SRAM3");
         }
 
         if (SRAM4_SIZE > 0) {
@@ -200,7 +202,7 @@ void _cpuctl_init(void)
                  * implicitly allocated to the CPU. As a result, there is no enable bit allowing
                  * the CPU to allocate these memories.
                  */
-                _mm_register_region(&sram4, SRAM4_START, SRAM4_SIZE, true, "SRAM4");
+                _mm_register_region(&sram4, SRAM4_START, SRAM4_SIZE, dma_cache, "SRAM4");
         }
 
         if (__CPU_ICACHE_ENABLE__) {
@@ -513,6 +515,51 @@ void _cpuctl_invalidate_dcache(void)
 {
 #if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
         SCB_InvalidateDCache();
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function invalidate/reset DCACHE by address.
+ *
+ * @param  addr         address (must be aligned to 32 bytes)
+ * @param  size         size in bytes
+ */
+//==============================================================================
+void _cpuctl_invalidate_dcache_by_addr(u32_t *addr, u32_t size)
+{
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+        SCB_InvalidateDCache_by_Addr(addr, size);
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function clean/flush DCACHE by address.
+ *
+ * @param  addr         address (must be aligned to 32 bytes)
+ * @param  size         size in bytes
+ */
+//==============================================================================
+void _cpuctl_clean_dcache_by_addr(u32_t *addr, u32_t size)
+{
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+        SCB_CleanDCache_by_Addr(addr, size);
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function clean/flush and invalidate/reset DCACHE by address.
+ *
+ * @param  addr         address (must be aligned to 32 bytes)
+ * @param  size         size in bytes
+ */
+//==============================================================================
+void _cpuctl_clean_invalidate_dcache_by_addr(u32_t *addr, u32_t size)
+{
+#if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__
+        SCB_CleanInvalidateDCache_by_Addr(addr, size);
 #endif
 }
 

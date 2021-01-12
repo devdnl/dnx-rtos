@@ -897,7 +897,7 @@ typedef struct
   __IO uint32_t DMACHRDR;
   __IO uint32_t DMACHTBAR;
   __IO uint32_t DMACHRBAR;
-} ETH_t;
+} ETH_TypeDef;
 
 /**
   * @brief External Interrupt/Event Controller
@@ -1467,7 +1467,7 @@ typedef struct
 #define CRC                 ((CRC_TypeDef *) CRC_BASE)
 #define FLASH               ((FLASH_t *) FLASH_R_BASE)
 #define OB                  ((OB_t *) OB_BASE)
-#define ETH                 ((ETH_t *) ETH_BASE)
+#define ETH                 ((ETH_TypeDef *) ETH_BASE)
 #define FSMC_Bank1          ((FSMC_Bank1_t *) FSMC_Bank1_R_BASE)
 #define FSMC_Bank1E         ((FSMC_Bank1E_t *) FSMC_Bank1E_R_BASE)
 #define FSMC_Bank2          ((FSMC_Bank2_t *) FSMC_Bank2_R_BASE)
@@ -7958,6 +7958,12 @@ typedef struct
   #define ETH_MACMIIAR_CR_Div42   ((uint32_t)0x00000000)  /* HCLK:60-72 MHz; MDC clock= HCLK/42 */
   #define ETH_MACMIIAR_CR_Div16   ((uint32_t)0x00000008)  /* HCLK:20-35 MHz; MDC clock= HCLK/16 */
   #define ETH_MACMIIAR_CR_Div26   ((uint32_t)0x0000000C)  /* HCLK:35-60 MHz; MDC clock= HCLK/26 */
+  #define ETH_MACMIIAR_CR_Div62_Pos  (2U)
+  #define ETH_MACMIIAR_CR_Div62_Msk  (0x1U << ETH_MACMIIAR_CR_Div62_Pos) /*!< 0x00000004 */
+  #define ETH_MACMIIAR_CR_Div62      ETH_MACMIIAR_CR_Div62_Msk /* HCLK:100-150 MHz; MDC clock= HCLK/62  */
+  #define ETH_MACMIIAR_CR_Div102_Pos (4U)
+  #define ETH_MACMIIAR_CR_Div102_Msk (0x1U << ETH_MACMIIAR_CR_Div102_Pos) /*!< 0x00000010 */
+  #define ETH_MACMIIAR_CR_Div102     ETH_MACMIIAR_CR_Div102_Msk /* HCLK:150-168 MHz; MDC clock= HCLK/102 */
 #define ETH_MACMIIAR_MW   ((uint32_t)0x00000002)  /* MII write */
 #define ETH_MACMIIAR_MB   ((uint32_t)0x00000001)  /* MII busy */
 
@@ -8295,6 +8301,7 @@ typedef struct
 #define ETH_DMAMFBOCR_MFA    ((uint32_t)0x0FFE0000)  /* Number of frames missed by the application */
 #define ETH_DMAMFBOCR_OMFC   ((uint32_t)0x00010000)  /* Overflow bit for missed frame counter */
 #define ETH_DMAMFBOCR_MFC    ((uint32_t)0x0000FFFF)  /* Number of frames missed by the controller */
+#define ETH_DMAMFBOCR_MFC_Pos (0U)
 
 /* Bit definition for Ethernet DMA Current Host Transmit Descriptor Register */
 #define ETH_DMACHTDR_HTDAP   ((uint32_t)0xFFFFFFFF)  /* Host transmit descriptor address pointer */
