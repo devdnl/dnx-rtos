@@ -39,12 +39,13 @@
 #include "stm32f4xx.h"
 #elif defined(ARCH_stm32f7)
 #include "stm32f7xx.h"
-// TODO cache clear/invalidate
 #endif
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define DEBUG                   0
+
 #define MUTEX_TIMEOUT           1000
 #define PHY_BSR_LINK_STATUS     (1 << 2)
 
@@ -53,17 +54,35 @@
 #define RCC_AHBxENR_ETHMACRXEN   RCC_AHBENR_ETHMACRXEN
 #define RCC_AHBxENR_ETHMACTXEN   RCC_AHBENR_ETHMACTXEN
 #define RCC_AHBxENR_ETHMACEN     RCC_AHBENR_ETHMACEN
+#define CPU_CACHE_ALIGN          1
 #elif defined(ARCH_stm32f4)
 #define AHBxENR                  AHB1ENR
 #define RCC_AHBxENR_ETHMACRXEN   RCC_AHB1ENR_ETHMACRXEN
 #define RCC_AHBxENR_ETHMACTXEN   RCC_AHB1ENR_ETHMACTXEN
 #define RCC_AHBxENR_ETHMACEN     RCC_AHB1ENR_ETHMACEN
+#define CPU_CACHE_ALIGN          1
 #elif defined(ARCH_stm32f7)
 #define AHBxENR                  AHB1ENR
 #define RCC_AHBxENR_ETHMACRXEN   RCC_AHB1ENR_ETHMACRXEN
 #define RCC_AHBxENR_ETHMACTXEN   RCC_AHB1ENR_ETHMACTXEN
 #define RCC_AHBxENR_ETHMACEN     RCC_AHB1ENR_ETHMACEN
+#define CPU_CACHE_ALIGN          32
 #endif
+
+#if CPU_CACHE_ALIGN != ETH_CPU_CACHE_ALIGN
+#error "CPU cache alignements are different!"
+#endif
+
+#define DMA_BUFFER_MASK         (CPU_CACHE_ALIGN - 1)
+#define DMA_ALIGN_UP(n)         (((n) + DMA_BUFFER_MASK) & ~DMA_BUFFER_MASK)
+#define DMA_ALIGN_DOWN(n)       ((n) & ~DMA_BUFFER_MASK)
+
+#define RX_DESC_ARRAY_SIZE      DMA_ALIGN_UP(sizeof(ETH_DMADescTypeDef) * __ETH_RXBUFNB__)
+#define TX_DESC_ARRAY_SIZE      DMA_ALIGN_UP(sizeof(ETH_DMADescTypeDef) * __ETH_TXBUFNB__)
+#define RX_BUF_ARRAY_SIZE       DMA_ALIGN_UP(ETH_RX_BUF_SIZE_ALIGN * __ETH_RXBUFNB__)
+#define TX_BUF_ARRAY_SIZE       DMA_ALIGN_UP(ETH_TX_BUF_SIZE_ALIGN * __ETH_TXBUFNB__)
+
+#define DESCS_BUFFS_SIZE        (RX_DESC_ARRAY_SIZE + TX_DESC_ARRAY_SIZE + RX_BUF_ARRAY_SIZE + TX_BUF_ARRAY_SIZE + CPU_CACHE_ALIGN)
 
 /*==============================================================================
   Local object types
@@ -71,18 +90,18 @@
 struct eth {
         sem_t              *rx_semaphore;
         mutex_t            *mutex;
+        ETH_DMADescTypeDef *DMA_rx_desc;
+        ETH_DMADescTypeDef *DMA_tx_desc;
+        uint8_t            *rx_buff;
+        uint8_t            *tx_buff;
         ETH_HandleTypeDef   eth;
-        ETH_DMADescTypeDef  DMA_rx_desc[__ETH_RXBUFNB__];
-        ETH_DMADescTypeDef  DMA_tx_desc[__ETH_TXBUFNB__];
-        uint8_t             rx_buff[__ETH_RXBUFNB__][ETH_RX_BUF_SIZE];
-        uint8_t             tx_buff[__ETH_TXBUFNB__][ETH_TX_BUF_SIZE];
         uint8_t             MAC_addr[6];
         bool                irq_yield;
         bool                configured;
         bool                run;
         u32_t               rx_timeout_ms;
         u32_t               tx_timeout_ms;
-
+        u8_t                descs_and_buffs[DESCS_BUFFS_SIZE];
         struct {
                 u32_t rx_packets;
                 u32_t tx_packets;
@@ -155,6 +174,29 @@ API_MOD_INIT(ETH, void **device_handle, u8_t major, u8_t minor, const void *conf
 
                         err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mutex);
                         if (!err) {
+
+                                /*
+                                 * Each DMA description is aligned to DMA cache line.
+                                 */
+                                hdl->DMA_rx_desc = (void*)DMA_ALIGN_DOWN((u32_t)hdl->descs_and_buffs + CPU_CACHE_ALIGN - 1);
+                                hdl->DMA_tx_desc = (void*)DMA_ALIGN_DOWN((u32_t)hdl->descs_and_buffs + RX_DESC_ARRAY_SIZE + CPU_CACHE_ALIGN - 1);
+
+                                /*
+                                 * Each RX/TX buffer (even for single packet) is aligned to
+                                 * DMA cache line.
+                                 */
+                                hdl->rx_buff = (void*)DMA_ALIGN_DOWN((u32_t)hdl->DMA_tx_desc + TX_DESC_ARRAY_SIZE + CPU_CACHE_ALIGN - 1);
+                                hdl->tx_buff = (void*)DMA_ALIGN_DOWN((u32_t)hdl->rx_buff + RX_BUF_ARRAY_SIZE + CPU_CACHE_ALIGN - 1);
+
+                                #if DEBUG
+                                printk("padding             : %u", (u32_t)hdl->DMA_rx_desc - (u32_t)hdl->descs_and_buffs);
+                                printk("hdl->descs_and_buffs: %p %u", hdl->descs_and_buffs, sizeof(hdl->descs_and_buffs));
+                                printk("hdl->DMA_rx_desc    : %p %u", hdl->DMA_rx_desc, RX_DESC_ARRAY_SIZE);
+                                printk("hdl->DMA_tx_desc    : %p %u", hdl->DMA_tx_desc, TX_DESC_ARRAY_SIZE);
+                                printk("hdl->rx_buff        : %p %u", hdl->rx_buff, RX_BUF_ARRAY_SIZE);
+                                printk("hdl->tx_buff        : %p %u", hdl->tx_buff, TX_BUF_ARRAY_SIZE);
+                                #endif
+
                                 if (config) {
                                         err = eth_configure(hdl, config);
                                 }
@@ -482,11 +524,11 @@ static int eth_configure(struct eth *hdl, const ETH_config_t *conf)
                         if (!err) {
                                 /* Initialize Tx Descriptors list: Chain Mode */
                                 HAL_ETH_DMATxDescListInit(&hdl->eth, hdl->DMA_tx_desc,
-                                                          &hdl->tx_buff[0][0], __ETH_TXBUFNB__);
+                                                          hdl->tx_buff, __ETH_TXBUFNB__);
 
                                 /* Initialize Rx Descriptors list: Chain Mode  */
                                 HAL_ETH_DMARxDescListInit(&hdl->eth, hdl->DMA_rx_desc,
-                                                          &hdl->rx_buff[0][0], __ETH_RXBUFNB__);
+                                                          hdl->rx_buff, __ETH_RXBUFNB__);
                                 eth->configured = true;
                         }
                 }
@@ -685,7 +727,8 @@ static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
         if (!err) {
 
                 __IO ETH_DMADescTypeDef *DmaTxDesc = hdl->eth.TxDesc;
-                uint8_t *buffer = (uint8_t*) (DmaTxDesc->Buffer1Addr);
+
+                _cpuctl_invalidate_dcache_by_addr((uint32_t*)DmaTxDesc, sizeof(ETH_DMADescTypeDef));
 
                 u64_t tref = sys_get_uptime_ms();
                 while ((DmaTxDesc->Status & ETH_DMATXDESC_OWN) != (uint32_t) RESET) {
@@ -694,10 +737,14 @@ static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
                                 err = ETIME;
                                 goto finish;
                         }
+                        _cpuctl_invalidate_dcache_by_addr((uint32_t*)DmaTxDesc, sizeof(ETH_DMADescTypeDef));
                 }
 
                 /* Copy the remaining bytes */
+                uint8_t *buffer = (uint8_t*) (DmaTxDesc->Buffer1Addr);
                 memcpy(buffer, pkt->payload, pkt->length);
+
+                _cpuctl_clean_dcache_by_addr((uint32_t*)buffer, pkt->length);
 
                 /* Prepare transmit descriptors to give to DMA */
                 err = HAL_ETH_TransmitFrame(&hdl->eth, pkt->length);
@@ -756,6 +803,7 @@ static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
 
                         if (len > 0) {
                                 pkt->length = len;
+                                _cpuctl_invalidate_dcache_by_addr((uint32_t*)buffer, len);
                                 memcpy(pkt->payload, buffer, min(pkt->length, len));
                         }
 
@@ -765,6 +813,7 @@ static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
                         /* Set Own bit in Rx descriptors: gives the buffers back to DMA */
                         for (u32_t i = 0; i < hdl->eth.RxFrameInfos.SegCount; i++) {
                                 dmarxdesc->Status |= ETH_DMARXDESC_OWN;
+                                _cpuctl_clean_dcache_by_addr((uint32_t*)dmarxdesc, sizeof(ETH_DMADescTypeDef));
                                 dmarxdesc = (ETH_DMADescTypeDef*)(dmarxdesc->Buffer2NextDescAddr);
                         }
 

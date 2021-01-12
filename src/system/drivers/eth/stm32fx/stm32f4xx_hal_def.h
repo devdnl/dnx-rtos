@@ -43,11 +43,13 @@ Detailed Doxygen description.
 
 #if defined(ARCH_stm32f1)
 #include "stm32f10x.h"
+#define ETH_CPU_CACHE_ALIGN 1
 #elif defined(ARCH_stm32f4)
 #include "stm32f4xx.h"
+#define ETH_CPU_CACHE_ALIGN 1
 #elif defined(ARCH_stm32f7)
 #include "stm32f7xx.h"
-// TODO cache clear/invalidate
+#define ETH_CPU_CACHE_ALIGN 32
 #endif
 
 #ifdef __cplusplus
@@ -68,6 +70,11 @@ extern "C" {
 /* Definition of the Ethernet driver buffers size and count */
 #define ETH_RX_BUF_SIZE                 ETH_MAX_PACKET_SIZE /* buffer size for receive               */
 #define ETH_TX_BUF_SIZE                 ETH_MAX_PACKET_SIZE /* buffer size for transmit              */
+
+/* RX & TX buffers alignment to CPU cache lines (size align) */
+#define ETH_ALIGN_MASK                  (ETH_CPU_CACHE_ALIGN - 1)
+#define ETH_RX_BUF_SIZE_ALIGN           ((ETH_MAX_PACKET_SIZE + ETH_ALIGN_MASK) & ~ETH_ALIGN_MASK)
+#define ETH_TX_BUF_SIZE_ALIGN           ((ETH_MAX_PACKET_SIZE + ETH_ALIGN_MASK) & ~ETH_ALIGN_MASK)
 
 /* Section 2: PHY configuration section */
 /* LAN8742A PHY Address*/

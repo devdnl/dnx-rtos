@@ -549,7 +549,7 @@ HAL_StatusTypeDef HAL_ETH_DMATxDescListInit(ETH_HandleTypeDef *heth, ETH_DMADesc
     dmatxdesc->Status = ETH_DMATXDESC_TCH;
 
     /* Set Buffer1 address pointer */
-    dmatxdesc->Buffer1Addr = (uint32_t)(&TxBuff[i*ETH_TX_BUF_SIZE]);
+    dmatxdesc->Buffer1Addr = (uint32_t)(&TxBuff[i*ETH_TX_BUF_SIZE_ALIGN]);
 
     if ((heth->Init).ChecksumMode == ETH_CHECKSUM_BY_HARDWARE)
     {
@@ -619,7 +619,7 @@ HAL_StatusTypeDef HAL_ETH_DMARxDescListInit(ETH_HandleTypeDef *heth, ETH_DMADesc
     DMARxDesc->ControlBufferSize = ETH_DMARXDESC_RCH | ETH_RX_BUF_SIZE;
 
     /* Set Buffer1 address pointer */
-    DMARxDesc->Buffer1Addr = (uint32_t)(&RxBuff[i*ETH_RX_BUF_SIZE]);
+    DMARxDesc->Buffer1Addr = (uint32_t)(&RxBuff[i*ETH_RX_BUF_SIZE_ALIGN]);
 
     if((heth->Init).RxMode == ETH_RXINTERRUPT_MODE)
     {
@@ -907,6 +907,8 @@ HAL_StatusTypeDef HAL_ETH_TransmitFrame(ETH_HandleTypeDef *heth, uint32_t FrameL
     return  HAL_ERROR;
   }
 
+  _cpuctl_invalidate_dcache_by_addr((uint32_t*)heth->TxDesc, sizeof(ETH_DMADescTypeDef));
+
   /* Check if the descriptor is owned by the ETHERNET DMA (when set) or CPU (when reset) */
   if(((heth->TxDesc)->Status & ETH_DMATXDESC_OWN) != (uint32_t)RESET)
   {
@@ -940,6 +942,8 @@ HAL_StatusTypeDef HAL_ETH_TransmitFrame(ETH_HandleTypeDef *heth, uint32_t FrameL
     heth->TxDesc->ControlBufferSize = (FrameLength & ETH_DMATXDESC_TBS1);
     /* Set Own bit of the Tx descriptor Status: gives the buffer back to ETHERNET DMA */
     heth->TxDesc->Status |= ETH_DMATXDESC_OWN;
+    _cpuctl_clean_dcache_by_addr((uint32_t*)heth->TxDesc, sizeof(ETH_DMADescTypeDef));
+
     /* Point to next descriptor */
     heth->TxDesc= (ETH_DMADescTypeDef *)(heth->TxDesc->Buffer2NextDescAddr);
   }
@@ -963,14 +967,17 @@ HAL_StatusTypeDef HAL_ETH_TransmitFrame(ETH_HandleTypeDef *heth, uint32_t FrameL
       {
         /* Setting the last segment bit */
         heth->TxDesc->Status |= ETH_DMATXDESC_LS;
-        size = FrameLength - (bufcount-1)*ETH_TX_BUF_SIZE;
+        size = FrameLength - (bufcount-1)*ETH_TX_BUF_SIZE_ALIGN;
         heth->TxDesc->ControlBufferSize = (size & ETH_DMATXDESC_TBS1);
       }
 
       /* Set Own bit of the Tx descriptor Status: gives the buffer back to ETHERNET DMA */
       heth->TxDesc->Status |= ETH_DMATXDESC_OWN;
+      _cpuctl_clean_dcache_by_addr((uint32_t*)heth->TxDesc, sizeof(ETH_DMADescTypeDef));
+
       /* point to next descriptor */
       heth->TxDesc = (ETH_DMADescTypeDef *)(heth->TxDesc->Buffer2NextDescAddr);
+      _cpuctl_invalidate_dcache_by_addr((uint32_t*)heth->TxDesc, sizeof(ETH_DMADescTypeDef));
     }
   }
 
@@ -1091,6 +1098,8 @@ HAL_StatusTypeDef HAL_ETH_GetReceivedFrame_IT(ETH_HandleTypeDef *heth)
   /* Set ETH HAL State to BUSY */
   heth->State = HAL_ETH_STATE_BUSY;
 
+  _cpuctl_invalidate_dcache_by_addr((uint32_t*)heth->RxDesc, sizeof(ETH_DMADescTypeDef));
+
   /* Scan descriptors owned by CPU */
   while (((heth->RxDesc->Status & ETH_DMARXDESC_OWN) == (uint32_t)RESET) && (descriptorscancounter < ETH_RXBUFNB))
   {
@@ -1148,6 +1157,8 @@ HAL_StatusTypeDef HAL_ETH_GetReceivedFrame_IT(ETH_HandleTypeDef *heth)
       /* Return function status */
       return HAL_OK;
     }
+
+    _cpuctl_invalidate_dcache_by_addr((uint32_t*)heth->RxDesc, sizeof(ETH_DMADescTypeDef));
   }
 
   /* Set HAL State to Ready */

@@ -60,6 +60,9 @@ extern "C" {
 #define _cpuctl_clean_dcache()
 #define _cpuctl_clean_invalidate_dcache()
 #define _cpuctl_invalidate_dcache()
+#define _cpuctl_invalidate_dcache_by_addr(...)
+#define _cpuctl_clean_dcache_by_addr(...)
+#define _cpuctl_clean_invalidate_dcache_by_addr(...)
 
 /*==============================================================================
   Exported types, enums definitions
