@@ -1485,7 +1485,8 @@ static int get_path_FS(const char *path, size_t len, int *position, FS_entry_t *
         int pos = 0;
 
         _llist_foreach(FS_entry_t*, entry, VFS.mnt_list) {
-                if (strncmp(path, entry->mount_point, len) == 0) {
+                if (  (len >= strlen(entry->mount_point))
+                   && (strncmp(path, entry->mount_point, len) == 0) ) {
                         if (position) {
                                 *position = pos;
                         }
