@@ -542,7 +542,7 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
         } else {
                 /*
                  * Subaddress is disabled, I2C will receive data directly.
-                 * Swtich peripheral to receive mode.
+                 * Switch peripheral to receive mode.
                  */
                 SET_BIT(i2c->CR1, I2C_CR1_ERRIE  | I2C_CR1_TCIE | I2C_CR1_STOPIE
                                 | I2C_CR1_NACKIE | I2C_CR1_RXIE);
@@ -874,10 +874,6 @@ static void IRQ_EV_handler(u8_t major)
         I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
         u16_t  ISR = i2c->ISR;
 
-        if (major == 1) {
-                __asm volatile("nop");
-        }
-
         /*
          * Handle slave NACK response.
          */
@@ -949,7 +945,7 @@ static void IRQ_EV_handler(u8_t major)
                 if (_I2C[major]->restart_receive) {
                         /*
                          * Restart-receive operation requested (after subaddress
-                         * send).
+                         * sent).
                          */
                         _I2C[major]->restart_receive = false;
                         CLEAR_BIT(i2c->CR1, I2C_CR1_TXIE);
@@ -962,6 +958,9 @@ static void IRQ_EV_handler(u8_t major)
                         } else {
                                 CLEAR_BIT(i2c->CR2, I2C_CR2_RELOAD);
                         }
+
+                        CLEAR_BIT(i2c->CR2, I2C_CR2_NBYTES);
+                        SET_BIT(i2c->CR2, (min(MAX_TRANSFER_SIZE, nbytes) << I2C_CR2_NBYTES_Pos) & I2C_CR2_NBYTES);
 
                         SET_BIT(i2c->CR2, I2C_CR2_START);
                 } else {

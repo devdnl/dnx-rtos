@@ -307,13 +307,13 @@ API_MOD_READ(I2C,
                         err = _I2C_LLD__slave_receive(hdl, dst, count, rdcnt);
 
                 } else {
-                        if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
-                                err = _I2C_LLD__master_start(hdl);
-                                if (err) {
-                                        printk("I2C%d:%d start error", hdl->major, hdl->minor, err);
-                                        goto error;
-                                }
+                        err = _I2C_LLD__master_start(hdl);
+                        if (err) {
+                                printk("I2C%d:%d start error", hdl->major, hdl->minor, err);
+                                goto error;
+                        }
 
+                        if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                                 err = _I2C_LLD__master_send_address(hdl, true, count);
                                 if (err) {
                                         printk("I2C%d:%d address %Xh error",
@@ -326,12 +326,12 @@ API_MOD_READ(I2C,
                                         printk("I2C%d:%d subaddress error", hdl->major, hdl->minor);
                                         goto error;
                                 }
-                        }
 
-                        err = _I2C_LLD__master_repeat_start(hdl);
-                        if (err) {
-                                printk("I2C%d:%d repeat start error", hdl->major, hdl->minor);
-                                goto error;
+                                err = _I2C_LLD__master_repeat_start(hdl);
+                                if (err) {
+                                        printk("I2C%d:%d repeat start error", hdl->major, hdl->minor);
+                                        goto error;
+                                }
                         }
 
                         err = _I2C_LLD__master_send_address(hdl, false, count);
