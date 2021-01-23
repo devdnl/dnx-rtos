@@ -174,10 +174,10 @@ typedef struct {
 
 /** USERSPACE: average CPU load */
 typedef struct {
-        u16_t avg1sec;                  //!< average CPU laod within 1 second (1% = 10)
-        u16_t avg1min;                  //!< average CPU load within 1 minute (1% = 10)
-        u16_t avg5min;                  //!< average CPU load within 5 minutes (1% = 10)
-        u16_t avg15min;                 //!< average CPU load within 15 minutes (1% = 10)
+        u32_t avg1sec;                  //!< average CPU laod within 1 second (1% = 10)
+        u32_t avg1min;                  //!< average CPU load within 1 minute (1% = 10)
+        u32_t avg5min;                  //!< average CPU load within 5 minutes (1% = 10)
+        u32_t avg15min;                 //!< average CPU load within 15 minutes (1% = 10)
 } avg_CPU_load_t;
 
 /*==============================================================================

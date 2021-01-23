@@ -719,52 +719,57 @@ static int eth_flush(struct eth *hdl)
 //==============================================================================
 static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
 {
-        if (not hdl->run) {
-                return EPERM;
-        }
+        int err = hdl->run ? ESUCC : EPERM;
 
-        int err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT);
-        if (!err) {
+        u64_t tref = sys_get_uptime_ms();
 
-                __IO ETH_DMADescTypeDef *DmaTxDesc = hdl->eth.TxDesc;
+        while (true) {
+                err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT);
+                if (!err) {
 
-                _cpuctl_invalidate_dcache_by_addr((uint32_t*)DmaTxDesc, sizeof(ETH_DMADescTypeDef));
+                        __IO ETH_DMADescTypeDef *DmaTxDesc = hdl->eth.TxDesc;
 
-                u64_t tref = sys_get_uptime_ms();
-                while ((DmaTxDesc->Status & ETH_DMATXDESC_OWN) != (uint32_t) RESET) {
-                        sys_sleep_ms(1);
-                        if (sys_get_uptime_ms() - tref >= hdl->tx_timeout_ms) {
-                                err = ETIME;
-                                goto finish;
-                        }
                         _cpuctl_invalidate_dcache_by_addr((uint32_t*)DmaTxDesc, sizeof(ETH_DMADescTypeDef));
+
+                        if ((DmaTxDesc->Status & ETH_DMATXDESC_OWN) != (uint32_t) RESET) {
+                                sys_mutex_unlock(hdl->mutex);
+
+                                if (sys_get_uptime_ms() - tref >= hdl->tx_timeout_ms) {
+                                        err = ETIME;
+                                        break;
+                                }
+
+                                sys_sleep_ms(10);
+                                continue;
+                        }
+
+                        /* Copy the remaining bytes */
+                        uint8_t *buffer = (uint8_t*) (DmaTxDesc->Buffer1Addr);
+                        memcpy(buffer, pkt->payload, pkt->length);
+
+                        _cpuctl_clean_dcache_by_addr((uint32_t*)buffer, pkt->length);
+
+                        /* Prepare transmit descriptors to give to DMA */
+                        err = HAL_ETH_TransmitFrame(&hdl->eth, pkt->length);
+
+                        /* When Transmit Underflow flag is set, clear it and issue a Transmit Poll Demand to resume transmission */
+                        if ((hdl->eth.Instance->DMASR & ETH_DMASR_TUS) != (uint32_t) RESET) {
+                                /* Clear TUS ETHERNET DMA flag */
+                                hdl->eth.Instance->DMASR = ETH_DMASR_TUS;
+
+                                /* Resume DMA transmission*/
+                                hdl->eth.Instance->DMATPDR = 0;
+                        }
+
+                        /* update statistics */
+                        update_dropped_rx_frames(hdl);
+                        hdl->stats.tx_packets++;
+                        hdl->stats.tx_bytes += pkt->length;
+
+                        sys_mutex_unlock(hdl->mutex);
                 }
 
-                /* Copy the remaining bytes */
-                uint8_t *buffer = (uint8_t*) (DmaTxDesc->Buffer1Addr);
-                memcpy(buffer, pkt->payload, pkt->length);
-
-                _cpuctl_clean_dcache_by_addr((uint32_t*)buffer, pkt->length);
-
-                /* Prepare transmit descriptors to give to DMA */
-                err = HAL_ETH_TransmitFrame(&hdl->eth, pkt->length);
-
-                /* When Transmit Underflow flag is set, clear it and issue a Transmit Poll Demand to resume transmission */
-                if ((hdl->eth.Instance->DMASR & ETH_DMASR_TUS) != (uint32_t) RESET) {
-                        /* Clear TUS ETHERNET DMA flag */
-                        hdl->eth.Instance->DMASR = ETH_DMASR_TUS;
-
-                        /* Resume DMA transmission*/
-                        hdl->eth.Instance->DMATPDR = 0;
-                }
-
-                /* update statistics */
-                update_dropped_rx_frames(hdl);
-                hdl->stats.tx_packets++;
-                hdl->stats.tx_bytes += pkt->length;
-
-                finish:
-                sys_mutex_unlock(hdl->mutex);
+                break;
         }
 
         return err;
@@ -782,19 +787,26 @@ static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
 //==============================================================================
 static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
 {
-        if (not hdl->run) {
-                return EPERM;
-        }
+        int err = hdl->run ? ESUCC : EPERM;
 
-        int err = sys_semaphore_wait(hdl->rx_semaphore, hdl->rx_timeout_ms);
-        if (!err) {
+        u64_t tref = sys_get_uptime_ms();
+
+        while (!err) {
+                sys_thread_yield();
+
                 err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT);
                 if (!err) {
                         /* get received frame */
                         if (HAL_ETH_GetReceivedFrame_IT(&hdl->eth) != HAL_OK) {
-                                printk("ETH: frame receive error");
-                                err = EIO;
-                                goto finish;
+                                sys_mutex_unlock(hdl->mutex);
+
+                                if (sys_get_uptime_ms() - tref >= hdl->rx_timeout_ms) {
+                                        err = ETIME;
+                                        break;
+                                }
+
+                                sys_semaphore_wait(hdl->rx_semaphore, 100);
+                                continue;
                         }
 
                         /* Obtain the size of the packet and put it into the "len" variable. */
@@ -833,11 +845,10 @@ static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
                         hdl->stats.rx_packets++;
                         hdl->stats.rx_bytes += len;
 
-                        finish:
                         sys_mutex_unlock(hdl->mutex);
-                } else {
-                        sys_semaphore_signal(hdl->rx_semaphore);
                 }
+
+                break;
         }
 
         return err;

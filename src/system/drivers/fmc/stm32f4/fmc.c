@@ -518,7 +518,7 @@ static int SDRAM_init(void)
         err1 = ram_test((void*)0xC0000000, mem_size1);
         if (!err1) {
                 err1 = sys_register_region(&sdram1, (void*)0xC0000000, mem_size1,
-                                           _MM_FLAG__DMA_CAPABLE, "SDRAM1");
+                                           _MM_FLAG__DMA_CAPABLE, "SDRAM");
         }
 #endif
 
@@ -532,7 +532,7 @@ static int SDRAM_init(void)
         err2 = ram_test((void*)0xD0000000, mem_size2);
         if (!err2) {
                 err2 = sys_register_region(&sdram2, (void*)0xD0000000, mem_size2,
-                                           _MM_FLAG__DMA_CAPABLE, "SDRAM2");
+                                           _MM_FLAG__DMA_CAPABLE, "SDRAM");
         }
 #endif
 

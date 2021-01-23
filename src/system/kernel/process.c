@@ -2106,12 +2106,12 @@ static int analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg)
         size_t fnlen = args ? ((u32_t)args - (u32_t)cmd) : strsize(cmd);
 
         // allocate file name
-        int err = _kmalloc(_MM_KRN, fnlen, NULL, false, cast(void**, &filename));
+        int err = _kmalloc(_MM_KRN, fnlen, NULL, 0, 0, cast(void**, &filename));
         if (err) goto finish;
         strlcpy(filename, cmd, fnlen);
 
         // allocate line
-        err = _kzalloc(_MM_KRN, SHEBANGLEN, NULL, false, cast(void**, &line));
+        err = _kzalloc(_MM_KRN, SHEBANGLEN, NULL, 0, 0, cast(void**, &line));
         if (err) goto finish;
 
         // open file
@@ -2150,7 +2150,7 @@ static int analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg)
 
                 size_t arglen = strsize(p) + strsize(filename) + argslen;
 
-                err = _kmalloc(_MM_KRN, arglen, NULL, false, cast(void**, cmdarg));
+                err = _kmalloc(_MM_KRN, arglen, NULL, 0, 0, cast(void**, cmdarg));
                 if (!err) {
                         strlcpy(*cmdarg, p, arglen);
                         strlcat(*cmdarg, " ", arglen);

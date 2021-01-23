@@ -34,14 +34,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#if defined(ARCH_stm32f1)
-#include "stm32f10x.h"
-#elif defined(ARCH_stm32f4)
 #include "stm32f4xx.h"
-#elif defined(ARCH_stm32f7)
-#include "stm32f7xx.h"
-// TODO cache clear/invalidate
-#endif
 #include "config.h"
 
 /** @addtogroup STM32F4xx_StdPeriph_Driver

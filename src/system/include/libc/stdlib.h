@@ -409,6 +409,30 @@ extern int rand(void);
 
 //==============================================================================
 /**
+ * @brief Function returns a pseudo-random integer.
+ *
+ * The rand() function returns a pseudo-random integer in the range 0 to
+ * @ref RAND_MAX inclusive (i.e., the mathematical range [0, RAND_MAX]).
+ *
+ * @param  seed
+ *
+ * @return The rand() function return a value between @b 0 and @ref RAND_MAX (inclusive).
+ *
+ * @b Example
+ * @code
+        // ...
+        unsigned int seed = 213;
+        int foo = rand_r(&seed);
+        // ...
+   @endcode
+ *
+ * @see RAND_MAX
+ */
+//==============================================================================
+extern int rand_r(unsigned int *seed);
+
+//==============================================================================
+/**
  * @brief Function sets the seed for rand() function.
  *
  * The srand() function sets its argument as the seed for a new sequence

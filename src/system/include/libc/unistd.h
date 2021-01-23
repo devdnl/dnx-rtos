@@ -497,7 +497,23 @@ static inline uid_t getuid(void)
  * @param  flags        file open flags
  * @param  ...          optional mode
  *
- * @return On success file descriptor is returned (fd >= 0), otherwise -1.
+ * @return On success file descriptor is returned, otherwise -1.
+ *
+ * @node In this implementation file descriptor can be negative! To check if
+ *       file is correctly opened compare to -1 value.
+ *
+ * @b Example
+ * @code
+        #include <sys/unistd.h>
+
+        // ...
+        fd_t fd = open(path, O_RDWR);
+        if (fd != -1) {
+                // ...
+                close(fd);
+        }
+        // ...
+   @endcode
  */
 //==============================================================================
 extern fd_t open(const char *path, int flags, ...);

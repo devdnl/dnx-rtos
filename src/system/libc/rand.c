@@ -46,7 +46,7 @@ Brief   Pseudo-random generator functions.
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static u32_t seed = 123456789;
+static unsigned int seed = 123456789;
 
 /*==============================================================================
   Exported objects
@@ -79,15 +79,39 @@ static u32_t seed = 123456789;
  * @see RAND_MAX
  */
 //==============================================================================
-int rand(void)
+int rand_r(unsigned int *seed)
 {
         const u64_t a = 1103515245;
         const u32_t c = 12345;
         const u64_t m = (1ULL << 32);
 
-        seed = (a * seed + c) % m;
+        *seed = (a * *seed + c) % m;
 
-        return seed;
+        return *seed;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns a pseudo-random integer.
+ *
+ * The rand() function returns a pseudo-random integer in the range 0 to
+ * @ref RAND_MAX inclusive (i.e., the mathematical range [0, RAND_MAX]).
+ *
+ * @return The rand() function return a value between @b 0 and @ref RAND_MAX (inclusive).
+ *
+ * @b Example
+ * @code
+        // ...
+        int foo = rand();
+        // ...
+   @endcode
+ *
+ * @see RAND_MAX
+ */
+//==============================================================================
+int rand(void)
+{
+        return rand_r(&seed);
 }
 
 //==============================================================================

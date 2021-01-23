@@ -215,6 +215,7 @@ static void catch_process(enum _kernel_panic_desc_cause suggested_cause)
         _assert_hook_suspend(false);
 
         if (kpanic_ctr > 1000000) {
+                _kernel_panic_trap_proc = NULL;
                 kpanic_desc.cause = _KERNEL_PANIC_DESC_CAUSE_PANICLOOP;
                 _kernel_panic_handle(false);
         }

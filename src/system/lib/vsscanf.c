@@ -281,6 +281,8 @@ int _vsscanf(const char *str, const char *format, va_list args)
 
                                                 if (*end != '\0')
                                                         str++;
+
+                                                read_fields++;
                                         }
                                 }
                                 break;
