@@ -307,7 +307,7 @@ API_MOD_READ(UART,
         if (!err) {
                 *rdcnt = 0;
 
-                while (count--) {
+                while (count > 0) {
                         err = sys_semaphore_wait(hdl->data_read_sem,
                                                  fattr.non_blocking_rd ?
                                                  0 : RX_WAIT_TIMEOUT);
@@ -316,8 +316,11 @@ API_MOD_READ(UART,
                                 if (_UART_FIFO__read(&hdl->Rx_FIFO, dst)) {
                                         dst++;
                                         (*rdcnt)++;
+                                        count--;
                                 }
                                 _UART_LLD__rx_resume(hdl->major);
+                        } else {
+                                break;
                         }
                 }
 
@@ -357,11 +360,13 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                         break;
 
                 case IOCTL_UART__GET_CHAR_UNBLOCKING:
-                        if (!_UART_FIFO__read(&hdl->Rx_FIFO, arg)) {
-                                err = EAGAIN;
-                        } else {
+                        _UART_LLD__rx_hold(hdl->major);
+                        if (_UART_FIFO__read(&hdl->Rx_FIFO, arg)) {
                                 err = ESUCC;
+                        } else {
+                                err = EAGAIN;
                         }
+                        _UART_LLD__rx_resume(hdl->major);
                         break;
 
                 default:
@@ -420,7 +425,7 @@ API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
  * @return true if success, false on error
  */
 //==============================================================================
-bool _UART_FIFO__write(struct Rx_FIFO *fifo, u8_t *data)
+bool _UART_FIFO__write(struct Rx_FIFO *fifo, const u8_t *data)
 {
         if (fifo->buffer_level < _UART_RX_BUFFER_SIZE) {
                 fifo->buffer[fifo->write_index++] = *data;

@@ -266,7 +266,7 @@ extern void _UART_LLD__abort_trasmission(u8_t major);
 extern void _UART_LLD__rx_resume(u8_t major);
 extern void _UART_LLD__rx_hold(u8_t major);
 extern void _UART_LLD__configure(u8_t major, const struct UART_config *config);
-extern bool _UART_FIFO__write(struct Rx_FIFO *fifo, u8_t *data);
+extern bool _UART_FIFO__write(struct Rx_FIFO *fifo, const u8_t *data);
 
 /*==============================================================================
   Exported inline functions
