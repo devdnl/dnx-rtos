@@ -745,6 +745,9 @@ WARN_LOGFILE           =
 
 INPUT                  = " ." \
                          manual.h \
+                         ../../src/system/drivers/zero/zero_ioctl.h \
+                         ../../src/system/drivers/urandom/urandom_ioctl.h \
+                         ../../src/system/drivers/part/part_ioctl.h \
                          ../../src/system/drivers/snd/snd_ioctl.h \
                          ../../src/system/drivers/spiee/spiee_ioctl.h \
                          ../../src/system/drivers/pwm/pwm_ioctl.h \

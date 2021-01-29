@@ -39,16 +39,18 @@ Detailed Doxygen description.
 ==============================================================================*/
 #include <stddef.h>
 #include "drivers/driver.h"
-#include "stm32f4/lib/stm32f4xx_rcc.h"
 
 #if defined(ARCH_stm32f1)
 #include "stm32f10x.h"
+#include "stm32f1/lib/stm32f10x_rcc.h"
 #define ETH_CPU_CACHE_ALIGN 1
 #elif defined(ARCH_stm32f4)
 #include "stm32f4xx.h"
+#include "stm32f4/lib/stm32f4xx_rcc.h"
 #define ETH_CPU_CACHE_ALIGN 1
 #elif defined(ARCH_stm32f7)
 #include "stm32f7xx.h"
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #define ETH_CPU_CACHE_ALIGN 32
 #endif
 

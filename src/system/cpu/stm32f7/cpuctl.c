@@ -597,6 +597,9 @@ void _cpuctl_invalidate_dcache_by_addr(u32_t *addr, u32_t size)
 {
 #if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__ && !__CPU_RAM1_RAM2_CACHE_DISABLE__
         SCB_InvalidateDCache_by_Addr(addr, size);
+#else
+        (void)addr;
+        (void)size;
 #endif
 }
 
@@ -612,6 +615,9 @@ void _cpuctl_clean_dcache_by_addr(u32_t *addr, u32_t size)
 {
 #if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__ && !__CPU_RAM1_RAM2_CACHE_DISABLE__
         SCB_CleanDCache_by_Addr(addr, size);
+#else
+        (void)addr;
+        (void)size;
 #endif
 }
 
@@ -627,6 +633,9 @@ void _cpuctl_clean_invalidate_dcache_by_addr(u32_t *addr, u32_t size)
 {
 #if __DCACHE_PRESENT && __CPU_DCACHE_ENABLE__ && !__CPU_RAM1_RAM2_CACHE_DISABLE__
         SCB_CleanInvalidateDCache_by_Addr(addr, size);
+#else
+        (void)addr;
+        (void)size;
 #endif
 }
 

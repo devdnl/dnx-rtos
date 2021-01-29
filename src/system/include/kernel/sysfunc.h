@@ -6051,6 +6051,34 @@ static inline int sys_driver_stat(dev_t id, struct vfs_dev_stat *stat)
         return _driver_stat(id, stat);
 }
 
+//==============================================================================
+/**
+ * @brief Function returns a pseudo-random integer.
+ *
+ * The rand() function returns a pseudo-random integer in the range 0 to
+ * @ref RAND_MAX inclusive (i.e., the mathematical range [0, RAND_MAX]).
+ *
+ * @param  seed
+ *
+ * @return The rand() function return a value between @b 0 and @ref RAND_MAX (inclusive).
+ *
+ * @b Example
+ * @code
+        // ...
+        unsigned int seed = 213;
+        int foo = rand_r(&seed);
+        // ...
+   @endcode
+ *
+ * @see RAND_MAX
+ */
+//==============================================================================
+static inline u32_t sys_rand_r(unsigned int *seed)
+{
+        extern int rand_r(unsigned int *seed);
+        return rand_r(seed);
+}
+
 #ifdef __cplusplus
 }
 #endif

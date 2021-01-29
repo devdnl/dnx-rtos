@@ -84,6 +84,9 @@ drivers configuration, and starting needed applications/daemons.
 \li \subpage page-drivers
 
 \section sec-drivers Drivers
+\li \subpage drv-zero
+\li \subpage drv-urandom
+\li \subpage drv-part
 \li \subpage drv-snd
 \li \subpage drv-spiee
 \li \subpage drv-pwm

@@ -2,6 +2,7 @@ dnx RTOS 2.4.3 Goose
 ====================
 New Features, Improvements:
 - Fixed ETH driver for stm32f1, stm32f4, stm32f7
+- New drivers: PART (parition support), ZERO (zero copy), URANDOM (pseudo random copy)
 -
 
 dnx RTOS 2.4.0 Goose

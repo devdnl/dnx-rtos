@@ -123,7 +123,10 @@ function Optimize(tab, arch)
     end
 end
 
-
-local tab = LoadTable(arg[1])
-Optimize(tab, arg[2])
-SaveTable(tab, arg[1])
+if #arg == 2 then
+    local tab = LoadTable(arg[1])
+    Optimize(tab, arg[2])
+    SaveTable(tab, arg[1])
+else
+    print("Usage: lua optimize.lua <bsp-file> <architecture>")
+end

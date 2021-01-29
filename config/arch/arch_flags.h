@@ -644,6 +644,9 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #*/
 
 #define ARCH_noarch
+#include "noarch/zero_flags.h"
+#include "noarch/urandom_flags.h"
+#include "noarch/part_flags.h"
 #include "noarch/spiee_flags.h"
 #include "noarch/loop_flags.h"
 #include "noarch/tty_flags.h"
@@ -1062,6 +1065,33 @@ __ENABLE_SPIEE__=_NO_
 #define __ENABLE_SND__ _NO_
 #/*
 __ENABLE_SND__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("PART")
+# this:SetToolTip("Partition device driver")
+#--*/
+#define __ENABLE_PART__ _NO_
+#/*
+__ENABLE_PART__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("URANDOM")
+# this:SetToolTip("Pseudo random generator device")
+#--*/
+#define __ENABLE_URANDOM__ _NO_
+#/*
+__ENABLE_URANDOM__=_NO_
+#*/
+
+#/*--
+# this:PutWidgets("ZERO")
+# this:SetToolTip("Zero data device")
+#--*/
+#define __ENABLE_ZERO__ _NO_
+#/*
+__ENABLE_ZERO__=_NO_
 #*/
 
 #// MODULE LIST END
