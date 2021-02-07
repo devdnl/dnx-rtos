@@ -358,8 +358,9 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
         size_t s = 0;
-        syscall(SYSCALL_FWRITE, &s, ptr, &size, &count, file);
-        return s;
+        size_t n = size * count;
+        syscall(SYSCALL_FWRITE, &s, ptr, &n, file);
+        return s / size;
 }
 
 //==============================================================================
@@ -409,8 +410,9 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 {
         size_t s = 0;
-        syscall(SYSCALL_FREAD, &s, ptr, &size, &count, file);
-        return s;
+        size_t n = size * count;
+        syscall(SYSCALL_FREAD, &s, ptr, &n, file);
+        return s / size;
 }
 
 //==============================================================================

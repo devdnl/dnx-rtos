@@ -639,6 +639,12 @@ static void IRQ_handle(u8_t major)
                 if (_UART_FIFO__write(&_UART_mem[major]->Rx_FIFO, &DR)) {
                         received++;
                 }
+
+                #if defined(ARCH_stm32f7) || defined(ARCH_stm32h7)
+                if (DEV->UART->SR & USART_SR_ORE) {
+                        REG_WRITE(DEV->UART->ICR, USART_ICR_ORECF);
+                }
+                #endif
         }
 
         /* transmitter interrupt handler */

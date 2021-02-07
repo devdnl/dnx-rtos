@@ -36,6 +36,7 @@ Brief   EXT4 file system
 ==============================================================================*/
 #define SECTOR_SIZE     512
 #define LOCK_TIMEOUT    MAX_DELAY_MS
+#define SYNC_TIMEOUT    100
 
 /*==============================================================================
   Local object types
@@ -762,10 +763,15 @@ API_FS_SYNC(ext4fs, void *fs_handle)
 {
         ext4fs_t *hdl = fs_handle;
 
-        int err = ext4_cache_write_back(false, hdl->mp);
+        int err = sys_mutex_lock(hdl->fs_mutex, SYNC_TIMEOUT);
         if (!err) {
-                err = ext4_cache_flush(hdl->mp);
-                ext4_cache_write_back(__EXT4FS_CFG_WR_BUF_STRATEGY__, hdl->mp);
+                err = ext4_cache_write_back(false, hdl->mp);
+                if (!err) {
+                        err = ext4_cache_flush(hdl->mp);
+                        ext4_cache_write_back(__EXT4FS_CFG_WR_BUF_STRATEGY__, hdl->mp);
+                }
+
+                sys_mutex_unlock(hdl->fs_mutex);
         }
 
         return err;

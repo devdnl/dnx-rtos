@@ -151,12 +151,11 @@ ssize_t read(fd_t fd, void *buf, size_t count)
                 }
 
                 size_t n = 0;
-                size_t size = 1;
-                syscall(SYSCALL_FREAD, &n, buf, &size, &count, f);
+                syscall(SYSCALL_FREAD, &n, buf, &count, f);
 
                 int iserr = 0;
                 int err = _builtinfunc(vfs_ferror, f, &iserr);
-                return (iserr || err) ? _errno : (ssize_t)n;
+                return (iserr || err) ? -_errno : (ssize_t)n;
 
         } else {
                 return -1;
@@ -188,8 +187,7 @@ ssize_t write(fd_t fd, const void *buf, size_t count)
                 }
 
                 size_t n = 0;
-                size_t size = 1;
-                syscall(SYSCALL_FWRITE, &n, buf, &size, &count, f);
+                syscall(SYSCALL_FWRITE, &n, buf, &count, f);
 
                 int iserr = 0;
                 int err = _builtinfunc(vfs_ferror, f, &iserr);

@@ -320,6 +320,9 @@ API_MOD_READ(UART,
                                 }
                                 _UART_LLD__rx_resume(hdl->major);
                         } else {
+                                if (fattr.non_blocking_rd) {
+                                        err = 0;
+                                }
                                 break;
                         }
                 }

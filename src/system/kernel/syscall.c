@@ -848,7 +848,6 @@ static void syscall_fclose(syscallrq_t *rq)
 
         SETERRNO(err);
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
-
 }
 
 //==============================================================================
@@ -861,13 +860,12 @@ static void syscall_fclose(syscallrq_t *rq)
 static void syscall_fwrite(syscallrq_t *rq)
 {
         GETARG(const uint8_t *, buf);
-        GETARG(size_t *, size);
         GETARG(size_t *, count);
         GETARG(FILE*, file);
 
         size_t wrcnt = 0;
-        SETERRNO(_vfs_fwrite(buf, (*count) * (*size), &wrcnt, file));
-        SETRETURN(size_t, wrcnt / (*size));
+        SETERRNO(_vfs_fwrite(buf, *count, &wrcnt, file));
+        SETRETURN(size_t, wrcnt);
 }
 
 //==============================================================================
@@ -880,13 +878,12 @@ static void syscall_fwrite(syscallrq_t *rq)
 static void syscall_fread(syscallrq_t *rq)
 {
         GETARG(uint8_t *, buf);
-        GETARG(size_t *, size);
         GETARG(size_t *, count);
         GETARG(FILE *, file);
 
         size_t rdcnt = 0;
-        SETERRNO(_vfs_fread(buf, (*count) * (*size), &rdcnt, file));
-        SETRETURN(size_t, rdcnt / (*size));
+        SETERRNO(_vfs_fread(buf, *count, &rdcnt, file));
+        SETRETURN(size_t, rdcnt);
 }
 
 //==============================================================================

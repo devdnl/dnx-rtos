@@ -122,8 +122,8 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
     #endif
         SYSCALL_FOPEN,                  // | FILE*          | const char *path          | const char *mode                    |                           |                           |                                           |
         SYSCALL_FCLOSE,                 // | int            | FILE *file                |                                     |                           |                           |                                           |
-        SYSCALL_FWRITE,                 // | size_t         | const void *src           | size_t *size                        | size_t *count             | FILE *file                |                                           |
-        SYSCALL_FREAD,                  // | size_t         | void *dst                 | size_t *size                        | size_t *count             | FILE *file                |                                           |
+        SYSCALL_FWRITE,                 // | size_t         | const void *src           | size_t *count                       | FILE *file                |                           |                                           |
+        SYSCALL_FREAD,                  // | size_t         | void *dst                 | size_t *count                       | FILE *file                |                           |                                           |
         SYSCALL_FSEEK,                  // | int            | FILE *file                | i64_t  *seek                        | int    *origin            |                           |                                           |
         SYSCALL_IOCTL,                  // | int            | FILE *file                | int *request                        | va_list *arg              |                           |                                           |
         SYSCALL_FFLUSH,                 // | int            | FILE *file                |                                     |                           |                           |                                           |
