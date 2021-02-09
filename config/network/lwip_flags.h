@@ -596,7 +596,7 @@ this:SetToolTip("TCP_TTL: Default Time-To-Live value.")
 this:AddWidget("Spinbox", 1, 255, "TCP_WND")
 this:SetToolTip("TCP_WND: The size of a TCP window (n * TCP_MSS).")
 --*/
-#define __NETWORK_TCP_WND__ 20
+#define __NETWORK_TCP_WND__ 3
 /*--
 this:AddWidget("Spinbox", 0, 50, "TCP_MAXRTX")
 this:SetToolTip("TCP_MAXRTX: Maximum number of retransmissions of data segments.")

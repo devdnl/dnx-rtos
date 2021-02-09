@@ -21608,7 +21608,7 @@
 			};
 			[70.000000]={
 				["key"]="__NETWORK_TCP_WND__";
-				["value"]="20";
+				["value"]="3";
 			};
 			[71.000000]={
 				["key"]="__NETWORK_TCP_MAXRTX__";
