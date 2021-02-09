@@ -48,7 +48,7 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static bool _UART_FIFO__read(struct Rx_FIFO *fifo, u8_t *data);
+static bool _UART_FIFO__read(struct rx_FIFO *fifo, u8_t *data);
 
 /*==============================================================================
   Local object definitions
@@ -56,16 +56,15 @@ static bool _UART_FIFO__read(struct Rx_FIFO *fifo, u8_t *data);
 MODULE_NAME(UART);
 
 /* UART default configuration */
-static const struct UART_config UART_DEFAULT_CONFIG = {
-        .parity             = _UART_DEFAULT_PARITY,
-        .stop_bits          = _UART_DEFAULT_STOP_BITS,
-        .LIN_break_length   = _UART_DEFAULT_LIN_BREAK_LEN,
-        .tx_enable          = _UART_DEFAULT_TX_ENABLE,
-        .rx_enable          = _UART_DEFAULT_RX_ENABLE,
-        .LIN_mode_enable    = _UART_DEFAULT_LIN_MODE_ENABLE,
-        .hardware_flow_ctrl = _UART_DEFAULT_HW_FLOW_CTRL,
-        .single_wire_mode   = _UART_DEFAULT_SINGLE_WIRE_MODE,
-        .baud               = _UART_DEFAULT_BAUD
+static const struct UART_rich_config UART_DEFAULT_CONFIG = {
+        .basic.parity    = __UART_DEFAULT_PARITY__,
+        .basic.stop_bits = __UART_DEFAULT_STOP_BITS__,
+        .basic.tx_enable = __UART_DEFAULT_TX_ENABLE__,
+        .basic.rx_enable = __UART_DEFAULT_RX_ENABLE__,
+        .basic.baud      = __UART_DEFAULT_BAUD__,
+        .LIN_break_bits  = UART_LIN_BREAK__10_BITS,
+        .RS485_DE_pin    = {port_idx:IOCTL_GPIO_PIN_IDX__NONE, pin_idx:IOCTL_GPIO_PIN_IDX__NONE},
+        .basic.features  = 0,
 };
 
 /* structure which identify USARTs data in the IRQs */
@@ -101,7 +100,7 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor, const void *con
                 if (err)
                         goto finish;
 
-                err = sys_semaphore_create(_UART_RX_BUFFER_SIZE, 0, &_UART_mem[major]->data_read_sem);
+                err = sys_semaphore_create(__UART_RX_BUFFER_LEN__, 0, &_UART_mem[major]->data_read_sem);
                 if (err)
                         goto finish;
 
@@ -115,11 +114,11 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor, const void *con
 
                 err = _UART_LLD__turn_on(major);
                 if (!err) {
-                        _UART_mem[major]->major  = major;
+                        _UART_mem[major]->major = major;
                         _UART_mem[major]->config = UART_DEFAULT_CONFIG;
 
                         if (config) {
-                                _UART_mem[major]->config = *cast(struct UART_config *, config);
+                                _UART_mem[major]->config.basic = *cast(struct UART_config *, config);
                         }
 
                         _UART_LLD__configure(major, &_UART_mem[major]->config);
@@ -246,29 +245,34 @@ API_MOD_WRITE(UART,
         if (!err) {
                 u32_t timeout = TX_WAIT_TIMEOUT;
 
-                hdl->Tx_buffer.src_ptr   = src;
-                hdl->Tx_buffer.data_size = count;
+                hdl->tx_buffer.src_ptr   = src;
+                hdl->tx_buffer.data_size = count;
                 _UART_LLD__transmit(hdl->major);
 
                 err = sys_semaphore_wait(hdl->write_ready_sem, timeout);
                 if (err) {
                         _UART_LLD__abort_trasmission(hdl->major);
 
-                        if (hdl->Tx_buffer.data_size == 0) {
+                        if (hdl->tx_buffer.data_size == 0) {
                                 *wrcnt = count;
                                 err    = ESUCC;
                         } else {
-                                *wrcnt = count - hdl->Tx_buffer.data_size;
+                                *wrcnt = count - hdl->tx_buffer.data_size;
 
                                 printk("UART: write timeout (%d bytes left)",
-                                       hdl->Tx_buffer.data_size);
+                                       hdl->tx_buffer.data_size);
                         }
 
-                        hdl->Tx_buffer.data_size = 0;
-                        hdl->Tx_buffer.src_ptr   = NULL;
+                        hdl->tx_buffer.data_size = 0;
+                        hdl->tx_buffer.src_ptr   = NULL;
 
                 } else {
                         *wrcnt = count;
+                }
+
+                // disable DE pin (in case of error)
+                if (hdl->config.basic.mode == UART_MODE__RS485) {
+                        _UART_set_DE_pin(hdl, false);
                 }
 
                 sys_mutex_unlock(hdl->port_lock_tx_mtx);
@@ -313,7 +317,7 @@ API_MOD_READ(UART,
                                                  0 : RX_WAIT_TIMEOUT);
                         if (!err) {
                                 _UART_LLD__rx_hold(hdl->major);
-                                if (_UART_FIFO__read(&hdl->Rx_FIFO, dst)) {
+                                if (_UART_FIFO__read(&hdl->rx_FIFO, dst)) {
                                         dst++;
                                         (*rdcnt)++;
                                         count--;
@@ -352,24 +356,37 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
         if (arg) {
                 switch (request) {
                 case IOCTL_UART__SET_CONFIGURATION:
-                        hdl->config = *cast(struct UART_config *, arg);
-                        _UART_LLD__configure(hdl->major, arg);
-                        err = ESUCC;
+                        hdl->config.basic                 = *cast(struct UART_config *, arg);
+                        hdl->config.LIN_break_bits        = UART_LIN_BREAK__10_BITS;
+                        hdl->config.RS485_DE_pin.port_idx = IOCTL_GPIO_PIN_IDX__NONE;
+                        hdl->config.RS485_DE_pin.pin_idx  = IOCTL_GPIO_PIN_IDX__NONE;
+                        hdl->config.basic.features        = 0;
+                        err = _UART_LLD__configure(hdl->major, &hdl->config);
                         break;
 
                 case IOCTL_UART__GET_CONFIGURATION:
-                        *cast(struct UART_config *, arg) = hdl->config;
+                        *cast(struct UART_config *, arg) = hdl->config.basic;
                         err = ESUCC;
                         break;
 
                 case IOCTL_UART__GET_CHAR_UNBLOCKING:
                         _UART_LLD__rx_hold(hdl->major);
-                        if (_UART_FIFO__read(&hdl->Rx_FIFO, arg)) {
+                        if (_UART_FIFO__read(&hdl->rx_FIFO, arg)) {
                                 err = ESUCC;
                         } else {
                                 err = EAGAIN;
                         }
                         _UART_LLD__rx_resume(hdl->major);
+                        break;
+
+                case IOCTL_UART__SET_RS485_DE_PIN:
+                        hdl->config.RS485_DE_pin = *cast(const GPIO_pin_in_port_t*, arg);
+                        err = ESUCC;
+                        break;
+
+                case IOCTL_UART__SET_LIN_BREAK_BITS:
+                        hdl->config.LIN_break_bits = *cast(enum UART_LIN_break *, arg);
+                        err = ESUCC;
                         break;
 
                 default:
@@ -412,7 +429,7 @@ API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
         struct UART_mem *hdl = device_handle;
 
         _UART_LLD__rx_hold(hdl->major);
-        device_stat->st_size = hdl->Rx_FIFO.buffer_level;
+        device_stat->st_size = hdl->rx_FIFO.buffer_level;
         _UART_LLD__rx_resume(hdl->major);
 
         return ESUCC;
@@ -428,12 +445,12 @@ API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
  * @return true if success, false on error
  */
 //==============================================================================
-bool _UART_FIFO__write(struct Rx_FIFO *fifo, const u8_t *data)
+bool _UART_FIFO__write(struct rx_FIFO *fifo, const u8_t *data)
 {
-        if (fifo->buffer_level < _UART_RX_BUFFER_SIZE) {
+        if (fifo->buffer_level < __UART_RX_BUFFER_LEN__) {
                 fifo->buffer[fifo->write_index++] = *data;
 
-                if (fifo->write_index >= _UART_RX_BUFFER_SIZE) {
+                if (fifo->write_index >= __UART_RX_BUFFER_LEN__) {
                         fifo->write_index = 0;
                 }
 
@@ -455,12 +472,12 @@ bool _UART_FIFO__write(struct Rx_FIFO *fifo, const u8_t *data)
  * @return true if success, false on error
  */
 //==============================================================================
-static bool _UART_FIFO__read(struct Rx_FIFO *fifo, u8_t *data)
+static bool _UART_FIFO__read(struct rx_FIFO *fifo, u8_t *data)
 {
         if (fifo->buffer_level > 0) {
                 *data = fifo->buffer[fifo->read_index++];
 
-                if (fifo->read_index >= _UART_RX_BUFFER_SIZE) {
+                if (fifo->read_index >= __UART_RX_BUFFER_LEN__) {
                         fifo->read_index = 0;
                 }
 
@@ -469,6 +486,23 @@ static bool _UART_FIFO__read(struct Rx_FIFO *fifo, u8_t *data)
                 return true;
         } else {
                 return false;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function enable/disable RS485 DE pin.
+ *
+ * @param  hdl          driver handle
+ * @param  enable       enable state
+ */
+//==============================================================================
+void _UART_set_DE_pin(struct UART_mem *hdl, bool enable)
+{
+        if (enable) {
+                _GPIO_DDI_set_pin(hdl->config.RS485_DE_pin.port_idx, hdl->config.RS485_DE_pin.pin_idx);
+        } else {
+                _GPIO_DDI_clear_pin(hdl->config.RS485_DE_pin.port_idx, hdl->config.RS485_DE_pin.pin_idx);
         }
 }
 

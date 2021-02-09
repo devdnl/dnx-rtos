@@ -2521,46 +2521,30 @@
 				["value"]="UART_STOP_BIT__1";
 			};
 			[4.000000]={
-				["key"]="__UART_DEFAULT_LIN_MODE_ENABLE__";
-				["value"]="_NO_";
-			};
-			[5.000000]={
-				["key"]="__UART_DEFAULT_LIN_BREAK_LEN__";
-				["value"]="UART_LIN_BREAK__10_BITS";
-			};
-			[6.000000]={
 				["key"]="__UART_DEFAULT_TX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[7.000000]={
+			[5.000000]={
 				["key"]="__UART_DEFAULT_RX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[8.000000]={
-				["key"]="__UART_DEFAULT_HW_FLOW_CTRL__";
-				["value"]="_NO_";
-			};
-			[9.000000]={
-				["key"]="__UART_DEFAULT_SINGLE_WIRE_MODE__";
-				["value"]="_NO_";
-			};
-			[10.000000]={
+			[6.000000]={
 				["key"]="__UART_DEFAULT_BAUD__";
 				["value"]="115200";
 			};
-			[11.000000]={
+			[7.000000]={
 				["key"]="__UART_TX_LOC__";
 				["value"]="0";
 			};
-			[12.000000]={
+			[8.000000]={
 				["key"]="__UART_RX_LOC__";
 				["value"]="0";
 			};
-			[13.000000]={
+			[9.000000]={
 				["key"]="__UART_CTS_LOC__";
 				["value"]="0";
 			};
-			[14.000000]={
+			[10.000000]={
 				["key"]="__UART_RTS_LOC__";
 				["value"]="0";
 			};
@@ -4495,34 +4479,18 @@
 				["value"]="UART_STOP_BIT__1";
 			};
 			[4.000000]={
-				["key"]="__UART_DEFAULT_LIN_MODE_ENABLE__";
-				["value"]="_NO_";
-			};
-			[5.000000]={
-				["key"]="__UART_DEFAULT_LIN_BREAK_LEN__";
-				["value"]="UART_LIN_BREAK__10_BITS";
-			};
-			[6.000000]={
 				["key"]="__UART_DEFAULT_TX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[7.000000]={
+			[5.000000]={
 				["key"]="__UART_DEFAULT_RX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[8.000000]={
-				["key"]="__UART_DEFAULT_HW_FLOW_CTRL__";
-				["value"]="_NO_";
-			};
-			[9.000000]={
-				["key"]="__UART_DEFAULT_SINGLE_WIRE_MODE__";
-				["value"]="_NO_";
-			};
-			[10.000000]={
+			[6.000000]={
 				["key"]="__UART_DEFAULT_BAUD__";
 				["value"]="115200";
 			};
-			[11.000000]={
+			[7.000000]={
 				["key"]="__UART_IRQ_PRIORITY__";
 				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 			};
@@ -8476,50 +8444,34 @@
 			};
 		};
 		["arch/stm32f3/uart_flags.h"]={
-			[1.000000]={
-				["key"]="__UART_RX_BUFFER_LEN__";
-				["value"]="128";
-			};
-			[2.000000]={
-				["key"]="__UART_DEFAULT_PARITY__";
-				["value"]="UART_PARITY__OFF";
-			};
-			[3.000000]={
-				["key"]="__UART_DEFAULT_STOP_BITS__";
-				["value"]="UART_STOP_BIT__1";
-			};
-			[4.000000]={
-				["key"]="__UART_DEFAULT_LIN_MODE_ENABLE__";
-				["value"]="_NO_";
-			};
-			[5.000000]={
-				["key"]="__UART_DEFAULT_LIN_BREAK_LEN__";
-				["value"]="UART_LIN_BREAK__10_BITS";
-			};
-			[6.000000]={
-				["key"]="__UART_DEFAULT_TX_ENABLE__";
-				["value"]="_YES_";
-			};
-			[7.000000]={
-				["key"]="__UART_DEFAULT_RX_ENABLE__";
-				["value"]="_YES_";
-			};
-			[8.000000]={
-				["key"]="__UART_DEFAULT_HW_FLOW_CTRL__";
-				["value"]="_NO_";
-			};
-			[9.000000]={
-				["key"]="__UART_DEFAULT_SINGLE_WIRE_MODE__";
-				["value"]="_NO_";
-			};
-			[10.000000]={
-				["key"]="__UART_DEFAULT_BAUD__";
-				["value"]="115200";
-			};
-			[11.000000]={
-				["key"]="__UART_IRQ_PRIORITY__";
-				["value"]="13";
-			};
+         [1.000000]={
+            ["key"]="__UART_RX_BUFFER_LEN__";
+            ["value"]="128";
+         };
+         [2.000000]={
+            ["key"]="__UART_DEFAULT_PARITY__";
+            ["value"]="UART_PARITY__OFF";
+         };
+         [3.000000]={
+            ["key"]="__UART_DEFAULT_STOP_BITS__";
+            ["value"]="UART_STOP_BIT__1";
+         };
+         [4.000000]={
+            ["key"]="__UART_DEFAULT_TX_ENABLE__";
+            ["value"]="_YES_";
+         };
+         [5.000000]={
+            ["key"]="__UART_DEFAULT_RX_ENABLE__";
+            ["value"]="_YES_";
+         };
+         [6.000000]={
+            ["key"]="__UART_DEFAULT_BAUD__";
+            ["value"]="115200";
+         };
+         [7.000000]={
+            ["key"]="__UART_IRQ_PRIORITY__";
+            ["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+         };
 		};
 		["arch/stm32f4/afm_flags.h"]={
 			[1.000000]={
@@ -13080,50 +13032,34 @@
 			};
 		};
 		["arch/stm32f4/uart_flags.h"]={
-			[1.000000]={
-				["key"]="__UART_RX_BUFFER_LEN__";
-				["value"]="128";
-			};
-			[2.000000]={
-				["key"]="__UART_DEFAULT_PARITY__";
-				["value"]="UART_PARITY__OFF";
-			};
-			[3.000000]={
-				["key"]="__UART_DEFAULT_STOP_BITS__";
-				["value"]="UART_STOP_BIT__1";
-			};
-			[4.000000]={
-				["key"]="__UART_DEFAULT_LIN_MODE_ENABLE__";
-				["value"]="_NO_";
-			};
-			[5.000000]={
-				["key"]="__UART_DEFAULT_LIN_BREAK_LEN__";
-				["value"]="UART_LIN_BREAK__10_BITS";
-			};
-			[6.000000]={
-				["key"]="__UART_DEFAULT_TX_ENABLE__";
-				["value"]="_YES_";
-			};
-			[7.000000]={
-				["key"]="__UART_DEFAULT_RX_ENABLE__";
-				["value"]="_YES_";
-			};
-			[8.000000]={
-				["key"]="__UART_DEFAULT_HW_FLOW_CTRL__";
-				["value"]="_NO_";
-			};
-			[9.000000]={
-				["key"]="__UART_DEFAULT_SINGLE_WIRE_MODE__";
-				["value"]="_NO_";
-			};
-			[10.000000]={
-				["key"]="__UART_DEFAULT_BAUD__";
-				["value"]="115200";
-			};
-			[11.000000]={
-				["key"]="__UART_IRQ_PRIORITY__";
-				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
-			};
+         [1.000000]={
+            ["key"]="__UART_RX_BUFFER_LEN__";
+            ["value"]="128";
+         };
+         [2.000000]={
+            ["key"]="__UART_DEFAULT_PARITY__";
+            ["value"]="UART_PARITY__OFF";
+         };
+         [3.000000]={
+            ["key"]="__UART_DEFAULT_STOP_BITS__";
+            ["value"]="UART_STOP_BIT__1";
+         };
+         [4.000000]={
+            ["key"]="__UART_DEFAULT_TX_ENABLE__";
+            ["value"]="_YES_";
+         };
+         [5.000000]={
+            ["key"]="__UART_DEFAULT_RX_ENABLE__";
+            ["value"]="_YES_";
+         };
+         [6.000000]={
+            ["key"]="__UART_DEFAULT_BAUD__";
+            ["value"]="115200";
+         };
+         [7.000000]={
+            ["key"]="__UART_IRQ_PRIORITY__";
+            ["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+         };
 		};
 		["arch/stm32f4/wdg_flags.h"]={
 			[1.000000]={
@@ -17382,50 +17318,34 @@
 			};
 		};
 		["arch/stm32f7/uart_flags.h"]={
-			[1.000000]={
-				["key"]="__UART_RX_BUFFER_LEN__";
-				["value"]="128";
-			};
-			[2.000000]={
-				["key"]="__UART_DEFAULT_PARITY__";
-				["value"]="UART_PARITY__OFF";
-			};
-			[3.000000]={
-				["key"]="__UART_DEFAULT_STOP_BITS__";
-				["value"]="UART_STOP_BIT__1";
-			};
-			[4.000000]={
-				["key"]="__UART_DEFAULT_LIN_MODE_ENABLE__";
-				["value"]="_NO_";
-			};
-			[5.000000]={
-				["key"]="__UART_DEFAULT_LIN_BREAK_LEN__";
-				["value"]="UART_LIN_BREAK__10_BITS";
-			};
-			[6.000000]={
-				["key"]="__UART_DEFAULT_TX_ENABLE__";
-				["value"]="_YES_";
-			};
-			[7.000000]={
-				["key"]="__UART_DEFAULT_RX_ENABLE__";
-				["value"]="_YES_";
-			};
-			[8.000000]={
-				["key"]="__UART_DEFAULT_HW_FLOW_CTRL__";
-				["value"]="_NO_";
-			};
-			[9.000000]={
-				["key"]="__UART_DEFAULT_SINGLE_WIRE_MODE__";
-				["value"]="_NO_";
-			};
-			[10.000000]={
-				["key"]="__UART_DEFAULT_BAUD__";
-				["value"]="115200";
-			};
-			[11.000000]={
-				["key"]="__UART_IRQ_PRIORITY__";
-				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
-			};
+         [1.000000]={
+            ["key"]="__UART_RX_BUFFER_LEN__";
+            ["value"]="128";
+         };
+         [2.000000]={
+            ["key"]="__UART_DEFAULT_PARITY__";
+            ["value"]="UART_PARITY__OFF";
+         };
+         [3.000000]={
+            ["key"]="__UART_DEFAULT_STOP_BITS__";
+            ["value"]="UART_STOP_BIT__1";
+         };
+         [4.000000]={
+            ["key"]="__UART_DEFAULT_TX_ENABLE__";
+            ["value"]="_YES_";
+         };
+         [5.000000]={
+            ["key"]="__UART_DEFAULT_RX_ENABLE__";
+            ["value"]="_YES_";
+         };
+         [6.000000]={
+            ["key"]="__UART_DEFAULT_BAUD__";
+            ["value"]="115200";
+         };
+         [7.000000]={
+            ["key"]="__UART_IRQ_PRIORITY__";
+            ["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+         };
 		};
 		["arch/stm32f7/wdg_flags.h"]={
 			[1.000000]={
@@ -21304,50 +21224,34 @@
 			};
 		};
 		["arch/stm32h7/uart_flags.h"]={
-			[1.000000]={
-				["key"]="__UART_RX_BUFFER_LEN__";
-				["value"]="128";
-			};
-			[2.000000]={
-				["key"]="__UART_DEFAULT_PARITY__";
-				["value"]="UART_PARITY__OFF";
-			};
-			[3.000000]={
-				["key"]="__UART_DEFAULT_STOP_BITS__";
-				["value"]="UART_STOP_BIT__1";
-			};
-			[4.000000]={
-				["key"]="__UART_DEFAULT_LIN_MODE_ENABLE__";
-				["value"]="_NO_";
-			};
-			[5.000000]={
-				["key"]="__UART_DEFAULT_LIN_BREAK_LEN__";
-				["value"]="UART_LIN_BREAK__10_BITS";
-			};
-			[6.000000]={
-				["key"]="__UART_DEFAULT_TX_ENABLE__";
-				["value"]="_YES_";
-			};
-			[7.000000]={
-				["key"]="__UART_DEFAULT_RX_ENABLE__";
-				["value"]="_YES_";
-			};
-			[8.000000]={
-				["key"]="__UART_DEFAULT_HW_FLOW_CTRL__";
-				["value"]="_NO_";
-			};
-			[9.000000]={
-				["key"]="__UART_DEFAULT_SINGLE_WIRE_MODE__";
-				["value"]="_NO_";
-			};
-			[10.000000]={
-				["key"]="__UART_DEFAULT_BAUD__";
-				["value"]="115200";
-			};
-			[11.000000]={
-				["key"]="__UART_IRQ_PRIORITY__";
-				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
-			};
+         [1.000000]={
+            ["key"]="__UART_RX_BUFFER_LEN__";
+            ["value"]="128";
+         };
+         [2.000000]={
+            ["key"]="__UART_DEFAULT_PARITY__";
+            ["value"]="UART_PARITY__OFF";
+         };
+         [3.000000]={
+            ["key"]="__UART_DEFAULT_STOP_BITS__";
+            ["value"]="UART_STOP_BIT__1";
+         };
+         [4.000000]={
+            ["key"]="__UART_DEFAULT_TX_ENABLE__";
+            ["value"]="_YES_";
+         };
+         [5.000000]={
+            ["key"]="__UART_DEFAULT_RX_ENABLE__";
+            ["value"]="_YES_";
+         };
+         [6.000000]={
+            ["key"]="__UART_DEFAULT_BAUD__";
+            ["value"]="115200";
+         };
+         [7.000000]={
+            ["key"]="__UART_IRQ_PRIORITY__";
+            ["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+         };
 		};
 		["filesystems/eefs_flags.h"]={
 			[1.000000]={

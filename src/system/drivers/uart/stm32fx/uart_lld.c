@@ -35,7 +35,6 @@
 
 #include "uart.h"
 #include "uart_ioctl.h"
-#include "stm32fx/uart_cfg.h"
 
 #if defined(ARCH_stm32f1)
 #include "stm32f1/stm32f10x.h"
@@ -383,7 +382,7 @@ int _UART_LLD__turn_on(u8_t major)
                 SET_BIT(*UART[major].APBENR, UART[major].APBENR_UARTEN);
 
                 NVIC_EnableIRQ(UART[major].IRQn);
-                NVIC_SetPriority(UART[major].IRQn, _UART_IRQ_PRIORITY);
+                NVIC_SetPriority(UART[major].IRQn, __UART_IRQ_PRIORITY__);
 
                 return ESUCC;
         } else {
@@ -419,7 +418,13 @@ int _UART_LLD__turn_off(u8_t major)
 void _UART_LLD__transmit(u8_t major)
 {
         sys_critical_section_begin();
+
+        if (_UART_mem[major]->config.basic.mode == UART_MODE__RS485) {
+                _UART_set_DE_pin(_UART_mem[major], true);
+        }
+
         SET_BIT(UART[major].UART->CR1, USART_CR1_TCIE);
+
         sys_critical_section_end();
 }
 
@@ -433,7 +438,13 @@ void _UART_LLD__transmit(u8_t major)
 void _UART_LLD__abort_trasmission(u8_t major)
 {
         sys_critical_section_begin();
+
         CLEAR_BIT(UART[major].UART->CR1, USART_CR1_TCIE);
+
+        if (_UART_mem[major]->config.basic.mode == UART_MODE__RS485) {
+                _UART_set_DE_pin(_UART_mem[major], false);
+        }
+
         sys_critical_section_end();
 }
 
@@ -473,7 +484,7 @@ void _UART_LLD__rx_hold(u8_t major)
  * @param config        configuration structure
  */
 //==============================================================================
-void _UART_LLD__configure(u8_t major, const struct UART_config *config)
+int _UART_LLD__configure(u8_t major, const struct UART_rich_config *config)
 {
         const UART_regs_t *DEV = &UART[major];
         u32_t PCLK = 0;
@@ -533,13 +544,13 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         PCLK = LL_RCC_GetUSARTClockFreq(DEV->CLKSRC);
 #endif
 
-        DEV->UART->BRR = (PCLK / (config->baud)) + 1;
+        DEV->UART->BRR = (PCLK / (config->basic.baud)) + 1;
 
         /* set 8 bit word length and wake idle line */
         CLEAR_BIT(DEV->UART->CR1, USART_CR1_M | USART_CR1_WAKE);
 
         /* set parity */
-        switch (config->parity) {
+        switch (config->basic.parity) {
         case UART_PARITY__OFF:
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_PCE | USART_CR1_M);
                 break;
@@ -554,14 +565,14 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         }
 
         /* transmitter enable */
-        if (config->tx_enable) {
+        if (config->basic.tx_enable) {
                 SET_BIT(DEV->UART->CR1, USART_CR1_TE);
         } else {
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_TE);
         }
 
         /* receiver enable */
-        if (config->rx_enable) {
+        if (config->basic.rx_enable) {
                 SET_BIT(DEV->UART->CR1, USART_CR1_RE);
         } else {
                 CLEAR_BIT(DEV->UART->CR1, USART_CR1_RE);
@@ -573,14 +584,14 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         #endif
 
         /* enable LIN if configured */
-        if (config->LIN_mode_enable) {
+        if (config->basic.mode == UART_MODE__LIN) {
                 SET_BIT(DEV->UART->CR2, USART_CR2_LINEN);
         } else {
                 CLEAR_BIT(DEV->UART->CR2, USART_CR2_LINEN);
         }
 
         /* configure stop bits */
-        if (config->stop_bits == UART_STOP_BIT__1) {
+        if (config->basic.stop_bits == UART_STOP_BIT__1) {
                 CLEAR_BIT(DEV->UART->CR2, USART_CR2_STOP);
         } else {
                 CLEAR_BIT(DEV->UART->CR2, USART_CR2_STOP);
@@ -591,21 +602,21 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
         CLEAR_BIT(DEV->UART->CR2, USART_CR2_CLKEN | USART_CR2_CPOL | USART_CR2_CPHA | USART_CR2_LBCL);
 
         /* LIN break detection length */
-        if (config->LIN_break_length == UART_LIN_BREAK__10_BITS) {
+        if (config->LIN_break_bits == UART_LIN_BREAK__10_BITS) {
                 CLEAR_BIT(DEV->UART->CR2, USART_CR2_LBDL);
         } else {
                 SET_BIT(DEV->UART->CR2, USART_CR2_LBDL);
         }
 
         /* hardware flow control */
-        if (config->hardware_flow_ctrl) {
+        if (config->basic.features & UART_FEATURE__HARDWARE_FLOW_CTRL) {
                 SET_BIT(DEV->UART->CR3, USART_CR3_CTSE | USART_CR3_RTSE);
         } else {
                 CLEAR_BIT(DEV->UART->CR3, USART_CR3_CTSE | USART_CR3_RTSE);
         }
 
         /* configure single wire mode */
-        if (config->single_wire_mode) {
+        if (config->basic.features & UART_FEATURE__SINGLE_WIRE) {
                 SET_BIT(DEV->UART->CR3, USART_CR3_HDSEL);
         } else {
                 CLEAR_BIT(DEV->UART->CR3, USART_CR3_HDSEL);
@@ -616,6 +627,8 @@ void _UART_LLD__configure(u8_t major, const struct UART_config *config)
 
         /* enable UART */
         SET_BIT(DEV->UART->CR1, USART_CR1_UE);
+
+        return ESUCC;
 }
 
 //==============================================================================
@@ -636,11 +649,11 @@ static void IRQ_handle(u8_t major)
         while ((DEV->UART->CR1 & USART_CR1_RXNEIE) && (DEV->UART->SR & (USART_SR_RXNE | USART_SR_ORE))) {
                 u8_t DR = DEV->UART->RDR;
 
-                if (_UART_FIFO__write(&_UART_mem[major]->Rx_FIFO, &DR)) {
+                if (_UART_FIFO__write(&_UART_mem[major]->rx_FIFO, &DR)) {
                         received++;
                 }
 
-                #if defined(ARCH_stm32f7) || defined(ARCH_stm32h7)
+                #if defined(ARCH_stm32f3) || defined(ARCH_stm32f7) || defined(ARCH_stm32h7)
                 if (DEV->UART->SR & USART_SR_ORE) {
                         REG_WRITE(DEV->UART->ICR, USART_ICR_ORECF);
                 }
@@ -650,16 +663,20 @@ static void IRQ_handle(u8_t major)
         /* transmitter interrupt handler */
         if ((DEV->UART->CR1 & USART_CR1_TCIE) && (DEV->UART->SR & USART_SR_TC)) {
 
-                if (_UART_mem[major]->Tx_buffer.data_size && _UART_mem[major]->Tx_buffer.src_ptr) {
-                        DEV->UART->TDR = *(_UART_mem[major]->Tx_buffer.src_ptr++);
+                if (_UART_mem[major]->tx_buffer.data_size && _UART_mem[major]->tx_buffer.src_ptr) {
+                        DEV->UART->TDR = *(_UART_mem[major]->tx_buffer.src_ptr++);
 
-                        if (--_UART_mem[major]->Tx_buffer.data_size == 0) {
-                                _UART_mem[major]->Tx_buffer.src_ptr = NULL;
+                        if (--_UART_mem[major]->tx_buffer.data_size == 0) {
+                                _UART_mem[major]->tx_buffer.src_ptr = NULL;
                         }
                 } else {
                         CLEAR_BIT(DEV->UART->CR1, USART_CR1_TCIE);
                         sys_semaphore_signal_from_ISR(_UART_mem[major]->write_ready_sem, NULL);
                         yield = true;
+
+                        if (_UART_mem[major]->config.basic.mode == UART_MODE__RS485) {
+                                _UART_set_DE_pin(_UART_mem[major], false);
+                        }
                 }
         }
 

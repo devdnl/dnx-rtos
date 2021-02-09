@@ -101,6 +101,9 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+#define UART_FEATURE__SINGLE_WIRE               (1 << 0)
+#define UART_FEATURE__HARDWARE_FLOW_CTRL        (1 << 1)
+
 /**
  *  @brief  Set UART configuration.
  *  @param  [WR] struct @ref UART_config_t * UART peripheral configuration
@@ -121,6 +124,20 @@ extern "C" {
  *  @return On success 0 is returned, otherwise -1.
  */
 #define IOCTL_UART__GET_CHAR_UNBLOCKING         _IOR(UART, 0x02, char*)
+
+/**
+ *  @brief  Set RS485 DE pin
+ *  @param  [WR] GPIO_pin_in_port_t * pin definition
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_UART__SET_RS485_DE_PIN            _IOW(UART, 0x03, const GPIO_pin_in_port_t*)
+
+/**
+ *  @brief  Set number of LIN break bits
+ *  @param  [WR] UART_LIN_break * number of break bits
+ *  @return On success 0 is returned, otherwise -1.
+ */
+#define IOCTL_UART__SET_LIN_BREAK_BITS          _IOW(UART, 0x04, const UART_LIN_break*)
 
 /*==============================================================================
   Exported object types
@@ -151,18 +168,25 @@ enum UART_LIN_break {
 };
 
 /**
+ * Type represent UART mode.
+ */
+enum UART_mode {
+        UART_MODE__NORMAL,                      //!< Normal UART mode
+        UART_MODE__LIN,                         //!< LIN mode
+        UART_MODE__RS485,                       //!< RS485 mode
+};
+
+/**
  * Type represent UART configuration.
  */
 typedef struct UART_config {
+        enum UART_mode      mode;               /*!< UART mode.*/
         enum UART_parity    parity;             /*!< Parity configuration.*/
         enum UART_stop_bit  stop_bits;          /*!< Stop bits configuration.*/
-        enum UART_LIN_break LIN_break_length;   /*!< LIN break length.*/
         bool                tx_enable;          /*!< Tx channel enable.*/
         bool                rx_enable;          /*!< Rx channel enable.*/
-        bool                LIN_mode_enable;    /*!< LIN mode enable.*/
-        bool                hardware_flow_ctrl; /*!< Hardware flow control enable (RTS, CTS).*/
-        bool                single_wire_mode;   /*!< Single wire mode enable.*/
         u32_t               baud;               /*!< Baudrate.*/
+        u32_t               features;           /*!< Extra features.*/
 } UART_config_t;
 
 /*==============================================================================

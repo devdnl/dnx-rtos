@@ -4697,34 +4697,18 @@
 				["value"]="UART_STOP_BIT__1";
 			};
 			[4]={
-				["key"]="__UART_DEFAULT_LIN_MODE_ENABLE__";
-				["value"]="_NO_";
-			};
-			[5]={
-				["key"]="__UART_DEFAULT_LIN_BREAK_LEN__";
-				["value"]="UART_LIN_BREAK__10_BITS";
-			};
-			[6]={
 				["key"]="__UART_DEFAULT_TX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[7]={
+			[5]={
 				["key"]="__UART_DEFAULT_RX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[8]={
-				["key"]="__UART_DEFAULT_HW_FLOW_CTRL__";
-				["value"]="_NO_";
-			};
-			[9]={
-				["key"]="__UART_DEFAULT_SINGLE_WIRE_MODE__";
-				["value"]="_NO_";
-			};
-			[10]={
+			[6]={
 				["key"]="__UART_DEFAULT_BAUD__";
 				["value"]="115200";
 			};
-			[11]={
+			[7]={
 				["key"]="__UART_IRQ_PRIORITY__";
 				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 			};

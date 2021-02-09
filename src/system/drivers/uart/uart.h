@@ -33,29 +33,25 @@
   Include files
 ==============================================================================*/
 #include "uart_ioctl.h"
+#include "gpio/gpio_ddi.h"
+#include "gpio_ioctl.h"
 
 #if defined(ARCH_stm32f1)
-#include "stm32fx/uart_cfg.h"
 #include "stm32f1/stm32f10x.h"
 #include "stm32f1/lib/stm32f10x_rcc.h"
 #elif defined(ARCH_stm32f3)
-#include "stm32fx/uart_cfg.h"
 #include "stm32f3/stm32f3xx.h"
 #include "stm32f3/lib/stm32f3xx_ll_rcc.h"
 #elif defined(ARCH_stm32f4)
-#include "stm32fx/uart_cfg.h"
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
 #elif defined(ARCH_stm32f7)
-#include "stm32fx/uart_cfg.h"
 #include "stm32f7/stm32f7xx.h"
 #include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #elif defined(ARCH_stm32h7)
-#include "stm32fx/uart_cfg.h"
 #include "stm32h7/stm32h7xx.h"
 #include "stm32h7/lib/stm32h7xx_ll_rcc.h"
 #elif defined(ARCH_efr32)
-#include "efr32/uart_cfg.h"
 #include "efr32/efr32xx.h"
 #include "efr32/lib/em_cmu.h"
 #endif
@@ -229,18 +225,18 @@ enum {
 /* USART handling structure */
 struct UART_mem {
         // Rx FIFO
-        struct Rx_FIFO {
-                u8_t            buffer[_UART_RX_BUFFER_SIZE];
+        struct rx_FIFO {
+                u8_t            buffer[__UART_RX_BUFFER_LEN__];
                 u16_t           buffer_level;
                 u16_t           read_index;
                 u16_t           write_index;
-        } Rx_FIFO;
+        } rx_FIFO;
 
         // Tx FIFO
-        struct Tx_buffer {
+        struct tx_buffer {
                 const u8_t     *src_ptr;
                 size_t          data_size;
-        } Tx_buffer;
+        } tx_buffer;
 
         // UART control
         sem_t                  *write_ready_sem;
@@ -248,7 +244,12 @@ struct UART_mem {
         mutex_t                *port_lock_rx_mtx;
         mutex_t                *port_lock_tx_mtx;
         u8_t                    major;
-        struct UART_config      config;
+
+        struct UART_rich_config {
+                GPIO_pin_in_port_t  RS485_DE_pin;
+                enum UART_LIN_break LIN_break_bits;
+                struct UART_config  basic;
+        } config;
 };
 
 /*==============================================================================
@@ -265,8 +266,9 @@ extern void _UART_LLD__transmit(u8_t major);
 extern void _UART_LLD__abort_trasmission(u8_t major);
 extern void _UART_LLD__rx_resume(u8_t major);
 extern void _UART_LLD__rx_hold(u8_t major);
-extern void _UART_LLD__configure(u8_t major, const struct UART_config *config);
-extern bool _UART_FIFO__write(struct Rx_FIFO *fifo, const u8_t *data);
+extern int  _UART_LLD__configure(u8_t major, const struct UART_rich_config *config);
+extern bool _UART_FIFO__write(struct rx_FIFO *fifo, const u8_t *data);
+extern void _UART_set_DE_pin(struct UART_mem *hdl, bool enable);
 
 /*==============================================================================
   Exported inline functions

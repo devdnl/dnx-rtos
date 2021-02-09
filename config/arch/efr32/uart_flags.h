@@ -98,20 +98,6 @@ this:AddItem("2", "UART_STOP_BIT__2")
 #define __UART_DEFAULT_STOP_BITS__ UART_STOP_BIT__1
 
 /*--
-this:AddWidget("Combobox", "LIN mode enable")
-this:AddItem("No", "_NO_")
-this:AddItem("Yes", "_YES_")
---*/
-#define __UART_DEFAULT_LIN_MODE_ENABLE__ _NO_
-
-/*--
-this:AddWidget("Combobox", "LIN break length")
-this:AddItem("10 bits", "UART_LIN_BREAK__10_BITS")
-this:AddItem("11 bits", "UART_LIN_BREAK__11_BITS")
---*/
-#define __UART_DEFAULT_LIN_BREAK_LEN__ UART_LIN_BREAK__10_BITS
-
-/*--
 this:AddWidget("Combobox", "Tx line enable")
 this:AddItem("No", "_NO_")
 this:AddItem("Yes", "_YES_")
@@ -124,21 +110,6 @@ this:AddItem("No", "_NO_")
 this:AddItem("Yes", "_YES_")
 --*/
 #define __UART_DEFAULT_RX_ENABLE__ _YES_
-
-/*--
-this:AddWidget("Combobox", "HW flow control")
-this:AddItem("No", "_NO_")
-this:AddItem("Yes", "_YES_")
---*/
-#define __UART_DEFAULT_HW_FLOW_CTRL__ _NO_
-
-
-/*--
-this:AddWidget("Combobox", "Single wire mode")
-this:AddItem("No", "_NO_")
-this:AddItem("Yes", "_YES_")
---*/
-#define __UART_DEFAULT_SINGLE_WIRE_MODE__ _NO_
 
 /*--
 this:AddWidget("Textbox", "Baud [bps]")
