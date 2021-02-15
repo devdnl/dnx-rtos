@@ -655,7 +655,7 @@ static void IRQ_handle(u8_t major)
 
                 #if defined(ARCH_stm32f3) || defined(ARCH_stm32f7) || defined(ARCH_stm32h7)
                 if (DEV->UART->SR & USART_SR_ORE) {
-                        REG_WRITE(DEV->UART->ICR, USART_ICR_ORECF);
+                        WRITE_REG(DEV->UART->ICR, USART_ICR_ORECF);
                 }
                 #endif
         }

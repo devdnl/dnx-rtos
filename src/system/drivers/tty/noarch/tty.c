@@ -68,7 +68,7 @@ typedef struct tty_io {
   Local function prototypes
 ==============================================================================*/
 static int      configure               (tty_t *tty, const TTY_config_t *conf);
-static void     service_in              (void *arg);
+static int      service_in              (void *arg);
 static void     vt100_init              (tty_io_t *io);
 static void     vt100_analyze           (tty_io_t *io, char c);
 static void     copy_string_to_queue    (const char *str, queue_t *queue, bool lfend, uint timeout);
@@ -604,7 +604,7 @@ static int configure(tty_t *tty, const TTY_config_t *conf)
  * @param arg           tty io
  */
 //==============================================================================
-static void service_in(void *arg)
+static int service_in(void *arg)
 {
         tty_io_t *io = arg;
 
@@ -627,6 +627,8 @@ static void service_in(void *arg)
                         sys_sleep_ms(100);
                 }
         }
+
+        return 0;
 }
 
 //==============================================================================
