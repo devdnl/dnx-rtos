@@ -38,7 +38,7 @@
 #ifndef _CONFIG_CONFIG_H_
 #define _CONFIG_CONFIG_H_
 
-#define _CONFIG_VERSION 0x34b5de28
+#define _CONFIG_VERSION 0xa6490e3f
 
 #// static definitions
 #define _NO_  0

@@ -69,6 +69,7 @@ CFLAGS   = -c \
            -Werror=switch \
            -Werror=stringop-overflow \
            -Werror=overflow \
+           -Wno-enum-conversion \
            -include ./config/config.h \
            -include ./build/defs.h \
            -I./build\

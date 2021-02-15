@@ -31,7 +31,7 @@
 
 #include "../../../config/config.h"
 
-#if _CONFIG_VERSION != 0x34b5de28
+#if _CONFIG_VERSION != 0xa6490e3f
 #error Configuration version mismatch!
 #endif
 
