@@ -584,12 +584,13 @@ static inline int process_get_priority(pid_t pid)
 
         // ...
 
-        void thread(void *arg)
+        int thread(void *arg)
         {
                 // ...
 
                 // thread function exit without any function,
                 // or just by return
+                return 0;
         }
 
         void some_function()
@@ -646,12 +647,13 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 
         // ...
 
-        void thread(void *arg)
+        int thread(void *arg)
         {
                 // ...
 
                 // thread function exit without any function,
                 // or just by return
+                return 0;
         }
 
         void some_function()
@@ -678,7 +680,7 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 
    @endcode
  *
- * @see thread_create(), thread_join()
+ * @see thread_create(), thread_join(), thread_exit()
  */
 //==============================================================================
 static inline int thread_cancel(tid_t tid)
@@ -686,6 +688,77 @@ static inline int thread_cancel(tid_t tid)
         int r = -1;
         syscall(SYSCALL_THREADKILL, &r, &tid);
         return r;
+}
+
+//==============================================================================
+/**
+ * @brief  The thread_exit function terminates execution of the calling thread.
+ * Function do not release resources allocated by thread.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <unistd.h>
+
+        // ...
+
+        int thread(void *arg)
+        {
+                // ...
+
+                // thread function exit without any function,
+                // or just by return
+
+                if (fail) {
+                        thread_exit();
+                        // exit here
+                }
+
+                // ...
+                return 0;
+        }
+
+        void some_function()
+        {
+                errno = 0;
+
+                tid_t tid = thread_create(thread, NULL, (void*)0);
+                if (tid) {
+                        printf("Thread %d created\n", (int)tid);
+                } else {
+                        perror("Thread not created");
+                }
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see thread_create(), thread_join(), thread_cancel()
+ */
+//==============================================================================
+static inline void thread_exit(void)
+{
+        int _kill_thread(void *arg)
+        {
+                tid_t tid = (uintptr_t)arg;
+                thread_cancel(tid);
+                return 0;
+        }
+
+        static const thread_attr_t ATTR = {
+                .stack_depth = STACK_DEPTH_MINIMAL,
+                .priority    = PRIORITY_NORMAL,
+                .detached    = true,
+        };
+
+        void *arg = (void*)(uint)_builtinfunc(process_get_active_thread, NULL);
+
+        while (true) {
+                tid_t tid = thread_create(_kill_thread, &ATTR, arg);
+                while (tid  > 0) {}
+                _builtinfunc(sleep_ms, 10);
+        }
 }
 
 //==============================================================================
@@ -711,12 +784,13 @@ static inline int thread_cancel(tid_t tid)
 
         // ...
 
-        void thread(void *arg)
+        int thread(void *arg)
         {
                 // ...
 
                 // thread function exit without any function,
                 // or just by return
+                return 0;
         }
 
         void some_function()
@@ -793,12 +867,13 @@ static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
 
         // ...
 
-        void thread(void *arg)
+        int thread(void *arg)
         {
                 // ...
 
                 // thread function exit without any function,
                 // or just by return
+                return 0;
         }
 
         void some_function()

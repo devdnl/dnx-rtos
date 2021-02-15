@@ -142,7 +142,7 @@ static void replace_CRLF_by_LF(char *buf, size_t len)
  * @return None
  */
 //==============================================================================
-static void telnet_thread(void *arg)
+static int telnet_thread(void *arg)
 {
         SOCKET *sock          = arg;
         FILE   *fin           = NULL;
@@ -271,6 +271,8 @@ exit:
                 global->conn_cnt--;
                 mutex_unlock(global->mtx);
         }
+
+        return 0;
 }
 
 //==============================================================================

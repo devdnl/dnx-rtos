@@ -49,7 +49,7 @@ CFLAGS   = -c \
            -g \
            -ggdb3  \
            -Os \
-           -std=c99 \
+           -std=c18 \
            -ffunction-sections \
            -Wall \
            -Wextra \

@@ -49,7 +49,7 @@ Brief   Performance measurement program
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void perf_thread(void *arg);
+static int perf_thread(void *arg);
 
 /*==============================================================================
   Local objects
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
  * @param  arg          thread's argument
  */
 //==============================================================================
-static void perf_thread(void *arg)
+static int perf_thread(void *arg)
 {
         UNUSED_ARG1(arg);
 
@@ -174,6 +174,8 @@ static void perf_thread(void *arg)
 
         printf("Result: %.1f pt, %0.3f pt/MHz\n",
                pt, pt / (float)((double)global->cpu_freq / 1e6));
+
+        return 0;
 }
 
 /*==============================================================================

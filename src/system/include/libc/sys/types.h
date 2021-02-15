@@ -175,6 +175,14 @@ struct timeval {
 #define __STRUCT_TIMEVAL_DEFINED__
 #endif
 
+#ifndef DOXYGEN
+/** @brief Structure holding an interval broken down into seconds and nanoseconds. */
+struct timespec {
+        time_t tv_sec;
+        long tv_nsec;
+};
+#endif
+
 #ifndef DOXYGEN // Doxygen documentation added to mntent.h file
 /** @brief Structure that describes a mount table entry. */
 struct mntent {

@@ -106,7 +106,7 @@ extern "C" {
 typedef int (*process_func_t)(int, char**);
 
 /** USERSPACE: thread function */
-typedef void (*thread_func_t)(void *arg);
+typedef int (*thread_func_t)(void *arg);
 
 /** KERNELSPACE: process descriptor */
 typedef struct _process _process_t;
