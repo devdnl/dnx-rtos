@@ -360,7 +360,6 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                         hdl->config.LIN_break_bits        = UART_LIN_BREAK__10_BITS;
                         hdl->config.RS485_DE_pin.port_idx = IOCTL_GPIO_PIN_IDX__NONE;
                         hdl->config.RS485_DE_pin.pin_idx  = IOCTL_GPIO_PIN_IDX__NONE;
-                        hdl->config.basic.features        = 0;
                         err = _UART_LLD__configure(hdl->major, &hdl->config);
                         break;
 

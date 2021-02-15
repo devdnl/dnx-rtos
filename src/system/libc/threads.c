@@ -171,7 +171,7 @@ void thrd_yield(void)
  * (e.g. if a destructor executed tss_set), the process is repeated up to
  * TSS_DTOR_ITERATIONS times.
  *
- * FInally, the thrd_exit function terminates execution of the calling thread
+ * Finally, the thrd_exit function terminates execution of the calling thread
  * and sets its result code to res.
  *
  * If the last thread in the program is terminated with thrd_exit, the entire
@@ -179,14 +179,14 @@ void thrd_yield(void)
  * (so the functions registered by atexit are executed in the context of that
  * last thread).
  *
- * @param  exit         exit value
+ * @param  res          exit value
  */
 //==============================================================================
-void thrd_exit(int exit)
+void thrd_exit(int res)
 {
-        UNUSED_ARG1(exit);
-        thread_cancel(thrd_current());
-        while (true);
+        UNUSED_ARG1(res);
+        thread_exit();
+        while (1) {}
 }
 
 //==============================================================================
@@ -203,6 +203,7 @@ void thrd_exit(int exit)
 int thrd_detach(thrd_t thrd)
 {
         UNUSED_ARG1(thrd);
+        // not supported by dnx RTOS
         return thrd_error;
 }
 
@@ -463,6 +464,7 @@ int cnd_signal(cnd_t *cnd)
 int cnd_broadcast(cnd_t *cnd)
 {
         UNUSED_ARG1(cnd);
+        // not supported by dnx RTOS
         return thrd_error;
 }
 
@@ -519,6 +521,7 @@ void call_once(once_flag *once, void (*func)(void))
 int tss_create(tss_t *tss, tss_dtor_t dtor)
 {
         UNUSED_ARG2(tss, dtor);
+        // not supported by dnx RTOS
         return thrd_error;
 }
 
@@ -546,6 +549,7 @@ int tss_create(tss_t *tss, tss_dtor_t dtor)
 void tss_delete(tss_t tss)
 {
         UNUSED_ARG1(tss);
+        // not supported by dnx RTOS
 }
 
 //==============================================================================
@@ -566,6 +570,7 @@ void tss_delete(tss_t tss)
 void *tss_get(tss_t tss)
 {
         UNUSED_ARG1(tss);
+        // not supported by dnx RTOS
         return NULL;
 }
 
@@ -586,6 +591,7 @@ void *tss_get(tss_t tss)
 int tss_set(tss_t tss, void *val)
 {
         UNUSED_ARG2(tss, val);
+        // not supported by dnx RTOS
         return thrd_error;
 }
 
