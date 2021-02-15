@@ -42,6 +42,10 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
+typedef struct {
+        lwip_thread_fn func;
+        void *arg;
+} lwip_thread_param_t;
 
 /*==============================================================================
   Local function prototypes
@@ -62,6 +66,25 @@
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief  Wrapper function that align LwIP's and dnx thread type.
+ *
+ * @param  arg          thread params
+ *
+ * @return Always 0.
+ */
+//==============================================================================
+static int lwip_thread_wrapper(void *arg)
+{
+        lwip_thread_param_t param = *cast(lwip_thread_param_t*, arg);
+        sys_free(arg);
+
+        param.func(param.arg);
+
+        return 0;
+}
 
 //==============================================================================
 /**
@@ -101,12 +124,19 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, 
                 .detached    = true
         };
 
-        sys_thread_t thr;
+        sys_thread_t thr = 0;
 
-        if (sys_thread_create(thread, &attr, arg, &thr) != ESUCC) {
-                thr = -1;
-        } else {
-                printk("%s: thread ID %u", name, thr);
+        lwip_thread_param_t *param = sys_malloc(sizeof(*param));
+        if (param) {
+                param->func = thread;
+                param->arg  = arg;
+
+                if (sys_thread_create(lwip_thread_wrapper, &attr, param, &thr) != ESUCC) {
+                        sys_free(param);
+                        thr = -1;
+                } else {
+                        printk("%s: thread ID %u", name, thr);
+                }
         }
 
         return thr;

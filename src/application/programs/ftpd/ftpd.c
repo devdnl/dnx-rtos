@@ -900,7 +900,7 @@ static FTP_cmd_t get_cmd(struct thread *self)
  * @param  arg          thread self pointer
  */
 //==============================================================================
-static void serve(void *arg)
+static int serve(void *arg)
 {
         msleep(100);
 
@@ -1012,6 +1012,8 @@ static void serve(void *arg)
         VERBOSE("Connection closed.\n");
         socket_close(self->socket);
         self->id = 0;
+
+        return 0;
 }
 
 //==============================================================================

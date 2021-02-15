@@ -126,7 +126,7 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void input_thread(void *sem);
+static int  input_thread(void *sem);
 static void clear_transfer_counters();
 static void unregister_socket(SIPC_socket_t *socket);
 static int  register_socket(SIPC_socket_t *socket);
@@ -424,7 +424,7 @@ static SIPC_socket_t *get_socket_by_port(u8_t port)
  * @param arg   thread argument
  */
 //==============================================================================
-static void input_thread(void *arg)
+static int input_thread(void *arg)
 {
         UNUSED_ARG1(arg);
 
@@ -573,6 +573,8 @@ static void input_thread(void *arg)
                         send_packet(packet.seq, packet.port, PACKET_TYPE_REPEAT, NULL, 0);
                 }
         }
+
+        return -1;
 }
 
 //==============================================================================

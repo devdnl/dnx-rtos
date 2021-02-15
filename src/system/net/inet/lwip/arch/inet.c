@@ -55,7 +55,7 @@ Brief    Network management.
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void  network_interface_thread(void *sem);
+static int   network_interface_thread(void *sem);
 static void  clear_rx_tx_counters();
 static bool  is_init_done();
 static dhcp_state_enum_t DHCP_get_state(void);
@@ -186,10 +186,11 @@ static void restore_configuration(void)
  * task initialize TCPIP stack to the last configuration.
  *
  * @param  arg          task's argument
- * @return None
+ *
+ * @return Always -1.
  */
 //==============================================================================
-static void network_interface_thread(void *arg)
+static int network_interface_thread(void *arg)
 {
         UNUSED_ARG1(arg);
 
@@ -229,7 +230,7 @@ static void network_interface_thread(void *arg)
         }
 
         // error occurred
-        return;
+        return -1;
 }
 
 //==============================================================================
