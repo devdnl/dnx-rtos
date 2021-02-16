@@ -510,20 +510,24 @@ API_FS_RENAME(ramfs, void *fs_handle, const char *old_name, const char *new_name
         if (!err) {
 
                 node_t *target;
-                err = get_node(old_name, &hdl->root_dir, 0, NULL, &target);
-                if (!err) {
-                        char *basename = strrchr(new_name, '/') + 1;
+                err = get_node(new_name, &hdl->root_dir, 0, NULL, &target);
+                if (err == ENOENT) {
 
-                        char *newname;
-                        err = sys_zalloc(strsize(basename), cast(void**, &newname));
+                        err = get_node(old_name, &hdl->root_dir, 0, NULL, &target);
                         if (!err) {
-                                strcpy(newname, basename);
+                                char *basename = strrchr(new_name, '/') + 1;
 
-                                if (target->name) {
-                                        sys_free(cast(void**, target->name));
+                                char *newname;
+                                err = sys_zalloc(strsize(basename), cast(void**, &newname));
+                                if (!err) {
+                                        strcpy(newname, basename);
+
+                                        if (target->name) {
+                                                sys_free(cast(void**, target->name));
+                                        }
+
+                                        target->name = newname;
                                 }
-
-                                target->name = newname;
                         }
                 }
 

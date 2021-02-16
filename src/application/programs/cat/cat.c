@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <dnx/misc.h>
+#include <ctype.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -47,12 +48,21 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static void read_stdin(void);
+static void read_file(const char *filename);
+static char *strlf(char *str, size_t slen, size_t *len);
+static void convert_to_printable(char *buf, size_t buflen);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-        u8_t buffer[80];
+        int    columns;
+        char   buffer[512];
+        bool   printable_only;
+        bool   number_lines;
+        int    args;
+        size_t line;
 };
 
 /*==============================================================================
@@ -74,105 +84,181 @@ PROGRAM_PARAMS(cat, STACK_DEPTH_LOW);
 static void print_help(char *name)
 {
         printf("Usage: %s [OPTION] [FILE]\n", name);
-        puts("  -n,             show only printable characters");
+        puts("  -p,             show only printable characters");
+        puts("  -n,             show line numbers");
         puts("  -h, --help      show this help");
 }
 
 //==============================================================================
 /**
  * @brief Cat main function
+ *
+ * @param  argc         argument count
+ * @param  argv         argument values
+ *
+ * @return 0 on success.
  */
 //==============================================================================
 int main(int argc, char *argv[])
 {
         int status = EXIT_SUCCESS;
-        bool printable_only = false;
 
-        int i = 1;
-        for (; i < argc; i++) {
-                if (strcmp(argv[i], "-n") == 0) {
-                        printable_only = true;
-                        continue;
-                }
+        global->args = 1;
+        global->columns = 80;
+        global->line = 1;
 
-                if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+        for (int i = 0; i < argc - 1; i++) {
+                if (strcmp(argv[i], "-p") == 0) {
+                        global->printable_only = true;
+                        global->args++;
+
+                } else if (strcmp(argv[i], "-n") == 0) {
+                        global->number_lines = true;
+                        global->args++;
+
+                } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
                         print_help(argv[0]);
-                        return 0;
+                        return EXIT_FAILURE;
                 }
-
-                break;
         }
 
         errno = 0;
 
-        u32_t col = 80;
-        ioctl(fileno(stdout), IOCTL_TTY__GET_COL, &col);
+        ioctl(fileno(stdout), IOCTL_TTY__GET_COL, &global->columns);
 
-        char *str = calloc(col + 1, sizeof(char));
-        if (str) {
-                FILE *file;
-                bool  stdio;
+        if (argc == global->args) {
+                read_stdin();
 
-                /* read each file */
-                do {
-                        /* check if file is stdin or regular file */
-                        if (argc == i) {
-                                file  = stdin;
-                                stdio = true;
-                        } else {
-                                file = fopen(argv[i], "r");
-                                if (!file) {
-                                        perror(argv[i]);
-                                        break;
-                                }
-
-                                stdio = false;
-                        }
-
-
-                        /* read strings from stdin */
-                        if (stdio) {
-                                char *str = cast(char*, global->buffer);
-                                int   len = sizeof(global->buffer);
-                                int   eof = 0;
-
-                                while (!eof && fgets(str, len, file)) {
-                                        eof = feof(file);
-                                        fputs(str, stdout);
-                                }
-
-                        /* read RAW data for the file */
-                        } else {
-                                int n;
-                                do {
-                                        n = fread(global->buffer, 1, sizeof(global->buffer), file);
-
-                                        if (printable_only) {
-                                                for (size_t i = 0; i < sizeof(global->buffer); i++) {
-                                                        int chr = global->buffer[i];
-                                                        if (!(chr == '\n' || (chr >= ' ' && chr < 0x80))) {
-                                                                global->buffer[i] = '.';
-                                                        }
-                                                }
-                                        }
-
-                                        fwrite(global->buffer, 1, n, stdout);
-                                } while (n == sizeof(global->buffer));
-                        }
-
-                        if (file != stdin) {
-                                fclose(file);
-                        }
-
-                } while (++i < argc);
-
-                free(str);
         } else {
-                perror(NULL);
-                status = EXIT_FAILURE;
+                for (int i = global->args; i < argc; i++) {
+                        read_file(argv[i]);
+                }
         }
 
         return status;
+}
+
+//==============================================================================
+/**
+ * @brief  Function read stdin.
+ */
+//==============================================================================
+static void read_stdin(void)
+{
+        char   *str = cast(char*, global->buffer);
+        int     len = sizeof(global->buffer);
+        int     eof = 0;
+        size_t line = 1;
+
+        while (!eof && fgets(str, len, stdin)) {
+                eof = feof(stdin);
+
+                if (global->number_lines) {
+                        fprintf(stdout, "%6u  %s", line, str);
+                        line++;
+                } else {
+                        fputs(str, stdout);
+                }
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function read regular file.
+ *
+ * @param  filename     file name
+ */
+//==============================================================================
+static void read_file(const char *filename)
+{
+        errno = 0;
+        FILE *file = fopen(filename, "r");
+
+        while (file) {
+                char *str = global->buffer;
+
+                size_t n = fread(global->buffer, 1, sizeof(global->buffer), file);
+                if (n == 0) {
+                        break;
+
+                } else {
+                        if (global->printable_only) {
+                                convert_to_printable(global->buffer, sizeof(global->buffer));
+                        }
+
+                        while (n > 0) {
+                                size_t len = n;
+                                char *lf = strlf(str, n, &len);
+                                if (lf) {
+                                        if (global->number_lines) {
+                                                fprintf(stdout, "%6u  %.*s", global->line, len, str);
+                                                global->line++;
+                                        } else {
+                                                fprintf(stdout, "%.*s", len, str);
+                                        }
+
+                                        str = lf + 1;
+                                } else {
+                                        fwrite(str, 1, len, stdout);
+                                }
+
+                                n -= len;
+                        }
+                }
+        }
+
+        if (file) {
+                fclose(file);
+        } else {
+                perror(filename);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Function localize \n in buffer and return substring size.
+ *
+ * @param  str          source string
+ * @param  slen         string length
+ * @param  len          substring length (number of characters from str to \n)
+ *
+ * @return Pointer to \n or NULL if not found.
+ */
+//==============================================================================
+static char *strlf(char *str, size_t slen, size_t *len)
+{
+        size_t n = 0;
+
+        while (slen--) {
+                n++;
+
+                if (*str == '\n') {
+                        *len = n;
+                        return str;
+                } else {
+                        str++;
+                }
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Function convert non printing values to '.'
+ *
+ * @param  buf          buffer
+ * @param  buflen       buffer length
+ */
+//==============================================================================
+static void convert_to_printable(char *buf, size_t buflen)
+{
+        while (buflen--) {
+                if (not ((*buf == '\n') or isprint(*buf))) {
+                        *buf = '.';
+                }
+                buf++;
+        }
 }
 
 /*==============================================================================

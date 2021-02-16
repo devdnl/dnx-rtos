@@ -478,9 +478,11 @@ void *_llist_take(llist_t *this, int position)
 
         if (is_llist_valid(this) && position >= 0) {
                 item_t *item = get_item(this, position);
-                obj = item->data;
-                if (obj) {
-                        remove_item(this, item, true);
+                if (item) {
+                        obj = item->data;
+                        if (obj) {
+                                remove_item(this, item, true);
+                        }
                 }
         }
 
@@ -500,9 +502,11 @@ void *_llist_take_front(llist_t *this)
 
         if (is_llist_valid(this)) {
                 item_t *item = this->head;
-                obj = item->data;
-                if (obj) {
-                        remove_item(this, item, true);
+                if (item) {
+                        obj = item->data;
+                        if (obj) {
+                                remove_item(this, item, true);
+                        }
                 }
         }
 
@@ -522,9 +526,11 @@ void *_llist_take_back(llist_t *this)
 
         if (is_llist_valid(this)) {
                 item_t *item = this->tail;
-                obj = item->data;
-                if (obj) {
-                        remove_item(this, item, true);
+                if (item) {
+                        obj = item->data;
+                        if (obj) {
+                                remove_item(this, item, true);
+                        }
                 }
         }
 

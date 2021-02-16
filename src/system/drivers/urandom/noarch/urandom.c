@@ -190,7 +190,7 @@ API_MOD_READ(URANDOM,
         URANDOM_t *hdl = device_handle;
 
         while (count) {
-                *dst++ = sys_rand_r(&hdl->seed);
+                *dst++ = sys_rand_r(&hdl->seed) >> (count % 3);
                 count--;
                 (*rdcnt)++;
         }
