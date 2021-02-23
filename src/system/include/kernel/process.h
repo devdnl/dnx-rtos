@@ -221,13 +221,14 @@ extern int         _process_thread_create               (_process_t*, thread_fun
 extern int         _process_thread_kill                 (_process_t*, tid_t);
 extern task_t     *_process_thread_get_task             (_process_t *proc, tid_t tid);
 extern int         _process_thread_get_stat             (pid_t, tid_t tid, thread_stat_t*);
+extern void        _process_thread_exit                 (int);
 extern void        _process_syscall_stat_inc            (_process_t *proc, _process_t *kworker);
 extern bool        _process_is_consistent               (void);
 extern void        _process_enter_kernelspace           (_process_t *proc);
 extern void        _process_exit_kernelspace            (_process_t *proc);
 extern bool        _process_is_kernelspace              (_process_t *proc, tid_t thread);
-extern void        _task_switched_in                    (task_t *task, void *task_tag);
-extern void        _task_switched_out                   (task_t *task, void *task_tag);
+extern void        _task_switched_in                    (task_t *task, void *proc, void *task_data);
+extern void        _task_switched_out                   (task_t *task, void *proc, void *task_data);
 extern void        _calculate_CPU_load                  (void);
 extern int         _get_average_CPU_load                (avg_CPU_load_t*);
 extern void        _task_get_process_container          (task_t*, _process_t**, tid_t*);

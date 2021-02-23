@@ -230,13 +230,12 @@ task_t *_kernel_get_idle_task_handle(void)
  * @param[in ] name             task name
  * @param[in ] stack_depth      stack deep
  * @param[in ] argv             argument pointer (can be NULL)
- * @param[in ] tag              user's tag (can be NULL)
  * @param[out] task             task handle (can be NULL)
  *
  * @return On of errno value.
  */
 //==============================================================================
-int _task_create(task_func_t func, const char *name, const size_t stack_depth, void *argv, void *tag, task_t **task)
+int _task_create(task_func_t func, const char *name, const size_t stack_depth, void *argv, task_t **task)
 {
         int err = EINVAL;
 
@@ -258,8 +257,6 @@ int _task_create(task_func_t func, const char *name, const size_t stack_depth, v
                 task_t *tsk = NULL;
                 if (xTaskCreate(func, name, stack_depth, argv,
                                 child_priority, &tsk) == pdPASS) {
-
-                        vTaskSetApplicationTaskTag(tsk, (void *)tag);
 
                         if (task) *task = tsk;
 
@@ -464,14 +461,15 @@ task_t *_task_get_handle(void)
  * @brief Function set task tag
  *
  * @param[in] taskhdl           task handle (NULL for current task)
- * @param[in] tag               task tag
+ * @param[in] index
  *
  * @return None
  */
 //==============================================================================
-void _task_set_tag(task_t *taskhdl, void *tag)
+void _task_set_storage_pointer(task_t *taskhdl, u8_t index, void *ptr)
 {
-        vTaskSetApplicationTaskTag(taskhdl, (TaskHookFunction_t)tag);
+
+        vTaskSetThreadLocalStoragePointer(taskhdl, index, ptr);
 }
 
 //==============================================================================
@@ -483,9 +481,9 @@ void _task_set_tag(task_t *taskhdl, void *tag)
  * @return task tag
  */
 //==============================================================================
-void *_task_get_tag(task_t *taskhdl)
+void *_task_get_storage_pointer(task_t *taskhdl, u8_t index)
 {
-        return (void*)xTaskGetApplicationTaskTag(taskhdl);
+        return pvTaskGetThreadLocalStoragePointer(taskhdl, index);
 }
 
 //==============================================================================

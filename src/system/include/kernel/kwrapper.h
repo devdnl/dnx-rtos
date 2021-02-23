@@ -95,7 +95,7 @@ extern void     _kernel_scheduler_unlock           (void);
 extern void     _kernel_release_resources          (void);
 extern task_t  *_kernel_get_idle_task_handle       (void);
 
-extern int      _task_create                       (task_func_t, const char*, const size_t, void*, void*, task_t**);
+extern int      _task_create                       (task_func_t, const char*, const size_t, void*, task_t**);
 extern void     _task_destroy                      (task_t*);
 extern void     _task_exit                         (void);
 extern void     _task_suspend                      (task_t*);
@@ -108,8 +108,8 @@ extern int      _task_get_free_stack               (task_t*);
 extern void     _task_yield                        (void);
 extern void     _task_yield_from_ISR               (bool);
 extern task_t  *_task_get_handle                   (void);
-extern void     _task_set_tag                      (task_t*, void*);
-extern void    *_task_get_tag                      (task_t*);
+extern void     _task_set_storage_pointer          (task_t*, u8_t, void*);
+extern void    *_task_get_storage_pointer          (task_t*, u8_t);
 
 extern int      _semaphore_create                  (size_t, size_t, sem_t**);
 extern int      _semaphore_destroy                 (sem_t*);

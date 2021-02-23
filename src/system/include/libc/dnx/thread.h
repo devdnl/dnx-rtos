@@ -695,6 +695,8 @@ static inline int thread_cancel(tid_t tid)
  * @brief  The thread_exit function terminates execution of the calling thread.
  * Function do not release resources allocated by thread.
  *
+ * @param status        thread exit status
+ *
  * @b Example
  * @code
         #include <dnx/thread.h>
@@ -710,7 +712,7 @@ static inline int thread_cancel(tid_t tid)
                 // or just by return
 
                 if (fail) {
-                        thread_exit();
+                        thread_exit(-1);
                         // exit here
                 }
 
@@ -737,28 +739,9 @@ static inline int thread_cancel(tid_t tid)
  * @see thread_create(), thread_join(), thread_cancel()
  */
 //==============================================================================
-static inline void thread_exit(void)
+static inline void thread_exit(int status)
 {
-        int _kill_thread(void *arg)
-        {
-                tid_t tid = (uintptr_t)arg;
-                thread_cancel(tid);
-                return 0;
-        }
-
-        static const thread_attr_t ATTR = {
-                .stack_depth = STACK_DEPTH_MINIMAL,
-                .priority    = PRIORITY_NORMAL,
-                .detached    = true,
-        };
-
-        void *arg = (void*)(uint)_builtinfunc(process_get_active_thread, NULL);
-
-        while (true) {
-                tid_t tid = thread_create(_kill_thread, &ATTR, arg);
-                while (tid  > 0) {}
-                _builtinfunc(sleep_ms, 10);
-        }
+        _process_thread_exit(status);
 }
 
 //==============================================================================

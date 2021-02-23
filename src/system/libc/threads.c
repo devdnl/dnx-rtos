@@ -184,8 +184,7 @@ void thrd_yield(void)
 //==============================================================================
 void thrd_exit(int res)
 {
-        UNUSED_ARG1(res);
-        thread_exit();
+        thread_exit(res);
         while (1) {}
 }
 

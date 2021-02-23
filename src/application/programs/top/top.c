@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
                 printf("\n");
 
                 printf(VT100_FONT_COLOR_BLACK VT100_BACK_COLOR_WHITE
-                       "PID PR     MEM   STS %%STU  %%CPU SCPS TH RES CMD"
+                       "PID PR     MEM   STS %%STU  %%CPU  SCPS TH RES CMD"
                        VT100_RESET_ATTRIBUTES "\n");
 
                 size_t seek = 0;
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
                         const char *fmtbegin = global->show_threads ? VT100_FONT_BOLD: "";
 
-                        printf("%s%3d %2d %7u %5d %4d %s %4u %2d %3d %s"VT100_RESET_ATTRIBUTES"\n",
+                        printf("%s%3d %2d %7u %5d %4d %s %5u %2d %3d %s"VT100_RESET_ATTRIBUTES"\n",
                                fmtbegin,
                                global->pstat.pid,
                                global->pstat.priority,
