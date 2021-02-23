@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
                 .detached    = false
         };
 
-        thread_join(thread_create(perf_thread, &THREAD_ATTR, NULL));
+        thread_join(thread_create(perf_thread, &THREAD_ATTR, NULL), NULL);
 
         return EXIT_SUCCESS;
 }

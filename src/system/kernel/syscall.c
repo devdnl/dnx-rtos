@@ -162,6 +162,7 @@ static void syscall_setcwd(syscallrq_t *rq);
 #endif
 static void syscall_threadcreate(syscallrq_t *rq);
 static void syscall_threadkill(syscallrq_t *rq);
+static void syscall_threadgetstatus(syscallrq_t *rq);
 static void syscall_semaphorecreate(syscallrq_t *rq);
 static void syscall_semaphoredestroy(syscallrq_t *rq);
 static void syscall_mutexcreate(syscallrq_t *rq);
@@ -282,6 +283,7 @@ static const syscallfunc_t syscalltab[] = {
         #endif
         [SYSCALL_THREADCREATE    ] = syscall_threadcreate,
         [SYSCALL_THREADKILL      ] = syscall_threadkill,
+        [SYSCALL_THREADGETSTATUS ] = syscall_threadgetstatus,
         [SYSCALL_SEMAPHORECREATE ] = syscall_semaphorecreate,
         [SYSCALL_SEMAPHOREDESTROY] = syscall_semaphoredestroy,
         [SYSCALL_MUTEXCREATE     ] = syscall_mutexcreate,
@@ -1330,6 +1332,21 @@ static void syscall_threadkill(syscallrq_t *rq)
 {
         GETARG(tid_t *, tid);
         SETERRNO(_process_thread_kill(rq->client_proc, *tid));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  Return thread exit status.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_threadgetstatus(syscallrq_t *rq)
+{
+        GETARG(tid_t *, tid);
+        GETARG(int   *, status);
+        SETERRNO(_process_thread_get_status(GETPROCESS(), *tid, status));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

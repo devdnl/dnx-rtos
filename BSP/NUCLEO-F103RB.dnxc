@@ -2908,7 +2908,7 @@
 			};
 			[19]={
 				["key"]="__OS_ENABLE_RENAME__";
-				["value"]="_NO_";
+				["value"]="_YES_";
 			};
 			[20]={
 				["key"]="__OS_ENABLE_CHMOD__";

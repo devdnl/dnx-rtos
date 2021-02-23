@@ -692,6 +692,65 @@ static inline int thread_cancel(tid_t tid)
 
 //==============================================================================
 /**
+ * @brief Function return current thread id.
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return On success, thread ID is returned. On error, -1 is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <unistd.h>
+
+        // ...
+
+        int thread(void *arg)
+        {
+                // ...
+
+                printf("Thread: %d\n", thread_current());
+
+                // thread function exit without any function,
+                // or just by return
+                return 0;
+        }
+
+        void some_function()
+        {
+                errno = 0;
+
+                tid_t tid = thread_create(thread, NULL, (void*)0);
+                if (tid) {
+                        printf("Thread %d created\n", (int)tid);
+                        sleep(1);
+
+                        if (thread_cancel(tid) == 0) {
+                                puts("Thread killed");
+                        } else {
+                                perror("Thread cancel error");
+                        }
+
+                } else {
+                        perror("Thread not created");
+                }
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see thread_create(), thread_join(), thread_exit()
+ */
+//==============================================================================
+static inline int thread_current(void)
+{
+        return _builtinfunc(process_get_active_thread, NULL);
+}
+
+//==============================================================================
+/**
  * @brief  The thread_exit function terminates execution of the calling thread.
  * Function do not release resources allocated by thread.
  *
@@ -752,6 +811,7 @@ static inline void thread_exit(int status)
  * program. Function wait until thread was closed or timeout occurred.
  *
  * @param tid           thread ID
+ * @param status        thread exit status
  * @param timeout_ms    timeout in milliseconds
  *
  * @exception | @ref EINVAL
@@ -785,7 +845,8 @@ static inline void thread_exit(int status)
                         printf("Thread %d created\n", (int)tid);
                         sleep(1);
 
-                        if (thread_join2(tid, MAX_DELAY_MS) == 0) {
+                        int status;
+                        if (thread_join2(tid, &status, MAX_DELAY_MS) == 0) {
                                 puts("Joinded with thread");
                         } else {
                                 perror("Thread join error");
@@ -803,7 +864,7 @@ static inline void thread_exit(int status)
  * @see thread_create(), thread_cancel()
  */
 //==============================================================================
-static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
+static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
 {
         int r = -1;
 
@@ -819,10 +880,16 @@ static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
                         _errno = _builtinfunc(flag_wait, flag,
                                               _PROCESS_EXIT_FLAG(tid),
                                               timeout_ms);
-                        r = _errno ? -1 : 0;
+                        if (!_errno) {
+                                if (status) {
+                                        syscall(SYSCALL_THREADGETSTATUS, &r, &tid, status);
+                                }
+                        } else {
+                                r = -1;
+                        }
                 }
         } else {
-                _errno = 1;
+                _errno = 17;
         }
 
         return r;
@@ -836,6 +903,7 @@ static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
  * program. Function wait until thread was closed.
  *
  * @param tid           thread ID
+ * @param status        thread exit status
  *
  * @exception | @ref EINVAL
  * @exception | @ref ETIME
@@ -868,7 +936,8 @@ static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
                         printf("Thread %d created\n", (int)tid);
                         sleep(1);
 
-                        if (thread_join(tid) == 0) {
+                        int status;
+                        if (thread_join(tid, &status) == 0) {
                                 puts("Joinded with thread");
                         } else {
                                 perror("Thread join error");
@@ -886,9 +955,9 @@ static inline int thread_join2(tid_t tid, uint32_t timeout_ms)
  * @see thread_create(), thread_cancel()
  */
 //==============================================================================
-static inline int thread_join(tid_t tid)
+static inline int thread_join(tid_t tid, int *status)
 {
-        return thread_join2(tid, MAX_DELAY_MS);
+        return thread_join2(tid, status, MAX_DELAY_MS);
 }
 
 //==============================================================================

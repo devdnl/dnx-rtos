@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
 
                                         thread_stat_t stat;
                                         if (thread_stat(global->pstat.pid, tid, &stat) == 0) {
-                                                printf("%     %2d         %5d %4d  %2d.%d %4u %2d\n",
+                                                printf("%     %2d         %5d %4d  %2d.%d %5u %2d\n",
                                                         stat.priority,
                                                         stat.stack_size,
                                                         stat.stack_max_usage * 100 / stat.stack_size,

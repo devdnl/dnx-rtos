@@ -1289,6 +1289,27 @@ USERSPACE void _process_thread_exit(int exit)
 
 //==============================================================================
 /**
+ * @brief  Function return thread exit status.
+ *
+ * @param  proc         process
+ * @param  tid          thread id
+ * @param  status       destiantion status pointer
+ *
+ * @return On success 0 is returned, otherwise -1.
+ */
+//==============================================================================
+KERNELSPACE int _process_thread_get_status(_process_t *proc, tid_t tid, int *status)
+{
+        if (is_proc_valid(proc) and is_tid_in_range(proc, tid) and status) {
+                *status = proc->taskdata[tid].status;
+                return 0;
+        } else {
+                return -1;
+        }
+}
+
+//==============================================================================
+/**
  * Function increase syscall request counter (stats).
  *
  * @param proc          process
@@ -2461,7 +2482,7 @@ KERNELSPACE void _task_switched_in(task_t *task, void *proc, void *task_data)
 //==============================================================================
 KERNELSPACE void _task_switched_out(task_t *task, void *proc, void *task_data)
 {
-        UNUSED_ARG3(task, proc, task_data);
+        UNUSED_ARG2(task, proc);
 
         if (active_process && (active_process->header.type == RES_TYPE_PROCESS)) {
                 cast(task_data_t*, task_data)->errnov = _errno;
