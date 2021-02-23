@@ -343,7 +343,7 @@ static inline int process_kill(pid_t pid)
 /**
  * @brief Function wait for selected process close.
  *
- * The function process_wait() wait for program close. Function destroy
+ * The function process_wait() wait for process close. Function destroy
  * child process when finish successfully at the selected timeout. In case of
  * timeout the process is not destroyed.
  *
@@ -389,6 +389,8 @@ static inline int process_kill(pid_t pid)
         // ...
 
    @endcode
+ *
+ * @see wait()
  */
 //==============================================================================
 static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
@@ -406,6 +408,62 @@ static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
         }
 
         return r;
+}
+
+//==============================================================================
+/**
+ * @brief Function wait for selected process close.
+ *
+ * The function wait() wait for process close.
+ *
+ * @param pid                   process ID
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ETIME
+ * @exception | ...
+ *
+ * @return Return process status or -1 on error.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        errno = 0;
+
+        static const process_attr_t attr = {
+                .f_stdin   = stdin,
+                .f_stdout  = stdout,
+                .f_stderr  = stderr,
+                .p_stdin   = NULL,
+                .p_stdout  = NULL,
+                .p_stderr  = NULL,
+                .detached  = false
+        }
+
+        int   status = -1;
+        pid_t pid    = process_create("ls /", &attr);
+        if (pid) {
+                status = wait(pid);
+        } else {
+                perror("Program not started");
+
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see process_wait()
+ */
+//==============================================================================
+static inline int wait(pid_t pid)
+{
+        int status = -1;
+        process_wait(pid, &status, MAX_DELAY_MS);
+        return status;
 }
 
 //==============================================================================
