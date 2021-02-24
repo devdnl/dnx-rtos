@@ -35,7 +35,7 @@ GLOBAL_VARIABLES_SECTION {
         lua_State *globalL;
         const char *progname;
 };
-PROGRAM_PARAMS(lua, STACK_DEPTH_MEDIUM);
+PROGRAM_PARAMS(lua, STACK_DEPTH_LARGE);
 
 
 
