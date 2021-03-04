@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 //==============================================================================
 static void help(const char *name)
 {
-        printf("Usage: %s [ARGUMETNS]...\n", name);
+        printf("Usage: %s [ARGUMENTS]...\n", name);
         printf("  if=FILE       input file\n");
         printf("  of=FILE       output file\n");
         printf("  bs=BYTES      block size\n");

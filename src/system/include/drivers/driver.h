@@ -315,6 +315,8 @@ extern "C" {
 #define API_MOD_STAT(modname, ...)              _MODULE_EXTERN_C int _##modname##_stat(__VA_ARGS__)
 #endif
 
+#define dev_dbg(_hdl, format, ...)              printk("%s%u-%u: "format, GET_MODULE_NAME(), _hdl->major, _hdl->minor, __VA_ARGS__)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
