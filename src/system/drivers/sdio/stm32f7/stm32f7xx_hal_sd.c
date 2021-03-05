@@ -1073,7 +1073,7 @@ HAL_StatusTypeDef HAL_SD_ReadBlocks_IT(SD_HandleTypeDef *hsd, uint8_t *pData, ui
   * @param  NumberOfBlocks: Number of blocks to write
   * @retval HAL status
   */
-HAL_StatusTypeDef HAL_SD_WriteBlocks_IT(SD_HandleTypeDef *hsd, uint8_t *pData, uint32_t BlockAdd, uint32_t NumberOfBlocks)
+HAL_StatusTypeDef HAL_SD_WriteBlocks_IT(SD_HandleTypeDef *hsd, const uint8_t *pData, uint32_t BlockAdd, uint32_t NumberOfBlocks)
 {
   SDMMC_DataInitTypeDef config;
   uint32_t errorstate;
@@ -3198,7 +3198,7 @@ static void SD_Read_IT(SD_HandleTypeDef *hsd)
 static void SD_Write_IT(SD_HandleTypeDef *hsd)
 {
   uint32_t count, data, dataremaining;
-  uint8_t* tmp;
+  const uint8_t* tmp;
 
   tmp = hsd->pTxBuffPtr;
   dataremaining = hsd->TxXferSize;

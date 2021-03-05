@@ -158,6 +158,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f7xx_ll_sdmmc.h"
 
+#define SystemCoreClock         ((uint32_t)216000000UL)
+
 #if defined(SDMMC1)
 
 /** @addtogroup STM32F7xx_HAL_Driver
@@ -1140,15 +1142,15 @@ uint32_t SDMMC_CmdSwitch(SDMMC_TypeDef *SDMMCx, uint32_t Argument)
   */
 static uint32_t SDMMC_GetCmdError(SDMMC_TypeDef *SDMMCx)
 {
-  u64_t tref = HAL_GetTick();
+  /* 8 is the number of required instructions cycles for the below loop statement.
+  The SDMMC_CMDTIMEOUT is expressed in ms */
+  register uint32_t count = SDMMC_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
+
   do
   {
-    if (HAL_GetTick() - tref >= SDMMC_CMDTIMEOUT) {
-      return SDMMC_ERROR_TIMEOUT;
-    }
-    else
+    if (count-- == 0U)
     {
-      HAL_Delay(1);
+      return SDMMC_ERROR_TIMEOUT;
     }
 
   }while(!__SDMMC_GET_FLAG(SDMMCx, SDMMC_FLAG_CMDSENT));
@@ -1170,16 +1172,15 @@ static uint32_t SDMMC_GetCmdResp1(SDMMC_TypeDef *SDMMCx, uint8_t SD_CMD, uint32_
   uint32_t response_r1;
   uint32_t sta_reg;
 
-  u64_t tref = HAL_GetTick();
+  /* 8 is the number of required instructions cycles for the below loop statement.
+  The Timeout is expressed in ms */
+  register uint32_t count = Timeout * (SystemCoreClock / 8U /1000U);
+
   do
   {
-    if (HAL_GetTick() - tref >= Timeout)
+    if (count-- == 0U)
     {
       return SDMMC_ERROR_TIMEOUT;
-    }
-    else
-    {
-      HAL_Delay(1);
     }
     sta_reg = SDMMCx->STA;
   }while(((sta_reg & (SDMMC_FLAG_CCRCFAIL | SDMMC_FLAG_CMDREND | SDMMC_FLAG_CTIMEOUT)) == 0U) ||
@@ -1304,17 +1305,15 @@ static uint32_t SDMMC_GetCmdResp1(SDMMC_TypeDef *SDMMCx, uint8_t SD_CMD, uint32_
 static uint32_t SDMMC_GetCmdResp2(SDMMC_TypeDef *SDMMCx)
 {
   uint32_t sta_reg;
+  /* 8 is the number of required instructions cycles for the below loop statement.
+  The SDMMC_CMDTIMEOUT is expressed in ms */
+  register uint32_t count = SDMMC_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
 
-  u64_t tref = HAL_GetTick();
   do
   {
-    if (HAL_GetTick() - tref >= SDMMC_CMDTIMEOUT)
+    if (count-- == 0U)
     {
       return SDMMC_ERROR_TIMEOUT;
-    }
-    else
-    {
-      HAL_Delay(1);
     }
     sta_reg = SDMMCx->STA;
   }while(((sta_reg & (SDMMC_FLAG_CCRCFAIL | SDMMC_FLAG_CMDREND | SDMMC_FLAG_CTIMEOUT)) == 0U) ||
@@ -1350,17 +1349,15 @@ static uint32_t SDMMC_GetCmdResp2(SDMMC_TypeDef *SDMMCx)
 static uint32_t SDMMC_GetCmdResp3(SDMMC_TypeDef *SDMMCx)
 {
   uint32_t sta_reg;
+  /* 8 is the number of required instructions cycles for the below loop statement.
+  The SDMMC_CMDTIMEOUT is expressed in ms */
+  register uint32_t count = SDMMC_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
 
-  u64_t tref = HAL_GetTick();
   do
   {
-    if (HAL_GetTick() - tref >= SDMMC_CMDTIMEOUT)
+    if (count-- == 0U)
     {
       return SDMMC_ERROR_TIMEOUT;
-    }
-    else
-    {
-      HAL_Delay(1);
     }
     sta_reg = SDMMCx->STA;
   }while(((sta_reg & (SDMMC_FLAG_CCRCFAIL | SDMMC_FLAG_CMDREND | SDMMC_FLAG_CTIMEOUT)) == 0U) ||
@@ -1394,16 +1391,15 @@ static uint32_t SDMMC_GetCmdResp6(SDMMC_TypeDef *SDMMCx, uint8_t SD_CMD, uint16_
   uint32_t response_r1;
   uint32_t sta_reg;
 
-  u64_t tref = HAL_GetTick();
+  /* 8 is the number of required instructions cycles for the below loop statement.
+  The SDMMC_CMDTIMEOUT is expressed in ms */
+  register uint32_t count = SDMMC_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
+
   do
   {
-    if (HAL_GetTick() - tref >= SDMMC_CMDTIMEOUT)
+    if (count-- == 0U)
     {
       return SDMMC_ERROR_TIMEOUT;
-    }
-    else
-    {
-      HAL_Delay(1);
     }
     sta_reg = SDMMCx->STA;
   }while(((sta_reg & (SDMMC_FLAG_CCRCFAIL | SDMMC_FLAG_CMDREND | SDMMC_FLAG_CTIMEOUT)) == 0U) ||
@@ -1466,17 +1462,15 @@ static uint32_t SDMMC_GetCmdResp6(SDMMC_TypeDef *SDMMCx, uint8_t SD_CMD, uint16_
 static uint32_t SDMMC_GetCmdResp7(SDMMC_TypeDef *SDMMCx)
 {
   uint32_t sta_reg;
+  /* 8 is the number of required instructions cycles for the below loop statement.
+  The SDMMC_CMDTIMEOUT is expressed in ms */
+  register uint32_t count = SDMMC_CMDTIMEOUT * (SystemCoreClock / 8U /1000U);
 
-  u64_t tref = HAL_GetTick();
   do
   {
-    if (HAL_GetTick() - tref >= SDMMC_CMDTIMEOUT)
+    if (count-- == 0U)
     {
       return SDMMC_ERROR_TIMEOUT;
-    }
-    else
-    {
-      HAL_Delay(1);
     }
     sta_reg = SDMMCx->STA;
   }while(((sta_reg & (SDMMC_FLAG_CCRCFAIL | SDMMC_FLAG_CMDREND | SDMMC_FLAG_CTIMEOUT)) == 0U) ||

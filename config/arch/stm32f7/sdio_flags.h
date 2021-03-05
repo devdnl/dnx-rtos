@@ -59,7 +59,7 @@ this:AddWidget("Combobox", "Bus wide")
 this:AddItem("1-bit wide bus", "SDMMC_BUS_WIDE_1B")
 this:AddItem("4-bit wide bus", "SDMMC_BUS_WIDE_4B")
 --*/
-#define __SDIO_CFG_BUS_WIDE__ SDMMC_BUS_WIDE_1B
+#define __SDIO_CFG_BUS_WIDE__ SDMMC_BUS_WIDE_4B
 
 /*--
 this:AddWidget("Spinbox", 1, 256, "Clock divide factor")
@@ -79,12 +79,12 @@ this:AddItem("Enable", "SDMMC_CLOCK_POWER_SAVE_ENABLE")
 #define __SDIO_CFG_PWRSAVE__ SDMMC_CLOCK_POWER_SAVE_DISABLE
 
 /*--
-this:AddWidget("Combobox", "Use DMA")
-this:AddItem("Never", "_SDIO_USE_DMA_NEVER")
-this:AddItem("If available", "_SDIO_USE_DMA_IFAVAILABLE")
-this:AddItem("Always", "_SDIO_USE_DMA_ALWAYS")
+this:AddWidget("Combobox", "Driver mode")
+this:AddItem("Polling", "_SDIO_MODE_POLLING")
+this:AddItem("IRQ", "_SDIO_MODE_IRQ")
+this:AddItem("DMA", "_SDIO_MODE_DMA")
 --*/
-#define __SDIO_CFG_USEDMA__ _SDIO_USE_DMA_ALWAYS
+#define __SDIO_CFG_MODE__ _SDIO_MODE_IRQ
 
 /*--
 this:AddWidget("Combobox", "IRQ priority")
