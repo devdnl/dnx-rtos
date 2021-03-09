@@ -76,7 +76,7 @@ Brief    String options analyze library.
  * @return Pointer to found value.
  */
 //==============================================================================
-const char *find_var(const char *opts, const char *var, size_t *len)
+static const char *find_var(const char *opts, const char *var, size_t *len)
 {
         char token[32];
         _strlcpy(token, var, sizeof(token));
@@ -109,7 +109,7 @@ const char *find_var(const char *opts, const char *var, size_t *len)
  * @return If flag found true is returned, false otherwise.
  */
 //==============================================================================
-bool find_flag(const char *opts, const char *flag)
+static bool find_flag(const char *opts, const char *flag)
 {
         const char *b = NULL;
 

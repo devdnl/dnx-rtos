@@ -214,6 +214,10 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                 return ENOENT;
         }
 
+        if (!attr) {
+                return EINVAL;
+        }
+
         char        *cmdarg    = NULL;
         _process_t  *proc      = NULL;
         task_args_t *task_args = NULL;
