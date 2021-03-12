@@ -85,6 +85,11 @@ typedef DMA_Channel_TypeDef     DMA_Stream_TypeDef;
 #define USART_SR_RXNE           USART_ISR_RXNE_RXFNE
 #define USART_SR_ORE            USART_ISR_ORE
 #define USART_SR_TC             USART_ISR_TC
+#define USART_SR_IDLE           USART_ISR_IDLE
+#define USART_SR_TXE            USART_ISR_TXE_TXFNF
+#define _DMA_DDI_reserve(...)   0
+#define _DMA_DDI_release(...)
+#define _DMA_DDI_get_stream(...) ENOTSUP
 #endif
 
 /*==============================================================================
@@ -133,7 +138,9 @@ typedef struct {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+#if !defined(ARCH_stm32h7)
 static bool dma_half_and_finish(DMA_Stream_TypeDef *stream, u8_t sr, void *arg);
+#endif
 
 /*==============================================================================
   Local object definitions
@@ -185,7 +192,8 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 2,
                 .DMA_rx_stream_alt = 5,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART16_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART16_CLKSOURCE,
+                .DMA_channel       = 41,
                 #endif
         },
         #endif
@@ -232,7 +240,8 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 5,
                 .DMA_rx_stream_alt = 5,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART234578_CLKSOURCE,
+                .DMA_channel       = 43,
                 #endif
         },
         #endif
@@ -279,7 +288,8 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 1,
                 .DMA_rx_stream_alt = 1,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART234578_CLKSOURCE,
+                .DMA_channel       = 45,
                 #endif
         },
         #endif
@@ -326,7 +336,8 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 2,
                 .DMA_rx_stream_alt = 2,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART234578_CLKSOURCE,
+                .DMA_channel       = 63,
                 #endif
         },
         #endif
@@ -373,7 +384,8 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 0,
                 .DMA_rx_stream_alt = 0,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART234578_CLKSOURCE,
+                .DMA_channel       = 65,
                 #endif
         },
         #endif
@@ -416,7 +428,8 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 1,
                 .DMA_rx_stream_alt = 2,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART16_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART16_CLKSOURCE,
+                .DMA_channel       = 71,
                 #endif
         },
         #endif
@@ -459,7 +472,8 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 3,
                 .DMA_rx_stream_alt = 3,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART234578_CLKSOURCE,
+                .DMA_channel       = 79,
                 #endif
         },
         #endif
@@ -502,7 +516,8 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 6,
                 .DMA_rx_stream_alt = 6,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART234578_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART234578_CLKSOURCE,
+                .DMA_channel       = 81,
                 #endif
         },
         #endif
@@ -541,7 +556,8 @@ static const UART_setup_t UART[] = {
                 #elif defined(ARCH_stm32f7)
                 .CLKSRC            = LL_RCC_UART9_CLKSOURCE,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART16910_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART16910_CLKSOURCE,
+                .DMA_channel       = UINT8_MAX,
                 #endif
         },
         #endif
@@ -580,7 +596,8 @@ static const UART_setup_t UART[] = {
                 #elif defined(ARCH_stm32f7)
                 .CLKSRC            = LL_RCC_UART10_CLKSOURCE,
                 #elif defined(ARCH_stm32h7)
-                .CLKSRC          = LL_RCC_USART16910_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART16910_CLKSOURCE,
+                .DMA_channel       = UINT8_MAX,
                 #endif
         }
         #endif
@@ -864,7 +881,7 @@ int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *co
         }
 
         if (uarthdl->DMA) {
-
+#if !defined(ARCH_stm32h7)
                 _DMA_DDI_config_t dma_conf;
                 dma_conf.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
                 dma_conf.arg       = hdl;
@@ -898,7 +915,7 @@ int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *co
 
                 SET_BIT(SETUP->UART->CR1, USART_CR1_IDLEIE);
                 SET_BIT(SETUP->UART->CR3, USART_CR3_DMAR);
-
+#endif
         } else {
                 SET_BIT(SETUP->UART->CR1, USART_CR1_RXNEIE);
         }
@@ -954,11 +971,13 @@ static bool receive_from_DMA_buffer(struct UART_mem *hdl)
  * @return True if task should yield, otherwise false.
  */
 //==============================================================================
+#if !defined(ARCH_stm32h7)
 static bool dma_half_and_finish(DMA_Stream_TypeDef *stream, u8_t sr, void *arg)
 {
         UNUSED_ARG3(stream, sr, arg);
         return receive_from_DMA_buffer(arg);
 }
+#endif
 
 //==============================================================================
 /**

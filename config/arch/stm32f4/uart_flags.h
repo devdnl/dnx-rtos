@@ -583,7 +583,7 @@ end
 
 /*--
 if this:PortExist(10) then
-this:AddExtraWidget("Label", "LabelIRQDMA10", "\nUART9 IRQ and DMA configuration", -1, "bold")
+this:AddExtraWidget("Label", "LabelIRQDMA10", "\nUART10 IRQ and DMA configuration", -1, "bold")
 this:AddExtraWidget("Void", "VoidIRQDMA10")
 end
 ++*/
