@@ -131,75 +131,75 @@
 #         end
 #     end
 #
-#     uC.PERIPH["STM32F301C6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true}
-#     uC.PERIPH["STM32F301C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true}
-#     uC.PERIPH["STM32F301K6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true}
-#     uC.PERIPH["STM32F301K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true}
-#     uC.PERIPH["STM32F301R6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true}
-#     uC.PERIPH["STM32F301R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true}
-#     uC.PERIPH["STM32F302C6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302CBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302K6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302R6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302RBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302RDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302RExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302VBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302VDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302VExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302ZDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F302ZExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303C6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303CBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303K6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303R6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303RBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303RDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303RExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303VBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303VDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303VExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303ZDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F303ZExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F318C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true}
-#     uC.PERIPH["STM32F318K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true}
-#     uC.PERIPH["STM32F328C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F334C4xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F334C6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F334C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F334K4xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F334K6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F334K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F334R6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F334R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F358CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F358RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F358VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F373C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F373CBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F373CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F373R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F373RBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F373RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F373V8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F373VBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F373VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F378CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F378RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F378VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
-#     uC.PERIPH["STM32F398VExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F301C6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true}
+#     uC.PERIPH["STM32F301C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true}
+#     uC.PERIPH["STM32F301K6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true}
+#     uC.PERIPH["STM32F301K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true}
+#     uC.PERIPH["STM32F301R6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true}
+#     uC.PERIPH["STM32F301R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true}
+#     uC.PERIPH["STM32F302C6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302CBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302K6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302R6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302RBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302RDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302RExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302VBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302VDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302VExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302ZDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F302ZExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303C6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303CBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303K6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303R6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303RBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303RDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303RExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303VBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303VDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303VExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303ZDxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F303ZExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F318C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true}
+#     uC.PERIPH["STM32F318K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true}
+#     uC.PERIPH["STM32F328C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F334C4xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F334C6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F334C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F334K4xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F334K6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F334K8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F334R6xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F334R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F358CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F358RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F358VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F373C8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F373CBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F373CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F373R8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F373RBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F373RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F373V8xx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F373VBxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F373VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F378CCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F378RCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F378VCxx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
+#     uC.PERIPH["STM32F398VExx"] = {GPIO = true, CLK = true, I2C = true, IRQ = true, DMA = true, PWM = true, UART = true, CAN = true}
 # end
 #
 # if uC.ARCH == "stm32f4" then
@@ -985,9 +985,9 @@ __ENABLE_FMC__=_NO_
 #     this:SetFlagValue("__ENABLE_DMA__", "_NO_")
 # end
 #--*/
-#define __ENABLE_DMA__ _NO_
+#define __ENABLE_DMA__ _YES_
 #/*
-__ENABLE_DMA__=_NO_
+__ENABLE_DMA__=_YES_
 #*/
 
 #/*--

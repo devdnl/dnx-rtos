@@ -50,10 +50,16 @@ typedef DMA_Channel_t           DMA_Stream_TypeDef;
 #elif defined(ARCH_stm32f3)
 #include "stm32f3/stm32f3xx.h"
 #include "stm32f3/lib/stm32f3xx_ll_rcc.h"
+#include "stm32f3/dma_ddi.h"
 #define SR                      ISR
 #define USART_SR_RXNE           USART_ISR_RXNE
 #define USART_SR_ORE            USART_ISR_ORE
 #define USART_SR_TC             USART_ISR_TC
+#define USART_SR_IDLE           USART_ISR_IDLE
+#define USART_SR_TXE            USART_ISR_TXE
+#define NDTR                    CNDTR
+#define _DMA_DDI_get_stream     _DMA_DDI_get_channel
+typedef DMA_Channel_TypeDef     DMA_Stream_TypeDef;
 #elif defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
@@ -154,13 +160,17 @@ static const UART_setup_t UART[] = {
                 .APBRSTR_UARTRST = RCC_APB2RSTR_USART1RST,
                 #endif
                 #if defined(ARCH_stm32f1)
-                .CLKSRC          = USART_CLKSOURCE_PCLK2,
+                .CLKSRC            = USART_CLKSOURCE_PCLK2,
                 .DMA_channel       = UINT8_MAX,
                 .DMA_major         = 0,
                 .DMA_rx_stream_pri = 5,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
-                .CLKSRC          = LL_RCC_USART1_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART1_CLKSOURCE,
+                .DMA_channel       = UINT8_MAX,
+                .DMA_major         = 0,
+                .DMA_rx_stream_pri = 5,
+                .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK2,
                 #elif defined(ARCH_stm32f7)
@@ -199,7 +209,11 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 6,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
-                .CLKSRC          = LL_RCC_USART2_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART2_CLKSOURCE,
+                .DMA_channel       = UINT8_MAX,
+                .DMA_major         = 0,
+                .DMA_rx_stream_pri = 6,
+                .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f7)
@@ -238,7 +252,11 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 3,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
-                .CLKSRC          = LL_RCC_USART3_CLKSOURCE,
+                .CLKSRC            = LL_RCC_USART3_CLKSOURCE,
+                .DMA_channel       = UINT8_MAX,
+                .DMA_major         = 0,
+                .DMA_rx_stream_pri = 3,
+                .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f7)
@@ -277,7 +295,11 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 3,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
-                .CLKSRC          = LL_RCC_UART4_CLKSOURCE,
+                .CLKSRC            = LL_RCC_UART4_CLKSOURCE,
+                .DMA_channel       = UINT8_MAX,
+                .DMA_major         = 1,
+                .DMA_rx_stream_pri = 3,
+                .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f7)
@@ -316,7 +338,11 @@ static const UART_setup_t UART[] = {
                 .DMA_rx_stream_pri = 4,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
-                .CLKSRC          = LL_RCC_UART5_CLKSOURCE,
+                .CLKSRC            = LL_RCC_UART5_CLKSOURCE,
+                .DMA_channel       = UINT8_MAX,
+                .DMA_major         = 1,
+                .DMA_rx_stream_pri = UINT8_MAX,
+                .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f4)
                 .CLKSRC          = USART_CLKSOURCE_PCLK1,
                 #elif defined(ARCH_stm32f7)
@@ -807,7 +833,7 @@ int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *co
                 dma_conf.release   = false;
                 dma_conf.NDT       = uarthdl->DMA->buflen;
                 dma_conf.PA        = cast(u32_t, &UART[hdl->major].UART->RDR);
-#if defined(ARCH_stm32f1)
+#if defined(ARCH_stm32f1) || defined(ARCH_stm32f3)
                 dma_conf.MA        = cast(u32_t, uarthdl->DMA->buf);
                 dma_conf.CR        = DMA_CCRx_MINC_ENABLE
                                    | DMA_CCRx_DIR_P2M
