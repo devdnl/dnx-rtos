@@ -1,3 +1,4 @@
+#!/usr/bin/env lua
 --------------------------------------------------------------------------------
 -- @brief  Load table from file
 -- @param  file         file to read from
@@ -128,5 +129,5 @@ if #arg == 2 then
     Optimize(tab, arg[2])
     SaveTable(tab, arg[1])
 else
-    print("Usage: lua optimize.lua <bsp-file> <architecture>")
+    print("Usage: ./optimize.lua <bsp-file> <architecture>")
 end
