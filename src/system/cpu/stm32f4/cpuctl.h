@@ -64,6 +64,9 @@ extern "C" {
 #define _cpuctl_clean_dcache_by_addr(...)
 #define _cpuctl_clean_invalidate_dcache_by_addr(...)
 
+/* CACHE macros */
+#define _CPUCTL_CACHE_ALIGN                     1
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/

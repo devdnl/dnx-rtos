@@ -433,38 +433,40 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         _SPI[hdl->major]->count      = count;
 
                         _DMA_DDI_config_t config_tx;
-                        config_tx.arg      = NULL;
-                        config_tx.callback = NULL;
-                        config_tx.cb_next  = NULL;
-                        config_tx.release  = true;
-                        config_tx.NDT      = count;
-                        config_tx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
+                        config_tx.arg       = NULL;
+                        config_tx.cb_finish = NULL;
+                        config_tx.cb_half   = NULL;
+                        config_tx.cb_next   = NULL;
+                        config_tx.release   = true;
+                        config_tx.NDT       = count;
+                        config_tx.PA        = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
                         config_tx.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 #if defined(ARCH_stm32f1)
-                        config_tx.MA       = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
-                        config_tx.CR       = (txbuf ? DMA_CCRx_MINC_ENABLE : DMA_CCRx_MINC_FIXED)
-                                           | DMA_CCRx_DIR_M2P
-                                           | DMA_CCRx_MSIZE_BYTE
-                                           | DMA_CCRx_PSIZE_BYTE;
+                        config_tx.MA        = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
+                        config_tx.CR        = (txbuf ? DMA_CCRx_MINC_ENABLE : DMA_CCRx_MINC_FIXED)
+                                            | DMA_CCRx_DIR_M2P
+                                            | DMA_CCRx_MSIZE_BYTE
+                                            | DMA_CCRx_PSIZE_BYTE;
 
 #elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
-                        config_tx.MA[0]    = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
-                        config_tx.MA[1]    = 0;
-                        config_tx.FC       = 0;
-                        config_tx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
-                                           | (txbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)
-                                           | DMA_SxCR_DIR_M2P
-                                           | DMA_SxCR_MSIZE_BYTE
-                                           | DMA_SxCR_PSIZE_BYTE;
+                        config_tx.MA[0]     = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
+                        config_tx.MA[1]     = 0;
+                        config_tx.FC        = 0;
+                        config_tx.CR        = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
+                                            | (txbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)
+                                            | DMA_SxCR_DIR_M2P
+                                            | DMA_SxCR_MSIZE_BYTE
+                                            | DMA_SxCR_PSIZE_BYTE;
 #endif
 
                         _DMA_DDI_config_t config_rx;
-                        config_rx.arg      = hdl;
-                        config_rx.callback = DMA_callback;
-                        config_rx.cb_next  = NULL;
-                        config_rx.release  = true;
-                        config_rx.NDT      = count;
-                        config_rx.PA       = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
+                        config_rx.arg       = hdl;
+                        config_rx.cb_finish = DMA_callback;
+                        config_rx.cb_half   = NULL;
+                        config_rx.cb_next   = NULL;
+                        config_rx.release   = true;
+                        config_rx.NDT       = count;
+                        config_rx.PA        = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
                         config_rx.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 #if defined(ARCH_stm32f1)
                         config_rx.MA       = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
@@ -473,14 +475,14 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                                            | DMA_CCRx_MSIZE_BYTE
                                            | DMA_CCRx_PSIZE_BYTE;
 #elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
-                        config_rx.MA[0]    = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
-                        config_rx.MA[1]    = 0;
-                        config_rx.FC       = 0;
-                        config_rx.CR       = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
-                                           | (rxbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)
-                                           | DMA_SxCR_DIR_P2M
-                                           | DMA_SxCR_MSIZE_BYTE
-                                           | DMA_SxCR_PSIZE_BYTE;
+                        config_rx.MA[0]     = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
+                        config_rx.MA[1]     = 0;
+                        config_rx.FC        = 0;
+                        config_rx.CR        = DMA_SxCR_CHSEL_SEL(SPI_HW[hdl->major].DMA_channel)
+                                            | (rxbuf ? DMA_SxCR_MINC_ENABLE : DMA_SxCR_MINC_FIXED)
+                                            | DMA_SxCR_DIR_P2M
+                                            | DMA_SxCR_MSIZE_BYTE
+                                            | DMA_SxCR_PSIZE_BYTE;
 #endif
                         err = _DMA_DDI_transfer(dmadrx, &config_rx);
                         if (!err) {

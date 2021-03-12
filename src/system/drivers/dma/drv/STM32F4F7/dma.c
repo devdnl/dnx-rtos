@@ -54,7 +54,8 @@ typedef struct {
 
 typedef struct {
         void           *arg;
-        _DMA_cb_t       callback;
+        _DMA_cb_t       cb_finish;
+        _DMA_cb_t       cb_half;
         _DMA_cb_t       cb_next;
         u32_t           dmad;
         bool            release;
@@ -410,8 +411,10 @@ void _DMA_DDI_release(u32_t dmad)
 
                         DMA_Stream_TypeDef *DMA_Stream = DMA_HW[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
 
-                        RT_stream->callback = NULL;
-                        DMA_Stream->CR      = 0;
+                        RT_stream->cb_finish = NULL;
+                        RT_stream->cb_half   = NULL;
+                        RT_stream->cb_next   = NULL;
+                        DMA_Stream->CR       = 0;
 
                         clear_DMA_IRQ_flags(GETMAJOR(dmad), GETSTREAM(dmad));
 
@@ -423,6 +426,37 @@ void _DMA_DDI_release(u32_t dmad)
                         memset(RT_stream, 0, sizeof(DMA_RT_stream_t));
                 }
         }
+}
+
+//==============================================================================
+/**
+ * @brief Function reaturn DMA steram according to DMA descriptor.
+ *
+ * @param dmad                  DMA descriptor.
+ * @param stream                stream
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _DMA_DDI_get_stream(u32_t dmad, DMA_Stream_TypeDef **stream)
+{
+        int err = EINVAL;
+
+        if (dmad && DMA_RT[GETMAJOR(dmad)] && stream) {
+                DMA_RT_stream_t *RT_stream = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
+
+                if (RT_stream->dmad == dmad) {
+
+                        DMA_Stream_TypeDef *DMA_Stream = DMA_HW[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
+                        *stream = DMA_Stream;
+                        err = 0;
+
+                } else {
+                        err = ENODEV;
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -462,10 +496,11 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                         DMA_Stream->CR   = config->CR & ~DMA_SxCR_EN;
                         DMA_Stream->FCR  = config->FC;
 
-                        RT_stream->arg      = config->arg;
-                        RT_stream->callback = config->callback;
-                        RT_stream->cb_next  = config->cb_next;
-                        RT_stream->release  = config->release;
+                        RT_stream->arg       = config->arg;
+                        RT_stream->cb_finish = config->cb_finish;
+                        RT_stream->cb_half   = config->cb_half;
+                        RT_stream->cb_next   = config->cb_next;
+                        RT_stream->release   = config->release;
 
                         clear_DMA_IRQ_flags(GETMAJOR(dmad), GETSTREAM(dmad));
                         NVIC_SetPriority(IRQn, config->IRQ_priority);
@@ -484,7 +519,7 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                                 }
                         }
 
-                        SET_BIT(DMA_Stream->CR, DMA_SxCR_TCIE | DMA_SxCR_TEIE);
+                        SET_BIT(DMA_Stream->CR, DMA_SxCR_TCIE | DMA_SxCR_TEIE | (config->cb_half ? DMA_SxCR_HTIE : 0));
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_EN);
 
                         err = ESUCC;
@@ -565,15 +600,16 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
 
                 if (NDT <= UINT16_MAX) {
                         _DMA_DDI_config_t config;
-                        config.arg      = hdl->queue[stream];
-                        config.callback = M2M_callback;
-                        config.cb_next  = NULL;
-                        config.release  = true;
-                        config.PA       = cast(u32_t, src);
-                        config.MA[0]    = cast(u32_t, dst);
-                        config.NDT      = NDT;
-                        config.FC       = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
-                        config.CR       = PMSIZE | (2 << DMA_SxCR_DIR_Pos)
+                        config.arg       = hdl->queue[stream];
+                        config.cb_finish = M2M_callback;
+                        config.cb_half   = NULL;
+                        config.cb_next   = NULL;
+                        config.release   = true;
+                        config.PA        = cast(u32_t, src);
+                        config.MA[0]     = cast(u32_t, dst);
+                        config.NDT       = NDT;
+                        config.FC        = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
+                        config.CR        = PMSIZE | (2 << DMA_SxCR_DIR_Pos)
                                          | DMA_SxCR_MINC | DMA_SxCR_PINC;
                         config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
 
@@ -679,15 +715,23 @@ static void IRQ_handle(u8_t major, u8_t stream)
         case 3: SR >>= 22; break;
         }
 
-        if (RT_stream->callback) {
-                yield = RT_stream->callback(DMA_HW[major].stream[stream],
-                                            SR & 0x3F, RT_stream->arg);
+        if ((DMA_stream->CR & DMA_SxCR_HTIE) && (SR & DMA_SR_HTIF)) {
+                if (RT_stream->cb_half) {
+                        yield = RT_stream->cb_half(DMA_HW[major].stream[stream],
+                                                   SR & 0x3F, RT_stream->arg);
+                }
+        } else {
+                if (RT_stream->cb_finish) {
+                        yield = RT_stream->cb_finish(DMA_HW[major].stream[stream],
+                                                     SR & 0x3F, RT_stream->arg);
+                }
         }
 
-        if (!(DMA_stream->CR & DMA_SxCR_CIRC)) {
+        if (!(DMA_stream->CR & DMA_SxCR_CIRC) && !(SR & DMA_SR_HTIF)) {
                 DMA_stream->CR = 0;
 
-                RT_stream->callback = NULL;
+                RT_stream->cb_finish = NULL;
+                RT_stream->cb_half   = NULL;
 
                 if (RT_stream->release) {
                         RT_stream->dmad    = 0;

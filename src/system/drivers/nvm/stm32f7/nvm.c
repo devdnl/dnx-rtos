@@ -5,7 +5,7 @@ Author  Daniel Zorychta
 
 Brief   NVM driver
 
-        Copyright (C) 2018 Daniel Zorychta <daniel.zorychta@gmail.com>
+        Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
 
         This program is free software; you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ Brief   NVM driver
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f4/stm32f4xx.h"
+#include "stm32f7/stm32f7xx.h"
 #include "../nvm_ioctl.h"
 
 /*==============================================================================
@@ -78,32 +78,19 @@ static int  configure(NVM_t *hdl, const NVM_config_t *conf);
 MODULE_NAME(NVM);
 
 static const sector_info_t SECTOR_INFO[] = {
-        /* BANK 0 */
-        /*00:*/ {.addr = 0x08000000, .size =  16384},
-        /*01:*/ {.addr = 0x08004000, .size =  16384},
-        /*02:*/ {.addr = 0x08008000, .size =  16384},
-        /*03:*/ {.addr = 0x0800C000, .size =  16384},
-        /*04:*/ {.addr = 0x08010000, .size =  65536},
-        /*05:*/ {.addr = 0x08020000, .size = 131072},
-        /*06:*/ {.addr = 0x08040000, .size = 131072},
-        /*07:*/ {.addr = 0x08060000, .size = 131072},
-        /*08:*/ {.addr = 0x08080000, .size = 131072},
-        /*09:*/ {.addr = 0x080A0000, .size = 131072},
-        /*10:*/ {.addr = 0x080C0000, .size = 131072},
-        /*11:*/ {.addr = 0x080E0000, .size = 131072},
-        /* BANK 1 */
-        /*12:*/ {.addr = 0x08100000, .size =  16384},
-        /*13:*/ {.addr = 0x08102000, .size =  16384},
-        /*14:*/ {.addr = 0x08104000, .size =  16384},
-        /*15:*/ {.addr = 0x08106000, .size =  16384},
-        /*16:*/ {.addr = 0x08108000, .size =  65536},
-        /*17:*/ {.addr = 0x0810A000, .size = 131072},
-        /*18:*/ {.addr = 0x0810C000, .size = 131072},
-        /*19:*/ {.addr = 0x08110000, .size = 131072},
-        /*20:*/ {.addr = 0x08120000, .size = 131072},
-        /*21:*/ {.addr = 0x08140000, .size = 131072},
-        /*22:*/ {.addr = 0x08160000, .size = 131072},
-        /*23:*/ {.addr = 0x08180000, .size = 131072},
+        /* SINGLE BANK MODE (256 bit read width) */
+        /*00:*/ {.addr = 0x08000000, .size =  32768},
+        /*01:*/ {.addr = 0x08008000, .size =  32768},
+        /*02:*/ {.addr = 0x08010000, .size =  32768},
+        /*03:*/ {.addr = 0x08018000, .size =  32768},
+        /*04:*/ {.addr = 0x08020000, .size = 131072},
+        /*05:*/ {.addr = 0x08040000, .size = 262144},
+        /*06:*/ {.addr = 0x08080000, .size = 262144},
+        /*07:*/ {.addr = 0x080C0000, .size = 262144},
+        /*08:*/ {.addr = 0x08100000, .size = 262144},
+        /*09:*/ {.addr = 0x08140000, .size = 262144},
+        /*10:*/ {.addr = 0x08180000, .size = 262144},
+        /*11:*/ {.addr = 0x081C0000, .size = 262144},
 };
 
 /*==============================================================================
@@ -512,10 +499,14 @@ static int configure(NVM_t *hdl, const NVM_config_t *conf)
 //==============================================================================
 static void FLASH_unlock(void)
 {
+        sys_critical_section_begin();
+
         if (FLASH->CR & FLASH_CR_LOCK) {
                 FLASH->KEYR = FLASH_KEY1;
                 FLASH->KEYR = FLASH_KEY2;
         }
+
+        sys_critical_section_end();
 }
 
 //==============================================================================
@@ -611,8 +602,10 @@ static int FLASH_wait_for_operation_finish(void)
 
         while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
 
+                __DSB();
+
                 if (FLASH->SR & FLASH_SR_BSY) {
-                        //sys_sleep_ms(1);
+                        // sys_sleep_ms(1);
 
                 } else {
                         if (FLASH->SR & FLASH_SR_WRPERR) {
@@ -620,13 +613,13 @@ static int FLASH_wait_for_operation_finish(void)
                                 err = EIO;
                                 break;
 
-                        } else if (FLASH->SR & ( FLASH_SR_PGSERR | FLASH_SR_PGPERR
+                        } else if (FLASH->SR & ( FLASH_SR_ERSERR | FLASH_SR_PGPERR
                                                | FLASH_SR_PGAERR)) {
                                 printk("%s: program error", GET_MODULE_NAME());
                                 err = EIO;
                                 break;
 
-                        } else if (FLASH->SR & FLASH_SR_SOP) {
+                        } else if (FLASH->SR & FLASH_SR_OPERR) {
                                 printk("%s: operation error", GET_MODULE_NAME());
                                 err = EIO;
                                 break;
@@ -637,8 +630,8 @@ static int FLASH_wait_for_operation_finish(void)
                 }
         }
 
-        SET_BIT(FLASH->SR, FLASH_SR_WRPERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR
-                         | FLASH_SR_PGAERR | FLASH_SR_SOP);
+        SET_BIT(FLASH->SR, FLASH_SR_WRPERR | FLASH_SR_ERSERR | FLASH_SR_PGPERR
+                         | FLASH_SR_PGAERR | FLASH_SR_OPERR);
 
         if (err == ETIME) {
                 printk("%s: operation timeout", GET_MODULE_NAME());
