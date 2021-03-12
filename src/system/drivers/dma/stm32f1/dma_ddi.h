@@ -100,7 +100,8 @@ typedef bool (*_DMA_cb_t)(DMA_Channel_t *channel, u8_t SR, void *arg);
 
 typedef struct {
         void     *arg;          /*! user configuration: callback argument */
-        _DMA_cb_t callback;     /*! user configuration: finish callback */
+        _DMA_cb_t cb_finish;    /*! user configuration: finish callback */
+        _DMA_cb_t cb_half;      /*! user configuration: half transfer callback */
         _DMA_cb_t cb_next;      /*! user configuration: next callback */
         u32_t     CR;           /*! user configuration: control register */
         u32_t     NDT;          /*! user configuration: data number */
@@ -150,6 +151,18 @@ extern void _DMA_DDI_release(u32_t dmad);
  */
 //==============================================================================
 extern int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config);
+
+//==============================================================================
+/**
+ * @brief Function return DMA channel according to DMA descriptor.
+ *
+ * @param dmad                  DMA descriptor.
+ * @param channel               stream
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int _DMA_DDI_get_channel(u32_t dmad, DMA_Channel_t **channel);
 
 //==============================================================================
 /**

@@ -106,6 +106,24 @@
 				["key"]="__ENABLE_SND__";
 				["value"]="_NO_";
 			};
+			[27]={
+				["key"]="__ENABLE_PART__";
+				["value"]="_NO_";
+			};
+			[28]={
+				["key"]="__ENABLE_URANDOM__";
+				["value"]="_NO_";
+			};
+			[29]={
+				["key"]="__ENABLE_ZERO__";
+				["value"]="_NO_";
+			};
+		};
+		["arch/noarch/part_flags.h"]={
+			[1]={
+				["key"]="__PART_CFG_EXAMPLE__";
+				["value"]="_NO_";
+			};
 		};
 		["arch/noarch/tty_flags.h"]={
 			[1]={
@@ -123,6 +141,18 @@
 			[4]={
 				["key"]="__TTY_NUMBER_OF_TERM__";
 				["value"]="2";
+			};
+		};
+		["arch/noarch/urandom_flags.h"]={
+			[1]={
+				["key"]="__URANDOM_CFG_EXAMPLE__";
+				["value"]="_NO_";
+			};
+		};
+		["arch/noarch/zero_flags.h"]={
+			[1]={
+				["key"]="__ZERO_CFG_EXAMPLE__";
+				["value"]="_NO_";
 			};
 		};
 		["arch/stm32f1/afm_flags.h"]={
@@ -2029,28 +2059,88 @@
 				["value"]="128";
 			};
 			[2]={
+				["key"]="__UART_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[3]={
 				["key"]="__UART_DEFAULT_PARITY__";
 				["value"]="UART_PARITY__OFF";
 			};
-			[3]={
+			[4]={
 				["key"]="__UART_DEFAULT_STOP_BITS__";
 				["value"]="UART_STOP_BIT__1";
 			};
-			[4]={
+			[5]={
 				["key"]="__UART_DEFAULT_TX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[5]={
+			[6]={
 				["key"]="__UART_DEFAULT_RX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[6]={
+			[7]={
 				["key"]="__UART_DEFAULT_BAUD__";
 				["value"]="115200";
 			};
-			[7]={
-				["key"]="__UART_IRQ_PRIORITY__";
+			[8]={
+				["key"]="__UART_UART1_IRQ_PRIORITY__";
 				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[9]={
+				["key"]="__UART_UART1_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[10]={
+				["key"]="__UART_UART1_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[11]={
+				["key"]="__UART_UART2_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[12]={
+				["key"]="__UART_UART2_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[13]={
+				["key"]="__UART_UART2_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[14]={
+				["key"]="__UART_UART3_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[15]={
+				["key"]="__UART_UART3_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[16]={
+				["key"]="__UART_UART3_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[17]={
+				["key"]="__UART_UART4_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[18]={
+				["key"]="__UART_UART4_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[19]={
+				["key"]="__UART_UART4_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[20]={
+				["key"]="__UART_UART5_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[21]={
+				["key"]="__UART_UART5_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[22]={
+				["key"]="__UART_UART5_DMA_BUF_LEN__";
+				["value"]="64";
 			};
 		};
 		["arch/stm32f1/usbd_flags.h"]={
@@ -2134,7 +2224,7 @@
 			};
 			[2]={
 				["key"]="__ENABLE_PROCFS__";
-				["value"]="_YES_";
+				["value"]="_NO_";
 			};
 			[3]={
 				["key"]="__ENABLE_FATFS__";
@@ -2151,6 +2241,16 @@
 			[6]={
 				["key"]="__ENABLE_ROMFS__";
 				["value"]="_YES_";
+			};
+			[7]={
+				["key"]="__ENABLE_FLATFS__";
+				["value"]="_NO_";
+			};
+		};
+		["filesystems/flatfs_flags.h"]={
+			[1]={
+				["key"]="__FLATFS_LOG_ENABLE__";
+				["value"]="_NO_";
 			};
 		};
 		["filesystems/ramfs_flags.h"]={

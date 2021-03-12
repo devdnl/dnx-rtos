@@ -131,6 +131,8 @@ static void initialize_basic_drivers(void)
          */
         driver_init("AFM", 0, 0, NULL);                 // alternative function configuration
         driver_init("CLK", 0, 0, "/dev/clk");           // system clock configuration
+        driver_init("DMA", 0, 0, NULL);                 // DMA configuration
+        driver_init("DMA", 1, 0, NULL);                 // DMA configuration
 
         /*
          * NOTE: make sure that UART1 is used as terminal output!
