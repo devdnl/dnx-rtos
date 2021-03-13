@@ -520,6 +520,7 @@ static int DMA_start(SND_t *hdl, const buf_t *buf)
         };
 
         _DMA_DDI_config_t config;
+        memset(&config, 0, sizeof(config));
         config.cb_finish= NULL;
         config.cb_half  = NULL;
         config.cb_next  = DMA_next;

@@ -883,6 +883,7 @@ int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *co
         if (uarthdl->DMA) {
 #if !defined(ARCH_stm32h7)
                 _DMA_DDI_config_t dma_conf;
+                memset(&config, 0, sizeof(config));
                 dma_conf.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
                 dma_conf.arg       = hdl;
                 dma_conf.cb_finish = dma_half_and_finish;

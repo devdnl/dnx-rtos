@@ -317,12 +317,14 @@ API_MOD_READ(DCI,
         }
 
         _DMA_DDI_config_t config;
+        memset(&config, 0, sizeof(config));
         config.MA[0]        = cast(u32_t, dst);
         config.MA[1]        = cast(u32_t, dst) + (hdl->TSIZEW * sizeof(u32_t));
         config.PA           = cast(u32_t, &DCMI->DR);
         config.NDT          = hdl->TSIZEW;
         config.arg          = DCI;
-        config.callback     = DMA_callback;
+        config.cb_finish    = DMA_callback;
+        config.cb_half      = NULL;
         config.cb_next      = NULL;
         config.release      = false;
         config.FC           = DMA_SxFCR_FTH_FULL | DMA_SxFCR_FS_EMPTY | DMA_SxFCR_DMDIS_YES;

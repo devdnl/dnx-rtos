@@ -654,8 +654,10 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                                 CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
                                 _DMA_DDI_config_t config;
+                                memset(&config, 0, sizeof(config));
                                 config.arg      = _I2C[hdl->major];
-                                config.callback = DMA_callback;
+                                config.cb_finish= DMA_callback;
+                                config.cb_half  = NULL;
                                 config.cb_next  = NULL;
                                 config.release  = false;
                                 config.PA       = cast(u32_t, &i2c->DR);
@@ -831,8 +833,10 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                         CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
                         _DMA_DDI_config_t config;
+                        memset(&config, 0, sizeof(config));
                         config.arg      = _I2C[hdl->major];
-                        config.callback = DMA_callback;
+                        config.cb_finish= DMA_callback;
+                        config.cb_half  = NULL;
                         config.cb_next  = NULL;
                         config.release  = false;
                         config.PA       = cast(u32_t, &i2c->DR);
