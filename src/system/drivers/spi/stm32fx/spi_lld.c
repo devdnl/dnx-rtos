@@ -433,7 +433,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         _SPI[hdl->major]->count      = count;
 
                         _DMA_DDI_config_t config_tx;
-                        memset(&config, 0, sizeof(config));
+                        memset(&config_tx, 0, sizeof(config_tx));
                         config_tx.arg       = NULL;
                         config_tx.cb_finish = NULL;
                         config_tx.cb_half   = NULL;
@@ -461,7 +461,7 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
 #endif
 
                         _DMA_DDI_config_t config_rx;
-                        memset(&config, 0, sizeof(config));
+                        memset(&config_rx, 0, sizeof(config_rx));
                         config_rx.arg       = hdl;
                         config_rx.cb_finish = DMA_callback;
                         config_rx.cb_half   = NULL;
