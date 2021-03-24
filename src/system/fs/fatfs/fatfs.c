@@ -110,7 +110,7 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path, const char *opts)
 
                 if (!err) {
                         if (hdl->read_only) {
-                                printk("FATFS: read only file system");
+                                printk("FATFS: %s mounted read only", src_path);
                         }
                 }
 

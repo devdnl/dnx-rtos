@@ -30,6 +30,7 @@ Brief   Partition driver
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "../part_ioctl.h"
+#include "drivers/class/storage/mbr.h"
 
 /*==============================================================================
   Local macros
@@ -40,6 +41,8 @@ Brief   Partition driver
   Local object types
 ==============================================================================*/
 typedef struct {
+        u8_t     major;
+        u8_t     minor;
         FILE    *dev;
         mutex_t *mutex;
         u32_t    block_size;
@@ -51,6 +54,7 @@ typedef struct {
   Local function prototypes
 ==============================================================================*/
 static int configure(PART_t *hdl, const PART_config_t *conf);
+static int auto_configure(PART_t *hdl);
 
 /*==============================================================================
   Local object
@@ -72,26 +76,29 @@ MODULE_NAME(PART);
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_INIT(PART, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(PART, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG1(major);
+        int err = sys_zalloc(sizeof(PART_t), device_handle);
+        if (!err) {
+                PART_t *hdl = *device_handle;
 
-        int err = EFAULT;
+                hdl->major = major;
+                hdl->minor = minor;
 
-        if (minor == 0) {
-                err = sys_zalloc(sizeof(PART_t), device_handle);
+                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mutex);
                 if (!err) {
-                        PART_t *hdl = *device_handle;
-
-                        err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mutex);
-
-                        if (err) {
-                                sys_free(device_handle);
+                        if (config) {
+                                err = configure(hdl, config);
                         }
+                }
+
+                if (err) {
+                        sys_free(device_handle);
                 }
         }
 
@@ -284,6 +291,10 @@ API_MOD_IOCTL(PART, void *device_handle, int request, void *arg)
                 }
                 break;
 
+        case IOCTL_PART__READ_MBR:
+                err = auto_configure(hdl);
+                break;
+
         default:
                 err = sys_ioctl(hdl->dev, request, arg);
                 break;
@@ -322,7 +333,7 @@ API_MOD_STAT(PART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         PART_t *hdl = device_handle;
 
-        device_stat->st_size = hdl->block_size * hdl->total_blocks;
+        device_stat->st_size = cast(u64_t, hdl->block_size) * cast(u64_t, hdl->total_blocks);
 
         return ESUCC;
 }
@@ -353,6 +364,67 @@ static int configure(PART_t *hdl, const PART_config_t *conf)
                                 hdl->offset_blocks = conf->offset_blocks;
                                 hdl->total_blocks  = conf->total_blocks;
                         }
+                }
+
+                sys_mutex_unlock(hdl->mutex);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function read MBR to detect existing partitions.
+ *
+ * @param  hdl          device handle
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
+static int auto_configure(PART_t *hdl)
+{
+        int err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT_ms);
+        if (!err) {
+
+                const size_t SECTOR_SIZE = 512;
+
+                u8_t *MBR;
+                err = sys_zalloc(512, cast(void**, &MBR));
+                if (!err) {
+                        size_t rdctr = 0;
+                        sys_fseek(hdl->dev, 0, VFS_SEEK_SET);
+                        err = sys_fread(MBR, SECTOR_SIZE, &rdctr, hdl->dev);
+                        if (err || (rdctr != SECTOR_SIZE)) {
+                                err = EIO;
+                        }
+
+                        if (!err && (MBR_get_boot_signature(MBR) != MBR_SIGNATURE)) {
+                                err = EMEDIUMTYPE;
+                        }
+
+                        for (int i = 0; i <= 3; i++) {
+
+                                PART_t *hdl_sub;
+                                if (sys_module_get_instance(hdl->major, i, cast(void**, &hdl_sub)) == 0) {
+
+                                        if (sys_mutex_lock(hdl_sub->mutex, MUTEX_TIMEOUT_ms) == 0) {
+
+                                                hdl_sub->block_size    = !err ? SECTOR_SIZE : 0;
+                                                hdl_sub->total_blocks  = !err ? MBR_get_partition_number_of_sectors(i + 1, MBR) : 0;
+                                                hdl_sub->offset_blocks = !err ? MBR_get_partition_first_LBA_sector(i + 1, MBR) : 0;
+
+                                                sys_mutex_unlock(hdl_sub->mutex);
+                                        }
+
+//                                        if (!err) {
+//                                                printk("%s%u-%u: partition %u size %u blocks",
+//                                                       GET_MODULE_NAME(), hdl_sub->major, hdl_sub->minor,
+//                                                       i, hdl_sub->total_blocks);
+//                                        }
+                                }
+                        }
+
+                        sys_free(cast(void**, &MBR));
                 }
 
                 sys_mutex_unlock(hdl->mutex);

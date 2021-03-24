@@ -139,7 +139,7 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path, const char *opts)
                         ext4_cache_write_back(__EXT4FS_CFG_WR_BUF_STRATEGY__, hdl->mp);
 
                         if (read_only) {
-                                printk("EXTFS: read only file system");
+                                printk("EXTFS: %s mounted read only", src_path);
                         }
                 }
 

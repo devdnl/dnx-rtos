@@ -55,50 +55,32 @@ Device (drivers) connection table
 \section drv-sdspi-ddesc Details
 \subsection drv-sdspi-ddesc-num Meaning of major and minor numbers
 There is special meaning of major and minor numbers. The major number selects
-SD card. There is possibility to use up to 256 SD Cards. The minor number
-selects volume and partitions as follow:
-\li 0: entire card volume
-\li 1: partition 1 (MBR only)
-\li 2: partition 2 (MBR only)
-\li 3: partition 3 (MBR only)
-\li 4: partition 4 (MBR only)
+SD card. There is possibility to use up to 256 SD Cards. The minor number has
+no meaning.
 
 \subsubsection drv-sdspi-ddesc-numres Numeration restrictions
-Major number can be set in range 0 to 255. The minor number can be used in range
-from 0 to 4. Each new major number is a new instance of driver that can handle
-SD Card.
+Major number can be set in range 0 to 255. The minor number should be 0.
+Each new major number is a new instance of driver that can handle SD Card.
 
 \subsection drv-sdspi-ddesc-init Driver initialization
 To initialize driver the following code can be used:
 
 @code
-driver_init("SDSPI", 0, 0, "/dev/sda");         // entire volume
-driver_init("SDSPI", 0, 1, "/dev/sda1");        // partition 1
-driver_init("SDSPI", 0, 2, "/dev/sda2");        // partition 2
-driver_init("SDSPI", 0, 3, "/dev/sda3");        // partition 3
-driver_init("SDSPI", 0, 4, "/dev/sda4");        // partition 4
+driver_init("SDSPI", 0, 0, "/dev/sda");
 @endcode
 
 Card 2:
 @code
-driver_init("SDSPI", 1, 0, "/dev/sdb");         // entire volume
-driver_init("SDSPI", 1, 1, "/dev/sdb1");        // partition 1
-driver_init("SDSPI", 1, 2, "/dev/sdb2");        // partition 2
-driver_init("SDSPI", 1, 3, "/dev/sdb3");        // partition 3
-driver_init("SDSPI", 1, 4, "/dev/sdb4");        // partition 4
+driver_init("SDSPI", 1, 0, "/dev/sdb");
 @endcode
-
-If card does not contains any partitions then SDSPIx:0 only can be used. If card
-has e.g. only 1 partition (MBR exist) then only one entry can be created. Created
-device files can be used directly by file systems.
 
 \subsection drv-sdspi-ddesc-release Driver release
 To release driver the following code can be used:
 @code
-driver_release("SDSPI", 0, 4);  // disable supporting of card 0 partition 4
+driver_release("SDSPI", 0, 0);
 @endcode
 @code
-driver_release("SDSPI", 1, 1);  // disable supporting of card 1 partition 1
+driver_release("SDSPI", 1, 0);
 @endcode
 
 \subsection drv-sdspi-ddesc-cfg Driver configuration
@@ -140,15 +122,7 @@ Reading data from device is the same as reading data from regular file.
 
 \subsection drv-sdspi-ddesc-mbr Card initialization
 There is special ioctl() request (@ref IOCTL_SDSPI__INITIALIZE_CARD or
-IOCTL_STORAGE__INITIALIZE) that initialize selected SD card. Initialization
-can be done on any partition (e.g. sda1) giving the same effect as initialization
-on master card file (e.g. sda, sdb). If initialization is already done on
-selected partition then is not necessary to initialize remained partitions.
-
-After initialization the MBR table should be read by driver. In this case the
-ioctl() request (@ref IOCTL_SDSPI__READ_MBR or IOCTL_STORAGE__READ_MBR)
-should be used. This procedure load all MBR entries and set required offsets in
-partition files (/dev/sd<i>x</i><b>y</b>).
+IOCTL_STORAGE__INITIALIZE) that initialize selected SD card.
 
 <b> The SDSPI Driver configures some options of SPI interface. There are options
 that should be configured by user manually:</b>
@@ -171,18 +145,12 @@ setup tool).
 
 // creating SD card nodes
 driver_init("SDSPI", 0, 0, "/dev/sda");
-driver_init("SDSPI", 0, 1, "/dev/sda1");
 
 // SD Card initialization
 FILE *f = fopen("/dev/sda", "r+");
 if (f) {
         if (ioctl(fileno(f), IOCTL_STORAGE__INITIALIZE) != 0) {
                 puts("SD initialization error");
-
-        } else {
-                if (ioctl(fileno(f), IOCTL_STORAGE__READ_MBR) != 0) {
-                        puts("SD read MBR error");
-                }
         }
 
         fclose(f);
@@ -190,7 +158,7 @@ if (f) {
 
 // file system mount
 mkdir("/mnt", 0777);
-mount("fatfs", "/dev/sda1", "/mnt", "");
+mount("fatfs", "/dev/sda", "/mnt", "");
 
 // ...
 
@@ -229,13 +197,6 @@ extern "C" {
  *          On error (card not initialized) -1 is returned and @ref errno is set.
  */
 #define IOCTL_SDSPI__INITIALIZE_CARD    IOCTL_STORAGE__INITIALIZE
-
-/**
- *  @brief  Read card's MBR sector and detect partitions (OS storage request).
- *  @return On success (MBR detected) 0 is returned.
- *          On error -1 (MBR not exist or IO error) is returned and @ref errno is set.
- */
-#define IOCTL_SDSPI__READ_MBR           IOCTL_STORAGE__READ_MBR
 
 /*==============================================================================
   Exported object types

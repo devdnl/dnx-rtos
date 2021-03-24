@@ -114,6 +114,7 @@ drivers configuration, and starting needed applications/daemons.
 \li \subpage drv-uart
 \li \subpage drv-usbd
 \li \subpage drv-wdg
+\li \subpage drv-usbh
 */
 
 //------------------------------------------------------------------------------
