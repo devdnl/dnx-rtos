@@ -443,27 +443,13 @@ API_MOD_IOCTL(SDIO, void *device_handle, int request, void *arg)
         int err = EBADRQC;
 
         switch (request) {
-        case IOCTL_SDIO__INITIALIZE_CARD: {
+        case IOCTL_SDIO__INITIALIZE_CARD:
                 err = sys_mutex_lock(hdl->mtx, MAX_DELAY_MS);
                 if (!err) {
                         err = card_initialize(hdl);
                         sys_mutex_unlock(hdl->mtx);
                 }
                 break;
-        }
-
-        case IOCTL_SDIO__READ_MBR: {
-//                err = sys_mutex_lock(hdl->ctrl->protect, MAX_DELAY_MS);
-//                if (!err) {
-//                        if (hdl->ctrl->initialized) {
-//                                err = MBR_detect_partitions(hdl);
-//                        } else {
-//                                err = ENOMEDIUM;
-//                        }
-//                        sys_mutex_unlock(hdl->ctrl->protect);
-//                }
-                break;
-        }
 
         default:
                 return EBADRQC;
@@ -584,6 +570,8 @@ static int card_initialize(SDIO_t *hdl)
         int err = EFAULT;
 
         hdl->hsd.CtxPtr = hdl;
+
+        hdl->mode = SDMMC[hdl->major].mode;
 
         if (SDMMC[hdl->major].mode == _SDIO_MODE_DMA) {
 //                DMA_HandleTypeDef *dmah;
