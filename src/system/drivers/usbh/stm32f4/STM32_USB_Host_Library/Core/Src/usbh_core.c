@@ -79,7 +79,7 @@ static USBH_StatusTypeDef DeInitStateMachine(USBH_HandleTypeDef *phost);
 
 #if (USBH_USE_OS == 1U)
 #if (osCMSIS < 0x20000U)
-static void USBH_Process_OS(void *argument);
+static int USBH_Process_OS(void *argument);
 #else
 static void USBH_Process_OS(void *argument);
 #endif
@@ -1301,7 +1301,7 @@ USBH_StatusTypeDef  USBH_LL_Disconnect(USBH_HandleTypeDef *phost)
   */
 
 #if (osCMSIS < 0x20000U)
-static void USBH_Process_OS(void *argument)
+static int USBH_Process_OS(void *argument)
 {
    USBH_HandleTypeDef *phost = argument;
 
@@ -1312,6 +1312,8 @@ static void USBH_Process_OS(void *argument)
         USBH_Process(phost);
      }
    }
+
+   return 0;
 }
 #else
 static void USBH_Process_OS(void *argument)
