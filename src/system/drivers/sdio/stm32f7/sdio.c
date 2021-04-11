@@ -300,38 +300,48 @@ API_MOD_WRITE(SDIO,
                         u32_t block_address = *fpos / BLOCKSIZE;
                         u32_t blocks        = count / BLOCKSIZE;
 
-                        if (hdl->mode == _SDIO_MODE_POLLING) {
+                        for (int i = 0; i < 5; i++) {
 
-                                err = HAL_SD_WriteBlocks(&hdl->hsd, src, block_address, blocks,
-                                                         SDMMC[hdl->major].card_timeout);
+                                if (hdl->mode == _SDIO_MODE_POLLING) {
 
-                        } else if (hdl->mode == _SDIO_MODE_IRQ) {
-
-                                err = HAL_SD_WriteBlocks_IT(&hdl->hsd, src, block_address, blocks);
-                                if (!err) {
-                                        err = sys_semaphore_wait(hdl->sem_xfer_complete,
+                                        err = HAL_SD_WriteBlocks(&hdl->hsd, src, block_address, blocks,
                                                                  SDMMC[hdl->major].card_timeout);
-                                }
 
-                        } else if (hdl->mode == _SDIO_MODE_DMA) {
+                                } else if (hdl->mode == _SDIO_MODE_IRQ) {
 
-                                err = HAL_SD_WriteBlocks_DMA(&hdl->hsd, src, block_address, blocks);
-                                if (!err) {
-                                        err = sys_semaphore_wait(hdl->sem_xfer_complete,
-                                                                 SDMMC[hdl->major].card_timeout);
-                                }
+                                        err = HAL_SD_WriteBlocks_IT(&hdl->hsd, src, block_address, blocks);
+                                        if (!err) {
+                                                err = sys_semaphore_wait(hdl->sem_xfer_complete,
+                                                                         SDMMC[hdl->major].card_timeout);
+                                        }
 
-                        } else {
-                                err = EFAULT;
-                                dev_dbg(hdl, "unknown card mode!", 0);
-                        }
+                                } else if (hdl->mode == _SDIO_MODE_DMA) {
 
-                        if (!err) {
-                                err = card_wait_ready(hdl);
-                                if (!err) {
-                                        *wrcnt += count;
+                                        err = HAL_SD_WriteBlocks_DMA(&hdl->hsd, src, block_address, blocks);
+                                        if (!err) {
+                                                err = sys_semaphore_wait(hdl->sem_xfer_complete,
+                                                                         SDMMC[hdl->major].card_timeout);
+                                        }
+
                                 } else {
-                                        dev_dbg(hdl, "card busy at write transfer", 0);
+                                        err = EFAULT;
+                                        dev_dbg(hdl, "unknown card mode!", 0);
+                                }
+
+                                if (!err) {
+                                        err = card_wait_ready(hdl);
+                                        if (!err) {
+                                                *wrcnt += count;
+                                        } else {
+                                                dev_dbg(hdl, "card busy at write transfer", 0);
+                                        }
+                                }
+
+                                if (!err) {
+                                        break;
+                                } else {
+                                        dev_dbg(hdl, "write error %d @ block %u", err, block_address);
+                                        sys_sleep_ms(50);
                                 }
                         }
 
@@ -378,38 +388,48 @@ API_MOD_READ(SDIO,
                         u32_t block_address = *fpos / BLOCKSIZE;
                         u32_t blocks        = count / BLOCKSIZE;
 
-                        if (hdl->mode == _SDIO_MODE_POLLING) {
+                        for (int i = 0; i < 5; i++) {
 
-                                err = HAL_SD_ReadBlocks(&hdl->hsd, dst, block_address, blocks,
-                                                        SDMMC[hdl->major].card_timeout);
+                                if (hdl->mode == _SDIO_MODE_POLLING) {
 
-                        } else if (hdl->mode == _SDIO_MODE_IRQ) {
+                                        err = HAL_SD_ReadBlocks(&hdl->hsd, dst, block_address, blocks,
+                                                                SDMMC[hdl->major].card_timeout);
 
-                                err = HAL_SD_ReadBlocks_IT(&hdl->hsd, dst, block_address, blocks);
-                                if (!err) {
-                                        err = sys_semaphore_wait(hdl->sem_xfer_complete,
-                                                                 SDMMC[hdl->major].card_timeout);
-                                }
+                                } else if (hdl->mode == _SDIO_MODE_IRQ) {
 
-                        } else if (hdl->mode == _SDIO_MODE_DMA) {
+                                        err = HAL_SD_ReadBlocks_IT(&hdl->hsd, dst, block_address, blocks);
+                                        if (!err) {
+                                                err = sys_semaphore_wait(hdl->sem_xfer_complete,
+                                                                         SDMMC[hdl->major].card_timeout);
+                                        }
 
-                                err = HAL_SD_ReadBlocks_DMA(&hdl->hsd, dst, block_address, blocks);
-                                if (!err) {
-                                        err = sys_semaphore_wait(hdl->sem_xfer_complete,
-                                                                 SDMMC[hdl->major].card_timeout);
-                                }
+                                } else if (hdl->mode == _SDIO_MODE_DMA) {
 
-                        } else {
-                                err = EFAULT;
-                                dev_dbg(hdl, "unknown card mode!", 0);
-                        }
+                                        err = HAL_SD_ReadBlocks_DMA(&hdl->hsd, dst, block_address, blocks);
+                                        if (!err) {
+                                                err = sys_semaphore_wait(hdl->sem_xfer_complete,
+                                                                         SDMMC[hdl->major].card_timeout);
+                                        }
 
-                        if (!err) {
-                                err = card_wait_ready(hdl);
-                                if (!err) {
-                                        *rdcnt += count;
                                 } else {
-                                        dev_dbg(hdl, "card busy at read transfer", 0);
+                                        err = EFAULT;
+                                        dev_dbg(hdl, "unknown card mode!", 0);
+                                }
+
+                                if (!err) {
+                                        err = card_wait_ready(hdl);
+                                        if (!err) {
+                                                *rdcnt += count;
+                                        } else {
+                                                dev_dbg(hdl, "card busy at read transfer", 0);
+                                        }
+                                }
+
+                                if (!err) {
+                                        break;
+                                } else {
+                                        dev_dbg(hdl, "read error %d @ block %u", err, block_address);
+                                        sys_sleep_ms(50);
                                 }
                         }
 
@@ -613,48 +633,53 @@ static int card_initialize(SDIO_t *hdl)
         hdl->hsd.Init.HardwareFlowControl = SDMMC[hdl->major].hardware_flow_ctrl;
         hdl->hsd.Init.ClockDiv = SDMMC[hdl->major].clock_div;
 
-        HAL_SD_DeInit(&hdl->hsd);
+        for (int i = 0; i < 3; i++) {
+                HAL_SD_DeInit(&hdl->hsd);
 
-        err = HAL_SD_Init(&hdl->hsd);
-        if (!err) {
+                err = HAL_SD_Init(&hdl->hsd);
+                if (!err) {
 
-                const char *mode = "?";
-                switch (hdl->mode) {
-                case _SDIO_MODE_POLLING:
-                        mode = "polling";
-                        break;
-                case _SDIO_MODE_IRQ:
-                        mode = "IRQ";
-                        break;
-                case _SDIO_MODE_DMA:
-                        mode = "DMA";
-                        break;
-                }
-                dev_dbg(hdl, "using %s mode", mode);
+                        const char *mode = "?";
+                        switch (hdl->mode) {
+                        case _SDIO_MODE_POLLING:
+                                mode = "polling";
+                                break;
+                        case _SDIO_MODE_IRQ:
+                                mode = "IRQ";
+                                break;
+                        case _SDIO_MODE_DMA:
+                                mode = "DMA";
+                                break;
+                        }
+                        dev_dbg(hdl, "using %s mode", mode);
 
-                if (SDMMC[hdl->major].bus_wide != SDMMC_BUS_WIDE_1B) {
-                        if (HAL_SD_ConfigWideBusOperation(&hdl->hsd, SDMMC_BUS_WIDE_4B) == SD_HAL_OK) {
-                                dev_dbg(hdl, "switched to 4-bit bus", 0);
-                        } else {
-                                dev_dbg(hdl, "4-bit bus not supported", 0);
+                        if (SDMMC[hdl->major].bus_wide != SDMMC_BUS_WIDE_1B) {
+                                if (HAL_SD_ConfigWideBusOperation(&hdl->hsd, SDMMC_BUS_WIDE_4B) == SD_HAL_OK) {
+                                        dev_dbg(hdl, "switched to 4-bit bus", 0);
+                                } else {
+                                        dev_dbg(hdl, "4-bit bus not supported", 0);
+                                }
+                        }
+
+                        HAL_SD_CardInfoTypeDef info;
+                        err = HAL_SD_GetCardInfo(&hdl->hsd, &info);
+                        if (!err) {
+
+                                dev_dbg(hdl, "found SD%s card",
+                                        info.CardType == CARD_SDSC ? "SC" : "HC/XC");
+
+                                dev_dbg(hdl, "%d %u-byte logical blocks",
+                                       info.BlockNbr, info.BlockSize);
+
+                                hdl->card_size = cast(u64_t, info.BlockSize)
+                                               * cast(u64_t, info.BlockNbr);
                         }
                 }
 
-                HAL_SD_CardInfoTypeDef info;
-                err = HAL_SD_GetCardInfo(&hdl->hsd, &info);
-                if (!err) {
-
-                        dev_dbg(hdl, "found SD%s card",
-                                info.CardType == CARD_SDSC ? "SC" : "HC/XC");
-
-                        dev_dbg(hdl, "%d %u-byte logical blocks",
-                               info.BlockNbr, info.BlockSize);
-
-                        hdl->card_size = cast(u64_t, info.BlockSize)
-                                       * cast(u64_t, info.BlockNbr);
-
-                } else {
+                if (err) {
                         HAL_SD_DeInit(&hdl->hsd);
+                } else {
+                        break;
                 }
         }
 

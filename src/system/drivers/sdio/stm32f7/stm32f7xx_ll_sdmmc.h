@@ -291,7 +291,7 @@ typedef struct
 #define SDMMC_CHECK_PATTERN                           0x000001AAU
 #define SD_SWITCH_1_8V_CAPACITY                       0x01000000U
 
-#define SDMMC_MAX_VOLT_TRIAL                          0x0000FFFFU
+#define SDMMC_MAX_VOLT_TRIAL                          0x00000800U  // was 0x0000FFFFU
 
 #define SDMMC_MAX_TRIAL                               0x0000FFFFU
 

@@ -2803,6 +2803,7 @@ static uint32_t SD_PowerON(SD_HandleTypeDef *hsd)
 
   if(count >= SDMMC_MAX_VOLT_TRIAL)
   {
+    printk("SDIO: invalid voltage range");
     return HAL_SD_ERROR_INVALID_VOLTRANGE;
   }
 

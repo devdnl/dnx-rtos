@@ -62,6 +62,7 @@ extern "C" {
 #define GLOBAL_VARIABLES_SECTION        struct _GVAR_STRUCT_NAME
 #define GLOBAL_VARIABLES_SECTION_BEGIN  struct _GVAR_STRUCT_NAME {
 #define GLOBAL_VARIABLES_SECTION_END    };
+#define GLOBAL_VARIABLES_TYPE(_type)    GLOBAL_VARIABLES_SECTION{_type _;}
 
 #ifdef __cplusplus
 #       include <stdlib.h>
