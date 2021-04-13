@@ -46,8 +46,8 @@ typedef struct {
         FILE    *dev;
         mutex_t *mutex;
         u32_t    block_size;
-        u32_t    offset_blocks;
-        u32_t    total_blocks;
+        u64_t    offset_bytes;
+        u64_t    total_bytes;
 } PART_t;
 
 /*==============================================================================
@@ -196,15 +196,15 @@ API_MOD_WRITE(PART,
         int err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT_ms);
         if (!err) {
 
-                i64_t addr = *fpos;
+                u64_t addr = *fpos;
 
-                if (addr < (hdl->total_blocks * hdl->block_size)) {
+                if (addr < hdl->total_bytes) {
 
-                        if ((addr + count) >= (hdl->total_blocks * hdl->block_size)) {
-                                count = (hdl->total_blocks * hdl->block_size) - addr;
+                        if ((addr + count) >= hdl->total_bytes) {
+                                count = hdl->total_bytes - addr;
                         }
 
-                        addr += hdl->block_size * hdl->offset_blocks;
+                        addr += hdl->offset_bytes;
                         err = sys_fseek(hdl->dev, addr, VFS_SEEK_SET);
                         if (!err) {
                                 err = sys_fwrite(src, count, wrcnt, hdl->dev);
@@ -246,15 +246,15 @@ API_MOD_READ(PART,
         int err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT_ms);
         if (!err) {
 
-                i64_t addr = *fpos;
+                u64_t addr = *fpos;
 
-                if (addr < (hdl->total_blocks * hdl->block_size)) {
+                if (addr < hdl->total_bytes) {
 
-                        if ((addr + count) >= (hdl->total_blocks * hdl->block_size)) {
-                                count = (hdl->total_blocks * hdl->block_size) - addr;
+                        if ((addr + count) >= hdl->total_bytes) {
+                                count = hdl->total_bytes - addr;
                         }
 
-                        addr += hdl->block_size * hdl->offset_blocks;
+                        addr += hdl->offset_bytes;
                         err = sys_fseek(hdl->dev, addr, VFS_SEEK_SET);
                         if (!err) {
                                 err = sys_fread(dst, count, rdcnt, hdl->dev);
@@ -333,7 +333,7 @@ API_MOD_STAT(PART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         PART_t *hdl = device_handle;
 
-        device_stat->st_size = cast(u64_t, hdl->block_size) * cast(u64_t, hdl->total_blocks);
+        device_stat->st_size = hdl->total_bytes;
 
         return ESUCC;
 }
@@ -360,9 +360,9 @@ static int configure(PART_t *hdl, const PART_config_t *conf)
                 if (!err) {
                         err = sys_fopen(conf->path, "r+", &hdl->dev);
                         if (!err) {
-                                hdl->block_size    = conf->block_size;
-                                hdl->offset_blocks = conf->offset_blocks;
-                                hdl->total_blocks  = conf->total_blocks;
+                                hdl->block_size   = conf->block_size;
+                                hdl->total_bytes  = cast(u64_t, conf->total_blocks)  * conf->block_size;
+                                hdl->offset_bytes = cast(u64_t, conf->offset_blocks) * conf->block_size;
                         }
                 }
 
@@ -409,18 +409,21 @@ static int auto_configure(PART_t *hdl)
 
                                         if (sys_mutex_lock(hdl_sub->mutex, MUTEX_TIMEOUT_ms) == 0) {
 
-                                                hdl_sub->block_size    = !err ? SECTOR_SIZE : 0;
-                                                hdl_sub->total_blocks  = !err ? MBR_get_partition_number_of_sectors(i + 1, MBR) : 0;
-                                                hdl_sub->offset_blocks = !err ? MBR_get_partition_first_LBA_sector(i + 1, MBR) : 0;
+                                                u32_t block_size    = !err ? SECTOR_SIZE : 0;
+                                                u32_t total_blocks  = !err ? MBR_get_partition_number_of_sectors(i + 1, MBR) : 0;
+                                                u32_t offset_blocks = !err ? MBR_get_partition_first_LBA_sector(i + 1, MBR) : 0;
+
+                                                hdl_sub->block_size   = block_size;
+                                                hdl_sub->total_bytes  = cast(u64_t, total_blocks) * block_size;
+                                                hdl_sub->offset_bytes = cast(u64_t, offset_blocks) * block_size;
 
                                                 sys_mutex_unlock(hdl_sub->mutex);
-                                        }
 
-//                                        if (!err) {
-//                                                printk("%s%u-%u: partition %u size %u blocks",
-//                                                       GET_MODULE_NAME(), hdl_sub->major, hdl_sub->minor,
-//                                                       i, hdl_sub->total_blocks);
-//                                        }
+//                                                if (!err) {
+//                                                        dev_dbg(hdl_sub, "partition %u, size %u blocks, offset %u blocks",
+//                                                                i, total_blocks, offset_blocks);
+//                                                }
+                                        }
                                 }
                         }
 
