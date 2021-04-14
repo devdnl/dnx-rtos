@@ -548,18 +548,29 @@ static int FLASH_erase_sector(uint32_t sector)
 #endif
         }
 
-        uint32_t addr = FLASH_BASE + (sector * SECTOR_SIZE);
+        uint32_t sec_addr = FLASH_BASE + (sector * SECTOR_SIZE);
 
-        int err = FLASH_wait_for_operation_finish(addr);
+        int err = FLASH_wait_for_operation_finish(sec_addr);
 
         if (!err) {
-                *FLASH_CR |= FLASH_CR_PER;
-                *FLASH_AR  = addr;
-                *FLASH_CR |= FLASH_CR_STRT;
 
-                err = FLASH_wait_for_operation_finish(addr);
+                u32_t *addr = cast(void*, sec_addr);
+                u32_t  len  = SECTOR_SIZE / sizeof(*addr);
 
-                *FLASH_CR &= (~FLASH_CR_PER);
+                while (len--) {
+                        if (*addr++ != 0xFFFFFFFF) {
+
+                                *FLASH_CR |= FLASH_CR_PER;
+                                *FLASH_AR  = sec_addr;
+                                *FLASH_CR |= FLASH_CR_STRT;
+
+                                err = FLASH_wait_for_operation_finish(sec_addr);
+
+                                *FLASH_CR &= (~FLASH_CR_PER);
+
+                                break;
+                        }
+                }
         }
 
         return err;

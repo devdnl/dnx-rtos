@@ -530,24 +530,31 @@ static void FLASH_lock(void)
 //==============================================================================
 static int FLASH_erase_sector(uint32_t sector)
 {
-        if (sector >= 12) {
-                sector += 4;
-        }
-
         int err = FLASH_wait_for_operation_finish();
 
         if (!err) {
-                FLASH->CR &= FLASH_CR_PSIZE_Msk;
-                FLASH->CR |= FLASH_CR_PSIZE_BYTE;
-                FLASH->CR &= FLASH_CR_SNB_Msk;
-                FLASH->CR |= ((sector << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk);
-                FLASH->CR |= FLASH_CR_SER;
-                FLASH->CR |= FLASH_CR_STRT;
 
-                err = FLASH_wait_for_operation_finish();
+                u32_t *addr = cast(void*, SECTOR_INFO[sector].addr);
+                u32_t  len  = SECTOR_INFO[sector].size / sizeof(*addr);
 
-                FLASH->CR &= (~FLASH_CR_SER);
-                FLASH->CR &= FLASH_CR_SNB_Msk;
+                while (len--) {
+                        if (*addr++ != 0xFFFFFFFF) {
+
+                                FLASH->CR &= FLASH_CR_PSIZE_Msk;
+                                FLASH->CR |= FLASH_CR_PSIZE_BYTE;
+                                FLASH->CR &= FLASH_CR_SNB_Msk;
+                                FLASH->CR |= ((sector << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk);
+                                FLASH->CR |= FLASH_CR_SER;
+                                FLASH->CR |= FLASH_CR_STRT;
+
+                                err = FLASH_wait_for_operation_finish();
+
+                                FLASH->CR &= (~FLASH_CR_SER);
+                                FLASH->CR &= FLASH_CR_SNB_Msk;
+
+                                break;
+                        }
+                }
         }
 
         return err;
