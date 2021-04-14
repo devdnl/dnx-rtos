@@ -130,6 +130,23 @@ __CPU_NAME__=EFR32MG1V132F256GM32
 #--*/
 #define __CPU_DEFAULT_IRQ_PRIORITY__ 7
 
+#/*--
+# this:AddWidget("Combobox", "Custom linker script")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CUSTOM_LD_SCRIPT__ _NO_
+#/*
+__CUSTOM_LD_SCRIPT__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Editline", true, "Custom linker script file path")
+#--*/
+#define __CUSTOM_LD_SCRIPT_FILE__ "./config/custom_script.ld"
+#/*
+__CUSTOM_LD_SCRIPT_FILE__="./config/custom_script.ld"
+#*/
 
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
@@ -145,7 +162,14 @@ __CPU_NAME__=EFR32MG1V132F256GM32
 CPUCONFIG_AFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_CFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -ffast-math -mthumb-interwork -DGCC_ARMCM4
-CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles -T./src/system/cpu/efr32/ld/$(__LD_SCRIPT__).ld
+CPUCONFIG_LDFLAGS=-mcpu=cortex-m4 -mthumb -mthumb-interwork -nostartfiles
+
+ifeq ($(__CUSTOM_LD_SCRIPT__), _YES_)
+CPUCONFIG_LDFLAGS += -T$(__CUSTOM_LD_SCRIPT_FILE__)
+else
+CPUCONFIG_LDFLAGS += -T./src/system/cpu/efr32/ld/$(__LD_SCRIPT__).ld
+endif
+
 #*/
 
 #// CPU family
