@@ -28,6 +28,7 @@ Brief   USB Host driver
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <stdalign.h>
 #include "drivers/driver.h"
 #include "drivers/class/storage/mbr.h"
 #include "stm32f4/lib/stm32f4xx_rcc.h"
@@ -66,7 +67,7 @@ typedef struct {
         USBH_HandleTypeDef hUSBHost;
         HCD_HandleTypeDef hhcd;
         bool class_active;
-        u8_t buffer[4096];
+        alignas(_HEAP_ALIGN_) u8_t buffer[8 * SECTOR_SIZE];
 } USBH_t;
 
 /*==============================================================================
