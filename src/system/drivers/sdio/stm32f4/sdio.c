@@ -29,7 +29,6 @@ Brief   SD Card Interface Driver.
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "drivers/class/storage/mbr.h"
 #include "drivers/class/storage/sd.h"
 #include "stm32f4/sdio_cfg.h"
 #include "stm32f4/dma_ddi.h"
@@ -74,16 +73,6 @@ Brief   SD Card Interface Driver.
 /*==============================================================================
   Local object types
 ==============================================================================*/
-/* minor numbers */
-enum {
-        VOLUME,
-        PARTITION_1,
-        PARTITION_2,
-        PARTITION_3,
-        PARTITION_4,
-        TOTAL_VOLUMES
-};
-
 typedef enum {
         DIR_IN,
         DIR_OUT
@@ -106,30 +95,19 @@ typedef enum {
 } resp_t;
 
 
+/** driver instance associated with partition */
 typedef struct {
-        u32_t      offset;              /* partition offset sector    */
-        u32_t      size;                /* partition size in sectors  */
-        bool       used;                /* true if partition used     */
-} part_t;
-
-/** main control structure */
-typedef struct {
+        u8_t       major;
+        u8_t       minor;
         mutex_t   *protect;
         queue_t   *event;
         SD_type_t  card;
         u32_t      RCA;
         bool       initialized;
-        u8_t       part_init;
-        part_t     part[TOTAL_VOLUMES];
+        u32_t      size_blocks;
         u32_t     *buf;
         size_t     count;
         u32_t      dmad;
-} SDIO_ctrl_t;
-
-/** driver instance associated with partition */
-typedef struct {
-        SDIO_ctrl_t  *ctrl;             /* module storage. */
-        u8_t          minor;            /* minor number. */
 } SDIO_t;
 
 /*==============================================================================
@@ -143,7 +121,6 @@ static int card_get_response(SD_response_t *resp, resp_t type);
 static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address, size_t *rdsec);
 static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t address, size_t *wrsec);
 static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address, u8_t *buf, size_t count, dir_t dir);
-static int MBR_detect_partitions(SDIO_t *hdl);
 
 #if USE_DMA != USE_DMA_NEVER
 static bool DMA_finished(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
@@ -154,8 +131,8 @@ static bool DMA_finished(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 ==============================================================================*/
 MODULE_NAME(SDIO);
 
-static SDIO_ctrl_t *SDIO_CTRL;
-static const u16_t  SECTOR_SIZE = 512;
+static SDIO_t *SDIO_CTRL;
+static const u16_t SECTOR_SIZE = 512;
 
 /*==============================================================================
   Exported object
@@ -183,74 +160,52 @@ API_MOD_INIT(SDIO, void **device_handle, u8_t major, u8_t minor, const void *con
 
         int err = ENODEV;
 
-        if (minor >= TOTAL_VOLUMES) {
-                return err;
-        }
-
         SDIO_t *hdl = NULL;
 
-        if (minor == 0) {
-                catcherr(err = sys_zalloc(sizeof(SDIO_t), cast(void**, &hdl)), finish);
-                catcherr(err = sys_zalloc(sizeof(SDIO_ctrl_t), cast(void**, &hdl->ctrl)), finish);
-                catcherr(err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->ctrl->protect), finish);
-                catcherr(err = sys_queue_create(1, sizeof(int), &hdl->ctrl->event), finish);
+        catcherr(err = sys_zalloc(sizeof(SDIO_t), cast(void**, &hdl)), finish);
+        catcherr(err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->protect), finish);
+        catcherr(err = sys_queue_create(1, sizeof(int), &hdl->event), finish);
+
+        hdl->major = major;
+        hdl->minor = minor;
 
 #if USE_DMA == USE_DMA_ALWAYS
-                hdl->ctrl->dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_PRI);
+        hdl->dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_PRI);
 
-                if (!hdl->ctrl->dmad) {
-                        hdl->ctrl->dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_ALT);
-                }
+        if (!hdl->dmad) {
+                hdl->dmad = _DMA_DDI_reserve(DMA_MAJOR, DMA_STREAM_ALT);
+        }
 
-                if (!hdl->ctrl->dmad) {
-                        printk("SDIO: could not reserve DMA stream");
-                        err = EIO;
-                        goto finish;
-                }
+        if (!hdl->dmad) {
+                printk("SDIO: could not reserve DMA stream");
+                err = EIO;
+                goto finish;
+        }
 #endif
 
-                SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SDIOEN);
+        SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SDIOEN);
 
-                SDIO->CLKCR = SDIO_CLKCR_INIT_CFG;
+        SDIO->CLKCR = SDIO_CLKCR_INIT_CFG;
 
-                SDIO->POWER = (1 * SDIO_POWER_PWRCTRL_1) | (1 * SDIO_POWER_PWRCTRL_0);
+        SDIO->POWER = (1 * SDIO_POWER_PWRCTRL_1) | (1 * SDIO_POWER_PWRCTRL_0);
 
-                SDIO_CTRL = hdl->ctrl;
+        SDIO_CTRL = hdl;
 
-                finish:
-                if (err && hdl) {
-                        if (hdl->ctrl) {
-                                if (hdl->ctrl->protect) {
-                                        sys_mutex_destroy(hdl->ctrl->protect);
-                                }
-
-                                if (hdl->ctrl->event) {
-                                        sys_queue_destroy(hdl->ctrl->event);
-                                }
-
-                                if (hdl->ctrl->dmad) {
-                                        _DMA_DDI_release(hdl->ctrl->dmad);
-                                }
-
-                                sys_free(cast(void**, &hdl->ctrl));
-                        }
-
-                        sys_free(cast(void**, &hdl));
+        finish:
+        if (err && hdl) {
+                if (hdl->protect) {
+                        sys_mutex_destroy(hdl->protect);
                 }
 
-        } else {
-                err = sys_zalloc(sizeof(SDIO_t), cast(void**, &hdl));
-                if (!err) {
-                        SDIO_t *hdl0 = NULL;
-                        err = sys_module_get_instance(major, 0, cast(void**, &hdl0));
-                        if (err) {
-                                sys_free(cast(void**, &hdl));
-                        } else {
-                                hdl->minor = minor;
-                                hdl->ctrl   = hdl0->ctrl;
-                                hdl->ctrl->part_init++;
-                        }
+                if (hdl->event) {
+                        sys_queue_destroy(hdl->event);
                 }
+
+                if (hdl->dmad) {
+                        _DMA_DDI_release(hdl->dmad);
+                }
+
+                sys_free(cast(void**, &hdl));
         }
 
         *device_handle = hdl;
@@ -271,37 +226,20 @@ API_MOD_RELEASE(SDIO, void *device_handle)
 {
         SDIO_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(hdl->ctrl->protect, _SDIO_CFG_CARD_TIMEOUT);
+        int err = sys_mutex_lock(hdl->protect, _SDIO_CFG_CARD_TIMEOUT);
         if (!err) {
-                if (!hdl->ctrl->part[hdl->minor].used) {
-                        if (hdl->minor == 0) {
-                                if (hdl->ctrl->part_init == 0) {
+                SDIO->POWER = 0;
+                SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_SDIORST);
+                CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_SDIORST);
+                CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_SDIOEN);
 
-                                        SDIO->POWER = 0;
-                                        SET_BIT(RCC->APB2RSTR, RCC_APB2RSTR_SDIORST);
-                                        CLEAR_BIT(RCC->APB2RSTR, RCC_APB2RSTR_SDIORST);
-                                        CLEAR_BIT(RCC->APB2ENR, RCC_APB2ENR_SDIOEN);
+                sys_mutex_unlock(hdl->protect);
+                sys_mutex_destroy(hdl->protect);
+                sys_queue_destroy(hdl->event);
+                _DMA_DDI_release(hdl->dmad);
+                sys_free(cast(void**, &hdl));
 
-                                        sys_mutex_unlock(hdl->ctrl->protect);
-                                        sys_mutex_destroy(hdl->ctrl->protect);
-                                        sys_queue_destroy(hdl->ctrl->event);
-                                        _DMA_DDI_release(hdl->ctrl->dmad);
-                                        sys_free(cast(void**, &hdl->ctrl));
-                                        sys_free(cast(void**, &hdl));
-                                        err = ESUCC;
-                                }
-
-                        } else {
-                                hdl->ctrl->part[hdl->minor].size   = 0;
-                                hdl->ctrl->part[hdl->minor].offset = 0;
-                                hdl->ctrl->part_init--;
-                                err = sys_free(cast(void**, &hdl));
-                        }
-                } else {
-                        err = EBUSY;
-                }
-
-                sys_mutex_unlock(hdl->ctrl->protect);
+                sys_mutex_unlock(hdl->protect);
         }
 
         return err;
@@ -319,16 +257,8 @@ API_MOD_RELEASE(SDIO, void *device_handle)
 //==============================================================================
 API_MOD_OPEN(SDIO, void *device_handle, u32_t flags)
 {
-        UNUSED_ARG1(flags);
-
-        SDIO_t *hdl = device_handle;
-
-        if (hdl->ctrl->part[hdl->minor].used) {
-                return EBUSY;
-        } else {
-                hdl->ctrl->part[hdl->minor].used = true;
-                return ESUCC;
-        }
+        UNUSED_ARG2(device_handle, flags);
+        return ESUCC;
 }
 
 //==============================================================================
@@ -343,12 +273,7 @@ API_MOD_OPEN(SDIO, void *device_handle, u32_t flags)
 //==============================================================================
 API_MOD_CLOSE(SDIO, void *device_handle, bool force)
 {
-        UNUSED_ARG1(force);
-
-        SDIO_t *hdl = device_handle;
-
-        hdl->ctrl->part[hdl->minor].used = false;
-
+        UNUSED_ARG2(device_handle, force);
         return ESUCC;
 }
 
@@ -376,19 +301,18 @@ API_MOD_WRITE(SDIO,
 {
         UNUSED_ARG1(fattr);
 
-        SDIO_t *hdl  = device_handle;
-        part_t *part = &hdl->ctrl->part[hdl->minor];
+        SDIO_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(hdl->ctrl->protect, MAX_DELAY_MS);
+        int err = sys_mutex_lock(hdl->protect, MAX_DELAY_MS);
         if (!err) {
-                if (part->size > 0) {
-                        u64_t lseek = *fpos + (cast(u64_t, part->offset) * SECTOR_SIZE);
+                if (hdl->size_blocks > 0) {
+                        u64_t lseek = *fpos;
                         err = card_write(hdl, src, count, lseek, wrcnt);
                 } else {
                         err = ENOMEDIUM;
                 }
 
-                sys_mutex_unlock(hdl->ctrl->protect);
+                sys_mutex_unlock(hdl->protect);
         }
 
         return err;
@@ -418,19 +342,18 @@ API_MOD_READ(SDIO,
 {
         UNUSED_ARG1(fattr);
 
-        SDIO_t *hdl  = device_handle;
-        part_t *part = &hdl->ctrl->part[hdl->minor];
+        SDIO_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(hdl->ctrl->protect, MAX_DELAY_MS);
+        int err = sys_mutex_lock(hdl->protect, MAX_DELAY_MS);
         if (!err) {
-                if (part->size > 0) {
-                        u64_t lseek = *fpos + (cast(u64_t, part->offset) * SECTOR_SIZE);
+                if (hdl->size_blocks > 0) {
+                        u64_t lseek = *fpos;
                         err = card_read(hdl, dst, count, lseek, rdcnt);
                 } else {
                         err = ENOMEDIUM;
                 }
 
-                sys_mutex_unlock(hdl->ctrl->protect);
+                sys_mutex_unlock(hdl->protect);
         }
 
         return err;
@@ -456,30 +379,16 @@ API_MOD_IOCTL(SDIO, void *device_handle, int request, void *arg)
         int err = EBADRQC;
 
         switch (request) {
-        case IOCTL_SDIO__INITIALIZE_CARD: {
-                err = sys_mutex_lock(hdl->ctrl->protect, MAX_DELAY_MS);
+        case IOCTL_SDIO__INITIALIZE_CARD:
+                err = sys_mutex_lock(hdl->protect, MAX_DELAY_MS);
                 if (!err) {
                         err = card_initialize(hdl);
-                        sys_mutex_unlock(hdl->ctrl->protect);
+                        sys_mutex_unlock(hdl->protect);
                 }
                 break;
-        }
-
-        case IOCTL_SDIO__READ_MBR: {
-                err = sys_mutex_lock(hdl->ctrl->protect, MAX_DELAY_MS);
-                if (!err) {
-                        if (hdl->ctrl->initialized) {
-                                err = MBR_detect_partitions(hdl);
-                        } else {
-                                err = ENOMEDIUM;
-                        }
-                        sys_mutex_unlock(hdl->ctrl->protect);
-                }
-                break;
-        }
 
         default:
-                return EBADRQC;
+                err = EBADRQC;
         }
 
         return err;
@@ -515,9 +424,8 @@ API_MOD_STAT(SDIO, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         SDIO_t *hdl = device_handle;
 
-        if (hdl->ctrl->initialized) {
-                device_stat->st_size = cast(u64_t, hdl->ctrl->part[hdl->minor].size)
-                                                 * SECTOR_SIZE;
+        if (hdl->initialized) {
+                device_stat->st_size = cast(u64_t, hdl->size_blocks) * SECTOR_SIZE;
         } else {
                 device_stat->st_size = 0;
         }
@@ -542,7 +450,7 @@ static int card_read(SDIO_t *hdl, u8_t *dst, size_t count, u64_t lseek, size_t *
 {
         int err = EIO;
 
-        if (hdl->ctrl->initialized) {
+        if (hdl->initialized) {
                 if ((count % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
 
                         count /= SECTOR_SIZE;
@@ -586,7 +494,7 @@ static int card_write(SDIO_t *hdl, const u8_t *src, size_t count, u64_t lseek, s
 {
         int err = EIO;
 
-        if (hdl->ctrl->initialized) {
+        if (hdl->initialized) {
                 if ((count % SECTOR_SIZE == 0) && (lseek % SECTOR_SIZE == 0)) {
 
                         count /= SECTOR_SIZE;
@@ -629,9 +537,9 @@ static int card_initialize(SDIO_t *hdl)
         int err = EIO;
         SD_response_t resp;
 
-        hdl->ctrl->card.type   = SD_TYPE__UNKNOWN;
-        hdl->ctrl->card.block  = false;
-        hdl->ctrl->initialized = false;
+        hdl->card.type   = SD_TYPE__UNKNOWN;
+        hdl->card.block  = false;
+        hdl->initialized = false;
 
         u32_t timer = sys_time_get_reference();
 
@@ -652,15 +560,15 @@ static int card_initialize(SDIO_t *hdl)
                         if ((resp.RESPONSE[0] >> 31) == 1) {
 
                                 if (resp.RESPONSE[0] & 0x40000000) {
-                                        hdl->ctrl->card.type  = SD_TYPE__SD2;
-                                        hdl->ctrl->card.block = true;
+                                        hdl->card.type  = SD_TYPE__SD2;
+                                        hdl->card.block = true;
                                 } else {
-                                        hdl->ctrl->card.type  = SD_TYPE__SD1;
-                                        hdl->ctrl->card.block = false;
+                                        hdl->card.type  = SD_TYPE__SD1;
+                                        hdl->card.block = false;
                                 }
 
                                 printk("SDIO: found SD%s card",
-                                       hdl->ctrl->card.block ? "HC" : "SC");
+                                       hdl->card.block ? "HC" : "SC");
 
                                 err = ESUCC;
                                 break;
@@ -674,9 +582,9 @@ static int card_initialize(SDIO_t *hdl)
                 catcherr(err = card_send_cmd(SD_CMD__CMD3, CMD_RESP_SHORT, 0), finish);
                 catcherr(err = card_get_response(&resp, RESP_R6), finish);
 
-                hdl->ctrl->RCA = resp.RESPONSE[0] & 0xFFFF0000;
+                hdl->RCA = resp.RESPONSE[0] & 0xFFFF0000;
 
-                catcherr(err = card_send_cmd(SD_CMD__CMD9, CMD_RESP_LONG, hdl->ctrl->RCA), finish);
+                catcherr(err = card_send_cmd(SD_CMD__CMD9, CMD_RESP_LONG, hdl->RCA), finish);
                 catcherr(err = card_get_response(&resp, RESP_R2), finish);
 
                 u32_t blks = 0;
@@ -691,23 +599,23 @@ static int card_initialize(SDIO_t *hdl)
                              / 512;
                 } else {
                         printk("SDIO: unknown CSD version");
-                        hdl->ctrl->card.type = SD_TYPE__UNKNOWN;
+                        hdl->card.type = SD_TYPE__UNKNOWN;
                         err = EIO;
                         goto finish;
                 }
 
                 printk("SDIO: %d 512-byte logical blocks", blks);
-                hdl->ctrl->part[VOLUME].size = blks;
+                hdl->size_blocks = blks;
 
-                catcherr(err = card_send_cmd(SD_CMD__CMD7, CMD_RESP_SHORT, hdl->ctrl->RCA), finish);
+                catcherr(err = card_send_cmd(SD_CMD__CMD7, CMD_RESP_SHORT, hdl->RCA), finish);
                 catcherr(err = card_get_response(&resp, RESP_R1), finish);
 
-                if (hdl->ctrl->card.type == SD_TYPE__SD1) {
+                if (hdl->card.type == SD_TYPE__SD1) {
                         catcherr(err = card_send_cmd(SD_CMD__CMD16, CMD_RESP_SHORT, SECTOR_SIZE), finish);
                         catcherr(err = card_get_response(&resp, RESP_R1), finish);
                 }
 
-                catcherr(err = card_send_cmd(SD_CMD__CMD55, CMD_RESP_SHORT, hdl->ctrl->RCA), finish);
+                catcherr(err = card_send_cmd(SD_CMD__CMD55, CMD_RESP_SHORT, hdl->RCA), finish);
                 catcherr(err = card_get_response(&resp, RESP_R1), finish);
 
                 catcherr(err = card_send_cmd(SD_CMD__ACMD6, CMD_RESP_SHORT, _SDIO_CFG_ACMD6_BUS_WIDE), finish);
@@ -715,7 +623,7 @@ static int card_initialize(SDIO_t *hdl)
 
                 SDIO->CLKCR = SDIO_CLKCR_RUN_CFG;
 
-                hdl->ctrl->initialized = true;
+                hdl->initialized = true;
         }
 
         finish:
@@ -848,7 +756,7 @@ static int card_read_sectors(SDIO_t *hdl, u8_t *dst, size_t count, u32_t address
 
         *rdsec = 0;
 
-        if (hdl->ctrl->card.type == SD_TYPE__SD1) {
+        if (hdl->card.type == SD_TYPE__SD1) {
                 address *= SECTOR_SIZE;
         }
 
@@ -903,7 +811,7 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
 
         *wrsec = 0;
 
-        if (hdl->ctrl->card.type == SD_TYPE__SD1) {
+        if (hdl->card.type == SD_TYPE__SD1) {
                 address *= SECTOR_SIZE;
         }
 
@@ -913,10 +821,10 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
 #endif
 
         if (count == 1) {
-                catcherr(err = card_transfer_block(hdl, SD_CMD__CMD24, address, const_cast(u8_t *, src), 1, DIR_OUT), exit);
+                catcherr(err = card_transfer_block(hdl, SD_CMD__CMD24, address, const_cast(src), 1, DIR_OUT), exit);
 
                 do {
-                        catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
+                        catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->RCA), exit);
                         catcherr(err = card_get_response(&resp, RESP_R1b), exit);
                 } while (!(resp.RESPONSE[0] & 0x100));
 
@@ -926,13 +834,13 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
                 while (count > 0) {
                         size_t blocks_to_transfer = min(count, 511);
 
-                        catcherr(err = card_transfer_block(hdl, SD_CMD__CMD25, address, const_cast(u8_t *, src), blocks_to_transfer, DIR_OUT), exit);
+                        catcherr(err = card_transfer_block(hdl, SD_CMD__CMD25, address, const_cast(src), blocks_to_transfer, DIR_OUT), exit);
                         catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
                         catcherr(err = card_get_response(&resp, RESP_R1b), exit);
 
                         while (!(resp.RESPONSE[0] & 0x100)) {
                                 sys_sleep_ms(1);
-                                catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->ctrl->RCA), exit);
+                                catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->RCA), exit);
                                 catcherr(err = card_get_response(&resp, RESP_R1b), exit);
                         }
 
@@ -969,9 +877,9 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
 #if USE_DMA != USE_DMA_NEVER
         bool dma_capable = sys_is_mem_dma_capable(buf);
 
-        if (hdl->ctrl->dmad && dma_capable) {
+        if (hdl->dmad && dma_capable) {
                 _DMA_DDI_config_t config;
-                config.callback = DMA_finished;
+                config.cb_finish= DMA_finished;
                 config.cb_next  = NULL;
                 config.arg      = hdl;
                 config.release  = false;
@@ -997,7 +905,7 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
                                 | DMA_SxFCR_FTH_FULL;
                 config.IRQ_priority = _SDIO_CFG_IRQ_PRIORITY;
 
-                err = _DMA_DDI_transfer(hdl->ctrl->dmad, &config);
+                err = _DMA_DDI_transfer(hdl->dmad, &config);
                 if (!err) {
 
                         SDIO->MASK   = 0;
@@ -1042,7 +950,7 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
                         sys_ISR_enable();
 
                         int err_ev = EIO;
-                        err = sys_queue_receive(hdl->ctrl->event, &err_ev, TRANSACTION_TIMEOUT);
+                        err = sys_queue_receive(hdl->event, &err_ev, TRANSACTION_TIMEOUT);
                         if (!err) {
                                 err = err_ev;
 
@@ -1078,8 +986,8 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
 
         /* IRQ transfer if DMA not capable or DMA disabled */
         {
-                hdl->ctrl->buf   = cast(u32_t*, buf);
-                hdl->ctrl->count = (count * SECTOR_SIZE) / sizeof(SDIO->FIFO);
+                hdl->buf   = cast(u32_t*, buf);
+                hdl->count = (count * SECTOR_SIZE) / sizeof(SDIO->FIFO);
 
                 SDIO->ICR = UINT32_MAX;
                 SDIO->MASK = 0;
@@ -1129,7 +1037,7 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
                 sys_ISR_enable();
 
                 int err_ev = EIO;
-                err = sys_queue_receive(hdl->ctrl->event, &err_ev, TRANSACTION_TIMEOUT);
+                err = sys_queue_receive(hdl->event, &err_ev, TRANSACTION_TIMEOUT);
                 if (!err) {
                         err = err_ev;
 
@@ -1152,50 +1060,6 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
                 if (err) {
                         printk("SDIO: error %d", err);
                 }
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief Function detect partitions
- *
- * @param[in]  hdl      SD module data
- *
- * @return One of errno value (errno.h).
- */
-//==============================================================================
-static int MBR_detect_partitions(SDIO_t *hdl)
-{
-        int err = EIO;
-
-        u8_t *MBR;
-        err = sys_zalloc(SECTOR_SIZE, cast(void**, &MBR));
-        if (!err) {
-                size_t rdcnt;
-                err = card_read(hdl, MBR, SECTOR_SIZE, 0, &rdcnt);
-                if (err || (rdcnt != SECTOR_SIZE)) {
-                        goto error;
-                }
-
-                if (MBR_get_boot_signature(MBR) != MBR_SIGNATURE) {
-                        err = EMEDIUMTYPE;
-                        goto error;
-                }
-
-                for (int i = PARTITION_1; i <= PARTITION_4; i++) {
-                        hdl->ctrl->part[i].size   = MBR_get_partition_number_of_sectors(i, MBR);
-                        hdl->ctrl->part[i].offset = MBR_get_partition_first_LBA_sector(i, MBR);
-
-                        if (hdl->ctrl->part[i].size && hdl->ctrl->part[i].offset) {
-                                printk("SDIO: partition %d size %d blocks",
-                                       i, hdl->ctrl->part[i].size);
-                        }
-                }
-
-                error:
-                sys_free(cast(void**, &MBR));
         }
 
         return err;
@@ -1299,7 +1163,7 @@ static bool DMA_finished(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 
         bool yield = false;
         int  err   = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
-        sys_queue_send_from_ISR(hdl->ctrl->event, &err, &yield);
+        sys_queue_send_from_ISR(hdl->event, &err, &yield);
 
         return yield;
 }

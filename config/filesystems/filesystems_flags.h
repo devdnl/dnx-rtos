@@ -129,6 +129,18 @@ __ENABLE_EXT4FS__=_NO_
 __ENABLE_ROMFS__=_YES_
 #*/
 
+#/*--
+# this:AddWidget("Checkbox", "Enable flatfs")
+# this:SetToolTip("FLAT File System")
+# this:AddExtraWidget("Hyperlink", "FLATFS_CONFIGURE", "Configure")
+# this:SetEvent("clicked", "FLATFS_CONFIGURE", function() this:LoadFile("filesystems/flatfs_flags.h") end)
+#--*/
+#include "../filesystems/flatfs_flags.h"
+#define __ENABLE_FLATFS__ _NO_
+#/*
+__ENABLE_FLATFS__=_NO_
+#*/
+
 #endif /* _FILE_SYSTEMS_FLAGS_H_ */
 #/*=============================================================================
 #  End of file

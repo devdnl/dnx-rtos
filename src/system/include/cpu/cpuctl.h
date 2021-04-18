@@ -49,8 +49,6 @@ extern "C" {
 #       include "stm32f7/cpuctl.h"
 #elif defined(ARCH_stm32h7)
 #       include "stm32h7/cpuctl.h"
-#elif defined(ARCH_efr32)
-#       include "efr32/cpuctl.h"
 #endif
 
 /*==============================================================================

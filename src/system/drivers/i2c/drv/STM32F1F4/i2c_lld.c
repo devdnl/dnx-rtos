@@ -203,7 +203,7 @@ static const I2C_info_t I2C_HW[_I2C_NUMBER_OF_PERIPHERALS] = {
 //==============================================================================
 static inline I2C_periph_t *get_I2C(I2C_dev_t *hdl)
 {
-        return const_cast(I2C_periph_t*, I2C_HW[hdl->major].I2C);
+        return const_cast(I2C_HW[hdl->major].I2C);
 }
 
 //==============================================================================
@@ -398,7 +398,7 @@ static void clear_address_event(I2C_dev_t *hdl)
 int _I2C_LLD__init(u8_t major)
 {
         const I2C_info_t *cfg = &I2C_HW[major];
-        I2C_periph_t            *i2c = const_cast(I2C_periph_t*, I2C_HW[major].I2C);
+        I2C_periph_t            *i2c = const_cast(I2C_HW[major].I2C);
 
         CLEAR_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
         SET_BIT(RCC->APB1ENR, cfg->APB1ENR_clk_mask);
@@ -463,7 +463,7 @@ int _I2C_LLD__init(u8_t major)
 void _I2C_LLD__release(u8_t major)
 {
         const I2C_info_t *cfg = &I2C_HW[major];
-        I2C_periph_t     *i2c = const_cast(I2C_periph_t*, I2C_HW[major].I2C);
+        I2C_periph_t     *i2c = const_cast(I2C_HW[major].I2C);
 
         NVIC_DisableIRQ(cfg->IRQ_EV_n);
         NVIC_DisableIRQ(cfg->IRQ_ER_n);
@@ -654,8 +654,10 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                                 CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
                                 _DMA_DDI_config_t config;
+                                memset(&config, 0, sizeof(config));
                                 config.arg      = _I2C[hdl->major];
-                                config.callback = DMA_callback;
+                                config.cb_finish= DMA_callback;
+                                config.cb_half  = NULL;
                                 config.cb_next  = NULL;
                                 config.release  = false;
                                 config.PA       = cast(u32_t, &i2c->DR);
@@ -831,8 +833,10 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                         CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
                         _DMA_DDI_config_t config;
+                        memset(&config, 0, sizeof(config));
                         config.arg      = _I2C[hdl->major];
-                        config.callback = DMA_callback;
+                        config.cb_finish= DMA_callback;
+                        config.cb_half  = NULL;
                         config.cb_next  = NULL;
                         config.release  = false;
                         config.PA       = cast(u32_t, &i2c->DR);
@@ -1122,7 +1126,7 @@ static void IRQ_EV_handler(u8_t major)
 {
         bool woken = false;
 
-        I2C_periph_t *i2c = const_cast(I2C_periph_t*, I2C_HW[major].I2C);
+        I2C_periph_t *i2c = const_cast(I2C_HW[major].I2C);
         u16_t  SR1 = i2c->SR1;
 
         if (SR1 & _I2C[major]->SR1_mask) {
@@ -1159,7 +1163,7 @@ static void IRQ_EV_handler(u8_t major)
 //==============================================================================
 static void IRQ_ER_handler(u8_t major)
 {
-        I2C_periph_t *i2c = const_cast(I2C_periph_t*, I2C_HW[major].I2C);
+        I2C_periph_t *i2c = const_cast(I2C_HW[major].I2C);
         u16_t  SR1 = i2c->SR1;
         u16_t  SR2 = i2c->SR2;
         UNUSED_ARG1(SR2);
@@ -1205,7 +1209,7 @@ static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 #endif
 {
         I2C_mem_t    *I2C_mem = arg;
-        I2C_periph_t *i2c     = const_cast(I2C_periph_t*, I2C_HW[I2C_mem->major].I2C);
+        I2C_periph_t *i2c     = const_cast(I2C_HW[I2C_mem->major].I2C);
 
         int err = (SR & DMA_SR_TEIF) ? EIO : ESUCC;
 

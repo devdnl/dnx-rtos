@@ -150,9 +150,11 @@ API_MOD_WRITE(ZERO,
               size_t           *wrcnt,
               struct vfs_fattr  fattr)
 {
-        UNUSED_ARG6(device_handle, src, count, fpos, wrcnt, fattr);
+        UNUSED_ARG4(device_handle, src, fpos, fattr);
 
-        return EPERM;
+        *wrcnt = count;
+
+        return ESUCC;
 }
 
 //==============================================================================

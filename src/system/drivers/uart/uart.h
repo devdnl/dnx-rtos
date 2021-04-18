@@ -51,9 +51,6 @@
 #elif defined(ARCH_stm32h7)
 #include "stm32h7/stm32h7xx.h"
 #include "stm32h7/lib/stm32h7xx_ll_rcc.h"
-#elif defined(ARCH_efr32)
-#include "efr32/efr32xx.h"
-#include "efr32/lib/em_cmu.h"
 #endif
 
 #ifdef __cplusplus
@@ -217,33 +214,18 @@ enum {
         #endif
         _UART_COUNT
 };
-#elif defined(ARCH_efr32)
-#define _UART_COUNT USART_COUNT
 #endif
 
 
 /* USART handling structure */
 struct UART_mem {
-        // Rx FIFO
-        struct rx_FIFO {
-                u8_t            buffer[__UART_RX_BUFFER_LEN__];
-                u16_t           buffer_level;
-                u16_t           read_index;
-                u16_t           write_index;
-        } rx_FIFO;
-
-        // Tx FIFO
-        struct tx_buffer {
-                const u8_t     *src_ptr;
-                size_t          data_size;
-        } tx_buffer;
-
-        // UART control
-        sem_t                  *write_ready_sem;
-        sem_t                  *data_read_sem;
-        mutex_t                *port_lock_rx_mtx;
-        mutex_t                *port_lock_tx_mtx;
-        u8_t                    major;
+        queue_t *tx_queue;
+        queue_t *rx_queue;
+        mutex_t *port_lock_rx_mtx;
+        mutex_t *port_lock_tx_mtx;
+        void    *uarthdl;
+        u8_t     major;
+        u8_t     minor;
 
         struct UART_rich_config {
                 GPIO_pin_in_port_t  RS485_DE_pin;
@@ -260,14 +242,10 @@ extern struct UART_mem *_UART_mem[];
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int  _UART_LLD__turn_on(u8_t major);
-extern int  _UART_LLD__turn_off(u8_t major);
-extern void _UART_LLD__transmit(u8_t major);
-extern void _UART_LLD__abort_trasmission(u8_t major);
-extern void _UART_LLD__rx_resume(u8_t major);
-extern void _UART_LLD__rx_hold(u8_t major);
-extern int  _UART_LLD__configure(u8_t major, const struct UART_rich_config *config);
-extern bool _UART_FIFO__write(struct rx_FIFO *fifo, const u8_t *data);
+extern int  _UART_LLD__turn_on(struct UART_mem *hdl);
+extern int  _UART_LLD__turn_off(struct UART_mem *hdl);
+extern void _UART_LLD__resume_transmit(struct UART_mem *hdl);
+extern int  _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *config);
 extern void _UART_set_DE_pin(struct UART_mem *hdl, bool enable);
 
 /*==============================================================================

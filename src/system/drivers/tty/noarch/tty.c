@@ -69,7 +69,7 @@ typedef struct tty_io {
 ==============================================================================*/
 static int      configure               (tty_t *tty, const TTY_config_t *conf);
 static int      service_in              (void *arg);
-static void     vt100_init              (tty_io_t *io);
+static void     vt100_init              (tty_io_t *io, bool force_clean);
 static void     vt100_analyze           (tty_io_t *io, char c);
 static void     copy_string_to_queue    (const char *str, queue_t *queue, bool lfend, uint timeout);
 static int      switch_terminal         (tty_io_t *io, int term_no);
@@ -582,7 +582,7 @@ static int configure(tty_t *tty, const TTY_config_t *conf)
                 tty->io->outfile = out;
                 tty->io->clear_at_init = conf->clear_screen;
 
-                vt100_init(tty->io);
+                vt100_init(tty->io, false);
 
         } else {
                 if (in) {
@@ -635,17 +635,18 @@ static int service_in(void *arg)
 /**
  * @brief Configure VT100 terminal
  *
- * @param io    TTY io
+ * @param io            TTY io
+ * @param force_clen    force screen clean
  */
 //==============================================================================
-static void vt100_init(tty_io_t *io)
+static void vt100_init(tty_io_t *io, bool force_clean)
 {
         size_t wrcnt;
 
         const char *cmd = VT100_RESET_ATTRIBUTES;
         sys_fwrite(cmd, strlen(cmd), &wrcnt, io->outfile);
 
-        if (io->clear_at_init) {
+        if (io->clear_at_init or force_clean) {
                 cmd = VT100_CLEAR_SCREEN VT100_CURSOR_HOME;
                 sys_fwrite(cmd, strlen(cmd), &wrcnt, io->outfile);
         }
@@ -785,7 +786,7 @@ static int switch_terminal(tty_io_t *io, int term_no)
 
                         tty_t *tty = io->tty[io->current_tty];
 
-                        vt100_init(io);
+                        vt100_init(io, true);
 
                         err = sys_mutex_lock(tty->secure_mtx, MAX_DELAY_MS);
                         if (!err) {
@@ -902,7 +903,7 @@ static int clear_tty(tty_t *tty)
                 ttybfr_clear(tty->screen);
 
                 if (tty->minor == tty->io->current_tty) {
-                        vt100_init(tty->io);
+                        vt100_init(tty->io, true);
                 }
 
                 sys_mutex_unlock(tty->secure_mtx);

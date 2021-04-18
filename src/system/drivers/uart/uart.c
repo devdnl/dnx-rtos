@@ -48,7 +48,6 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static bool _UART_FIFO__read(struct rx_FIFO *fifo, u8_t *data);
 
 /*==============================================================================
   Local object definitions
@@ -69,6 +68,110 @@ static const struct UART_rich_config UART_DEFAULT_CONFIG = {
 
 /* structure which identify USARTs data in the IRQs */
 struct UART_mem *_UART_mem[_UART_COUNT];
+
+/* RX FIFO length */
+static const uint16_t RX_BUF_LEN[] = {
+        #ifdef __UART_MAJOR0_RX_BUFFER_LEN__
+        __UART_MAJOR0_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR1_RX_BUFFER_LEN__
+        __UART_MAJOR1_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR2_RX_BUFFER_LEN__
+        __UART_MAJOR2_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR3_RX_BUFFER_LEN__
+        __UART_MAJOR3_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR4_RX_BUFFER_LEN__
+        __UART_MAJOR4_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR5_RX_BUFFER_LEN__
+        __UART_MAJOR5_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR6_RX_BUFFER_LEN__
+        __UART_MAJOR6_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR7_RX_BUFFER_LEN__
+        __UART_MAJOR7_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR8_RX_BUFFER_LEN__
+        __UART_MAJOR8_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR9_RX_BUFFER_LEN__
+        __UART_MAJOR9_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR10_RX_BUFFER_LEN__
+        __UART_MAJOR10_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR11_RX_BUFFER_LEN__
+        __UART_MAJOR111_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR12_RX_BUFFER_LEN__
+        __UART_MAJOR12_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR13_RX_BUFFER_LEN__
+        __UART_MAJOR13_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR14_RX_BUFFER_LEN__
+        __UART_MAJOR14_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR15_RX_BUFFER_LEN__
+        __UART_MAJOR15_RX_BUFFER_LEN__,
+        #endif
+};
+
+/* TX FIFO length */
+static const uint16_t TX_BUF_LEN[] = {
+        #ifdef __UART_MAJOR0_TX_BUFFER_LEN__
+        __UART_MAJOR0_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR1_TX_BUFFER_LEN__
+        __UART_MAJOR1_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR2_TX_BUFFER_LEN__
+        __UART_MAJOR2_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR3_TX_BUFFER_LEN__
+        __UART_MAJOR3_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR4_TX_BUFFER_LEN__
+        __UART_MAJOR4_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR5_TX_BUFFER_LEN__
+        __UART_MAJOR5_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR6_TX_BUFFER_LEN__
+        __UART_MAJOR6_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR7_TX_BUFFER_LEN__
+        __UART_MAJOR7_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR8_TX_BUFFER_LEN__
+        __UART_MAJOR8_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR9_TX_BUFFER_LEN__
+        __UART_MAJOR9_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR10_TX_BUFFER_LEN__
+        __UART_MAJOR10_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR11_TX_BUFFER_LEN__
+        __UART_MAJOR111_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR12_TX_BUFFER_LEN__
+        __UART_MAJOR12_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR13_TX_BUFFER_LEN__
+        __UART_MAJOR13_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR14_TX_BUFFER_LEN__
+        __UART_MAJOR14_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR15_TX_BUFFER_LEN__
+        __UART_MAJOR15_TX_BUFFER_LEN__,
+        #endif
+};
 
 /*==============================================================================
   Function definitions
@@ -95,48 +198,51 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor, const void *con
         int err = sys_zalloc(sizeof(struct UART_mem), device_handle);
         if (!err) {
                 _UART_mem[major] = *device_handle;
+                struct UART_mem *hdl = _UART_mem[major];
 
-                err = sys_semaphore_create(1, 0, &_UART_mem[major]->write_ready_sem);
+                hdl->major = major;
+                hdl->minor = minor;
+
+                err = sys_queue_create(RX_BUF_LEN[hdl->major], sizeof(char), &hdl->rx_queue);
                 if (err)
                         goto finish;
 
-                err = sys_semaphore_create(__UART_RX_BUFFER_LEN__, 0, &_UART_mem[major]->data_read_sem);
+                err = sys_queue_create(TX_BUF_LEN[hdl->major], sizeof(char), &hdl->tx_queue);
                 if (err)
                         goto finish;
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &_UART_mem[major]->port_lock_rx_mtx);
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->port_lock_rx_mtx);
                 if (err)
                         goto finish;
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &_UART_mem[major]->port_lock_tx_mtx);
+                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->port_lock_tx_mtx);
                 if (err)
                         goto finish;
 
-                err = _UART_LLD__turn_on(major);
+                err = _UART_LLD__turn_on(hdl);
                 if (!err) {
-                        _UART_mem[major]->major = major;
-                        _UART_mem[major]->config = UART_DEFAULT_CONFIG;
+                        hdl->config = UART_DEFAULT_CONFIG;
 
                         if (config) {
-                                _UART_mem[major]->config.basic = *cast(struct UART_config *, config);
+                                hdl->config.basic = *cast(struct UART_config *, config);
                         }
 
-                        _UART_LLD__configure(major, &_UART_mem[major]->config);
+                        _UART_LLD__configure(hdl, &hdl->config);
                 }
 
                 finish:
                 if (err) {
-                        if (_UART_mem[major]->port_lock_tx_mtx)
-                                sys_mutex_destroy(_UART_mem[major]->port_lock_tx_mtx);
+                        if (hdl->port_lock_tx_mtx)
+                                sys_mutex_destroy(hdl->port_lock_tx_mtx);
 
-                        if (_UART_mem[major]->port_lock_rx_mtx)
-                                sys_mutex_destroy(_UART_mem[major]->port_lock_rx_mtx);
+                        if (hdl->port_lock_rx_mtx)
+                                sys_mutex_destroy(hdl->port_lock_rx_mtx);
 
-                        if (_UART_mem[major]->write_ready_sem)
-                                sys_semaphore_destroy(_UART_mem[major]->write_ready_sem);
+                        if (hdl->rx_queue)
+                                sys_queue_destroy(hdl->rx_queue);
 
-                        if (_UART_mem[major]->write_ready_sem)
-                                sys_semaphore_destroy(_UART_mem[major]->write_ready_sem);
+                        if (hdl->tx_queue)
+                                sys_queue_destroy(hdl->tx_queue);
 
                         sys_free(device_handle);
                         _UART_mem[major] = NULL;
@@ -165,9 +271,10 @@ API_MOD_RELEASE(UART, void *device_handle)
                         sys_mutex_destroy(hdl->port_lock_rx_mtx);
                         sys_mutex_destroy(hdl->port_lock_tx_mtx);
 
-                        sys_semaphore_destroy(hdl->write_ready_sem);
+                        sys_queue_destroy(hdl->rx_queue);
+                        sys_queue_destroy(hdl->tx_queue);
 
-                        _UART_LLD__turn_off(hdl->major);
+                        _UART_LLD__turn_off(hdl);
 
                         _UART_mem[hdl->major] = NULL;
                         sys_free(&device_handle);
@@ -243,36 +350,11 @@ API_MOD_WRITE(UART,
 
         int err = sys_mutex_lock(hdl->port_lock_tx_mtx, MTX_BLOCK_TIMEOUT);
         if (!err) {
-                u32_t timeout = TX_WAIT_TIMEOUT;
-
-                hdl->tx_buffer.src_ptr   = src;
-                hdl->tx_buffer.data_size = count;
-                _UART_LLD__transmit(hdl->major);
-
-                err = sys_semaphore_wait(hdl->write_ready_sem, timeout);
-                if (err) {
-                        _UART_LLD__abort_trasmission(hdl->major);
-
-                        if (hdl->tx_buffer.data_size == 0) {
-                                *wrcnt = count;
-                                err    = ESUCC;
-                        } else {
-                                *wrcnt = count - hdl->tx_buffer.data_size;
-
-                                printk("UART: write timeout (%d bytes left)",
-                                       hdl->tx_buffer.data_size);
-                        }
-
-                        hdl->tx_buffer.data_size = 0;
-                        hdl->tx_buffer.src_ptr   = NULL;
-
-                } else {
-                        *wrcnt = count;
-                }
-
-                // disable DE pin (in case of error)
-                if (hdl->config.basic.mode == UART_MODE__RS485) {
-                        _UART_set_DE_pin(hdl, false);
+                while (count--) {
+                        sys_queue_send(hdl->tx_queue, src, TX_WAIT_TIMEOUT);
+                        _UART_LLD__resume_transmit(hdl);
+                        src++;
+                        (*wrcnt)++;
                 }
 
                 sys_mutex_unlock(hdl->port_lock_tx_mtx);
@@ -311,18 +393,13 @@ API_MOD_READ(UART,
         if (!err) {
                 *rdcnt = 0;
 
-                while (count > 0) {
-                        err = sys_semaphore_wait(hdl->data_read_sem,
-                                                 fattr.non_blocking_rd ?
-                                                 0 : RX_WAIT_TIMEOUT);
+                while (count--) {
+                        u32_t timeout = fattr.non_blocking_rd ? 0 : RX_WAIT_TIMEOUT;
+
+                        err = sys_queue_receive(hdl->rx_queue, dst, timeout);
                         if (!err) {
-                                _UART_LLD__rx_hold(hdl->major);
-                                if (_UART_FIFO__read(&hdl->rx_FIFO, dst)) {
-                                        dst++;
-                                        (*rdcnt)++;
-                                        count--;
-                                }
-                                _UART_LLD__rx_resume(hdl->major);
+                                dst++;
+                                (*rdcnt)++;
                         } else {
                                 if (fattr.non_blocking_rd) {
                                         err = 0;
@@ -360,7 +437,7 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                         hdl->config.LIN_break_bits        = UART_LIN_BREAK__10_BITS;
                         hdl->config.RS485_DE_pin.port_idx = IOCTL_GPIO_PIN_IDX__NONE;
                         hdl->config.RS485_DE_pin.pin_idx  = IOCTL_GPIO_PIN_IDX__NONE;
-                        err = _UART_LLD__configure(hdl->major, &hdl->config);
+                        err = _UART_LLD__configure(hdl, &hdl->config);
                         break;
 
                 case IOCTL_UART__GET_CONFIGURATION:
@@ -369,13 +446,8 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
                         break;
 
                 case IOCTL_UART__GET_CHAR_UNBLOCKING:
-                        _UART_LLD__rx_hold(hdl->major);
-                        if (_UART_FIFO__read(&hdl->rx_FIFO, arg)) {
-                                err = ESUCC;
-                        } else {
-                                err = EAGAIN;
-                        }
-                        _UART_LLD__rx_resume(hdl->major);
+                        err = sys_queue_receive(hdl->rx_queue, arg, 0);
+                        if (err == ETIME) err = EAGAIN;
                         break;
 
                 case IOCTL_UART__SET_RS485_DE_PIN:
@@ -408,9 +480,20 @@ API_MOD_IOCTL(UART, void *device_handle, int request, void *arg)
 //==============================================================================
 API_MOD_FLUSH(UART, void *device_handle)
 {
-        UNUSED_ARG1(device_handle);
+        struct UART_mem *hdl = device_handle;
 
-        return ESUCC;
+        int err = 0;
+        while (!err) {
+                size_t items = 0;
+                err = sys_queue_get_number_of_items(hdl->tx_queue, &items);
+                if (items == 0) {
+                        break;
+                } else {
+                        sys_sleep_ms(5);
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -427,65 +510,11 @@ API_MOD_STAT(UART, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         struct UART_mem *hdl = device_handle;
 
-        _UART_LLD__rx_hold(hdl->major);
-        device_stat->st_size = hdl->rx_FIFO.buffer_level;
-        _UART_LLD__rx_resume(hdl->major);
+        size_t items = 0;
+        sys_queue_get_number_of_items(hdl->rx_queue, &items);
+        device_stat->st_size = items;
 
         return ESUCC;
-}
-
-//==============================================================================
-/**
- * @brief Function write data to FIFO
- *
- * @param fifo          fifo buffer
- * @param data          data to write
- *
- * @return true if success, false on error
- */
-//==============================================================================
-bool _UART_FIFO__write(struct rx_FIFO *fifo, const u8_t *data)
-{
-        if (fifo->buffer_level < __UART_RX_BUFFER_LEN__) {
-                fifo->buffer[fifo->write_index++] = *data;
-
-                if (fifo->write_index >= __UART_RX_BUFFER_LEN__) {
-                        fifo->write_index = 0;
-                }
-
-                fifo->buffer_level++;
-
-                return true;
-        } else {
-                return false;
-        }
-}
-
-//==============================================================================
-/**
- * @brief Function read data from FIFO
- *
- * @param fifo          fifo buffer
- * @param data          data result
- *
- * @return true if success, false on error
- */
-//==============================================================================
-static bool _UART_FIFO__read(struct rx_FIFO *fifo, u8_t *data)
-{
-        if (fifo->buffer_level > 0) {
-                *data = fifo->buffer[fifo->read_index++];
-
-                if (fifo->read_index >= __UART_RX_BUFFER_LEN__) {
-                        fifo->read_index = 0;
-                }
-
-                fifo->buffer_level--;
-
-                return true;
-        } else {
-                return false;
-        }
 }
 
 //==============================================================================

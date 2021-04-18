@@ -145,6 +145,24 @@ __CPU_NAME__=STM32F103TBxx
 #--*/
 #define __CPU_VTOR_TAB_POSITION__ 0x00000
 
+#/*--
+# this:AddWidget("Combobox", "Custom linker script")
+# this:AddItem("No", "_NO_")
+# this:AddItem("Yes", "_YES_")
+#--*/
+#define __CUSTOM_LD_SCRIPT__ _NO_
+#/*
+__CUSTOM_LD_SCRIPT__=_NO_
+#*/
+
+#/*--
+# this:AddWidget("Editline", true, "Custom linker script file path")
+#--*/
+#define __CUSTOM_LD_SCRIPT_FILE__ "./config/custom_script.ld"
+#/*
+__CUSTOM_LD_SCRIPT_FILE__="./config/custom_script.ld"
+#*/
+
 #//-----------------------------------------------------------------------------
 #// mandatory flags, not configurable
 #//-----------------------------------------------------------------------------
@@ -158,7 +176,14 @@ __CPU_NAME__=STM32F103TBxx
 CPUCONFIG_AFLAGS=-mcpu=cortex-m3 -mthumb -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM3
 CPUCONFIG_CFLAGS=-mcpu=cortex-m3 -mthumb -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM3
 CPUCONFIG_CXXFLAGS=-mcpu=cortex-m3 -mthumb -ffast-math -fno-math-errno -mthumb-interwork -DGCC_ARMCM3
-CPUCONFIG_LDFLAGS=-mcpu=cortex-m3 -mthumb -mthumb-interwork -nostartfiles -T./src/system/cpu/stm32f1/ld/$(__CPU_NAME__).ld
+CPUCONFIG_LDFLAGS=-mcpu=cortex-m3 -mthumb -mthumb-interwork -nostartfiles
+
+ifeq ($(__CUSTOM_LD_SCRIPT__), _YES_)
+CPUCONFIG_LDFLAGS += -T$(__CUSTOM_LD_SCRIPT_FILE__)
+else
+CPUCONFIG_LDFLAGS += -T./src/system/cpu/stm32f1/ld/$(__CPU_NAME__).ld
+endif
+
 #*/
 
 #// current CPU family definitions

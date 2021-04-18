@@ -56,6 +56,9 @@ extern "C" {
 #define _CPUCTL_FAST_MEM                        "DTCM"
 #define _CPUCTL_STACK_REGION_FLAGS              _MM_FLAG__DMA_CAPABLE | _MM_FLAG__CACHEABLE
 
+/* CACHE macros */
+#define _CPUCTL_CACHE_ALIGN                     32
+
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
@@ -80,9 +83,9 @@ extern u32_t _cpuctl_get_CPU_load_counter_delta (void);
 extern void  _cpuctl_clean_dcache                       (void);
 extern void  _cpuctl_clean_invalidate_dcache            (void);
 extern void  _cpuctl_invalidate_dcache                  (void);
-extern void  _cpuctl_invalidate_dcache_by_addr          (u32_t *addr, u32_t size);
-extern void  _cpuctl_clean_dcache_by_addr               (u32_t *addr, u32_t size);
-extern void  _cpuctl_clean_invalidate_dcache_by_addr    (u32_t *addr, u32_t size);
+extern void  _cpuctl_invalidate_dcache_by_addr          (void *addr, u32_t size);
+extern void  _cpuctl_clean_dcache_by_addr               (void *addr, u32_t size);
+extern void  _cpuctl_clean_invalidate_dcache_by_addr    (void *addr, u32_t size);
 
 #ifdef __cplusplus
 }

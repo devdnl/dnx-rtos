@@ -651,7 +651,7 @@ static inline void *realloc(void *ptr, size_t size)
 static inline void abort(void)
 {
         extern void _process_abort(struct _process*);
-        _builtinfunc(process_abort, (struct _process*)_builtinfunc(task_get_tag, _THIS_TASK));
+        _builtinfunc(process_abort, _builtinfunc(process_get_active));
 }
 
 //==============================================================================
@@ -678,7 +678,7 @@ static inline void abort(void)
 static inline void exit(int status)
 {
         extern void _process_exit(struct _process*, int);
-        _builtinfunc(process_exit, (struct _process*)_builtinfunc(task_get_tag, _THIS_TASK), status);
+        _builtinfunc(process_exit, _builtinfunc(process_get_active), status);
         for (;;); // makes compiler happy
 }
 

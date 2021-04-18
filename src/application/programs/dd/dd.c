@@ -108,7 +108,17 @@ int main(int argc, char *argv[])
         u8_t *blk = malloc(global->block_size);
         if (blk) {
                 FILE *in  = fopen(global->input_file, "r");
-                FILE *out = fopen(global->output_file, "w+");
+                if (!in) {
+                        perror(global->input_file);
+                }
+
+                FILE *out = fopen(global->output_file, "r+");
+                if (!out) {
+                        out = fopen(global->output_file, "w");
+                        if (!out) {
+                                perror(global->output_file);
+                        }
+                }
 
                 if (in and out) {
                         fseek(in, global->skip, SEEK_SET);
@@ -157,6 +167,8 @@ int main(int argc, char *argv[])
                 }
 
                 free(blk);
+        } else {
+                perror("dd");
         }
 
         return EXIT_SUCCESS;
@@ -171,7 +183,7 @@ int main(int argc, char *argv[])
 //==============================================================================
 static void help(const char *name)
 {
-        printf("Usage: %s [ARGUMETNS]...\n", name);
+        printf("Usage: %s [ARGUMENTS]...\n", name);
         printf("  if=FILE       input file\n");
         printf("  of=FILE       output file\n");
         printf("  bs=BYTES      block size\n");

@@ -219,7 +219,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
         *fpos = 0;
 
         // create path with offset
-        char *opath = const_cast(char*, path);
+        char *opath = const_cast(path);
 
         if (hdl->offset_path) {
                 err = sys_malloc(strlen(hdl->offset_path) + strsize(path),
@@ -570,7 +570,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
         int err;
 
         // create path with offset
-        char *opath = const_cast(char*, path);
+        char *opath = const_cast(path);
 
         if (hdl->offset_path) {
                 err = sys_malloc(strlen(hdl->offset_path) + strsize(path),

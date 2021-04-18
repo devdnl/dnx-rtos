@@ -1,9 +1,20 @@
-dnx RTOS 2.4.3 Goose
+dnx RTOS 2.4.5 Goose
 ====================
 New Features, Improvements:
 - Fixed ETH driver for stm32f1, stm32f4, stm32f7
 - New drivers: PART (parition support), ZERO (zero copy), URANDOM (pseudo random copy)
--
+- Added DMA support for UART driver in stm32fx architectures.
+- Removed EFR32 architecture.
+- Added flatfs file system (simple damage resistant file system).
+- Added SDIO driver for stm32f7x architecture (polling and IRQ  modes only).
+- Fixes in NVM driver (fast erase and error fix)
+- const_cast() macro without type argument (cast to void*)
+- Added wait() function (wait for process close)
+- Added timer irq-based encoder driver for stm32f7x architecture
+- Added zlib library
+- Added usb host library (memory stick)
+- Added return status for threads
+- Added possibility to select custom linker script
 
 dnx RTOS 2.4.0 Goose
 ====================

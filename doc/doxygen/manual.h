@@ -84,6 +84,7 @@ drivers configuration, and starting needed applications/daemons.
 \li \subpage page-drivers
 
 \section sec-drivers Drivers
+\li \subpage drv-timenc
 \li \subpage drv-zero
 \li \subpage drv-urandom
 \li \subpage drv-part
@@ -113,6 +114,7 @@ drivers configuration, and starting needed applications/daemons.
 \li \subpage drv-uart
 \li \subpage drv-usbd
 \li \subpage drv-wdg
+\li \subpage drv-usbh
 */
 
 //------------------------------------------------------------------------------

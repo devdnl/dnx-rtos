@@ -38,7 +38,6 @@ Driver handles GPIO peripheral.
 \li stm32f4
 \li stm32f7
 \li stm32h7
-\li efr32
 
 \section drv-gpio-ddesc Details
 \subsection drv-gpio-ddesc-num Meaning of major and minor numbers
@@ -146,8 +145,6 @@ not initialized then pin behavior is undefined (depends on microcontroller).
         #include "stm32f7/gpio_cfg.h"
 #elif defined(ARCH_stm32h7)
         #include "stm32h7/gpio_cfg.h"
-#elif defined(ARCH_efr32)
-        #include "efr32/gpio_cfg.h"
 #endif
 
 #ifdef __cplusplus

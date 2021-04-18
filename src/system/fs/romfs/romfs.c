@@ -342,7 +342,7 @@ API_FS_STAT(romfs, void *fs_handle, const char *path, struct stat *stat)
 
         int err = get_entry(path, &entry);
         if (!err) {
-                err = _romfs_fstat(fs_handle, const_cast(void*, entry), stat);
+                err = _romfs_fstat(fs_handle, const_cast(entry), stat);
         }
 
         return err;
@@ -444,7 +444,7 @@ API_FS_OPENDIR(romfs, void *fs_handle, const char *path, DIR *dir)
         int err = get_entry(path, &entry);
         if (!err) {
                 if (entry->type == ROMFS_FILE_TYPE__DIR) {
-                        dir->d_hdl   = const_cast(void*, entry->data);
+                        dir->d_hdl   = const_cast(entry->data);
                         dir->d_items = cast(romfs_dir_t*, entry->data)->items;
                         dir->d_seek  = 0;
 

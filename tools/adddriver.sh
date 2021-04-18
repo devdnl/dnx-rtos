@@ -327,11 +327,12 @@ MODULE_NAME(${DRVNAME^^});
  * @param[out]          **device_handle        device allocated memory
  * @param[in ]            major                major device number
  * @param[in ]            minor                minor device number
+ * @param[in ]            config               optional module configuration
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_INIT(${DRVNAME^^}, void **device_handle, u8_t major, u8_t minor)
+API_MOD_INIT(${DRVNAME^^}, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
         int err = EFAULT;
 
@@ -410,7 +411,7 @@ API_MOD_CLOSE(${DRVNAME^^}, void *device_handle, bool force)
  * @param[in ]          *src                    data source
  * @param[in ]           count                  number of bytes to write
  * @param[in ][out]     *fpos                   file position
- * @param[out]          *wrcnt                  number of written bytes
+ * @param[out]          *wrctr                  number of written bytes
  * @param[in ]           fattr                  file attributes
  *
  * @return One of errno value (errno.h).
@@ -421,7 +422,7 @@ API_MOD_WRITE(${DRVNAME^^},
               const u8_t       *src,
               size_t            count,
               fpos_t           *fpos,
-              size_t           *wrcnt,
+              size_t           *wrctr,
               struct vfs_fattr  fattr)
 {
         ${DRVNAME^^}_t *hdl = device_handle;
@@ -441,7 +442,7 @@ API_MOD_WRITE(${DRVNAME^^},
  * @param[out]          *dst                    data destination
  * @param[in ]           count                  number of bytes to read
  * @param[in ][out]     *fpos                   file position
- * @param[out]          *rdcnt                  number of read bytes
+ * @param[out]          *rdctr                  number of read bytes
  * @param[in ]           fattr                  file attributes
  *
  * @return One of errno value (errno.h).
@@ -452,7 +453,7 @@ API_MOD_READ(${DRVNAME^^},
              u8_t            *dst,
              size_t           count,
              fpos_t          *fpos,
-             size_t          *rdcnt,
+             size_t          *rdctr,
              struct vfs_fattr fattr)
 {
         ${DRVNAME^^}_t *hdl = device_handle;

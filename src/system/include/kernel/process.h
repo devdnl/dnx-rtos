@@ -62,6 +62,7 @@ extern "C" {
 #define GLOBAL_VARIABLES_SECTION        struct _GVAR_STRUCT_NAME
 #define GLOBAL_VARIABLES_SECTION_BEGIN  struct _GVAR_STRUCT_NAME {
 #define GLOBAL_VARIABLES_SECTION_END    };
+#define GLOBAL_VARIABLES_TYPE(_type)    GLOBAL_VARIABLES_SECTION{_type _;}
 
 #ifdef __cplusplus
 #       include <stdlib.h>
@@ -214,20 +215,22 @@ extern int         _process_get_priority                (pid_t, int*);
 extern int         _process_get_container               (pid_t, _process_t**);
 extern int         _process_get_stat_seek               (size_t, process_stat_t*);
 extern int         _process_get_stat_pid                (pid_t, process_stat_t*);
-extern tid_t       _process_get_active_thread           (_process_t *process);
+extern tid_t       _process_get_active_thread           (_process_t*);
 extern pid_t       _process_get_active_process_pid      (void);
 extern u8_t        _process_get_max_threads             (_process_t*);
 extern int         _process_thread_create               (_process_t*, thread_func_t, const thread_attr_t*, void*, tid_t*);
 extern int         _process_thread_kill                 (_process_t*, tid_t);
-extern task_t     *_process_thread_get_task             (_process_t *proc, tid_t tid);
-extern int         _process_thread_get_stat             (pid_t, tid_t tid, thread_stat_t*);
-extern void        _process_syscall_stat_inc            (_process_t *proc, _process_t *kworker);
+extern task_t     *_process_thread_get_task             (_process_t*, tid_t);
+extern int         _process_thread_get_stat             (pid_t, tid_t, thread_stat_t*);
+extern void        _process_thread_exit                 (int);
+extern int         _process_thread_get_status           (_process_t*, tid_t, int*);
+extern void        _process_syscall_stat_inc            (_process_t*, _process_t*);
 extern bool        _process_is_consistent               (void);
-extern void        _process_enter_kernelspace           (_process_t *proc);
-extern void        _process_exit_kernelspace            (_process_t *proc);
-extern bool        _process_is_kernelspace              (_process_t *proc, tid_t thread);
-extern void        _task_switched_in                    (task_t *task, void *task_tag);
-extern void        _task_switched_out                   (task_t *task, void *task_tag);
+extern void        _process_enter_kernelspace           (_process_t*);
+extern void        _process_exit_kernelspace            (_process_t*);
+extern bool        _process_is_kernelspace              (_process_t*, tid_t);
+extern void        _task_switched_in                    (task_t*, void*, void*);
+extern void        _task_switched_out                   (task_t*, void*, void*);
 extern void        _calculate_CPU_load                  (void);
 extern int         _get_average_CPU_load                (avg_CPU_load_t*);
 extern void        _task_get_process_container          (task_t*, _process_t**, tid_t*);

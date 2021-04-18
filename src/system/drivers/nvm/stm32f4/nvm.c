@@ -29,7 +29,6 @@ Brief   NVM driver
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f4/nvm_cfg.h"
 #include "stm32f4/stm32f4xx.h"
 #include "../nvm_ioctl.h"
 
@@ -248,7 +247,7 @@ API_MOD_WRITE(NVM,
         NVM_t *hdl = device_handle;
 
         if (hdl->sector_count == 0) {
-                printk("%s: write at not configured device", GET_MODULE_NAME());
+                printk("%s: write to not configured device", GET_MODULE_NAME());
                 return EINVAL;
         }
 
@@ -311,7 +310,7 @@ API_MOD_READ(NVM,
         NVM_t *hdl = device_handle;
 
         if (hdl->sector_count == 0) {
-                printk("%s: read at not configured device", GET_MODULE_NAME());
+                printk("%s: read from not configured device", GET_MODULE_NAME());
                 return EINVAL;
         }
 
@@ -540,24 +539,35 @@ static void FLASH_lock(void)
 //==============================================================================
 static int FLASH_erase_sector(uint32_t sector)
 {
-        if (sector >= 12) {
-                sector += 4;
-        }
-
         int err = FLASH_wait_for_operation_finish();
 
         if (!err) {
-                FLASH->CR &= FLASH_CR_PSIZE_Msk;
-                FLASH->CR |= FLASH_CR_PSIZE_BYTE;
-                FLASH->CR &= FLASH_CR_SNB_Msk;
-                FLASH->CR |= ((sector << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk);
-                FLASH->CR |= FLASH_CR_SER;
-                FLASH->CR |= FLASH_CR_STRT;
 
-                err = FLASH_wait_for_operation_finish();
+                u32_t *addr = cast(void*, SECTOR_INFO[sector].addr);
+                u32_t  len  = SECTOR_INFO[sector].size / sizeof(*addr);
 
-                FLASH->CR &= (~FLASH_CR_SER);
-                FLASH->CR &= FLASH_CR_SNB_Msk;
+                while (len--) {
+                        if (*addr++ != 0xFFFFFFFF) {
+
+                                if (sector >= 12) {
+                                        sector += 4;
+                                }
+
+                                FLASH->CR &= FLASH_CR_PSIZE_Msk;
+                                FLASH->CR |= FLASH_CR_PSIZE_BYTE;
+                                FLASH->CR &= FLASH_CR_SNB_Msk;
+                                FLASH->CR |= ((sector << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk);
+                                FLASH->CR |= FLASH_CR_SER;
+                                FLASH->CR |= FLASH_CR_STRT;
+
+                                err = FLASH_wait_for_operation_finish();
+
+                                FLASH->CR &= (~FLASH_CR_SER);
+                                FLASH->CR &= FLASH_CR_SNB_Msk;
+
+                                break;
+                        }
+                }
         }
 
         return err;
@@ -610,10 +620,10 @@ static int FLASH_wait_for_operation_finish(void)
 
         u32_t tref = sys_get_uptime_ms();
 
-        while (not sys_time_is_expired(tref, sys_get_uptime_ms())) {
+        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
 
                 if (FLASH->SR & FLASH_SR_BSY) {
-                        sys_sleep_ms(1);
+                        //sys_sleep_ms(1);
 
                 } else {
                         if (FLASH->SR & FLASH_SR_WRPERR) {

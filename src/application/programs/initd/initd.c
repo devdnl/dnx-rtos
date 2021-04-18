@@ -131,6 +131,8 @@ static void initialize_basic_drivers(void)
          */
         driver_init("AFM", 0, 0, NULL);                 // alternative function configuration
         driver_init("CLK", 0, 0, "/dev/clk");           // system clock configuration
+        driver_init("DMA", 0, 0, NULL);                 // DMA configuration
+        driver_init("DMA", 1, 0, NULL);                 // DMA configuration
 
         /*
          * NOTE: make sure that UART1 is used as terminal output!
@@ -273,8 +275,9 @@ static void mount_SD_card(void)
          *    by using SPI interface.
          */
         driver_init("SDSPI", 0, 0, "/dev/sda");
-        driver_init("SDSPI", 0, 1, "/dev/sda1");
-        driver_init("SDSPI", 0, 2, "/dev/sda2");
+
+        driver_init("PART", 0, 0, "/dev/sda1"); // partition 1
+        driver_init("PART", 0, 1, "/dev/sda2"); // partition 2
 
         /*
          * 4. SD Card initialization and MBR read. After this operation SD card
@@ -289,6 +292,11 @@ static void mount_SD_card(void)
 
                 ioctl(fileno(f), IOCTL_SDSPI__CONFIGURE, &cfg);
                 ioctl(fileno(f), IOCTL_STORAGE__INITIALIZE);
+                fclose(f);
+        }
+
+        f = fopen("/dev/sda1", "r+");
+        if (f) {
                 ioctl(fileno(f), IOCTL_STORAGE__READ_MBR);
                 fclose(f);
         }

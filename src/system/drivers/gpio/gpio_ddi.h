@@ -59,8 +59,6 @@
 #include "stm32f7/gpio_cfg.h"
 #elif defined(ARCH_stm32h7)
 #include "stm32h7/gpio_cfg.h"
-#elif defined(ARCH_efr32)
-#include "efr32/gpio_cfg.h"
 #endif
 
 #ifdef __cplusplus

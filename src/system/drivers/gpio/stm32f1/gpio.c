@@ -146,7 +146,7 @@ API_MOD_INIT(GPIO, void **device_handle, u8_t major, u8_t minor, const void *con
                 GPIOx[major].GPIO->CRL = GPIOx[major].CRL;
                 GPIOx[major].GPIO->CRH = GPIOx[major].CRH;
 
-                *device_handle = const_cast(void*, &GPIOx[major]);
+                *device_handle = const_cast(&GPIOx[major]);
 
                 return ESUCC;
         } else {

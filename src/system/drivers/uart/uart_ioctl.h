@@ -34,9 +34,10 @@ Driver handles UART peripheral.
 
 \section drv-uart-sup-arch Supported architectures
 \li stm32f1
+\li stm32f3
 \li stm32f4
 \li stm32f7
-\li efr32
+\li stm32h7
 
 \section drv-uart-ddesc Details
 \subsection drv-uart-ddesc-num Meaning of major and minor numbers

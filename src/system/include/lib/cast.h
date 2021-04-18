@@ -48,7 +48,7 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief The macro casts variable <i>var</i> to type <i>type</i>.
+ * @brief The macro casts variable <i>var</i> to type <i>void*</i>.
  * Use this macro to remove <b>const</b> attribute.
  *
  * @param type          casting type
@@ -65,14 +65,14 @@ extern "C" {
 
    const char *str = "test";
 
-   func(const_cast(char*, str));
+   func(const_cast(str));
 
    // ...
  * @endcode
  */
 //==============================================================================
 #ifndef __cplusplus
-#define const_cast(type, var) ((type)(var))
+#define const_cast(var) ((void*)(var))
 #endif
 
 //==============================================================================

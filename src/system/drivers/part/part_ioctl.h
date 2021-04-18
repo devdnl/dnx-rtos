@@ -79,6 +79,7 @@ The same as regular file.
   Include files
 ==============================================================================*/
 #include "drivers/ioctl_macros.h"
+#include "drivers/class/storage/ioctl.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -128,6 +129,35 @@ extern "C" {
     @endcode
  */
 #define IOCTL_PART__CONFIGURE           _IOW(PART, 0x00, const PART_config_t*)
+
+/**
+ *  @brief  Automatically detects partitions geometry by reading MBR.
+ *  @param  none
+ *  @return On success 0 is returned, otherwise -1.
+ *
+ *  @b Example
+ *  @code
+    #include <sys/ioctl.h>
+
+    //...
+
+    static const PART_config_t cfg = {path: "/dev/usb0"};
+    driver_init2("PART", 0, 0, "/dev/usb0p0", &cfg);
+    driver_init2("PART", 0, 1, "/dev/usb0p1", &cfg);
+    driver_init2("PART", 0, 2, "/dev/usb0p2", &cfg);
+    driver_init2("PART", 0, 3, "/dev/usb0p3", &cfg);
+
+    f = fopen("/dev/usb0p0", "r+");  // any file with the same major can be opened
+    if (f) {
+            // after this ioctl, partitions geometry fill be updated
+            ioctl(fileno(f), IOCTL_PART__READ_MBR);
+            fclose(f);
+    }
+
+    //...
+    @endcode
+ */
+#define IOCTL_PART__READ_MBR            IOCTL_STORAGE__READ_MBR
 
 /*==============================================================================
   Exported object types

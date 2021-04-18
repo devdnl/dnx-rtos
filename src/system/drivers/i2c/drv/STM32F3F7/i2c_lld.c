@@ -196,7 +196,7 @@ static const I2C_info_t I2C_HW[_I2C_NUMBER_OF_PERIPHERALS] = {
 //==============================================================================
 static inline I2C_TypeDef *get_I2C(I2C_dev_t *hdl)
 {
-        return const_cast(I2C_TypeDef*, I2C_HW[hdl->major].I2C);
+        return const_cast(I2C_HW[hdl->major].I2C);
 }
 
 //==============================================================================
@@ -347,7 +347,7 @@ static void compute_timing(u8_t major, i2c_timing_t *timing)
 int _I2C_LLD__init(u8_t major)
 {
         const I2C_info_t *cfg = &I2C_HW[major];
-        I2C_TypeDef            *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
+        I2C_TypeDef            *i2c = const_cast(I2C_HW[major].I2C);
 
         CLEAR_BIT(RCC->APB1ENR, cfg->APB1ENR_I2CEN);
         SET_BIT(RCC->APB1ENR, cfg->APB1ENR_I2CEN);
@@ -394,7 +394,7 @@ int _I2C_LLD__init(u8_t major)
 void _I2C_LLD__release(u8_t major)
 {
         const I2C_info_t *cfg = &I2C_HW[major];
-        I2C_TypeDef     *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
+        I2C_TypeDef     *i2c = const_cast(I2C_HW[major].I2C);
 
         NVIC_DisableIRQ(cfg->IRQ_EV_n);
         NVIC_DisableIRQ(cfg->IRQ_ER_n);
@@ -645,7 +645,7 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
         WRITE_REG(i2c->ICR, I2C_ICR_NACKCF | I2C_ICR_STOPCF);
         SET_BIT(i2c->CR1, I2C_CR1_ERRIE | I2C_CR1_TCIE | I2C_CR1_STOPIE | I2C_CR1_NACKIE | I2C_CR1_TXIE);
 
-        _I2C[hdl->major]->buf = const_cast(u8_t*, src);
+        _I2C[hdl->major]->buf = const_cast(src);
         _I2C[hdl->major]->buf_len = count;
         _I2C[hdl->major]->subaddr_len = hdl->config.sub_addr_mode;
         _I2C[hdl->major]->subaddr_buf = _I2C[hdl->major]->subaddr;
@@ -769,7 +769,7 @@ int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size
 
         *wrctr = 0;
 
-        _I2C[hdl->major]->buf = const_cast(u8_t*, src);
+        _I2C[hdl->major]->buf = const_cast(src);
         _I2C[hdl->major]->buf_len = count;
         _I2C[hdl->major]->subaddr_len = 0;
         _I2C[hdl->major]->subaddr_buf = NULL;
@@ -871,7 +871,7 @@ static void IRQ_EV_handler(u8_t major)
 {
         bool woken = false;
 
-        I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
+        I2C_TypeDef *i2c = const_cast(I2C_HW[major].I2C);
         u16_t  ISR = i2c->ISR;
 
         /*
@@ -1008,7 +1008,7 @@ static void IRQ_ER_handler(u8_t major)
 {
         bool woken = false;
 
-        I2C_TypeDef *i2c = const_cast(I2C_TypeDef*, I2C_HW[major].I2C);
+        I2C_TypeDef *i2c = const_cast(I2C_HW[major].I2C);
         u16_t ISR = i2c->ISR;
 
         if (ISR & ( I2C_ISR_BERR    | I2C_ISR_OVR   | I2C_ISR_ARLO

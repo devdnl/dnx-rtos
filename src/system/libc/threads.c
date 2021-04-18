@@ -117,7 +117,7 @@ int thrd_equal(thrd_t lhs, thrd_t rhs)
 //==============================================================================
 thrd_t thrd_current(void)
 {
-        return _builtinfunc(process_get_active_thread, NULL);
+        return thread_current();
 }
 
 //==============================================================================
@@ -184,8 +184,7 @@ void thrd_yield(void)
 //==============================================================================
 void thrd_exit(int res)
 {
-        UNUSED_ARG1(res);
-        thread_exit();
+        thread_exit(res);
         while (1) {}
 }
 
@@ -223,8 +222,7 @@ int thrd_detach(thrd_t thrd)
 //==============================================================================
 int thrd_join(thrd_t thr, int *res)
 {
-        if (res) *res = 0;
-        int err = thread_join(thr);
+        int err = thread_join(thr, res);
         return !err ? thrd_success : thrd_error;
 }
 

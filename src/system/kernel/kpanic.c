@@ -230,7 +230,7 @@ static void catch_process(enum _kernel_panic_desc_cause suggested_cause)
 //==============================================================================
 void _kernel_panic_handle(bool system_consistent)
 {
-        if (_kernel_panic_trap_proc) {
+        if (_kernel_panic_trap_proc or (kpanic_desc.cause == _KERNEL_PANIC_DESC_CAUSE_PANICLOOP)) {
                 _process_t *proc = _kernel_panic_trap_proc;
 
                 if (proc) {

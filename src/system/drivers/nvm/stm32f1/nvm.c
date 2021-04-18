@@ -29,7 +29,6 @@ Brief   NVM driver
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f1/nvm_cfg.h"
 #include "stm32f1/stm32f10x.h"
 #include "../nvm_ioctl.h"
 
@@ -226,7 +225,7 @@ API_MOD_WRITE(NVM,
         NVM_t *hdl = device_handle;
 
         if (hdl->sector_count == 0) {
-                printk("%s: write at not configured device", GET_MODULE_NAME());
+                printk("%s: write to not configured device", GET_MODULE_NAME());
                 return EINVAL;
         }
 
@@ -304,7 +303,7 @@ API_MOD_READ(NVM,
         NVM_t *hdl = device_handle;
 
         if (hdl->sector_count == 0) {
-                printk("%s: read not configured device", GET_MODULE_NAME());
+                printk("%s: read from not configured device", GET_MODULE_NAME());
                 return EINVAL;
         }
 
@@ -549,18 +548,29 @@ static int FLASH_erase_sector(uint32_t sector)
 #endif
         }
 
-        uint32_t addr = FLASH_BASE + (sector * SECTOR_SIZE);
+        uint32_t sec_addr = FLASH_BASE + (sector * SECTOR_SIZE);
 
-        int err = FLASH_wait_for_operation_finish(addr);
+        int err = FLASH_wait_for_operation_finish(sec_addr);
 
         if (!err) {
-                *FLASH_CR |= FLASH_CR_PER;
-                *FLASH_AR  = addr;
-                *FLASH_CR |= FLASH_CR_STRT;
 
-                err = FLASH_wait_for_operation_finish(addr);
+                u32_t *addr = cast(void*, sec_addr);
+                u32_t  len  = SECTOR_SIZE / sizeof(*addr);
 
-                *FLASH_CR &= (~FLASH_CR_PER);
+                while (len--) {
+                        if (*addr++ != 0xFFFFFFFF) {
+
+                                *FLASH_CR |= FLASH_CR_PER;
+                                *FLASH_AR  = sec_addr;
+                                *FLASH_CR |= FLASH_CR_STRT;
+
+                                err = FLASH_wait_for_operation_finish(sec_addr);
+
+                                *FLASH_CR &= (~FLASH_CR_PER);
+
+                                break;
+                        }
+                }
         }
 
         return err;
@@ -633,10 +643,10 @@ static int FLASH_wait_for_operation_finish(uint32_t address)
 
         u32_t tref = sys_get_uptime_ms();
 
-        while (not sys_time_is_expired(tref, sys_get_uptime_ms())) {
+        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
 
                 if (*FLASH_SR & FLASH_SR_BSY) {
-                        sys_sleep_ms(1);
+                        //sys_sleep_ms(1);
 
                 } else {
                         if (*FLASH_SR & FLASH_SR_WRPRTERR) {

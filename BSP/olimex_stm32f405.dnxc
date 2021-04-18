@@ -3,96 +3,134 @@
 	["file"]={
 		["arch/arch_flags.h"]={
 			[1]={
+				["key"]="__ENABLE_USBH__";
+				["value"]="_NO_";
+			};
+			[2]={
 				["key"]="__ENABLE_GPIO__";
 				["value"]="_YES_";
 			};
-			[2]={
+			[3]={
 				["key"]="__ENABLE_AFM__";
 				["value"]="_YES_";
 			};
-			[3]={
+			[4]={
 				["key"]="__ENABLE_CLK__";
 				["value"]="_YES_";
 			};
-			[4]={
+			[5]={
 				["key"]="__ENABLE_RTC__";
 				["value"]="_NO_";
 			};
-			[5]={
+			[6]={
 				["key"]="__ENABLE_CRC__";
 				["value"]="_NO_";
 			};
-			[6]={
-				["key"]="__ENABLE_ETHMAC__";
+			[7]={
+				["key"]="__ENABLE_ETH__";
 				["value"]="_NO_";
 			};
-			[7]={
+			[8]={
 				["key"]="__ENABLE_SPI__";
 				["value"]="_YES_";
 			};
-			[8]={
+			[9]={
 				["key"]="__ENABLE_UART__";
 				["value"]="_YES_";
 			};
-			[9]={
+			[10]={
 				["key"]="__ENABLE_WDG__";
 				["value"]="_NO_";
 			};
-			[10]={
+			[11]={
 				["key"]="__ENABLE_USBD__";
 				["value"]="_NO_";
 			};
-			[11]={
+			[12]={
 				["key"]="__ENABLE_I2C__";
 				["value"]="_YES_";
 			};
-			[12]={
+			[13]={
 				["key"]="__ENABLE_IRQ__";
 				["value"]="_NO_";
 			};
-			[13]={
+			[14]={
 				["key"]="__ENABLE_LOOP__";
 				["value"]="_NO_";
 			};
-			[14]={
+			[15]={
 				["key"]="__ENABLE_I2CEE__";
 				["value"]="_NO_";
 			};
-			[15]={
+			[16]={
 				["key"]="__ENABLE_SDIO__";
 				["value"]="_NO_";
 			};
-			[16]={
+			[17]={
 				["key"]="__ENABLE_SDSPI__";
 				["value"]="_NO_";
 			};
-			[17]={
+			[18]={
 				["key"]="__ENABLE_TTY__";
 				["value"]="_YES_";
 			};
-			[18]={
+			[19]={
 				["key"]="__ENABLE_DHT11__";
 				["value"]="_NO_";
 			};
-			[19]={
+			[20]={
 				["key"]="__ENABLE_FMC__";
 				["value"]="_NO_";
 			};
-			[20]={
+			[21]={
 				["key"]="__ENABLE_DMA__";
 				["value"]="_YES_";
 			};
-			[21]={
+			[22]={
 				["key"]="__ENABLE_DCI__";
 				["value"]="_NO_";
 			};
-			[22]={
+			[23]={
 				["key"]="__ENABLE_CAN__";
 				["value"]="_NO_";
 			};
-			[23]={
+			[24]={
 				["key"]="__ENABLE_NVM__";
 				["value"]="_YES_";
+			};
+			[25]={
+				["key"]="__ENABLE_PWM__";
+				["value"]="_NO_";
+			};
+			[26]={
+				["key"]="__ENABLE_SPIEE__";
+				["value"]="_NO_";
+			};
+			[27]={
+				["key"]="__ENABLE_SND__";
+				["value"]="_NO_";
+			};
+			[28]={
+				["key"]="__ENABLE_PART__";
+				["value"]="_NO_";
+			};
+			[29]={
+				["key"]="__ENABLE_URANDOM__";
+				["value"]="_NO_";
+			};
+			[30]={
+				["key"]="__ENABLE_ZERO__";
+				["value"]="_NO_";
+			};
+			[31]={
+				["key"]="__ENABLE_TIMENC__";
+				["value"]="_NO_";
+			};
+		};
+		["arch/noarch/part_flags.h"]={
+			[1]={
+				["key"]="__PART_CFG_EXAMPLE__";
+				["value"]="_NO_";
 			};
 		};
 		["arch/noarch/tty_flags.h"]={
@@ -112,13 +150,17 @@
 				["key"]="__TTY_NUMBER_OF_TERM__";
 				["value"]="4";
 			};
-			[5]={
-				["key"]="__TTY_TERM_IN_FILE__";
-				["value"]="\"/dev/ttyS0\"";
+		};
+		["arch/noarch/urandom_flags.h"]={
+			[1]={
+				["key"]="__URANDOM_CFG_EXAMPLE__";
+				["value"]="_NO_";
 			};
-			[6]={
-				["key"]="__TTY_TERM_OUT_FILE__";
-				["value"]="\"/dev/ttyS0\"";
+		};
+		["arch/noarch/zero_flags.h"]={
+			[1]={
+				["key"]="__ZERO_CFG_EXAMPLE__";
+				["value"]="_NO_";
 			};
 		};
 		["arch/stm32f4/afm_flags.h"]={
@@ -138,69 +180,15 @@
 				["key"]="__AFM_MII_RMII_SEL__";
 				["value"]="(0 << 23)";
 			};
-			[5]={
-				["key"]="__AFM_EXTI0_PORT__";
-				["value"]="(0 << 0)";
+		};
+		["arch/stm32f4/can_flags.h"]={
+			[1]={
+				["key"]="__CAN_CFG_DEBUG_FREEZE__";
+				["value"]="_YES_";
 			};
-			[6]={
-				["key"]="__AFM_EXTI1_PORT__";
-				["value"]="(0 << 4)";
-			};
-			[7]={
-				["key"]="__AFM_EXTI2_PORT__";
-				["value"]="(0 << 8)";
-			};
-			[8]={
-				["key"]="__AFM_EXTI3_PORT__";
-				["value"]="(0 << 12)";
-			};
-			[9]={
-				["key"]="__AFM_EXTI4_PORT__";
-				["value"]="(0 << 0)";
-			};
-			[10]={
-				["key"]="__AFM_EXTI5_PORT__";
-				["value"]="(0 << 4)";
-			};
-			[11]={
-				["key"]="__AFM_EXTI6_PORT__";
-				["value"]="(0 << 8)";
-			};
-			[12]={
-				["key"]="__AFM_EXTI7_PORT__";
-				["value"]="(0 << 12)";
-			};
-			[13]={
-				["key"]="__AFM_EXTI8_PORT__";
-				["value"]="(0 << 0)";
-			};
-			[14]={
-				["key"]="__AFM_EXTI9_PORT__";
-				["value"]="(0 << 4)";
-			};
-			[15]={
-				["key"]="__AFM_EXTI10_PORT__";
-				["value"]="(0 << 8)";
-			};
-			[16]={
-				["key"]="__AFM_EXTI11_PORT__";
-				["value"]="(0 << 12)";
-			};
-			[17]={
-				["key"]="__AFM_EXTI12_PORT__";
-				["value"]="(0 << 0)";
-			};
-			[18]={
-				["key"]="__AFM_EXTI13_PORT__";
-				["value"]="(0 << 4)";
-			};
-			[19]={
-				["key"]="__AFM_EXTI14_PORT__";
-				["value"]="(0 << 8)";
-			};
-			[20]={
-				["key"]="__AFM_EXTI15_PORT__";
-				["value"]="(0 << 12)";
+			[2]={
+				["key"]="__CAN_CFG_RX_FIFO_SIZE__";
+				["value"]="16";
 			};
 		};
 		["arch/stm32f4/clk_flags.h"]={
@@ -217,16 +205,16 @@
 				["value"]="RCC_HSE_ON";
 			};
 			[4]={
-				["key"]="__CLK_PLL_ON__";
-				["value"]="ENABLE";
-			};
-			[5]={
 				["key"]="__CLK_PLL_SRC__";
 				["value"]="RCC_PLLSource_HSE";
 			};
-			[6]={
-				["key"]="__CLK_PLL_M__";
+			[5]={
+				["key"]="__CLK_PLL_SRC_DIV_M__";
 				["value"]="4";
+			};
+			[6]={
+				["key"]="__CLK_PLL_ON__";
+				["value"]="ENABLE";
 			};
 			[7]={
 				["key"]="__CLK_PLL_N__";
@@ -249,176 +237,172 @@
 				["value"]="ENABLE";
 			};
 			[12]={
-				["key"]="__CLK_PLLI2S_M__";
-				["value"]="4";
-			};
-			[13]={
 				["key"]="__CLK_PLLI2S_N__";
 				["value"]="192";
 			};
-			[14]={
+			[13]={
 				["key"]="__CLK_PLLI2S_P__";
 				["value"]="2";
 			};
-			[15]={
+			[14]={
 				["key"]="__CLK_PLLI2S_Q__";
 				["value"]="2";
 			};
-			[16]={
+			[15]={
 				["key"]="__CLK_PLLI2S_R__";
 				["value"]="2";
 			};
-			[17]={
+			[16]={
 				["key"]="__CLK_PLLSAI_ON__";
 				["value"]="ENABLE";
 			};
-			[18]={
-				["key"]="__CLK_PLLSAI_M__";
-				["value"]="4";
-			};
-			[19]={
+			[17]={
 				["key"]="__CLK_PLLSAI_N__";
 				["value"]="192";
 			};
-			[20]={
+			[18]={
 				["key"]="__CLK_PLLSAI_P__";
 				["value"]="2";
 			};
-			[21]={
+			[19]={
 				["key"]="__CLK_PLLSAI_Q__";
 				["value"]="2";
 			};
-			[22]={
+			[20]={
 				["key"]="__CLK_PLLSAI_R__";
 				["value"]="2";
 			};
-			[23]={
+			[21]={
 				["key"]="__CLK_SYS_CLK_SRC__";
 				["value"]="RCC_SYSCLKSource_PLLCLK";
 			};
-			[24]={
+			[22]={
 				["key"]="__CLK_RTC_CLK_SRC__";
 				["value"]="RCC_RTCCLKSource_LSI";
 			};
-			[25]={
+			[23]={
 				["key"]="__CLK_MC01_CLK_SRC__";
 				["value"]="RCC_MCO1Source_HSI";
 			};
-			[26]={
+			[24]={
 				["key"]="__CLK_MC01_CLK_DIV__";
 				["value"]="RCC_MCO1Div_1";
 			};
-			[27]={
+			[25]={
 				["key"]="__CLK_MC02_CLK_SRC__";
 				["value"]="RCC_MCO2Source_HSE";
 			};
-			[28]={
+			[26]={
 				["key"]="__CLK_MC02_CLK_DIV__";
 				["value"]="RCC_MCO2Div_1";
 			};
-			[29]={
+			[27]={
 				["key"]="__CLK_I2SAPB1_CLK_SRC__";
 				["value"]="RCC_I2SCLKSource_HSI_HSE";
 			};
-			[30]={
+			[28]={
 				["key"]="__CLK_I2SAPB2_CLK_SRC__";
 				["value"]="RCC_I2SCLKSource_HSI_HSE";
 			};
-			[31]={
+			[29]={
 				["key"]="__CLK_I2S_CLK_SRC__";
 				["value"]="RCC_I2S2CLKSource_PLLI2S";
 			};
-			[32]={
+			[30]={
 				["key"]="__CLK_SAI1_CLK_SRC__";
 				["value"]="RCC_SAICLKSource_HSI_HSE";
 			};
-			[33]={
+			[31]={
 				["key"]="__CLK_SAI2_CLK_SRC__";
 				["value"]="RCC_SAICLKSource_HSI_HSE";
 			};
-			[34]={
+			[32]={
 				["key"]="__CLK_SAI_PLLSAI_CLK_DIV__";
 				["value"]="1";
 			};
-			[35]={
+			[33]={
 				["key"]="__CLK_SAI_PLLI2S_CLK_DIV__";
 				["value"]="1";
 			};
-			[36]={
+			[34]={
 				["key"]="__CLK_SAI_PLLI2S_CLK_DIVR__";
 				["value"]="1";
 			};
-			[37]={
+			[35]={
 				["key"]="__CLK_SAI_PLL_CLK_DIVR__";
 				["value"]="1";
 			};
-			[38]={
+			[36]={
 				["key"]="__CLK_SAI_BLOCK_A_CLK_SRC__";
 				["value"]="RCC_SAIACLKSource_PLLI2S";
 			};
-			[39]={
+			[37]={
 				["key"]="__CLK_SAI_BLOCK_B_CLK_SRC__";
 				["value"]="RCC_SAIBCLKSource_PLLI2S";
 			};
-			[40]={
+			[38]={
 				["key"]="__CLK_LTDC_DIV__";
 				["value"]="RCC_PLLSAIDivR_Div2";
 			};
-			[41]={
+			[39]={
 				["key"]="__CLK_DFSDM1_CLK_SRC__";
 				["value"]="RCC_DFSDMCLKSource_APB";
 			};
-			[42]={
+			[40]={
 				["key"]="__CLK_DFSDM1_ACLK_SRC__";
 				["value"]="RCC_DFSDM1AUDIOCLKSOURCE_I2SAPB1";
 			};
-			[43]={
+			[41]={
 				["key"]="__CLK_DFSDM2_ACLK_SRC__";
 				["value"]="RCC_DFSDM2AUDIOCLKSOURCE_I2SAPB1";
 			};
-			[44]={
+			[42]={
 				["key"]="__CLK_DSI_SRC__";
 				["value"]="RCC_DSICLKSource_PHY";
 			};
-			[45]={
+			[43]={
 				["key"]="__CLK_48MHZ_SRC__";
 				["value"]="RCC_48MHZCLKSource_PLL";
 			};
-			[46]={
+			[44]={
 				["key"]="__CLK_SDIO_SRC__";
 				["value"]="RCC_SDIOCLKSource_48MHZ";
 			};
-			[47]={
+			[45]={
 				["key"]="__CLK_SPDIF_SRC__";
 				["value"]="RCC_SPDIFRXCLKSource_PLLR";
 			};
-			[48]={
+			[46]={
 				["key"]="__CLK_CEC_SRC__";
 				["value"]="RCC_CECCLKSource_HSIDiv488";
 			};
-			[49]={
+			[47]={
 				["key"]="__CLK_FMPI2C1_SRC__";
 				["value"]="RCC_FMPI2C1CLKSource_APB1";
 			};
-			[50]={
+			[48]={
 				["key"]="__CLK_AHB_PRE__";
 				["value"]="RCC_SYSCLK_Div1";
 			};
-			[51]={
+			[49]={
 				["key"]="__CLK_APB1_PRE__";
 				["value"]="RCC_HCLK_Div4";
 			};
-			[52]={
+			[50]={
 				["key"]="__CLK_APB2_PRE__";
 				["value"]="RCC_HCLK_Div2";
 			};
-			[53]={
+			[51]={
 				["key"]="__CLK_CPU_VOLTAGE__";
 				["value"]="3p6V";
 			};
-			[54]={
+			[52]={
 				["key"]="__CLK_FLASH_LATENCY__";
 				["value"]="5";
+			};
+			[53]={
+				["key"]="__CLK_HCLK_FREQ__";
+				["value"]="168000000";
 			};
 		};
 		["arch/stm32f4/cpu_flags.h"]={
@@ -439,8 +423,32 @@
 				["value"]="STM32F405RGxx";
 			};
 			[5]={
+				["key"]="__CPU_IRQ_RTOS_KERNEL_PRIORITY_VAL__";
+				["value"]="15";
+			};
+			[6]={
+				["key"]="__CPU_IRQ_RTOS_APICALL_PRIORITY_VAL__";
+				["value"]="12";
+			};
+			[7]={
 				["key"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 				["value"]="15";
+			};
+			[8]={
+				["key"]="__CPU_DISABLE_INTER_OF_MCYCLE_INSTR__";
+				["value"]="_YES_";
+			};
+			[9]={
+				["key"]="__CPU_VTOR_TAB_POSITION__";
+				["value"]="0x00000";
+			};
+			[10]={
+				["key"]="__CUSTOM_LD_SCRIPT__";
+				["value"]="_NO_";
+			};
+			[11]={
+				["key"]="__CUSTOM_LD_SCRIPT_FILE__";
+				["value"]="\"./config/custom_script.ld\"";
 			};
 		};
 		["arch/stm32f4/dci_flags.h"]={
@@ -536,55 +544,59 @@
 				["key"]="__DCI_CROP_WIDTH__";
 				["value"]="1";
 			};
+			[24]={
+				["key"]="__DCI_IRQ_PRIORITY__";
+				["value"]="12";
+			};
 		};
-		["arch/stm32f4/ethmac_flags.h"]={
+		["arch/stm32f4/eth_flags.h"]={
 			[1]={
-				["key"]="__ETHMAC_CHECKSUM_BY_HARDWARE__";
-				["value"]="_YES_";
+				["key"]="__ETH_CHECKSUM_BY_HARDWARE__";
+				["value"]="ETH_CHECKSUM_BY_HARDWARE";
 			};
 			[2]={
-				["key"]="__ETHMAC_SPEED__";
-				["value"]="ETH_Speed_100M";
+				["key"]="__ETH_SPEED__";
+				["value"]="ETH_SPEED_100M";
 			};
 			[3]={
-				["key"]="__ETHMAC_RXBUFNB__";
+				["key"]="__ETH_RXBUFNB__";
 				["value"]="10";
 			};
 			[4]={
-				["key"]="__ETHMAC_TXBUFNB__";
-				["value"]="10";
+				["key"]="__ETH_TXBUFNB__";
+				["value"]="3";
 			};
 			[5]={
-				["key"]="__ETHMAC_DEVICE__";
-				["value"]="DP83848";
+				["key"]="__ETH_DEVICE__";
+				["value"]="LAN8742A";
 			};
 			[6]={
-				["key"]="__ETHMAC_PHY_SR__";
-				["value"]="16";
+				["key"]="__ETH_PHY_SR__";
+				["value"]="31";
 			};
 			[7]={
-				["key"]="__ETHMAC_PHY_SPEED_STATUS_BM__";
-				["value"]="0x0002";
-			};
-			[8]={
-				["key"]="__ETHMAC_PHY_DUPLEX_STATUS_BM__";
+				["key"]="__ETH_PHY_SPEED_STATUS_BM__";
 				["value"]="0x0004";
 			};
+			[8]={
+				["key"]="__ETH_PHY_DUPLEX_STATUS_BM__";
+				["value"]="0x0010";
+			};
 			[9]={
-				["key"]="__ETHMAC_PHY_ADDRESS__";
-				["value"]="1";
+				["key"]="__ETH_PHY_ADDRESS__";
+				["value"]="0";
 			};
 			[10]={
-				["key"]="__ETHMAC_PHY_RESET_DELAY__";
+				["key"]="__ETH_PHY_RESET_DELAY__";
 				["value"]="250";
 			};
 			[11]={
-				["key"]="__ETHMAC_PHY_CONFIG_DELAY__";
+				["key"]="__ETH_PHY_CONFIG_DELAY__";
 				["value"]="500";
 			};
 			[12]={
-				["key"]="__ETHMAC_PHY_AUTONEGOTIATION__";
-				["value"]="ETH_AutoNegotiation_Disable";
+				["key"]="__ETH_PHY_AUTONEGOTIATION__";
+				["value"]="ETH_AUTONEGOTIATION_DISABLE";
 			};
 		};
 		["arch/stm32f4/fmc_flags.h"]={
@@ -4241,10 +4253,134 @@
 				["value"]="_I2C_DUTY_CYCLE_1_2";
 			};
 		};
-		["arch/stm32f4/nvm_flags.h"]={
+		["arch/stm32f4/irq_flags.h"]={
 			[1]={
-				["key"]="__NVM_CFG_EXAMPLE__";
-				["value"]="_NO_";
+				["key"]="__IRQ_LINE_0_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[2]={
+				["key"]="__IRQ_LINE_1_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[3]={
+				["key"]="__IRQ_LINE_2_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[4]={
+				["key"]="__IRQ_LINE_3_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[5]={
+				["key"]="__IRQ_LINE_4_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[6]={
+				["key"]="__IRQ_LINE_5_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[7]={
+				["key"]="__IRQ_LINE_6_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[8]={
+				["key"]="__IRQ_LINE_7_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[9]={
+				["key"]="__IRQ_LINE_8_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[10]={
+				["key"]="__IRQ_LINE_9_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[11]={
+				["key"]="__IRQ_LINE_10_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[12]={
+				["key"]="__IRQ_LINE_11_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[13]={
+				["key"]="__IRQ_LINE_12_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[14]={
+				["key"]="__IRQ_LINE_13_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[15]={
+				["key"]="__IRQ_LINE_14_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[16]={
+				["key"]="__IRQ_LINE_15_MODE__";
+				["value"]="_IRQ_MODE_DISABLED";
+			};
+			[17]={
+				["key"]="__IRQ_EXTI0_PORT__";
+				["value"]="(0 << 0)";
+			};
+			[18]={
+				["key"]="__IRQ_EXTI1_PORT__";
+				["value"]="(0 << 4)";
+			};
+			[19]={
+				["key"]="__IRQ_EXTI2_PORT__";
+				["value"]="(0 << 8)";
+			};
+			[20]={
+				["key"]="__IRQ_EXTI3_PORT__";
+				["value"]="(0 << 12)";
+			};
+			[21]={
+				["key"]="__IRQ_EXTI4_PORT__";
+				["value"]="(0 << 0)";
+			};
+			[22]={
+				["key"]="__IRQ_EXTI5_PORT__";
+				["value"]="(0 << 4)";
+			};
+			[23]={
+				["key"]="__IRQ_EXTI6_PORT__";
+				["value"]="(0 << 8)";
+			};
+			[24]={
+				["key"]="__IRQ_EXTI7_PORT__";
+				["value"]="(0 << 12)";
+			};
+			[25]={
+				["key"]="__IRQ_EXTI8_PORT__";
+				["value"]="(0 << 0)";
+			};
+			[26]={
+				["key"]="__IRQ_EXTI9_PORT__";
+				["value"]="(0 << 4)";
+			};
+			[27]={
+				["key"]="__IRQ_EXTI10_PORT__";
+				["value"]="(0 << 8)";
+			};
+			[28]={
+				["key"]="__IRQ_EXTI11_PORT__";
+				["value"]="(0 << 12)";
+			};
+			[29]={
+				["key"]="__IRQ_EXTI12_PORT__";
+				["value"]="(0 << 0)";
+			};
+			[30]={
+				["key"]="__IRQ_EXTI13_PORT__";
+				["value"]="(0 << 4)";
+			};
+			[31]={
+				["key"]="__IRQ_EXTI14_PORT__";
+				["value"]="(0 << 8)";
+			};
+			[32]={
+				["key"]="__IRQ_EXTI15_PORT__";
+				["value"]="(0 << 12)";
 			};
 		};
 		["arch/stm32f4/sdio_flags.h"]={
@@ -4271,6 +4407,284 @@
 			[6]={
 				["key"]="__SDIO_CFG_USEDMA__";
 				["value"]="_SDIO_USE_DMA_IFAVAILABLE";
+			};
+			[7]={
+				["key"]="__SDIO_IRQ_PRIORITY__";
+				["value"]="13";
+			};
+		};
+		["arch/stm32f4/snd_flags.h"]={
+			[1]={
+				["key"]="__SND_CFG_SAI1_BLKA_NO_DIVIDER__";
+				["value"]="0";
+			};
+			[2]={
+				["key"]="__SND_CFG_SAI1_BLKA_CKSTR__";
+				["value"]="SAI_xCR1_CKSTR";
+			};
+			[3]={
+				["key"]="__SND_CFG_SAI1_BLKA_LSBFRIST__";
+				["value"]="0";
+			};
+			[4]={
+				["key"]="__SND_CFG_SAI1_BLKA_DS__";
+				["value"]="4";
+			};
+			[5]={
+				["key"]="__SND_CFG_SAI1_BLKA_PRTCFG__";
+				["value"]="0";
+			};
+			[6]={
+				["key"]="__SND_CFG_SAI1_BLKA_MODE__";
+				["value"]="0";
+			};
+			[7]={
+				["key"]="__SND_CFG_SAI1_BLKA_COMP__";
+				["value"]="0";
+			};
+			[8]={
+				["key"]="__SND_CFG_SAI1_BLKA_CPL__";
+				["value"]="0";
+			};
+			[9]={
+				["key"]="__SND_CFG_SAI1_BLKA_TRIS__";
+				["value"]="0";
+			};
+			[10]={
+				["key"]="__SND_CFG_SAI1_BLKA_FSOFF__";
+				["value"]="0";
+			};
+			[11]={
+				["key"]="__SND_CFG_SAI1_BLKA_FSPOL__";
+				["value"]="0";
+			};
+			[12]={
+				["key"]="__SND_CFG_SAI1_BLKA_FSDEF__";
+				["value"]="SAI_xFRCR_FSDEF";
+			};
+			[13]={
+				["key"]="__SND_CFG_SAI1_BLKA_FSALL__";
+				["value"]="16";
+			};
+			[14]={
+				["key"]="__SND_CFG_SAI1_BLKA_FRL__";
+				["value"]="32";
+			};
+			[15]={
+				["key"]="__SND_CFG_SAI1_BLKA_NBSLOT__";
+				["value"]="2";
+			};
+			[16]={
+				["key"]="__SND_CFG_SAI1_BLKA_SLOTSZ__";
+				["value"]="1";
+			};
+			[17]={
+				["key"]="__SND_CFG_SAI1_BLKA_FBOFF__";
+				["value"]="1";
+			};
+			[18]={
+				["key"]="__SND_CFG_SAI1_BLKB_NO_DIVIDER__";
+				["value"]="0";
+			};
+			[19]={
+				["key"]="__SND_CFG_SAI1_BLKB_CKSTR__";
+				["value"]="SAI_xCR1_CKSTR";
+			};
+			[20]={
+				["key"]="__SND_CFG_SAI1_BLKB_LSBFRIST__";
+				["value"]="0";
+			};
+			[21]={
+				["key"]="__SND_CFG_SAI1_BLKB_DS__";
+				["value"]="4";
+			};
+			[22]={
+				["key"]="__SND_CFG_SAI1_BLKB_PRTCFG__";
+				["value"]="0";
+			};
+			[23]={
+				["key"]="__SND_CFG_SAI1_BLKB_MODE__";
+				["value"]="0";
+			};
+			[24]={
+				["key"]="__SND_CFG_SAI1_BLKB_COMP__";
+				["value"]="0";
+			};
+			[25]={
+				["key"]="__SND_CFG_SAI1_BLKB_CPL__";
+				["value"]="0";
+			};
+			[26]={
+				["key"]="__SND_CFG_SAI1_BLKB_TRIS__";
+				["value"]="0";
+			};
+			[27]={
+				["key"]="__SND_CFG_SAI1_BLKB_FSOFF__";
+				["value"]="0";
+			};
+			[28]={
+				["key"]="__SND_CFG_SAI1_BLKB_FSPOL__";
+				["value"]="0";
+			};
+			[29]={
+				["key"]="__SND_CFG_SAI1_BLKB_FSDEF__";
+				["value"]="SAI_xFRCR_FSDEF";
+			};
+			[30]={
+				["key"]="__SND_CFG_SAI1_BLKB_FSALL__";
+				["value"]="16";
+			};
+			[31]={
+				["key"]="__SND_CFG_SAI1_BLKB_FRL__";
+				["value"]="32";
+			};
+			[32]={
+				["key"]="__SND_CFG_SAI1_BLKB_NBSLOT__";
+				["value"]="2";
+			};
+			[33]={
+				["key"]="__SND_CFG_SAI1_BLKB_SLOTSZ__";
+				["value"]="1";
+			};
+			[34]={
+				["key"]="__SND_CFG_SAI1_BLKB_FBOFF__";
+				["value"]="0";
+			};
+			[35]={
+				["key"]="__SND_CFG_SAI2_BLKA_NO_DIVIDER__";
+				["value"]="0";
+			};
+			[36]={
+				["key"]="__SND_CFG_SAI2_BLKA_CKSTR__";
+				["value"]="SAI_xCR1_CKSTR";
+			};
+			[37]={
+				["key"]="__SND_CFG_SAI2_BLKA_LSBFRIST__";
+				["value"]="0";
+			};
+			[38]={
+				["key"]="__SND_CFG_SAI2_BLKA_DS__";
+				["value"]="4";
+			};
+			[39]={
+				["key"]="__SND_CFG_SAI2_BLKA_PRTCFG__";
+				["value"]="0";
+			};
+			[40]={
+				["key"]="__SND_CFG_SAI2_BLKA_MODE__";
+				["value"]="0";
+			};
+			[41]={
+				["key"]="__SND_CFG_SAI2_BLKA_COMP__";
+				["value"]="0";
+			};
+			[42]={
+				["key"]="__SND_CFG_SAI2_BLKA_CPL__";
+				["value"]="0";
+			};
+			[43]={
+				["key"]="__SND_CFG_SAI2_BLKA_TRIS__";
+				["value"]="0";
+			};
+			[44]={
+				["key"]="__SND_CFG_SAI2_BLKA_FSOFF__";
+				["value"]="0";
+			};
+			[45]={
+				["key"]="__SND_CFG_SAI2_BLKA_FSPOL__";
+				["value"]="0";
+			};
+			[46]={
+				["key"]="__SND_CFG_SAI2_BLKA_FSDEF__";
+				["value"]="SAI_xFRCR_FSDEF";
+			};
+			[47]={
+				["key"]="__SND_CFG_SAI2_BLKA_FSALL__";
+				["value"]="16";
+			};
+			[48]={
+				["key"]="__SND_CFG_SAI2_BLKA_FRL__";
+				["value"]="32";
+			};
+			[49]={
+				["key"]="__SND_CFG_SAI2_BLKA_NBSLOT__";
+				["value"]="2";
+			};
+			[50]={
+				["key"]="__SND_CFG_SAI2_BLKA_SLOTSZ__";
+				["value"]="1";
+			};
+			[51]={
+				["key"]="__SND_CFG_SAI2_BLKA_FBOFF__";
+				["value"]="0";
+			};
+			[52]={
+				["key"]="__SND_CFG_SAI2_BLKB_NO_DIVIDER__";
+				["value"]="0";
+			};
+			[53]={
+				["key"]="__SND_CFG_SAI2_BLKB_CKSTR__";
+				["value"]="SAI_xCR1_CKSTR";
+			};
+			[54]={
+				["key"]="__SND_CFG_SAI2_BLKB_LSBFRIST__";
+				["value"]="0";
+			};
+			[55]={
+				["key"]="__SND_CFG_SAI2_BLKB_DS__";
+				["value"]="4";
+			};
+			[56]={
+				["key"]="__SND_CFG_SAI2_BLKB_PRTCFG__";
+				["value"]="0";
+			};
+			[57]={
+				["key"]="__SND_CFG_SAI2_BLKB_MODE__";
+				["value"]="0";
+			};
+			[58]={
+				["key"]="__SND_CFG_SAI2_BLKB_COMP__";
+				["value"]="0";
+			};
+			[59]={
+				["key"]="__SND_CFG_SAI2_BLKB_CPL__";
+				["value"]="0";
+			};
+			[60]={
+				["key"]="__SND_CFG_SAI2_BLKB_TRIS__";
+				["value"]="0";
+			};
+			[61]={
+				["key"]="__SND_CFG_SAI2_BLKB_FSOFF__";
+				["value"]="0";
+			};
+			[62]={
+				["key"]="__SND_CFG_SAI2_BLKB_FSPOL__";
+				["value"]="0";
+			};
+			[63]={
+				["key"]="__SND_CFG_SAI2_BLKB_FSDEF__";
+				["value"]="SAI_xFRCR_FSDEF";
+			};
+			[64]={
+				["key"]="__SND_CFG_SAI2_BLKB_FSALL__";
+				["value"]="16";
+			};
+			[65]={
+				["key"]="__SND_CFG_SAI2_BLKB_FRL__";
+				["value"]="32";
+			};
+			[66]={
+				["key"]="__SND_CFG_SAI2_BLKB_NBSLOT__";
+				["value"]="2";
+			};
+			[67]={
+				["key"]="__SND_CFG_SAI2_BLKB_SLOTSZ__";
+				["value"]="1";
+			};
+			[68]={
+				["key"]="__SND_CFG_SAI2_BLKB_FBOFF__";
+				["value"]="0";
 			};
 		};
 		["arch/stm32f4/spi_flags.h"]={
@@ -4317,31 +4731,237 @@
 		};
 		["arch/stm32f4/uart_flags.h"]={
 			[1]={
-				["key"]="__UART_RX_BUFFER_LEN__";
-				["value"]="128";
-			};
-			[2]={
 				["key"]="__UART_DEFAULT_PARITY__";
 				["value"]="UART_PARITY__OFF";
 			};
-			[3]={
+			[2]={
 				["key"]="__UART_DEFAULT_STOP_BITS__";
 				["value"]="UART_STOP_BIT__1";
 			};
-			[4]={
+			[3]={
 				["key"]="__UART_DEFAULT_TX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[5]={
+			[4]={
 				["key"]="__UART_DEFAULT_RX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[6]={
+			[5]={
 				["key"]="__UART_DEFAULT_BAUD__";
 				["value"]="115200";
 			};
+			[6]={
+				["key"]="__UART_MAJOR0_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
 			[7]={
-				["key"]="__UART_IRQ_PRIORITY__";
+				["key"]="__UART_MAJOR0_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[8]={
+				["key"]="__UART_UART1_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[9]={
+				["key"]="__UART_UART1_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[10]={
+				["key"]="__UART_UART1_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[11]={
+				["key"]="__UART_MAJOR1_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[12]={
+				["key"]="__UART_MAJOR1_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[13]={
+				["key"]="__UART_UART2_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[14]={
+				["key"]="__UART_UART2_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[15]={
+				["key"]="__UART_UART2_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[16]={
+				["key"]="__UART_MAJOR2_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[17]={
+				["key"]="__UART_MAJOR2_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[18]={
+				["key"]="__UART_UART3_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[19]={
+				["key"]="__UART_UART3_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[20]={
+				["key"]="__UART_UART3_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[21]={
+				["key"]="__UART_MAJOR3_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[22]={
+				["key"]="__UART_MAJOR3_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[23]={
+				["key"]="__UART_UART4_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[24]={
+				["key"]="__UART_UART4_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[25]={
+				["key"]="__UART_UART4_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[26]={
+				["key"]="__UART_MAJOR4_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[27]={
+				["key"]="__UART_MAJOR4_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[28]={
+				["key"]="__UART_UART5_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[29]={
+				["key"]="__UART_UART5_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[30]={
+				["key"]="__UART_UART5_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[31]={
+				["key"]="__UART_MAJOR5_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[32]={
+				["key"]="__UART_MAJOR5_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[33]={
+				["key"]="__UART_UART6_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[34]={
+				["key"]="__UART_UART6_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[35]={
+				["key"]="__UART_UART6_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[36]={
+				["key"]="__UART_MAJOR6_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[37]={
+				["key"]="__UART_MAJOR6_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[38]={
+				["key"]="__UART_UART7_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[39]={
+				["key"]="__UART_UART7_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[40]={
+				["key"]="__UART_UART7_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[41]={
+				["key"]="__UART_MAJOR7_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[42]={
+				["key"]="__UART_MAJOR7_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[43]={
+				["key"]="__UART_UART8_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[44]={
+				["key"]="__UART_UART8_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[45]={
+				["key"]="__UART_UART8_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[46]={
+				["key"]="__UART_MAJOR8_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[47]={
+				["key"]="__UART_MAJOR8_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[48]={
+				["key"]="__UART_UART9_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[49]={
+				["key"]="__UART_UART9_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[50]={
+				["key"]="__UART_UART9_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+			[51]={
+				["key"]="__UART_MAJOR9_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[52]={
+				["key"]="__UART_MAJOR9_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[53]={
+				["key"]="__UART_UART10_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[54]={
+				["key"]="__UART_UART10_DMA_MODE__";
+				["value"]="_NO_";
+			};
+			[55]={
+				["key"]="__UART_UART10_DMA_BUF_LEN__";
+				["value"]="64";
+			};
+		};
+		["arch/stm32f4/usbh_flags.h"]={
+			[1]={
+				["key"]="__USBH_DEBUG_MSG__";
+				["value"]="_NO_";
+			};
+			[2]={
+				["key"]="__USBH_ENABLE_DMA_TRANSFER__";
+				["value"]="_YES_";
+			};
+			[3]={
+				["key"]="__USBH_IRQ_PRIORITY__";
 				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 			};
 		};
@@ -4386,15 +5006,19 @@
 				["key"]="__EXT4FS_CFG_BLK_CACHE_SIZE__";
 				["value"]="1";
 			};
+			[5]={
+				["key"]="__EXT4FS_CFG_WR_BUF_STRATEGY__";
+				["value"]="1";
+			};
 		};
 		["filesystems/fatfs_flags.h"]={
 			[1]={
-				["key"]="__FATFS_LFN_ENABLE__";
-				["value"]="_YES_";
-			};
-			[2]={
 				["key"]="__FATFS_LFN_CODEPAGE__";
 				["value"]="852";
+			};
+			[2]={
+				["key"]="__FATFS_BUFFERED_FILE_ENABLE__";
+				["value"]="_YES_";
 			};
 		};
 		["filesystems/filesystems_flags.h"]={
@@ -4422,6 +5046,16 @@
 				["key"]="__ENABLE_ROMFS__";
 				["value"]="_NO_";
 			};
+			[7]={
+				["key"]="__ENABLE_FLATFS__";
+				["value"]="_NO_";
+			};
+		};
+		["filesystems/flatfs_flags.h"]={
+			[1]={
+				["key"]="__FLATFS_LOG_ENABLE__";
+				["value"]="_NO_";
+			};
 		};
 		["filesystems/ramfs_flags.h"]={
 			[1]={
@@ -4437,623 +5071,627 @@
 		};
 		["network/lwip_flags.h"]={
 			[1]={
-				["key"]="__NETWORK_MEMP_SEPARATE_POOLS__";
-				["value"]="0";
-			};
-			[2]={
 				["key"]="__NETWORK_MEMP_OVERFLOW_CHECK__";
 				["value"]="0";
 			};
-			[3]={
+			[2]={
 				["key"]="__NETWORK_MEMP_SANITY_CHECK__";
 				["value"]="0";
 			};
+			[3]={
+				["key"]="__NETWORK_MEM_OVERFLOW_CHECK__";
+				["value"]="0";
+			};
 			[4]={
+				["key"]="__NETWORK_MEM_SANITY_CHECK__";
+				["value"]="0";
+			};
+			[5]={
+				["key"]="__NETWORK_MEM_USE_POOLS__";
+				["value"]="0";
+			};
+			[6]={
+				["key"]="__NETWORK_MEM_USE_POOLS_TRY_BIGGER_POOL__";
+				["value"]="0";
+			};
+			[7]={
+				["key"]="__NETWORK_MEMP_USE_CUSTOM_POOLS__";
+				["value"]="0";
+			};
+			[8]={
 				["key"]="__NETWORK_MEMP_NUM_PBUF__";
 				["value"]="10";
 			};
-			[5]={
+			[9]={
 				["key"]="__NETWORK_MEMP_NUM_RAW_PCB__";
 				["value"]="4";
 			};
-			[6]={
+			[10]={
 				["key"]="__NETWORK_MEMP_NUM_UDP_PCB__";
 				["value"]="4";
 			};
-			[7]={
+			[11]={
 				["key"]="__NETWORK_MEMP_NUM_TCP_PCB__";
 				["value"]="10";
 			};
-			[8]={
+			[12]={
 				["key"]="__NETWORK_MEMP_NUM_TCP_PCB_LISTEN__";
 				["value"]="8";
 			};
-			[9]={
+			[13]={
 				["key"]="__NETWORK_MEMP_NUM_TCP_SEG__";
 				["value"]="16";
 			};
-			[10]={
+			[14]={
 				["key"]="__NETWORK_MEMP_NUM_REASSDATA__";
 				["value"]="5";
 			};
-			[11]={
+			[15]={
 				["key"]="__NETWORK_MEMP_NUM_FRAG_PBUF__";
 				["value"]="15";
 			};
-			[12]={
+			[16]={
 				["key"]="__NETWORK_MEMP_NUM_ARP_QUEUE__";
 				["value"]="30";
 			};
-			[13]={
+			[17]={
 				["key"]="__NETWORK_MEMP_NUM_IGMP_GROUP__";
 				["value"]="8";
 			};
-			[14]={
+			[18]={
 				["key"]="__NETWORK_MEMP_NUM_NETBUF__";
 				["value"]="2";
 			};
-			[15]={
+			[19]={
 				["key"]="__NETWORK_MEMP_NUM_NETCONN__";
 				["value"]="4";
 			};
-			[16]={
+			[20]={
+				["key"]="__NETWORK_MEMP_NUM_SELECT_CB__";
+				["value"]="4";
+			};
+			[21]={
 				["key"]="__NETWORK_MEMP_NUM_TCPIP_MSG_API__";
 				["value"]="8";
 			};
-			[17]={
+			[22]={
 				["key"]="__NETWORK_MEMP_NUM_TCPIP_MSG_INPKT__";
 				["value"]="8";
 			};
-			[18]={
-				["key"]="__NETWORK_MEMP_NUM_SNMP_NODE__";
-				["value"]="50";
-			};
-			[19]={
-				["key"]="__NETWORK_MEMP_NUM_SNMP_ROOTNODE__";
-				["value"]="30";
-			};
-			[20]={
-				["key"]="__NETWORK_MEMP_NUM_LOCALHOSTLIST__";
-				["value"]="1";
-			};
-			[21]={
-				["key"]="__NETWORK_MEMP_NUM_PPPOE_INTERFACES__";
-				["value"]="1";
-			};
-			[22]={
-				["key"]="__NETWORK_PBUF_POOL_SIZE__";
-				["value"]="10";
-			};
 			[23]={
-				["key"]="__NETWORK_LWIP_ARP__";
+				["key"]="__NETWORK_MEMP_NUM_NETDB__";
 				["value"]="1";
 			};
 			[24]={
+				["key"]="__NETWORK_MEMP_NUM_LOCALHOSTLIST__";
+				["value"]="1";
+			};
+			[25]={
+				["key"]="__NETWORK_PBUF_POOL_SIZE__";
+				["value"]="10";
+			};
+			[26]={
+				["key"]="__NETWORK_LWIP_ARP__";
+				["value"]="1";
+			};
+			[27]={
 				["key"]="__NETWORK_ARP_TABLE_SIZE__";
 				["value"]="10";
 			};
-			[25]={
+			[28]={
+				["key"]="__NETWORK_ARP_MAXAGE__";
+				["value"]="300";
+			};
+			[29]={
 				["key"]="__NETWORK_ARP_QUEUEING__";
 				["value"]="0";
 			};
-			[26]={
-				["key"]="__NETWORK_ETHARP_TRUST_IP_MAC__";
-				["value"]="0";
+			[30]={
+				["key"]="__NETWORK_ARP_QUEUE_LEN__";
+				["value"]="3";
 			};
-			[27]={
+			[31]={
 				["key"]="__NETWORK_ETHARP_SUPPORT_VLAN__";
 				["value"]="0";
 			};
-			[28]={
+			[32]={
 				["key"]="__NETWORK_ETH_PAD_SIZE__";
 				["value"]="0";
 			};
-			[29]={
+			[33]={
 				["key"]="__NETWORK_ETHARP_SUPPORT_STATIC_ENTRIES__";
 				["value"]="0";
 			};
-			[30]={
+			[34]={
+				["key"]="__NETWORK_LWIP_IPV4__";
+				["value"]="1";
+			};
+			[35]={
 				["key"]="__NETWORK_IP_FORWARD__";
 				["value"]="0";
 			};
-			[31]={
-				["key"]="__NETWORK_IP_OPTIONS_ALLOWED__";
-				["value"]="1";
-			};
-			[32]={
+			[36]={
 				["key"]="__NETWORK_IP_REASSEMBLY__";
 				["value"]="1";
 			};
-			[33]={
+			[37]={
 				["key"]="__NETWORK_IP_FRAG__";
 				["value"]="1";
 			};
-			[34]={
+			[38]={
+				["key"]="__NETWORK_IP_OPTIONS_ALLOWED__";
+				["value"]="1";
+			};
+			[39]={
 				["key"]="__NETWORK_IP_REASS_MAXAGE__";
 				["value"]="3";
 			};
-			[35]={
+			[40]={
 				["key"]="__NETWORK_IP_REASS_MAX_PBUFS__";
 				["value"]="10";
 			};
-			[36]={
+			[41]={
 				["key"]="__NETWORK_IP_DEFAULT_TTL__";
 				["value"]="255";
 			};
-			[37]={
+			[42]={
 				["key"]="__NETWORK_IP_SOF_BROADCAST__";
 				["value"]="0";
 			};
-			[38]={
+			[43]={
 				["key"]="__NETWORK_IP_SOF_BROADCAST_RECV__";
 				["value"]="0";
 			};
-			[39]={
+			[44]={
 				["key"]="__NETWORK_IP_FORWARD_ALLOW_TX_ON_RX_NETIF__";
 				["value"]="0";
 			};
-			[40]={
+			[45]={
 				["key"]="__NETWORK_LWIP_ICMP__";
 				["value"]="1";
 			};
-			[41]={
+			[46]={
 				["key"]="__NETWORK_ICMP_TTL__";
 				["value"]="255";
 			};
-			[42]={
+			[47]={
 				["key"]="__NETWORK_LWIP_BROADCAST_PING__";
 				["value"]="1";
 			};
-			[43]={
+			[48]={
 				["key"]="__NETWORK_LWIP_MULTICAST_PING__";
 				["value"]="1";
 			};
-			[44]={
+			[49]={
 				["key"]="__NETWORK_LWIP_DHCP__";
 				["value"]="1";
 			};
-			[45]={
+			[50]={
+				["key"]="__NETWORK_LWIP_DHCP_BOOTP_FILE__";
+				["value"]="0";
+			};
+			[51]={
+				["key"]="__NETWORK_LWIP_DHCP_GET_NTP_SRV__";
+				["value"]="0";
+			};
+			[52]={
+				["key"]="__NETWORK_LWIP_DHCP_MAX_NTP_SERVERS__";
+				["value"]="1";
+			};
+			[53]={
 				["key"]="__NETWORK_LWIP_AUTOIP__";
 				["value"]="0";
 			};
-			[46]={
+			[54]={
 				["key"]="__NETWORK_LWIP_DHCP_AUTOIP_COOP__";
 				["value"]="0";
 			};
-			[47]={
+			[55]={
 				["key"]="__NETWORK_LWIP_DHCP_AUTOIP_COOP_TRIES__";
 				["value"]="9";
 			};
-			[48]={
-				["key"]="__NETWORK_LWIP_SNMP__";
-				["value"]="0";
-			};
-			[49]={
-				["key"]="__NETWORK_SNMP_CONCURRENT_REQUESTS__";
-				["value"]="1";
-			};
-			[50]={
-				["key"]="__NETWORK_SNMP_TRAP_DESTINATIONS__";
-				["value"]="1";
-			};
-			[51]={
-				["key"]="__NETWORK_SNMP_MAX_OCTET_STRING_LEN__";
-				["value"]="127";
-			};
-			[52]={
-				["key"]="__NETWORK_SNMP_MAX_TREE_DEPTH__";
-				["value"]="15";
-			};
-			[53]={
+			[56]={
 				["key"]="__NETWORK_LWIP_IGMP__";
 				["value"]="0";
 			};
-			[54]={
+			[57]={
 				["key"]="__NETWORK_LWIP_DNS__";
 				["value"]="1";
 			};
-			[55]={
+			[58]={
 				["key"]="__NETWORK_DNS_TABLE_SIZE__";
 				["value"]="4";
 			};
-			[56]={
+			[59]={
 				["key"]="__NETWORK_DNS_MAX_NAME_LENGTH__";
 				["value"]="128";
 			};
-			[57]={
+			[60]={
 				["key"]="__NETWORK_DNS_MAX_SERVERS__";
 				["value"]="2";
 			};
-			[58]={
+			[61]={
+				["key"]="__NETWORK_DNS_MAX_RETRIES__";
+				["value"]="4";
+			};
+			[62]={
 				["key"]="__NETWORK_DNS_DOES_NAME_CHECK__";
 				["value"]="1";
 			};
-			[59]={
+			[63]={
 				["key"]="__NETWORK_DNS_LOCAL_HOSTLIST_IS_DYNAMIC__";
 				["value"]="0";
 			};
-			[60]={
+			[64]={
+				["key"]="__NETWORK_LWIP_DNS_SUPPORT_MDNS_QUERIES__";
+				["value"]="0";
+			};
+			[65]={
 				["key"]="__NETWORK_LWIP_UDP__";
 				["value"]="1";
 			};
-			[61]={
+			[66]={
 				["key"]="__NETWORK_UDP_TTL__";
 				["value"]="255";
 			};
-			[62]={
+			[67]={
 				["key"]="__NETWORK_LWIP_NETBUF_RECVINFO__";
 				["value"]="0";
 			};
-			[63]={
+			[68]={
 				["key"]="__NETWORK_LWIP_TCP__";
 				["value"]="1";
 			};
-			[64]={
+			[69]={
 				["key"]="__NETWORK_TCP_TTL__";
 				["value"]="255";
 			};
-			[65]={
+			[70]={
+				["key"]="__NETWORK_TCP_WND__";
+				["value"]="3";
+			};
+			[71]={
 				["key"]="__NETWORK_TCP_MAXRTX__";
 				["value"]="12";
 			};
-			[66]={
+			[72]={
 				["key"]="__NETWORK_TCP_SYNMAXRTX__";
 				["value"]="6";
 			};
-			[67]={
-				["key"]="__NETWORK_TCP_QUEUE_OOSEQ__";
-				["value"]="0";
-			};
-			[68]={
-				["key"]="__NETWORK_TCP_MSS__";
-				["value"]="1460";
-			};
-			[69]={
-				["key"]="__NETWORK_TCP_MSL__";
-				["value"]="1000";
-			};
-			[70]={
-				["key"]="__NETWORK_TCP_CALCULATE_EFF_SEND_MSS__";
-				["value"]="1";
-			};
-			[71]={
-				["key"]="__NETWORK_TCP_OOSEQ_MAX_BYTES__";
-				["value"]="0";
-			};
-			[72]={
-				["key"]="__NETWORK_TCP_OOSEQ_MAX_PBUFS__";
-				["value"]="0";
-			};
 			[73]={
-				["key"]="__NETWORK_TCP_LISTEN_BACKLOG__";
+				["key"]="__NETWORK_LWIP_TCP_SACK_OUT__";
 				["value"]="0";
 			};
 			[74]={
-				["key"]="__NETWORK_TCP_DEFAULT_LISTEN_BACKLOG__";
-				["value"]="255";
+				["key"]="__NETWORK_LWIP_TCP_MAX_SACK_NUM__";
+				["value"]="4";
 			};
 			[75]={
-				["key"]="__NETWORK_TCP_OVERSIZE__";
-				["value"]="TCP_MSS";
+				["key"]="__NETWORK_TCP_MSS__";
+				["value"]="1460";
 			};
 			[76]={
-				["key"]="__NETWORK_LWIP_TCP_TIMESTAMPS__";
-				["value"]="0";
-			};
-			[77]={
-				["key"]="__NETWORK_LWIP_NETIF_HOSTNAME__";
+				["key"]="__NETWORK_TCP_CALCULATE_EFF_SEND_MSS__";
 				["value"]="1";
 			};
+			[77]={
+				["key"]="__NETWORK_TCP_SND_BUF__";
+				["value"]="4";
+			};
 			[78]={
-				["key"]="__NETWORK_LWIP_NETIF_HWADDRHINT__";
+				["key"]="__NETWORK_TCP_OOSEQ_MAX_BYTES__";
 				["value"]="0";
 			};
 			[79]={
-				["key"]="__NETWORK_LWIP_NETIF_LOOPBACK__";
+				["key"]="__NETWORK_TCP_OOSEQ_MAX_PBUFS__";
 				["value"]="0";
 			};
 			[80]={
-				["key"]="__NETWORK_LWIP_LOOPBACK_MAX_PBUFS__";
+				["key"]="__NETWORK_TCP_LISTEN_BACKLOG__";
 				["value"]="0";
 			};
 			[81]={
-				["key"]="__NETWORK_LWIP_HAVE_LOOPIF__";
-				["value"]="0";
+				["key"]="__NETWORK_TCP_DEFAULT_LISTEN_BACKLOG__";
+				["value"]="255";
 			};
 			[82]={
-				["key"]="__NETWORK_LWIP_HAVE_SLIPIF__";
-				["value"]="0";
+				["key"]="__NETWORK_TCP_OVERSIZE__";
+				["value"]="TCP_MSS";
 			};
 			[83]={
-				["key"]="__NETWORK_TCPIP_THREAD_NAME__";
-				["value"]="\"tcpipd\"";
+				["key"]="__NETWORK_LWIP_TCP_TIMESTAMPS__";
+				["value"]="0";
 			};
 			[84]={
-				["key"]="__NETWORK_TCPIP_THREAD_STACKSIZE__";
-				["value"]="STACK_DEPTH_LOW";
+				["key"]="__NETWORK_LWIP_WND_SCALE__";
+				["value"]="0";
 			};
 			[85]={
-				["key"]="__NETWORK_TCPIP_THREAD_PRIO__";
+				["key"]="__NETWORK_TCP_RCV_SCALE__";
 				["value"]="0";
 			};
 			[86]={
-				["key"]="__NETWORK_TCPIP_MBOX_SIZE__";
-				["value"]="8";
+				["key"]="__NETWORK_PBUF_LINK_ENCAPSULATION_HLEN__";
+				["value"]="0";
 			};
 			[87]={
-				["key"]="__NETWORK_SLIPIF_THREAD_NAME__";
-				["value"]="\"slipifd\"";
+				["key"]="__NETWORK_LWIP_SINGLE_NETIF__";
+				["value"]="1";
 			};
 			[88]={
-				["key"]="__NETWORK_SLIPIF_THREAD_STACKSIZE__";
-				["value"]="STACK_DEPTH_LOW";
+				["key"]="__NETWORK_LWIP_NETIF_HOSTNAME__";
+				["value"]="1";
 			};
 			[89]={
-				["key"]="__NETWORK_SLIPIF_THREAD_PRIO__";
+				["key"]="__NETWORK_LWIP_NETIF_HWADDRHINT__";
 				["value"]="0";
 			};
 			[90]={
-				["key"]="__NETWORK_PPP_THREAD_NAME__";
-				["value"]="\"pppind\"";
+				["key"]="__NETWORK_LWIP_LOOPIF_MULTICAST__";
+				["value"]="0";
 			};
 			[91]={
-				["key"]="__NETWORK_PPP_THREAD_STACKSIZE__";
-				["value"]="STACK_DEPTH_LOW";
+				["key"]="__NETWORK_LWIP_NETIF_LOOPBACK__";
+				["value"]="0";
 			};
 			[92]={
-				["key"]="__NETWORK_PPP_THREAD_PRIO__";
+				["key"]="__NETWORK_LWIP_LOOPBACK_MAX_PBUFS__";
 				["value"]="0";
 			};
 			[93]={
-				["key"]="__NETWORK_DEFAULT_THREAD_NAME__";
-				["value"]="\"lwipd\"";
+				["key"]="__NETWORK_TCPIP_THREAD_NAME__";
+				["value"]="\"tcpipd\"";
 			};
 			[94]={
-				["key"]="__NETWORK_DEFAULT_THREAD_STACKSIZE__";
+				["key"]="__NETWORK_TCPIP_THREAD_STACKSIZE__";
 				["value"]="STACK_DEPTH_LOW";
 			};
 			[95]={
-				["key"]="__NETWORK_DEFAULT_THREAD_PRIO__";
+				["key"]="__NETWORK_TCPIP_THREAD_PRIO__";
 				["value"]="0";
 			};
 			[96]={
-				["key"]="__NETWORK_DEFAULT_RAW_RECVMBOX_SIZE__";
+				["key"]="__NETWORK_TCPIP_MBOX_SIZE__";
 				["value"]="8";
 			};
 			[97]={
-				["key"]="__NETWORK_DEFAULT_UDP_RECVMBOX_SIZE__";
-				["value"]="8";
+				["key"]="__NETWORK_SLIPIF_THREAD_NAME__";
+				["value"]="\"slipifd\"";
 			};
 			[98]={
-				["key"]="__NETWORK_DEFAULT_TCP_RECVMBOX_SIZE__";
-				["value"]="8";
+				["key"]="__NETWORK_SLIPIF_THREAD_STACKSIZE__";
+				["value"]="STACK_DEPTH_LOW";
 			};
 			[99]={
-				["key"]="__NETWORK_DEFAULT_ACCEPTMBOX_SIZE__";
-				["value"]="8";
-			};
-			[100]={
-				["key"]="__NETWORK_LWIP_TCPIP_TIMEOUT__";
-				["value"]="1";
-			};
-			[101]={
-				["key"]="__NETWORK_PPP_SUPPORT__";
+				["key"]="__NETWORK_SLIPIF_THREAD_PRIO__";
 				["value"]="0";
 			};
+			[100]={
+				["key"]="__NETWORK_DEFAULT_THREAD_NAME__";
+				["value"]="\"lwipd\"";
+			};
+			[101]={
+				["key"]="__NETWORK_DEFAULT_THREAD_STACKSIZE__";
+				["value"]="STACK_DEPTH_LOW";
+			};
 			[102]={
-				["key"]="__NETWORK_PPPOE_SUPPORT__";
+				["key"]="__NETWORK_DEFAULT_THREAD_PRIO__";
 				["value"]="0";
 			};
 			[103]={
-				["key"]="__NETWORK_NUM_PPP__";
-				["value"]="1";
+				["key"]="__NETWORK_DEFAULT_RAW_RECVMBOX_SIZE__";
+				["value"]="8";
 			};
 			[104]={
-				["key"]="__NETWORK_PAP_SUPPORT__";
-				["value"]="0";
+				["key"]="__NETWORK_DEFAULT_UDP_RECVMBOX_SIZE__";
+				["value"]="8";
 			};
 			[105]={
-				["key"]="__NETWORK_CHAP_SUPPORT__";
-				["value"]="0";
+				["key"]="__NETWORK_DEFAULT_TCP_RECVMBOX_SIZE__";
+				["value"]="8";
 			};
 			[106]={
-				["key"]="__NETWORK_MD5_SUPPORT__";
-				["value"]="0";
+				["key"]="__NETWORK_DEFAULT_ACCEPTMBOX_SIZE__";
+				["value"]="8";
 			};
 			[107]={
-				["key"]="__NETWORK_FSM_DEFTIMEOUT__";
-				["value"]="6";
+				["key"]="__NETWORK_LWIP_TCPIP_TIMEOUT__";
+				["value"]="1";
 			};
 			[108]={
-				["key"]="__NETWORK_FSM_DEFMAXTERMREQS__";
-				["value"]="2";
+				["key"]="__NETWORK_LWIP_TCP_KEEPALIVE__";
+				["value"]="0";
 			};
 			[109]={
-				["key"]="__NETWORK_FSM_DEFMAXCONFREQS__";
-				["value"]="10";
+				["key"]="__NETWORK_LWIP_STATS__";
+				["value"]="0";
 			};
 			[110]={
-				["key"]="__NETWORK_FSM_DEFMAXNAKLOOPS__";
-				["value"]="5";
+				["key"]="__NETWORK_LWIP_CHECKSUM_CTRL_PER_NETIF__";
+				["value"]="0";
 			};
 			[111]={
-				["key"]="__NETWORK_UPAP_DEFTIMEOUT__";
-				["value"]="6";
+				["key"]="__NETWORK_CHECKSUM_GEN_IP__";
+				["value"]="0";
 			};
 			[112]={
-				["key"]="__NETWORK_UPAP_DEFREQTIME__";
-				["value"]="30";
+				["key"]="__NETWORK_CHECKSUM_GEN_UDP__";
+				["value"]="0";
 			};
 			[113]={
-				["key"]="__NETWORK_CHAP_DEFTIMEOUT__";
-				["value"]="6";
+				["key"]="__NETWORK_CHECKSUM_GEN_TCP__";
+				["value"]="0";
 			};
 			[114]={
-				["key"]="__NETWORK_CHAP_DEFTRANSMITS__";
-				["value"]="10";
+				["key"]="__NETWORK_CHECKSUM_GEN_ICMP__";
+				["value"]="0";
 			};
 			[115]={
-				["key"]="__NETWORK_LCP_ECHOINTERVAL__";
+				["key"]="__NETWORK_CHECKSUM_GEN_ICMP6__";
 				["value"]="0";
 			};
 			[116]={
-				["key"]="__NETWORK_LCP_MAXECHOFAILS__";
-				["value"]="3";
+				["key"]="__NETWORK_CHECKSUM_CHECK_IP__";
+				["value"]="1";
 			};
 			[117]={
-				["key"]="__NETWORK_PPP_MAXIDLEFLAG__";
-				["value"]="100";
+				["key"]="__NETWORK_CHECKSUM_CHECK_UDP__";
+				["value"]="1";
 			};
 			[118]={
+				["key"]="__NETWORK_CHECKSUM_CHECK_TCP__";
+				["value"]="1";
+			};
+			[119]={
+				["key"]="__NETWORK_CHECKSUM_CHECK_ICMP__";
+				["value"]="1";
+			};
+			[120]={
+				["key"]="__NETWORK_CHECKSUM_CHECK_ICMP6__";
+				["value"]="1";
+			};
+			[121]={
 				["key"]="__NETWORK_LWIP_CHECKSUM_ON_COPY__";
 				["value"]="0";
 			};
-			[119]={
+			[122]={
 				["key"]="__NETWORK_LWIP_DBG_MIN_LEVEL__";
 				["value"]="LWIP_DBG_LEVEL_ALL";
 			};
-			[120]={
+			[123]={
 				["key"]="__NETWORK_LWIP_DBG_TYPES_ON__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[121]={
-				["key"]="__NETWORK_LOW_LEVEL_DEBUG__";
-				["value"]="LWIP_DBG_OFF";
-			};
-			[122]={
+			[124]={
 				["key"]="__NETWORK_ETHARP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[123]={
+			[125]={
 				["key"]="__NETWORK_NETIF_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[124]={
+			[126]={
 				["key"]="__NETWORK_PBUF_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[125]={
+			[127]={
 				["key"]="__NETWORK_API_LIB_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[126]={
+			[128]={
 				["key"]="__NETWORK_API_MSG_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[127]={
+			[129]={
 				["key"]="__NETWORK_SOCKETS_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[128]={
+			[130]={
 				["key"]="__NETWORK_ICMP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[129]={
+			[131]={
 				["key"]="__NETWORK_IGMP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[130]={
+			[132]={
 				["key"]="__NETWORK_INET_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[131]={
+			[133]={
 				["key"]="__NETWORK_IP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[132]={
+			[134]={
 				["key"]="__NETWORK_IP_REASS_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[133]={
+			[135]={
 				["key"]="__NETWORK_RAW_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[134]={
+			[136]={
 				["key"]="__NETWORK_MEM_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[135]={
+			[137]={
 				["key"]="__NETWORK_MEMP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[136]={
+			[138]={
 				["key"]="__NETWORK_SYS_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[137]={
+			[139]={
 				["key"]="__NETWORK_TIMERS_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[138]={
+			[140]={
 				["key"]="__NETWORK_TCP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[139]={
+			[141]={
 				["key"]="__NETWORK_TCP_INPUT_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[140]={
+			[142]={
 				["key"]="__NETWORK_TCP_FR_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[141]={
+			[143]={
 				["key"]="__NETWORK_TCP_RTO_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[142]={
+			[144]={
 				["key"]="__NETWORK_TCP_CWND_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[143]={
+			[145]={
 				["key"]="__NETWORK_TCP_WND_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[144]={
+			[146]={
 				["key"]="__NETWORK_TCP_OUTPUT_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[145]={
+			[147]={
 				["key"]="__NETWORK_TCP_RST_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[146]={
+			[148]={
 				["key"]="__NETWORK_TCP_QLEN_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[147]={
+			[149]={
 				["key"]="__NETWORK_UDP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[148]={
+			[150]={
 				["key"]="__NETWORK_TCPIP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[149]={
-				["key"]="__NETWORK_PPP_DEBUG__";
-				["value"]="LWIP_DBG_OFF";
-			};
-			[150]={
+			[151]={
 				["key"]="__NETWORK_SLIP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[151]={
+			[152]={
 				["key"]="__NETWORK_DHCP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[152]={
+			[153]={
 				["key"]="__NETWORK_AUTOIP_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
-			[153]={
-				["key"]="__NETWORK_SNMP_MSG_DEBUG__";
-				["value"]="LWIP_DBG_OFF";
-			};
 			[154]={
-				["key"]="__NETWORK_SNMP_MIB_DEBUG__";
+				["key"]="__NETWORK_DNS_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
 			[155]={
-				["key"]="__NETWORK_DNS_DEBUG__";
+				["key"]="__NETWORK_IP6_DEBUG__";
+				["value"]="LWIP_DBG_OFF";
+			};
+			[156]={
+				["key"]="__NETWORK_DHCP6_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
 			};
 		};
@@ -5067,8 +5705,22 @@
 				["value"]="_NO_";
 			};
 			[3]={
-				["key"]="__ENABLE_DNX_STACK__";
-				["value"]="_YES_";
+				["key"]="__ENABLE_SIPC_STACK__";
+				["value"]="_NO_";
+			};
+		};
+		["network/sipc_flags.h"]={
+			[1]={
+				["key"]="__NETWORK_SIPC_INTERFACE_PATH__";
+				["value"]="\"/dev/nc\"";
+			};
+			[2]={
+				["key"]="__NETWORK_SIPC_DEBUG_ON__";
+				["value"]="_NO_";
+			};
+			[3]={
+				["key"]="__NETWORK_SIPC_RECV_BUF_SIZE__";
+				["value"]="2048";
 			};
 		};
 		["network/tcpip_flags.h"]={
@@ -5111,150 +5763,146 @@
 				["value"]="4";
 			};
 			[7]={
-				["key"]="__OS_TASK_KWORKER_MODE__";
-				["value"]="1";
-			};
-			[8]={
 				["key"]="__OS_TASK_MAX_SYSTEM_THREADS__";
 				["value"]="16";
 			};
-			[9]={
-				["key"]="__OS_TASK_KWORKER_IO_THREADS__";
-				["value"]="8";
-			};
-			[10]={
+			[8]={
 				["key"]="__OS_SLEEP_ON_IDLE__";
 				["value"]="_NO_";
 			};
-			[11]={
+			[9]={
 				["key"]="__OS_COLOR_TERMINAL_ENABLE__";
 				["value"]="_YES_";
 			};
-			[12]={
+			[10]={
 				["key"]="__OS_MONITOR_CPU_LOAD__";
 				["value"]="_YES_";
 			};
-			[13]={
+			[11]={
 				["key"]="__OS_ENABLE_TIMEMAN__";
 				["value"]="_YES_";
 			};
-			[14]={
+			[12]={
 				["key"]="__OS_PRINTF_ENABLE__";
 				["value"]="_YES_";
 			};
-			[15]={
+			[13]={
+				["key"]="__OS_PRINTF_FLOAT_ENABLE__";
+				["value"]="_YES_";
+			};
+			[14]={
 				["key"]="__OS_SCANF_ENABLE__";
 				["value"]="_YES_";
 			};
-			[16]={
+			[15]={
 				["key"]="__OS_ENABLE_MKDIR__";
 				["value"]="_YES_";
 			};
-			[17]={
+			[16]={
 				["key"]="__OS_ENABLE_GETCWD__";
 				["value"]="_YES_";
 			};
-			[18]={
+			[17]={
 				["key"]="__OS_ENABLE_MKFIFO__";
 				["value"]="_YES_";
 			};
-			[19]={
+			[18]={
 				["key"]="__OS_ENABLE_REMOVE__";
 				["value"]="_YES_";
 			};
-			[20]={
+			[19]={
 				["key"]="__OS_ENABLE_RENAME__";
 				["value"]="_YES_";
 			};
-			[21]={
+			[20]={
 				["key"]="__OS_ENABLE_CHMOD__";
 				["value"]="_YES_";
 			};
-			[22]={
+			[21]={
 				["key"]="__OS_ENABLE_CHOWN__";
 				["value"]="_YES_";
 			};
-			[23]={
+			[22]={
 				["key"]="__OS_ENABLE_STATFS__";
 				["value"]="_YES_";
 			};
-			[24]={
+			[23]={
 				["key"]="__OS_ENABLE_MKNOD__";
 				["value"]="_YES_";
 			};
-			[25]={
+			[24]={
 				["key"]="__OS_ENABLE_FSTAT__";
 				["value"]="_YES_";
 			};
-			[26]={
+			[25]={
 				["key"]="__OS_ENABLE_SYS_ASSERT__";
 				["value"]="_YES_";
 			};
-			[27]={
+			[26]={
 				["key"]="__OS_ENABLE_SHARED_MEMORY__";
 				["value"]="_YES_";
 			};
-			[28]={
+			[27]={
 				["key"]="__OS_SYSTEM_MSG_ENABLE__";
 				["value"]="_YES_";
 			};
-			[29]={
-				["key"]="__OS_SYSTEM_FS_CACHE_ENABLE__";
-				["value"]="_NO_";
-			};
-			[30]={
+			[28]={
 				["key"]="__OS_SYSTEM_SHEBANG_ENABLE__";
 				["value"]="_NO_";
 			};
-			[31]={
+			[29]={
 				["key"]="__OS_STREAM_BUFFER_LENGTH__";
 				["value"]="100";
 			};
-			[32]={
+			[30]={
 				["key"]="__OS_PIPE_LENGTH__";
 				["value"]="8";
 			};
-			[33]={
+			[31]={
 				["key"]="__HEAP_BLOCK_SIZE__";
 				["value"]="4";
 			};
-			[34]={
+			[32]={
 				["key"]="__OS_SYSTEM_MSG_COLS__";
 				["value"]="64";
 			};
-			[35]={
+			[33]={
 				["key"]="__OS_SYSTEM_MSG_ROWS__";
 				["value"]="32";
 			};
-			[36]={
-				["key"]="__OS_SYSTEM_CACHE_MIN_FREE__";
-				["value"]="1024";
-			};
-			[37]={
+			[34]={
 				["key"]="__OS_SYSTEM_CACHE_SYNC_PERIOD__";
 				["value"]="30";
 			};
-			[38]={
+			[35]={
 				["key"]="__OS_MONITOR_NETWORK_MEMORY_USAGE_LIMIT__";
 				["value"]="0";
 			};
-			[39]={
+			[36]={
 				["key"]="__OS_ERRNO_STRING_LEN__";
 				["value"]="3";
 			};
-			[40]={
+			[37]={
+				["key"]="__OS_HEAP_SANITY_CHECK__";
+				["value"]="_NO_";
+			};
+			[38]={
+				["key"]="__OS_HEAP_OVERFLOW_CHECK__";
+				["value"]="_NO_";
+			};
+			[39]={
 				["key"]="__OS_HOSTNAME__";
 				["value"]="\"poz\"";
 			};
-			[41]={
+			[40]={
 				["key"]="__OS_RTC_FILE_PATH__";
 				["value"]="\"/dev/rtc\"";
 			};
-			[42]={
+			[41]={
 				["key"]="__OS_INIT_PROG__";
 				["value"]="\"initd\"";
 			};
-			[43]={
+			[42]={
 				["key"]="__OS_SYSTEM_PROG__";
 				["value"]="\"dsh -e\"";
 			};
@@ -5275,6 +5923,10 @@
 			[4]={
 				["key"]="__CPU_OSC_FREQ__";
 				["value"]="8000000";
+			};
+			[5]={
+				["key"]="__CPU_UART_TERM__";
+				["value"]="0";
 			};
 		};
 	};

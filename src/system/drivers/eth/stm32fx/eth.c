@@ -330,7 +330,7 @@ API_MOD_WRITE(ETH,
                 size_t len = min(count, ETH_MAX_PACKET_SIZE);
 
                 ETH_packet_t pkt;
-                pkt.payload = const_cast(u8_t*, src);
+                pkt.payload = const_cast(src);
                 pkt.length  = len;
                 err = packet_send(hdl, &pkt);
                 if (!err) {

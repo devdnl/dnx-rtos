@@ -99,9 +99,11 @@ extern void  vApplicationSwitchedOut(void);
 #define configUSE_TIME_SLICING                  1
 #define configUSE_NEWLIB_REENTRANT              0
 #define configENABLE_BACKWARD_COMPATIBILITY     0
-#define configUSE_APPLICATION_TASK_TAG          1
+#define configUSE_APPLICATION_TASK_TAG          0
 #define configSUPPORT_STATIC_ALLOCATION         1
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
+#define configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES 0
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 2
 
 /* Hook function related definitions. */
 #define configUSE_IDLE_HOOK                     1
@@ -153,8 +155,8 @@ extern void  vApplicationSwitchedOut(void);
 #define INCLUDE_xEventGroupSetBitFromISR        0
 #define INCLUDE_xTimerPendFunctionCall          0
 
-#define traceTASK_SWITCHED_OUT()                _task_switched_out(pxCurrentTCB, pxCurrentTCB->pxTaskTag)
-#define traceTASK_SWITCHED_IN()                 _task_switched_in(pxCurrentTCB, pxCurrentTCB->pxTaskTag)
+#define traceTASK_SWITCHED_OUT()                _task_switched_out(pxCurrentTCB, pxCurrentTCB->pvThreadLocalStoragePointers[0], pxCurrentTCB->pvThreadLocalStoragePointers[1])
+#define traceTASK_SWITCHED_IN()                 _task_switched_in(pxCurrentTCB, pxCurrentTCB->pvThreadLocalStoragePointers[0], pxCurrentTCB->pvThreadLocalStoragePointers[1])
 
 #if __OS_ENABLE_SYS_ASSERT__ > 0
 extern void _assert_hook(bool assert, const char *msg);

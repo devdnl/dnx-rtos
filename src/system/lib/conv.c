@@ -349,7 +349,7 @@ char *_strtoi(const char *string, int base, i32_t *value)
                         base = 10;
                 }
         } else if (base < 2 || base > 16) {
-                return const_cast(char*, string);
+                return const_cast(string);
         }
 
         char  character;
@@ -388,7 +388,7 @@ char *_strtoi(const char *string, int base, i32_t *value)
 
         *value *= sign;
 
-        return const_cast(char*, string);
+        return const_cast(string);
 }
 
 //==============================================================================

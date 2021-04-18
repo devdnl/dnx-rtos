@@ -299,9 +299,9 @@ static int stack_init(void)
                         tcpip_init(NULL, NULL);
 
                         netif_add(&inet->netif,
-                                  const_cast(ip_addr_t*, &ip_addr_any),
-                                  const_cast(ip_addr_t*, &ip_addr_any),
-                                  const_cast(ip_addr_t*, &ip_addr_any),
+                                  const_cast(&ip_addr_any),
+                                  const_cast(&ip_addr_any),
+                                  const_cast(&ip_addr_any),
                                   inet,
                                   netif_configure,
                                   tcpip_input);
@@ -345,9 +345,9 @@ static int apply_static_IP_configuration(const ip_addr_t *ip_address, const ip_a
                 clear_rx_tx_counters();
                 netif_set_down(&inet->netif);
                 netif_set_addr(&inet->netif,
-                               const_cast(ip_addr_t*, ip_address),
-                               const_cast(ip_addr_t*, net_mask),
-                               const_cast(ip_addr_t*, gateway) );
+                               const_cast(ip_address),
+                               const_cast(net_mask),
+                               const_cast(gateway) );
                 netif_set_up(&inet->netif);
                 netif_set_link_up(&inet->netif);
 
@@ -404,9 +404,9 @@ static int DHCP_start_client(void)
                         clear_rx_tx_counters();
                         netif_set_down(&inet->netif);
                         netif_set_addr(&inet->netif,
-                                       const_cast(ip_addr_t*, &ip_addr_any),
-                                       const_cast(ip_addr_t*, &ip_addr_any),
-                                       const_cast(ip_addr_t*, &ip_addr_any) );
+                                       const_cast(&ip_addr_any),
+                                       const_cast(&ip_addr_any),
+                                       const_cast(&ip_addr_any) );
                         netif_set_up(&inet->netif);
                         netif_set_link_up(&inet->netif);
 
@@ -511,7 +511,7 @@ static int DHCP_renew_connection(void)
 //==============================================================================
 static err_t netif_configure(struct netif *netif)
 {
-        netif->hostname   = const_cast(char*, __OS_HOSTNAME__);
+        netif->hostname   = const_cast(__OS_HOSTNAME__);
         netif->name[0]    = 'E';
         netif->name[1]    = 'T';
         netif->output     = etharp_output;

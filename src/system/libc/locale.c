@@ -122,7 +122,7 @@ char *setlocale(int category, const char *locale)
 //==============================================================================
 struct lconv *localeconv(void)
 {
-        return const_cast(struct lconv *, &locale);
+        return const_cast(&locale);
 }
 
 /*==============================================================================
