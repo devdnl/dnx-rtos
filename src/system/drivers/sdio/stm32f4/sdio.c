@@ -821,7 +821,7 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
 #endif
 
         if (count == 1) {
-                catcherr(err = card_transfer_block(hdl, SD_CMD__CMD24, address, const_cast(u8_t *, src), 1, DIR_OUT), exit);
+                catcherr(err = card_transfer_block(hdl, SD_CMD__CMD24, address, const_cast(src), 1, DIR_OUT), exit);
 
                 do {
                         catcherr(err = card_send_cmd(SD_CMD__CMD13, CMD_RESP_SHORT, hdl->RCA), exit);
@@ -834,7 +834,7 @@ static int card_write_sectors(SDIO_t *hdl, const u8_t *src, size_t count, u32_t 
                 while (count > 0) {
                         size_t blocks_to_transfer = min(count, 511);
 
-                        catcherr(err = card_transfer_block(hdl, SD_CMD__CMD25, address, const_cast(u8_t *, src), blocks_to_transfer, DIR_OUT), exit);
+                        catcherr(err = card_transfer_block(hdl, SD_CMD__CMD25, address, const_cast(src), blocks_to_transfer, DIR_OUT), exit);
                         catcherr(err = card_send_cmd(SD_CMD__CMD12, CMD_RESP_SHORT, 0), exit);
                         catcherr(err = card_get_response(&resp, RESP_R1b), exit);
 

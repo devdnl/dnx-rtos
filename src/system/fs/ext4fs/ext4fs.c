@@ -645,7 +645,7 @@ API_FS_READDIR(ext4fs, void *fs_handle, DIR *dir)
 
         int err = ENOENT;
 
-        ext4_direntry *de = const_cast(ext4_direntry*, ext4_dir_entry_next(d));
+        ext4_direntry *de = const_cast(ext4_dir_entry_next(d));
         if (de) {
                 ext4_file f;
                 f.flags = 0;

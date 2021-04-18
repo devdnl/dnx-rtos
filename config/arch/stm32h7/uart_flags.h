@@ -179,16 +179,6 @@ this:AddExtraWidget("Label", "LabelDefaults", "Defaults", -1, "bold")
 this:AddExtraWidget("Void", "VoidDefaults")
 ++*/
 /*--
-this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
---*/
-#define __UART_RX_BUFFER_LEN__ 128
-
-/*--
-this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
---*/
-#define __UART_TX_BUFFER_LEN__ 128
-
-/*--
 this:AddWidget("Combobox", "Parity bit")
 this:AddItem("Off", "UART_PARITY__OFF")
 this:AddItem("Odd", "UART_PARITY__ODD")
@@ -248,6 +238,20 @@ end
 ++*/
 /*--
 if this:PortExist(1) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR0_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(1) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR0_TX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(1) then
 this:AddWidget("Combobox", "IRQ priority")
 uC.AddPriorityItems(this, false)
 end
@@ -281,6 +285,20 @@ this:AddExtraWidget("Label", "LabelIRQDMA2", "\nUART2 IRQ and DMA configuration"
 this:AddExtraWidget("Void", "VoidIRQDMA2")
 end
 ++*/
+/*--
+if this:PortExist(2) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR1_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(2) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR1_TX_BUFFER_LEN__ 128
+
 /*--
 if this:PortExist(2) then
 this:AddWidget("Combobox", "IRQ priority")
@@ -318,6 +336,20 @@ end
 ++*/
 /*--
 if this:PortExist(3) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR2_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(3) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR2_TX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(3) then
 this:AddWidget("Combobox", "IRQ priority")
 uC.AddPriorityItems(this, false)
 end
@@ -351,6 +383,20 @@ this:AddExtraWidget("Label", "LabelIRQDMA4", "\nUART4 IRQ and DMA configuration"
 this:AddExtraWidget("Void", "VoidIRQDMA4")
 end
 ++*/
+/*--
+if this:PortExist(4) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR3_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(4) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR3_TX_BUFFER_LEN__ 128
+
 /*--
 if this:PortExist(4) then
 this:AddWidget("Combobox", "IRQ priority")
@@ -388,6 +434,20 @@ end
 ++*/
 /*--
 if this:PortExist(5) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR4_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(5) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR4_TX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(5) then
 this:AddWidget("Combobox", "IRQ priority")
 uC.AddPriorityItems(this, false)
 end
@@ -421,6 +481,20 @@ this:AddExtraWidget("Label", "LabelIRQDMA6", "\nUART6 IRQ and DMA configuration"
 this:AddExtraWidget("Void", "VoidIRQDMA6")
 end
 ++*/
+/*--
+if this:PortExist(6) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR5_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(6) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR5_TX_BUFFER_LEN__ 128
+
 /*--
 if this:PortExist(6) then
 this:AddWidget("Combobox", "IRQ priority")
@@ -458,6 +532,20 @@ end
 ++*/
 /*--
 if this:PortExist(7) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR6_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(7) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR6_TX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(7) then
 this:AddWidget("Combobox", "IRQ priority")
 uC.AddPriorityItems(this, false)
 end
@@ -491,6 +579,20 @@ this:AddExtraWidget("Label", "LabelIRQDMA8", "\nUART8 IRQ and DMA configuration"
 this:AddExtraWidget("Void", "VoidIRQDMA8")
 end
 ++*/
+/*--
+if this:PortExist(8) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR7_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(8) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR7_TX_BUFFER_LEN__ 128
+
 /*--
 if this:PortExist(8) then
 this:AddWidget("Combobox", "IRQ priority")
@@ -528,6 +630,20 @@ end
 ++*/
 /*--
 if this:PortExist(9) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR8_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(9) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR8_TX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(9) then
 this:AddWidget("Combobox", "IRQ priority")
 uC.AddPriorityItems(this, false)
 end
@@ -561,6 +677,20 @@ this:AddExtraWidget("Label", "LabelIRQDMA10", "\nUART10 IRQ and DMA configuratio
 this:AddExtraWidget("Void", "VoidIRQDMA10")
 end
 ++*/
+/*--
+if this:PortExist(10) then
+this:AddWidget("Spinbox", 16, 65536, "Rx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR9_RX_BUFFER_LEN__ 128
+
+/*--
+if this:PortExist(10) then
+this:AddWidget("Spinbox", 16, 65536, "Tx buffer length [B]")
+end
+--*/
+#define __UART_MAJOR9_TX_BUFFER_LEN__ 128
+
 /*--
 if this:PortExist(10) then
 this:AddWidget("Combobox", "IRQ priority")

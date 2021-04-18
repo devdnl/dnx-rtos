@@ -599,44 +599,6 @@
 #     uC.PERIPH["STM32H7B3ZIxx" ] = {GPIO = true, CLK = true, UART = true}
 #     uC.PERIPH["STM32H7B3ZIxxQ"] = {GPIO = true, CLK = true, UART = true}
 # end
-#
-# if uC.ARCH == "efr32" then
-#     uC.AddPriorityItems = function(this, no_default)
-#         this:AddItem("Priority 0 (the highest)", "0")
-#         for i = 1, 6 do this:AddItem("Priority "..i, tostring(i)) end
-#         this:AddItem("Priority 7 (the lowest, safe for kernel API)", "7")
-#         if no_default ~= true then
-#             this:AddItem("Default priority", "__CPU_DEFAULT_IRQ_PRIORITY__")
-#         end
-#     end
-#
-#     uC.PERIPH["EFR32MG12P132F1024GL125"] = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG12P132F1024GM48"]  = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG12P232F1024GL125"] = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG12P232F1024GM48"]  = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG12P332F1024GL125"] = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG12P332F1024GM48"]  = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG12P432F1024GL125"] = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG12P432F1024GM48"]  = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG12P433F1024GL125"] = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG12P433F1024GM48"]  = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1B132F256GM32"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1B132F256GM48"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1B232F256GM32"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1B232F256GM48"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1B632F256GM32"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1B732F256GM32"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1P132F256GM32"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1P132F256GM48"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1P133F256GM48"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1P232F256GM32"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1P232F256GM48"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1P233F256GM48"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1P632F256GM32"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1P732F256GM32"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1V132F256GM32"]    = {GPIO = true, UART = true}
-#     uC.PERIPH["EFR32MG1V132F256GM48"]    = {GPIO = true, UART = true}
-# end
 #++*/
 
 #/* include of CPU mandatory file in Makefile
@@ -723,10 +685,6 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32h7/gpio_flags.h"
 #include "stm32h7/uart_flags.h"
 #include "stm32h7/clk_flags.h"
-#elif (__CPU_ARCH__ == efr32)
-#include "efr32/cpu_flags.h"
-#include "efr32/gpio_flags.h"
-#include "efr32/uart_flags.h"
 #endif
 
 #/*--
@@ -1001,9 +959,9 @@ __ENABLE_FMC__=_NO_
 #     this:SetFlagValue("__ENABLE_DMA__", "_NO_")
 # end
 #--*/
-#define __ENABLE_DMA__ _YES_
+#define __ENABLE_DMA__ _NO_
 #/*
-__ENABLE_DMA__=_YES_
+__ENABLE_DMA__=_NO_
 #*/
 
 #/*--
@@ -1121,9 +1079,9 @@ __ENABLE_ZERO__=_NO_
 #     this:SetFlagValue("__ENABLE_TIMENC__", "_NO_")
 # end
 #--*/
-#define __ENABLE_TIMENC__ _YES_
+#define __ENABLE_TIMENC__ _NO_
 #/*
-__ENABLE_TIMENC__=_YES_
+__ENABLE_TIMENC__=_NO_
 #*/
 
 #// MODULE LIST END

@@ -259,7 +259,7 @@ API_MOD_WRITE(USBH,
                                         }
                                 }
 
-                                u8_t *buf = unaligned ? hdl->buffer : const_cast(u8_t *, src);
+                                u8_t *buf = unaligned ? hdl->buffer : const_cast(src);
                                 uint32_t sector_count = len / SECTOR_SIZE;
                                 uint32_t sector_addr  = (*fpos / SECTOR_SIZE);
 

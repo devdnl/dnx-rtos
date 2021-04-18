@@ -244,7 +244,7 @@ API_MOD_WRITE(LOOP,
         if (!err) {
 
                 hdl->action.cmd         = LOOP_CMD__TRANSMISSION_CLIENT2HOST;
-                hdl->action.arg.rw.data = const_cast(u8_t*, src);
+                hdl->action.arg.rw.data = const_cast(src);
                 hdl->action.arg.rw.size = count;
                 hdl->action.arg.rw.seek = *fpos;
 

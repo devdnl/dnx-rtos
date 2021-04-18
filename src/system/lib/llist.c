@@ -39,7 +39,7 @@
   Local macros
 ==============================================================================*/
 #ifndef const_cast
-#define const_cast(t, v) ((t)(v))
+#define const_cast(v) ((void*)(v))
 #endif
 
 #ifndef cast
@@ -1144,7 +1144,7 @@ static int insert_item(llist_t *this, int index, const void *data)
         } else {
                 item_t *new_item = this->malloc(sizeof(item_t), this->allocctx);
                 if (new_item) {
-                        new_item->data = const_cast(void*, data);
+                        new_item->data = const_cast(data);
 
                         item_t *item = get_item(this, index);
                         if (item) {
@@ -1178,7 +1178,7 @@ static int prepend(llist_t *this, const void *data)
 {
         item_t *new_item = this->malloc(sizeof(item_t), this->allocctx);
         if (new_item) {
-                new_item->data = const_cast(void*, data);
+                new_item->data = const_cast(data);
 
                 if (this->head == NULL) {
                         new_item->next   = NULL;
@@ -1212,7 +1212,7 @@ static int append(llist_t *this, const void *data)
 {
         item_t *new_item = this->malloc(sizeof(item_t), this->allocctx);
         if (new_item) {
-                new_item->data = const_cast(void*, data);
+                new_item->data = const_cast(data);
 
                 if (this->head == NULL) {
                         new_item->next   = NULL;

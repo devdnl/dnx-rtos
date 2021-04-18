@@ -69,6 +69,110 @@ static const struct UART_rich_config UART_DEFAULT_CONFIG = {
 /* structure which identify USARTs data in the IRQs */
 struct UART_mem *_UART_mem[_UART_COUNT];
 
+/* RX FIFO length */
+static const uint16_t RX_BUF_LEN[] = {
+        #ifdef __UART_MAJOR0_RX_BUFFER_LEN__
+        __UART_MAJOR0_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR1_RX_BUFFER_LEN__
+        __UART_MAJOR1_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR2_RX_BUFFER_LEN__
+        __UART_MAJOR2_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR3_RX_BUFFER_LEN__
+        __UART_MAJOR3_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR4_RX_BUFFER_LEN__
+        __UART_MAJOR4_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR5_RX_BUFFER_LEN__
+        __UART_MAJOR5_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR6_RX_BUFFER_LEN__
+        __UART_MAJOR6_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR7_RX_BUFFER_LEN__
+        __UART_MAJOR7_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR8_RX_BUFFER_LEN__
+        __UART_MAJOR8_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR9_RX_BUFFER_LEN__
+        __UART_MAJOR9_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR10_RX_BUFFER_LEN__
+        __UART_MAJOR10_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR11_RX_BUFFER_LEN__
+        __UART_MAJOR111_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR12_RX_BUFFER_LEN__
+        __UART_MAJOR12_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR13_RX_BUFFER_LEN__
+        __UART_MAJOR13_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR14_RX_BUFFER_LEN__
+        __UART_MAJOR14_RX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR15_RX_BUFFER_LEN__
+        __UART_MAJOR15_RX_BUFFER_LEN__,
+        #endif
+};
+
+/* TX FIFO length */
+static const uint16_t TX_BUF_LEN[] = {
+        #ifdef __UART_MAJOR0_TX_BUFFER_LEN__
+        __UART_MAJOR0_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR1_TX_BUFFER_LEN__
+        __UART_MAJOR1_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR2_TX_BUFFER_LEN__
+        __UART_MAJOR2_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR3_TX_BUFFER_LEN__
+        __UART_MAJOR3_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR4_TX_BUFFER_LEN__
+        __UART_MAJOR4_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR5_TX_BUFFER_LEN__
+        __UART_MAJOR5_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR6_TX_BUFFER_LEN__
+        __UART_MAJOR6_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR7_TX_BUFFER_LEN__
+        __UART_MAJOR7_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR8_TX_BUFFER_LEN__
+        __UART_MAJOR8_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR9_TX_BUFFER_LEN__
+        __UART_MAJOR9_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR10_TX_BUFFER_LEN__
+        __UART_MAJOR10_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR11_TX_BUFFER_LEN__
+        __UART_MAJOR111_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR12_TX_BUFFER_LEN__
+        __UART_MAJOR12_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR13_TX_BUFFER_LEN__
+        __UART_MAJOR13_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR14_TX_BUFFER_LEN__
+        __UART_MAJOR14_TX_BUFFER_LEN__,
+        #endif
+        #ifdef __UART_MAJOR15_TX_BUFFER_LEN__
+        __UART_MAJOR15_TX_BUFFER_LEN__,
+        #endif
+};
+
 /*==============================================================================
   Function definitions
 ==============================================================================*/
@@ -99,11 +203,11 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor, const void *con
                 hdl->major = major;
                 hdl->minor = minor;
 
-                err = sys_queue_create(__UART_RX_BUFFER_LEN__, sizeof(char), &hdl->rx_queue);
+                err = sys_queue_create(RX_BUF_LEN[hdl->major], sizeof(char), &hdl->rx_queue);
                 if (err)
                         goto finish;
 
-                err = sys_queue_create(__UART_RX_BUFFER_LEN__, sizeof(char), &hdl->tx_queue);
+                err = sys_queue_create(TX_BUF_LEN[hdl->major], sizeof(char), &hdl->tx_queue);
                 if (err)
                         goto finish;
 
