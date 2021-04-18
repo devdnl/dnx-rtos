@@ -3,119 +3,127 @@
 	["file"]={
 		["arch/arch_flags.h"]={
 			[1]={
+				["key"]="__ENABLE_USBH__";
+				["value"]="_NO_";
+			};
+			[2]={
 				["key"]="__ENABLE_GPIO__";
 				["value"]="_YES_";
 			};
-			[2]={
+			[3]={
 				["key"]="__ENABLE_AFM__";
 				["value"]="_NO_";
 			};
-			[3]={
+			[4]={
 				["key"]="__ENABLE_CLK__";
 				["value"]="_YES_";
 			};
-			[4]={
+			[5]={
 				["key"]="__ENABLE_RTC__";
 				["value"]="_NO_";
 			};
-			[5]={
+			[6]={
 				["key"]="__ENABLE_CRC__";
 				["value"]="_NO_";
 			};
-			[6]={
+			[7]={
 				["key"]="__ENABLE_ETH__";
 				["value"]="_NO_";
 			};
-			[7]={
+			[8]={
 				["key"]="__ENABLE_SPI__";
 				["value"]="_NO_";
 			};
-			[8]={
+			[9]={
 				["key"]="__ENABLE_UART__";
 				["value"]="_YES_";
 			};
-			[9]={
+			[10]={
 				["key"]="__ENABLE_WDG__";
 				["value"]="_NO_";
 			};
-			[10]={
+			[11]={
 				["key"]="__ENABLE_USBD__";
 				["value"]="_NO_";
 			};
-			[11]={
+			[12]={
 				["key"]="__ENABLE_I2C__";
 				["value"]="_NO_";
 			};
-			[12]={
+			[13]={
 				["key"]="__ENABLE_IRQ__";
 				["value"]="_NO_";
 			};
-			[13]={
+			[14]={
 				["key"]="__ENABLE_LOOP__";
 				["value"]="_NO_";
 			};
-			[14]={
+			[15]={
 				["key"]="__ENABLE_I2CEE__";
 				["value"]="_NO_";
 			};
-			[15]={
+			[16]={
 				["key"]="__ENABLE_SDIO__";
 				["value"]="_NO_";
 			};
-			[16]={
+			[17]={
 				["key"]="__ENABLE_SDSPI__";
 				["value"]="_NO_";
 			};
-			[17]={
+			[18]={
 				["key"]="__ENABLE_TTY__";
 				["value"]="_YES_";
 			};
-			[18]={
+			[19]={
 				["key"]="__ENABLE_DHT11__";
 				["value"]="_NO_";
 			};
-			[19]={
+			[20]={
 				["key"]="__ENABLE_FMC__";
 				["value"]="_NO_";
 			};
-			[20]={
+			[21]={
 				["key"]="__ENABLE_DMA__";
 				["value"]="_NO_";
 			};
-			[21]={
+			[22]={
 				["key"]="__ENABLE_DCI__";
 				["value"]="_NO_";
 			};
-			[22]={
+			[23]={
 				["key"]="__ENABLE_CAN__";
 				["value"]="_NO_";
 			};
-			[23]={
+			[24]={
 				["key"]="__ENABLE_NVM__";
 				["value"]="_NO_";
 			};
-			[24]={
+			[25]={
 				["key"]="__ENABLE_PWM__";
 				["value"]="_NO_";
 			};
-			[25]={
+			[26]={
 				["key"]="__ENABLE_SPIEE__";
 				["value"]="_NO_";
 			};
-			[26]={
+			[27]={
 				["key"]="__ENABLE_SND__";
 				["value"]="_NO_";
 			};
-			[27]={
+			[28]={
 				["key"]="__ENABLE_PART__";
 				["value"]="_NO_";
 			};
-			[28]={
+			[29]={
 				["key"]="__ENABLE_URANDOM__";
 				["value"]="_NO_";
 			};
-			[29]={
+			[30]={
 				["key"]="__ENABLE_ZERO__";
+				["value"]="_NO_";
+			};
+			[31]={
+				["key"]="__ENABLE_TIMENC__";
 				["value"]="_NO_";
 			};
 		};
@@ -469,6 +477,14 @@
 			[7]={
 				["key"]="__CPU_VTOR_TAB_POSITION__";
 				["value"]="0x00000";
+			};
+			[8]={
+				["key"]="__CUSTOM_LD_SCRIPT__";
+				["value"]="_NO_";
+			};
+			[9]={
+				["key"]="__CUSTOM_LD_SCRIPT_FILE__";
+				["value"]="\"./config/custom_script.ld\"";
 			};
 		};
 		["arch/stm32f1/eth_flags.h"]={
@@ -2055,32 +2071,32 @@
 		};
 		["arch/stm32f1/uart_flags.h"]={
 			[1]={
-				["key"]="__UART_RX_BUFFER_LEN__";
-				["value"]="128";
-			};
-			[2]={
-				["key"]="__UART_TX_BUFFER_LEN__";
-				["value"]="128";
-			};
-			[3]={
 				["key"]="__UART_DEFAULT_PARITY__";
 				["value"]="UART_PARITY__OFF";
 			};
-			[4]={
+			[2]={
 				["key"]="__UART_DEFAULT_STOP_BITS__";
 				["value"]="UART_STOP_BIT__1";
 			};
-			[5]={
+			[3]={
 				["key"]="__UART_DEFAULT_TX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[6]={
+			[4]={
 				["key"]="__UART_DEFAULT_RX_ENABLE__";
 				["value"]="_YES_";
 			};
-			[7]={
+			[5]={
 				["key"]="__UART_DEFAULT_BAUD__";
 				["value"]="115200";
+			};
+			[6]={
+				["key"]="__UART_MAJOR0_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[7]={
+				["key"]="__UART_MAJOR0_TX_BUFFER_LEN__";
+				["value"]="128";
 			};
 			[8]={
 				["key"]="__UART_UART1_IRQ_PRIORITY__";
@@ -2095,50 +2111,82 @@
 				["value"]="64";
 			};
 			[11]={
+				["key"]="__UART_MAJOR1_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[12]={
+				["key"]="__UART_MAJOR1_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[13]={
 				["key"]="__UART_UART2_IRQ_PRIORITY__";
 				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 			};
-			[12]={
+			[14]={
 				["key"]="__UART_UART2_DMA_MODE__";
 				["value"]="_NO_";
 			};
-			[13]={
+			[15]={
 				["key"]="__UART_UART2_DMA_BUF_LEN__";
 				["value"]="64";
 			};
-			[14]={
+			[16]={
+				["key"]="__UART_MAJOR2_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[17]={
+				["key"]="__UART_MAJOR2_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[18]={
 				["key"]="__UART_UART3_IRQ_PRIORITY__";
 				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 			};
-			[15]={
+			[19]={
 				["key"]="__UART_UART3_DMA_MODE__";
 				["value"]="_NO_";
 			};
-			[16]={
+			[20]={
 				["key"]="__UART_UART3_DMA_BUF_LEN__";
 				["value"]="64";
 			};
-			[17]={
+			[21]={
+				["key"]="__UART_MAJOR3_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[22]={
+				["key"]="__UART_MAJOR3_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[23]={
 				["key"]="__UART_UART4_IRQ_PRIORITY__";
 				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 			};
-			[18]={
+			[24]={
 				["key"]="__UART_UART4_DMA_MODE__";
 				["value"]="_NO_";
 			};
-			[19]={
+			[25]={
 				["key"]="__UART_UART4_DMA_BUF_LEN__";
 				["value"]="64";
 			};
-			[20]={
+			[26]={
+				["key"]="__UART_MAJOR4_RX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[27]={
+				["key"]="__UART_MAJOR4_TX_BUFFER_LEN__";
+				["value"]="128";
+			};
+			[28]={
 				["key"]="__UART_UART5_IRQ_PRIORITY__";
 				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 			};
-			[21]={
+			[29]={
 				["key"]="__UART_UART5_DMA_MODE__";
 				["value"]="_NO_";
 			};
-			[22]={
+			[30]={
 				["key"]="__UART_UART5_DMA_BUF_LEN__";
 				["value"]="64";
 			};
