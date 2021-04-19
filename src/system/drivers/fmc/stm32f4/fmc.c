@@ -58,6 +58,8 @@ typedef struct {
   Local function prototypes
 ==============================================================================*/
 static int SDRAM_init(void);
+static int register_heap_regions(void *addr, size_t mem_size, mem_region_t region[],
+                                 size_t region_num, size_t region_size);
 
 /*==============================================================================
   Local object
@@ -65,11 +67,11 @@ static int SDRAM_init(void);
 MODULE_NAME(FMC);
 
 #if __FMC_SDRAM_1_ENABLE__ > 0
-static mem_region_t sdram1;
+static mem_region_t sdram1_heap[__FMC_SDRAM_1_HEAP_REGIONS__ + 1];
 #endif
 
 #if __FMC_SDRAM_2_ENABLE__ > 0
-static mem_region_t sdram2;
+static mem_region_t sdram2_heap[__FMC_SDRAM_2_HEAP_REGIONS__ + 1];
 #endif
 
 /*==============================================================================
@@ -517,8 +519,9 @@ static int SDRAM_init(void)
 
         err1 = ram_test((void*)0xC0000000, mem_size1);
         if (!err1) {
-                err1 = sys_register_region(&sdram1, (void*)0xC0000000, mem_size1,
-                                           _MM_FLAG__DMA_CAPABLE, "SDRAM");
+                err1 = register_heap_regions((void*)0xC0000000, mem_size1,
+                                             sdram1_heap, ARRAY_SIZE(sdram1_heap),
+                                             (__FMC_SDRAM_1_HEAP_REGION_SIZE__ * 1024) & 0xFFFFFFFC);
         }
 #endif
 
@@ -527,16 +530,51 @@ static int SDRAM_init(void)
                          * (2 << (__FMC_SDRAM_2_NC__ +  7))     // Col bits (0 - 8 bits:  A7)
                          * (2 << (__FMC_SDRAM_2_NB__     ))     // Banks (2 or 4)
                          * (8 << (__FMC_SDRAM_2_MWID__   ))     // Bus width
-                         / (8));
+                         / (8);
 
         err2 = ram_test((void*)0xD0000000, mem_size2);
         if (!err2) {
-                err2 = sys_register_region(&sdram2, (void*)0xD0000000, mem_size2,
-                                           _MM_FLAG__DMA_CAPABLE, "SDRAM");
+                err2 = register_heap_regions((void*)0xD0000000, mem_size2,
+                                             sdram2_heap, ARRAY_SIZE(sdram2_heap),
+                                             (__FMC_SDRAM_2_HEAP_REGION_SIZE__ * 1024) & 0xFFFFFFFC);
         }
 #endif
 
         return err1 ? err1 : (err2 ? err2 : ESUCC);
+}
+
+//==============================================================================
+/**
+ * @brief  Function register selected number of memory regions in SDRAM.
+ *
+ * @param  add          memory start address
+ * @param  mem_size     memory size
+ * @param  region       region array
+ * @param  region_num   number of regions in array
+ * @param  region_size  size of single region
+ *
+ * @return One of errno value (errno.h).
+ */
+//==============================================================================
+static int register_heap_regions(void *addr, size_t mem_size, mem_region_t region[],
+                                 size_t region_num, size_t region_size)
+{
+        int err = EINVAL;
+
+        for (size_t i = 0; (i < (region_num - 1)) && (mem_size > 0); i++) {
+                size_t heap_sz = min(mem_size, region_size);
+                err = sys_register_region(&region[i], addr, heap_sz,
+                                          _MM_FLAG__DMA_CAPABLE, "SDRAM");
+                addr     += heap_sz;
+                mem_size -= heap_sz;
+        }
+
+        if (mem_size > 0) {
+                err = sys_register_region(&region[region_num - 1], addr, mem_size,
+                                          _MM_FLAG__DMA_CAPABLE, "SDRAM");
+        }
+
+        return err;
 }
 
 /*==============================================================================

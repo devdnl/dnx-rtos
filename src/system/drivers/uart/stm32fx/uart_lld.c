@@ -706,12 +706,12 @@ int _UART_LLD__turn_off(struct UART_mem *hdl)
         uarthdl_t *uarthdl = hdl->uarthdl;
         const UART_setup_t *SETUP =  &UART[hdl->major];
 
-        #if USE_DMA
         if (uarthdl->DMA) {
+                #if USE_DMA
                 _DMA_DDI_release(uarthdl->DMA->desc);
+                #endif
                 sys_free(cast(void*, &uarthdl->DMA));
         }
-        #endif
 
         NVIC_DisableIRQ(SETUP->IRQn);
         SET_BIT(*SETUP->APBRSTR, SETUP->APBRSTR_UARTRST);
@@ -755,7 +755,6 @@ void _UART_LLD__resume_transmit(struct UART_mem *hdl)
 //==============================================================================
 int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *config)
 {
-        uarthdl_t *uarthdl = hdl->uarthdl;
         const UART_setup_t *SETUP = &UART[hdl->major];
         u32_t PCLK = 0;
 
@@ -893,6 +892,7 @@ int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *co
         }
 
 #if USE_DMA
+        uarthdl_t *uarthdl = hdl->uarthdl;
         if (uarthdl->DMA) {
 #if !defined(ARCH_stm32h7)
                 _DMA_DDI_config_t dma_conf;
@@ -976,6 +976,7 @@ static bool receive_from_DMA_buffer(struct UART_mem *hdl)
 
         return yield;
 #else
+        UNUSED_ARG1(hdl);
         return false;
 #endif
 }

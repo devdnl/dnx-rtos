@@ -193,6 +193,16 @@ this:AddWidget("Spinbox", 1, 16, "Row to column delay")
 --*/
 #define __FMC_SDRAM_1_TRCD__ 16
 
+/*--
+this:AddWidget("Spinbox", 1, 2048, "Heap regions")
+--*/
+#define __FMC_SDRAM_1_HEAP_REGIONS__ 1
+
+/*--
+this:AddWidget("Spinbox", 1, 65536, "Heap region size [KiB]")
+--*/
+#define __FMC_SDRAM_1_HEAP_REGION_SIZE__ 8192
+
 //------------------------------------------------------------------------------
 /*--
 this:AddExtraWidget("Label", "LABEL_SDRAM2", "\nSDRAM 2", -1, "bold")
@@ -243,6 +253,16 @@ this:AddWidget("Spinbox", 1, 16, "Row to column delay")
 --*/
 #define __FMC_SDRAM_2_TRCD__ 16
 
+/*--
+this:AddWidget("Spinbox", 1, 2048, "Heap regions")
+--*/
+#define __FMC_SDRAM_2_HEAP_REGIONS__ 1
+
+/*--
+this:AddWidget("Spinbox", 1, 65536, "Heap region size [KiB]")
+--*/
+#define __FMC_SDRAM_2_HEAP_REGION_SIZE__ 8192
+
 
 //------------------------------------------------------------------------------
 // FUNCTIONS
@@ -259,6 +279,8 @@ this.SDRAMEn = function(self, SDRAM)
     this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_NR__")
     this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_NC__")
     this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_TRCD__")
+    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_HEAP_REGIONS__")
+    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_HEAP_REGION_SIZE__")
 end
 
 this:SDRAMEn(1)
