@@ -41,10 +41,16 @@
 #define TIMEOUT_MS                      250
 #define LSE_TIMEOUT_MS                  5000
 
+#if !defined(PWR_CR_VOS_1) && !defined(PWR_CR_VOS_0)
+#define PWR_REGULATOR_VOLTAGE_SCALE0    PWR_REGULATOR_VOLTAGE_SCALE1
+#define PWR_REGULATOR_VOLTAGE_SCALE1    (1*PWR_CR_VOS)
+#define PWR_REGULATOR_VOLTAGE_SCALE2    (0*PWR_CR_VOS)
+#else
 #define PWR_REGULATOR_VOLTAGE_SCALE0    (0)
 #define PWR_REGULATOR_VOLTAGE_SCALE1    ((1*PWR_CR_VOS_1) | (1*PWR_CR_VOS_0))
 #define PWR_REGULATOR_VOLTAGE_SCALE2    ((1*PWR_CR_VOS_1) | (0*PWR_CR_VOS_0))
 #define PWR_REGULATOR_VOLTAGE_SCALE3    ((0*PWR_CR_VOS_1) | (1*PWR_CR_VOS_0))
+#endif
 
 /*==============================================================================
   Local types, enums definitions
