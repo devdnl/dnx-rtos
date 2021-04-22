@@ -32,6 +32,8 @@ Brief   NVM driver
 #include "stm32f7/stm32f7xx.h"
 #include "../nvm_ioctl.h"
 
+// NOTE: only single bank mode (default options bits) is supported
+
 /*==============================================================================
   Local macros
 ==============================================================================*/

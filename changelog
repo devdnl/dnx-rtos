@@ -1,4 +1,4 @@
-dnx RTOS 2.4.5 Goose
+dnx RTOS 2.4.x Goose
 ====================
 New Features, Improvements:
 - Fixed ETH driver for stm32f1, stm32f4, stm32f7

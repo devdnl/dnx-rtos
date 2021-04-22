@@ -25,6 +25,9 @@ Brief   NVM driver
 
 ==============================================================================*/
 
+// NOTE: driver supports only single bank mode in devices with 1MiB dual bank flash.
+//       Only DB1M = 0 configuration in supported (default production setup).
+
 /*==============================================================================
   Include files
 ==============================================================================*/
@@ -91,6 +94,12 @@ static const sector_info_t SECTOR_INFO[] = {
         /*09:*/ {.addr = 0x080A0000, .size = 131072},
         /*10:*/ {.addr = 0x080C0000, .size = 131072},
         /*11:*/ {.addr = 0x080E0000, .size = 131072},
+#ifndef FLASH_OPTCR_DB1M
+        /*12:*/ {.addr = 0x08100000, .size = 131072},
+        /*13:*/ {.addr = 0x08120000, .size = 131072},
+        /*14:*/ {.addr = 0x08140000, .size = 131072},
+        /*15:*/ {.addr = 0x08160000, .size = 131072},
+#else
         /* BANK 1 */
         /*12:*/ {.addr = 0x08100000, .size =  16384},
         /*13:*/ {.addr = 0x08102000, .size =  16384},
@@ -104,6 +113,7 @@ static const sector_info_t SECTOR_INFO[] = {
         /*21:*/ {.addr = 0x08140000, .size = 131072},
         /*22:*/ {.addr = 0x08160000, .size = 131072},
         /*23:*/ {.addr = 0x08180000, .size = 131072},
+#endif
 };
 
 /*==============================================================================
@@ -549,9 +559,11 @@ static int FLASH_erase_sector(uint32_t sector)
                 while (len--) {
                         if (*addr++ != 0xFFFFFFFF) {
 
+                                #ifdef FLASH_OPTCR_DB1M
                                 if (sector >= 12) {
                                         sector += 4;
                                 }
+                                #endif
 
                                 FLASH->CR &= FLASH_CR_PSIZE_Msk;
                                 FLASH->CR |= FLASH_CR_PSIZE_BYTE;

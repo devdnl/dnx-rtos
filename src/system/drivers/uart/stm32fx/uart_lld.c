@@ -556,7 +556,7 @@ static const UART_setup_t UART[] = {
                 #elif defined(ARCH_stm32f3)
                 .CLKSRC            = LL_RCC_UART9_CLKSOURCE,
                 #elif defined(ARCH_stm32f4)
-                .CLKSRC            = USART9_CLKSOURCE_PCLK1,
+                .CLKSRC            = USART_CLKSOURCE_PCLK1,
                 .DMA_channel       = UINT8_MAX,
                 .DMA_major         = UINT8_MAX,
                 .DMA_rx_stream_pri = UINT8_MAX,
