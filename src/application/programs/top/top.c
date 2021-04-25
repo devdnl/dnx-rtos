@@ -95,7 +95,8 @@ int main(int argc, char *argv[])
         int     key   = ' ';
         clock_t timer = clock() + global->refresh_inteval_s;
 
-        while (key != 'q' && key != '\0') {
+        while ((key != 'q') && (key != '\0') && (key != ETX)) {
+
                 ioctl(fileno(stdin), IOCTL_VFS__NON_BLOCKING_RD_MODE);
                 clearerr(stdin);
                 key = getchar();

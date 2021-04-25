@@ -85,123 +85,129 @@ int main(int argc, char *argv[])
 {
         getcwd(global->cwd, CWD_MAX_LEN - 1);
 
-        if (argc == 2) {
-                char *path = argv[1];
+        for (int i = 0; i < argc; i++) {
 
-                if (path[0] == '/') {
-                        strcpy(global->cwd, path);
-
-                } else {
-                        if (LAST_CHARACTER(global->cwd) != '/') {
-                                strcat(global->cwd, "/");
-                        }
-
-                        if (strncmp(path, "./", 2) == 0) {
-                                path += 2;
-                        }
-
-                        strcat(global->cwd, path);
+                if ((i == 0) and (argc >= 2)) {
+                        continue;
                 }
 
-                chdir(global->cwd);
-        }
+                if (argc >= 2) {
+                        printf("%s:\n", argv[i]);
 
-        DIR *dir = opendir(""); // path determined by CWD
-        if (dir) {
-                errno = 0;
+                        char *path = argv[i];
 
-                u16_t count = 0;
+                        if (path[0] == '/') {
+                                strcpy(global->cwd, path);
 
-                dirent_t *dirent = readdir(dir);
-                while (!errno && dirent) {
-
-                        if (isstreq(dirent->d_name, ".") || isstreq(dirent->d_name, "..") ) {
-                                goto next;
-                        }
-
-                        struct stat st;
-                        if (stat(dirent->d_name, &st) == 0) {
-
-                                const char *type;
-                                switch (S_IFMT(st.st_mode)) {
-                                case S_IFDIR:  type = VT100_FONT_COLOR_LIGHT_BLUE"d"; break;
-                                case S_IFDEV:  type = VT100_FONT_COLOR_MAGENTA"c";    break;
-                                case S_IFLNK:  type = VT100_FONT_COLOR_CYAN"l";       break;
-                                case S_IFREG:  type = VT100_FONT_COLOR_GREEN"-";      break;
-                                case S_IFPROG: type = VT100_FONT_BOLD"*";             break;
-                                case S_IFIFO:  type = VT100_FONT_COLOR_BROWN"p";      break;
-                                default:       type = "?";                            break;
-                                }
-
-                                char mode[10];
-                                mode[0] = (st.st_mode & S_IRUSR) ? 'r' : '-';
-                                mode[1] = (st.st_mode & S_IWUSR) ? 'w' : '-';
-                                mode[2] = (st.st_mode & S_IXUSR) ? 'x' : '-';
-                                mode[3] = (st.st_mode & S_IRGRP) ? 'r' : '-';
-                                mode[4] = (st.st_mode & S_IWGRP) ? 'w' : '-';
-                                mode[5] = (st.st_mode & S_IXGRP) ? 'x' : '-';
-                                mode[6] = (st.st_mode & S_IROTH) ? 'r' : '-';
-                                mode[7] = (st.st_mode & S_IWOTH) ? 'w' : '-';
-                                mode[8] = (st.st_mode & S_IXOTH) ? 'x' : '-';
-                                mode[9] = '\0';
-
-                                u32_t       size;
-                                const char *unit;
-                                if (st.st_size >= (u64_t)(1*GiB)) {
-                                        size = CONVERT_TO_MiB(st.st_size);
-                                        unit = "MiB";
-                                } else if (st.st_size >= 1*MiB) {
-                                        size = CONVERT_TO_KiB(st.st_size);
-                                        unit = "KiB";
-                                } else {
-                                        size = st.st_size;
-                                        unit = "B";
-                                }
-
-                                int mod_id    = get_module_ID2(st.st_dev);
-                                int mod_major = get_module_major(st.st_dev);
-                                int mod_minor = get_module_minor(st.st_dev);
-
-                                char mod[12];
-                                memset(mod, 0, sizeof(mod));
-
-                                if (S_ISDEV(st.st_mode)) {
-                                        snprintf(mod, sizeof(mod), "%2d,%2d,%2d",
-                                                 mod_id, mod_major, mod_minor);
-                                }
-
-                                struct tm tm;
-                                localtime_r(&st.st_mtime, &tm);
-
-                                char time[24];
-                                strftime(time, sizeof(time), "%d-%m-%Y %H:%M", &tm);
-
-                                printf("%s%s %9u %s"
-                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(25)"%s"
-                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(35)"%s"
-                                       VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(52)"%s"
-                                       VT100_RESET_ATTRIBUTES"\n",
-                                       type, mode, size, unit, mod, time, dirent->d_name);
-
-                                count++;
                         } else {
-                                errno = EFAULT;
-                                break;
+                                if (LAST_CHARACTER(global->cwd) != '/') {
+                                        strcat(global->cwd, "/");
+                                }
+
+                                if (strncmp(path, "./", 2) == 0) {
+                                        path += 2;
+                                }
+
+                                strcat(global->cwd, path);
                         }
 
-                        next:
-                        dirent = readdir(dir);
+                        chdir(global->cwd);
                 }
 
-                if (!(errno == ESUCC || errno == ENOENT)) {
-                        perror("Read dir");
+                DIR *dir = opendir(""); // path determined by CWD
+                if (dir) {
+                        errno = 0;
+
+                        u16_t count = 0;
+
+                        dirent_t *dirent;
+                        while (!errno && (dirent = readdir(dir))) {
+
+                                if (isstreq(dirent->d_name, ".") || isstreq(dirent->d_name, "..") ) {
+                                        continue;
+                                }
+
+                                struct stat st;
+                                if (stat(dirent->d_name, &st) == 0) {
+
+                                        const char *type;
+                                        switch (S_IFMT(st.st_mode)) {
+                                        case S_IFDIR:  type = VT100_FONT_COLOR_LIGHT_BLUE"d"; break;
+                                        case S_IFDEV:  type = VT100_FONT_COLOR_MAGENTA"c";    break;
+                                        case S_IFLNK:  type = VT100_FONT_COLOR_CYAN"l";       break;
+                                        case S_IFREG:  type = VT100_FONT_COLOR_GREEN"-";      break;
+                                        case S_IFPROG: type = VT100_FONT_BOLD"*";             break;
+                                        case S_IFIFO:  type = VT100_FONT_COLOR_BROWN"p";      break;
+                                        default:       type = "?";                            break;
+                                        }
+
+                                        char mode[10];
+                                        mode[0] = (st.st_mode & S_IRUSR) ? 'r' : '-';
+                                        mode[1] = (st.st_mode & S_IWUSR) ? 'w' : '-';
+                                        mode[2] = (st.st_mode & S_IXUSR) ? 'x' : '-';
+                                        mode[3] = (st.st_mode & S_IRGRP) ? 'r' : '-';
+                                        mode[4] = (st.st_mode & S_IWGRP) ? 'w' : '-';
+                                        mode[5] = (st.st_mode & S_IXGRP) ? 'x' : '-';
+                                        mode[6] = (st.st_mode & S_IROTH) ? 'r' : '-';
+                                        mode[7] = (st.st_mode & S_IWOTH) ? 'w' : '-';
+                                        mode[8] = (st.st_mode & S_IXOTH) ? 'x' : '-';
+                                        mode[9] = '\0';
+
+                                        u32_t       size;
+                                        const char *unit;
+                                        if (st.st_size >= (u64_t)(1*GiB)) {
+                                                size = CONVERT_TO_MiB(st.st_size);
+                                                unit = "MiB";
+                                        } else if (st.st_size >= 1*MiB) {
+                                                size = CONVERT_TO_KiB(st.st_size);
+                                                unit = "KiB";
+                                        } else {
+                                                size = st.st_size;
+                                                unit = "B";
+                                        }
+
+                                        int mod_id    = get_module_ID2(st.st_dev);
+                                        int mod_major = get_module_major(st.st_dev);
+                                        int mod_minor = get_module_minor(st.st_dev);
+
+                                        char mod[12];
+                                        memset(mod, 0, sizeof(mod));
+
+                                        if (S_ISDEV(st.st_mode)) {
+                                                snprintf(mod, sizeof(mod), "%2d,%2d,%2d",
+                                                         mod_id, mod_major, mod_minor);
+                                        }
+
+                                        struct tm tm;
+                                        localtime_r(&st.st_mtime, &tm);
+
+                                        char time[24];
+                                        strftime(time, sizeof(time), "%d-%m-%Y %H:%M", &tm);
+
+                                        printf("%s%s %9u %s"
+                                               VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(25)"%s"
+                                               VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(35)"%s"
+                                               VT100_CURSOR_BACKWARD(999)VT100_CURSOR_FORWARD(52)"%s"
+                                               VT100_RESET_ATTRIBUTES"\n",
+                                               type, mode, size, unit, mod, time, dirent->d_name);
+
+                                        count++;
+                                } else {
+                                        errno = EFAULT;
+                                        break;
+                                }
+                        }
+
+                        if (!(errno == ESUCC || errno == ENOENT)) {
+                                perror("Read dir");
+                        }
+
+                        printf("total %d%c\n", count, (argc >= 2) ? '\n' : ' ');
+
+                        closedir(dir);
+                } else {
+                        perror(global->cwd);
                 }
-
-                printf("total %d\n", count);
-
-                closedir(dir);
-        } else {
-                perror(global->cwd);
         }
 
         return errno ? EXIT_FAILURE : EXIT_SUCCESS;

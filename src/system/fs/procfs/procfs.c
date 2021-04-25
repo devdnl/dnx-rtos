@@ -984,7 +984,7 @@ static size_t get_file_content(struct file_info *file, u8_t *buff, size_t size, 
 
         case FILE_CONTENT_CPUINFO:
                 buf_snprintf(buff, &size,&clen, &seek,
-                             "CPU name  : %s\n"
+                             "CPU name: %s\n"
                              "CPU vendor: %s\n",
                              _CPUCTL_PLATFORM_NAME,
                              _CPUCTL_VENDOR_NAME);

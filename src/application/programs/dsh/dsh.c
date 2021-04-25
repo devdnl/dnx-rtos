@@ -52,6 +52,7 @@
 #define HISTORY_NEXT_KEY                "\033^[A"
 #define HISTORY_PREV_KEY                "\033^[B"
 #define COMMAND_HINT_KEY                "\033^[T"
+#define HISTORY_ENTRIES                 8
 
 /*==============================================================================
   Local types, enums definitions
@@ -60,11 +61,11 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static void  clear_prompt         ();
-static void  print_prompt         ();
-static bool  read_input           ();
-static bool  history_request      ();
-static bool  command_hint         ();
+static void  clear_prompt         (void);
+static void  print_prompt         (void);
+static bool  read_input           (void);
+static bool  history_request      (void);
+static bool  command_hint         (void);
 static bool  is_cd_cmd            (const char *cmd);
 static bool  is_exit_cmd          (const char *cmd);
 static bool  is_clear_cmd         (const char *cmd);
@@ -81,7 +82,9 @@ static bool  analyze_line         (char *cmd);
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
         char            line[PROMPT_LINE_LEN];
-        char            history[PROMPT_LINE_LEN];
+        char           *history[HISTORY_ENTRIES];
+        u8_t            history_wr;
+        u8_t            history_rd;
         char            cwd[CWD_PATH_LEN];
         bool            prompt_enable;
         FILE           *input;
@@ -134,7 +137,7 @@ static void print_prompt(void)
  * @return true if string read, false if not
  */
 //==============================================================================
-static bool read_input()
+static bool read_input(void)
 {
         if (global->stream_closed) {
                 strcpy(global->line, "exit");
@@ -163,25 +166,52 @@ static bool read_input()
  * @return true if history got, false is new command inserted
  */
 //==============================================================================
-static bool history_request()
+static bool history_request(void)
 {
         if (strcmp(global->line, HISTORY_NEXT_KEY) == 0 || strcmp(global->line, HISTORY_PREV_KEY) == 0) {
-                if (strlen(global->history)) {
-                        ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->history);
+
+                bool found = false;
+
+                for (size_t i = 0; i < HISTORY_ENTRIES and not found; i++) {
+                        if (not isstrempty(global->history[global->history_rd])) {
+                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->history[global->history_rd]);
+                                found = true;
+                        }
+
+                        if (++global->history_rd >= HISTORY_ENTRIES) {
+                                global->history_rd = 0;
+                        }
                 }
 
                 global->prompt_enable = false;
 
                 return true;
-        } else {
+
+        } else if (strrchr(global->line, '\e') == NULL) {
                 global->prompt_enable = true;
 
-                if (strlen(global->line)) {
-                        if (global->line[0] != '\033') {
-                                strcpy(global->history, global->line);
+                if (strlen(global->line) and (global->line[0] != '\033')) {
+
+                        if ( (global->history[global->history_rd] == NULL)
+                           or not isstreq(global->history[global->history_wr], global->line)) {
+
+                                if (++global->history_wr >= HISTORY_ENTRIES) {
+                                        global->history_wr = 0;
+                                }
+
+                                if (global->history[global->history_wr]) {
+                                        free(global->history[global->history_wr]);
+                                }
+
+                                global->history[global->history_wr] = strdup(global->line);
+
+                                global->history_rd = global->history_wr;
                         }
                 }
 
+                return false;
+        } else {
+                global->prompt_enable = true;
                 return false;
         }
 }
@@ -193,59 +223,108 @@ static bool history_request()
  * @return true if hint key was recognized, otherwise false
  */
 //==============================================================================
-static bool command_hint()
+static bool command_hint(void)
 {
         char *tabstart = strchr(global->line, '\033');
-        if (tabstart) {
-                if (strcmp(tabstart, COMMAND_HINT_KEY) == 0) {
-                        *tabstart = '\0';
+        if (tabstart and (strcmp(tabstart, COMMAND_HINT_KEY) == 0)) {
 
-                        if (strlen(global->line) != 0) {
-                                dirent_t *dirent;
-                                int cnt  = 0;
+                *tabstart = '\0';
 
-                                DIR *dir = opendir("/proc/bin");
-                                if (dir) {
-                                        while ((dirent = readdir(dir))) {
-                                                if (strncmp(dirent->d_name, global->line, strlen(global->line)) == 0) {
-                                                        cnt++;
-                                                }
-                                        }
+                char  search[128];
+                char *line;
 
-                                        closedir(dir);
+                /*
+                 * Setup file search path
+                 */
+                char *sp = strrchr(global->line, ' ');
+                if (sp) {
+                        strlcpy(search, global->cwd, sizeof(search));
+                        line = sp + 1;
+
+                        if (*line == '/') {
+                                char *slash = strrchr(line, '/');
+
+                                if (slash == line) {
+                                        strlcpy(search, "/", sizeof(search));
+                                        line++;
+                                } else {
+                                        size_t len = (slash - line) + 1;
+                                        strlcpy(search, line, min(sizeof(search), len));
+                                        line = slash + 1;
+                                }
+                        } else {
+                                if (strncmp(line, "./", 2) == 0) {
+                                        line += 2;
                                 }
 
-                                dir = opendir("/proc/bin");
-                                if (dir) {
-                                        if (cnt > 1) {
-                                                puts("");
-                                        }
+                                strlcpy(search, global->cwd, sizeof(search));
+                                strlcat(search, "/", sizeof(search));
 
-                                        while ((dirent = readdir(dir))) {
-
-                                                if (strncmp(dirent->d_name, global->line, strlen(global->line)) == 0) {
-                                                        if (cnt > 1) {
-                                                                printf("%s ", dirent->d_name);
-                                                        } else  {
-                                                                ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, dirent->d_name);
-                                                                break;
-                                                        }
-                                                }
-                                        }
-
-                                        closedir(dir);
-
-                                        if (cnt > 1) {
-                                                puts(" ");
-                                                print_prompt();
-                                                ioctl(fileno(global->input), IOCTL_TTY__REFRESH_LAST_LINE);
-                                        }
+                                char *slash = strrchr(line, '/');
+                                if (slash) {
+                                        size_t len = (slash - line) + strlen(search) + 1;
+                                        strlcat(search, line, min(sizeof(search), len));
+                                        line = slash + 1;
                                 }
                         }
 
-                        global->prompt_enable = false;
-                        return true;
+                } else {
+                        strlcpy(search, "/proc/bin", sizeof(search));
+                        line = global->line;
                 }
+
+                /*
+                 * Match entered string
+                 */
+                if (strlen(global->line) != 0) {
+                        dirent_t *dirent;
+                        int matching_entries = 0;
+
+                        DIR *dir = opendir(search);
+                        if (dir) {
+                                while ((matching_entries < 2) and (dirent = readdir(dir))) {
+                                        if (strncmp(dirent->d_name, line, strlen(line)) == 0) {
+                                                matching_entries++;
+                                        }
+                                }
+
+                                if (matching_entries > 1) {
+                                        puts("");
+                                }
+
+                                seekdir(dir, 0);
+
+                                while ((dirent = readdir(dir))) {
+
+                                        if (strncmp(dirent->d_name, line, strlen(line)) == 0) {
+                                                if (matching_entries > 1) {
+                                                        printf("%s ", dirent->d_name);
+
+                                                } else  {
+                                                        strlcpy(line, dirent->d_name, PROMPT_LINE_LEN - (global->line - line));
+
+                                                        if (S_IFMT(dirent->mode) == S_IFDIR) {
+                                                                strlcat(global->line, "/", PROMPT_LINE_LEN);
+                                                        }
+
+                                                        ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->line);
+                                                        break;
+                                                }
+                                        }
+                                }
+
+                                if (matching_entries > 1) {
+                                        puts(" ");
+                                        print_prompt();
+                                        ioctl(fileno(global->input), IOCTL_TTY__REFRESH_LAST_LINE);
+                                }
+
+                                closedir(dir);
+                        }
+                }
+
+                global->prompt_enable = false;
+                return true;
         }
 
         return false;
@@ -626,6 +705,13 @@ static bool start_program(char *master, char *slave, char *std_in,
 
                 if (not detached) {
                         process_wait(pidmaster, NULL, MAX_DELAY_MS);
+
+                        // clear stdin
+                        if (global->input == stdin) {
+                                ioctl(fileno(global->input), IOCTL_VFS__NON_BLOCKING_RD_MODE);
+                                while (getc(global->input) != EOF);
+                                ioctl(fileno(global->input), IOCTL_VFS__DEFAULT_RD_MODE);
+                        }
                 }
 
         } else {
@@ -819,8 +905,21 @@ int main(int argc, char *argv[])
 
                 print_prompt();
 
-                if (!read_input())
-                        break;
+                if (!read_input()) {
+                        if (stdin == global->input) {
+                                if (isstrempty(global->line)) {
+                                        puts("Exit");
+                                        break;
+                                } else {
+                                        memset(global->line, '\0', sizeof(global->line));
+                                        global->prompt_enable = false;
+                                        continue;
+                                }
+                        } else {
+                                puts("Exit");
+                                break;
+                        }
+                }
 
                 if (history_request())
                         continue;
@@ -830,8 +929,9 @@ int main(int argc, char *argv[])
 
                 char *cmd = trim_string(global->line);
 
-                if (strlen(cmd) == 0)
+                if (strlen(cmd) == 0) {
                         continue;
+                }
 
                 if (is_comment(cmd)) {
                         continue;

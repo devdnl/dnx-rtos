@@ -306,7 +306,7 @@ void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
                         } else if (this->carriage >= _TTY_TERMINAL_COLUMNS) {
                                 strcat(this->new_line_bfr, "\r\n");
                                 put_new_line_buffer(this);
-                                this->carriage = 0;
+                                this->carriage = 1;
                                 put_char(chr);
 
                         } else {

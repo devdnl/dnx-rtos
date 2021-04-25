@@ -217,7 +217,7 @@ void ttyedit_set_value(ttyedit_t *this, const char *str, bool show)
 
                         ttyedit_clear(this);
                         strcpy(this->buffer, str);
-                        this->length          = strlen(str);
+                        this->length = strlen(str);
                         this->cursor_position = this->length;
 
                         if (show) {
