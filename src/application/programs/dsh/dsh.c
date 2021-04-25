@@ -205,8 +205,9 @@ static bool history_request(void)
 
                                 global->history[global->history_wr] = strdup(global->line);
 
-                                global->history_rd = global->history_wr;
                         }
+
+                        global->history_rd = global->history_wr;
                 }
 
                 return false;
