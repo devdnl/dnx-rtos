@@ -92,7 +92,9 @@ int main(int argc, char *argv[])
                 }
 
                 if (argc >= 2) {
-                        printf("%s:\n", argv[i]);
+                        if (argc >= 3) {
+                                printf("%s:\n", argv[i]);
+                        }
 
                         char *path = argv[i];
 
@@ -202,7 +204,7 @@ int main(int argc, char *argv[])
                                 perror("Read dir");
                         }
 
-                        printf("total %d%c\n", count, (argc >= 2) ? '\n' : ' ');
+                        printf("total %d%c\n", count, (argc >= 3) ? '\n' : ' ');
 
                         closedir(dir);
                 } else {
