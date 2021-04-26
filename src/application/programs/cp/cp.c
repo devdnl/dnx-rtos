@@ -5,7 +5,7 @@
 
 @brief   Program to copy files
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
+#include <dirent.h>
+#include <dnx/misc.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -40,9 +42,9 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define BUFFER_MAX_SIZE                 8192
-#define INFO_REFRESH_TIME_MS            (CLOCKS_PER_SEC * 1)
-#define PATH_MAX_SIZE                   128
+#define BUFFER_MAX_SIZE                 32768
+
+#define VERBOSE(...) if (global->verbose) printf(__VA_ARGS__)
 
 /*==============================================================================
   Local types, enums definitions
@@ -51,11 +53,22 @@
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
+static void print_help(char *argv[]);
+static int copy_file(const char *src, const char *dst);
+static int copy_recursive(const char *src_path, const char *dst_path);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
+        size_t buffer_size;
+        u8_t *buffer;
+        bool opts;
+        bool recursive;
+        bool force;
+        bool verbose;
+        char src_path[256];
+        char dst_path[256];
 };
 
 /*==============================================================================
@@ -74,71 +87,229 @@ PROGRAM_PARAMS(cp, STACK_DEPTH_MEDIUM);
 //==============================================================================
 int main(int argc, char *argv[])
 {
-        if (argc != 3) {
-                printf("Usage: %s <source file> <destination file>\n", argv[0]);
+        if (argc < 3) {
+                print_help(argv);
                 return EXIT_FAILURE;
+
+        } else {
+                if (isstreq(argv[1], "--help")) {
+                        print_help(argv);
+                        return EXIT_FAILURE;
+
+                } else if (argv[1][0] == '-') {
+                        global->opts = true;
+
+                        global->recursive =  (strchr(argv[1], 'r') != NULL)
+                                          or (strchr(argv[1], 'R') != NULL);
+
+                        global->force = (strchr(argv[1], 'f') != NULL);
+
+                        global->verbose = (strchr(argv[1], 'v') != NULL);
+                }
         }
 
-        errno = 0;
+        int err = ENOMEM;
 
-        int   err      = EXIT_SUCCESS;
+        // allocate operational buffer
+        global->buffer_size = BUFFER_MAX_SIZE;
+        while ((global->buffer = malloc(global->buffer_size * sizeof(char))) == NULL) {
+                global->buffer_size /= 2;
+
+                if (global->buffer_size < 512) {
+                        perror(NULL);
+                        return EXIT_FAILURE;
+                }
+        }
+
+        if (global->buffer) {
+                if (global->opts) {
+
+                        DIR *dir = opendir(argv[2]);
+                        if (dir) {
+                                strlcpy(global->src_path, argv[2], sizeof(global->src_path));
+                                strlcpy(global->dst_path, argv[3], sizeof(global->dst_path));
+
+                                if (LAST_CHARACTER(global->src_path) == '/') {
+                                        LAST_CHARACTER(global->src_path) = '\0';
+                                }
+
+                                if (LAST_CHARACTER(global->dst_path) != '/') {
+                                        strlcat(global->dst_path, "/", sizeof(global->dst_path));
+                                }
+
+                                char *slash = strrchr(global->src_path, '/');
+                                if (slash) {
+                                        strlcat(global->dst_path, slash + 1, sizeof(global->dst_path));
+                                } else {
+                                        strlcat(global->dst_path, global->src_path, sizeof(global->dst_path));
+                                }
+
+                                closedir(dir);
+                        }
+
+                        err = copy_recursive(global->src_path, global->dst_path);
+
+                } else {
+                        err = copy_file(argv[1], argv[2]);
+                }
+
+                free(global->buffer);
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Print help message.
+ *
+ * @param  argv
+ */
+//==============================================================================
+static void print_help(char *argv[])
+{
+        printf("Usage: %s [ARG] <source file> <destination file>\n", argv[0]);
+}
+
+//==============================================================================
+/**
+ * @brief  Copy selected file.
+ *
+ * @param  src          source path
+ * @param  dst          destination path
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+static int copy_file(const char *src, const char *dst)
+{
+        int   err      = 0;
         char *buffer   = NULL;
         FILE *src_file = NULL;
         FILE *dst_file = NULL;
 
-        src_file = fopen(argv[1], "r");
+        errno = 0;
+        src_file = fopen(src, "r");
         if (!src_file) {
-                perror(argv[1]);
-                err = EXIT_FAILURE;
-                goto exit;
+                err = errno;
+                perror(src);
         }
 
-        dst_file = fopen(argv[2], "w");
+        errno = 0;
+        dst_file = fopen(dst, "w");
         if (!dst_file) {
-                perror(argv[2]);
-                err = EXIT_FAILURE;
-                goto exit;
+                err = errno;
+                perror(dst);
         }
 
-        int buffer_size = BUFFER_MAX_SIZE;
-        while ((buffer = malloc(buffer_size * sizeof(char))) == NULL) {
-                buffer_size /= 2;
+        if (src_file and dst_file) {
+                int n;
+                errno = 0;
+                while (buffer && (n = fread(buffer, sizeof(char), global->buffer_size, src_file)) > 0) {
+                        if (ferror(src_file)) {
+                                err = errno;
+                                perror(src);
+                                break;
+                        }
 
-                if (buffer_size < 512) {
-                        perror(NULL);
-                        err = EXIT_FAILURE;
-                        goto exit;
+                        errno = 0;
+                        fwrite(buffer, sizeof(char), n, dst_file);
+                        if (ferror(dst_file)) {
+                                err = errno;
+                                perror(dst);
+                                break;
+                        }
                 }
         }
 
-        int n;
-        while (buffer && (n = fread(buffer, sizeof(char), buffer_size, src_file)) > 0) {
-                if (ferror(src_file)) {
-                        perror(argv[1]);
-                        break;
-                }
-
-                fwrite(buffer, sizeof(char), n, dst_file);
-                if (ferror(dst_file)) {
-                        perror(argv[2]);
-                        break;
-                }
-        }
-
-exit:
-        if (buffer) {
-                free(buffer);
-        }
-
-        if (src_file) {
-                fclose(src_file);
-        }
-
-        if (dst_file) {
-                fclose(dst_file);
-        }
+        fclose(src_file);
+        fclose(dst_file);
 
         return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Copy files/dirs recursively
+ *
+ * @param  src_path     source path
+ * @param  dst_path     destination path
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+static int copy_recursive(const char *src_path, const char *dst_path)
+{
+        int err = 0;
+
+        strlcpy(global->src_path, src_path, sizeof(global->src_path));
+        strlcpy(global->dst_path, dst_path, sizeof(global->dst_path));
+
+        DIR *dir = opendir(src_path);
+        if (dir) {
+
+                char *slash = NULL;
+
+                if (LAST_CHARACTER(global->src_path) != '/') {
+                        strlcat(global->src_path, "/", sizeof(global->src_path));
+                }
+
+                if (LAST_CHARACTER(global->dst_path) != '/') {
+                        strlcat(global->dst_path, "/", sizeof(global->dst_path));
+                }
+
+                VERBOSE("Coping: '%s' => '%s'\n", global->src_path, global->dst_path);
+                errno = 0;
+                err = mkdir(global->dst_path, 0666);
+                if (err) {
+                        perror(global->dst_path);
+                        if (global->force) err = 0;
+                }
+
+                dirent_t *dirent;
+                while (not err and (dirent = readdir(dir))) {
+
+                        if (  isstreq(dirent->d_name, ".")
+                           or isstreq(dirent->d_name, "..") ) {
+                                continue;
+                        }
+
+                        strlcat(global->src_path, dirent->d_name, sizeof(global->src_path));
+                        strlcat(global->dst_path, dirent->d_name, sizeof(global->dst_path));
+
+                        int err = copy_recursive(global->src_path, global->dst_path);
+                        if (err and not global->force) {
+                                break;
+                        } else {
+                                err = 0;
+                        }
+
+                        slash = strrchr(global->src_path, '/');
+                        if (slash) *(slash + 1) = '\0';
+
+                        slash = strrchr(global->dst_path, '/');
+                        if (slash) *(slash + 1) = '\0';
+                }
+
+                slash = strrchr(global->src_path, '/');
+                if (slash) *(slash) = '\0';
+                else strcpy(global->src_path, "");
+
+                slash = strrchr(global->dst_path, '/');
+                if (slash) *(slash) = '\0';
+                else strcpy(global->dst_path, "");
+
+                closedir(dir);
+
+        } else {
+                VERBOSE("Coping: '%s' => '%s'\n", src_path, dst_path);
+                err = copy_file(src_path, dst_path);
+                if (err) {
+                        if (global->force) err = 0;
+                }
+        }
+
+        return 0;
 }
 
 /*==============================================================================

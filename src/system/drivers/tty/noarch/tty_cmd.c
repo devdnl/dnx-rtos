@@ -171,18 +171,23 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                 else if (strcmp(VT100_HOME       , this->token) == 0) return TTYCMD_KEY_HOME;
                                 else if (strcmp(VT100_END_1      , this->token) == 0) return TTYCMD_KEY_END;
                                 else if (strcmp(VT100_END_2      , this->token) == 0) return TTYCMD_KEY_END;
-                                else if (strcmp(VT100_F1         , this->token) == 0) return TTYCMD_KEY_F1;
-                                else if (strcmp(VT100_F2         , this->token) == 0) return TTYCMD_KEY_F2;
-                                else if (strcmp(VT100_F3         , this->token) == 0) return TTYCMD_KEY_F3;
-                                else if (strcmp(VT100_F4         , this->token) == 0) return TTYCMD_KEY_F4;
-                                else if (strcmp(VT100_F5         , this->token) == 0) return TTYCMD_KEY_F5;
-                                else if (strcmp(VT100_F6         , this->token) == 0) return TTYCMD_KEY_F6;
-                                else if (strcmp(VT100_F7         , this->token) == 0) return TTYCMD_KEY_F7;
-                                else if (strcmp(VT100_F8         , this->token) == 0) return TTYCMD_KEY_F8;
-                                else if (strcmp(VT100_F9         , this->token) == 0) return TTYCMD_KEY_F9;
-                                else if (strcmp(VT100_F10        , this->token) == 0) return TTYCMD_KEY_F10;
-                                else if (strcmp(VT100_F11        , this->token) == 0) return TTYCMD_KEY_F11;
-                                else if (strcmp(VT100_F12        , this->token) == 0) return TTYCMD_KEY_F12;
+                                else if (strcmp(VT100_F1_XTERM   , this->token) == 0) return TTYCMD_KEY_F1;
+                                else if (strcmp(VT100_F1_VT      , this->token) == 0) return TTYCMD_KEY_F1;
+                                else if (strcmp(VT100_F2_XTERM   , this->token) == 0) return TTYCMD_KEY_F2;
+                                else if (strcmp(VT100_F2_VT      , this->token) == 0) return TTYCMD_KEY_F2;
+                                else if (strcmp(VT100_F3_XTERM   , this->token) == 0) return TTYCMD_KEY_F3;
+                                else if (strcmp(VT100_F3_VT      , this->token) == 0) return TTYCMD_KEY_F3;
+                                else if (strcmp(VT100_F4_XTERM   , this->token) == 0) return TTYCMD_KEY_F4;
+                                else if (strcmp(VT100_F4_VT      , this->token) == 0) return TTYCMD_KEY_F4;
+                                else if (strcmp(VT100_F5_XTERM   , this->token) == 0) return TTYCMD_KEY_F5;
+                                else if (strcmp(VT100_F5_VT      , this->token) == 0) return TTYCMD_KEY_F5;
+                                else if (strcmp(VT100_F6_VT      , this->token) == 0) return TTYCMD_KEY_F6;
+                                else if (strcmp(VT100_F7_VT      , this->token) == 0) return TTYCMD_KEY_F7;
+                                else if (strcmp(VT100_F8_VT      , this->token) == 0) return TTYCMD_KEY_F8;
+                                else if (strcmp(VT100_F9_VT      , this->token) == 0) return TTYCMD_KEY_F9;
+                                else if (strcmp(VT100_F10_VT     , this->token) == 0) return TTYCMD_KEY_F10;
+                                else if (strcmp(VT100_F11_VT     , this->token) == 0) return TTYCMD_KEY_F11;
+                                else if (strcmp(VT100_F12_VT     , this->token) == 0) return TTYCMD_KEY_F12;
                                 else return TTYCMD_BUSY;
                         } else {
                                 if (  sys_time_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)

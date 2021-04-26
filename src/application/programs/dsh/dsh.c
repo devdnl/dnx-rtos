@@ -237,11 +237,17 @@ static bool command_hint(void)
                 /*
                  * Setup file search path
                  */
-                char *sp = strrchr(global->line, ' ');
-                if (sp) {
-                        strlcpy(search, global->cwd, sizeof(search));
-                        line = sp + 1;
+                char *begin = NULL;
+                if ((begin = strrchr(global->line, ' '))) {
+                        line = begin + 1;
+                } else if (strncmp(global->line, "./", 2) == 0) {
+                        begin = global->line;
+                        line  = global->line + 2;
+                } else if ((begin = strchr(global->line, '/'))) {
+                        line = begin;
+                }
 
+                if (begin) {
                         if (*line == '/') {
                                 char *slash = strrchr(line, '/');
 
@@ -258,8 +264,12 @@ static bool command_hint(void)
                                         line += 2;
                                 }
 
-                                strlcpy(search, global->cwd, sizeof(search));
-                                strlcat(search, "/", sizeof(search));
+                                if (*begin == '/') {
+                                        strlcpy(search, "/", sizeof(search));
+                                } else {
+                                        strlcpy(search, global->cwd, sizeof(search));
+                                        strlcat(search, "/", sizeof(search));
+                                }
 
                                 char *slash = strrchr(line, '/');
                                 if (slash) {
@@ -293,13 +303,33 @@ static bool command_hint(void)
                                         puts("");
                                 }
 
-                                seekdir(dir, 0);
+                                closedir(dir);
+                                dir = opendir(search);
+
+                                char common[128];
+                                memset(common, EOT, sizeof(common));
+                                memcpy(common, line, min(strlen(line), sizeof(common) - 1));
+                                size_t min_len = UINT16_MAX;
 
                                 while ((dirent = readdir(dir))) {
 
                                         if (strncmp(dirent->d_name, line, strlen(line)) == 0) {
                                                 if (matching_entries > 1) {
                                                         printf("%s ", dirent->d_name);
+
+                                                        min_len = min(min_len, strlen(dirent->d_name));
+
+                                                        for (size_t i = 0; i < min_len; i++) {
+                                                                if (common[i] == EOT) {
+                                                                        common[i] = dirent->d_name[i];
+
+                                                                } else if (common[i] != dirent->d_name[i]) {
+                                                                        common[i] = '\0';
+                                                                        break;
+                                                                }
+                                                        }
+
+                                                        common[min_len] = '\0';
 
                                                 } else  {
                                                         strlcpy(line, dirent->d_name, PROMPT_LINE_LEN - (global->line - line));
@@ -318,6 +348,9 @@ static bool command_hint(void)
                                         puts(" ");
                                         print_prompt();
                                         ioctl(fileno(global->input), IOCTL_TTY__REFRESH_LAST_LINE);
+
+                                        strlcpy(line, common, PROMPT_LINE_LEN - (global->line - line));
+                                        ioctl(fileno(global->input), IOCTL_TTY__SET_EDITLINE, global->line);
                                 }
 
                                 closedir(dir);

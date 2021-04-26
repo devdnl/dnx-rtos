@@ -46,6 +46,7 @@ extern "C" {
 ==============================================================================*/
 #include <kernel/syscall.h>
 #include <kernel/errno.h>
+#include <kernel/builtinfunc.h>
 #include <lib/unarg.h>
 
 /*==============================================================================

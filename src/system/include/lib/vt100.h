@@ -175,40 +175,45 @@ extern "C" {
 #define VT100_PGDN                              "\033[6~"
 
 /** @brief F1 key code. */
-#define VT100_F1                                "\033OP"
+#define VT100_F1_XTERM                          "\033OP"
+#define VT100_F1_VT                             "\033[11~"
 
 /** @brief F2 key code. */
-#define VT100_F2                                "\033OQ"
+#define VT100_F2_XTERM                          "\033OQ"
+#define VT100_F2_VT                             "\033[12~"
 
 /** @brief F3 key code. */
-#define VT100_F3                                "\033OR"
+#define VT100_F3_XTERM                          "\033OR"
+#define VT100_F3_VT                             "\033[13~"
 
 /** @brief F4 key code. */
-#define VT100_F4                                "\033OS"
+#define VT100_F4_XTERM                          "\033OS"
+#define VT100_F4_VT                             "\033[14~"
 
 /** @brief F5 key code. */
-#define VT100_F5                                "\033[16~"
+#define VT100_F5_XTERM                          "\033[16~"
+#define VT100_F5_VT                             "\033[15~"
 
 /** @brief F6 key code. */
-#define VT100_F6                                "\033[17~"
+#define VT100_F6_VT                             "\033[17~"
 
 /** @brief F7 key code. */
-#define VT100_F7                                "\033[18~"
+#define VT100_F7_VT                             "\033[18~"
 
 /** @brief F8 key code. */
-#define VT100_F8                                "\033[19~"
+#define VT100_F8_VT                             "\033[19~"
 
 /** @brief F9 key code. */
-#define VT100_F9                                "\033[20~"
+#define VT100_F9_VT                             "\033[20~"
 
 /** @brief F10 key code. */
-#define VT100_F10                               "\033[21~"
+#define VT100_F10_VT                            "\033[21~"
 
 /** @brief F11 key code. */
-#define VT100_F11                               "\033[23~"
+#define VT100_F11_VT                            "\033[23~"
 
 /** @brief F12 key code. */
-#define VT100_F12                               "\033[24~"
+#define VT100_F12_VT                            "\033[24~"
 
 
 #if (__OS_COLOR_TERMINAL_ENABLE__ > 0)
