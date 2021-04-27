@@ -356,7 +356,7 @@ static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 
         // ...
 
-        printf("Context was switched %lu times\n", get_tick_counter());
+        printf("Context was switched %llu times\n", get_tick_counter());
 
         // ...
 
@@ -386,7 +386,7 @@ static inline u64_t get_tick_counter(void)
 
         // ...
 
-        printf("System works by %lu ms\n", get_time_ms());
+        printf("System works by %llu ms\n", get_time_ms());
 
         // ...
 

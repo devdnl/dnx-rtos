@@ -103,11 +103,11 @@ int main(int argc, char *argv[])
                                        global->status.MAC[0], global->status.MAC[1],
                                        global->status.MAC[2], global->status.MAC[3],
                                        global->status.MAC[4], global->status.MAC[5]);
-                                printf("RX packets: %lu, %u dropped\n",
+                                printf("RX packets: %llu, %u dropped\n",
                                        global->status.rx_packets, global->status.rx_dropped_frames);
-                                printf("RX bytes  : %lu\n", global->status.rx_bytes);
-                                printf("TX packets: %lu\n", global->status.tx_packets);
-                                printf("TX bytes  : %lu\n", global->status.tx_bytes);
+                                printf("RX bytes  : %llu\n", global->status.rx_bytes);
+                                printf("TX packets: %llu\n", global->status.tx_packets);
+                                printf("TX bytes  : %llu\n", global->status.tx_bytes);
 
                                 err = EXIT_SUCCESS;
 

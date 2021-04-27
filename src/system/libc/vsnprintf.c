@@ -107,8 +107,11 @@
  *   %f         - print float number. Note: make sure that input value is the float!
  *                printf("Foobar: %f", 1.0); => Foobar: 1.000000
  *
- *   %l?        - print long long values, where ? means d, i, u, x, or X.
- *                NOTE: not supported
+ *   %l?        - print long values, where ? means d, i, u, x, or X.
+ *                printf("32-bit value: %lu\n", 4561); => 32-bit value: 4561
+ *
+ *   %ll?       - print long long values, where ? means d, i, u, x, or X.
+ *                printf("64-bit value: %llu\n", 4561); => 64-bit value: 4561
  *
  *   %p         - print pointer
  *                printf("Pointer: %p", main); => Pointer: 0x4028B4

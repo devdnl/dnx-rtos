@@ -81,8 +81,9 @@ int _vsscanf(const char *str, const char *format, va_list args)
 {
 #if (__OS_SCANF_ENABLE__ > 0)
         int       read_fields = 0;
+        int       long_ctr    = 0;
         char      chr;
-        int       value;
+        int64_t   value;
         char     *strs;
         int       sign;
         char     *string;
@@ -111,7 +112,11 @@ int _vsscanf(const char *str, const char *format, va_list args)
                         if (bfr_size == 0)
                             bfr_size = UINT16_MAX;
 
+                        loop:
                         switch (chr) {
+                        case '\0':
+                                break;
+
                         case '%':
                                 if (*str == '%') {
                                         str++;
@@ -136,7 +141,7 @@ int _vsscanf(const char *str, const char *format, va_list args)
                                         str++;
                                 }
 
-                                strs  = (char*)str;
+                                strs = (char*)str;
 
                                 while (*str >= '0' && *str <= '9' && bfr_size > 0) {
                                         value *= 10;
@@ -146,12 +151,28 @@ int _vsscanf(const char *str, const char *format, va_list args)
                                 }
 
                                 if (str != strs) {
-                                        int *var = va_arg(args, int*);
+                                        int64_t v = value * sign;
 
-                                        if (var) {
-                                                *var = value * sign;
-                                                read_fields++;
+                                        switch (long_ctr) {
+                                        default:
+                                        case 0: {
+                                                int *var = va_arg(args, int*);
+                                                *var = v;
+                                                break;
                                         }
+                                        case 1: {
+                                                int32_t *var = va_arg(args, int32_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case 2: {
+                                                int64_t *var = va_arg(args, int64_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        }
+                                        long_ctr = 0;
+                                        read_fields++;
                                 }
                                 break;
 
@@ -195,12 +216,28 @@ int _vsscanf(const char *str, const char *format, va_list args)
                                 }
 
                                 if (strs != str) {
-                                        int *var = va_arg(args, int*);
+                                        int64_t v = value * sign;
 
-                                        if (var) {
-                                                *var = value * sign;
-                                                read_fields++;
+                                        switch (long_ctr) {
+                                        default:
+                                        case 0: {
+                                                int *var = va_arg(args, int*);
+                                                *var = v;
+                                                break;
                                         }
+                                        case 1: {
+                                                int32_t *var = va_arg(args, int32_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case 2: {
+                                                int64_t *var = va_arg(args, int64_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        }
+                                        long_ctr = 0;
+                                        read_fields++;
                                 }
                                 break;
 
@@ -227,12 +264,28 @@ int _vsscanf(const char *str, const char *format, va_list args)
                                 }
 
                                 if (str != strs) {
-                                        int *var = va_arg(args, int*);
+                                        int64_t v = value * sign;
 
-                                        if (var) {
-                                                *var = value * sign;
-                                                read_fields++;
+                                        switch (long_ctr) {
+                                        default:
+                                        case 0: {
+                                                int *var = va_arg(args, int*);
+                                                *var = v;
+                                                break;
                                         }
+                                        case 1: {
+                                                int32_t *var = va_arg(args, int32_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case 2: {
+                                                int64_t *var = va_arg(args, int64_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        }
+                                        long_ctr = 0;
+                                        read_fields++;
                                 }
                                 break;
 
@@ -286,7 +339,14 @@ int _vsscanf(const char *str, const char *format, va_list args)
                                         }
                                 }
                                 break;
+
+                        case 'l':
+                                long_ctr++;
+                                chr = *format++;
+                                goto loop;
+                                break;
                         }
+
                 } else if (chr <= ' ') {
                         while (*str <= ' ' && *str != '\0') {
                                 str++;

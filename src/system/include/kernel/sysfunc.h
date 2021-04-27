@@ -3236,8 +3236,11 @@ static inline void sys_sync(void)
  *   %f         - print float number. Note: make sure that input value is the float!
  *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
  *
- *   %l?        - print long long values, where ? means d, i, u, x, or X.
- *                @note Flag not supported.
+ *   %l?        - print long values, where ? means d, i, u, x, or X.
+ *                printf("32-bit value: %lu\n", 4561); => 32-bit value: 4561
+ *
+ *   %ll?       - print long long values, where ? means d, i, u, x, or X.
+ *                printf("64-bit value: %llu\n", 4561); => 64-bit value: 4561
  *
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
@@ -3311,8 +3314,11 @@ static inline void printk(const char *format, ...);
  *   %f         - print float number. Note: make sure that input value is the float!
  *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
  *
- *   %l?        - print long long values, where ? means d, i, u, x, or X.
- *                @note Flag not supported.
+ *   %l?        - print long values, where ? means d, i, u, x, or X.
+ *                printf("32-bit value: %lu\n", 4561); => 32-bit value: 4561
+ *
+ *   %ll?       - print long long values, where ? means d, i, u, x, or X.
+ *                printf("64-bit value: %llu\n", 4561); => 64-bit value: 4561
  *
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
@@ -3391,8 +3397,11 @@ static inline int sys_vsnprintf(char *buf, size_t size, const char *format, va_l
  *   %f         - print float number. Note: make sure that input value is the float!
  *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
  *
- *   %l?        - print long long values, where ? means d, i, u, x, or X.
- *                @note Flag not supported.
+ *   %l?        - print long values, where ? means d, i, u, x, or X.
+ *                printf("32-bit value: %lu\n", 4561); => 32-bit value: 4561
+ *
+ *   %ll?       - print long long values, where ? means d, i, u, x, or X.
+ *                printf("64-bit value: %llu\n", 4561); => 64-bit value: 4561
  *
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
@@ -3474,8 +3483,11 @@ static inline int sys_snprintf(char *bfr, size_t size, const char *format, ...)
  *   %f         - print float number. Note: make sure that input value is the float!
  *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
  *
- *   %l?        - print long long values, where ? means d, i, u, x, or X.
- *                @note Flag not supported.
+ *   %l?        - print long values, where ? means d, i, u, x, or X.
+ *                printf("32-bit value: %lu\n", 4561); => 32-bit value: 4561
+ *
+ *   %ll?       - print long long values, where ? means d, i, u, x, or X.
+ *                printf("64-bit value: %llu\n", 4561); => 64-bit value: 4561
  *
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode
@@ -3553,8 +3565,11 @@ static inline int sys_vfprintf(FILE *file, const char *format, va_list args)
  *   %f         - print float number. Note: make sure that input value is the float!
  *                @code printf("Foobar: %f", 1.0); //=> Foobar: 1.000000 @endcode
  *
- *   %l?        - print long long values, where ? means d, i, u, x, or X.
- *                @note Flag not supported.
+ *   %l?        - print long values, where ? means d, i, u, x, or X.
+ *                printf("32-bit value: %lu\n", 4561); => 32-bit value: 4561
+ *
+ *   %ll?       - print long long values, where ? means d, i, u, x, or X.
+ *                printf("64-bit value: %llu\n", 4561); => 64-bit value: 4561
  *
  *   %p         - print pointer
  *                @code printf("Pointer: %p", main); //=> Pointer: 0x4028B4 @endcode

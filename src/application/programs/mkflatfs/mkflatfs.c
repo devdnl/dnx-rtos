@@ -333,9 +333,9 @@ static int format(u64_t disc_size, u32_t max_file_size, bool fast_format)
         u32_t total_files = CEILING(blocks_for_files, max_file_size);
         u32_t blocks_per_last_file = blocks_for_files - ((total_files - 1) * max_file_size);
 
-        printf("Volume size      : %lu B\n", disc_size * BLOCK_SIZE);
-        printf("Maximal file size: %lu B\n", cast(u64_t, max_file_size - 1) * BLOCK_SIZE);
-        printf("Last file size   : %lu B\n", cast(u64_t, blocks_per_last_file - 1) * BLOCK_SIZE);
+        printf("Volume size      : %llu B\n", disc_size * BLOCK_SIZE);
+        printf("Maximal file size: %llu B\n", cast(u64_t, max_file_size - 1) * BLOCK_SIZE);
+        printf("Last file size   : %llu B\n", cast(u64_t, blocks_per_last_file - 1) * BLOCK_SIZE);
         printf("Maximal files    : %u\n", total_files);
         printf("Formatting...\n");
 

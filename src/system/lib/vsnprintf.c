@@ -112,8 +112,11 @@
  *   %f         - print float number. Note: make sure that input value is the float!
  *                printf("Foobar: %f", 1.0); => Foobar: 1.000000
  *
- *   %l?        - print long long values, where ? means d, i, u, x, or X.
- *                NOTE: not supported
+ *   %l?        - print long values, where ? means d, i, u, x, or X.
+ *                printf("32-bit value: %lu\n", 4561); => 32-bit value: 4561
+ *
+ *   %ll?       - print long long values, where ? means d, i, u, x, or X.
+ *                printf("64-bit value: %llu\n", 4561); => 64-bit value: 4561
  *
  *   %p         - print pointer
  *                printf("Pointer: %p", main); => Pointer: 0x4028B4
@@ -125,9 +128,9 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
         char   chr;
         int    arg_size;
         size_t scan_len     = 1;
+        int    long_ctr     = 0;
         bool   leading_zero = false;
         bool   loop_break   = false;
-        bool   long_long    = false;
         bool   arg_size_str = false;
         bool   point        = false;
 
@@ -235,10 +238,18 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
 
                 // check long long values
                 if (chr == 'l') {
-                        long_long = true;
+                        long_ctr++;
 
                         if (!get_format_char()) {
                                 return false;
+                        }
+
+                        if (chr == 'l') {
+                                long_ctr++;
+
+                                if (!get_format_char()) {
+                                        return false;
+                                }
                         }
                 }
 
@@ -337,7 +348,7 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                         }
 
                         i64_t val;
-                        if (long_long) {
+                        if (long_ctr == 2) {
                                 val = va_arg(arg, i64_t);
 
                         } else {
@@ -372,7 +383,7 @@ int _vsnprintf(char *buf, size_t size, const char *format, va_list arg)
                                 }
                         }
 
-                        long_long = false;
+                        long_ctr = 0;
 
                         return true;
                 } else {
