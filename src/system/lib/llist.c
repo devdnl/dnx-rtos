@@ -83,7 +83,7 @@ static int     append           (llist_t *this, const void *data);
 static int     insert_item      (llist_t *this, int index, const void *data);
 static item_t *get_item         (llist_t *this, int position);
 static int     remove_item      (llist_t *this, item_t *item, bool unlink);
-static void    quicksort        (llist_t *this, int left, int right);
+static void    quicksort        (llist_t *this, item_t *l, item_t *h);
 static void   *usrmalloc        (size_t size, void *allocctx);
 static void    usrfree          (void *mem, void *freectx);
 static void   *krnmalloc        (size_t size, void *allocctx);
@@ -579,7 +579,7 @@ void _llist_sort(llist_t *this)
 {
         if (is_llist_valid(this)) {
                 if (this->cmp_functor) {
-                        quicksort(this, 0, this->count - 1);
+                        quicksort(this, this->head, this->tail);
                 }
         }
 }
@@ -595,7 +595,7 @@ void _llist_unique(llist_t *this)
 {
         if (is_llist_valid(this)) {
                 if (this->cmp_functor) {
-                        quicksort(this, 0, this->count - 1);
+                        quicksort(this, this->head, this->tail);
 
                         item_t *item = this->head;
                         while (item && item->next) {
@@ -1243,44 +1243,39 @@ static int append(llist_t *this, const void *data)
  * @return None
  */
 //==============================================================================
-static void quicksort(llist_t *this, int left, int right)
+static item_t *partition(llist_t *this, item_t *l, item_t *h)
 {
-        int     i, j;
-        void   *pivot;
-        item_t *item_i, *item_j, *item_r, *item_l;
+        void *pivot = h->data;
 
-        i = (left + right) / 2;
+        item_t *i = l->prev;
 
-        item_i = get_item(this, i);
-        item_r = get_item(this, right);
-        item_l = get_item(this, left);
-        pivot  = item_i->data;
+        for (item_t *j = l; j != h; j = j->next) {
 
-        item_i->data = item_r->data;
+                if (this->cmp_functor(j->data, pivot) <= 0) {
 
-        item_j = item_i = item_l;
-        for (i = j = left; i < right; item_i = item_i->next, i++) {
+                        i = (i == NULL) ? l : i->next;
 
-                if (this->cmp_functor(item_i->data, pivot) < 0) {
-
-                        void *data   = item_j->data;
-                        item_j->data = item_i->data;
-                        item_i->data = data;
-
-                        item_j = item_j->next;
-                        j++;
+                        void *data = i->data;
+                        i->data = j->data;
+                        j->data = data;
                 }
         }
 
-        item_r->data = item_j->data;
-        item_j->data = pivot;
+        i = (i == NULL) ? l : l->next;
 
-        if (left < j - 1) {
-                quicksort(this, left, j - 1);
-        }
+        void *data = i->data;
+        i->data = h->data;
+        h->data = data;
 
-        if (j + 1 < right) {
-                quicksort(this, j + 1, right);
+        return i;
+}
+
+static void quicksort(llist_t *this, item_t *l, item_t *h)
+{
+        if ((l != NULL) && (h != NULL) && (l != h) && (l != h->next)) {
+                item_t *p = partition(this, l, h);
+                quicksort(this, l, p->prev);
+                quicksort(this, p->next, h);
         }
 }
 

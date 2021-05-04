@@ -40,7 +40,7 @@ Brief    EEPROM File System. File system for small memories 1-64KiB EEPROM.
 #define DBG(...)
 #endif
 
-#define BUSY_TIMEOUT                    2000
+#define BUSY_TIMEOUT                    20000
 
 #define BLOCK_SIZE                      128
 #define BLOCKS_IN_BYTE                  8
@@ -328,17 +328,40 @@ API_FS_INIT(eefs, void **fs_handle, const char *src_path, const char *opts)
                            && hdl->block.buf.main.blocks        >= 8
                            && hdl->block.buf.main.bitmap_blocks <= 64 ) {
 
+                                for (size_t blk = 1; blk < (1U + hdl->block.buf.main.bitmap_blocks); blk++) {
+                                        hdl->block.num = blk;
+                                        err = block_read(hdl, &hdl->block);
+                                        if (!err) {
+                                                if (hdl->block.buf.bitmap.magic != BLOCK_MAGIC_BITMAP) {
+                                                        DBG("broken bitmap in block %u", blk);
+                                                        err = EMEDIUMTYPE;
+                                                        break;
+                                                }
+                                        }
+                                }
+
                                 hdl->root_dir_block = 1 + hdl->block.buf.main.bitmap_blocks;
 
-                                if (!isstrempty(opts)) {
-                                        if (sys_stropt_is_flag(opts, "sync")) {
-                                                hdl->flag |= FLAG_SYNC;
-                                                DBG("enabled cache write-through");
+                                hdl->block.num = hdl->root_dir_block;
+                                err = block_read(hdl, &hdl->block);
+                                if (!err) {
+                                        if (hdl->block.buf.dir.magic != BLOCK_MAGIC_DIR) {
+                                                DBG("broken root directory in block %u", hdl->block.num);
+                                                err = EMEDIUMTYPE;
                                         }
+                                }
 
-                                        if (sys_stropt_is_flag(opts, "ro")) {
-                                                hdl->flag |= FLAG_RDONLY;
-                                                DBG("readonly mount");
+                                if (!err) {
+                                        if (!isstrempty(opts)) {
+                                                if (sys_stropt_is_flag(opts, "sync")) {
+                                                        hdl->flag |= FLAG_SYNC;
+                                                        DBG("enabled cache write-through");
+                                                }
+
+                                                if (sys_stropt_is_flag(opts, "ro")) {
+                                                        hdl->flag |= FLAG_RDONLY;
+                                                        DBG("readonly mount");
+                                                }
                                         }
                                 }
                         } else {
@@ -598,22 +621,23 @@ API_FS_READDIR(eefs, void *fs_handle, DIR *dir)
         EEFS_t *hdl = fs_handle;
 
         dir_desc_t *dd = dir->d_hdl;
-        if (!dd || dd->magic != DIR_DESC_MAGIC) {
+        if (!dd || dd->magic != DIR_DESC_MAGIC || dd->block_num == 0) {
                 DBG("readdir, broken descriptor");
                 return EINVAL;
         }
 
-        u16_t seek     = dir->d_seek;
-        hdl->block.num = dd->block_num;
-
-        memset(dd->name, 0, sizeof(dd->name));
-        dir->dirent.d_name = dd->name;
-        dir->dirent.dev    = 0;
-        dir->dirent.size   = 0;
-        dir->dirent.mode   = 0;
-
         int err = sys_mutex_lock(hdl->lock_mtx, BUSY_TIMEOUT);
         if (!err) {
+
+                u16_t seek     = dir->d_seek;
+                hdl->block.num = dd->block_num;
+
+                memset(dd->name, 0, sizeof(dd->name));
+                dir->dirent.d_name = dd->name;
+                dir->dirent.dev    = 0;
+                dir->dirent.size   = 0;
+                dir->dirent.mode   = 0;
+
                 do {
                         err = block_read(hdl, &hdl->block);
                         if (err) {
@@ -1428,21 +1452,31 @@ static uint16_t fletcher16(uint8_t const *data, size_t bytes)
 //==============================================================================
 static int block_read(EEFS_t *hdl, block_buf_t *blk)
 {
-        memset(&blk->buf, 0, 128);
+        int err = EFAULT;
 
-        size_t rdcnt = 0;
-        sys_fseek(hdl->srcdev, blk->num * BLOCK_SIZE, SEEK_SET);
-        int err = sys_fread(&blk->buf, BLOCK_SIZE, &rdcnt, hdl->srcdev);
+        for (int i = 0; i < 3; i++) {
 
-        if (!err) {
-                u16_t chsum  = fletcher16(blk->buf.chsum.buf, sizeof(blk->buf.chsum.buf));
-                      chsum ^= blk->num;
+                memset(&blk->buf, 0, 128);
 
-                err = (chsum == blk->buf.chsum.checksum) ? ESUCC : EILSEQ;
+                size_t rdcnt = 0;
+                sys_fseek(hdl->srcdev, blk->num * BLOCK_SIZE, SEEK_SET);
+                err = sys_fread(&blk->buf, BLOCK_SIZE, &rdcnt, hdl->srcdev);
 
-                if (err) {
-                        DBG("Block %d checksum fail", blk->num);
+                if (!err) {
+                        u16_t chsum  = fletcher16(blk->buf.chsum.buf, sizeof(blk->buf.chsum.buf));
+                              chsum ^= blk->num;
+
+                        err = (chsum == blk->buf.chsum.checksum) ? ESUCC : EILSEQ;
+
+                        if (!err) {
+                                break;
+
+                        } else {
+                                DBG("Block %d checksum fail", blk->num);
+                        }
                 }
+
+                sys_sleep_ms(10);
         }
 
         return err;
@@ -2055,6 +2089,8 @@ static int dir_get_entry_params(EEFS_t *hdl, dir_entry_t **dirent, u8_t *items, 
                 *items   = ARRAY_SIZE(hdl->block.buf.dir_entry.entry);
                 *blknext = hdl->block.buf.dir_entry.next;
                 err      = ESUCC;
+        } else {
+                DBG("invalid dir/dir_entry magic in block %u", hdl->block.num);
         }
 
         return err;

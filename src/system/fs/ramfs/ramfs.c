@@ -124,7 +124,7 @@ API_FS_INIT(ramfs, void **fs_handle, const char *src_path, const char *opts)
                 if (err)
                         goto finish;
 
-                err = sys_llist_create(NULL, NULL, cast(llist_t**, &hdl->root_dir.data.llist_t));
+                err = sys_llist_create(NULL, NULL, &hdl->root_dir.data.llist_t);
                 if (err)
                         goto finish;
 

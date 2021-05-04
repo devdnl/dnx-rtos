@@ -52,7 +52,7 @@ Only major number is used to identify device. Only minor number set to 0 is
 accepted by driver.
 
 \subsubsection drv-i2cee-ddesc-numres Numeration restrictions
-The minor number should be set to 0.
+The minor 0 device should be initialized first.
 
 \subsection drv-i2cee-ddesc-init Driver initialization
 To initialize driver the following code can be used:
@@ -63,6 +63,12 @@ driver_init("I2CEE", 0, 0, "/dev/24c32");
 @code
 driver_init("I2CEE", 1, 0, "/dev/24c64");
 @endcode
+@code
+driver_init("I2CEE", 2, 0, "/dev/M24M02-a");
+driver_init("I2CEE", 2, 1, "/dev/M24M02-b");
+driver_init("I2CEE", 2, 2, "/dev/M24M02-c");
+driver_init("I2CEE", 2, 3, "/dev/M24M02-d");
+@endcode
 
 \subsection drv-i2cee-ddesc-release Driver release
 To release driver the following code can be used:
@@ -71,6 +77,12 @@ driver_release("I2CEE", 0, 0);
 @endcode
 @code
 driver_release("I2CEE", 1, 0);
+@endcode
+@code
+driver_release("I2CEE", 2, 0);
+driver_release("I2CEE", 2, 1);
+driver_release("I2CEE", 2, 2);
+driver_release("I2CEE", 2, 3);
 @endcode
 
 \subsection drv-i2cee-ddesc-cfg Driver configuration

@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
         // allocate operational buffer
         global->buffer_size = BUFFER_MAX_SIZE;
-        while ((global->buffer = malloc(global->buffer_size * sizeof(char))) == NULL) {
+        while ((global->buffer = malloc(global->buffer_size)) == NULL) {
                 global->buffer_size /= 2;
 
                 if (global->buffer_size < 512) {
@@ -184,7 +184,6 @@ static void print_help(char *argv[])
 static int copy_file(const char *src, const char *dst)
 {
         int   err      = 0;
-        char *buffer   = NULL;
         FILE *src_file = NULL;
         FILE *dst_file = NULL;
 
@@ -205,7 +204,7 @@ static int copy_file(const char *src, const char *dst)
         if (src_file and dst_file) {
                 int n;
                 errno = 0;
-                while (buffer && (n = fread(buffer, sizeof(char), global->buffer_size, src_file)) > 0) {
+                while ((n = fread(global->buffer, 1, global->buffer_size, src_file)) > 0) {
                         if (ferror(src_file)) {
                                 err = errno;
                                 perror(src);
@@ -213,7 +212,7 @@ static int copy_file(const char *src, const char *dst)
                         }
 
                         errno = 0;
-                        fwrite(buffer, sizeof(char), n, dst_file);
+                        fwrite(global->buffer, 1, n, dst_file);
                         if (ferror(dst_file)) {
                                 err = errno;
                                 perror(dst);

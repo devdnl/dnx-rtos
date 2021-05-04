@@ -36,17 +36,24 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define MUTEX_TIMEOUT   1000
+#define MUTEX_TIMEOUT   10000
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 typedef struct {
-        FILE    *i2c_dev;
         mutex_t *mtx;
-        u32_t    memory_size;
-        u16_t    page_size;
-        u16_t    page_prog_time_ms;
+        u8_t     devices;
+} I2CEE_main_t;
+
+typedef struct {
+        I2CEE_main_t *main;
+        FILE         *i2c_dev;
+        u32_t         memory_size;
+        u16_t         page_size;
+        u16_t         page_prog_time_ms;
+        u8_t          major;
+        u8_t          minor;
 } I2CEE_t;
 
 /*==============================================================================
@@ -87,23 +94,47 @@ API_MOD_INIT(I2CEE, void **device_handle, u8_t major, u8_t minor, const void *co
 {
         UNUSED_ARG1(major);
 
-        if (minor != 0) {
-                return ENODEV;
-        }
-
         int err = sys_zalloc(sizeof(I2CEE_t), device_handle);
         if (!err) {
                 I2CEE_t *hdl = *device_handle;
 
-                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
+                hdl->major = major;
+                hdl->minor = minor;
+
+                if (minor == 0) {
+                        err = sys_zalloc(sizeof(*hdl->main), cast(void*, &hdl->main));
+                        if (!err) {
+                                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->main->mtx);
+                        }
+                } else {
+                        I2CEE_t *hdl0;
+                        err = sys_module_get_instance(major, 0, cast(void*, &hdl0));
+                        if (!err) {
+                                if (hdl0) {
+                                        hdl->main = hdl0->main;
+                                } else {
+                                        dev_dbg(hdl, "initialize minor 0 device first!", 0);
+                                        err = EFAULT;
+                                }
+                        }
+                }
 
                 if (!err && config) {
                         err = configure(hdl, config);
                 }
 
-                if (err) {
-                        if (hdl->mtx) {
-                                sys_mutex_destroy(hdl->mtx);
+                if (!err) {
+                        hdl->main->devices++;
+
+                } else {
+                        if (minor == 0) {
+                                if (hdl->main) {
+                                        if (hdl->main->mtx) {
+                                                sys_mutex_destroy(hdl->main->mtx);
+                                        }
+
+                                        sys_free(cast(void*, &hdl->main));
+                                }
                         }
 
                         sys_free(device_handle);
@@ -126,18 +157,26 @@ API_MOD_RELEASE(I2CEE, void *device_handle)
 {
         I2CEE_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(hdl->mtx, 0);
+        int err = sys_mutex_lock(hdl->main->mtx, 0);
         if (!err) {
-                mutex_t *mtx = hdl->mtx;
-                hdl->mtx = 0;
-                sys_mutex_unlock(mtx);
-                sys_mutex_destroy(mtx);
+                mutex_t *mtx = hdl->main->mtx;
 
                 if (hdl->i2c_dev) {
                         sys_fclose(hdl->i2c_dev);
                 }
 
+                if (--hdl->main->devices == 0) {
+                        hdl->main->mtx = NULL;
+                        sys_mutex_unlock(mtx);
+                        sys_mutex_destroy(mtx);
+
+                        sys_free(cast(void*, &hdl->main));
+                } else {
+                        sys_mutex_unlock(mtx);
+                }
+
                 memset(hdl, 0, sizeof(I2CEE_t));
+
                 sys_free(&device_handle);
         }
 
@@ -202,7 +241,7 @@ API_MOD_WRITE(I2CEE,
 
         I2CEE_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
+        int err = sys_mutex_lock(hdl->main->mtx, MUTEX_TIMEOUT);
         if (!err) {
 
                 if (*fpos < hdl->memory_size) {
@@ -230,7 +269,7 @@ API_MOD_WRITE(I2CEE,
                         *wrcnt = 0;
                 }
 
-                sys_mutex_unlock(hdl->mtx);
+                sys_mutex_unlock(hdl->main->mtx);
         }
 
         return err;
@@ -262,7 +301,7 @@ API_MOD_READ(I2CEE,
 
         I2CEE_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
+        int err = sys_mutex_lock(hdl->main->mtx, MUTEX_TIMEOUT);
         if (!err) {
 
                 if (*fpos < hdl->memory_size) {
@@ -277,7 +316,7 @@ API_MOD_READ(I2CEE,
                         *rdcnt = 0;
                 }
 
-                sys_mutex_unlock(hdl->mtx);
+                sys_mutex_unlock(hdl->main->mtx);
         }
 
         return err;
@@ -382,7 +421,7 @@ API_MOD_STAT(I2CEE, void *device_handle, struct vfs_dev_stat *device_stat)
 //==============================================================================
 static int configure(I2CEE_t *hdl, const I2CEE_config_t *cfg)
 {
-        int err = sys_mutex_lock(hdl->mtx, MUTEX_TIMEOUT);
+        int err = sys_mutex_lock(hdl->main->mtx, MUTEX_TIMEOUT);
         if (!err) {
                 if (hdl->i2c_dev) {
                         err = sys_fclose(hdl->i2c_dev);
@@ -397,7 +436,7 @@ static int configure(I2CEE_t *hdl, const I2CEE_config_t *cfg)
                         }
                 }
 
-                sys_mutex_unlock(hdl->mtx);
+                sys_mutex_unlock(hdl->main->mtx);
         }
 
         return err;

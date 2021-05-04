@@ -843,6 +843,51 @@ static inline const struct _prog_data *sys_get_programs_table()
         return _get_programs_table();
 }
 
+//==============================================================================
+/**
+ * @brief  Function duplicate selected string.
+ *
+ * @param  str          source string
+ * @param  stddup       duplicated string
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_strdup(const char *str, char **strdup)
+{
+        int err = EINVAL;
+        if (str && strdup) {
+                err = sys_malloc(strsize(str), cast(void**, strdup));
+                if (!err) {
+                        strcpy(*strdup, str);
+                }
+        }
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function duplicate selected string.
+ *
+ * @param  str          source string
+ * @param  len          source string len
+ * @param  stddup       duplicated string
+ *
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+static inline int sys_strndup(const char *str, size_t len, char **strdup)
+{
+        int err = EINVAL;
+        if (str && strdup) {
+                err = sys_malloc(len + 1, cast(void**, strdup));
+                if (!err) {
+                        strlcpy(*strdup, str, len + 1);
+                }
+        }
+        return err;
+}
+
 #ifdef __cplusplus
 }
 #endif
