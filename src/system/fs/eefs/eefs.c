@@ -67,8 +67,7 @@ Brief    EEPROM File System. File system for small memories 1-64KiB EEPROM.
 #define cache_get_block(sys_cache)      cast(block_cached_t*, &sys_cache[1])->block
 #define cache_get_block_num(sys_cache)  cast(block_cached_t*, &sys_cache[1])->block_num
 
-#define FLAG_SYNC                       (1<<0)
-#define FLAG_RDONLY                     (1<<1)
+#define FLAG_RDONLY                     (1<<0)
 
 #define block_is_dir(block_buf)         (block_buf.buf.dir.magic  == BLOCK_MAGIC_DIR)
 #define block_is_dir_entry(block_buf)   (block_buf.buf.dir_entry.magic  == BLOCK_MAGIC_DIR_ENTRY)
@@ -242,6 +241,15 @@ typedef struct {
 } block_buf_t;
 
 /**
+ * Type contains block cache buffer.
+ */
+typedef struct {
+        bool  used;
+        u32_t hit;
+        block_buf_t buf;
+} cache_buf_t;
+
+/**
  * File system handle.
  */
 typedef struct {
@@ -253,6 +261,9 @@ typedef struct {
         block_buf_t  block;
         block_buf_t  tmpblock;
         u8_t         flag;
+        #if __EEFS_CACHE_SIZE__ > 0
+        cache_buf_t  cache_block[__EEFS_CACHE_SIZE__];
+        #endif
 } EEFS_t;
 
 /*==============================================================================
@@ -352,12 +363,11 @@ API_FS_INIT(eefs, void **fs_handle, const char *src_path, const char *opts)
                                 }
 
                                 if (!err) {
-                                        if (!isstrempty(opts)) {
-                                                if (sys_stropt_is_flag(opts, "sync")) {
-                                                        hdl->flag |= FLAG_SYNC;
-                                                        DBG("enabled cache write-through");
-                                                }
+                                        if (__EEFS_CACHE_SIZE__ > 0) {
+                                                printk("EEFS: using cache write-through");
+                                        }
 
+                                        if (!isstrempty(opts)) {
                                                 if (sys_stropt_is_flag(opts, "ro")) {
                                                         hdl->flag |= FLAG_RDONLY;
                                                         DBG("readonly mount");
@@ -1454,6 +1464,26 @@ static int block_read(EEFS_t *hdl, block_buf_t *blk)
 {
         int err = EFAULT;
 
+        #if __EEFS_CACHE_SIZE__ > 0
+        for (size_t i = 0; i < ARRAY_SIZE(hdl->cache_block); i++) {
+                if (hdl->cache_block[i].used) {
+                        if (hdl->cache_block[i].buf.num == blk->num) {
+                                memcpy(blk, &hdl->cache_block[i].buf, sizeof(*blk));
+                                hdl->cache_block[i].hit++;
+                                err = 0;
+                        } else {
+                                if (hdl->cache_block[i].hit > 0) {
+                                        hdl->cache_block[i].hit--;
+                                }
+                        }
+                }
+        }
+
+        if (!err) {
+                return err;
+        }
+        #endif
+
         for (int i = 0; i < 3; i++) {
 
                 memset(&blk->buf, 0, 128);
@@ -1469,6 +1499,31 @@ static int block_read(EEFS_t *hdl, block_buf_t *blk)
                         err = (chsum == blk->buf.chsum.checksum) ? ESUCC : EILSEQ;
 
                         if (!err) {
+                                #if __EEFS_CACHE_SIZE__ > 0
+                                uint32_t hit_min = UINT32_MAX;
+
+                                // find not used block
+                                for (size_t i = 0; i < ARRAY_SIZE(hdl->cache_block); i++) {
+                                        if (!hdl->cache_block[i].used) {
+                                                memcpy(&hdl->cache_block[i].buf, blk, sizeof(*blk));
+                                                hdl->cache_block[i].used = true;
+                                                hdl->cache_block[i].hit++;
+                                                return 0;
+
+                                        } else {
+                                                hit_min = min(hit_min, hdl->cache_block[i].hit);
+                                        }
+                                }
+
+                                // if empty block not found, then select rare used
+                                for (size_t i = 0; i < ARRAY_SIZE(hdl->cache_block); i++) {
+                                        if (hdl->cache_block[i].hit == hit_min) {
+                                                hdl->cache_block[i].hit = 0;
+                                                memcpy(&hdl->cache_block[i].buf, blk, sizeof(*blk));
+                                                return 0;
+                                        }
+                                }
+                                #endif
                                 break;
 
                         } else {
@@ -1498,9 +1553,17 @@ static int block_write(EEFS_t *hdl, block_buf_t *blk)
                 return EROFS;
 
         } else {
-                blk->buf.chsum.checksum = fletcher16(blk->buf.chsum.buf,
-                                                     sizeof(blk->buf.chsum.buf))
-                                        ^ blk->num;
+                blk->buf.chsum.checksum  = fletcher16(blk->buf.chsum.buf, sizeof(blk->buf.chsum.buf));
+                blk->buf.chsum.checksum ^= blk->num;
+
+                #if __EEFS_CACHE_SIZE__ > 0
+                for (size_t i = 0; i < ARRAY_SIZE(hdl->cache_block); i++) {
+                        if (hdl->cache_block[i].used && hdl->cache_block[i].buf.num == blk->num) {
+                                memcpy(&hdl->cache_block[i].buf, blk, sizeof(*blk));
+                                break;
+                        }
+                }
+                #endif
 
                 size_t wrcnt = 0;
                 sys_fseek(hdl->srcdev, blk->num * BLOCK_SIZE, SEEK_SET);

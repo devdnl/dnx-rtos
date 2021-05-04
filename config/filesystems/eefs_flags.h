@@ -40,9 +40,16 @@ this:SetLayout("TitledGridBack", 2, "Home > File Systems > eefs",
 ++*/
 
 /*--
-this:AddWidget("Checkbox", "Enable file system debug")
+this:AddWidget("Combobox", "Enable file system debug")
+this:AddItem("Disable", "_NO_")
+this:AddItem("Enable", "_YES_")
 --*/
 #define __EEFS_LOG_ENABLE__ _NO_
+
+/*--
+this:AddWidget("Spinbox", 0, 512, "Cache size (128 bytes blocks)")
+--*/
+#define __EEFS_CACHE_SIZE__ 8
 
 #endif /* _EEFS_FLAGS_H_ */
 /*==============================================================================
