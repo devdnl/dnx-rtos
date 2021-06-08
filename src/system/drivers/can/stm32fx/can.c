@@ -145,7 +145,13 @@ typedef struct {
         mutex_t *txmbox_mtx[TX_MAILBOXES];
         queue_t *txrdy_q[TX_MAILBOXES];
         queue_t *rxqueue_q;
+        u64_t    tx_frames;
+        u64_t    tx_bytes;
+        u64_t    rx_frames;
+        u64_t    rx_bytes;
         u32_t    rx_overrun;
+        u32_t    baud;
+        CAN_mode_t mode;
 } CAN_t;
 
 /* CAN registers */
@@ -261,6 +267,7 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
                         hdl->major        = major;
                         hdl->recv_timeout = MAX_DELAY_MS;
                         hdl->send_timeout = MAX_DELAY_MS;
+                        hdl->mode         = CAN_MODE__INIT;
 
                         err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->config_mtx);
                         if (err) {
@@ -601,6 +608,10 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
                         case CAN_MODE__SLEEP : err = set_sleep_mode(hdl); break;
                         default              : err = EINVAL; break;
                         }
+
+                        if (!err) {
+                                hdl->mode = mode;
+                        }
                 }
                 break;
 
@@ -628,44 +639,41 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
                 }
                 break;
 
-        case IOCTL_CAN__GET_RECEIVE_ERROR_COUNTER:
+        case IOCTL_CAN__GET_STATUS:
                 if (arg) {
-                        *cast(u8_t*, arg) = ((CANX[hdl->major].CAN->ESR & CAN_ESR_REC) >> 24);
-                        err = ESUCC;
-                }
-                break;
+                        CAN_status_t *status = arg;
 
-        case IOCTL_CAN__GET_TRANSMIT_ERROR_COUNTER:
-                if (arg) {
-                        *cast(u8_t*, arg) = ((CANX[hdl->major].CAN->ESR & CAN_ESR_TEC) >> 16);
-                        err = ESUCC;
-                }
-                break;
-
-        case IOCTL_CAN__GET_BUS_STATUS:
-                if (arg) {
-                        CAN_bus_status_t *status = arg;
-
+                        // CAN bus status
                         if (CANX[hdl->major].CAN->ESR & CAN_ESR_BOFF) {
-                                *status = CAN_BUS_STATUS__OFF;
+                                status->can_bus_status = CAN_BUS_STATUS__OFF;
 
                         } else if (CANX[hdl->major].CAN->ESR & CAN_ESR_EPVF) {
-                                *status = CAN_BUS_STATUS__PASSIVE;
+                                status->can_bus_status = CAN_BUS_STATUS__PASSIVE;
 
                         } else if (CANX[hdl->major].CAN->ESR & CAN_ESR_EWGF) {
-                                *status = CAN_BUS_STATUS__WARNING;
+                                status->can_bus_status = CAN_BUS_STATUS__WARNING;
 
                         } else {
-                                *status = CAN_BUS_STATUS__OK;
+                                status->can_bus_status = CAN_BUS_STATUS__OK;
                         }
 
-                        err = ESUCC;
-                }
-                break;
+                        // CAN mode
+                        status->mode = hdl->mode;
 
-        case IOCTL_CAN__GET_RX_FIFO_OVERRUN_COUNTER:
-                if (arg) {
-                        *cast(u32_t*, arg) = hdl->rx_overrun;
+                        // error countes
+                        status->rx_error_ctr   = ((CANX[hdl->major].CAN->ESR & CAN_ESR_REC) >> 24);
+                        status->tx_error_ctr   = ((CANX[hdl->major].CAN->ESR & CAN_ESR_TEC) >> 16);
+                        status->rx_overrun_ctr = hdl->rx_overrun;
+
+                        // transfer stats
+                        status->tx_frames = hdl->tx_frames;
+                        status->tx_bytes  = hdl->tx_bytes;
+                        status->rx_frames = hdl->rx_frames;
+                        status->rx_bytes  = hdl->rx_bytes;
+
+                        // baud
+                        status->baud_bps = hdl->baud;
+
                         err = ESUCC;
                 }
                 break;
@@ -865,8 +873,8 @@ static int configure(CAN_t *hdl, const CAN_config_t *cfg)
                 LL_RCC_GetSystemClocksFreq(&freq);
                 u32_t PCLK = freq.PCLK1_Frequency;
 
-                u32_t baud = PCLK / (cfg->prescaler * (1 + TS1 + TS2));
-                printk("%s%d-%d: baud rate: %u bps", GET_MODULE_NAME(), hdl->major, 0,  baud);
+                hdl->baud = PCLK / (cfg->prescaler * (1 + TS1 + TS2));
+                printk("%s%d-%d: baud rate: %u bps", GET_MODULE_NAME(), hdl->major, 0,  hdl->baud);
 
                 sys_mutex_unlock(hdl->config_mtx);
         }
@@ -896,6 +904,10 @@ static int set_init_mode(CAN_t *hdl)
 
                 while (not sys_time_is_expired(tref, INIT_TIMEOUT)) {
                         if (CANX[hdl->major].CAN->MSR & CAN_MSR_INAK) {
+                                hdl->tx_bytes  = 0;
+                                hdl->rx_bytes  = 0;
+                                hdl->tx_frames = 0;
+                                hdl->rx_frames = 0;
                                 err = ESUCC;
                                 break;
                         }
@@ -1126,6 +1138,11 @@ static int send_msg(CAN_t *hdl, const CAN_msg_t *msg, u32_t timeout_ms)
                                         if (!err) {
                                                 err = erri;
 
+                                                if (!err) {
+                                                        hdl->tx_frames++;
+                                                        hdl->tx_bytes += msg->data_length;
+                                                }
+
                                         } else {
                                                 printk("%s%d-%d: message send abort", GET_MODULE_NAME(), hdl->major, 0);
                                                 SET_BIT(CANX[hdl->major].CAN->TSR, CAN_TSR_ABRQ0 << (i * 8));
@@ -1276,8 +1293,14 @@ static bool CAN_RX_IRQ(CAN_t *hdl, u8_t fifo)
 {
         bool yield = false;
 
-        if (sys_queue_send_from_ISR(hdl->rxqueue_q, &CANX[hdl->major].CAN->sFIFOMailBox[fifo], &yield) != 0) {
+        CAN_FIFOMailBox_TypeDef *mbox = &CANX[hdl->major].CAN->sFIFOMailBox[fifo];
+
+        if (sys_queue_send_from_ISR(hdl->rxqueue_q, mbox, &yield) != 0) {
                 hdl->rx_overrun++;
+
+        } else {
+                hdl->rx_frames++;
+                hdl->rx_bytes += mbox->RDTR & CAN_RDT0R_DLC;
         }
 
         if (fifo == 0) {

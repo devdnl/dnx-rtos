@@ -170,6 +170,9 @@ static void syscall_mutexdestroy(syscallrq_t *rq);
 static void syscall_queuecreate(syscallrq_t *rq);
 static void syscall_queuedestroy(syscallrq_t *rq);
 #if __ENABLE_NETWORK__ == _YES_
+static void syscall_netifadd(syscallrq_t *rq);
+static void syscall_netifrm(syscallrq_t *rq);
+static void syscall_netiflist(syscallrq_t *rq);
 static void syscall_netifup(syscallrq_t *rq);
 static void syscall_netifdown(syscallrq_t *rq);
 static void syscall_netifstatus(syscallrq_t *rq);
@@ -291,6 +294,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_QUEUECREATE     ] = syscall_queuecreate,
         [SYSCALL_QUEUEDESTROY    ] = syscall_queuedestroy,
         #if __ENABLE_NETWORK__ == _YES_
+        [SYSCALL_NETADD           ] = syscall_netifadd,
+        [SYSCALL_NETRM            ] = syscall_netifrm,
+        [SYSCALL_NETIFLIST        ] = syscall_netiflist,
         [SYSCALL_NETIFUP          ] = syscall_netifup,
         [SYSCALL_NETIFDOWN        ] = syscall_netifdown,
         [SYSCALL_NETIFSTATUS      ] = syscall_netifstatus,
@@ -412,23 +418,12 @@ int _syscall_kworker_process(int argc, char *argv[])
 
         u64_t sync_period_ref = _kernel_get_time_ms();
 
-        bool network_initialized = false;
-
         for (;;) {
                 _sleep_ms(1000);
 
                 if ( (_kernel_get_time_ms() - sync_period_ref) >= FS_CACHE_SYNC_PERIOD_MS) {
                         _vfs_sync();
                         sync_period_ref = _kernel_get_time_ms();
-                }
-
-                if (not network_initialized) {
-                        network_initialized = true;
-
-                        size_t n = _NET_FAMILY__COUNT;
-                        for (NET_family_t netf = 0; netf < n; netf++) {
-                                _net_ifup(netf, NULL);
-                        }
                 }
         }
 
@@ -1505,6 +1500,54 @@ static void syscall_queuedestroy(syscallrq_t *rq)
 #if __ENABLE_NETWORK__ == _YES_
 //==============================================================================
 /**
+ * @brief  This syscall add network interface.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netifadd(syscallrq_t *rq)
+{
+        GETARG(const char *, netname);
+        GETARG(NET_family_t *, family);
+        GETARG(const char *, if_path);
+
+        SETERRNO(_net_ifadd(netname, *family, if_path));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall remove network interface.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netifrm(syscallrq_t *rq)
+{
+        GETARG(const char *, netname);
+
+        SETERRNO(_net_ifrm(netname));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall list network interfaces.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_netiflist(syscallrq_t *rq)
+{
+        GETARG(char **, netname);
+        GETARG(size_t *, netname_len);
+
+        SETERRNO(_net_iflist(netname, *netname_len));
+        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+}
+
+//==============================================================================
+/**
  * @brief  This syscall up network.
  *
  * @param  rq                   syscall request
@@ -1512,10 +1555,10 @@ static void syscall_queuedestroy(syscallrq_t *rq)
 //==============================================================================
 static void syscall_netifup(syscallrq_t *rq)
 {
-        GETARG(NET_family_t *, family);
+        GETARG(const char *, netname);
         GETARG(const NET_generic_config_t *, config);
 
-        SETERRNO(_net_ifup(*family, config));
+        SETERRNO(_net_ifup(netname, config));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1528,9 +1571,9 @@ static void syscall_netifup(syscallrq_t *rq)
 //==============================================================================
 static void syscall_netifdown(syscallrq_t *rq)
 {
-        GETARG(NET_family_t *, family);
+        GETARG(const char *, netname);
 
-        SETERRNO(_net_ifdown(*family));
+        SETERRNO(_net_ifdown(netname));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1543,10 +1586,11 @@ static void syscall_netifdown(syscallrq_t *rq)
 //==============================================================================
 static void syscall_netifstatus(syscallrq_t *rq)
 {
+        GETARG(const char *, netname);
         GETARG(NET_family_t *, family);
         GETARG(NET_generic_status_t *, status);
 
-        SETERRNO(_net_ifstatus(*family, status));
+        SETERRNO(_net_ifstatus(netname, family, status));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1559,11 +1603,11 @@ static void syscall_netifstatus(syscallrq_t *rq)
 //==============================================================================
 static void syscall_netsocketcreate(syscallrq_t *rq)
 {
-        GETARG(NET_family_t*, family);
+        GETARG(const char *, netname);
         GETARG(NET_protocol_t*, protocol);
 
         SOCKET *socket = NULL;
-        int     err    = _net_socket_create(*family, *protocol, &socket);
+        int     err    = _net_socket_create(netname, *protocol, &socket);
         if (err == ESUCC) {
                 err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socket));
                 if (err != ESUCC) {
@@ -1747,11 +1791,11 @@ static void syscall_netsendto(syscallrq_t *rq)
 //==============================================================================
 static void syscall_netgethostbyname(syscallrq_t *rq)
 {
-        GETARG(NET_family_t *, family);
+        GETARG(const char *, netname);
         GETARG(const char *, name);
         GETARG(NET_generic_sockaddr_t *, addr);
 
-        SETERRNO(_net_gethostbyname(*family, name, addr));
+        SETERRNO(_net_gethostbyname(netname, name, addr));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 

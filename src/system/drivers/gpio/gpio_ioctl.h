@@ -183,6 +183,13 @@ typedef struct {
   Exported macros
 ==============================================================================*/
 /**
+ * PIN declaration
+ */
+#define IOCTL_GPIO_PIN_DECL(_name)\
+        .port_idx = IOCTL_GPIO_PORT_IDX__##_name,\
+        .pin_idx  = IOCTL_GPIO_PIN_IDX__##_name\
+
+/**
  * @brief  Not existing pin number.
  */
 #define IOCTL_GPIO_PIN_IDX__NULL                0xFF

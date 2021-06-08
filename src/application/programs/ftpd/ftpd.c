@@ -432,8 +432,9 @@ static void handle_cmd_PASV(struct thread *self)
 {
         NET_INET_status_t status;
         memset(&status, 0, sizeof(status));
+        NET_family_t family;
 
-        if (ifstatus(NET_FAMILY__INET, &status) == 0) {
+        if (ifstatus("inet", &family, &status) == 0) {
 
                 int n = snprintf(self->buf, sizeof(self->buf),
                                  "227 =%d,%d,%d,%d,%d,%d\r\n",
@@ -916,7 +917,7 @@ static int serve(void *arg)
         self->quit  = false;
 
         if (!self->sock_pasv) {
-                self->sock_pasv = socket_open(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+                self->sock_pasv = socket_open("inet", NET_PROTOCOL__TCP);
                 if (self->sock_pasv) {
                         NET_INET_sockaddr_t ADDR_ANY = {
                                 .addr = NET_INET_IPv4_ANY,
@@ -1036,7 +1037,7 @@ int main(int argc, char *argv[])
                 }
         }
 
-        SOCKET *socket = socket_open(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
         if (socket) {
                 static const NET_INET_sockaddr_t ADDR_ANY = {
                         .addr = NET_INET_IPv4_ANY,

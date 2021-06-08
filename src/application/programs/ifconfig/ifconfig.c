@@ -54,19 +54,13 @@
   Local object definitions
 ==============================================================================*/
 GLOBAL_VARIABLES_SECTION {
-};
+        char *network[32];
 
-static const char *INET_STATE[] = {
-       "NOT CONFIGURED",
-       "STATIC IP",
-       "DHCP CONFIGURING",
-       "DHCP",
-       "LINK DISCONNECTED"
-};
-
-static const char *SIPC_STATE[] = {
-       "NOT CONFIGURED",
-       "CONFIGURED"
+        union {
+                NET_INET_status_t inet;
+                NET_SIPC_status_t sipc;
+                NET_CANNET_status_t cannet;
+        } status;
 };
 
 /*==============================================================================
@@ -77,6 +71,35 @@ PROGRAM_PARAMS(ifconfig, STACK_DEPTH_LOW);
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief  Print help message
+ * @param  prog_name    program name
+ * @return None
+ */
+//==============================================================================
+static void print_help_msg(const char *prog_name)
+{
+        printf("Usage: %s <network> [up=<options>] [down]\n", prog_name);
+        printf("General options:\n");
+        printf("  network       network name\n");
+        printf("  up=<options>  configure network\n");
+        printf("  down          disable network\n");
+        printf("  -h, --help    this help\n");
+        printf("\n");
+        printf("Options for INET:\n");
+        printf("  Static: %s INET up=address,netmask,gateway\n", prog_name);
+        printf("  DHCP  : %s INET up=dhcp\n", prog_name);
+        printf("\n");
+        printf("Options for SIPC:\n");
+        printf("  MTU setup  : %s SIPC up=MTU\n", prog_name);
+        printf("  Default MTU: %s SIPC up=auto\n", prog_name);
+        printf("\n");
+        printf("Options for CANNET:\n");
+        printf("  %s CANNET up=address\n", prog_name);
+        printf("\n");
+}
 
 //==============================================================================
 /**
@@ -100,37 +123,11 @@ static const char *convert_unit(u64_t *val)
 
 //==============================================================================
 /**
- * @brief  Print help message
- * @param  prog_name    program name
- * @return None
- */
-//==============================================================================
-static void print_help_msg(const char *prog_name)
-{
-        printf("Usage: %s <network> [up=<options>] [down]\n", prog_name);
-        printf("General options:\n");
-        printf("  INET,...      network name\n");
-        printf("  up=<options>  configure network\n");
-        printf("  down          disable network\n");
-        printf("  -h, --help    this help\n");
-        printf("\n");
-        printf("Options for INET:\n");
-        printf("  Static: %s INET up=address,netmask,gateway\n", prog_name);
-        printf("  DHCP  : %s INET up=dhcp\n", prog_name);
-        printf("\n");
-        printf("Options for SIPC:\n");
-        printf("  MTU setup  : %s SIPC up=MTU\n", prog_name);
-        printf("  Default MTU: %s SIPC up=auto\n", prog_name);
-        printf("\n");
-}
-
-//==============================================================================
-/**
  * @brief Function setup INET connection.
  * @param options       string options
  */
 //==============================================================================
-static void INET_up(const char *options)
+static void INET_up(const char *netname, const char *options)
 {
         if (isstreq(options, "dhcp") || isstreq(options, "DHCP")) {
                 static const NET_INET_config_t DHCP = {
@@ -140,8 +137,8 @@ static void INET_up(const char *options)
                         .gateway = NET_INET_IPv4_ANY
                 };
 
-                if (ifup(NET_FAMILY__INET, &DHCP) != 0) {
-                        perror("INET");
+                if (ifup(netname, &DHCP) != 0) {
+                        perror(netname);
                 }
 
         } else {
@@ -149,9 +146,9 @@ static void INET_up(const char *options)
                 int ma = INT_MAX, mb = INT_MAX, mc = INT_MAX, md = INT_MAX;
                 int ga = INT_MAX, gb = INT_MAX, gc = INT_MAX, gd = INT_MAX;
 
-                sscanf(options, "%4d.%4d.%4d.%4d,"
-                                "%4d.%4d.%4d.%4d,"
-                                "%4d.%4d.%4d.%4d",
+                sscanf(options, "%4u.%4u.%4u.%4u,"
+                                "%4u.%4u.%4u.%4u,"
+                                "%4u.%4u.%4u.%4u",
 
                        &aa, &ab, &ac, &ad,
                        &ma, &mb, &mc, &md,
@@ -179,8 +176,8 @@ static void INET_up(const char *options)
                         .gateway = NET_INET_IPv4(ga,gb,gc,gd)
                 };
 
-                if (ifup(NET_FAMILY__INET, &config) != 0) {
-                        perror("INET");
+                if (ifup(netname, &config) != 0) {
+                        perror(netname);
                 }
         }
 }
@@ -191,51 +188,55 @@ static void INET_up(const char *options)
  * @brief Function gets INET connection status.
  */
 //==============================================================================
-static void INET_status(void)
+static void INET_print_status(void)
 {
-        NET_INET_status_t ifstat;
-        if (ifstatus(NET_FAMILY__INET, &ifstat) == 0) {
+        static const char *INET_STATE[] = {
+               "NOT CONFIGURED",
+               "STATIC IP",
+               "DHCP CONFIGURING",
+               "DHCP",
+               "LINK DISCONNECTED"
+        };
 
-                const char *tx_unit = convert_unit(&ifstat.tx_bytes);
-                const char *rx_unit = convert_unit(&ifstat.rx_bytes);
+        const char *tx_unit = convert_unit(&global->status.inet.tx_bytes);
+        const char *rx_unit = convert_unit(&global->status.inet.rx_bytes);
 
-                printf("INET\n"
-                       "  Status : %s\n"
-                       "  HWaddr : %02X:%02X:%02X:%02X:%02X:%02X\n"
-                       "  Address: %d.%d.%d.%d\n"
-                       "  Gateway: %d.%d.%d.%d\n"
-                       "  Netmask: %d.%d.%d.%d\n"
-                       "  RX packets: %u (%u %s)\n"
-                       "  TX packets: %u (%u %s)\n",
+        printf("INET\n"
+               "  Status : %s\n"
+               "  HWaddr : %02X:%02X:%02X:%02X:%02X:%02X\n"
+               "  Address: %u.%u.%u.%u\n"
+               "  Gateway: %u.%u.%u.%u\n"
+               "  Netmask: %u.%u.%u.%u\n"
+               "  RX packets: %llu (%llu %s)\n"
+               "  TX packets: %llu (%llu %s)\n",
 
-                       INET_STATE[ifstat.state],
+               INET_STATE[global->status.inet.state],
 
-                       ifstat.hw_addr[0],
-                       ifstat.hw_addr[1],
-                       ifstat.hw_addr[2],
-                       ifstat.hw_addr[3],
-                       ifstat.hw_addr[4],
-                       ifstat.hw_addr[5],
+               global->status.inet.hw_addr[0],
+               global->status.inet.hw_addr[1],
+               global->status.inet.hw_addr[2],
+               global->status.inet.hw_addr[3],
+               global->status.inet.hw_addr[4],
+               global->status.inet.hw_addr[5],
 
-                       NET_INET_IPv4_a(ifstat.address),
-                       NET_INET_IPv4_b(ifstat.address),
-                       NET_INET_IPv4_c(ifstat.address),
-                       NET_INET_IPv4_d(ifstat.address),
+               NET_INET_IPv4_a(global->status.inet.address),
+               NET_INET_IPv4_b(global->status.inet.address),
+               NET_INET_IPv4_c(global->status.inet.address),
+               NET_INET_IPv4_d(global->status.inet.address),
 
-                       NET_INET_IPv4_a(ifstat.gateway),
-                       NET_INET_IPv4_b(ifstat.gateway),
-                       NET_INET_IPv4_c(ifstat.gateway),
-                       NET_INET_IPv4_d(ifstat.gateway),
+               NET_INET_IPv4_a(global->status.inet.gateway),
+               NET_INET_IPv4_b(global->status.inet.gateway),
+               NET_INET_IPv4_c(global->status.inet.gateway),
+               NET_INET_IPv4_d(global->status.inet.gateway),
 
-                       NET_INET_IPv4_a(ifstat.mask),
-                       NET_INET_IPv4_b(ifstat.mask),
-                       NET_INET_IPv4_c(ifstat.mask),
-                       NET_INET_IPv4_d(ifstat.mask),
+               NET_INET_IPv4_a(global->status.inet.mask),
+               NET_INET_IPv4_b(global->status.inet.mask),
+               NET_INET_IPv4_c(global->status.inet.mask),
+               NET_INET_IPv4_d(global->status.inet.mask),
 
-                       (uint)ifstat.rx_packets, cast(uint, ifstat.rx_bytes), rx_unit,
-                       (uint)ifstat.tx_packets, cast(uint, ifstat.tx_bytes), tx_unit
-               );
-        }
+               global->status.inet.rx_packets, global->status.inet.rx_bytes, rx_unit,
+               global->status.inet.tx_packets, global->status.inet.tx_bytes, tx_unit
+       );
 }
 
 
@@ -245,21 +246,19 @@ static void INET_status(void)
  * @param options       string options
  */
 //==============================================================================
-static void SIPC_up(const char *options)
+static void SIPC_up(const char *netname, const char *options)
 {
-        UNUSED_ARG1(options);
-
         NET_SIPC_config_t conf;
         if (isstreq(options, "auto")) {
                 conf.MTU = 1024;
         } else {
-                int MTU = 0;
-                sscanf(options, "%u", &MTU);
+                u32_t MTU = 0;
+                sscanf(options, "%lu", &MTU);
                 conf.MTU = MTU;
         }
 
-        if (ifup(NET_FAMILY__SIPC, &conf) != 0) {
-                perror("INET");
+        if (ifup(netname, &conf) != 0) {
+                perror(netname);
         }
 }
 
@@ -268,26 +267,101 @@ static void SIPC_up(const char *options)
  * @brief Function gets INET connection status.
  */
 //==============================================================================
-static void SIPC_status(void)
+static void SIPC_print_status(void)
 {
-        NET_SIPC_status_t ifstat;
-        if (ifstatus(NET_FAMILY__SIPC, &ifstat) == 0) {
+        static const char *SIPC_STATE[] = {
+               "NOT CONFIGURED",
+               "CONFIGURED"
+        };
 
-                const char *tx_unit = convert_unit(&ifstat.tx_bytes);
-                const char *rx_unit = convert_unit(&ifstat.rx_bytes);
+        const char *tx_unit = convert_unit(&global->status.sipc.tx_bytes);
+        const char *rx_unit = convert_unit(&global->status.sipc.rx_bytes);
 
-                printf("SIPC\n"
-                       "  Status: %s\n"
-                       "  MTU: %u B\n"
-                       "  RX packets: %u (%u %s)\n"
-                       "  TX packets: %u (%u %s)\n",
+        printf("SIPC\n"
+               "  Status: %s\n"
+               "  MTU: %u B\n"
+               "  RX packets: %llu (%llu %s)\n"
+               "  TX packets: %llu (%llu %s)\n",
 
-                       SIPC_STATE[ifstat.state],
-                       ifstat.MTU,
-                       (uint)ifstat.rx_packets, cast(uint, ifstat.rx_bytes), rx_unit,
-                       (uint)ifstat.tx_packets, cast(uint, ifstat.tx_bytes), tx_unit
-               );
+               SIPC_STATE[global->status.sipc.state],
+               global->status.sipc.MTU,
+               global->status.sipc.rx_packets, global->status.sipc.rx_bytes, rx_unit,
+               global->status.sipc.tx_packets, global->status.sipc.tx_bytes, tx_unit
+       );
+}
+
+
+//==============================================================================
+/**
+ * @brief Function setup SIPC connection.
+ * @param options       string options
+ */
+//==============================================================================
+static void CANNET_up(const char *netname, const char *options)
+{
+        NET_CANNET_config_t conf;
+        u32_t addr = 0;
+        sscanf(options, "%lu", &addr);
+        conf.addr = addr;
+
+        if (ifup(netname, &conf) != 0) {
+                perror(netname);
         }
+}
+
+//==============================================================================
+/**
+ * @brief Function gets INET connection status.
+ */
+//==============================================================================
+static void CANNET_print_status(void)
+{
+        static const char *CANNET_STATE[] = {
+               "NOT CONFIGURED",
+               "CONFIGURED"
+        };
+
+        const char *tx_unit = convert_unit(&global->status.cannet.tx_bytes);
+        const char *rx_unit = convert_unit(&global->status.cannet.rx_bytes);
+
+        printf("CANNET\n"
+               "  Status: %s\n"
+               "  Address: %u\n"
+               "  MTU: %u B\n"
+               "  RX packets: %llu (%llu %s)\n"
+               "  TX packets: %llu (%llu %s)\n",
+
+               CANNET_STATE[global->status.cannet.state],
+               global->status.cannet.addr,
+               global->status.cannet.MTU,
+               global->status.cannet.rx_packets, global->status.cannet.rx_bytes, rx_unit,
+               global->status.cannet.tx_packets, global->status.cannet.tx_bytes, tx_unit
+       );
+}
+
+//==============================================================================
+/**
+ * @brief Function print network status.
+ */
+//==============================================================================
+static void print_network_status(const char *network, NET_family_t family)
+{
+        printf("%s, ", network);
+
+        if (family == _NET_FAMILY__COUNT) {
+                puts("UNKNOWN");
+
+        } else if (family == NET_FAMILY__INET) {
+                INET_print_status();
+
+        } else if (family == NET_FAMILY__SIPC) {
+                SIPC_print_status();
+
+        } else if (family == NET_FAMILY__CANNET) {
+                CANNET_print_status();
+        }
+
+        puts("");
 }
 
 //==============================================================================
@@ -302,10 +376,21 @@ static void SIPC_status(void)
 //==============================================================================
 int main(int argc, char *argv[])
 {
+        iflist(global->network, ARRAY_SIZE(global->network));
+
         if (argc == 1) {
-                // print statuses of all networks
-                INET_status();
-                SIPC_status();
+                uint num_of_networks = 0;
+                for (; global->network[num_of_networks]; num_of_networks++);
+                printf("Number of networks: %u\n", num_of_networks);
+
+                char **network = global->network;
+                while (*network) {
+                        NET_family_t family;
+                        if (ifstatus(*network, &family, &global->status) == 0) {
+                                print_network_status(*network, family);
+                        }
+                        network++;
+                }
 
         } else if (argc >= 4) {
                 // print help if too many arguments are given
@@ -314,7 +399,7 @@ int main(int argc, char *argv[])
         } else {
                 bool        down    = false;
                 const char *up_args = NULL;
-                const char *net     = NULL;
+                const char *netname = NULL;
 
                 // analyze arguments
                 for (int i = 1; i < argc; i++) {
@@ -329,35 +414,37 @@ int main(int argc, char *argv[])
                                 up_args = argv[i] + 3;
 
                         } else {
-                                net = argv[i];
+                                netname = argv[i];
                         }
                 }
 
                 // configure selected network
-                if (net) {
-                        if (isstreq(net, "INET")) {
+                if (netname) {
+                        NET_family_t family;
+                        if (ifstatus(netname, &family, &global->status) == 0) {
                                 if (down) {
-                                        ifdown(NET_FAMILY__INET);
-                                } else if (up_args) {
-                                        INET_up(up_args);
-                                } else {
-                                        INET_status();
-                                }
+                                        ifdown(netname);
 
-                        } else if (isstreq(net, "SIPC")) {
-                                if (down) {
-                                        ifdown(NET_FAMILY__SIPC);
                                 } else if (up_args) {
-                                        SIPC_up(up_args);
-                                } else {
-                                        SIPC_status();
-                                }
+                                        if (family == _NET_FAMILY__COUNT) {
+                                                fputs("Unknown network.\n", stderr);
 
-                        } else {
-                                fputs("Unknown network family.\n", stderr);
+                                        } else if (family == NET_FAMILY__INET) {
+                                                INET_up(netname, up_args);
+
+                                        } else if (family == NET_FAMILY__SIPC) {
+                                                SIPC_up(netname, up_args);
+
+                                        } else if (family == NET_FAMILY__CANNET) {
+                                                CANNET_up(netname, up_args);
+                                        }
+                                } else {
+                                        print_network_status(netname, family);
+                                }
                         }
+
                 } else {
-                        fputs("Unknown network family.\n", stderr);
+                        fputs("Unknown network.\n", stderr);
                 }
         }
 

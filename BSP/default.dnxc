@@ -6775,28 +6775,44 @@
 				["value"]="16";
 			};
 			[18.000000]={
+				["key"]="__FMC_SDRAM_1_HEAP_REGIONS__";
+				["value"]="1";
+			};
+			[19.000000]={
+				["key"]="__FMC_SDRAM_1_HEAP_REGION_SIZE__";
+				["value"]="8192";
+			};
+			[20.000000]={
 				["key"]="__FMC_SDRAM_2_ENABLE__";
 				["value"]="0";
 			};
-			[19.000000]={
+			[21.000000]={
 				["key"]="__FMC_SDRAM_2_NB__";
 				["value"]="1";
 			};
-			[20.000000]={
+			[22.000000]={
 				["key"]="__FMC_SDRAM_2_MWID__";
 				["value"]="1";
 			};
-			[21.000000]={
+			[23.000000]={
 				["key"]="__FMC_SDRAM_2_NR__";
 				["value"]="1";
 			};
-			[22.000000]={
+			[24.000000]={
 				["key"]="__FMC_SDRAM_2_NC__";
 				["value"]="0";
 			};
-			[23.000000]={
+			[25.000000]={
 				["key"]="__FMC_SDRAM_2_TRCD__";
 				["value"]="16";
+			};
+			[26.000000]={
+				["key"]="__FMC_SDRAM_2_HEAP_REGIONS__";
+				["value"]="1";
+			};
+			[27.000000]={
+				["key"]="__FMC_SDRAM_2_HEAP_REGION_SIZE__";
+				["value"]="8192";
 			};
 		};
 		["arch/stm32f4/gpio_flags.h"]={
@@ -19704,6 +19720,10 @@
 				["key"]="__EEFS_LOG_ENABLE__";
 				["value"]="_NO_";
 			};
+			[2.000000]={
+				["key"]="__EEFS_CACHE_SIZE__";
+				["value"]="8";
+			};
 		};
 		["filesystems/ext4fs_flags.h"]={
 			[1.000000]={
@@ -19785,7 +19805,49 @@
 				["value"]="_YES_";
 			};
 		};
-		["network/lwip_flags.h"]={
+		["network/cannet_flags.h"]={
+			[1.000000]={
+				["key"]="__NETWORK_CANNET_MAX_SOCKET_BUFFER_LENGTH__";
+				["value"]="256";
+			};
+			[2.000000]={
+				["key"]="__NETWORK_CANNET_MAX_SOCKETS__";
+				["value"]="16";
+			};
+			[3.000000]={
+				["key"]="__NETWORK_CANNET_DEBUG_ON__";
+				["value"]="_NO_";
+			};
+		};
+		["network/network_flags.h"]={
+			[1.000000]={
+				["key"]="__ENABLE_TCPIP_STACK__";
+				["value"]="_NO_";
+			};
+			[2.000000]={
+				["key"]="__ENABLE_SIPC_STACK__";
+				["value"]="_NO_";
+			};
+			[3.000000]={
+				["key"]="__ENABLE_CANNET_STACK__";
+				["value"]="_NO_";
+			};
+			[4.000000]={
+				["key"]="__ENABLE_NETWORK__";
+				["value"]="_NO_";
+			};
+		};
+		["network/sipc_flags.h"]={
+			[1.000000]={
+				["key"]="__NETWORK_SIPC_DEBUG_ON__";
+				["value"]="_NO_";
+			};
+			[2.000000]={
+				["key"]="__NETWORK_SIPC_RECV_BUF_SIZE__";
+				["value"]="2048";
+			};
+		};
+		["network/tcpip_flags.h"]={
 			[1.000000]={
 				["key"]="__NETWORK_MEMP_OVERFLOW_CHECK__";
 				["value"]="0";
@@ -20409,48 +20471,6 @@
 			[156.000000]={
 				["key"]="__NETWORK_DHCP6_DEBUG__";
 				["value"]="LWIP_DBG_OFF";
-			};
-		};
-		["network/network_flags.h"]={
-			[1.000000]={
-				["key"]="__ENABLE_NETWORK__";
-				["value"]="_NO_";
-			};
-			[2.000000]={
-				["key"]="__ENABLE_TCPIP_STACK__";
-				["value"]="_NO_";
-			};
-			[3.000000]={
-				["key"]="__ENABLE_SIPC_STACK__";
-				["value"]="_NO_";
-			};
-		};
-		["network/sipc_flags.h"]={
-			[1.000000]={
-				["key"]="__NETWORK_SIPC_INTERFACE_PATH__";
-				["value"]="\"/dev/nc\"";
-			};
-			[2.000000]={
-				["key"]="__NETWORK_SIPC_DEBUG_ON__";
-				["value"]="_NO_";
-			};
-			[3.000000]={
-				["key"]="__NETWORK_SIPC_RECV_BUF_SIZE__";
-				["value"]="2048";
-			};
-		};
-		["network/tcpip_flags.h"]={
-			[1.000000]={
-				["key"]="__STACK_LWIP__";
-				["value"]="0xf986f02e";
-			};
-			[2.000000]={
-				["key"]="__NETWORK_TCPIP_STACK__";
-				["value"]="__STACK_LWIP__";
-			};
-			[3.000000]={
-				["key"]="__NETWORK_TCPIP_DEVICE_PATH__";
-				["value"]="\"/dev/eth\"";
 			};
 		};
 		["os/os_flags.h"]={

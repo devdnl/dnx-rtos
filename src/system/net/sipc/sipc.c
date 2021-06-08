@@ -121,18 +121,19 @@ typedef struct {
         mutex_t *socket_list_mtx;
         llist_t *socket_list;
         uint16_t seq_ctr;
+        bool run;
 } sipc_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
 static int  input_thread(void *sem);
-static void clear_transfer_counters();
-static void unregister_socket(SIPC_socket_t *socket);
-static int  register_socket(SIPC_socket_t *socket);
-static bool is_socket_registered(SIPC_socket_t *socket);
-static int  send_packet(u16_t seq, u8_t port, u8_t type, const u8_t *payload, u16_t plen);
-static SIPC_socket_t *get_socket_by_port(u8_t port);
+static void clear_transfer_counters(sipc_t *sipc);
+static void unregister_socket(sipc_t *sipc, SIPC_socket_t *socket);
+static int  register_socket(sipc_t *sipc, SIPC_socket_t *socket);
+static bool is_socket_registered(sipc_t *sipc, SIPC_socket_t *socket);
+static int  send_packet(sipc_t *sipc, u16_t seq, u8_t port, u8_t type, const u8_t *payload, u16_t plen);
+static SIPC_socket_t *get_socket_by_port(sipc_t *sipc, u8_t port);
 
 /*==============================================================================
   External function prototypes
@@ -141,7 +142,6 @@ static SIPC_socket_t *get_socket_by_port(u8_t port);
 /*==============================================================================
   Local objects
 ==============================================================================*/
-static sipc_t *sipc;
 static const u8_t PACKET_PREABLE[2] = {0xAA, 0x55};
 static u32_t CONNECTION_TIMEOUT = 4000;
 
@@ -168,7 +168,7 @@ static const char *TYPE_STR[] = {"DATA", "HSK", "ACK", "NACK", "BUSY", "REPT", "
  * @return None
  */
 //==============================================================================
-static void clear_transfer_counters(void)
+static void clear_transfer_counters(sipc_t *sipc)
 {
         sipc->stats.rx_bytes   = 0;
         sipc->stats.tx_bytes   = 0;
@@ -245,8 +245,10 @@ static uint16_t fletcher16(uint8_t const *data, size_t bytes)
  * @return On success return allocated data.
  */
 //==============================================================================
-static void receive_packet(sipc_packet_t *phdr, u8_t **payload)
+static void receive_packet(void *ctx, sipc_packet_t *phdr, u8_t **payload)
 {
+        sipc_t *sipc = ctx;
+
         while (true) {
                 size_t rdcnt;
 
@@ -291,7 +293,7 @@ static void receive_packet(sipc_packet_t *phdr, u8_t **payload)
  * @return One of errno value.
  */
 //==============================================================================
-static int send_packet(u16_t seq, u8_t port, u8_t type, const u8_t *payload, u16_t plen)
+static int send_packet(sipc_t *sipc, u16_t seq, u8_t port, u8_t type, const u8_t *payload, u16_t plen)
 {
         DEBUG("sending packet : seq:%u, port:%d, type:%s, plen:%d", seq, port, TYPE_STR[type], plen);
 
@@ -394,7 +396,7 @@ static bool is_packet_valid(sipc_packet_t *packet, u8_t *payload)
  * @return Socket object.
  */
 //==============================================================================
-static SIPC_socket_t *get_socket_by_port(u8_t port)
+static SIPC_socket_t *get_socket_by_port(sipc_t *sipc, u8_t port)
 {
         SIPC_socket_t *socket = NULL;
 
@@ -426,30 +428,21 @@ static SIPC_socket_t *get_socket_by_port(u8_t port)
 //==============================================================================
 static int input_thread(void *arg)
 {
-        UNUSED_ARG1(arg);
+        sipc_t *sipc = arg;
 
         /* open interface file */
-        bool msg = false;
-
-        while (sipc->if_file == NULL) {
-                int err = sys_fopen(__NETWORK_SIPC_INTERFACE_PATH__, "r+", &sipc->if_file);
-
-                if (err && !msg) {
-                        printk("SIPC: waiting for interface file...");
-                        msg = true;
-                }
-
+        while (sipc->run and (sipc->if_file == NULL)) {
                 sys_sleep_ms(1000);
         }
 
-        while (true) {
+        while (sipc->run) {
                 sipc_packet_t packet;
                 u8_t *payload;
-                receive_packet(&packet, &payload);
+                receive_packet(sipc, &packet, &payload);
 
                 if (sipc->state == NET_SIPC_STATE__DOWN) {
 
-                        clear_transfer_counters();
+                        clear_transfer_counters(sipc);
 
                         if (sys_mutex_lock(sipc->socket_list_mtx, MAX_DELAY_MS) == 0) {
 
@@ -474,7 +467,7 @@ static int input_thread(void *arg)
                         sipc->stats.rx_packets++;
                         sipc->stats.rx_bytes += sizeof(sipc_packet_t) + packet.plen;
 
-                        SIPC_socket_t *socket = get_socket_by_port(packet.port);
+                        SIPC_socket_t *socket = get_socket_by_port(sipc, packet.port);
 
                         if (socket) {
                                 socket->seq = packet.seq;
@@ -520,7 +513,7 @@ static int input_thread(void *arg)
                                                 ptype = PACKET_TYPE_BUSY;
                                         }
 
-                                        send_packet(packet.seq, packet.port, ptype, NULL, 0);
+                                        send_packet(sipc, packet.seq, packet.port, ptype, NULL, 0);
 
                                 } else if (packet.type == PACKET_TYPE_BIND) {
 
@@ -540,7 +533,7 @@ static int input_thread(void *arg)
                                                 zfree((void*)&payload);
                                         }
 
-                                        send_packet(packet.seq, packet.port, PACKET_TYPE_ACK, NULL, 0);
+                                        send_packet(sipc, packet.seq, packet.port, PACKET_TYPE_ACK, NULL, 0);
 
                                         if (socket->waiting_for_data_ack) {
                                                 sys_queue_send(socket->ansq, &packet.type, 0);
@@ -560,7 +553,7 @@ static int input_thread(void *arg)
                                         zfree((void*)&payload);
                                 }
 
-                                send_packet(packet.seq, packet.port, PACKET_TYPE_NACK, NULL, 0);
+                                send_packet(sipc, packet.seq, packet.port, PACKET_TYPE_NACK, NULL, 0);
                         }
 
                 } else {
@@ -570,7 +563,7 @@ static int input_thread(void *arg)
                                 zfree((void*)&payload);
                         }
 
-                        send_packet(packet.seq, packet.port, PACKET_TYPE_REPEAT, NULL, 0);
+                        send_packet(sipc, packet.seq, packet.port, PACKET_TYPE_REPEAT, NULL, 0);
                 }
         }
 
@@ -586,7 +579,7 @@ static int input_thread(void *arg)
  * @return One of errno value.
  */
 //==============================================================================
-static int register_socket(SIPC_socket_t *socket)
+static int register_socket(sipc_t *sipc, SIPC_socket_t *socket)
 {
         int err = sys_mutex_lock(sipc->socket_list_mtx, MAX_DELAY_MS);
         if (!err) {
@@ -616,7 +609,7 @@ static int register_socket(SIPC_socket_t *socket)
  * @return If socket is registered then true is returned, otherwise false.
  */
 //==============================================================================
-static bool is_socket_registered(SIPC_socket_t *socket)
+static bool is_socket_registered(sipc_t *sipc, SIPC_socket_t *socket)
 {
         bool is_registered = false;
 
@@ -635,7 +628,7 @@ static bool is_socket_registered(SIPC_socket_t *socket)
  * @param  socket       socket to unregister
  */
 //==============================================================================
-static void unregister_socket(SIPC_socket_t *socket)
+static void unregister_socket(sipc_t *sipc, SIPC_socket_t *socket)
 {
         int err = sys_mutex_lock(sipc->socket_list_mtx, MAX_DELAY_MS);
         if (!err) {
@@ -651,59 +644,78 @@ static void unregister_socket(SIPC_socket_t *socket)
 
 //==============================================================================
 /**
- * @brief  Function starts network manager and set network interface.
- *         Function is called before kernel start.
- * @param  None
+ * @brief  Function initialize network.
+ * @param  ctx          context
+ * @param  if_path      interface path
  * @return One of @ref errno value.
  */
 //==============================================================================
-static int stack_init(void)
+int SIPC_ifinit(void **ctx, const char *if_path)
 {
-        if (sipc) {
-                return ESUCC;
-        }
-
-        int err = zalloc(sizeof(sipc_t), (void*)&sipc);
+        int err = zalloc(sizeof(sipc_t), ctx);
         if (!err) {
+                sipc_t *sipc = *ctx;
+
                 static const thread_attr_t attr = {
                         .priority    = PRIORITY_NORMAL,
                         .stack_depth = STACK_DEPTH_LOW,
                         .detached    = true
                 };
 
-                int tierr = sys_thread_create(input_thread, &attr, NULL, &sipc->if_thread);
+                sipc->run = true;
+
+                int ferr  = sys_fopen(if_path, "r+", &sipc->if_file);
                 int merr  = sys_mutex_create(MUTEX_TYPE_NORMAL, &sipc->socket_list_mtx);
                 int serr  = sys_mutex_create(MUTEX_TYPE_NORMAL, &sipc->packet_send_mtx);
                 int lerr  = _llist_create_krn(_MM_NET, list_cmp_functor, NULL, &sipc->socket_list);
+                int tierr = sys_thread_create(input_thread, &attr, sipc, &sipc->if_thread);
 
-                if (tierr || merr || lerr || serr) {
-                        if (!tierr) {
-                                sys_thread_destroy(sipc->if_thread);
-                        }
-
-                        if (!merr) {
-                                sys_mutex_destroy(sipc->socket_list_mtx);
-                        }
-
-                        if (!serr) {
-                                sys_mutex_destroy(sipc->packet_send_mtx);
-                        }
-
-                        if (!lerr) {
-                                sys_llist_destroy(sipc->socket_list);
-                        }
-
-                        zfree((void*)&sipc);
-
+                if (ferr || tierr || merr || lerr || serr) {
+                        SIPC_ifdeinit(sipc);
                         printk("SIPC: stack initialization error");
-
                         err = ENOMEM;
                 } else {
-                        printk("SIPC: thread ID: %u", sipc->if_thread);
+                        printk("SIPC (%s): thread ID: %u", if_path, sipc->if_thread);
                 }
         }
 
         return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function deinitialize network.
+ * @param  ctx   context
+ * @return One of @ref errno value.
+ */
+//==============================================================================
+int SIPC_ifdeinit(void *ctx)
+{
+        sipc_t *sipc = ctx;
+
+        sipc->run = false;
+
+        if (sipc->if_thread) {
+                sys_thread_destroy(sipc->if_thread);
+        }
+
+        if (sipc->socket_list_mtx) {
+                sys_mutex_destroy(sipc->socket_list_mtx);
+        }
+
+        if (sipc->packet_send_mtx) {
+                sys_mutex_destroy(sipc->packet_send_mtx);
+        }
+
+        if (sipc->socket_list) {
+                sys_llist_destroy(sipc->socket_list);
+        }
+
+        if (sipc->if_file) {
+                sys_fclose(sipc->if_file);
+        }
+
+        return zfree(ctx);
 }
 
 //==============================================================================
@@ -713,17 +725,16 @@ static int stack_init(void)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_ifup(const NET_SIPC_config_t *cfg)
+int SIPC_ifup(void *ctx, const NET_SIPC_config_t *cfg)
 {
-        int err = stack_init();
-        if (!err) {
-                if (cfg) {
-                        sipc->conf.MTU = max(64, cfg->MTU);
-                        sipc->state = NET_SIPC_STATE__UP;
-                } else {
-                        sipc->conf.MTU = 64;
-                        sipc->state = NET_SIPC_STATE__DOWN;
-                }
+        sipc_t *sipc = ctx;
+
+        int err = EINVAL;
+
+        if (cfg) {
+                sipc->conf.MTU = max(64, cfg->MTU);
+                sipc->state = NET_SIPC_STATE__UP;
+                err = 0;
         }
 
         return err;
@@ -735,15 +746,17 @@ int SIPC_ifup(const NET_SIPC_config_t *cfg)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_ifdown(void)
+int SIPC_ifdown(void *ctx)
 {
+        sipc_t *sipc = ctx;
+
         int err = ENONET;
 
         if ((sipc != NULL) && (sipc->state == NET_SIPC_STATE__UP)) {
 
                 sipc->state = NET_SIPC_STATE__DOWN;
 
-                clear_transfer_counters();
+                clear_transfer_counters(sipc);
 
                 err = ESUCC;
         }
@@ -758,8 +771,10 @@ int SIPC_ifdown(void)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_ifstatus(NET_SIPC_status_t *status)
+int SIPC_ifstatus(void *ctx, NET_SIPC_status_t *status)
 {
+        sipc_t *sipc = ctx;
+
         if (sipc) {
                 status->MTU        = sipc->conf.MTU;
                 status->rx_packets = sipc->stats.rx_packets;
@@ -782,8 +797,10 @@ int SIPC_ifstatus(NET_SIPC_status_t *status)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_create(NET_protocol_t prot, SIPC_socket_t *socket)
+int SIPC_socket_create(void *ctx, NET_protocol_t prot, SIPC_socket_t *socket)
 {
+        UNUSED_ARG1(ctx);
+
         int err = EINVAL;
 
         if (prot == NET_PROTOCOL__STREAM) {
@@ -824,9 +841,11 @@ int SIPC_socket_create(NET_protocol_t prot, SIPC_socket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_destroy(SIPC_socket_t *socket)
+int SIPC_socket_destroy(void *ctx, SIPC_socket_t *socket)
 {
-        unregister_socket(socket);
+        sipc_t *sipc = ctx;
+
+        unregister_socket(sipc, socket);
 
         socket->port         = 0;
         socket->recv_timeout = 0;
@@ -845,15 +864,17 @@ int SIPC_socket_destroy(SIPC_socket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_connect(SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
+int SIPC_socket_connect(void *ctx, SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
 {
+        sipc_t *sipc = ctx;
+
         if (addr->port == 0) {
                 return EINVAL;
         }
 
         socket->port = addr->port;
 
-        int err = register_socket(socket);
+        int err = register_socket(sipc, socket);
         if (err) {
                 socket->port = 0;
                 return err;
@@ -863,7 +884,7 @@ int SIPC_socket_connect(SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
 
         socket->seq = sipc->seq_ctr;
 
-        err = send_packet(socket->seq, socket->port, PACKET_TYPE_HANDSHAKE, NULL, 0);
+        err = send_packet(sipc, socket->seq, socket->port, PACKET_TYPE_HANDSHAKE, NULL, 0);
         if (!err) {
                 u8_t type;
                 err = sys_queue_receive(socket->ansq, &type, CONNECTION_TIMEOUT);
@@ -886,7 +907,7 @@ int SIPC_socket_connect(SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
         }
 
         if (err) {
-                unregister_socket(socket);
+                unregister_socket(sipc, socket);
                 socket->port = 0;
         }
 
@@ -900,9 +921,11 @@ int SIPC_socket_connect(SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_disconnect(SIPC_socket_t *socket)
+int SIPC_socket_disconnect(void *ctx, SIPC_socket_t *socket)
 {
-        unregister_socket(socket);
+        sipc_t *sipc = ctx;
+
+        unregister_socket(sipc, socket);
         sipcbuf__clear(socket->rxbuf);
         sys_queue_reset(socket->ansq);
         socket->port = 0;
@@ -918,9 +941,9 @@ int SIPC_socket_disconnect(SIPC_socket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_shutdown(SIPC_socket_t *socket, NET_shut_t how)
+int SIPC_socket_shutdown(void *ctx, SIPC_socket_t *socket, NET_shut_t how)
 {
-        UNUSED_ARG2(socket, how);
+        UNUSED_ARG3(ctx, socket, how);
         return ENOTSUP;
 }
 
@@ -932,20 +955,22 @@ int SIPC_socket_shutdown(SIPC_socket_t *socket, NET_shut_t how)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_bind(SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
+int SIPC_socket_bind(void *ctx, SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
 {
+        sipc_t *sipc = ctx;
+
         if (addr->port == 0) {
                 return EINVAL;
         }
 
         socket->port = addr->port;
 
-        int err = register_socket(socket);
+        int err = register_socket(sipc, socket);
         if (!err) {
 
                 sys_queue_reset(socket->ansq);
                 socket->seq = sipc->seq_ctr;
-                err = send_packet(socket->seq, socket->port, PACKET_TYPE_BIND, NULL, 0);
+                err = send_packet(sipc, socket->seq, socket->port, PACKET_TYPE_BIND, NULL, 0);
 
         } else {
                 socket->port = 0;
@@ -961,9 +986,9 @@ int SIPC_socket_bind(SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_listen(SIPC_socket_t *socket)
+int SIPC_socket_listen(void *ctx, SIPC_socket_t *socket)
 {
-        UNUSED_ARG1(socket);
+        UNUSED_ARG2(ctx, socket);
         return ENOTSUP;
 }
 
@@ -975,9 +1000,9 @@ int SIPC_socket_listen(SIPC_socket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_accept(SIPC_socket_t *socket, SIPC_socket_t *new_socket)
+int SIPC_socket_accept(void *ctx, SIPC_socket_t *socket, SIPC_socket_t *new_socket)
 {
-        UNUSED_ARG2(socket, new_socket);
+        UNUSED_ARG3(ctx, socket, new_socket);
         return ENOTSUP;
 }
 
@@ -992,13 +1017,16 @@ int SIPC_socket_accept(SIPC_socket_t *socket, SIPC_socket_t *new_socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_recv(SIPC_socket_t *socket,
+int SIPC_socket_recv(void          *ctx,
+                     SIPC_socket_t *socket,
                      void          *buf,
                      size_t         len,
                      NET_flags_t    flags,
                      size_t        *recved)
 {
-        if (!is_socket_registered(socket)) {
+        sipc_t *sipc = ctx;
+
+        if (!is_socket_registered(sipc, socket)) {
                 return ECONNREFUSED;
         }
 
@@ -1018,7 +1046,7 @@ int SIPC_socket_recv(SIPC_socket_t *socket,
                         } else {
                                 if (socket->busy && !sipcbuf__is_full(socket->rxbuf)) {
                                         socket->busy = false;
-                                        send_packet(socket->seq, socket->port, PACKET_TYPE_ACK, NULL, 0);
+                                        send_packet(sipc, socket->seq, socket->port, PACKET_TYPE_ACK, NULL, 0);
                                 }
                         }
                 }
@@ -1045,14 +1073,15 @@ int SIPC_socket_recv(SIPC_socket_t *socket,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_recvfrom(SIPC_socket_t       *socket,
+int SIPC_socket_recvfrom(void                *ctx,
+                         SIPC_socket_t       *socket,
                          void                *buf,
                          size_t               len,
                          NET_flags_t          flags,
                          NET_SIPC_sockaddr_t *sockaddr,
                          size_t              *recved)
 {
-        UNUSED_ARG6(socket, buf, len, flags, sockaddr, recved);
+        UNUSED_ARG7(ctx, socket, buf, len, flags, sockaddr, recved);
         return ENOTSUP;
 }
 
@@ -1067,7 +1096,8 @@ int SIPC_socket_recvfrom(SIPC_socket_t       *socket,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_send(SIPC_socket_t *socket,
+int SIPC_socket_send(void          *ctx,
+                     SIPC_socket_t *socket,
                      const void    *buf,
                      size_t         len,
                      NET_flags_t    flags,
@@ -1075,7 +1105,9 @@ int SIPC_socket_send(SIPC_socket_t *socket,
 {
         UNUSED_ARG1(flags);
 
-        if (!is_socket_registered(socket)) {
+        sipc_t *sipc = ctx;
+
+        if (!is_socket_registered(sipc, socket)) {
                 return ECONNREFUSED;
         }
 
@@ -1103,7 +1135,7 @@ int SIPC_socket_send(SIPC_socket_t *socket,
                 socket->seq = sipc->seq_ctr;
                 socket->waiting_for_data_ack = true;
 
-                err = send_packet(socket->seq, socket->port, PACKET_TYPE_DATA, buf, plen);
+                err = send_packet(sipc, socket->seq, socket->port, PACKET_TYPE_DATA, buf, plen);
                 if (!err) {
                         u8_t type;
                         err = sys_queue_receive(socket->ansq, &type, socket->send_timeout);
@@ -1163,14 +1195,15 @@ int SIPC_socket_send(SIPC_socket_t *socket,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_sendto(SIPC_socket_t             *socket,
+int SIPC_socket_sendto(void                      *ctx,
+                       SIPC_socket_t             *socket,
                        const void                *buf,
                        size_t                     len,
                        NET_flags_t                flags,
                        const NET_SIPC_sockaddr_t *to_sockaddr,
                        size_t                    *sent)
 {
-        UNUSED_ARG6(socket, buf, len, flags, to_sockaddr, sent);
+        UNUSED_ARG7(ctx, socket, buf, len, flags, to_sockaddr, sent);
         return ENOTSUP;
 }
 
@@ -1182,9 +1215,10 @@ int SIPC_socket_sendto(SIPC_socket_t             *socket,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_gethostbyname(const char *name, NET_SIPC_sockaddr_t *sock_addr)
+int SIPC_gethostbyname(void *ctx, const char *name, NET_SIPC_sockaddr_t *sock_addr)
 {
-        UNUSED_ARG2(name, sock_addr);
+        UNUSED_ARG3(ctx, name, sock_addr);
+
         return ENOTSUP;
 }
 
@@ -1196,8 +1230,10 @@ int SIPC_gethostbyname(const char *name, NET_SIPC_sockaddr_t *sock_addr)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_set_recv_timeout(SIPC_socket_t *socket, uint32_t timeout)
+int SIPC_socket_set_recv_timeout(void *ctx, SIPC_socket_t *socket, uint32_t timeout)
 {
+        UNUSED_ARG1(ctx);
+
         socket->recv_timeout = timeout;
 
         return ESUCC;
@@ -1211,8 +1247,10 @@ int SIPC_socket_set_recv_timeout(SIPC_socket_t *socket, uint32_t timeout)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_set_send_timeout(SIPC_socket_t *socket, uint32_t timeout)
+int SIPC_socket_set_send_timeout(void *ctx, SIPC_socket_t *socket, uint32_t timeout)
 {
+        UNUSED_ARG1(ctx);
+
         socket->send_timeout = timeout;
 
         return ESUCC;
@@ -1226,9 +1264,10 @@ int SIPC_socket_set_send_timeout(SIPC_socket_t *socket, uint32_t timeout)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_get_recv_timeout(SIPC_socket_t *socket, uint32_t *timeout)
+int SIPC_socket_get_recv_timeout(void *ctx, SIPC_socket_t *socket, uint32_t *timeout)
 {
         *timeout = socket->recv_timeout;
+
         return ESUCC;
 }
 
@@ -1240,9 +1279,12 @@ int SIPC_socket_get_recv_timeout(SIPC_socket_t *socket, uint32_t *timeout)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_get_send_timeout(SIPC_socket_t *socket, uint32_t *timeout)
+int SIPC_socket_get_send_timeout(void *ctx, SIPC_socket_t *socket, uint32_t *timeout)
 {
+        UNUSED_ARG1(ctx);
+
         *timeout = socket->send_timeout;
+
         return ESUCC;
 }
 
@@ -1254,8 +1296,10 @@ int SIPC_socket_get_send_timeout(SIPC_socket_t *socket, uint32_t *timeout)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_getaddress(SIPC_socket_t *socket, NET_SIPC_sockaddr_t *sockaddr)
+int SIPC_socket_getaddress(void *ctx, SIPC_socket_t *socket, NET_SIPC_sockaddr_t *sockaddr)
 {
+        UNUSED_ARG1(ctx);
+
         return sockaddr->port = socket->port;
 }
 

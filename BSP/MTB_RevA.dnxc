@@ -2313,7 +2313,7 @@
 				["value"]="_YES_";
 			};
 		};
-		["network/lwip_flags.h"]={
+		["network/tcpip_flags.h"]={
 			[1]={
 				["key"]="__NETWORK_MEMP_OVERFLOW_CHECK__";
 				["value"]="0";
@@ -2965,20 +2965,6 @@
 			[3]={
 				["key"]="__NETWORK_SIPC_RECV_BUF_SIZE__";
 				["value"]="2048";
-			};
-		};
-		["network/tcpip_flags.h"]={
-			[1]={
-				["key"]="__STACK_LWIP__";
-				["value"]="0xf986f02e";
-			};
-			[2]={
-				["key"]="__NETWORK_TCPIP_STACK__";
-				["value"]="__STACK_LWIP__";
-			};
-			[3]={
-				["key"]="__NETWORK_TCPIP_DEVICE_PATH__";
-				["value"]="\"/dev/eth\"";
 			};
 		};
 		["os/os_flags.h"]={

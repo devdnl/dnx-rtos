@@ -322,7 +322,7 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
         int appends = argc - 2;
 
         int err;
-        while ((err = get_host_by_name(NET_FAMILY__INET,
+        while ((err = get_host_by_name("inet",
                                        argv[global->current_host_arg],
                                        &global->server))) {
 
@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
                         continue;
                 }
 
-                SOCKET *socket = socket_open(NET_FAMILY__INET, NET_PROTOCOL__UDP);
+                SOCKET *socket = socket_open("inet", NET_PROTOCOL__UDP);
                 if (socket) {
                         socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
                         socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);

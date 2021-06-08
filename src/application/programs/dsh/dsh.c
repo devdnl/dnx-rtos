@@ -315,7 +315,7 @@ static bool command_hint(void)
 
                                         if (strncmp(dirent->d_name, line, strlen(line)) == 0) {
                                                 if (matching_entries > 1) {
-                                                        printf("%s ", dirent->d_name);
+                                                        printf("'%s'  ", dirent->d_name);
 
                                                         min_len = min(min_len, strlen(dirent->d_name));
 

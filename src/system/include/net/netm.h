@@ -5,7 +5,7 @@ Author   Daniel Zorychta
 
 Brief    Network management.
 
-         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -79,6 +79,13 @@ extern "C" {
   SIPC NETWORK FAMILY
 ------------------------------------------------------------------------------*/
 
+/*------------------------------------------------------------------------------
+  CANNET NETWORK FAMILY
+------------------------------------------------------------------------------*/
+#define NET_CANNET_MAX_PORT             7
+#define NET_CANNET_CAN_ID_MASK          0x10003FFF
+#define NET_CANNET_ADDR_BROADCAST       0x3FFF
+#define NET_CANNET_ADDR_ANY             0x0000
 
 /*==============================================================================
   Exported object types
@@ -98,6 +105,11 @@ typedef enum {
 #else
 #define NET_FAMILY__SIPC _NET_FAMILY__COUNT
 #endif
+#if __ENABLE_CANNET_STACK__ > 0
+        NET_FAMILY__CANNET,                     //!< CAN network Communication
+#else
+#define NET_FAMILY__CANNET _NET_FAMILY__COUNT
+#endif
     #ifndef DOXYGEN
         _NET_FAMILY__COUNT
     #endif
@@ -105,9 +117,11 @@ typedef enum {
 
 /** Protocol selection. Not all protocols are available for all family networks. */
 typedef enum {
-        NET_PROTOCOL__UDP,                      //!< UDP protocol (INET).
-        NET_PROTOCOL__TCP,                      //!< TCP protocol (INET).
-        NET_PROTOCOL__STREAM,                   //!< STREAM protocol (SIPC)
+        NET_PROTOCOL__DATAGRAM,                         //!< DATAGRAM type protocol
+        NET_PROTOCOL__STREAM,                           //!< STREAM type protocol
+        NET_PROTOCOL__UDP = NET_PROTOCOL__DATAGRAM,     //!< UDP protocol.
+        NET_PROTOCOL__TCP = NET_PROTOCOL__STREAM,       //!< TCP protocol.
+        _NET_PROTOCOL__COUNT,                           //!< number of protocols
 } NET_protocol_t;
 
 /** Control flags. */
@@ -200,7 +214,7 @@ typedef enum {
 
 /** SIPC configuration. */
 typedef struct {
-        u16_t MTU;
+        u16_t MTU;                              //!< Maximal Transfer Unit
 } NET_SIPC_config_t;
 
 /** SIPC status. */
@@ -218,6 +232,38 @@ typedef struct {
         u8_t             port;                   /*!< Port.*/
 } NET_SIPC_sockaddr_t;
 
+
+/*------------------------------------------------------------------------------
+  CANNET NETWORK FAMILY
+------------------------------------------------------------------------------*/
+/** CANNET network state. */
+typedef enum {
+        NET_CANNET_STATE__DOWN,                 //!< Network not configured.
+        NET_CANNET_STATE__UP,                   //!< Network configured.
+} NET_CANNET_state_t;
+
+/** CANNET configuration. */
+typedef struct {
+        u16_t             addr;                 //!< device address.
+} NET_CANNET_config_t;
+
+/** CANNET status. */
+typedef struct {
+        NET_CANNET_state_t state;               /*!< Connection state.*/
+        u16_t              addr;                /*!< Address.*/
+        u16_t              MTU;                 /*!< Transfer size. */
+        u64_t              tx_bytes;            /*!< Number of transmitted bytes.*/
+        u64_t              rx_bytes;            /*!< Number of received bytes.*/
+        u64_t              tx_packets;          /*!< Number of transmitted packets.*/
+        u64_t              rx_packets;          /*!< Number of received packets.*/
+} NET_CANNET_status_t;
+
+/** SIPC socket address. */
+typedef struct {
+        u16_t addr;                             /*!< Address.*/
+        u8_t  port;                             /*!< Port.*/
+} NET_CANNET_sockaddr_t;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -226,11 +272,15 @@ typedef struct {
   Exported functions
 ==============================================================================*/
 #ifndef DOXYGEN
-extern int   _net_ifup(NET_family_t, const NET_generic_config_t*);
-extern int   _net_ifdown(NET_family_t);
-extern int   _net_ifstatus(NET_family_t, NET_generic_status_t*);
-extern int   _net_gethostbyname(NET_family_t, const char*, NET_generic_sockaddr_t*);
-extern int   _net_socket_create(NET_family_t, NET_protocol_t, SOCKET**);
+extern int   _net_ifadd(const char*, NET_family_t, const char*);
+extern int   _net_ifrm(const char*);
+extern int   _net_ifdelete(const char*);
+extern int   _net_iflist(char**, size_t);
+extern int   _net_ifup(const char*, const NET_generic_config_t*);
+extern int   _net_ifdown(const char*);
+extern int   _net_ifstatus(const char*, NET_family_t*, NET_generic_status_t*);
+extern int   _net_gethostbyname(const char*, const char*, NET_generic_sockaddr_t*);
+extern int   _net_socket_create(const char*, NET_protocol_t, SOCKET**);
 extern int   _net_socket_destroy(SOCKET*);
 extern int   _net_socket_bind(SOCKET*, const NET_generic_sockaddr_t*);
 extern int   _net_socket_listen(SOCKET*);

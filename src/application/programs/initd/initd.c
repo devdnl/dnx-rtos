@@ -344,6 +344,10 @@ static void start_DHCP_client(void)
          * 1. The DHCP configuration should be prepared to get network address.
          *    The static IP configuration can be used as well.
          */
+        errno = 0;
+        ifadd("inet", NET_FAMILY__INET, "/dev/eth");
+        perror("Network 'inet' status");
+
         puts("Starting DHCP client...\n");
 
         static const NET_INET_config_t cfg_dhcp = {
@@ -357,7 +361,7 @@ static void start_DHCP_client(void)
          * 2. Command setup network interface.
          */
         errno = 0;
-        if (ifup(NET_FAMILY__INET, &cfg_dhcp) != 0) {
+        if (ifup("inet", &cfg_dhcp) != 0) {
                 perror("ifup");
         }
         #endif

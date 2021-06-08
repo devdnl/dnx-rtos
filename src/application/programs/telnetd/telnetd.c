@@ -298,14 +298,15 @@ int main(int argc, char *argv[])
         NET_INET_status_t netstat = {0};
 
         do {
-                ifstatus(NET_FAMILY__INET, &netstat);
+                NET_family_t family;
+                ifstatus("inet", &family, &netstat);
                 msleep(500);
         } while (! ( (netstat.state == NET_INET_STATE__DHCP_CONFIGURED)
                    ||(netstat.state == NET_INET_STATE__STATIC_IP) ) );
 
 
 
-        SOCKET *listener = socket_open(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        SOCKET *listener = socket_open("inet", NET_PROTOCOL__TCP);
         if (!listener) {
                 global->msg = "Connection failed";
                 goto exit;

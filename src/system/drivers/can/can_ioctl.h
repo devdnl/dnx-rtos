@@ -353,32 +353,11 @@ extern "C" {
 #define IOCTL_CAN__RECV_MSG                     _IOR(CAN, 0x08, CAN_msg_t*)
 
 /**
- *  @brief  Get receive error counter.
- *  @param  [RD] @ref u8_t * error counter
+ *  @brief  CAN status.
+ *  @param  [WR] const @ref CAN_mode_t * can mode
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_CAN__GET_RECEIVE_ERROR_COUNTER    _IOR(CAN, 0x09, u8_t*)
-
-/**
- *  @brief  Get transmit error counter.
- *  @param  [RD] @ref u8_t * error counter
- *  @return On success 0 is returned, otherwise -1.
- */
-#define IOCTL_CAN__GET_TRANSMIT_ERROR_COUNTER   _IOR(CAN, 0x0A, u8_t*)
-
-/**
- *  @brief  Get bus status.
- *  @param  [RD] @ref CAN_bus_status_t * bus status
- *  @return On success 0 is returned, otherwise -1.
- */
-#define IOCTL_CAN__GET_BUS_STATUS               _IOR(CAN, 0x0B, CAN_bus_status_t*)
-
-/**
- *  @brief  Get RX FIFO overrun counter.
- *  @param  [RD] @ref u32_t* RX FIFO overrun counter
- *  @return On success 0 is returned, otherwise -1.
- */
-#define IOCTL_CAN__GET_RX_FIFO_OVERRUN_COUNTER  _IOR(CAN, 0x0C, u32_t*)
+#define IOCTL_CAN__GET_STATUS                   _IOW(CAN, 0x09, CAN_status_t*)
 
 /*==============================================================================
   Exported object types
@@ -438,6 +417,22 @@ typedef enum {
         CAN_BUS_STATUS__PASSIVE,        /*!< Bus is in passive mode */
         CAN_BUS_STATUS__OFF,            /*!< Bus off state */
 } CAN_bus_status_t;
+
+/**
+ * CAN status.
+ */
+typedef struct {
+        u64_t tx_bytes;
+        u64_t tx_frames;
+        u64_t rx_bytes;
+        u64_t rx_frames;
+        u32_t rx_overrun_ctr;
+        u32_t baud_bps;
+        CAN_bus_status_t can_bus_status;
+        CAN_mode_t mode;
+        u8_t rx_error_ctr;
+        u8_t tx_error_ctr;
+} CAN_status_t;
 
 /*==============================================================================
   Exported objects

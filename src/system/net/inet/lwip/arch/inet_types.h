@@ -67,6 +67,7 @@ typedef struct {
         bool            ready:1;
         bool            disconnected:1;
         bool            configured:1;
+        bool            thread_run:1;
         u8_t            frame[ETH_MAX_PACKET_SIZE];
 } inet_t;
 

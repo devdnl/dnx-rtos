@@ -42,26 +42,13 @@
 #                function() this:LoadFile("config.h", true) end)
 #++*/
 
-
-#/*--
-# this:AddExtraWidget("Label", "LabelGeneral", "General", -1, "bold")
-# this:AddExtraWidget("Void", "VoidGeneral0")
-#
-# this:AddWidget("Checkbox", "Enable network subsystem")
-# this:AddExtraWidget("Void", "VoidEnable")
-#--*/
-#define __ENABLE_NETWORK__ _NO_
-#/*
-__ENABLE_NETWORK__=_NO_
-#*/
-
 #/*--
 # this:AddExtraWidget("Label", "LabelStacks", "\nStacks", -1, "bold")
 # this:AddExtraWidget("Void", "VoidStacks")
 #++*/
 
 #/*--
-# this:AddWidget("Checkbox", "Enable TCP/IP stack")
+# this:AddWidget("Checkbox", "Enable TCP/IP")
 # this:AddExtraWidget("Hyperlink", "TCPIPConfigure", "Configure")
 # this:SetEvent("clicked", "TCPIPConfigure", function() this:LoadFile("network/tcpip_flags.h") end)
 #--*/
@@ -71,7 +58,7 @@ __ENABLE_TCPIP_STACK__=_NO_
 #*/
 
 #/*--
-# this:AddWidget("Checkbox", "Enable SIPC stack")
+# this:AddWidget("Checkbox", "Enable SIPC")
 # this:AddExtraWidget("Hyperlink", "SIPCConfigure", "Configure")
 # this:SetEvent("clicked", "SIPCConfigure", function() this:LoadFile("network/sipc_flags.h") end)
 #--*/
@@ -80,10 +67,20 @@ __ENABLE_TCPIP_STACK__=_NO_
 __ENABLE_SIPC_STACK__=_NO_
 #*/
 
+#/*--
+# this:AddWidget("Checkbox", "Enable CANNET")
+# this:AddExtraWidget("Hyperlink", "CANNETConfigure", "Configure")
+# this:SetEvent("clicked", "CANNETConfigure", function() this:LoadFile("network/cannet_flags.h") end)
+#--*/
+#define __ENABLE_CANNET_STACK__ _NO_
+#/*
+__ENABLE_CANNET_STACK__=_NO_
+#*/
+
 #if __ENABLE_TCPIP_STACK__ == _YES_
 #include "tcpip_flags.h"
 #/*
-include ./config/network/tcpip_flags.h
+#include ./config/network/tcpip_flags.h
 #*/
 #endif
 
@@ -93,6 +90,27 @@ include ./config/network/tcpip_flags.h
 include ./config/network/sipc_flags.h
 #*/
 #endif
+
+#if __ENABLE_CANNET_STACK__ == _YES_
+#include "cannet_flags.h"
+#/*
+include ./config/network/cannet_flags.h
+#*/
+#endif
+
+
+
+#/* MASTER NETWORK SUBSYSTEM ENABLE */
+#define __ENABLE_NETWORK__ _NO_
+#/*
+ifeq ($(__ENABLE_TCPIP_STACK__), _YES_)
+__ENABLE_NETWORK__=_NO_
+else ifeq ($(__ENABLE_SIPC_STACK__), _YES_)
+__ENABLE_NETWORK__=_NO_
+else ifeq ($(__ENABLE_CANNET_STACK__), _YES_)
+__ENABLE_NETWORK__=_NO_
+endif
+#*/
 
 #endif /* _NETWORK_FLAGS_H_ */
 #/*=============================================================================

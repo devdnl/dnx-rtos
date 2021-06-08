@@ -94,7 +94,7 @@ int sipcbuf__create(sipcbuf_t **sipcbuf, size_t max_capacity)
         int err = _kzalloc(_MM_NET, sizeof(sipcbuf_t), NULL, 0, 0, (void*)&this);
 
         if (!err) {
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &this->access);
+                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &this->access);
 
                 if (!err) {
                         this->soft_max_capacity = max(256, max_capacity);
@@ -117,14 +117,19 @@ int sipcbuf__create(sipcbuf_t **sipcbuf, size_t max_capacity)
 void sipcbuf__destroy(sipcbuf_t *sipcbuf)
 {
         if (sipcbuf) {
-                sipcbuf__clear(sipcbuf);
+                mutex_t *mtx = sipcbuf->access;
 
                 if (sys_mutex_lock(sipcbuf->access, MAX_DELAY_MS)) {
-                        mutex_t *mtx = sipcbuf->access;
+                        sipcbuf__clear(sipcbuf);
                         sipcbuf->access = NULL;
                         sys_mutex_unlock(mtx);
-                        sys_mutex_destroy(mtx);
                 }
+
+                if (sys_mutex_lock(mtx, MAX_DELAY_MS)) {
+                        sys_mutex_unlock(mtx);
+                }
+
+                sys_mutex_destroy(mtx);
 
                 _kfree(_MM_NET, (void*)&sipcbuf);
         }

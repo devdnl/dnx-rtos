@@ -240,11 +240,90 @@ extern "C" {
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief  Function add new network interface.
+ *
+ * @param  netname      network name
+ * @param  family       interface family
+ * @param  if_path      interface path
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
+ *
+ * @see ifrm(), ifstatus(), iflist()
+ */
+//==============================================================================
+static inline int ifadd(const char *netname, NET_family_t family, const char *if_path)
+{
+#if __ENABLE_NETWORK__ == _YES_
+        int result = -1;
+        syscall(SYSCALL_NETADD, &result, netname, &family, if_path);
+        return result;
+#else
+        UNUSED_ARG3(netname, family, if_path);
+        _errno = ENOTSUP;
+        return -1;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function remove network interface.
+ *
+ * @param  netname      network name
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
+ *
+ * @see ifrm(), ifstatus(), iflist()
+ */
+//==============================================================================
+static inline int ifrm(const char *netname)
+{
+#if __ENABLE_NETWORK__ == _YES_
+        int result = -1;
+        syscall(SYSCALL_NETRM, &result, netname);
+        return result;
+#else
+        UNUSED_ARG1(netname);
+        _errno = ENOTSUP;
+        return -1;
+#endif
+}
+
+//==============================================================================
+/**
+ * @brief  Function list all networks.
+ *
+ * @param  netname      network name
+ * @param  netname_len  network name buffer length
+ *
+ * @return On success 0 is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
+ *
+ * @see ifadd(), ifrm()
+ */
+//==============================================================================
+static inline int iflist(char *netname[], size_t netname_len)
+{
+#if __ENABLE_NETWORK__ == _YES_
+        int result = -1;
+        syscall(SYSCALL_NETIFLIST, &result, netname, &netname_len);
+        return result;
+#else
+        UNUSED_ARG2(netname, netname_len);
+        _errno = ENOTSUP;
+        return -1;
+#endif
+}
+
 //==============================================================================
 /**
  * @brief  Function set up selected network interface.
  *
- * @param  family       interface family
+ * @param  netname      network name
  * @param  config       configuration for specified interface
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
@@ -253,14 +332,14 @@ extern "C" {
  * @see ifdown(), ifstatus()
  */
 //==============================================================================
-static inline int ifup(NET_family_t family, const NET_generic_config_t *config)
+static inline int ifup(const char *netname, const NET_generic_config_t *config)
 {
 #if __ENABLE_NETWORK__ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETIFUP, &result, &family, config);
+        syscall(SYSCALL_NETIFUP, &result, netname, config);
         return result;
 #else
-        UNUSED_ARG2(family, config);
+        UNUSED_ARG2(netname, config);
         _errno = ENOTSUP;
         return -1;
 #endif
@@ -270,7 +349,7 @@ static inline int ifup(NET_family_t family, const NET_generic_config_t *config)
 /**
  * @brief  Function set down selected network interface.
  *
- * @param  family       interface family
+ * @param  netname      network name
  *
  * @return On success 0 is returned, otherwise -1 and @ref errno value is set
  *         appropriately.
@@ -278,14 +357,14 @@ static inline int ifup(NET_family_t family, const NET_generic_config_t *config)
  * @see ifup(), ifstatus()
  */
 //==============================================================================
-static inline int ifdown(NET_family_t family)
+static inline int ifdown(const char *netname)
 {
 #if __ENABLE_NETWORK__ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETIFDOWN, &result, &family);
+        syscall(SYSCALL_NETIFDOWN, &result, netname);
         return result;
 #else
-        UNUSED_ARG1(family);
+        UNUSED_ARG1(netname);
         _errno = ENOTSUP;
         return -1;
 #endif
@@ -295,6 +374,7 @@ static inline int ifdown(NET_family_t family)
 /**
  * @brief  Function get status of selected interface.
  *
+ * @param  netname      network name
  * @param  family       interface family
  * @param  status       status of selected interface
  *
@@ -304,14 +384,14 @@ static inline int ifdown(NET_family_t family)
  * @see ifup(), ifdown()
  */
 //==============================================================================
-static inline int ifstatus(NET_family_t family, NET_generic_status_t *status)
+static inline int ifstatus(const char *netname, NET_family_t *family, NET_generic_status_t *status)
 {
 #if __ENABLE_NETWORK__ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETIFSTATUS, &result, &family, status);
+        syscall(SYSCALL_NETIFSTATUS, &result, netname, family, status);
         return result;
 #else
-        UNUSED_ARG2(family, status);
+        UNUSED_ARG3(netname, family, status);
         _errno = ENOTSUP;
         return -1;
 #endif
@@ -322,7 +402,7 @@ static inline int ifstatus(NET_family_t family, NET_generic_status_t *status)
 /**
  * @brief Creates an endpoint for communication and returns a socket.
  *
- * @param family        The protocol family to use for this socket.
+ * @param netname       Network name.
  * @param protocol      The protocol name.
  *
  * @return On error @b NULL is returned and @ref errno value is set appropriately,
@@ -331,14 +411,14 @@ static inline int ifstatus(NET_family_t family, NET_generic_status_t *status)
  * @see socket_close()
  */
 //==============================================================================
-static inline SOCKET *socket_open(NET_family_t family, NET_protocol_t protocol)
+static inline SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
 {
 #if __ENABLE_NETWORK__ == _YES_
         SOCKET *socket = NULL;
-        syscall(SYSCALL_NETSOCKETCREATE, &socket, &family, &protocol);
+        syscall(SYSCALL_NETSOCKETCREATE, &socket, netname, &protocol);
         return socket;
 #else
-        UNUSED_ARG2(family, protocol);
+        UNUSED_ARG2(netname, protocol);
         _errno = ENOTSUP;
         return NULL;
 #endif
@@ -793,7 +873,7 @@ static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *add
 /**
  * @brief  The function gets host address by its name.
  *
- * @param  family       Network family.
+ * @param  netname      Network name.
  * @param  name         Host name.
  * @param  sock_addr    Obtained host address.
  *
@@ -801,16 +881,16 @@ static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *add
  *         appropriately.
  */
 //==============================================================================
-static inline int get_host_by_name(NET_family_t            family,
+static inline int get_host_by_name(const char             *netname,
                                    const char             *name,
                                    NET_generic_sockaddr_t *sock_addr)
 {
 #if __ENABLE_NETWORK__ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETGETHOSTBYNAME, &result, &family, name, sock_addr);
+        syscall(SYSCALL_NETGETHOSTBYNAME, &result, netname, name, sock_addr);
         return result;
 #else
-        UNUSED_ARG3(family, name, sock_addr);
+        UNUSED_ARG3(netname, name, sock_addr);
         _errno = ENOTSUP;
         return -1;
 #endif
