@@ -101,14 +101,14 @@ include ./config/network/cannet_flags.h
 
 
 #/* MASTER NETWORK SUBSYSTEM ENABLE */
-#define __ENABLE_NETWORK__ _NO_
+#define __ENABLE_NETWORK__ (__ENABLE_TCPIP_STACK__ || __ENABLE_SIPC_STACK__ || __ENABLE_CANNET_STACK__)
 #/*
 ifeq ($(__ENABLE_TCPIP_STACK__), _YES_)
-__ENABLE_NETWORK__=_NO_
+__ENABLE_NETWORK__=_YES_
 else ifeq ($(__ENABLE_SIPC_STACK__), _YES_)
-__ENABLE_NETWORK__=_NO_
+__ENABLE_NETWORK__=_YES_
 else ifeq ($(__ENABLE_CANNET_STACK__), _YES_)
-__ENABLE_NETWORK__=_NO_
+__ENABLE_NETWORK__=_YES_
 endif
 #*/
 
