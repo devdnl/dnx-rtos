@@ -58,6 +58,16 @@ enum _kernel_panic_desc_cause {
         _KERNEL_PANIC_DESC_CAUSE_UNKNOWN    = 8
 };
 
+struct _kernel_panic_info {
+        const char *cause_str;       /* cause string       */
+        const char *name;            /* process name       */
+        int         cause;           /* kernel panic cause */
+        pid_t       pid;             /* process ID         */
+        tid_t       tid;             /* thread ID          */
+        bool        kernelspace;     /* kernel space       */
+        bool        kernel_panic;    /* kernel panic       */
+};
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
@@ -66,7 +76,7 @@ enum _kernel_panic_desc_cause {
   Exported functions
 ==============================================================================*/
 extern int  _kernel_panic_init();
-extern bool _kernel_panic_detect(FILE*);
+extern bool _kernel_panic_info(struct _kernel_panic_info*);
 extern void _kernel_panic_report(enum _kernel_panic_desc_cause);
 extern void _kernel_panic_report_from_ISR(enum _kernel_panic_desc_cause);
 extern void _kernel_panic_handle(bool system_consistent);

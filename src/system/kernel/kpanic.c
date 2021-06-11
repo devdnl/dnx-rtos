@@ -114,19 +114,19 @@ int _kernel_panic_init(void)
 /**
  * @brief  Function check if the kernel panic occurred in the last session
  *
- * @param  path         file path to write panic message
+ * @param  info         kernel panic info
  *
  * @return If kernel panic occured in the last session then true is returned,
  *         otherwise false.
  */
 //==============================================================================
-bool _kernel_panic_detect(FILE *file)
+bool _kernel_panic_info(struct _kernel_panic_info *info)
 {
         bool occurred = (  kpanic_desc.valid1 == _KERNEL_PANIC_DESC_VALID1
                         && kpanic_desc.valid2 == _KERNEL_PANIC_DESC_VALID2 );
 
         if (occurred) {
-              #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
+            #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
                 const char *panic_type;
 
                 if (  (strncmp(kpanic_desc.name, "kworker",  128) == 0)
@@ -136,28 +136,21 @@ bool _kernel_panic_detect(FILE *file)
                         panic_type = "APP CRASH";
                 }
 
-                printk("%s: %s: %d:%d:%s:%s", panic_type, kpanic_desc.name,
-                       kpanic_desc.pid, kpanic_desc.tid,
+                printk(VT100_FONT_COLOR_RED"%s: %s: %d:%d:%s:%s"VT100_RESET_ATTRIBUTES,
+                       panic_type, kpanic_desc.name, kpanic_desc.pid, kpanic_desc.tid,
                        CAUSE[kpanic_desc.cause], kpanic_desc.kernelspace ? "KS" : "US");
-              #endif
 
-                if (file) {
-                        if (kpanic_desc.cause > _KERNEL_PANIC_DESC_CAUSE_UNKNOWN) {
-                                kpanic_desc.cause = _KERNEL_PANIC_DESC_CAUSE_UNKNOWN;
-                        }
+                _cpuctl_print_exception();
+            #endif
 
-                        if (kpanic_desc.name == NULL) {
-                                kpanic_desc.name = "<unknown>";
-                        }
-
-                      #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
-                        sys_fprintf(file, VT100_FONT_COLOR_RED"*** %s ***"VT100_RESET_ATTRIBUTES"\n", panic_type);
-                        sys_fprintf(file, "Cause: %s\n", CAUSE[kpanic_desc.cause]);
-                        sys_fprintf(file, "PID  : %d (%.*s)\n", kpanic_desc.pid, 256, kpanic_desc.name);
-                        sys_fprintf(file, "TID  : %d\n", kpanic_desc.tid);
-                        sys_fprintf(file, "SPACE: %s\n", kpanic_desc.kernelspace ? "kernel" : "user");
-                        _cpuctl_print_exception(file);
-                      #endif
+                if (info) {
+                        info->cause = (kpanic_desc.cause > _KERNEL_PANIC_DESC_CAUSE_UNKNOWN)
+                                    ? _KERNEL_PANIC_DESC_CAUSE_UNKNOWN : kpanic_desc.cause;
+                        info->cause_str = CAUSE[info->cause];
+                        info->name = (kpanic_desc.name == NULL) ? "<unknown>" : kpanic_desc.name;
+                        info->kernelspace = kpanic_desc.kernelspace;
+                        info->pid = kpanic_desc.pid;
+                        info->tid = kpanic_desc.tid;
                 }
 
                 kpanic_desc.valid1 = 0;

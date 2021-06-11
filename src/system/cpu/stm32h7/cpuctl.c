@@ -379,28 +379,26 @@ void _cpuctl_delay_us(u16_t microseconds)
 //==============================================================================
 /**
  * @brief  Function printout dumped registers.
- *
- * @param  file         destination file
  */
 //==============================================================================
-void _cpuctl_print_exception(void *file)
+void _cpuctl_print_exception(void)
 {
-        sys_fprintf(file, "R0   : %08xh\n", reg_dump.R0);
-        sys_fprintf(file, "R1   : %08xh\n", reg_dump.R1);
-        sys_fprintf(file, "R2   : %08xh\n", reg_dump.R2);
-        sys_fprintf(file, "R3   : %08xh\n", reg_dump.R3);
-        sys_fprintf(file, "R12  : %08xh\n", reg_dump.R12);
-        sys_fprintf(file, "LR   : %08xh\n", reg_dump.LR);
-        sys_fprintf(file, "PC   : %08xh\n", reg_dump.PC);
-        sys_fprintf(file, "PSR  : %08xh\n", reg_dump.PSR);
-        sys_fprintf(file, "MFSR : %08xh\n", reg_dump.MFSR);
-        sys_fprintf(file, "BFSR : %08xh\n", reg_dump.BFSR);
-        sys_fprintf(file, "UFSR : %08xh\n", reg_dump.UFSR);
-        sys_fprintf(file, "HFSR : %08xh\n", reg_dump.HFSR);
-        sys_fprintf(file, "DFSR : %08xh\n", reg_dump.DFSR);
-        sys_fprintf(file, "BFAR : %08xh\n", reg_dump.BFAR);
-        sys_fprintf(file, "AFSR : %08xh\n", reg_dump.AFSR);
-        sys_fprintf(file, "MFAR : %08xh\n", reg_dump.MFAR);
+        printk("R0   : %08xh\n", reg_dump.R0);
+        printk("R1   : %08xh\n", reg_dump.R1);
+        printk("R2   : %08xh\n", reg_dump.R2);
+        printk("R3   : %08xh\n", reg_dump.R3);
+        printk("R12  : %08xh\n", reg_dump.R12);
+        printk("LR   : %08xh\n", reg_dump.LR);
+        printk("PC   : %08xh\n", reg_dump.PC);
+        printk("PSR  : %08xh\n", reg_dump.PSR);
+        printk("MFSR : %08xh\n", reg_dump.MFSR);
+        printk("BFSR : %08xh\n", reg_dump.BFSR);
+        printk("UFSR : %08xh\n", reg_dump.UFSR);
+        printk("HFSR : %08xh\n", reg_dump.HFSR);
+        printk("DFSR : %08xh\n", reg_dump.DFSR);
+        printk("BFAR : %08xh\n", reg_dump.BFAR);
+        printk("AFSR : %08xh\n", reg_dump.AFSR);
+        printk("MFAR : %08xh\n", reg_dump.MFAR);
 }
 
 //==============================================================================

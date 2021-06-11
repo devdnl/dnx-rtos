@@ -86,7 +86,7 @@ extern "C" {
  * @param FS_name       file system name
  * @param src_path      file system source file (e.g. /dev/sda1)
  * @param mount_point   file system mount directory
- * @param options       fiel system options (can be NULL)
+ * @param options       file system options (can be NULL)
  *
  * @exception | ...
  *

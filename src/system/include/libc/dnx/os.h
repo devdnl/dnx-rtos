@@ -50,6 +50,7 @@ extern "C" {
 #include <kernel/khooks.h>
 #include <kernel/process.h>
 #include <kernel/printk.h>
+#include <kernel/kpanic.h>
 #include <mm/mm.h>
 #include <drivers/drvctrl.h>
 
@@ -100,6 +101,28 @@ typedef struct {
         u16_t avg5min;                  /*!< average CPU load within 5 minutes (1% = 10).*/
         u16_t avg15min;                 /*!< average CPU load within 15 minutes (1% = 10).*/
 } avg_CPU_load_t;
+#endif
+
+
+#ifdef DOXYGEN
+/**
+ * @brief Kernel Panic info
+ *
+ * The type contains information about last occurred kernel panic.
+ *
+ * @see get_kernel_panic_info()
+ */
+typedef struct {
+        const char *cause_str;       /*!< cause string       */
+        const char *name;            /*!< process name       */
+        int         cause;           /*!< kernel panic cause */
+        pid_t       pid;             /*!< process ID         */
+        tid_t       tid;             /*!< thread ID          */
+        bool        kernelspace;     /*!< kernel space       */
+        bool        kernel_panic;    /*!< kernel panic       */
+} kernel_panic_info_t;
+#else
+typedef struct _kernel_panic_info kernel_panic_info_t;
 #endif
 
 /*==============================================================================
@@ -476,7 +499,7 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "2.4.8";
+        return "2.4.9";
 }
 
 //==============================================================================
@@ -971,13 +994,12 @@ static inline void syslog_clear(void)
 
 //==============================================================================
 /**
- * @brief Function is used to detect occurred kernel panic.
+ * @brief Function is used to get occurred kernel panic info.
  *
- * The function detect_kernel_panic() detect if in the last session
- * the Kernel Panic occurred. Kernel Panic message is redirected to the selected
- * file.
+ * The function get_kernel_panic_info() check if in the last session
+ * the Kernel Panic occurred.
  *
- * @param  file         write kernel panic message into selected file
+ * @param  info         kernel panic information
  *
  * @return If kernel panic occurred then \b true is returned, otherwise \b false.
  *
@@ -987,17 +1009,21 @@ static inline void syslog_clear(void)
 
         // ...
 
-        detect_kernel_panic(stderr);
+        kernel_panic_info_t info;
+        bool occurred = get_kernel_panic_info(&info);
+        if (occurred) {
+                // ...
+        }
 
         // ...
 
    @endcode
  */
 //==============================================================================
-static inline bool detect_kernel_panic(FILE *file)
+static inline bool get_kernel_panic_info(kernel_panic_info_t *info)
 {
         bool r = false;
-        syscall(SYSCALL_KERNELPANICDETECT, &r, file);
+        syscall(SYSCALL_KERNELPANICINFO, &r, info);
         return r;
 }
 

@@ -146,7 +146,7 @@ static void syscall_free(syscallrq_t *rq);
 #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 static void syscall_syslogread(syscallrq_t *rq);
 #endif
-static void syscall_kernelpanicdetect(syscallrq_t *rq);
+static void syscall_kernelpanicinfo(syscallrq_t *rq);
 static void syscall_processcreate(syscallrq_t *rq);
 static void syscall_processkill(syscallrq_t *rq);
 static void syscall_processcleanzombie(syscallrq_t *rq);
@@ -270,7 +270,7 @@ static const syscallfunc_t syscalltab[] = {
         #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         [SYSCALL_SYSLOGREAD       ] = syscall_syslogread,
         #endif
-        [SYSCALL_KERNELPANICDETECT ] = syscall_kernelpanicdetect,
+        [SYSCALL_KERNELPANICINFO   ] = syscall_kernelpanicinfo,
         [SYSCALL_PROCESSCREATE     ] = syscall_processcreate,
         [SYSCALL_PROCESSKILL       ] = syscall_processkill,
         [SYSCALL_PROCESSCLEANZOMBIE] = syscall_processcleanzombie,
@@ -1105,10 +1105,10 @@ static void syscall_syslogread(syscallrq_t *rq)
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_kernelpanicdetect(syscallrq_t *rq)
+static void syscall_kernelpanicinfo(syscallrq_t *rq)
 {
-        GETARG(FILE*, file);
-        SETRETURN(bool, _kernel_panic_detect(file));
+        GETARG(struct _kernel_panic_info*, info);
+        SETRETURN(bool, _kernel_panic_info(info));
 }
 
 //==============================================================================

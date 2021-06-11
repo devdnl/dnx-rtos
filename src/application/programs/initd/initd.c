@@ -40,6 +40,7 @@
 #include <dnx/os.h>
 #include <dnx/thread.h>
 #include <dnx/net.h>
+#include <dnx/vt100.h>
 #include <unistd.h>
 
 /*==============================================================================
@@ -187,7 +188,17 @@ static void show_kernel_panic_message(void)
          *    Kernel panic message is redirected to the standard output.
          *    Implementation hold kernel panic message by 3 seconds.
          */
-        if (detect_kernel_panic(stdout)) {
+        kernel_panic_info_t info;
+        if (get_kernel_panic_info(&info)) {
+
+                printf(VT100_FONT_COLOR_RED);
+                printf("*** %s ***\n", info.kernel_panic ? "KERNEL PANIC" : "APP CRACH");
+                printf("  Cause: %s (%d)\n", info.cause_str, info.cause);
+                printf("  PID  : %u (%.*s)\n", info.pid, 256, info.name);
+                printf("  TID  : %u\n", info.tid);
+                printf("  SPACE: %s\n", info.kernelspace ? "kernel" : "user");
+                printf(VT100_RESET_ATTRIBUTES"\n");
+
                 sleep(3);
         }
 }
