@@ -169,7 +169,7 @@ static void syscall_mutexcreate(syscallrq_t *rq);
 static void syscall_mutexdestroy(syscallrq_t *rq);
 static void syscall_queuecreate(syscallrq_t *rq);
 static void syscall_queuedestroy(syscallrq_t *rq);
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
 static void syscall_netifadd(syscallrq_t *rq);
 static void syscall_netifrm(syscallrq_t *rq);
 static void syscall_netiflist(syscallrq_t *rq);
@@ -293,7 +293,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MUTEXDESTROY    ] = syscall_mutexdestroy,
         [SYSCALL_QUEUECREATE     ] = syscall_queuecreate,
         [SYSCALL_QUEUEDESTROY    ] = syscall_queuedestroy,
-        #if __ENABLE_NETWORK__ == _YES_
+        #if _ENABLE_NETWORK_ == _YES_
         [SYSCALL_NETADD           ] = syscall_netifadd,
         [SYSCALL_NETRM            ] = syscall_netifrm,
         [SYSCALL_NETIFLIST        ] = syscall_netiflist,
@@ -1497,7 +1497,7 @@ static void syscall_queuedestroy(syscallrq_t *rq)
         SETERRNO(err);
 }
 
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
 //==============================================================================
 /**
  * @brief  This syscall add network interface.

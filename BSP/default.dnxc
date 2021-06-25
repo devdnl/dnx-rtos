@@ -19832,10 +19832,6 @@
 				["key"]="__ENABLE_CANNET_STACK__";
 				["value"]="_NO_";
 			};
-			[4.000000]={
-				["key"]="__ENABLE_NETWORK__";
-				["value"]="_NO_";
-			};
 		};
 		["network/sipc_flags.h"]={
 			[1.000000]={

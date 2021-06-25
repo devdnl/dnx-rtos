@@ -1,5 +1,5 @@
 # Makefile for GNU make
-ifeq ($(__ENABLE_NETWORK__), _YES_)
+ifeq ($(_ENABLE_NETWORK_), _YES_)
    CSRC_CORE += net/netm.c
    
    ifeq ($(__ENABLE_TCPIP_STACK__), _YES_)

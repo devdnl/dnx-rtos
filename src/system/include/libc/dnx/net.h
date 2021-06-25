@@ -257,7 +257,7 @@ extern "C" {
 //==============================================================================
 static inline int ifadd(const char *netname, NET_family_t family, const char *if_path)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETADD, &result, netname, &family, if_path);
         return result;
@@ -282,7 +282,7 @@ static inline int ifadd(const char *netname, NET_family_t family, const char *if
 //==============================================================================
 static inline int ifrm(const char *netname)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETRM, &result, netname);
         return result;
@@ -308,7 +308,7 @@ static inline int ifrm(const char *netname)
 //==============================================================================
 static inline int iflist(char *netname[], size_t netname_len)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETIFLIST, &result, netname, &netname_len);
         return result;
@@ -334,7 +334,7 @@ static inline int iflist(char *netname[], size_t netname_len)
 //==============================================================================
 static inline int ifup(const char *netname, const NET_generic_config_t *config)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETIFUP, &result, netname, config);
         return result;
@@ -359,7 +359,7 @@ static inline int ifup(const char *netname, const NET_generic_config_t *config)
 //==============================================================================
 static inline int ifdown(const char *netname)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETIFDOWN, &result, netname);
         return result;
@@ -386,7 +386,7 @@ static inline int ifdown(const char *netname)
 //==============================================================================
 static inline int ifstatus(const char *netname, NET_family_t *family, NET_generic_status_t *status)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETIFSTATUS, &result, netname, family, status);
         return result;
@@ -413,7 +413,7 @@ static inline int ifstatus(const char *netname, NET_family_t *family, NET_generi
 //==============================================================================
 static inline SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         SOCKET *socket = NULL;
         syscall(SYSCALL_NETSOCKETCREATE, &socket, netname, &protocol);
         return socket;
@@ -438,7 +438,7 @@ static inline SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
 //==============================================================================
 static inline int socket_close(SOCKET *socket)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         syscall(SYSCALL_NETSOCKETDESTROY, NULL, socket);
         return 0;
 #else
@@ -467,7 +467,7 @@ static inline int socket_close(SOCKET *socket)
 //==============================================================================
 static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETBIND, &result, socket, sockAddr);
         return result;
@@ -493,7 +493,7 @@ static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sock
 //==============================================================================
 static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETCONNECT, &result, socket, sockAddr);
         return result;
@@ -518,7 +518,7 @@ static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *s
 //==============================================================================
 static inline int socket_disconnect(SOCKET *socket)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETDISCONNECT, &result, socket);
         return result;
@@ -543,7 +543,7 @@ static inline int socket_disconnect(SOCKET *socket)
 //==============================================================================
 static inline int socket_listen(SOCKET *socket)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETLISTEN, &result, socket);
         return result;
@@ -569,7 +569,7 @@ static inline int socket_listen(SOCKET *socket)
 //==============================================================================
 static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETACCEPT, &result, socket, new_socket);
         return result;
@@ -598,7 +598,7 @@ static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 //==============================================================================
 static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETRECV, &result, socket, buf, &len, &flags);
         return result;
@@ -628,7 +628,7 @@ static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t
 //==============================================================================
 static inline int socket_read(SOCKET *socket, void *buf, size_t len)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         return socket_recv(socket, buf, len, NET_FLAGS__NONE);
 #else
         UNUSED_ARG3(socket, buf, len);
@@ -661,7 +661,7 @@ static inline int socket_recvfrom(SOCKET                 *socket,
                                   NET_flags_t             flags,
                                   NET_generic_sockaddr_t *from_sockaddr)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETRECVFROM, &result, socket, buf, &len, &flags, from_sockaddr);
         return result;
@@ -691,7 +691,7 @@ static inline int socket_recvfrom(SOCKET                 *socket,
 //==============================================================================
 static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSEND, &result, socket, buf, &len, &flags);
         return result;
@@ -721,7 +721,7 @@ static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_f
 //==============================================================================
 static inline int socket_write(SOCKET *socket, const void *buf, size_t len)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         return socket_send(socket, buf, len, NET_FLAGS__NONE);
 #else
         UNUSED_ARG3(socket, buf, len);
@@ -754,7 +754,7 @@ static inline int socket_sendto(SOCKET                       *socket,
                                 NET_flags_t                   flags,
                                 const NET_generic_sockaddr_t *to_sockaddr)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSENDTO, &result, socket, buf, &len, &flags, to_sockaddr);
         return result;
@@ -780,7 +780,7 @@ static inline int socket_sendto(SOCKET                       *socket,
 //==============================================================================
 static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSHUTDOWN, &result, socket, &how);
         return result;
@@ -806,7 +806,7 @@ static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
 //==============================================================================
 static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSETRECVTIMEOUT, &result, socket, &timeout);
         return result;
@@ -832,7 +832,7 @@ static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 //==============================================================================
 static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETSETSENDTIMEOUT, &result, socket, &timeout);
         return result;
@@ -858,7 +858,7 @@ static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 //==============================================================================
 static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETGETADDRESS, &result, socket, addr);
         return result;
@@ -885,7 +885,7 @@ static inline int get_host_by_name(const char             *netname,
                                    const char             *name,
                                    NET_generic_sockaddr_t *sock_addr)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         int result = -1;
         syscall(SYSCALL_NETGETHOSTBYNAME, &result, netname, name, sock_addr);
         return result;
@@ -910,7 +910,7 @@ static inline int get_host_by_name(const char             *netname,
 //==============================================================================
 static inline u16_t hton_u16(NET_family_t family, u16_t value)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         return _builtinfunc(net_hton_u16, family, value);
 #else
         UNUSED_ARG1(family);
@@ -932,7 +932,7 @@ static inline u16_t hton_u16(NET_family_t family, u16_t value)
 //==============================================================================
 static inline u32_t hton_u32(NET_family_t family, u32_t value)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         return _builtinfunc(net_hton_u32, family, value);
 #else
         UNUSED_ARG1(family);
@@ -954,7 +954,7 @@ static inline u32_t hton_u32(NET_family_t family, u32_t value)
 //==============================================================================
 static inline u64_t hton_u64(NET_family_t family, u64_t value)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         return _builtinfunc(net_hton_u64, family, value);
 #else
         UNUSED_ARG1(family);
@@ -976,7 +976,7 @@ static inline u64_t hton_u64(NET_family_t family, u64_t value)
 //==============================================================================
 static inline u16_t ntoh_u16(NET_family_t family, u16_t value)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         return _builtinfunc(net_hton_u16, family, value);
 #else
         UNUSED_ARG1(family);
@@ -998,7 +998,7 @@ static inline u16_t ntoh_u16(NET_family_t family, u16_t value)
 //==============================================================================
 static inline u32_t ntoh_u32(NET_family_t family, u32_t value)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         return _builtinfunc(net_hton_u32, family, value);
 #else
         UNUSED_ARG1(family);
@@ -1020,7 +1020,7 @@ static inline u32_t ntoh_u32(NET_family_t family, u32_t value)
 //==============================================================================
 static inline u64_t ntoh_u64(NET_family_t family, u64_t value)
 {
-#if __ENABLE_NETWORK__ == _YES_
+#if _ENABLE_NETWORK_ == _YES_
         return _builtinfunc(net_hton_u64, family, value);
 #else
         UNUSED_ARG1(family);

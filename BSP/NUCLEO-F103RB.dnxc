@@ -2939,20 +2939,20 @@
 				["value"]="LWIP_DBG_OFF";
 			};
 		};
-		["network/network_flags.h"]={
-			[1]={
-				["key"]="__ENABLE_NETWORK__";
-				["value"]="_NO_";
-			};
-			[2]={
-				["key"]="__ENABLE_TCPIP_STACK__";
-				["value"]="_NO_";
-			};
-			[3]={
-				["key"]="__ENABLE_SIPC_STACK__";
-				["value"]="_NO_";
-			};
-		};
+      ["network/network_flags.h"]={
+         [1.000000]={
+            ["key"]="__ENABLE_TCPIP_STACK__";
+            ["value"]="_NO_";
+         };
+         [2.000000]={
+            ["key"]="__ENABLE_SIPC_STACK__";
+            ["value"]="_NO_";
+         };
+         [3.000000]={
+            ["key"]="__ENABLE_CANNET_STACK__";
+            ["value"]="_NO_";
+         };
+      };
 		["network/sipc_flags.h"]={
 			[1]={
 				["key"]="__NETWORK_SIPC_INTERFACE_PATH__";

@@ -238,7 +238,7 @@ static void initialize_additional_drivers(void)
                 };
                 ioctl(fd, IOCTL_ETH__CONFIGURE, &CONF);
 
-                #if !__ENABLE_NETWORK__
+                #if !_ENABLE_NETWORK_
                 ioctl(fd, IOCTL_ETH__START);
                 #endif
                 close(fd);
@@ -350,7 +350,7 @@ static void print_system_log_messages(void)
 //==============================================================================
 static void start_DHCP_client(void)
 {
-        #if __ENABLE_NETWORK__
+        #if _ENABLE_NETWORK_
         /*
          * 1. The DHCP configuration should be prepared to get network address.
          *    The static IP configuration can be used as well.
