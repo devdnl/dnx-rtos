@@ -1969,6 +1969,14 @@ static int received_first_frame(cannet_t *cannet, CANNET_socket_t *socket, const
         socket->expected_crc = frame->transfer_crc16;
         socket->crc = calculate_crc16(frame->data, sizeof(frame->data), crc16_ccitt_start);
 
+#if __NETWORK_CANNET_DEBUG_ON__
+        char buf[32];
+        for (size_t i = 0; i < sizeof(frame->data); i++) {
+                sys_snprintf(buf + (i * 3), sizeof(buf) - (i * 3), "%02X ", frame->data[i]);
+        }
+        DEBUG("Payload [ %s]", buf);
+#endif
+
         cannetbuf__clear(socket->assembly_buf);
         return cannetbuf__write(socket->assembly_buf, frame->data, sizeof(frame->data));
 }
@@ -1998,6 +2006,14 @@ static int received_next_frame(cannet_t *cannet, CANNET_socket_t *socket, const 
         socket->seq_rx &= 3;
         socket->crc = calculate_crc16(frame->data, sizeof(frame->data), socket->crc);
 
+#if __NETWORK_CANNET_DEBUG_ON__
+        char buf[32];
+        for (size_t i = 0; i < sizeof(frame->data); i++) {
+                sys_snprintf(buf + (i * 3), sizeof(buf) - (i * 3), "%02X ", frame->data[i]);
+        }
+        DEBUG("Payload [ %s]", buf);
+#endif
+
         return cannetbuf__write(socket->assembly_buf, frame->data, sizeof(frame->data));
 }
 
@@ -2023,6 +2039,14 @@ static int received_last_frame(cannet_t *cannet, CANNET_socket_t *socket, const 
         socket->seq_rx++;
         socket->seq_rx &= 3;
         socket->crc = calculate_crc16(frame->data, len, socket->crc);
+
+#if __NETWORK_CANNET_DEBUG_ON__
+        char buf[32];
+        for (size_t i = 0; i < len; i++) {
+                sys_snprintf(buf + (i * 3), sizeof(buf) - (i * 3), "%02X ", frame->data[i]);
+        }
+        DEBUG("Payload [ %s]", buf);
+#endif
 
         int err = cannetbuf__write(socket->assembly_buf, frame->data, len);
         if (!err) {
@@ -2061,6 +2085,14 @@ static int received_single_frame(cannet_t *cannet, CANNET_socket_t *socket, cons
                       cannet->addr, get_frame_sequence(&frame->header), 0);
                 return EILSEQ;
         }
+
+#if __NETWORK_CANNET_DEBUG_ON__
+        char buf[32];
+        for (size_t i = 0; i < len; i++) {
+                sys_snprintf(buf + (i * 3), sizeof(buf) - (i * 3), "%02X ", frame->data[i]);
+        }
+        DEBUG("Payload [ %s]", buf);
+#endif
 
         int err = cannetbuf__write(socket->rx_buf, frame->data, len);
 
