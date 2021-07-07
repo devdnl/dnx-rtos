@@ -61,7 +61,6 @@ typedef struct tty_io {
         tty_t *tty[_TTY_NUMBER_OF_VT];
         tid_t  service_in;
         u8_t   current_tty;
-        bool   clear_at_init;
 } tty_io_t;
 
 /*==============================================================================
@@ -580,7 +579,6 @@ static int configure(tty_t *tty, const TTY_config_t *conf)
         if (!err) {
                 tty->io->infile  = in;
                 tty->io->outfile = out;
-                tty->io->clear_at_init = conf->clear_screen;
 
                 vt100_init(tty->io, false);
 
@@ -646,7 +644,7 @@ static void vt100_init(tty_io_t *io, bool force_clean)
         const char *cmd = VT100_RESET_ATTRIBUTES;
         sys_fwrite(cmd, strlen(cmd), &wrcnt, io->outfile);
 
-        if (io->clear_at_init or force_clean) {
+        if (force_clean) {
                 cmd = VT100_CLEAR_SCREEN VT100_CURSOR_HOME;
                 sys_fwrite(cmd, strlen(cmd), &wrcnt, io->outfile);
         }

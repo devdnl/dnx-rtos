@@ -71,7 +71,8 @@ driver_release("TTY", 1, 0);
 @endcode
 
 \subsection drv-tty-ddesc-cfg Driver configuration
-Driver can be configured in Configtool. Runtime configuration is not possible.
+Driver can be configured by using IOCTL_TTY_CONFIGURE request. The configuration
+is passed by TTY_config_t type.
 
 \subsection drv-tty-ddesc-write Data write
 Writing data to device is the same as writing data to regular file.
@@ -186,7 +187,6 @@ extern "C" {
 typedef struct {
         const char *input_file;         //!< input file path
         const char *output_file;        //!< output file path
-        bool        clear_screen;       //!< clear screen at initialization
 } TTY_config_t;
 
 typedef struct {

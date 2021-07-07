@@ -119,6 +119,7 @@ static void initialize_basic_drivers(void)
         driver_init("GPIO", 1, 0, NULL);
         driver_init("GPIO", 2, 0, NULL);
         driver_init("GPIO", 3, 0, NULL);
+        driver_init("GPIO", 4, 0, NULL);
         driver_init("GPIO", 5, 0, NULL);
         driver_init("GPIO", 6, 0, NULL);
         driver_init("GPIO", 7, 0, NULL);
@@ -143,8 +144,7 @@ static void initialize_basic_drivers(void)
 
         static const TTY_config_t TTY_config = {
                 .input_file   = "/dev/ttyS0",
-                .output_file  = "/dev/ttyS0",
-                .clear_screen = true,
+                .output_file  = "/dev/ttyS0"
         };
         driver_init2("TTY", 0, 0, "/dev/tty0", &TTY_config);     // first user terminal
 
