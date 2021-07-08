@@ -470,7 +470,7 @@ double _strtod(const char *str, char **end)
                                 }
                                 i++;
                                 continue;
-                        } else if (isspace(num)) {
+                        } else if (isspace(num) || isprint(num)) {
                                 break;
                         }
 
