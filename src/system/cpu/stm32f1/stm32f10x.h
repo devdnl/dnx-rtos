@@ -820,13 +820,13 @@ typedef struct
   __IO uint32_t CNDTR;
   __IO uint32_t CPAR;
   __IO uint32_t CMAR;
-} DMA_Channel_t;
+} DMA_Channel_TypeDef;
 
 typedef struct
 {
   __IO uint32_t ISR;
   __IO uint32_t IFCR;
-} DMA_t;
+} DMA_TypeDef;
 
 /**
   * @brief Ethernet MAC
@@ -1449,20 +1449,20 @@ typedef struct
 #define TIM10               ((TIM_TypeDef *) TIM10_BASE)
 #define TIM11               ((TIM_TypeDef *) TIM11_BASE)
 #define SDIO                ((SDIO_t *) SDIO_BASE)
-#define DMA1                ((DMA_t *) DMA1_BASE)
-#define DMA2                ((DMA_t *) DMA2_BASE)
-#define DMA1_Channel1       ((DMA_Channel_t *) DMA1_Channel1_BASE)
-#define DMA1_Channel2       ((DMA_Channel_t *) DMA1_Channel2_BASE)
-#define DMA1_Channel3       ((DMA_Channel_t *) DMA1_Channel3_BASE)
-#define DMA1_Channel4       ((DMA_Channel_t *) DMA1_Channel4_BASE)
-#define DMA1_Channel5       ((DMA_Channel_t *) DMA1_Channel5_BASE)
-#define DMA1_Channel6       ((DMA_Channel_t *) DMA1_Channel6_BASE)
-#define DMA1_Channel7       ((DMA_Channel_t *) DMA1_Channel7_BASE)
-#define DMA2_Channel1       ((DMA_Channel_t *) DMA2_Channel1_BASE)
-#define DMA2_Channel2       ((DMA_Channel_t *) DMA2_Channel2_BASE)
-#define DMA2_Channel3       ((DMA_Channel_t *) DMA2_Channel3_BASE)
-#define DMA2_Channel4       ((DMA_Channel_t *) DMA2_Channel4_BASE)
-#define DMA2_Channel5       ((DMA_Channel_t *) DMA2_Channel5_BASE)
+#define DMA1                ((DMA_TypeDef *) DMA1_BASE)
+#define DMA2                ((DMA_TypeDef *) DMA2_BASE)
+#define DMA1_Channel1       ((DMA_Channel_TypeDef *) DMA1_Channel1_BASE)
+#define DMA1_Channel2       ((DMA_Channel_TypeDef *) DMA1_Channel2_BASE)
+#define DMA1_Channel3       ((DMA_Channel_TypeDef *) DMA1_Channel3_BASE)
+#define DMA1_Channel4       ((DMA_Channel_TypeDef *) DMA1_Channel4_BASE)
+#define DMA1_Channel5       ((DMA_Channel_TypeDef *) DMA1_Channel5_BASE)
+#define DMA1_Channel6       ((DMA_Channel_TypeDef *) DMA1_Channel6_BASE)
+#define DMA1_Channel7       ((DMA_Channel_TypeDef *) DMA1_Channel7_BASE)
+#define DMA2_Channel1       ((DMA_Channel_TypeDef *) DMA2_Channel1_BASE)
+#define DMA2_Channel2       ((DMA_Channel_TypeDef *) DMA2_Channel2_BASE)
+#define DMA2_Channel3       ((DMA_Channel_TypeDef *) DMA2_Channel3_BASE)
+#define DMA2_Channel4       ((DMA_Channel_TypeDef *) DMA2_Channel4_BASE)
+#define DMA2_Channel5       ((DMA_Channel_TypeDef *) DMA2_Channel5_BASE)
 #define RCC                 ((RCC_t *) RCC_BASE)
 #define CRC                 ((CRC_TypeDef *) CRC_BASE)
 #define FLASH               ((FLASH_t *) FLASH_R_BASE)

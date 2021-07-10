@@ -82,7 +82,7 @@ static void IRQ_ER_handler(u8_t major);
 
 #if USE_DMA > 0
 #if defined(ARCH_stm32f1)
-static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg);
+static bool DMA_callback(DMA_Channel_TypeDef *channel, u8_t SR, void *arg);
 #elif defined(ARCH_stm32f4)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 #endif
@@ -1203,7 +1203,7 @@ static void IRQ_ER_handler(u8_t major)
 //==============================================================================
 #if USE_DMA > 0
 #if defined(ARCH_stm32f1)
-static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg)
+static bool DMA_callback(DMA_Channel_TypeDef *channel, u8_t SR, void *arg)
 #elif defined(ARCH_stm32f4)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 #endif

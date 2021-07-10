@@ -46,7 +46,7 @@
 #define USART_CLKSOURCE_PCLK2   2
 #define NDTR                    CNDTR
 #define _DMA_DDI_get_stream     _DMA_DDI_get_channel
-typedef DMA_Channel_t           DMA_Stream_TypeDef;
+typedef DMA_Channel_TypeDef     DMA_Stream_TypeDef;
 #elif defined(ARCH_stm32f3)
 #include "stm32f3/stm32f3xx.h"
 #include "stm32f3/lib/stm32f3xx_ll_rcc.h"

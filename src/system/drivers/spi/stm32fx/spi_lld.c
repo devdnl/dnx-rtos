@@ -79,7 +79,7 @@ struct SPI_info {
 ==============================================================================*/
 #if USE_DMA > 0
 #if defined(ARCH_stm32f1)
-static bool DMA_callback(DMA_Channel_t *stream, u8_t SR, void *arg);
+static bool DMA_callback(DMA_Channel_TypeDef *stream, u8_t SR, void *arg);
 #elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 #endif
@@ -595,7 +595,7 @@ static void handle_SPI_IRQ(u8_t major)
  */
 //==============================================================================
 #if defined(ARCH_stm32f1)
-static bool DMA_callback(DMA_Channel_t *stream, u8_t SR, void *arg)
+static bool DMA_callback(DMA_Channel_TypeDef *stream, u8_t SR, void *arg)
 #elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 #endif

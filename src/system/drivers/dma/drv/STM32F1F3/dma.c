@@ -5,7 +5,7 @@ Author   Daniel Zorychta
 
 Brief    General usage DMA driver.
 
-         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -28,14 +28,28 @@ Brief    General usage DMA driver.
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f3/dma_ddi.h"
-#include "stm32f3/stm32f3xx.h"
-#include "../dma_ioctl.h"
+#include "dma/dma_ioctl.h"
 #include "kernel/khooks.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f1/stm32f10x.h"
+#include "stm32f1/dma_ddi.h"
+#elif defined(ARCH_stm32f3)
+#include "stm32f3/stm32f3xx.h"
+#include "stm32f3/dma_ddi.h"
+#endif
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#if defined(ARCH_stm32f1)
+#define DMA_CCR_EN DMA_CCR1_EN
+#define DMA_CCR_TCIE DMA_CCR1_TCIE
+#define DMA_CCR_TEIE DMA_CCR1_TEIE
+#define DMA_CCR_HTIE DMA_CCR1_HTIE
+#elif defined(ARCH_stm32f3)
+#endif
+
 enum {
         _DMA1,
       #if defined(RCC_AHBENR_DMA2EN)
@@ -177,7 +191,11 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor, const void *conf
                         }
 
                         if (!err) {
-                                RCC->AHBENR |= (RCC_AHBENR_DMA1EN | RCC_AHBENR_DMA2EN);
+                                RCC->AHBENR |= (RCC_AHBENR_DMA1EN
+                                #if defined(RCC_AHBENR_DMA2EN)
+                                               | RCC_AHBENR_DMA2EN
+                                #endif
+                                );
                                 DMA_mem->DMA[0].ID_ctr = 1;
                                 DMA_mem->DMA[1].ID_ctr = 1;
                                 DMA_mem->DMA[1].major  = 1;

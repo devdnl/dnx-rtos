@@ -3,11 +3,11 @@ HDRLOC_ARCH += drivers/dma
 
 ifeq ($(__ENABLE_DMA__), _YES_)
     ifeq ($(TARGET), stm32f1)
-        CSRC_ARCH   += drivers/dma/stm32f1/dma.c
+        CSRC_ARCH   += drivers/dma/drv/STM32F1F3/dma.c
         CXXSRC_ARCH += 
     endif
     ifeq ($(TARGET), stm32f3)
-        CSRC_ARCH   += drivers/dma/stm32f3/dma.c
+        CSRC_ARCH   += drivers/dma/drv/STM32F1F3/dma.c
         CXXSRC_ARCH += 
     endif
     ifeq ($(TARGET), stm32f4)
