@@ -65,9 +65,14 @@ typedef struct {
 typedef struct {
         DMA_RT_stream_t stream[STREAM_COUNT];
         queue_t       **queue;
-        u32_t           ID_cnt;
+        u32_t           ID_ctr;
         u8_t            major;
+        u8_t            minor;
 } DMA_RT_t;
+
+typedef struct {
+        DMA_RT_t DMA[DMA_COUNT];
+} DMA_mem_t;
 
 /*==============================================================================
   Local function prototypes
@@ -121,7 +126,7 @@ static const DMA_HW_t DMA_HW[] = {
         },
 };
 
-static DMA_RT_t *DMA_RT[DMA_COUNT];
+static DMA_mem_t *DMA_mem;
 
 /*==============================================================================
   Exported object
@@ -149,34 +154,29 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor, const void *conf
 
         int err = EFAULT;
 
-        if (major < DMA_COUNT && minor == 0) {
-                err = sys_zalloc(sizeof(DMA_RT_t), device_handle);
+        if (major == 0 && minor == 0) {
+                err = sys_zalloc(sizeof(DMA_mem_t), device_handle);
                 if (!err) {
+                        DMA_mem = *device_handle;
+
                         /*
                          * Only the DMA2 controller is able to perform
                          * memory-to-memory transfers. It is a peripheral limitation.
                          * Allocating memory for memory-to-memory semaphores.
                          */
-                        if (major == 1) {
-                                DMA_RT_t *hdl = *device_handle;
-                                err = sys_zalloc(sizeof(queue_t*) * STREAM_COUNT,
-                                                 cast(void*, &hdl->queue));
-                                if (err) {
-                                        sys_free(device_handle);
-                                }
+                        DMA_RT_t *hdl = &DMA_mem->DMA[1];
+                        err = sys_zalloc(sizeof(queue_t*) * STREAM_COUNT,
+                                         cast(void*, &hdl->queue));
+                        if (err) {
+                                sys_free(device_handle);
+                                DMA_mem = NULL;
                         }
 
                         if (!err) {
-                                /*
-                                 * NOTE: DMA1EN and DMA2EN are localized in this same
-                                 *       register and DMA2EN is shifted by 1 bit relative
-                                 *       to DMA1EN.
-                                 */
-                                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA1EN << major);
-
-                                DMA_RT[major] = *device_handle;
-                                DMA_RT[major]->major = major;
-                                DMA_RT[major]->ID_cnt++;
+                                RCC->AHB1ENR |= (RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMA2EN);
+                                DMA_mem->DMA[0].ID_ctr = 1;
+                                DMA_mem->DMA[1].ID_ctr = 1;
+                                DMA_mem->DMA[1].major  = 1;
                         }
                 }
         }
@@ -369,23 +369,23 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
 {
         int dmad = 0;
 
-        if (DMA_RT[major] == NULL) {
-                printk("DMA%d: not initialized", major + 1);
+        if (DMA_mem == NULL) {
+                printk("DMA: driver not initialized");
                 return dmad;
         }
 
         if (major < DMA_COUNT && stream < STREAM_COUNT) {
                 sys_critical_section_begin();
                 {
-                        if (DMA_RT[major]->stream[stream].dmad == 0) {
-                                u32_t ID = DMA_RT[major]->ID_cnt++;
+                        if (DMA_mem->DMA[major].stream[stream].dmad == 0) {
+                                u32_t ID = DMA_mem->DMA[major].ID_ctr++;
 
                                 dmad = DMAD(major, stream, ID);
 
-                                DMA_RT[major]->stream[stream].dmad = dmad;
+                                DMA_mem->DMA[major].stream[stream].dmad = dmad;
 
-                                if (DMA_RT[major]->ID_cnt == 0) {
-                                        DMA_RT[major]->ID_cnt++;
+                                if (DMA_mem->DMA[major].ID_ctr == 0) {
+                                        DMA_mem->DMA[major].ID_ctr++;
                                 }
                         }
                 }
@@ -404,8 +404,8 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
 //==============================================================================
 void _DMA_DDI_release(u32_t dmad)
 {
-        if (dmad && DMA_RT[GETMAJOR(dmad)]) {
-                DMA_RT_stream_t *RT_stream = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
+        if (dmad && DMA_mem) {
+                DMA_RT_stream_t *RT_stream = &DMA_mem->DMA[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
 
                 if (RT_stream->dmad == dmad) {
 
@@ -442,8 +442,8 @@ int _DMA_DDI_get_stream(u32_t dmad, DMA_Stream_TypeDef **stream)
 {
         int err = EINVAL;
 
-        if (dmad && DMA_RT[GETMAJOR(dmad)] && stream) {
-                DMA_RT_stream_t *RT_stream = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
+        if (dmad && DMA_mem && stream) {
+                DMA_RT_stream_t *RT_stream = &DMA_mem->DMA[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
 
                 if (RT_stream->dmad == dmad) {
 
@@ -475,13 +475,13 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
         int err = EINVAL;
 
         if (  dmad
-           && DMA_RT[GETMAJOR(dmad)]
+           && DMA_mem
            && config
            && config->NDT
            && config->PA
            && (config->MA[0] || config->MA[1])) {
 
-                DMA_RT_stream_t    *RT_stream  = &DMA_RT[GETMAJOR(dmad)]->stream[GETSTREAM(dmad)];
+                DMA_RT_stream_t    *RT_stream  = &DMA_mem->DMA[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
                 DMA_Stream_TypeDef *DMA_Stream =  DMA_HW[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
                 IRQn_Type           IRQn       =  DMA_HW[GETMAJOR(dmad)].IRQn[GETSTREAM(dmad)];
 
@@ -545,7 +545,7 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
         /*
          * Only DMA2 is able to transfer data in memory-to-memory mode.
          */
-        DMA_RT_t *hdl = DMA_RT[1];
+        DMA_RT_t *hdl = &DMA_mem->DMA[1];
         if (!hdl || !dst || !src || !size) {
                 return EINVAL;
         }
@@ -696,7 +696,7 @@ static bool M2M_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 static void IRQ_handle(u8_t major, u8_t stream)
 {
         DMA_Stream_TypeDef *DMA_stream = DMA_HW[major].stream[stream];
-        DMA_RT_stream_t    *RT_stream  = &DMA_RT[major]->stream[stream];
+        DMA_RT_stream_t    *RT_stream  = &DMA_mem->DMA[major].stream[stream];
 
         if (RT_stream->flush_cache) {
                 _cpuctl_clean_invalidate_dcache();
