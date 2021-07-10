@@ -64,7 +64,7 @@ typedef struct {
 
 typedef struct {
         DMA_RT_stream_t stream[STREAM_COUNT];
-        queue_t       **queue;
+        queue_t       **m2m_queue;
         u32_t           ID_ctr;
         u8_t            major;
         u8_t            minor;
@@ -166,7 +166,7 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor, const void *conf
                          */
                         DMA_RT_t *hdl = &DMA_mem->DMA[1];
                         err = sys_zalloc(sizeof(queue_t*) * STREAM_COUNT,
-                                         cast(void*, &hdl->queue));
+                                         cast(void*, &hdl->m2m_queue));
                         if (err) {
                                 sys_free(device_handle);
                                 DMA_mem = NULL;
@@ -564,8 +564,8 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
                 if (dmad) break;
         }
 
-        if (dmad && (hdl->queue[stream] == NULL)) {
-                err = sys_queue_create(1, sizeof(int), &hdl->queue[stream]);
+        if (dmad && (hdl->m2m_queue[stream] == NULL)) {
+                err = sys_queue_create(1, sizeof(int), &hdl->m2m_queue[stream]);
                 if (err) {
                         _DMA_DDI_release(dmad);
                         return err;
@@ -600,7 +600,7 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
 
                 if (NDT <= UINT16_MAX) {
                         _DMA_DDI_config_t config;
-                        config.arg       = hdl->queue[stream];
+                        config.arg       = hdl->m2m_queue[stream];
                         config.cb_finish = M2M_callback;
                         config.cb_half   = NULL;
                         config.cb_next   = NULL;
@@ -616,7 +616,7 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {
                                 int ferr = EIO;
-                                err = sys_queue_receive(hdl->queue[stream], &ferr,
+                                err = sys_queue_receive(hdl->m2m_queue[stream], &ferr,
                                                         M2M_TRANSFER_TIMEOUT);
                                 if (!err) {
                                         err = ferr;
