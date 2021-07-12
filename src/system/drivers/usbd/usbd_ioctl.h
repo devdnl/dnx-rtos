@@ -206,7 +206,7 @@ extern "C" {
  * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
-#define IOCTL_USBD__CONFIGURE_EP_1_7            _IOW(USBD, 0x02, const usbd_ep_config_t*)
+#define IOCTL_USBD__CONFIGURE_EP_1_7            _IOW(USBD, 0x02, const USBD_ep_config_t*)
 
 //==============================================================================
 /**
@@ -262,7 +262,7 @@ extern "C" {
  * @return On success 0 is returned, otherwise -1.
  */
 //==============================================================================
-#define IOCTL_USBD__GET_SETUP_PACKET            _IOR(USBD, 0x08, usbd_setup_container_t*)
+#define IOCTL_USBD__GET_SETUP_PACKET            _IOR(USBD, 0x08, USBD_setup_container_t*)
 
 //==============================================================================
 /**

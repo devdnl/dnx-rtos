@@ -189,7 +189,7 @@ extern "C" {
  *  @return On success 0 is returned.
  *          On error -1 is returned and @ref errno is set.
  */
-#define IOCTL_SDSPI__CONFIGURE          _IOW(SDSPI, 0x00, SDSPI_cfg_t*)
+#define IOCTL_SDSPI__CONFIGURE          _IOW(SDSPI, 0x00, SDSPI_config_t*)
 
 /**
  *  @brief  Initialize SD card (OS storage request).

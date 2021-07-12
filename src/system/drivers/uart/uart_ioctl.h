@@ -138,7 +138,7 @@ extern "C" {
  *  @param  [WR] UART_LIN_break * number of break bits
  *  @return On success 0 is returned, otherwise -1.
  */
-#define IOCTL_UART__SET_LIN_BREAK_BITS          _IOW(UART, 0x04, const UART_LIN_break*)
+#define IOCTL_UART__SET_LIN_BREAK_BITS          _IOW(UART, 0x04, const enum UART_LIN_break*)
 
 /*==============================================================================
   Exported object types

@@ -70,6 +70,13 @@ Brief   SD Card Interface Driver.
                                         | 0*SDIO_CLKCR_HWFC_EN\
                                         | SDIO_CLKCR_CLKEN)
 
+/*
+ * NOTE: Some CPUs do not have this bit in peripheral's status register.
+ */
+#ifndef SDIO_STA_STBITERR
+#define SDIO_STA_STBITERR 0
+#endif
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
