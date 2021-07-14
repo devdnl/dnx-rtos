@@ -689,7 +689,7 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                                 _DMA_DDI_release(dmad);
                                 goto finish;
                         } else {
-                                dev_dbg(hdl, "DMA read channel in use, using polling mode", 0);
+                                dev_dbg(hdl, "DMA read channel in use, using IRQ mode", 0);
                         }
                 }
 #endif
@@ -879,7 +879,7 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                         goto finish;
 
                 } else {
-                        dev_dbg(hdl, "DMA write channel in use, using polling mode", 0);
+                        dev_dbg(hdl, "DMA write channel in use, using IRQ mode", 0);
                 }
         }
 #endif
