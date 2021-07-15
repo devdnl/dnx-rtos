@@ -37,9 +37,9 @@ Brief    General usage DMA driver.
 #define DMA_COUNT                       2
 #define STREAM_COUNT                    8
 
-#define DMAD(major, stream, ID)         (((ID) << 4) | (((stream) & 7) << 1) | ((major) & 1))
-#define GETMAJOR(DMAD)                  (((DMAD) >> 0) & 1)
-#define GETSTREAM(DMAD)                 (((DMAD) >> 1) & 7)
+#define DMAD(major, stream, ID)         (((ID) << 5) | (((stream) & 7) << 2) | ((major) & 3))
+#define GETMAJOR(DMAD)                  (((DMAD) >> 0) & 3)
+#define GETSTREAM(DMAD)                 (((DMAD) >> 2) & 7)
 
 #define M2M_TRANSFER_TIMEOUT            5000
 
@@ -374,6 +374,9 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
                 return dmad;
         }
 
+        // TODO przeszukiwanie wolnego strumienia dla DMA1, DMA2 i BDMA
+        // TODO lepszy interfejs tego sterownika
+
         if (major < DMA_COUNT && stream < STREAM_COUNT) {
                 sys_critical_section_begin();
                 {
@@ -518,6 +521,9 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                                         RT_stream->flush_cache = false;
                                 }
                         }
+
+                        // FIXME
+                        DMAMUX1_Channel0->CCR = (config->channel & DMAMUX_CxCR_DMAREQ_ID_Msk);
 
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_TCIE | DMA_SxCR_TEIE | (config->cb_half ? DMA_SxCR_HTIE : 0));
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_EN);

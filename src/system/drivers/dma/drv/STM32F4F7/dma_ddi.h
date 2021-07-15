@@ -51,13 +51,15 @@
   Include files
 ==============================================================================*/
 #include "config.h"
-#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7) || defined(ARCH_stm32h7)
 
 #include <sys/types.h>
 #if defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
 #elif defined(ARCH_stm32f7)
 #include "stm32f7/stm32f7xx.h"
+#elif defined(ARCH_stm32h7)
+#include "stm32h7/stm32h7xx.h"
 #endif
 
 #ifdef __cplusplus
@@ -148,6 +150,7 @@ extern "C" {
 ==============================================================================*/
 typedef bool (*_DMA_cb_t)(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 
+// FIXME lepszy interfejs
 typedef struct {
         void     *arg;          /*! user configuration: callback argument */
         _DMA_cb_t cb_finish;    /*! user configuration: finish callback */
@@ -159,8 +162,17 @@ typedef struct {
         u32_t     MA[2];        /*! user configuration: memory address */
         u32_t     FC;           /*! user configuration: FIFO control */
         bool      release;      /*! user configuration: automatically release stream */
-        uint32_t  IRQ_priority; /*! user configuration: IRQ priority */
+        u32_t     IRQ_priority; /*! user configuration: IRQ priority */
+        u32_t     channel;
 } _DMA_DDI_config_t;
+
+enum {
+        _DMA_DDI_DMA1,
+        _DMA_DDI_DMA2,
+#if defined(ARCH_stm32h7)
+        _DMA_DDI_BDMA,
+#endif
+};
 
 /*==============================================================================
   Exported objects

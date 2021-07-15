@@ -18,4 +18,8 @@ ifeq ($(__ENABLE_DMA__), _YES_)
         CSRC_ARCH   += drivers/dma/drv/STM32F4F7/dma.c
         CXXSRC_ARCH += 
     endif
+    ifeq ($(TARGET), stm32h7)
+        CSRC_ARCH   += drivers/dma/drv/STM32F4F7/dma.c
+        CXXSRC_ARCH += 
+    endif
 endif

@@ -81,15 +81,13 @@ typedef DMA_Channel_TypeDef     DMA_Stream_TypeDef;
 #elif defined(ARCH_stm32h7)
 #include "stm32h7/stm32h7xx.h"
 #include "stm32h7/lib/stm32h7xx_ll_rcc.h"
+#include "stm32h7/dma_ddi.h"
 #define SR                      ISR
 #define USART_SR_RXNE           USART_ISR_RXNE_RXFNE
 #define USART_SR_ORE            USART_ISR_ORE
 #define USART_SR_TC             USART_ISR_TC
 #define USART_SR_IDLE           USART_ISR_IDLE
 #define USART_SR_TXE            USART_ISR_TXE_TXFNF
-#define _DMA_DDI_reserve(...)   0
-#define _DMA_DDI_release(...)
-#define _DMA_DDI_get_stream(...) ENOTSUP
 #endif
 
 /*==============================================================================
@@ -145,9 +143,7 @@ typedef struct {
   Local function prototypes
 ==============================================================================*/
 #if USE_DMA
-#if !defined(ARCH_stm32h7)
 static bool dma_half_and_finish(DMA_Stream_TypeDef *stream, u8_t sr, void *arg);
-#endif
 #endif
 
 /*==============================================================================
@@ -650,6 +646,10 @@ int _UART_LLD__turn_on(struct UART_mem *hdl)
                                         dmabuf->buflen = buf_len;
                                         dmabuf->buf    = (void*)DMA_ALIGN_UP((u32_t)&dmabuf->buf_holder);
 
+                                        /*
+                                         * STM32H7: DMA major and stream number is not taken in the account.
+                                         // FIXME
+                                         */
                                         dmabuf->desc = _DMA_DDI_reserve(SETUP->DMA_major,
                                                                         SETUP->DMA_rx_stream_pri);
                                         if (dmabuf->desc == 0) {
@@ -894,7 +894,6 @@ int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *co
 #if USE_DMA
         uarthdl_t *uarthdl = hdl->uarthdl;
         if (uarthdl->DMA) {
-#if !defined(ARCH_stm32h7)
                 _DMA_DDI_config_t dma_conf;
                 memset(&config, 0, sizeof(config));
                 dma_conf.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
@@ -923,13 +922,22 @@ int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *co
                                    | DMA_SxCR_CIRC
                                    | DMA_SxCR_MSIZE_BYTE
                                    | DMA_SxCR_PSIZE_BYTE;
+#elif defined(ARCH_stm32h7)
+                dma_conf.MA[0]     = cast(u32_t, uarthdl->DMA->buf);
+                dma_conf.MA[1]     = 0;
+                dma_conf.FC        = 0;
+                dma_conf.CR        = DMA_SxCR_MINC_ENABLE
+                                   | DMA_SxCR_DIR_P2M
+                                   | DMA_SxCR_CIRC
+                                   | DMA_SxCR_MSIZE_BYTE
+                                   | DMA_SxCR_PSIZE_BYTE
+                                   | DMA_SxCR_TRBUFF;
+                dma_conf.channel   = UART[hdl->major].DMA_channel;
 #endif
-
                 _DMA_DDI_transfer(uarthdl->DMA->desc, &dma_conf);
 
                 SET_BIT(SETUP->UART->CR1, USART_CR1_IDLEIE);
                 SET_BIT(SETUP->UART->CR3, USART_CR3_DMAR);
-#endif
         } else
 #endif
         {
@@ -993,13 +1001,11 @@ static bool receive_from_DMA_buffer(struct UART_mem *hdl)
  */
 //==============================================================================
 #if USE_DMA
-#if !defined(ARCH_stm32h7)
 static bool dma_half_and_finish(DMA_Stream_TypeDef *stream, u8_t sr, void *arg)
 {
         UNUSED_ARG3(stream, sr, arg);
         return receive_from_DMA_buffer(arg);
 }
-#endif
 #endif
 
 //==============================================================================
