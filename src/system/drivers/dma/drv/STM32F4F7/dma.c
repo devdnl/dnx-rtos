@@ -43,12 +43,6 @@ Brief    General usage DMA driver.
 
 #define M2M_TRANSFER_TIMEOUT            5000
 
-#define DMA_SR_FEIF                     DMA_LISR_FEIF0
-#define DMA_SR_DMEIF                    DMA_LISR_DMEIF0
-#define DMA_SR_TEIF                     DMA_LISR_TEIF0
-#define DMA_SR_HTIF                     DMA_LISR_HTIF0
-#define DMA_SR_TCIF                     DMA_LISR_TCIF0
-
 #if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
 #define DMA_SxCR_CHSEL_SEL(c)           (((c) &7) << DMA_SxCR_CHSEL_Pos)
 #endif
@@ -393,13 +387,13 @@ API_MOD_STAT(DMA, void *device_handle, struct vfs_dev_stat *device_stat)
 /**
  * @brief Function allocate selected stream.
  *
- * @param [in]  major_mask    DMA peripheral number mask.
- * @param [in]  stream        stream number.
+ * @param [in]  major           DMA peripheral number.
+ * @param [in]  stream          stream number.
  *
  * @return On success DMA descriptor number, otherwise 0.
  */
 //==============================================================================
-u32_t _DMA_DDI_reserve(u8_t major_mask, u8_t stream)
+u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
 {
         int dmad = 0;
 
@@ -408,14 +402,7 @@ u32_t _DMA_DDI_reserve(u8_t major_mask, u8_t stream)
                 return dmad;
         }
 
-        if (  ((major_mask == _DMA_DDI_DMA1) || (major_mask == _DMA_DDI_DMA2))
-           && (stream < STREAM_COUNT) ) {
-
-                u8_t major = 0;
-                switch (major_mask) {
-                case _DMA_DDI_DMA1: major = 0; break;
-                case _DMA_DDI_DMA2: major = 1; break;
-                }
+        if ((major < DMA_COUNT) && (stream < STREAM_COUNT)) {
 
                 sys_critical_section_begin();
                 {

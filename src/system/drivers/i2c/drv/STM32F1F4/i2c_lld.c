@@ -643,33 +643,39 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
         if (count >= 3) {
 #if USE_DMA > 0
                 if (I2C_HW[hdl->major].use_DMA) {
-                        u32_t dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_rx_stream_pri);
+                        u32_t dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_rx_stream_pri);
                         if (dmad == 0) {
-                                dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_rx_stream_alt);
+                                dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_rx_stream_alt);
                         }
 
                         if (dmad) {
                                 CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
-                                _DMA_DDI_config_t config;
-                                memset(&config, 0, sizeof(config));
-                                config.arg      = _I2C[hdl->major];
-                                config.cb_finish= DMA_callback;
-                                config.cb_half  = NULL;
-                                config.cb_next  = NULL;
-                                config.release  = false;
-                                config.PA       = cast(u32_t, &i2c->DR);
-                                config.NDT      = count;
-                                #if defined(ARCH_stm32f1)
-                                config.MA       = cast(u32_t, dst);
-                                config.CR       = DMA_CCRx_MINC_ENABLE | DMA_CCRx_DIR_P2M;
-                                #elif defined(ARCH_stm32f4)
-                                config.MA[0]    = cast(u32_t, dst);
-                                config.FC       = DMA_SxFCR_RESET_VALUE;
-                                config.CR       = DMA_SxCR_CHSEL_SEL(I2C_HW[hdl->major].DMA_channel)
-                                                | DMA_SxCR_MINC_ENABLE | DMA_SxCR_DIR_P2M;
-                                #endif
-                                config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+                                _DMA_DDI_config_t config = {0};
+                                config.user_ctx                             = _I2C[hdl->major];
+                                config.cb_finish                            = DMA_callback;
+                                config.cb_half                              = NULL;
+                                config.cb_next                              = NULL;
+                                config.data_number                          = count;
+                                config.peripheral_address                   = cast(u32_t, &i2c->DR);
+                                config.memory_address[0]                    = cast(u32_t, dst);
+                                config.memory_address[1]                    = 0;
+                                config.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
+                                config.channel                              = I2C_HW[hdl->major].DMA_channel;
+                                config.release                              = false;
+                                config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
+                                config.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+                                config.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+                                config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
+                                config.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                                config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                                config.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                                config.control.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                                config.control.memory_increment             = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE;
+                                config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+                                config.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                                config.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY;
+                                config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
 
                                 err = _DMA_DDI_transfer(dmad, &config);
                                 if (!err) {
@@ -822,34 +828,39 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
 
 #if USE_DMA > 0
         if (count >= 3 && I2C_HW[hdl->major].use_DMA) {
-                u32_t dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_tx_stream_pri);
+                u32_t dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_tx_stream_pri);
                 if (dmad == 0) {
-                        dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_tx_stream_alt);
+                        dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_tx_stream_alt);
                 }
 
                 if (dmad) {
                         CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
-                        _DMA_DDI_config_t config;
-                        memset(&config, 0, sizeof(config));
-                        config.arg      = _I2C[hdl->major];
-                        config.cb_finish= DMA_callback;
-                        config.cb_half  = NULL;
-                        config.cb_next  = NULL;
-                        config.release  = false;
-                        config.PA       = cast(u32_t, &i2c->DR);
-                        config.NDT      = count;
-
-#if defined(ARCH_stm32f1)
-                        config.MA       = cast(u32_t, src);
-                        config.CR       = DMA_CCRx_MINC_ENABLE | DMA_CCRx_DIR_M2P;
-#elif defined(ARCH_stm32f4)
-                        config.MA[0]    = cast(u32_t, src);
-                        config.FC       = DMA_SxFCR_RESET_VALUE;
-                        config.CR       = DMA_SxCR_CHSEL_SEL(I2C_HW[hdl->major].DMA_channel)
-                                        | DMA_SxCR_MINC_ENABLE | DMA_SxCR_DIR_M2P;
-#endif
-                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+                        _DMA_DDI_config_t config = {0};
+                        config.user_ctx                             = _I2C[hdl->major];
+                        config.cb_finish                            = DMA_callback;
+                        config.cb_half                              = NULL;
+                        config.cb_next                              = NULL;
+                        config.data_number                          = count;
+                        config.peripheral_address                   = cast(u32_t, &i2c->DR);
+                        config.memory_address[0]                    = cast(u32_t, src);
+                        config.memory_address[1]                    = 0;
+                        config.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
+                        config.channel                              = I2C_HW[hdl->major].DMA_channel;
+                        config.release                              = false;
+                        config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
+                        config.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+                        config.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+                        config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
+                        config.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                        config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                        config.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                        config.control.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                        config.control.memory_increment             = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE;
+                        config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+                        config.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                        config.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
+                        config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
 
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {

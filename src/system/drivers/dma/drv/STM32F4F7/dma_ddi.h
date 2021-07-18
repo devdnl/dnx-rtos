@@ -69,10 +69,19 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _DMA_DDI_DMA1   (1 << 0)
-#define _DMA_DDI_DMA2   (1 << 1)
-#if defined(ARCH_stm32h7)
-#define _DMA_DDI_BDMA   (1 << 2)
+#define DMA_SR_FEIF                     DMA_LISR_FEIF0
+#define DMA_SR_DMEIF                    DMA_LISR_DMEIF0
+#define DMA_SR_TEIF                     DMA_LISR_TEIF0
+#define DMA_SR_HTIF                     DMA_LISR_HTIF0
+#define DMA_SR_TCIF                     DMA_LISR_TCIF0
+
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+#define _DMA_DDI_DMA1                   0
+#define _DMA_DDI_DMA2                   1
+#elif defined(ARCH_stm32h7)
+#define _DMA_DDI_DMA1                   (1 << 0)
+#define _DMA_DDI_DMA2                   (1 << 1)
+#define _DMA_DDI_BDMA                   (1 << 2)
 #endif
 
 /*==============================================================================
@@ -83,16 +92,16 @@ typedef bool (*_DMA_cb_t)(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 struct _dma_ddi_control {
         enum mburst {
                 _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER,
-                _DMA_DDI_MEMORY_BUSRT_4_BEATS,
-                _DMA_DDI_MEMORY_BUSRT_8_BEATS,
-                _DMA_DDI_MEMORY_BUSRT_16_BEATS,
+                _DMA_DDI_MEMORY_BURST_4_BEATS,
+                _DMA_DDI_MEMORY_BURST_8_BEATS,
+                _DMA_DDI_MEMORY_BURRT_16_BEATS,
         } memory_burst:2;
 
         enum pburst {
                 _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER,
-                _DMA_DDI_PERIPHERAL_BUSRT_4_BEATS,
-                _DMA_DDI_PERIPHERAL_BUSRT_8_BEATS,
-                _DMA_DDI_PERIPHERAL_BUSRT_16_BEATS,
+                _DMA_DDI_PERIPHERAL_BURST_4_BEATS,
+                _DMA_DDI_PERIPHERAL_BURST_8_BEATS,
+                _DMA_DDI_PERIPHERAL_BURST_16_BEATS,
         } peripheral_burst:2;
 
         enum trbuff {
@@ -195,19 +204,29 @@ typedef struct {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
 //==============================================================================
 /**
  * @brief Function allocate selected stream.
  *
- * @param [in]  major_mask    DMA peripheral number mask.
+ * @param [in]  major         DMA peripheral number.
  * @param [in]  stream        stream number.
  *
  * @return On success DMA descriptor number, otherwise 0.
  */
 //==============================================================================
-#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
-extern u32_t _DMA_DDI_reserve(u8_t major_mask, u8_t stream);
+extern u32_t _DMA_DDI_reserve(u8_t major, u8_t stream);
 #elif defined(ARCH_stm32h7)
+//==============================================================================
+/**
+ * @brief Function allocate selected stream.
+ *
+ * @param [in]  major_mask    DMA peripheral mask.
+ * @param [in]  stream        stream number.
+ *
+ * @return On success DMA descriptor number, otherwise 0.
+ */
+//==============================================================================
 extern u32_t _DMA_DDI_reserve(u8_t major_mask);
 #endif
 
