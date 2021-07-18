@@ -11,15 +11,15 @@ ifeq ($(__ENABLE_DMA__), _YES_)
         CXXSRC_ARCH += 
     endif
     ifeq ($(TARGET), stm32f4)
-        CSRC_ARCH   += drivers/dma/drv/STM32F4F7/dma.c
+        CSRC_ARCH   += drivers/dma/drv/STM32F4F7H7/dma.c
         CXXSRC_ARCH += 
     endif
     ifeq ($(TARGET), stm32f7)
-        CSRC_ARCH   += drivers/dma/drv/STM32F4F7/dma.c
+        CSRC_ARCH   += drivers/dma/drv/STM32F4F7H7/dma.c
         CXXSRC_ARCH += 
     endif
     ifeq ($(TARGET), stm32h7)
-        CSRC_ARCH   += drivers/dma/drv/STM32F4F7/dma.c
+        CSRC_ARCH   += drivers/dma/drv/STM32F4F7H7/dma.c
         CXXSRC_ARCH += 
     endif
 endif
