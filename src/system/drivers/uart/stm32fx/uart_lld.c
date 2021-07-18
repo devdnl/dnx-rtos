@@ -179,7 +179,7 @@ static const UART_setup_t UART[] = {
                 #if defined(ARCH_stm32f1)
                 .CLKSRC            = USART_CLKSOURCE_PCLK2,
                 .DMA_channel       = UINT8_MAX,
-                .DMA_major         = 0,
+                .DMA_major         = _DMA_DDI_DMA1,
                 .DMA_rx_stream_pri = 5,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
@@ -228,7 +228,7 @@ static const UART_setup_t UART[] = {
                 #if defined(ARCH_stm32f1)
                 .CLKSRC            = USART_CLKSOURCE_PCLK1,
                 .DMA_channel       = UINT8_MAX,
-                .DMA_major         = 0,
+                .DMA_major         = _DMA_DDI_DMA1,
                 .DMA_rx_stream_pri = 6,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
@@ -277,7 +277,7 @@ static const UART_setup_t UART[] = {
                 #if defined(ARCH_stm32f1)
                 .CLKSRC            = USART_CLKSOURCE_PCLK1,
                 .DMA_channel       = UINT8_MAX,
-                .DMA_major         = 0,
+                .DMA_major         = _DMA_DDI_DMA1,
                 .DMA_rx_stream_pri = 3,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
@@ -326,7 +326,7 @@ static const UART_setup_t UART[] = {
                 #if defined(ARCH_stm32f1)
                 .CLKSRC            = USART_CLKSOURCE_PCLK1,
                 .DMA_channel       = UINT8_MAX,
-                .DMA_major         = 1,
+                .DMA_major         = _DMA_DDI_DMA2,
                 .DMA_rx_stream_pri = 3,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
@@ -375,7 +375,7 @@ static const UART_setup_t UART[] = {
                 #if defined(ARCH_stm32f1)
                 .CLKSRC            = USART_CLKSOURCE_PCLK1,
                 .DMA_channel       = UINT8_MAX,
-                .DMA_major         = 1,
+                .DMA_major         = _DMA_DDI_DMA2,
                 .DMA_rx_stream_pri = 4,
                 .DMA_rx_stream_alt = UINT8_MAX,
                 #elif defined(ARCH_stm32f3)
@@ -661,7 +661,7 @@ int _UART_LLD__turn_on(struct UART_mem *hdl)
                                         dmabuf->buflen = buf_len;
                                         dmabuf->buf    = (void*)DMA_ALIGN_UP((u32_t)&dmabuf->buf_holder);
 
-#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+#if defined(ARCH_stm32f1) || defined(ARCH_stm32f3) || defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
                                         dmabuf->desc = _DMA_DDI_reserve(SETUP->DMA_major,
                                                                         SETUP->DMA_rx_stream_pri);
                                         if (dmabuf->desc == 0) {
@@ -909,39 +909,35 @@ int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *co
         uarthdl_t *uarthdl = hdl->uarthdl;
         if (uarthdl->DMA) {
                 _DMA_DDI_config_t dma_conf = {0};
-                dma_conf.IRQ_priority       = __CPU_DEFAULT_IRQ_PRIORITY__;
-                dma_conf.user_ctx           = hdl;
-                dma_conf.cb_finish          = dma_half_and_finish;
-                dma_conf.cb_half            = dma_half_and_finish;
-                dma_conf.cb_next            = NULL;
-                dma_conf.release            = false;
-                dma_conf.data_number        = uarthdl->DMA->buflen;
-                dma_conf.peripheral_address = cast(u32_t, &UART[hdl->major].UART->RDR);
+                dma_conf.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
+                dma_conf.user_ctx                             = hdl;
+                dma_conf.cb_finish                            = dma_half_and_finish;
+                dma_conf.cb_half                              = dma_half_and_finish;
+                dma_conf.cb_next                              = NULL;
+                dma_conf.release                              = false;
+                dma_conf.data_number                          = uarthdl->DMA->buflen;
+                dma_conf.peripheral_address                   = cast(u32_t, &UART[hdl->major].UART->RDR);
 #if defined(ARCH_stm32f1) || defined(ARCH_stm32f3)
-                dma_conf.MA        = cast(u32_t, uarthdl->DMA->buf);
-                dma_conf.CR        = DMA_CCRx_MINC_ENABLE
-                                   | DMA_CCRx_DIR_P2M
-                                   | DMA_CCRx_CIRC_ENABLE
-                                   | DMA_CCRx_MSIZE_BYTE
-                                   | DMA_CCRx_PSIZE_BYTE;
-
+                dma_conf.memory_address                       = cast(u32_t, uarthdl->DMA->buf);
 #elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7) || defined(ARCH_stm32h7)
                 dma_conf.memory_address[0]                    = cast(u32_t, uarthdl->DMA->buf);
                 dma_conf.memory_address[1]                    = 0;
-                dma_conf.channel                              = UART[hdl->major].DMA_channel;
-                dma_conf.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
-                dma_conf.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
-                dma_conf.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
-                dma_conf.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
+#endif
                 dma_conf.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_HIGH;
-                dma_conf.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
                 dma_conf.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
                 dma_conf.control.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
-                dma_conf.control.memory_increment             = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE;
+                dma_conf.control.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
                 dma_conf.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
                 dma_conf.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_ENABLED;
                 dma_conf.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY;
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7) || defined(ARCH_stm32h7)
+                dma_conf.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+                dma_conf.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+                dma_conf.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
                 dma_conf.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
+                dma_conf.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                dma_conf.channel                              = UART[hdl->major].DMA_channel;
+                dma_conf.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
         #if defined(ARCH_stm32h7)
                 dma_conf.control.bufferable_transfer          = _DMA_DDI_BUFFERABLE_TRANSFER_ENABLED;
         #endif

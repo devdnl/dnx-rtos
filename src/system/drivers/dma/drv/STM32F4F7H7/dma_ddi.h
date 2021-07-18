@@ -140,12 +140,12 @@ struct _dma_ddi_control {
 
         enum minc {
                 _DMA_DDI_MEMORY_ADDRESS_POINTER_IS_FIXED,
-                _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE,
-        } memory_increment:1;
+                _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED,
+        } memory_address_increment:1;
 
         enum pinc {
                 _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED,
-                _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_PERIPHERAL_SIZE,
+                _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED,
         } peripheral_address_increment:1;
 
         enum circ {

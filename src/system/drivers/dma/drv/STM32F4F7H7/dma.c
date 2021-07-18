@@ -587,7 +587,7 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                                          | ((config->control.peripheral_increment_offset << DMA_SxCR_PINCOS_Pos) & DMA_SxCR_PINCOS_Msk)
                                          | ((config->control.memory_data_size << DMA_SxCR_MSIZE_Pos) & DMA_SxCR_MSIZE_Msk)
                                          | ((config->control.peripheral_data_size << DMA_SxCR_PSIZE_Pos) & DMA_SxCR_PSIZE_Msk)
-                                         | ((config->control.memory_increment << DMA_SxCR_MINC_Pos) & DMA_SxCR_MINC_Msk)
+                                         | ((config->control.memory_address_increment << DMA_SxCR_MINC_Pos) & DMA_SxCR_MINC_Msk)
                                          | ((config->control.peripheral_address_increment << DMA_SxCR_PINC_Pos) & DMA_SxCR_PINC_Msk)
                                          | ((config->control.circular_mode << DMA_SxCR_CIRC_Pos) & DMA_SxCR_CIRC_Msk)
                                          | ((config->control.transfer_direction << DMA_SxCR_DIR_Pos) & DMA_SxCR_DIR_Msk)
@@ -720,9 +720,9 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
                         config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
                         config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
                         config.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
-                        config.control.memory_increment             = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE;
+                        config.control.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
                         config.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
-                        config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_PERIPHERAL_SIZE;
+                        config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED;
                         config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
                         config.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
                         config.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY;

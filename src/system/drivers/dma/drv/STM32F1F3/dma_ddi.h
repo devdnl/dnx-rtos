@@ -67,67 +67,72 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#if defined(ARCH_stm32f1)
-#define DMA_CCR_PL_1 DMA_CCR1_PL_1
-#define DMA_CCR_PL_0 DMA_CCR1_PL_0
-#define DMA_CCR_MSIZE_1 DMA_CCR1_MSIZE_1
-#define DMA_CCR_MSIZE_0 DMA_CCR1_MSIZE_0
-#define DMA_CCR_PSIZE_1 DMA_CCR1_PSIZE_1
-#define DMA_CCR_PSIZE_0 DMA_CCR1_PSIZE_0
-#define DMA_CCR_MINC DMA_CCR1_MINC
-#define DMA_CCR_PINC DMA_CCR1_PINC
-#define DMA_CCR_CIRC DMA_CCR1_CIRC
-#define DMA_CCR_MEM2MEM DMA_CCR1_MEM2MEM
-#define DMA_CCR_DIR DMA_CCR1_DIR
-#endif
-
 #define DMA_SR_GIF                      DMA_ISR_GIF1
 #define DMA_SR_TCIF                     DMA_ISR_TCIF1
 #define DMA_SR_HTIF                     DMA_ISR_HTIF1
 #define DMA_SR_TEIF                     DMA_ISR_TEIF1
 
-#define DMA_CCRx_PL_LOW                 ((0 * DMA_CCR_PL_1) | (0 * DMA_CCR_PL_0))
-#define DMA_CCRx_PL_MEDIUM              ((0 * DMA_CCR_PL_1) | (1 * DMA_CCR_PL_0))
-#define DMA_CCRx_PL_HIGH                ((1 * DMA_CCR_PL_1) | (0 * DMA_CCR_PL_0))
-#define DMA_CCRx_PL_VERY_HIGH           ((1 * DMA_CCR_PL_1) | (1 * DMA_CCR_PL_0))
-
-#define DMA_CCRx_MSIZE_BYTE             ((0 * DMA_CCR_MSIZE_1) | (0 * DMA_CCR_MSIZE_0))
-#define DMA_CCRx_MSIZE_HALFWORD         ((0 * DMA_CCR_MSIZE_1) | (1 * DMA_CCR_MSIZE_0))
-#define DMA_CCRx_MSIZE_WORD             ((1 * DMA_CCR_MSIZE_1) | (0 * DMA_CCR_MSIZE_0))
-
-#define DMA_CCRx_PSIZE_BYTE             ((0 * DMA_CCR_PSIZE_1) | (0 * DMA_CCR_PSIZE_0))
-#define DMA_CCRx_PSIZE_HALFWORD         ((0 * DMA_CCR_PSIZE_1) | (1 * DMA_CCR_PSIZE_0))
-#define DMA_CCRx_PSIZE_WORD             ((1 * DMA_CCR_PSIZE_1) | (0 * DMA_CCR_PSIZE_0))
-
-#define DMA_CCRx_MINC_FIXED             (0 * DMA_CCR_MINC)
-#define DMA_CCRx_MINC_ENABLE            (1 * DMA_CCR_MINC)
-
-#define DMA_CCRx_PINC_FIXED             (0 * DMA_CCR_PINC)
-#define DMA_CCRx_PINC_ENABLE            (1 * DMA_CCR_PINC)
-
-#define DMA_CCRx_CIRC_DISABLE           (0 * DMA_CCR_CIRC)
-#define DMA_CCRx_CIRC_ENABLE            (1 * DMA_CCR_CIRC)
-
-#define DMA_CCRx_DIR_P2M                ((0 * DMA_CCR_MEM2MEM) | (0 * DMA_CCR_DIR))
-#define DMA_CCRx_DIR_M2P                ((0 * DMA_CCR_MEM2MEM) | (1 * DMA_CCR_DIR))
-#define DMA_CCRx_DIR_M2M                ((1 * DMA_CCR_MEM2MEM) | (0 * DMA_CCR_DIR))
+#define _DMA_DDI_DMA1                   0
+#define _DMA_DDI_DMA2                   1
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
 typedef bool (*_DMA_cb_t)(DMA_Channel_TypeDef *channel, u8_t SR, void *arg);
 
+struct _dma_ddi_control {
+        enum pl {
+                _DMA_DDI_PRIORITY_LEVEL_LOW,
+                _DMA_DDI_PRIORITY_LEVEL_MEDIUM,
+                _DMA_DDI_PRIORITY_LEVEL_HIGH,
+                _DMA_DDI_PRIORITY_LEVEL_VERY_HIGH,
+        } priority_level:2;
+
+        enum msize {
+                _DMA_DDI_MEMORY_DATA_SIZE_BYTE,
+                _DMA_DDI_MEMORY_DATA_SIZE_HALF_WORD,
+                _DMA_DDI_MEMORY_DATA_SIZE_WORD,
+        } memory_data_size:2;
+
+        enum psize {
+                _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE,
+                _DMA_DDI_PERIPHERAL_DATA_SIZE_HALF_WORD,
+                _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD,
+        } peripheral_data_size:2;
+
+        enum minc {
+                _DMA_DDI_MEMORY_ADDRESS_POINTER_IS_FIXED,
+                _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED,
+        } memory_address_increment:1;
+
+        enum pinc {
+                _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED,
+                _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED,
+        } peripheral_address_increment:1;
+
+        enum circ {
+                _DMA_DDI_CIRCULAR_MODE_DISABLED,
+                _DMA_DDI_CIRCULAR_MODE_ENABLED,
+        } circular_mode:1;
+
+        enum dir {
+                _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY,
+                _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL,
+                _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY,
+        } transfer_direction:2;
+};
+
 typedef struct {
-        void     *arg;          /*! user configuration: callback argument */
-        _DMA_cb_t cb_finish;    /*! user configuration: finish callback */
-        _DMA_cb_t cb_half;      /*! user configuration: half transfer callback */
-        _DMA_cb_t cb_next;      /*! user configuration: next callback */
-        u32_t     CR;           /*! user configuration: control register */
-        u32_t     NDT;          /*! user configuration: data number */
-        u32_t     PA;           /*! user configuration: peripheral address */
-        u32_t     MA;           /*! user configuration: memory address */
-        bool      release;      /*! user configuration: automatically release stream */
-        uint32_t  IRQ_priority; /*! user configuration: IRQ priority */
+        void     *user_ctx;             /*! user context */
+        _DMA_cb_t cb_finish;            /*! finish callback */
+        _DMA_cb_t cb_half;              /*! half transfer callback */
+        _DMA_cb_t cb_next;              /*! next callback */
+        u32_t     data_number;          /*! data number */
+        u32_t     peripheral_address;   /*! peripheral address */
+        u32_t     memory_address;       /*! memory address */
+        u32_t     IRQ_priority;         /*! IRQ priority */
+        bool      release;              /*! automatically release stream */
+        struct _dma_ddi_control control;/*! DMA control */
 } _DMA_DDI_config_t;
 
 /*==============================================================================

@@ -104,7 +104,7 @@ static const struct SPI_info SPI_HW[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .DMA_tx_stream_alt     = UINT8_MAX,
                 .DMA_rx_stream_pri     = 2,
                 .DMA_rx_stream_alt     = UINT8_MAX,
-                .DMA_major             = 0,
+                .DMA_major             = _DMA_DDI_DMA1,
                 #endif
         },
         #endif
@@ -121,7 +121,7 @@ static const struct SPI_info SPI_HW[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .DMA_tx_stream_alt     = UINT8_MAX,
                 .DMA_rx_stream_pri     = 4,
                 .DMA_rx_stream_alt     = UINT8_MAX,
-                .DMA_major             = 0,
+                .DMA_major             = _DMA_DDI_DMA1,
                 #endif
         },
         #endif
@@ -138,7 +138,7 @@ static const struct SPI_info SPI_HW[_NUMBER_OF_SPI_PERIPHERALS] = {
                 .DMA_tx_stream_alt     = UINT8_MAX,
                 .DMA_rx_stream_pri     = 1,
                 .DMA_rx_stream_alt     = UINT8_MAX,
-                .DMA_major             = 1,
+                .DMA_major             = _DMA_DDI_DMA2,
                 #endif
         }
         #endif
@@ -439,24 +439,29 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         config_tx.cb_next                              = NULL;
                         config_tx.data_number                          = count;
                         config_tx.peripheral_address                   = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
-                        config_tx.memory_address[0]                    = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
-                        config_tx.memory_address[1]                    = 0;
+#if defined(ARCH_stm32f1) || defined(ARCH_stm32f3)
+                        config_tx.memory_address                       = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
+#endif
                         config_tx.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
-                        config_tx.channel                              = SPI_HW[hdl->major].DMA_channel;
                         config_tx.release                              = true;
-                        config_tx.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
+                        config_tx.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                        config_tx.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                        config_tx.control.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                        config_tx.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+                        config_tx.control.memory_address_increment     = (txbuf ? _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED : _DMA_DDI_MEMORY_ADDRESS_POINTER_IS_FIXED);
+                        config_tx.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                        config_tx.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
                         config_tx.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
                         config_tx.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
                         config_tx.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
-                        config_tx.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
                         config_tx.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
-                        config_tx.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
-                        config_tx.control.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
-                        config_tx.control.memory_increment             = (txbuf ? _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE : _DMA_DDI_MEMORY_ADDRESS_POINTER_IS_FIXED);
-                        config_tx.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
-                        config_tx.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
-                        config_tx.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
                         config_tx.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
+                        config_tx.channel                              = SPI_HW[hdl->major].DMA_channel;
+                        config_tx.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
+                        config_tx.memory_address[0]                    = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
+                        config_tx.memory_address[1]                    = 0;
+#endif
 
                         _DMA_DDI_config_t config_rx = {0};
                         config_rx.user_ctx                             = hdl;
@@ -465,25 +470,29 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         config_rx.cb_next                              = NULL;
                         config_rx.data_number                          = count;
                         config_rx.peripheral_address                   = cast(u32_t, &SPI_HW[hdl->major].SPI->DR);
-                        config_rx.memory_address[0]                    = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
-                        config_rx.memory_address[1]                    = 0;
+#if defined(ARCH_stm32f1) || defined(ARCH_stm32f3)
+                        config_rx.memory_address                       = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
+#endif
                         config_rx.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
-                        config_rx.channel                              = SPI_HW[hdl->major].DMA_channel;
                         config_rx.release                              = true;
-                        config_rx.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
-                        config_rx.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
-                        config_rx.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
-                        config_rx.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
                         config_rx.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
-                        config_rx.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                        config_rx.control.memory_address_increment     = (rxbuf ? _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED : _DMA_DDI_MEMORY_ADDRESS_POINTER_IS_FIXED);
                         config_rx.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
                         config_rx.control.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
-                        config_rx.control.memory_increment             = (rxbuf ? _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE : _DMA_DDI_MEMORY_ADDRESS_POINTER_IS_FIXED);
                         config_rx.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
                         config_rx.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
                         config_rx.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY;
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+                        config_rx.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                        config_rx.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+                        config_rx.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+                        config_rx.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
                         config_rx.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
-
+                        config_rx.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
+                        config_rx.channel                              = SPI_HW[hdl->major].DMA_channel;
+                        config_rx.memory_address[0]                    = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
+                        config_rx.memory_address[1]                    = 0;
+#endif
                         err = _DMA_DDI_transfer(dmadrx, &config_rx);
                         if (!err) {
                                 err = _DMA_DDI_transfer(dmadtx, &config_tx);
