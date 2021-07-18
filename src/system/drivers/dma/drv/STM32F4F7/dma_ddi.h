@@ -69,110 +69,124 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define DMA_SR_FEIF                     DMA_LISR_FEIF0
-#define DMA_SR_DMEIF                    DMA_LISR_DMEIF0
-#define DMA_SR_TEIF                     DMA_LISR_TEIF0
-#define DMA_SR_HTIF                     DMA_LISR_HTIF0
-#define DMA_SR_TCIF                     DMA_LISR_TCIF0
-
-#define DMA_SxCR_CHSEL_SEL(c)           (((c) &7) << DMA_SxCR_CHSEL_Pos)
-
-#define DMA_SxCR_MBURST_SINGLE          ((0 * DMA_SxCR_MBURST_1) | (0 * DMA_SxCR_MBURST_0))
-#define DMA_SxCR_MBURST_INCR4           ((0 * DMA_SxCR_MBURST_1) | (1 * DMA_SxCR_MBURST_0))
-#define DMA_SxCR_MBURST_INCR8           ((1 * DMA_SxCR_MBURST_1) | (0 * DMA_SxCR_MBURST_0))
-#define DMA_SxCR_MBURST_INCR16          ((1 * DMA_SxCR_MBURST_1) | (1 * DMA_SxCR_MBURST_0))
-
-#define DMA_SxCR_PBURST_SINGLE          ((0 * DMA_SxCR_PBURST_1) | (0 * DMA_SxCR_PBURST_0))
-#define DMA_SxCR_PBURST_INCR4           ((0 * DMA_SxCR_PBURST_1) | (1 * DMA_SxCR_PBURST_0))
-#define DMA_SxCR_PBURST_INCR8           ((1 * DMA_SxCR_PBURST_1) | (0 * DMA_SxCR_PBURST_0))
-#define DMA_SxCR_PBURST_INCR16          ((1 * DMA_SxCR_PBURST_1) | (1 * DMA_SxCR_PBURST_0))
-
-#define DMA_SxCR_CT_M0AR                (0 * DMA_SxCR_CT)
-#define DMA_SxCR_CT_M1AR                (1 * DMA_SxCR_CT)
-
-#define DMA_SxCR_DBM_DISABLE            (0 * DMA_SxCR_DBM)
-#define DMA_SxCR_DBM_ENABLE             (1 * DMA_SxCR_DBM)
-
-#define DMA_SxCR_PL_LOW                 ((0 * DMA_SxCR_PL_1) | (0 * DMA_SxCR_PL_0))
-#define DMA_SxCR_PL_MEDIUM              ((0 * DMA_SxCR_PL_1) | (1 * DMA_SxCR_PL_0))
-#define DMA_SxCR_PL_HIGH                ((1 * DMA_SxCR_PL_1) | (0 * DMA_SxCR_PL_0))
-#define DMA_SxCR_PL_VERY_HIGH           ((1 * DMA_SxCR_PL_1) | (1 * DMA_SxCR_PL_0))
-
-#define DMA_SxCR_PINCOS_PSIZE           (0 * DMA_SxCR_PINCOS)
-#define DMA_SxCR_PINCOS_FIXED           (1 * DMA_SxCR_PINCOS)
-
-#define DMA_SxCR_MSIZE_BYTE             ((0 * DMA_SxCR_MSIZE_1) | (0 * DMA_SxCR_MSIZE_0))
-#define DMA_SxCR_MSIZE_HALFWORD         ((0 * DMA_SxCR_MSIZE_1) | (1 * DMA_SxCR_MSIZE_0))
-#define DMA_SxCR_MSIZE_WORD             ((1 * DMA_SxCR_MSIZE_1) | (0 * DMA_SxCR_MSIZE_0))
-
-#define DMA_SxCR_PSIZE_BYTE             ((0 * DMA_SxCR_PSIZE_1) | (0 * DMA_SxCR_PSIZE_0))
-#define DMA_SxCR_PSIZE_HALFWORD         ((0 * DMA_SxCR_PSIZE_1) | (1 * DMA_SxCR_PSIZE_0))
-#define DMA_SxCR_PSIZE_WORD             ((1 * DMA_SxCR_PSIZE_1) | (0 * DMA_SxCR_PSIZE_0))
-
-#define DMA_SxCR_MINC_FIXED             (0 * DMA_SxCR_MINC)
-#define DMA_SxCR_MINC_ENABLE            (1 * DMA_SxCR_MINC)
-
-#define DMA_SxCR_PINC_FIXED             (0 * DMA_SxCR_PINC)
-#define DMA_SxCR_PINC_ENABLE            (1 * DMA_SxCR_PINC)
-
-#define DMA_SxCR_CIRC_DISABLE           (0 * DMA_SxCR_CIRC)
-#define DMA_SxCR_CIRC_ENABLE            (1 * DMA_SxCR_CIRC)
-
-#define DMA_SxCR_DIR_P2M                ((0 * DMA_SxCR_DIR_1) | (0 * DMA_SxCR_DIR_0))
-#define DMA_SxCR_DIR_M2P                ((0 * DMA_SxCR_DIR_1) | (1 * DMA_SxCR_DIR_0))
-#define DMA_SxCR_DIR_M2M                ((1 * DMA_SxCR_DIR_1) | (0 * DMA_SxCR_DIR_0))
-
-#define DMA_SxCR_PFCTRL_DMA             (0 * DMA_SxCR_PFCTRL)
-#define DMA_SxCR_PFCTRL_PER             (1 * DMA_SxCR_PFCTRL)
-
-#define DMA_SxFCR_FEIE_DISABLE          (0 * DMA_SxFCR_FEIE)
-#define DMA_SxFCR_FEIE_ENABLE           (1 * DMA_SxFCR_FEIE)
-
-#define DMA_SxFCR_FS_0_FL_1_4           ((0 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (0 * DMA_SxFCR_FS_0))
-#define DMA_SxFCR_FS_1_4_FL_1_2         ((0 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (1 * DMA_SxFCR_FS_0))
-#define DMA_SxFCR_FS_1_2_FL_3_4         ((0 * DMA_SxFCR_FS_2) | (1 * DMA_SxFCR_FS_1) | (0 * DMA_SxFCR_FS_0))
-#define DMA_SxFCR_FS_3_4_FL_FULL        ((0 * DMA_SxFCR_FS_2) | (1 * DMA_SxFCR_FS_1) | (1 * DMA_SxFCR_FS_0))
-#define DMA_SxFCR_FS_EMPTY              ((1 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (0 * DMA_SxFCR_FS_0))
-#define DMA_SxFCR_FS_FULL               ((1 * DMA_SxFCR_FS_2) | (0 * DMA_SxFCR_FS_1) | (1 * DMA_SxFCR_FS_0))
-
-#define DMA_SxFCR_DMDIS_NO              (0  * DMA_SxFCR_DMDIS)
-#define DMA_SxFCR_DMDIS_YES             (1  * DMA_SxFCR_DMDIS)
-
-#define DMA_SxFCR_FTH_1_4               ((0 * DMA_SxFCR_FTH_1) | (0 * DMA_SxFCR_FTH_0))
-#define DMA_SxFCR_FTH_1_2               ((0 * DMA_SxFCR_FTH_1) | (1 * DMA_SxFCR_FTH_0))
-#define DMA_SxFCR_FTH_3_4               ((1 * DMA_SxFCR_FTH_1) | (0 * DMA_SxFCR_FTH_0))
-#define DMA_SxFCR_FTH_FULL              ((1 * DMA_SxFCR_FTH_1) | (1 * DMA_SxFCR_FTH_0))
-
-#define DMA_SxFCR_RESET_VALUE           0x21
+#define _DMA_DDI_DMA1   (1 << 0)
+#define _DMA_DDI_DMA2   (1 << 1)
+#if defined(ARCH_stm32h7)
+#define _DMA_DDI_BDMA   (1 << 2)
+#endif
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
 typedef bool (*_DMA_cb_t)(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 
-// FIXME lepszy interfejs
-typedef struct {
-        void     *arg;          /*! user configuration: callback argument */
-        _DMA_cb_t cb_finish;    /*! user configuration: finish callback */
-        _DMA_cb_t cb_half;      /*! user configuration: half transfer callback */
-        _DMA_cb_t cb_next;      /*! user configuration: next callback */
-        u32_t     CR;           /*! user configuration: control register */
-        u32_t     NDT;          /*! user configuration: data number */
-        u32_t     PA;           /*! user configuration: peripheral address */
-        u32_t     MA[2];        /*! user configuration: memory address */
-        u32_t     FC;           /*! user configuration: FIFO control */
-        bool      release;      /*! user configuration: automatically release stream */
-        u32_t     IRQ_priority; /*! user configuration: IRQ priority */
-        u32_t     channel;
-} _DMA_DDI_config_t;
+struct _dma_ddi_control {
+        enum mburst {
+                _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER,
+                _DMA_DDI_MEMORY_BUSRT_4_BEATS,
+                _DMA_DDI_MEMORY_BUSRT_8_BEATS,
+                _DMA_DDI_MEMORY_BUSRT_16_BEATS,
+        } memory_burst:2;
 
-enum {
-        _DMA_DDI_DMA1,
-        _DMA_DDI_DMA2,
-#if defined(ARCH_stm32h7)
-        _DMA_DDI_BDMA,
-#endif
+        enum pburst {
+                _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER,
+                _DMA_DDI_PERIPHERAL_BUSRT_4_BEATS,
+                _DMA_DDI_PERIPHERAL_BUSRT_8_BEATS,
+                _DMA_DDI_PERIPHERAL_BUSRT_16_BEATS,
+        } peripheral_burst:2;
+
+        enum trbuff {
+                _DMA_DDI_BUFFERABLE_TRANSFER_DISABLED,
+                _DMA_DDI_BUFFERABLE_TRANSFER_ENABLED,
+        } bufferable_transfer:1;
+
+        enum dbm {
+                _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED,
+                _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED,
+        } double_buffer_mode:1;
+
+        enum pl {
+                _DMA_DDI_PRIORITY_LEVEL_LOW,
+                _DMA_DDI_PRIORITY_LEVEL_MEDIUM,
+                _DMA_DDI_PRIORITY_LEVEL_HIGH,
+                _DMA_DDI_PRIORITY_LEVEL_VERY_HIGH,
+        } priority_level:2;
+
+        enum pincos {
+                _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE,
+                _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_FIXED_TO_4,
+        } peripheral_increment_offset:1;
+
+        enum msize {
+                _DMA_DDI_MEMORY_DATA_SIZE_BYTE,
+                _DMA_DDI_MEMORY_DATA_SIZE_HALF_WORD,
+                _DMA_DDI_MEMORY_DATA_SIZE_WORD,
+        } memory_data_size:2;
+
+        enum psize {
+                _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE,
+                _DMA_DDI_PERIPHERAL_DATA_SIZE_HALF_WORD,
+                _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD,
+        } peripheral_data_size:2;
+
+        enum minc {
+                _DMA_DDI_MEMORY_ADDRESS_POINTER_IS_FIXED,
+                _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE,
+        } memory_increment:1;
+
+        enum pinc {
+                _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED,
+                _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_PERIPHERAL_SIZE,
+        } peripheral_address_increment:1;
+
+        enum circ {
+                _DMA_DDI_CIRCULAR_MODE_DISABLED,
+                _DMA_DDI_CIRCULAR_MODE_ENABLED,
+        } circular_mode:1;
+
+        enum dir {
+                _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY,
+                _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL,
+                _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY,
+        } transfer_direction:2;
+
+        enum pfctrl {
+                _DMA_DDI_FLOW_CONTROLLER_DMA,
+                _DMA_DDI_FLOW_CONTROLLER_PERIPHERAL,
+        } flow_controller:1;
 };
+
+struct _dma_ddi_fifo {
+        enum dmdis {
+                _DMA_DDI_DIRECT_MODE_ENABLED,
+                _DMA_DDI_DIRECT_MODE_DISABLED,
+        } direct_mode:1;
+
+        enum fth {
+                _DMA_DDI_FIFO_THRESHOLD_1_4,
+                _DMA_DDI_FIFO_THRESHOLD_1_2,
+                _DMA_DDI_FIFO_THRESHOLD_3_4,
+                _DMA_DDI_FIFO_THRESHOLD_FULL,
+        } FIFO_threshold:2;
+};
+
+/*
+ * DMA configuration structure
+ */
+typedef struct {
+        void     *user_ctx;             /*! user context */
+        _DMA_cb_t cb_finish;            /*! finish callback */
+        _DMA_cb_t cb_half;              /*! half transfer callback */
+        _DMA_cb_t cb_next;              /*! next callback */
+        u32_t     data_number;          /*! data number */
+        u32_t     peripheral_address;   /*! peripheral address */
+        u32_t     memory_address[2];    /*! memory address */
+        u32_t     IRQ_priority;         /*! IRQ priority */
+        u32_t     channel;              /*! DMA channel */
+        bool      release;              /*! automatically release stream */
+        struct _dma_ddi_control control;/*! DMA control */
+        struct _dma_ddi_fifo fifo;      /*! FIFO control */
+} _DMA_DDI_config_t;
 
 /*==============================================================================
   Exported objects
@@ -185,13 +199,17 @@ enum {
 /**
  * @brief Function allocate selected stream.
  *
- * @param [in]  major         DMA peripheral number.
+ * @param [in]  major_mask    DMA peripheral number mask.
  * @param [in]  stream        stream number.
  *
  * @return On success DMA descriptor number, otherwise 0.
  */
 //==============================================================================
-extern u32_t _DMA_DDI_reserve(u8_t major, u8_t stream);
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+extern u32_t _DMA_DDI_reserve(u8_t major_mask, u8_t stream);
+#elif defined(ARCH_stm32h7)
+extern u32_t _DMA_DDI_reserve(u8_t major_mask);
+#endif
 
 //==============================================================================
 /**

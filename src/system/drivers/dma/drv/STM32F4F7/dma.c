@@ -43,17 +43,30 @@ Brief    General usage DMA driver.
 
 #define M2M_TRANSFER_TIMEOUT            5000
 
+#define DMA_SR_FEIF                     DMA_LISR_FEIF0
+#define DMA_SR_DMEIF                    DMA_LISR_DMEIF0
+#define DMA_SR_TEIF                     DMA_LISR_TEIF0
+#define DMA_SR_HTIF                     DMA_LISR_HTIF0
+#define DMA_SR_TCIF                     DMA_LISR_TCIF0
+
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+#define DMA_SxCR_CHSEL_SEL(c)           (((c) &7) << DMA_SxCR_CHSEL_Pos)
+#endif
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
 typedef struct {
-        DMA_TypeDef        *DMA;
-        DMA_Stream_TypeDef *stream[STREAM_COUNT];
-        IRQn_Type           IRQn[STREAM_COUNT];
+        DMA_TypeDef             *DMA;
+        DMA_Stream_TypeDef      *stream[STREAM_COUNT];
+        #if defined(ARCH_stm32h7)
+        DMAMUX_Channel_TypeDef  *channel[STREAM_COUNT];
+        #endif
+        IRQn_Type                IRQn[STREAM_COUNT];
 } DMA_HW_t;
 
 typedef struct {
-        void           *arg;
+        void           *user_ctx;
         _DMA_cb_t       cb_finish;
         _DMA_cb_t       cb_half;
         _DMA_cb_t       cb_next;
@@ -87,42 +100,62 @@ MODULE_NAME(DMA);
 
 static const DMA_HW_t DMA_HW[] = {
         {
-                .DMA       = DMA1,
-                .stream[0] = DMA1_Stream0,
-                .stream[1] = DMA1_Stream1,
-                .stream[2] = DMA1_Stream2,
-                .stream[3] = DMA1_Stream3,
-                .stream[4] = DMA1_Stream4,
-                .stream[5] = DMA1_Stream5,
-                .stream[6] = DMA1_Stream6,
-                .stream[7] = DMA1_Stream7,
-                .IRQn[0]   = DMA1_Stream0_IRQn,
-                .IRQn[1]   = DMA1_Stream1_IRQn,
-                .IRQn[2]   = DMA1_Stream2_IRQn,
-                .IRQn[3]   = DMA1_Stream3_IRQn,
-                .IRQn[4]   = DMA1_Stream4_IRQn,
-                .IRQn[5]   = DMA1_Stream5_IRQn,
-                .IRQn[6]   = DMA1_Stream6_IRQn,
-                .IRQn[7]   = DMA1_Stream7_IRQn,
+                .DMA        = DMA1,
+                .stream[0]  = DMA1_Stream0,
+                .stream[1]  = DMA1_Stream1,
+                .stream[2]  = DMA1_Stream2,
+                .stream[3]  = DMA1_Stream3,
+                .stream[4]  = DMA1_Stream4,
+                .stream[5]  = DMA1_Stream5,
+                .stream[6]  = DMA1_Stream6,
+                .stream[7]  = DMA1_Stream7,
+#if defined(ARCH_stm32h7)
+                .channel[0] = DMAMUX1_Channel0,
+                .channel[1] = DMAMUX1_Channel1,
+                .channel[2] = DMAMUX1_Channel2,
+                .channel[3] = DMAMUX1_Channel3,
+                .channel[4] = DMAMUX1_Channel4,
+                .channel[5] = DMAMUX1_Channel5,
+                .channel[6] = DMAMUX1_Channel6,
+                .channel[7] = DMAMUX1_Channel7,
+#endif
+                .IRQn[0]    = DMA1_Stream0_IRQn,
+                .IRQn[1]    = DMA1_Stream1_IRQn,
+                .IRQn[2]    = DMA1_Stream2_IRQn,
+                .IRQn[3]    = DMA1_Stream3_IRQn,
+                .IRQn[4]    = DMA1_Stream4_IRQn,
+                .IRQn[5]    = DMA1_Stream5_IRQn,
+                .IRQn[6]    = DMA1_Stream6_IRQn,
+                .IRQn[7]    = DMA1_Stream7_IRQn,
         },
         {
-                .DMA       = DMA2,
-                .stream[0] = DMA2_Stream0,
-                .stream[1] = DMA2_Stream1,
-                .stream[2] = DMA2_Stream2,
-                .stream[3] = DMA2_Stream3,
-                .stream[4] = DMA2_Stream4,
-                .stream[5] = DMA2_Stream5,
-                .stream[6] = DMA2_Stream6,
-                .stream[7] = DMA2_Stream7,
-                .IRQn[0]   = DMA2_Stream0_IRQn,
-                .IRQn[1]   = DMA2_Stream1_IRQn,
-                .IRQn[2]   = DMA2_Stream2_IRQn,
-                .IRQn[3]   = DMA2_Stream3_IRQn,
-                .IRQn[4]   = DMA2_Stream4_IRQn,
-                .IRQn[5]   = DMA2_Stream5_IRQn,
-                .IRQn[6]   = DMA2_Stream6_IRQn,
-                .IRQn[7]   = DMA2_Stream7_IRQn,
+                .DMA        = DMA2,
+                .stream[0]  = DMA2_Stream0,
+                .stream[1]  = DMA2_Stream1,
+                .stream[2]  = DMA2_Stream2,
+                .stream[3]  = DMA2_Stream3,
+                .stream[4]  = DMA2_Stream4,
+                .stream[5]  = DMA2_Stream5,
+                .stream[6]  = DMA2_Stream6,
+                .stream[7]  = DMA2_Stream7,
+#if defined(ARCH_stm32h7)
+                .channel[0] = DMAMUX1_Channel8,
+                .channel[1] = DMAMUX1_Channel9,
+                .channel[2] = DMAMUX1_Channel10,
+                .channel[3] = DMAMUX1_Channel11,
+                .channel[4] = DMAMUX1_Channel12,
+                .channel[5] = DMAMUX1_Channel13,
+                .channel[6] = DMAMUX1_Channel14,
+                .channel[7] = DMAMUX1_Channel15,
+#endif
+                .IRQn[0]    = DMA2_Stream0_IRQn,
+                .IRQn[1]    = DMA2_Stream1_IRQn,
+                .IRQn[2]    = DMA2_Stream2_IRQn,
+                .IRQn[3]    = DMA2_Stream3_IRQn,
+                .IRQn[4]    = DMA2_Stream4_IRQn,
+                .IRQn[5]    = DMA2_Stream5_IRQn,
+                .IRQn[6]    = DMA2_Stream6_IRQn,
+                .IRQn[7]    = DMA2_Stream7_IRQn,
         },
 };
 
@@ -160,9 +193,9 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor, const void *conf
                         DMA_mem = *device_handle;
 
                         /*
-                         * Only the DMA2 controller is able to perform
-                         * memory-to-memory transfers. It is a peripheral limitation.
-                         * Allocating memory for memory-to-memory semaphores.
+                         * Only the DMA2 controller is able (F4,F7)/used (H7) to perform
+                         * memory-to-memory transfers.
+                         * Allocating memory for memory-to-memory queues.
                          */
                         DMA_RT_t *hdl = &DMA_mem->DMA[1];
                         err = sys_zalloc(sizeof(queue_t*) * STREAM_COUNT,
@@ -355,17 +388,18 @@ API_MOD_STAT(DMA, void *device_handle, struct vfs_dev_stat *device_stat)
         return ESUCC;
 }
 
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
 //==============================================================================
 /**
  * @brief Function allocate selected stream.
  *
- * @param [in]  major         DMA peripheral number.
+ * @param [in]  major_mask    DMA peripheral number mask.
  * @param [in]  stream        stream number.
  *
  * @return On success DMA descriptor number, otherwise 0.
  */
 //==============================================================================
-u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
+u32_t _DMA_DDI_reserve(u8_t major_mask, u8_t stream)
 {
         int dmad = 0;
 
@@ -374,10 +408,15 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
                 return dmad;
         }
 
-        // TODO przeszukiwanie wolnego strumienia dla DMA1, DMA2 i BDMA
-        // TODO lepszy interfejs tego sterownika
+        if (  ((major_mask == _DMA_DDI_DMA1) || (major_mask == _DMA_DDI_DMA2))
+           && (stream < STREAM_COUNT) ) {
 
-        if (major < DMA_COUNT && stream < STREAM_COUNT) {
+                u8_t major = 0;
+                switch (major_mask) {
+                case _DMA_DDI_DMA1: major = 0; break;
+                case _DMA_DDI_DMA2: major = 1; break;
+                }
+
                 sys_critical_section_begin();
                 {
                         if (DMA_mem->DMA[major].stream[stream].dmad == 0) {
@@ -397,6 +436,58 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t stream)
 
         return dmad;
 }
+#endif
+
+#if defined(ARCH_stm32h7)
+//==============================================================================
+/**
+ * @brief Function allocate selected stream.
+ *
+ * @param [in]  major_mask    DMA peripheral number mask.
+ *
+ * @return On success DMA descriptor number, otherwise 0.
+ */
+//==============================================================================
+u32_t _DMA_DDI_reserve(u8_t major_mask)
+{
+        int dmad = 0;
+
+        if (DMA_mem == NULL) {
+                printk("DMA: driver not initialized");
+                return dmad;
+        }
+
+        for (u8_t major = 0; (major < DMA_COUNT) && (dmad == 0); major++) {
+
+                if (major_mask & (1 << major)) {
+
+                        sys_critical_section_begin();
+                        {
+                                for (u8_t stream = 0; stream < STREAM_COUNT; stream++) {
+
+                                        if (DMA_mem->DMA[major].stream[stream].dmad == 0) {
+
+                                                u32_t ID = DMA_mem->DMA[major].ID_ctr++;
+
+                                                dmad = DMAD(major, stream, ID);
+
+                                                DMA_mem->DMA[major].stream[stream].dmad = dmad;
+
+                                                if (DMA_mem->DMA[major].ID_ctr == 0) {
+                                                        DMA_mem->DMA[major].ID_ctr++;
+                                                }
+
+                                                break;
+                                        }
+                                }
+                        }
+                        sys_critical_section_end();
+                }
+        }
+
+        return dmad;
+}
+#endif
 
 //==============================================================================
 /**
@@ -480,9 +571,9 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
         if (  dmad
            && DMA_mem
            && config
-           && config->NDT
-           && config->PA
-           && (config->MA[0] || config->MA[1])) {
+           && config->data_number
+           && config->peripheral_address
+           && (config->memory_address[0] || config->memory_address[1])) {
 
                 DMA_RT_stream_t    *RT_stream  = &DMA_mem->DMA[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
                 DMA_Stream_TypeDef *DMA_Stream =  DMA_HW[GETMAJOR(dmad)].stream[GETSTREAM(dmad)];
@@ -492,14 +583,33 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                         DMA_Stream->CR = 0;
                         clear_DMA_IRQ_flags(GETMAJOR(dmad), GETSTREAM(dmad));
 
-                        DMA_Stream->M0AR = config->MA[0];
-                        DMA_Stream->M1AR = config->MA[1];
-                        DMA_Stream->NDTR = config->NDT;
-                        DMA_Stream->PAR  = config->PA;
-                        DMA_Stream->CR   = config->CR & ~DMA_SxCR_EN;
-                        DMA_Stream->FCR  = config->FC;
+                        DMA_Stream->M0AR = config->memory_address[0];
+                        DMA_Stream->M1AR = config->memory_address[1];
+                        DMA_Stream->NDTR = config->data_number;
+                        DMA_Stream->PAR  = config->peripheral_address;
+                        DMA_Stream->CR   = ((config->control.memory_burst << DMA_SxCR_MBURST_Pos) & DMA_SxCR_MBURST_Msk)
+                                         | ((config->control.peripheral_burst << DMA_SxCR_PBURST_Pos) & DMA_SxCR_PBURST_Msk)
+                                        #if defined(ARCH_stm32f4) | defined(ARCH_stm32f7)
+                                         | DMA_SxCR_CHSEL_SEL(config->channel)
+                                        #endif
+                                        #ifdef DMA_SxCR_TRBUFF_Msk
+                                         | ((config->control.bufferable_transfer << DMA_SxCR_TRBUFF_Pos) & DMA_SxCR_TRBUFF_Msk)
+                                        #endif
+                                         | ((config->control.double_buffer_mode << DMA_SxCR_DBM_Pos) & DMA_SxCR_DBM_Msk)
+                                         | ((config->control.priority_level << DMA_SxCR_PL_Pos) & DMA_SxCR_PL_Msk)
+                                         | ((config->control.peripheral_increment_offset << DMA_SxCR_PINCOS_Pos) & DMA_SxCR_PINCOS_Msk)
+                                         | ((config->control.memory_data_size << DMA_SxCR_MSIZE_Pos) & DMA_SxCR_MSIZE_Msk)
+                                         | ((config->control.peripheral_data_size << DMA_SxCR_PSIZE_Pos) & DMA_SxCR_PSIZE_Msk)
+                                         | ((config->control.memory_increment << DMA_SxCR_MINC_Pos) & DMA_SxCR_MINC_Msk)
+                                         | ((config->control.peripheral_address_increment << DMA_SxCR_PINC_Pos) & DMA_SxCR_PINC_Msk)
+                                         | ((config->control.circular_mode << DMA_SxCR_CIRC_Pos) & DMA_SxCR_CIRC_Msk)
+                                         | ((config->control.transfer_direction << DMA_SxCR_DIR_Pos) & DMA_SxCR_DIR_Msk)
+                                         | ((config->control.flow_controller << DMA_SxCR_PFCTRL_Pos) & DMA_SxCR_PFCTRL_Msk);
 
-                        RT_stream->arg       = config->arg;
+                        DMA_Stream->FCR  = ((config->fifo.direct_mode << DMA_SxFCR_DMDIS_Pos) & DMA_SxFCR_DMDIS_Msk)
+                                         | ((config->fifo.FIFO_threshold << DMA_SxFCR_FTH_Pos) & DMA_SxFCR_FTH_Msk);
+
+                        RT_stream->user_ctx  = config->user_ctx;
                         RT_stream->cb_finish = config->cb_finish;
                         RT_stream->cb_half   = config->cb_half;
                         RT_stream->cb_next   = config->cb_next;
@@ -509,21 +619,23 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                         NVIC_SetPriority(IRQn, config->IRQ_priority);
                         NVIC_EnableIRQ(IRQn);
 
-                        RT_stream->flush_cache = (  _mm_is_cacheable((void*)config->MA[0])
-                                                 || _mm_is_cacheable((void*)config->MA[1]));
+                        RT_stream->flush_cache = (  _mm_is_cacheable((void*)config->memory_address[0])
+                                                 || _mm_is_cacheable((void*)config->memory_address[1]));
 
                         if (RT_stream->flush_cache) {
 
-                                if (  ((config->CR & DMA_SxCR_DIR_Msk) == DMA_SxCR_DIR_M2P)
-                                   || ((config->CR & DMA_SxCR_DIR_Msk) == DMA_SxCR_DIR_M2M) ) {
+                                if (  (config->control.transfer_direction == _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL)
+                                   || (config->control.transfer_direction == _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY) ) {
 
                                         _cpuctl_clean_dcache();
                                         RT_stream->flush_cache = false;
                                 }
                         }
 
-                        // FIXME
-                        DMAMUX1_Channel0->CCR = (config->channel & DMAMUX_CxCR_DMAREQ_ID_Msk);
+                        #if defined(ARCH_stm32h7)
+                        DMAMUX_Channel_TypeDef *channel = DMA_HW[GETMAJOR(dmad)].channel[GETSTREAM(dmad)];
+                        channel->CCR = (config->channel & DMAMUX_CxCR_DMAREQ_ID_Msk);
+                        #endif
 
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_TCIE | DMA_SxCR_TEIE | (config->cb_half ? DMA_SxCR_HTIE : 0));
                         SET_BIT(DMA_Stream->CR, DMA_SxCR_EN);
@@ -565,9 +677,12 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
         u32_t dmad   = 0;
         u8_t  stream = 0;
 
-        for (; stream < STREAM_COUNT; stream++) {
-                dmad = _DMA_DDI_reserve(hdl->major, stream);
-                if (dmad) break;
+        for (; (stream < STREAM_COUNT) && (dmad == 0); stream++) {
+                #if defined(ARCH_stm32h7)
+                dmad = _DMA_DDI_reserve(_DMA_DDI_DMA2);
+                #else
+                dmad = _DMA_DDI_reserve(_DMA_DDI_DMA2, stream);
+                #endif
         }
 
         if (dmad && (hdl->m2m_queue[stream] == NULL)) {
@@ -579,45 +694,51 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
         }
 
         if (dmad) {
-                u32_t PMSIZE, NDT;
+                _DMA_DDI_config_t config = {0};
 
                 if (  ((size & 3) == 0)
                    && ((cast(u32_t, src) & 3) == 0)
                    && ((cast(u32_t, dst) & 3) == 0) ) {
 
-                        PMSIZE = (2 << DMA_SxCR_PSIZE_Pos)
-                               | (2 << DMA_SxCR_MSIZE_Pos);
-
-                        NDT = size / 4;
+                        config.control.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD;
+                        config.control.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_WORD;
+                        config.data_number                  = size / 4;
 
                 } else if (  ((size & 1) == 0)
                           && ((cast(u32_t, src) & 1) == 0)
                           && ((cast(u32_t, dst) & 1) == 0) ) {
 
-                        PMSIZE = (1 << DMA_SxCR_PSIZE_Pos)
-                               | (1 << DMA_SxCR_MSIZE_Pos);
-
-                        NDT = size / 2;
+                        config.control.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_HALF_WORD;
+                        config.control.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_HALF_WORD;
+                        config.data_number                  = size / 2;
 
                 } else {
-                        PMSIZE = 0;
-                        NDT    = size;
+                        config.control.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                        config.control.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                        config.data_number                  = size;
                 }
 
-                if (NDT <= UINT16_MAX) {
-                        _DMA_DDI_config_t config;
-                        config.arg       = hdl->m2m_queue[stream];
-                        config.cb_finish = M2M_callback;
-                        config.cb_half   = NULL;
-                        config.cb_next   = NULL;
-                        config.release   = true;
-                        config.PA        = cast(u32_t, src);
-                        config.MA[0]     = cast(u32_t, dst);
-                        config.NDT       = NDT;
-                        config.FC        = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
-                        config.CR        = PMSIZE | (2 << DMA_SxCR_DIR_Pos)
-                                         | DMA_SxCR_MINC | DMA_SxCR_PINC;
-                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+                if (config.data_number <= UINT16_MAX) {
+                        config.user_ctx                             = hdl->m2m_queue[stream];
+                        config.cb_finish                            = M2M_callback;
+                        config.cb_half                              = NULL;
+                        config.cb_next                              = NULL;
+                        config.release                              = true;
+                        config.peripheral_address                   = cast(u32_t, src);
+                        config.memory_address[0]                    = cast(u32_t, dst);
+                        config.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
+                        config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
+                        config.control.bufferable_transfer          = _DMA_DDI_BUFFERABLE_TRANSFER_DISABLED;
+                        config.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                        config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
+                        config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
+                        config.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+                        config.control.memory_increment             = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE;
+                        config.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+                        config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_PERIPHERAL_SIZE;
+                        config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                        config.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                        config.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY;
 
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {
@@ -724,12 +845,12 @@ static void IRQ_handle(u8_t major, u8_t stream)
         if ((DMA_stream->CR & DMA_SxCR_HTIE) && (SR & DMA_SR_HTIF)) {
                 if (RT_stream->cb_half) {
                         yield = RT_stream->cb_half(DMA_HW[major].stream[stream],
-                                                   SR & 0x3F, RT_stream->arg);
+                                                   SR & 0x3F, RT_stream->user_ctx);
                 }
         } else {
                 if (RT_stream->cb_finish) {
                         yield = RT_stream->cb_finish(DMA_HW[major].stream[stream],
-                                                     SR & 0x3F, RT_stream->arg);
+                                                     SR & 0x3F, RT_stream->user_ctx);
                 }
         }
 
@@ -758,7 +879,7 @@ static void IRQ_handle(u8_t major, u8_t stream)
 
         if (RT_stream->cb_next) {
                 yield |= RT_stream->cb_next(DMA_HW[major].stream[stream],
-                                            SR & 0x3F, RT_stream->arg);
+                                            SR & 0x3F, RT_stream->user_ctx);
         }
 
         sys_thread_yield_from_ISR(yield);
