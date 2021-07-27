@@ -642,7 +642,8 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
 
         if (count >= 3) {
 #if USE_DMA > 0
-                if (I2C_HW[hdl->major].use_DMA) {
+                if (I2C_HW[hdl->major].use_DMA && sys_is_mem_dma_capable(dst)) {
+
                         u32_t dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_rx_stream_pri);
                         if (dmad == 0) {
                                 dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_rx_stream_alt);
@@ -679,7 +680,8 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                                 config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
                                 config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
                                 config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
-                                config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
+                                config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_DISABLED;
+                                config.fifo.fifo_threshold                  = _DMA_DDI_FIFO_THRESHOLD_FULL;
                                 config.channel                              = I2C_HW[hdl->major].DMA_channel;
 #endif
 
@@ -833,7 +835,8 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
         clear_address_event(hdl);
 
 #if USE_DMA > 0
-        if (count >= 3 && I2C_HW[hdl->major].use_DMA) {
+        if ((count >= 3) && I2C_HW[hdl->major].use_DMA && sys_is_mem_dma_capable(src)) {
+
                 u32_t dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_tx_stream_pri);
                 if (dmad == 0) {
                         dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_tx_stream_alt);
@@ -870,7 +873,8 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                         config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
                         config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
                         config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
-                        config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_ENABLED;
+                        config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_DISABLED;
+                        config.fifo.fifo_threshold                  = _DMA_DDI_FIFO_THRESHOLD_FULL;
                         config.channel                              = I2C_HW[hdl->major].DMA_channel;
 #endif
                         err = _DMA_DDI_transfer(dmad, &config);

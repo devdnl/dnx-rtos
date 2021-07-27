@@ -1266,6 +1266,8 @@ int SIPC_socket_set_send_timeout(void *ctx, SIPC_socket_t *socket, uint32_t time
 //==============================================================================
 int SIPC_socket_get_recv_timeout(void *ctx, SIPC_socket_t *socket, uint32_t *timeout)
 {
+        UNUSED_ARG1(ctx);
+
         *timeout = socket->recv_timeout;
 
         return ESUCC;

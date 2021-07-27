@@ -1146,7 +1146,7 @@ KERNELSPACE int _process_thread_kill(_process_t *proc, tid_t tid)
 {
         int err = EINVAL;
 
-        if (is_proc_valid(proc) && is_tid_in_range(proc, tid)) {
+        if (is_proc_valid(proc) && (tid > 0) && is_tid_in_range(proc, tid)) {
                 ATOMIC(process_mtx) {
                         if (proc->taskdata[tid].task) {
                                 _task_destroy(proc->taskdata[tid].task);
