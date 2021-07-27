@@ -48,7 +48,7 @@ enum {
         #if defined(RCC_APB2ENR_SAI1EN)
         _SAI1,
         #endif
-        #if defined(RCC_APB1ENR_SAI2EN)
+        #if defined(RCC_APB1ENR_SAI2EN) || defined(RCC_APB2ENR_SAI2EN)
         _SAI2,
         #endif
         SAI_PERIPHERALS,
@@ -122,7 +122,7 @@ static const struct SAI_info SAI_INFO[SAI_PERIPHERALS] = {
                 .SLOTR_CONF      = {_SND_CFG_SAI1_BLKA_SLOTR, _SND_CFG_SAI1_BLKB_SLOTR},
         },
 #endif
-#if defined(RCC_APB2ENR_SAI2EN)
+#if defined(RCC_APB1ENR_SAI2EN) || defined(RCC_APB2ENR_SAI2EN)
         {
                 .BASE            = SAI2,
                 .BLOCK           = {SAI2_Block_A, SAI2_Block_B},
@@ -520,31 +520,31 @@ static int DMA_start(SND_t *hdl, const buf_t *buf)
         };
 
         _DMA_DDI_config_t config = {0};
-        config.user_ctx                             = hdl;
-        config.cb_finish                            = NULL;
-        config.cb_half                              = NULL;
-        config.cb_next                              = DMA_next;
-        config.data_number                          = buf->size / WLEN[hdl->conf.bits_per_sample];
-        config.peripheral_address                   = cast(u32_t, &hdl->SAI->BLOCK[hdl->minor]->DR);
-        config.memory_address[0]                    = cast(u32_t, buf->ptr);
-        config.memory_address[1]                    = 0;
-        config.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
-        config.channel                              = hdl->DMA_channel;
-        config.release                              = false;
-        config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_DISABLED;
-        config.fifo.FIFO_threshold                  = _DMA_DDI_FIFO_THRESHOLD_FULL;
-        config.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
-        config.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
-        config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
-        config.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_MEDIUM;
-        config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
-        config.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
-        config.control.peripheral_data_size         = PSIZE[hdl->conf.bits_per_sample];
-        config.control.memory_increment             = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE;
-        config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
-        config.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
-        config.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
-        config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
+        config.user_ctx                     = hdl;
+        config.cb_finish                    = NULL;
+        config.cb_half                      = NULL;
+        config.cb_next                      = DMA_next;
+        config.data_number                  = buf->size / WLEN[hdl->conf.bits_per_sample];
+        config.peripheral_address           = cast(u32_t, &hdl->SAI->BLOCK[hdl->minor]->DR);
+        config.memory_address[0]            = cast(u32_t, buf->ptr);
+        config.memory_address[1]            = 0;
+        config.IRQ_priority                 = __CPU_DEFAULT_IRQ_PRIORITY__;
+        config.channel                      = hdl->DMA_channel;
+        config.release                      = false;
+        config.mode                         = _DMA_DDI_MODE_DIRECT;
+        config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
+        config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+        config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+        config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
+        config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_MEDIUM;
+        config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+        config.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+        config.peripheral_data_size         = PSIZE[hdl->conf.bits_per_sample];
+        config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+        config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+        config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+        config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
+        config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
 
         int err = _DMA_DDI_transfer(hdl->dmad, &config);
         if (!err) {

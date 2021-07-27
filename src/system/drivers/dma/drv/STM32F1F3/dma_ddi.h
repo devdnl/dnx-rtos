@@ -80,7 +80,17 @@ extern "C" {
 ==============================================================================*/
 typedef bool (*_DMA_cb_t)(DMA_Channel_TypeDef *channel, u8_t SR, void *arg);
 
-struct _dma_ddi_control {
+typedef struct {
+        void     *user_ctx;             /*! user context */
+        _DMA_cb_t cb_finish;            /*! finish callback */
+        _DMA_cb_t cb_half;              /*! half transfer callback */
+        _DMA_cb_t cb_next;              /*! next callback */
+        u32_t     data_number;          /*! data number */
+        u32_t     peripheral_address;   /*! peripheral address */
+        u32_t     memory_address;       /*! memory address */
+        u32_t     IRQ_priority;         /*! IRQ priority */
+        bool      release;              /*! automatically release stream */
+
         enum pl {
                 _DMA_DDI_PRIORITY_LEVEL_LOW,
                 _DMA_DDI_PRIORITY_LEVEL_MEDIUM,
@@ -120,19 +130,6 @@ struct _dma_ddi_control {
                 _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL,
                 _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY,
         } transfer_direction:2;
-};
-
-typedef struct {
-        void     *user_ctx;             /*! user context */
-        _DMA_cb_t cb_finish;            /*! finish callback */
-        _DMA_cb_t cb_half;              /*! half transfer callback */
-        _DMA_cb_t cb_next;              /*! next callback */
-        u32_t     data_number;          /*! data number */
-        u32_t     peripheral_address;   /*! peripheral address */
-        u32_t     memory_address;       /*! memory address */
-        u32_t     IRQ_priority;         /*! IRQ priority */
-        bool      release;              /*! automatically release stream */
-        struct _dma_ddi_control control;/*! DMA control */
 } _DMA_DDI_config_t;
 
 /*==============================================================================

@@ -504,14 +504,14 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                         DMA_Stream->CMAR  = config->memory_address;
                         DMA_Stream->CNDTR = config->data_number;
                         DMA_Stream->CPAR  = config->peripheral_address;
-                        DMA_Stream->CCR   = ((config->control.priority_level << DMA_CCR_PL_Pos) & DMA_CCR_PL_Msk)
-                                          | ((config->control.memory_data_size << DMA_CCR_MSIZE_Pos) & DMA_CCR_MSIZE_Msk)
-                                          | ((config->control.peripheral_data_size << DMA_CCR_PSIZE_Pos) & DMA_CCR_PSIZE_Msk)
-                                          | ((config->control.memory_address_increment << DMA_CCR_MINC_Pos) & DMA_CCR_MINC_Msk)
-                                          | ((config->control.peripheral_address_increment << DMA_CCR_PINC_Pos) & DMA_CCR_PINC_Msk)
-                                          | ((config->control.circular_mode << DMA_CCR_CIRC_Pos) & DMA_CCR_CIRC_Msk);
+                        DMA_Stream->CCR   = ((config->priority_level << DMA_CCR_PL_Pos) & DMA_CCR_PL_Msk)
+                                          | ((config->memory_data_size << DMA_CCR_MSIZE_Pos) & DMA_CCR_MSIZE_Msk)
+                                          | ((config->peripheral_data_size << DMA_CCR_PSIZE_Pos) & DMA_CCR_PSIZE_Msk)
+                                          | ((config->memory_address_increment << DMA_CCR_MINC_Pos) & DMA_CCR_MINC_Msk)
+                                          | ((config->peripheral_address_increment << DMA_CCR_PINC_Pos) & DMA_CCR_PINC_Msk)
+                                          | ((config->circular_mode << DMA_CCR_CIRC_Pos) & DMA_CCR_CIRC_Msk);
 
-                        switch (config->control.transfer_direction) {
+                        switch (config->transfer_direction) {
                         case _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY:
                                 break;
                         case _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL:
@@ -590,38 +590,38 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
                    && ((cast(u32_t, src) & 3) == 0)
                    && ((cast(u32_t, dst) & 3) == 0) ) {
 
-                        config.control.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD;
-                        config.control.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_WORD;
+                        config.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD;
+                        config.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_WORD;
                         config.data_number                  = size / 4;
 
                 } else if (  ((size & 1) == 0)
                           && ((cast(u32_t, src) & 1) == 0)
                           && ((cast(u32_t, dst) & 1) == 0) ) {
 
-                        config.control.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_HALF_WORD;
-                        config.control.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_HALF_WORD;
+                        config.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_HALF_WORD;
+                        config.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_HALF_WORD;
                         config.data_number                  = size / 2;
 
                 } else {
-                        config.control.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
-                        config.control.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                        config.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                        config.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
                         config.data_number                  = size;
                 }
 
                 if (config.data_number <= UINT16_MAX) {
-                        config.user_ctx                             = hdl->m2m_queue[channel];
-                        config.cb_finish                            = M2M_callback;
-                        config.cb_half                              = NULL;
-                        config.cb_next                              = NULL;
-                        config.release                              = true;
-                        config.peripheral_address                   = cast(u32_t, src);
-                        config.memory_address                       = cast(u32_t, dst);
-                        config.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
-                        config.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
-                        config.control.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
-                        config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED;
-                        config.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
-                        config.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY;
+                        config.user_ctx                     = hdl->m2m_queue[channel];
+                        config.cb_finish                    = M2M_callback;
+                        config.cb_half                      = NULL;
+                        config.cb_next                      = NULL;
+                        config.release                      = true;
+                        config.peripheral_address           = cast(u32_t, src);
+                        config.memory_address               = cast(u32_t, dst);
+                        config.IRQ_priority                 = __CPU_DEFAULT_IRQ_PRIORITY__;
+                        config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                        config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+                        config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED;
+                        config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                        config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY;
 
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {

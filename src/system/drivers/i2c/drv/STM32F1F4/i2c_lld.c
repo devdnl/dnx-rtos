@@ -653,36 +653,36 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                                 CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
                                 _DMA_DDI_config_t config = {0};
-                                config.user_ctx                             = _I2C[hdl->major];
-                                config.cb_finish                            = DMA_callback;
-                                config.cb_half                              = NULL;
-                                config.cb_next                              = NULL;
-                                config.data_number                          = count;
-                                config.peripheral_address                   = cast(u32_t, &i2c->DR);
+                                config.user_ctx                     = _I2C[hdl->major];
+                                config.cb_finish                    = DMA_callback;
+                                config.cb_half                      = NULL;
+                                config.cb_next                      = NULL;
+                                config.data_number                  = count;
+                                config.peripheral_address           = cast(u32_t, &i2c->DR);
 #if defined(ARCH_stm32f1) || defined(ARCH_stm32f3)
-                                config.memory_address                       = cast(u32_t, dst);
+                                config.memory_address               = cast(u32_t, dst);
 #elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
-                                config.memory_address[0]                    = cast(u32_t, dst);
-                                config.memory_address[1]                    = 0;
+                                config.memory_address[0]            = cast(u32_t, dst);
+                                config.memory_address[1]            = 0;
 #endif
-                                config.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
-                                config.release                              = false;
-                                config.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
-                                config.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
-                                config.control.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
-                                config.control.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
-                                config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
-                                config.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
-                                config.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY;
+                                config.IRQ_priority                 = __CPU_DEFAULT_IRQ_PRIORITY__;
+                                config.release                      = false;
+                                config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                                config.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                                config.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                                config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+                                config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+                                config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                                config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY;
 #if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
-                                config.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
-                                config.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
-                                config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
-                                config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
-                                config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
-                                config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_DISABLED;
-                                config.fifo.fifo_threshold                  = _DMA_DDI_FIFO_THRESHOLD_FULL;
-                                config.channel                              = I2C_HW[hdl->major].DMA_channel;
+                                config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+                                config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+                                config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
+                                config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                                config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
+                                config.mode                         = _DMA_DDI_MODE_FIFO;
+                                config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
+                                config.channel                      = I2C_HW[hdl->major].DMA_channel;
 #endif
 
                                 err = _DMA_DDI_transfer(dmad, &config);
@@ -846,36 +846,36 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                         CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
                         _DMA_DDI_config_t config = {0};
-                        config.user_ctx                             = _I2C[hdl->major];
-                        config.cb_finish                            = DMA_callback;
-                        config.cb_half                              = NULL;
-                        config.cb_next                              = NULL;
-                        config.data_number                          = count;
-                        config.peripheral_address                   = cast(u32_t, &i2c->DR);
+                        config.user_ctx                     = _I2C[hdl->major];
+                        config.cb_finish                    = DMA_callback;
+                        config.cb_half                      = NULL;
+                        config.cb_next                      = NULL;
+                        config.data_number                  = count;
+                        config.peripheral_address           = cast(u32_t, &i2c->DR);
 #if defined(ARCH_stm32f1) || defined(ARCH_stm32f3)
-                        config.memory_address                       = cast(u32_t, src);
+                        config.memory_address               = cast(u32_t, src);
 #elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
-                        config.memory_address[0]                    = cast(u32_t, src);
-                        config.memory_address[1]                    = 0;
+                        config.memory_address[0]            = cast(u32_t, src);
+                        config.memory_address[1]            = 0;
 #endif
-                        config.IRQ_priority                         = __CPU_DEFAULT_IRQ_PRIORITY__;
-                        config.release                              = false;
-                        config.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
-                        config.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
-                        config.control.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
-                        config.control.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
-                        config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
-                        config.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
-                        config.control.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
+                        config.IRQ_priority                 = __CPU_DEFAULT_IRQ_PRIORITY__;
+                        config.release                      = false;
+                        config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                        config.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                        config.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                        config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+                        config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+                        config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                        config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
 #if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
-                        config.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
-                        config.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
-                        config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
-                        config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
-                        config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
-                        config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_DISABLED;
-                        config.fifo.fifo_threshold                  = _DMA_DDI_FIFO_THRESHOLD_FULL;
-                        config.channel                              = I2C_HW[hdl->major].DMA_channel;
+                        config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+                        config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+                        config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
+                        config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                        config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
+                        config.mode                         = _DMA_DDI_MODE_DIRECT;
+                        config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
+                        config.channel                      = I2C_HW[hdl->major].DMA_channel;
 #endif
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {

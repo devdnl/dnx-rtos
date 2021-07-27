@@ -887,31 +887,31 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
         if (hdl->dmad && dma_capable) {
 
                 _DMA_DDI_config_t config = {0};
-                config.user_ctx                             = hdl;
-                config.cb_finish                            = DMA_finished;
-                config.cb_half                              = NULL;
-                config.cb_next                              = NULL;
-                config.data_number                          = count * SECTOR_SIZE / sizeof(SDIO->FIFO);
-                config.peripheral_address                   = cast(u32_t, &SDIO->FIFO);
-                config.memory_address[0]                    = cast(u32_t, buf);
-                config.memory_address[1]                    = 0;
-                config.IRQ_priority                         = _SDIO_CFG_IRQ_PRIORITY;
-                config.channel                              = DMA_CHANNEL;
-                config.release                              = false;
-                config.fifo.direct_mode                     = _DMA_DDI_DIRECT_MODE_DISABLED;
-                config.fifo.FIFO_threshold                  = _DMA_DDI_FIFO_THRESHOLD_FULL;
-                config.control.memory_burst                 = _DMA_DDI_MEMORY_BURST_4_BEATS;
-                config.control.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_4_BEATS;
-                config.control.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
-                config.control.priority_level               = _DMA_DDI_PRIORITY_LEVEL_VERY_HIGH;
-                config.control.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
-                config.control.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
-                config.control.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD;
-                config.control.memory_increment             = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED_ACCORDING_TO_MEMORY_SIZE;
-                config.control.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
-                config.control.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
-                config.control.transfer_direction           = (dir == DIR_IN) ? _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY : _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
-                config.control.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_PERIPHERAL;
+                config.user_ctx                     = hdl;
+                config.cb_finish                    = DMA_finished;
+                config.cb_half                      = NULL;
+                config.cb_next                      = NULL;
+                config.data_number                  = count * SECTOR_SIZE / sizeof(SDIO->FIFO);
+                config.peripheral_address           = cast(u32_t, &SDIO->FIFO);
+                config.memory_address[0]            = cast(u32_t, buf);
+                config.memory_address[1]            = 0;
+                config.IRQ_priority                 = _SDIO_CFG_IRQ_PRIORITY;
+                config.channel                      = DMA_CHANNEL;
+                config.release                      = false;
+                config.mode                         = _DMA_DDI_MODE_FIFO;
+                config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
+                config.memory_burst                 = _DMA_DDI_MEMORY_BURST_4_BEATS;
+                config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_4_BEATS;
+                config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
+                config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_VERY_HIGH;
+                config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                config.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                config.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD;
+                config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+                config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+                config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                config.transfer_direction           = (dir == DIR_IN) ? _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY : _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
+                config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_PERIPHERAL;
 
                 err = _DMA_DDI_transfer(hdl->dmad, &config);
                 if (!err) {
