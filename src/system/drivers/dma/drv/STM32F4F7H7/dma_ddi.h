@@ -195,52 +195,166 @@ typedef struct {
 typedef bool (*_MDMA_cb_t)(MDMA_Channel_TypeDef *stream, void *arg);
 
 /*
- * DMA configuration structure
+ * MDMA configuration structure
  */
 typedef struct {
-        void     *user_ctx;                             /*! user context */
-        _DMA_cb_t cb_channel_transfer_completed;        /*! finish callback */
-        _DMA_cb_t cb_block_transfer_completed;          /*! half transfer callback */
-        _DMA_cb_t cb_block_transfer_repeat_completed;   /*! next callback */
-        _DMA_cb_t cb_buffer_transfer_completed;         /*! next callback */
-        _DMA_cb_t cb_transfer_error;                    /*! next callback */
-
-        u32_t     data_number;          /*! data number */
-        u32_t     source_address;       /*! peripheral address */
-        u32_t     destination_address;  /*! memory address */
-        u32_t     channel;              /*! DMA channel */
-        bool      release;                              /*! automatically release channel */
+        void      *user_ctx;
+        _MDMA_cb_t cb_channel_transfer_completed;
+        _MDMA_cb_t cb_block_transfer_completed;
+        _MDMA_cb_t cb_block_transfer_repeat_completed;
+        _MDMA_cb_t cb_buffer_transfer_completed;
+        _MDMA_cb_t cb_transfer_error;
+        u32_t      source_address;
+        u32_t      destination_address;
+        u32_t      buffer_transfer_length;
+        u32_t      link_address;
+        u16_t      block_repeat_destination_address_update;
+        u16_t      block_repeat_source_address_update;
+        u32_t      block_repeat_count;
+        u32_t      block_size;
+        u32_t      mask_address;
+        u32_t      mask_data;
+        bool       release;
+        u8_t       trigger_selection;
 
         enum {
-                _DMA_DDI_MDMA_SOFTWARE_REQUEST_DISABLE,
-                _DMA_DDI_MDMA_SOFTWARE_REQUEST_ENABLE,
+                _MDMA_DDI_SOFTWARE_REQUEST_DISABLE,
+                _MDMA_DDI_SOFTWARE_REQUEST_ENABLE,
         } software_request:1;
 
         enum {
-                _DMA_DDI_MDMA_WORD_ENDIANESS_EXCHANGE_DISABLE,
-                _DMA_DDI_MDMA_WORD_ENDIANESS_EXCHANGE_ENABLE,
+                _MDMA_DDI_WORD_ENDIANESS_EXCHANGE_DISABLE,
+                _MDMA_DDI_WORD_ENDIANESS_EXCHANGE_ENABLE,
         } word_endianess_exchange:1;
 
         enum {
-                _DMA_DDI_MDMA_HALF_WORD_ENDIANESS_EXCHANGE_DISABLE,
-                _DMA_DDI_MDMA_HALF_WORD_ENDIANESS_EXCHANGE_ENABLE,
+                _MDMA_DDI_HALF_WORD_ENDIANESS_EXCHANGE_DISABLE,
+                _MDMA_DDI_HALF_WORD_ENDIANESS_EXCHANGE_ENABLE,
         } half_word_endianess_exchange:1;
 
         enum {
-                _DMA_DDI_MDMA_BYTE_ENDIANESS_EXCHANGE_DISABLE,
-                _DMA_DDI_MDMA_BYTE_ENDIANESS_EXCHANGE_ENABLE,
+                _MDMA_DDI_BYTE_ENDIANESS_EXCHANGE_DISABLE,
+                _MDMA_DDI_BYTE_ENDIANESS_EXCHANGE_ENABLE,
         } byte_endianess_exchange:1;
 
         enum {
-                _DMA_DDI_MDMA_PRIORITY_LEVEL_LOW,
-                _DMA_DDI_MDMA_PRIORITY_LEVEL_MEDIUM,
-                _DMA_DDI_MDMA_PRIORITY_LEVEL_HIGH,
-                _DMA_DDI_MDMA_PRIORITY_LEVEL_VERY_HIGH,
+                _MDMA_DDI_PRIORITY_LEVEL_LOW,
+                _MDMA_DDI_PRIORITY_LEVEL_MEDIUM,
+                _MDMA_DDI_PRIORITY_LEVEL_HIGH,
+                _MDMA_DDI_PRIORITY_LEVEL_VERY_HIGH,
         } priority_level:2;
 
-} _DMA_DDI_mdma_config_t;
+        enum {
+                _MDMA_DDI_DESTINATION_WRITE_NON_BUFFERABLE,
+                _MDMA_DDI_DESTINATION_WRITE_BUFFERABLE
+        } bufferable_write_mode:1;
 
-extern u32_t _DMA_DDI_MDMA_reserve(u8_t stream);
+        enum {
+                _MDMA_DDI_REQUEST_MODE_HARDWARE,
+                _MDMA_DDI_REQUEST_MODE_SOFTWARE
+        } request_mode:1;
+
+        enum {
+                _MDMA_DDI_TRIGGER_MODE_BUFFER_TRANSFER,
+                _MDMA_DDI_TRIGGER_MODE_BLOCK_TRANSFER,
+                _MDMA_DDI_TRIGGER_MODE_REPEATED_BLOCK_TRANSFER,
+                _MDMA_DDI_TRIGGER_MODE_LINKED_LIST_TRANSFER,
+        } trigger_mode:2;
+
+        enum {
+                _MDMA_DDI_PADDING_ALIGNMENT_RIGHT_ALIGNED_PADDED_0,
+                _MDMA_DDI_PADDING_ALIGNMENT_RIGHT_ALIGNED_SIGN_EXTENDED,
+                _MDMA_DDI_PADDING_ALIGNMENT_LEFT_ALIGNED_PADDED_0,
+        } padding_alignment_mode:2;
+
+        enum {
+                _MDMA_DDI_PACK_MODE_DISABLED,
+                _MDMA_DDI_PACK_MODE_ENABLED
+        } pack_mode:1;
+
+        enum {
+                _MDMA_DDI_DESTINATION_BURST_SINGLE_TRANSFER,
+                _MDMA_DDI_DESTINATION_BURST_2_BEATS,
+                _MDMA_DDI_DESTINATION_BURST_4_BEATS,
+                _MDMA_DDI_DESTINATION_BURST_8_BEATS,
+                _MDMA_DDI_DESTINATION_BURST_16_BEATS,
+                _MDMA_DDI_DESTINATION_BURST_32_BEATS,
+                _MDMA_DDI_DESTINATION_BURST_64_BEATS,
+                _MDMA_DDI_DESTINATION_BURST_128_BEATS,
+        } destination_burst:3;
+
+        enum {
+                _MDMA_DDI_SOURCE_BURST_SINGLE_TRANSFER,
+                _MDMA_DDI_SOURCE_BURST_2_BEATS,
+                _MDMA_DDI_SOURCE_BURST_4_BEATS,
+                _MDMA_DDI_SOURCE_BURST_8_BEATS,
+                _MDMA_DDI_SOURCE_BURST_16_BEATS,
+                _MDMA_DDI_SOURCE_BURST_32_BEATS,
+                _MDMA_DDI_SOURCE_BURST_64_BEATS,
+                _MDMA_DDI_SOURCE_BURST_128_BEATS,
+        } source_burst:3;
+
+        enum {
+                _MDMA_DDI_DESTINATION_INCREMENT_OFFSET_BYTE,
+                _MDMA_DDI_DESTINATION_INCREMENT_OFFSET_HALF_WORD,
+                _MDMA_DDI_DESTINATION_INCREMENT_OFFSET_WORD,
+                _MDMA_DDI_DESTINATION_INCREMENT_OFFSET_DOUBLE_WORD
+        } destination_increment_offset_size:2;
+
+        enum {
+                _MDMA_DDI_SOURCE_INCREMENT_OFFSET_BYTE,
+                _MDMA_DDI_SOURCE_INCREMENT_OFFSET_HALF_WORD,
+                _MDMA_DDI_SOURCE_INCREMENT_OFFSET_WORD,
+                _MDMA_DDI_SOURCE_INCREMENT_OFFSET_DOUBLE_WORD
+        } source_increment_offset_size:2;
+
+        enum {
+                _MDMA_DDI_DESTINATION_DATA_SIZE_BYTE,
+                _MDMA_DDI_DESTINATION_DATA_SIZE_HALF_WORD,
+                _MDMA_DDI_DESTINATION_DATA_SIZE_WORD,
+                _MDMA_DDI_DESTINATION_DATA_SIZE_DOUBLE_WORD
+        } destination_data_size:2;
+
+        enum {
+                _MDMA_DDI_SOURCE_DATA_SIZE_BYTE,
+                _MDMA_DDI_SOURCE_DATA_SIZE_HALF_WORD,
+                _MDMA_DDI_SOURCE_DATA_SIZE_WORD,
+                _MDMA_DDI_SOURCE_DATA_SIZE_DOUBLE_WORD
+        } source_data_size:2;
+
+        enum {
+                _MDMA_DDI_DESTINATION_ADDRESS_POINTER_FIXED = 0,
+                _MDMA_DDI_DESTINATION_ADDRESS_PONTER_INCREMENTED = 2,
+                _MDMA_DDI_DESTINATION_ADDRESS_PONTER_DECREMENTED = 3,
+        } destination_address_pointer_mode:2;
+
+        enum {
+                _MDMA_DDI_SOURCE_ADDRESS_POINTER_FIXED = 0,
+                _MDMA_DDI_SOURCE_ADDRESS_PONTER_INCREMENTED = 2,
+                _MDMA_DDI_SOURCE_ADDRESS_PONTER_DECREMENTED = 3,
+        } source_address_pointer_mode:2;
+
+        enum { // BRDUM
+                _MDMA_DDI_BLOCK_REPEAT_DESTINATION_ADDRESS_UPDATE_ADD,
+                _MDMA_DDI_BLOCK_REPEAT_DESTINATION_ADDRESS_UPDATE_SUB,
+        } block_repeat_destination_address_update_mode:1;
+
+        enum { // BRSUM
+                _MDMA_DDI_BLOCK_REPEAT_SOURCE_ADDRESS_UPDATE_ADD,
+                _MDMA_DDI_BLOCK_REPEAT_SOURCE_ADDRESS_UPDATE_SUB,
+        } block_repeat_source_address_update_mode:1;
+
+        enum {
+                _MDMA_DDI_DESTINATION_BUS_SYSTEM_AXI,
+                _MDMA_DDI_DESTINATION_BUS_AHB_TCM
+        } destination_bus:1;
+
+        enum {
+                _MDMA_DDI_SOURCE_BUS_SYSTEM_AXI,
+                _MDMA_DDI_SOURCE_BUS_AHB_TCM
+        } source_bus:1;
+
+} _MDMA_DDI_config_t;
 #endif
 
 /*==============================================================================
@@ -328,7 +442,63 @@ extern int _DMA_DDI_memcpy(void *dst, const void *src, size_t size);
 /*------------------------------------------------------------------------------
  * MDMA
  -----------------------------------------------------------------------------*/
-extern u32_t _DMA_DDI_MDMA_reserve(u8_t stream);
+//==============================================================================
+/**
+ * @brief Function allocate selected stream.
+ *
+ * @param [in]  major_mask    DMA peripheral mask.
+ *
+ * @return On success DMA descriptor number, otherwise 0.
+ */
+//==============================================================================
+extern u32_t _MDMA_DDI_reserve(void);
+
+//==============================================================================
+/**
+ * @brief Function free allocated stream.
+ *
+ * @param dmad                  DMA descriptor.
+ */
+//==============================================================================
+extern void _MDMA_DDI_release(u32_t dmad);
+
+//==============================================================================
+/**
+ * @brief Function start transfer. The IRQ flags (TCIE, TEIE) are added
+ *        automatically.
+ *
+ * @param dmad                  DMA descriptor.
+ * @param config                DMA configuration.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int _MDMA_DDI_transfer(u32_t dmad, _MDMA_DDI_config_t *config);
+
+//==============================================================================
+/**
+ * @brief Function reaturn DMA steram according to DMA descriptor.
+ *
+ * @param dmad                  DMA descriptor.
+ * @param stream                stream
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int _MDMA_DDI_get_channel(u32_t dmad, MDMA_Channel_TypeDef **stream);
+
+//==============================================================================
+/**
+ * @brief Function start memory-to-memory transfer by using free channel.
+ *
+ * @param dst                   destination address.
+ * @param src                   source address.
+ * @param size                  block size.
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+extern int _MDMA_DDI_memcpy(void *dst, const void *src, size_t size);
 #endif
 
 /*==============================================================================
