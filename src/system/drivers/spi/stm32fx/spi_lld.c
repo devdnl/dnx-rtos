@@ -458,7 +458,8 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         config_tx.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
                         config_tx.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
                         config_tx.channel                      = SPI_HW[hdl->major].DMA_channel;
-                        config_tx.mode                         = _DMA_DDI_MODE_DIRECT;
+                        config_tx.mode                         = _DMA_DDI_MODE_FIFO;
+                        config_tx.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
                         config_tx.memory_address[0]            = cast(u32_t, txbuf ? txbuf : &_SPI[hdl->major]->flush_byte);
                         config_tx.memory_address[1]            = 0;
 #endif
@@ -488,7 +489,8 @@ int _SPI_LLD__transceive(struct SPI_slave *hdl, const u8_t *txbuf, u8_t *rxbuf, 
                         config_rx.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
                         config_rx.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
                         config_rx.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
-                        config_rx.mode                         = _DMA_DDI_MODE_DIRECT;
+                        config_rx.mode                         = _DMA_DDI_MODE_FIFO;
+                        config_rx.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_1_2;
                         config_rx.channel                      = SPI_HW[hdl->major].DMA_channel;
                         config_rx.memory_address[0]            = cast(u32_t, rxbuf ? rxbuf : &_SPI[hdl->major]->flush_byte);
                         config_rx.memory_address[1]            = 0;

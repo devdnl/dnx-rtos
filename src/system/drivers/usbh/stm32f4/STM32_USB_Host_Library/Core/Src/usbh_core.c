@@ -148,7 +148,7 @@ USBH_StatusTypeDef  USBH_Init(USBH_HandleTypeDef *phost,
      return USBH_FAIL;
   }
 
-  USBH_UsrLog("USBH: thread ID %d", phost->thread);
+  USBH_UsrLog("thread ID %d", phost->thread);
 #endif /* (USBH_USE_OS == 1U) */
 
   /* Initialize low level driver */

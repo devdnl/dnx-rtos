@@ -328,8 +328,8 @@ API_MOD_READ(DCI,
         config.IRQ_priority                 = _DCI_IRQ_PRIORITY;
         config.channel                      = DMA_CHANNEL;
         config.release                      = false;
-        config.mode                         = _DMA_DDI_MODE_DIRECT;
-        config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
+        config.mode                         = _DMA_DDI_MODE_FIFO;
+        config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_1_2;
         config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
         config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
         config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
@@ -340,7 +340,7 @@ API_MOD_READ(DCI,
         config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
         config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
         config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_ENABLED;
-        config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
+        config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY;
         config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
 
         hdl->tleft = hdl->TCOUNT - 1;
