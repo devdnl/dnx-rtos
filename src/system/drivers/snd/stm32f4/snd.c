@@ -531,7 +531,7 @@ static int DMA_start(SND_t *hdl, const buf_t *buf)
         config.IRQ_priority                 = __CPU_DEFAULT_IRQ_PRIORITY__;
         config.channel                      = hdl->DMA_channel;
         config.release                      = false;
-        config.mode                         = _DMA_DDI_MODE_DIRECT;
+        config.mode                         = _DMA_DDI_MODE_FIFO;
         config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
         config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
         config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;

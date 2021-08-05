@@ -274,6 +274,7 @@ static const uint16_t crc16_ccitt_table[256] = {
 
 static const uint16_t crc16_ccitt_start = 0xFFFF;
 
+static const u32_t CAN_SEND_TIMEOUT = 2000;
 static const u32_t THREAD_CAN_RECV_TIMEOUT_ms = 1000;
 static const u32_t MUTEX_TIMEOUT_ms = 10000;
 static const u32_t CONNECTION_TIMEOUT_ms = 250;
@@ -374,6 +375,8 @@ int CANNET_ifinit(void **ctx, const char *if_path)
                         err = ENOMEM;
 
                 } else {
+                        sys_ioctl(cannet->if_file, IOCTL_CAN__SET_SEND_TIMEOUT, &CAN_SEND_TIMEOUT);
+
                         printk("CANNET (%s): thread ID: %u", if_path, cannet->if_thread);
                         cannet->state = NET_CANNET_STATE__DOWN;
                 }

@@ -677,7 +677,7 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
 #if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
                                 config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
                                 config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
-                                config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
+                                config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
                                 config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
                                 config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
                                 config.mode                         = _DMA_DDI_MODE_FIFO;
@@ -873,7 +873,7 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                         config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
                         config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
                         config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
-                        config.mode                         = _DMA_DDI_MODE_DIRECT;
+                        config.mode                         = _DMA_DDI_MODE_FIFO;
                         config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
                         config.channel                      = I2C_HW[hdl->major].DMA_channel;
 #endif
