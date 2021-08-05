@@ -81,9 +81,27 @@ API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor, const void *conf
                 u32_t MEM_MODE = (_AFM_MEM_MODE == _AFM_MEM_MODE_AUTO) ?
                                  0 : _AFM_MEM_MODE;
 
-                SYSCFG->MEMRMP    |= _AFM_SWP_FMC | _AFM_FB_MODE | MEM_MODE;
+                SYSCFG->MEMRMP |= _AFM_SWP_FMC | _AFM_FB_MODE | MEM_MODE;
 
-                SYSCFG->PMC       |= _AFM_MII_RMII_SEL;
+                SYSCFG->PMC |= _AFM_MII_RMII_SEL;
+
+#if __AFM_BKPRAM_ENABLE__
+                SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
+                SET_BIT(PWR->CR, PWR_CR_DBP);
+                SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_BKPSRAMEN);
+
+                SET_BIT(PWR->CSR, PWR_CSR_BRE);
+                u64_t tref = sys_get_uptime_ms();
+                while (not sys_time_is_expired(tref, 500)) {
+                        if (PWR->CSR & PWR_CSR_BRR) {
+                                break;
+                        }
+                }
+
+                if (not (PWR->CSR & PWR_CSR_BRR)) {
+                        printk("AFM: backup regulator timeout");
+                }
+#endif
 
                 return ESUCC;
         } else {

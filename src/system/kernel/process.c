@@ -2427,7 +2427,9 @@ static int allocate_process_globals(_process_t *proc, const struct _prog_data *u
 
         if (*usrprog->globals_size > 0) {
                 res_header_t *mem;
-                err = _kzalloc(_MM_PROG, *usrprog->globals_size, NULL, 0, 0, cast(void*, &mem));
+                err = _kzalloc(_MM_PROG, *usrprog->globals_size, NULL,
+                               _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE,
+                               cast(void*, &mem));
                 if (!err) {
                         proc->globals = &mem[1];
                         _process_register_resource(proc, mem);

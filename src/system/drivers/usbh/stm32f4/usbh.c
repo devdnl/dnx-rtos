@@ -239,7 +239,8 @@ API_MOD_WRITE(USBH,
                 if (hdl->class_active) {
 
                         bool unaligned = hdl->hhcd.Init.dma_enable
-                                         && ((uintptr_t)src % _HEAP_ALIGN_);
+                                         && (  ((uintptr_t)src % _HEAP_ALIGN_)
+                                            || !sys_is_mem_dma_capable(src) );
 
                         if (unaligned) {
                                 DEBUG("write from unaligned source pointer");
@@ -249,10 +250,9 @@ API_MOD_WRITE(USBH,
 
                         while (!err && count) {
 
-                                size_t len = unaligned ? min(count, sizeof(hdl->buffer))
-                                                       : count;
+                                size_t len = unaligned ? min(count, sizeof(hdl->buffer)) : count;
 
-                                if (unaligned or not sys_is_mem_dma_capable(src)) {
+                                if (unaligned) {
                                         if (_DMA_DDI_memcpy(hdl->buffer, src, len) != 0) {
                                                 DEBUG("DMA M2M transfer fail!");
                                                 memcpy(hdl->buffer, src, len);
@@ -347,7 +347,8 @@ API_MOD_READ(USBH,
                 if (hdl->class_active) {
 
                         bool unaligned = hdl->hhcd.Init.dma_enable
-                                         && ((uintptr_t)dst % _HEAP_ALIGN_);
+                                         && (  ((uintptr_t)dst % _HEAP_ALIGN_)
+                                            || !sys_is_mem_dma_capable(dst) );
 
                         if (unaligned) {
                                 DEBUG("read to unaligned destination pointer");
@@ -357,12 +358,7 @@ API_MOD_READ(USBH,
 
                         while (!err && count) {
 
-                                size_t len = unaligned ? min(count, sizeof(hdl->buffer))
-                                                       : count;
-
-                                if (not sys_is_mem_dma_capable(dst)) {
-                                        unaligned = true;
-                                }
+                                size_t len = unaligned ? min(count, sizeof(hdl->buffer)) : count;
 
                                 u8_t *buf = unaligned ? hdl->buffer : dst;
                                 uint32_t sector_count = len / SECTOR_SIZE;
