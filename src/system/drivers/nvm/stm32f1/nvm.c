@@ -643,27 +643,18 @@ static int FLASH_wait_for_operation_finish(uint32_t address)
 
         u32_t tref = sys_get_uptime_ms();
 
-        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+        while (*FLASH_SR & FLASH_SR_BSY) {}
 
-                if (*FLASH_SR & FLASH_SR_BSY) {
-                        //sys_sleep_ms(1);
+        if (*FLASH_SR & FLASH_SR_WRPRTERR) {
+                printk("%s: write protection error", GET_MODULE_NAME());
+                err = EIO;
 
-                } else {
-                        if (*FLASH_SR & FLASH_SR_WRPRTERR) {
-                                printk("%s: write protection error", GET_MODULE_NAME());
-                                err = EIO;
-                                break;
-
-                        } else if (*FLASH_SR & FLASH_SR_PGERR) {
-                                printk("%s: program error, cell @ 0x%X is not erased",
-                                       GET_MODULE_NAME(), FLASH->AR | FLASH_BASE);
-                                err = EIO;
-                                break;
-                        } else {
-                                err = ESUCC;
-                                break;
-                        }
-                }
+        } else if (*FLASH_SR & FLASH_SR_PGERR) {
+                printk("%s: program error, cell @ 0x%X is not erased",
+                       GET_MODULE_NAME(), FLASH->AR | FLASH_BASE);
+                err = EIO;
+        } else {
+                err = ESUCC;
         }
 
         // clear flags

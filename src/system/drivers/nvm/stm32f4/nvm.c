@@ -630,34 +630,22 @@ static int FLASH_wait_for_operation_finish(void)
 {
         int err = ETIME;
 
-        u32_t tref = sys_get_uptime_ms();
+        while (FLASH->SR & FLASH_SR_BSY) {}
 
-        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+        if (FLASH->SR & FLASH_SR_WRPERR) {
+                printk("%s: write protection error", GET_MODULE_NAME());
+                err = EIO;
 
-                if (FLASH->SR & FLASH_SR_BSY) {
-                        //sys_sleep_ms(1);
+        } else if (FLASH->SR & ( FLASH_SR_PGSERR | FLASH_SR_PGPERR
+                               | FLASH_SR_PGAERR)) {
+                printk("%s: program error", GET_MODULE_NAME());
+                err = EIO;
 
-                } else {
-                        if (FLASH->SR & FLASH_SR_WRPERR) {
-                                printk("%s: write protection error", GET_MODULE_NAME());
-                                err = EIO;
-                                break;
-
-                        } else if (FLASH->SR & ( FLASH_SR_PGSERR | FLASH_SR_PGPERR
-                                               | FLASH_SR_PGAERR)) {
-                                printk("%s: program error", GET_MODULE_NAME());
-                                err = EIO;
-                                break;
-
-                        } else if (FLASH->SR & FLASH_SR_SOP) {
-                                printk("%s: operation error", GET_MODULE_NAME());
-                                err = EIO;
-                                break;
-                        } else {
-                                err = ESUCC;
-                                break;
-                        }
-                }
+        } else if (FLASH->SR & FLASH_SR_SOP) {
+                printk("%s: operation error", GET_MODULE_NAME());
+                err = EIO;
+        } else {
+                err = ESUCC;
         }
 
         SET_BIT(FLASH->SR, FLASH_SR_WRPERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR
