@@ -67,6 +67,7 @@ typedef struct {
         USBH_HandleTypeDef hUSBHost;
         HCD_HandleTypeDef hhcd;
         bool class_active;
+        u32_t irq_ctr;
         alignas(_HEAP_ALIGN_) u8_t buffer[8 * SECTOR_SIZE];
 } USBH_t;
 
@@ -1166,6 +1167,10 @@ void CAN3_SCE_OTG_HS_IRQHandler(void)
                 usbh_irq = true;
                 HAL_HCD_IRQHandler(&usbh->hhcd);
                 usbh_irq = false;
+
+                if (usbh->irq_ctr > 1000000) {
+                        //HAL_HCD_MspDeInit(&usbh->hhcd);
+                }
         }
 }
 
