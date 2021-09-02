@@ -50,6 +50,13 @@ Brief   NVM driver
 #define FLASH_CR_PSIZE_WORD     ((1 * FLASH_CR_PSIZE_1) | (0 * FLASH_CR_PSIZE_0))
 #define FLASH_CR_PSIZE_DOUBLE   ((1 * FLASH_CR_PSIZE_1) | (1 * FLASH_CR_PSIZE_0))
 
+#define INSTRUCTION_CACHE_DISABLE() (FLASH->ACR &= (~FLASH_ACR_ICEN))
+#define INSTRUCTION_CACHE_ENABLE()  (FLASH->ACR |= FLASH_ACR_ICEN)
+#define INSTRUCTION_CACHE_RESET()   do {FLASH->ACR |= FLASH_ACR_ICRST; FLASH->ACR &= ~FLASH_ACR_ICRST;} while(0U)
+#define DATA_CACHE_DISABLE()        (FLASH->ACR &= (~FLASH_ACR_DCEN))
+#define DATA_CACHE_ENABLE()         (FLASH->ACR |= FLASH_ACR_DCEN)
+#define DATA_CACHE_RESET()          do {FLASH->ACR |= FLASH_ACR_DCRST; FLASH->ACR &= ~FLASH_ACR_DCRST;} while(0U)
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -74,6 +81,7 @@ static int  FLASH_erase_sector(uint32_t sector);
 static int  FLASH_program_byte(uint32_t address, uint8_t data);
 static int  FLASH_wait_for_operation_finish(void);
 static int  configure(NVM_t *hdl, const NVM_config_t *conf);
+static void flush_caches(void);
 
 /*==============================================================================
   Local object
@@ -556,6 +564,8 @@ static int FLASH_erase_sector(uint32_t sector)
                 u32_t *addr = cast(void*, SECTOR_INFO[sector].addr);
                 u32_t  len  = SECTOR_INFO[sector].size / sizeof(*addr);
 
+                flush_caches();
+
                 while (len--) {
                         if (*addr++ != 0xFFFFFFFF) {
 
@@ -604,7 +614,10 @@ static int FLASH_program_byte(uint32_t address, uint8_t data)
                 FLASH->CR |= FLASH_CR_PSIZE_BYTE;
                 FLASH->CR |= FLASH_CR_PG;
 
+                sys_ISR_disable();
                 *cast(__IO uint8_t*, address) = data;
+                while (FLASH->SR & FLASH_SR_BSY) {}
+                sys_ISR_enable();
 
                 err = FLASH_wait_for_operation_finish();
 
@@ -628,7 +641,7 @@ static int FLASH_program_byte(uint32_t address, uint8_t data)
 //==============================================================================
 static int FLASH_wait_for_operation_finish(void)
 {
-        int err = ETIME;
+        int err;
 
         while (FLASH->SR & FLASH_SR_BSY) {}
 
@@ -651,11 +664,29 @@ static int FLASH_wait_for_operation_finish(void)
         SET_BIT(FLASH->SR, FLASH_SR_WRPERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR
                          | FLASH_SR_PGAERR | FLASH_SR_SOP);
 
-        if (err == ETIME) {
-                printk("%s: operation timeout", GET_MODULE_NAME());
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Flush data and flash caches.
+ */
+//==============================================================================
+static void flush_caches(void)
+{
+        /* Flush instruction cache  */
+        if (READ_BIT(FLASH->ACR, FLASH_ACR_ICEN) != RESET) {
+                INSTRUCTION_CACHE_DISABLE();
+                INSTRUCTION_CACHE_RESET();
+                INSTRUCTION_CACHE_ENABLE();
         }
 
-        return err;
+        /* Flush data cache */
+        if (READ_BIT(FLASH->ACR, FLASH_ACR_DCEN) != RESET) {
+                DATA_CACHE_DISABLE();
+                DATA_CACHE_RESET();
+                DATA_CACHE_ENABLE();
+        }
 }
 
 /*==============================================================================
