@@ -50,13 +50,6 @@ Brief   NVM driver
 #define FLASH_CR_PSIZE_WORD     ((1 * FLASH_CR_PSIZE_1) | (0 * FLASH_CR_PSIZE_0))
 #define FLASH_CR_PSIZE_DOUBLE   ((1 * FLASH_CR_PSIZE_1) | (1 * FLASH_CR_PSIZE_0))
 
-#define INSTRUCTION_CACHE_DISABLE() (FLASH->ACR &= (~FLASH_ACR_ICEN))
-#define INSTRUCTION_CACHE_ENABLE()  (FLASH->ACR |= FLASH_ACR_ICEN)
-#define INSTRUCTION_CACHE_RESET()   do {FLASH->ACR |= FLASH_ACR_ICRST; FLASH->ACR &= ~FLASH_ACR_ICRST;} while(0U)
-#define DATA_CACHE_DISABLE()        (FLASH->ACR &= (~FLASH_ACR_DCEN))
-#define DATA_CACHE_ENABLE()         (FLASH->ACR |= FLASH_ACR_DCEN)
-#define DATA_CACHE_RESET()          do {FLASH->ACR |= FLASH_ACR_DCRST; FLASH->ACR &= ~FLASH_ACR_DCRST;} while(0U)
-
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -81,7 +74,6 @@ static int  FLASH_erase_sector(uint32_t sector);
 static int  FLASH_program_byte(uint32_t address, uint8_t data);
 static int  FLASH_wait_for_operation_finish(void);
 static int  configure(NVM_t *hdl, const NVM_config_t *conf);
-static void flush_caches(void);
 
 /*==============================================================================
   Local object
