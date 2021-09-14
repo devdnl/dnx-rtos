@@ -560,36 +560,23 @@ static int FLASH_erase_sector(uint32_t sector)
         int err = FLASH_wait_for_operation_finish();
 
         if (!err) {
-
-                u32_t *addr = cast(void*, SECTOR_INFO[sector].addr);
-                u32_t  len  = SECTOR_INFO[sector].size / sizeof(*addr);
-
-                flush_caches();
-
-                while (len--) {
-                        if (*addr++ != 0xFFFFFFFF) {
-
-                                #ifdef FLASH_OPTCR_DB1M
-                                if (sector >= 12) {
-                                        sector += 4;
-                                }
-                                #endif
-
-                                FLASH->CR &= FLASH_CR_PSIZE_Msk;
-                                FLASH->CR |= FLASH_CR_PSIZE_BYTE;
-                                FLASH->CR &= FLASH_CR_SNB_Msk;
-                                FLASH->CR |= ((sector << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk);
-                                FLASH->CR |= FLASH_CR_SER;
-                                FLASH->CR |= FLASH_CR_STRT;
-
-                                err = FLASH_wait_for_operation_finish();
-
-                                FLASH->CR &= (~FLASH_CR_SER);
-                                FLASH->CR &= FLASH_CR_SNB_Msk;
-
-                                break;
-                        }
+                #ifdef FLASH_OPTCR_DB1M
+                if (sector >= 12) {
+                        sector += 4;
                 }
+                #endif
+
+                FLASH->CR &= FLASH_CR_PSIZE_Msk;
+                FLASH->CR |= FLASH_CR_PSIZE_BYTE;
+                FLASH->CR &= FLASH_CR_SNB_Msk;
+                FLASH->CR |= ((sector << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk);
+                FLASH->CR |= FLASH_CR_SER;
+                FLASH->CR |= FLASH_CR_STRT;
+
+                err = FLASH_wait_for_operation_finish();
+
+                FLASH->CR &= (~FLASH_CR_SER);
+                FLASH->CR &= FLASH_CR_SNB_Msk;
         }
 
         return err;
@@ -665,28 +652,6 @@ static int FLASH_wait_for_operation_finish(void)
                          | FLASH_SR_PGAERR | FLASH_SR_SOP);
 
         return err;
-}
-
-//==============================================================================
-/**
- * @brief  Flush data and flash caches.
- */
-//==============================================================================
-static void flush_caches(void)
-{
-        /* Flush instruction cache  */
-        if (READ_BIT(FLASH->ACR, FLASH_ACR_ICEN) != RESET) {
-                INSTRUCTION_CACHE_DISABLE();
-                INSTRUCTION_CACHE_RESET();
-                INSTRUCTION_CACHE_ENABLE();
-        }
-
-        /* Flush data cache */
-        if (READ_BIT(FLASH->ACR, FLASH_ACR_DCEN) != RESET) {
-                DATA_CACHE_DISABLE();
-                DATA_CACHE_RESET();
-                DATA_CACHE_ENABLE();
-        }
 }
 
 /*==============================================================================
