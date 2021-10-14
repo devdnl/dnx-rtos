@@ -977,7 +977,7 @@ static size_t get_file_content(struct file_info *file, u8_t *buff, size_t size, 
                         if (size) buf_snprintf(buff, &size, &clen, &seek, "Stack Size: %d\n", stat.stack_size);
                         if (size) buf_snprintf(buff, &size, &clen, &seek, "Stack Usage: %d\n", stat.stack_max_usage);
                         if (size) buf_snprintf(buff, &size, &clen, &seek, "Priority: %d\n", stat.priority);
-                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Syscalls/s: %u\n", stat.syscalls);
+                        if (size) buf_snprintf(buff, &size, &clen, &seek, "Syscalls/s: %u\n", stat.syscalls_per_sec);
                 }
                 break;
         }

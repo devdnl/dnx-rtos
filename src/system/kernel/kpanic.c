@@ -58,6 +58,7 @@ struct kernel_panic_desc {
         tid_t                          tid;             /* thread ID          */
         uint32_t                       valid2;          /* validation value 2 */
         bool                           kernelspace;     /* kernel space       */
+        u8_t                           syscall;         /* syscall            */
 };
 
 /*==============================================================================
@@ -136,9 +137,10 @@ bool _kernel_panic_info(struct _kernel_panic_info *info)
                         panic_type = "APP CRASH";
                 }
 
-                printk(VT100_FONT_COLOR_RED"%s: %s: %d:%d:%s:%s"VT100_RESET_ATTRIBUTES,
+                printk(VT100_FONT_COLOR_RED"%s: %s: %d:%d,%s,%s,%u"VT100_RESET_ATTRIBUTES,
                        panic_type, kpanic_desc.name, kpanic_desc.pid, kpanic_desc.tid,
-                       CAUSE[kpanic_desc.cause], kpanic_desc.kernelspace ? "KS" : "US");
+                       CAUSE[kpanic_desc.cause], kpanic_desc.kernelspace ? "KS" : "US",
+                       kpanic_desc.syscall);
 
                 _cpuctl_print_exception();
             #endif
@@ -151,6 +153,7 @@ bool _kernel_panic_info(struct _kernel_panic_info *info)
                         info->kernelspace = kpanic_desc.kernelspace;
                         info->pid = kpanic_desc.pid;
                         info->tid = kpanic_desc.tid;
+                        info->sycall = kpanic_desc.syscall;
                 }
 
                 kpanic_desc.valid1 = 0;
@@ -231,22 +234,25 @@ void _kernel_panic_handle(bool system_consistent)
                         kpanic_desc.tid  = _process_get_active_thread(proc);
                         _process_get_pid(proc, &kpanic_desc.pid);
                         kpanic_desc.kernelspace = _process_is_kernelspace(proc, kpanic_desc.tid);
+                        kpanic_desc.syscall = _process_get_curr_syscall(proc, kpanic_desc.tid);
 
                 } else {
                         kpanic_desc.name = "<NULL>";
                         kpanic_desc.pid  = 0;
                         kpanic_desc.tid  = 0;
                         kpanic_desc.kernelspace = true;
+                        kpanic_desc.syscall = 0xFF;
                         system_consistent = false;
                 }
 
                 if (system_consistent && (kpanic_desc.pid > 1)) {
 
-                        _printk("APP CRASH <%s> %d:%d:%s:%s\n",
+                        _printk("APP CRASH <%s> %d:%d,%s,%s,%u\n",
                                 kpanic_desc.name,
                                 kpanic_desc.pid, kpanic_desc.tid,
                                 CAUSE[kpanic_desc.cause],
-                                kpanic_desc.kernelspace ? "KRN" : "USR");
+                                kpanic_desc.kernelspace ? "KRN" : "USR",
+                                kpanic_desc.syscall);
 
                         _process_kill(kpanic_desc.pid);
 

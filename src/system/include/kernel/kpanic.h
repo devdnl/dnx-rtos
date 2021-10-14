@@ -66,6 +66,7 @@ struct _kernel_panic_info {
         tid_t       tid;             /* thread ID          */
         bool        kernelspace;     /* kernel space       */
         bool        kernel_panic;    /* kernel panic       */
+        bool        sycall;          /* syscall            */
 };
 
 /*==============================================================================

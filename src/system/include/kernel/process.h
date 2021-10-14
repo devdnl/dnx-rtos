@@ -153,7 +153,7 @@ typedef struct {
         u16_t       stack_size;         //!< stack size
         u16_t       stack_max_usage;    //!< max stack usage
         i16_t       priority;           //!< priority
-        u16_t       syscalls;           //!< syscalls per second
+        u16_t       syscalls_per_sec;   //!< syscalls per second
 } process_stat_t;
 
 /** USERSPACE: thread statistics */
@@ -163,7 +163,7 @@ typedef struct {
         u16_t       stack_size;         //!< stack size
         u16_t       stack_max_usage;    //!< max stack usage
         i16_t       priority;           //!< priority
-        u16_t       syscalls;           //!< syscalls per second
+        u16_t       syscalls_per_sec;   //!< syscalls per second
 } thread_stat_t;
 
 /** USERSPACE: thread attributes */
@@ -226,9 +226,10 @@ extern void        _process_thread_exit                 (int);
 extern int         _process_thread_get_status           (_process_t*, tid_t, int*);
 extern void        _process_syscall_stat_inc            (_process_t*, _process_t*);
 extern bool        _process_is_consistent               (void);
-extern void        _process_enter_kernelspace           (_process_t*);
+extern void        _process_enter_kernelspace           (_process_t*, u8_t syscall);
 extern void        _process_exit_kernelspace            (_process_t*);
 extern bool        _process_is_kernelspace              (_process_t*, tid_t);
+extern u8_t        _process_get_curr_syscall            (_process_t*, tid_t);
 extern void        _task_switched_in                    (task_t*, void*, void*);
 extern void        _task_switched_out                   (task_t*, void*, void*);
 extern void        _calculate_CPU_load                  (void);

@@ -54,6 +54,7 @@
 #define foreach_resource(_v, _l)        for (res_header_t *_v = _l; _v; _v = _v->next)
 #define foreach_process(_v, _l)         for (_process_t *_v = _l; _v; _v = cast(_process_t*, _v->header.next))
 
+#define NO_SYSCALL                      UINT8_MAX
 #define SHEBANGLEN                      64
 
 // critical section - mutex wait must set to max possible
@@ -78,35 +79,36 @@
 typedef struct _prog_data pdata_t;
 
 typedef struct {
-        task_t          *task;          //!< task
-        u32_t            timecnt;       //!< counter used to calculate CPU load
-        int              status;        //!< thread exit status
-        int              errnov;        //!< thread error number
-        u16_t            CPU_load;      //!< CPU load
-        u16_t            syscalls;      //!< syscalls/s
-        u16_t            syscalls_ctr;  //!< syscall counter
-        u16_t            stack_size;    //!< stack size
-        bool             kernelspace;   //!< execution in kernel space
-        tid_t            id;            //!< thread id
+        task_t          *task;                  //!< task
+        u32_t            timecnt;               //!< counter used to calculate CPU load
+        int              status;                //!< thread exit status
+        int              errnov;                //!< thread error number
+        u16_t            CPU_load;              //!< CPU load
+        u16_t            syscalls_per_sec;      //!< syscalls/s
+        u16_t            syscalls_ctr;          //!< syscall counter
+        u16_t            stack_size;            //!< stack size
+        bool             kernelspace;           //!< execution in kernel space
+        tid_t            id;                    //!< thread id
+        u8_t             curr_syscall;          //!< current syscall
 } task_data_t;
 
 struct _process {
-        res_header_t     header;        //!< resource header
-        flag_t          *event;         //!< events for exit indicator and syscall finish
-        FILE            *f_stdin;       //!< stdin file
-        FILE            *f_stdout;      //!< stdout file
-        FILE            *f_stderr;      //!< stderr file
-        void            *globals;       //!< address to global variables
-        res_header_t    *res_list;      //!< list of used resources
-        u32_t            res_list_size; //!< size of resources list
-        char            *cwd;           //!< current working path
-        const pdata_t   *pdata;         //!< program data
-        char            **argv;         //!< program arguments
-        u8_t             argc;          //!< number of arguments
-        pid_t            pid;           //!< process ID
-        u8_t             flag;          //!< control flags
-        u8_t             curr_task;     //!< current working task (thread)
-        task_data_t      taskdata[];    //!< array of tasks data
+        res_header_t     header;                //!< resource header
+        flag_t          *event;                 //!< events for exit indicator and syscall finish
+        FILE            *f_stdin;               //!< stdin file
+        FILE            *f_stdout;              //!< stdout file
+        FILE            *f_stderr;              //!< stderr file
+        void            *globals;               //!< address to global variables
+        res_header_t    *res_list;              //!< list of used resources
+        u32_t            res_list_size;         //!< size of resources list
+        char            *cwd;                   //!< current working path
+        const pdata_t   *pdata;                 //!< program data
+        char            **argv;                 //!< program arguments
+        u8_t             argc;                  //!< number of arguments
+        pid_t            pid;                   //!< process ID
+        u8_t             flag;                  //!< control flags
+        u8_t             curr_task;             //!< current working task (thread)
+        task_data_t      taskdata[];            //!< array of tasks data
 };
 
 typedef struct {
@@ -280,6 +282,7 @@ KERNELSPACE int _process_create(const char *cmd, const process_attr_t *attr, pid
                         proc->taskdata[0].stack_size  = *proc->pdata->stack_depth;
                         proc->taskdata[0].kernelspace = (proc->flag & FLAG_KWORKER);
                         proc->taskdata[0].id = 0;
+                        proc->taskdata[0].syscalls_per_sec = NO_SYSCALL;
 
                         task_args->func = proc->pdata->main;
                         task_args->proc = proc;
@@ -1102,6 +1105,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                                 proc->taskdata[id].stack_size  = (attr ? attr->stack_depth : STACK_DEPTH_LOW);
                                 proc->taskdata[id].kernelspace = (proc->flag & FLAG_KWORKER);
                                 proc->taskdata[id].id = id;
+                                proc->taskdata[id].curr_syscall = NO_SYSCALL;
 
                                 if (proc->event) {
                                         _flag_clear(proc->event, _PROCESS_EXIT_FLAG(id)
@@ -1235,12 +1239,12 @@ KERNELSPACE int _process_thread_get_stat(pid_t pid, tid_t tid, thread_stat_t *st
 
                                 memset(stat, 0, sizeof(thread_stat_t));
 
-                                stat->tid             = tid;
-                                stat->CPU_load        = proc->taskdata[tid].CPU_load;
-                                stat->priority        = _task_get_priority(proc->taskdata[tid].task);
-                                stat->stack_size      = proc->taskdata[tid].stack_size;
-                                stat->stack_max_usage = stat->stack_size - _task_get_free_stack(proc->taskdata[tid].task);
-                                stat->syscalls        = proc->taskdata[tid].syscalls;
+                                stat->tid              = tid;
+                                stat->CPU_load         = proc->taskdata[tid].CPU_load;
+                                stat->priority         = _task_get_priority(proc->taskdata[tid].task);
+                                stat->stack_size       = proc->taskdata[tid].stack_size;
+                                stat->stack_max_usage  = stat->stack_size - _task_get_free_stack(proc->taskdata[tid].task);
+                                stat->syscalls_per_sec = proc->taskdata[tid].syscalls_per_sec;
 
                                 err = ESUCC;
                         }
@@ -1382,7 +1386,7 @@ KERNELSPACE void _calculate_CPU_load(void)
                                 proc->taskdata[i].timecnt  = 0;
                                 avg_CPU_load_calc.avg1sec  += proc->taskdata[i].CPU_load;
 
-                                proc->taskdata[i].syscalls = proc->taskdata[i].syscalls_ctr;
+                                proc->taskdata[i].syscalls_per_sec = proc->taskdata[i].syscalls_ctr;
                                 proc->taskdata[i].syscalls_ctr = 0;
                         }
                 }
@@ -1591,12 +1595,13 @@ KERNELSPACE bool _process_is_consistent(void)
  * @param  proc         process
  */
 //==============================================================================
-KERNELSPACE void _process_enter_kernelspace(_process_t *proc)
+KERNELSPACE void _process_enter_kernelspace(_process_t *proc, u8_t syscall)
 {
         if (is_proc_valid(proc)) {
                 ATOMIC(process_mtx) {
                         tid_t i = _process_get_active_thread(proc);
                         proc->taskdata[i].kernelspace = true;
+                        proc->taskdata[i].curr_syscall = syscall;
                 }
         }
 }
@@ -1614,6 +1619,7 @@ KERNELSPACE void _process_exit_kernelspace(_process_t *proc)
                 ATOMIC(process_mtx) {
                         tid_t i = _process_get_active_thread(proc);
                         proc->taskdata[i].kernelspace = false;
+                        proc->taskdata[i].curr_syscall = 0xFF;
                 }
         }
 }
@@ -1639,6 +1645,28 @@ KERNELSPACE bool _process_is_kernelspace(_process_t *proc, tid_t tid)
         }
 
         return kernelspace;
+}
+
+//==============================================================================
+/**
+ * @brief  Function get current syscall.
+ *
+ * @param  proc         process
+ *
+ * @return Current syscall.
+ */
+//==============================================================================
+u8_t _process_get_curr_syscall(_process_t *proc, tid_t tid)
+{
+        bool syscall = NO_SYSCALL;
+
+        if (is_proc_valid(proc) && is_tid_in_range(proc, tid)) {
+                ATOMIC(process_mtx) {
+                        syscall = proc->taskdata[tid].curr_syscall;
+                }
+        }
+
+        return syscall;
 }
 
 //==============================================================================
@@ -1827,10 +1855,10 @@ static void process_get_stat(_process_t *proc, process_stat_t *stat)
         for (tid_t tid = 0; tid < threads; tid++) {
                 if (proc->taskdata[tid].task) {
                         stat->threads_count++;
-                        stat->CPU_load        += proc->taskdata[tid].CPU_load;
-                        stat->syscalls        += proc->taskdata[tid].syscalls;
-                        stat->stack_max_usage += (proc->taskdata[tid].stack_size - _task_get_free_stack(proc->taskdata[tid].task));
-                        stat->stack_size      += proc->taskdata[tid].stack_size;
+                        stat->CPU_load         += proc->taskdata[tid].CPU_load;
+                        stat->syscalls_per_sec += proc->taskdata[tid].syscalls_per_sec;
+                        stat->stack_max_usage  += (proc->taskdata[tid].stack_size - _task_get_free_stack(proc->taskdata[tid].task));
+                        stat->stack_size       += proc->taskdata[tid].stack_size;
                 }
         }
 
