@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
                                global->pstat.stack_size,
                                global->pstat.stack_max_usage * 100 / global->pstat.stack_size,
                                cpu_load_str,
-                               global->pstat.syscalls,
+                               global->pstat.syscalls_per_sec,
                                global->pstat.threads_count,
                                global->pstat.dir_count
                                + global->pstat.files_count
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
                                                         stat.stack_max_usage * 100 / stat.stack_size,
                                                         stat.CPU_load / 10,
                                                         stat.CPU_load % 10,
-                                                        stat.syscalls,
+                                                        stat.syscalls_per_sec,
                                                         stat.tid);
                                         }
                                 }
