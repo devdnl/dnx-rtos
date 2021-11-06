@@ -54,6 +54,11 @@ Brief   USB Host driver
 #define DEBUG(...)
 #endif
 
+#define _PASTER(x, y)           x##y
+#define _EVALUATOR(x, y)        _PASTER(x, y)
+#define RESET_PIN_PORT_IDX      _EVALUATOR(IOCTL_GPIO_PORT_IDX__, __USBH_PHY_RESET_PIN__)
+#define RESET_PIN_PIN_IDX       _EVALUATOR(IOCTL_GPIO_PIN_IDX__, __USBH_PHY_RESET_PIN__)
+
 #define RECOVERY_TIMEOUT        5000
 #define SECTOR_SIZE             512
 
@@ -892,9 +897,9 @@ USBH_SpeedTypeDef USBH_LL_GetSpeed(USBH_HandleTypeDef *phost)
 //==============================================================================
 USBH_StatusTypeDef USBH_LL_ResetPort(USBH_HandleTypeDef *phost)
 {
-        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__UM_RESET, IOCTL_GPIO_PIN_IDX__UM_RESET);
+        _GPIO_DDI_set_pin(RESET_PIN_PORT_IDX, RESET_PIN_PIN_IDX);
         sys_sleep_ms(50);
-        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__UM_RESET, IOCTL_GPIO_PIN_IDX__UM_RESET);
+        _GPIO_DDI_clear_pin(RESET_PIN_PORT_IDX, RESET_PIN_PIN_IDX);
 
         HAL_HCD_ResetPort(phost->pData);
         return USBH_OK;

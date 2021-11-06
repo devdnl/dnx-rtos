@@ -41,6 +41,11 @@ this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > USBH",
 ++*/
 
 /*--
+this:AddWidget("Editline", false, "PHY reset pin")
+--*/
+#define __USBH_PHY_RESET_PIN__ NONE
+
+/*--
 this:AddWidget("Checkbox", "Debug messages")
 this:AddExtraWidget("Void", "VOIDDEBUG")
 --*/

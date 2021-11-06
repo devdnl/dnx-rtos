@@ -628,9 +628,7 @@ static int FLASH_wait_for_operation_finish(uint32_t address)
 #endif
         }
 
-        int err = ETIME;
-
-        u32_t tref = sys_get_uptime_ms();
+        int err;
 
         while (*FLASH_SR & FLASH_SR_BSY) {}
 
@@ -648,10 +646,6 @@ static int FLASH_wait_for_operation_finish(uint32_t address)
 
         // clear flags
         SET_BIT(*FLASH_SR, FLASH_SR_EOP | FLASH_SR_PGERR | FLASH_SR_WRPRTERR);
-
-        if (err == ETIME) {
-                printk("%s: operation timeout", GET_MODULE_NAME());
-        }
 
         return err;
 }

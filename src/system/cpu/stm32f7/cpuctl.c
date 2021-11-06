@@ -293,19 +293,16 @@ void _cpuctl_init(void)
         printk("CPU: FPU type %s", FPU_TYPE[SCB_GetFPUType()]);
 
 #if __CPU_SHOW_AND_CLEAR_RESET_SOURCE__
-        u32_t RSR = RCC->RSR;
-        SET_BIT(RCC->RSR, RCC_RSR_RMVF);
+        u32_t CSR = RCC->CSR;
+        SET_BIT(RCC->CSR, RCC_CSR_RMVF);
         printk("Reset source:");
-        if (RSR & RCC_RSR_LPWRRSTF)  printk("  Low power reset");
-        if (RSR & RCC_RSR_WWDG1RSTF) printk("  Window watchdog reset");
-        if (RSR & RCC_RSR_IWDG1RSTF) printk("  Watchdog reset");
-        if (RSR & RCC_RSR_SFTRSTF)   printk("  Software reset");
-        if (RSR & RCC_RSR_PORRSTF)   printk("  POR reset");
-        if (RSR & RCC_RSR_PINRSTF)   printk("  Pin reset");
-        if (RSR & RCC_RSR_BORRSTF)   printk("  BOR reset");
-        if (RSR & RCC_RSR_D2RSTF)    printk("  D2 reset");
-        if (RSR & RCC_RSR_D1RSTF)    printk("  D1 reset");
-        if (RSR & RCC_RSR_CPURSTF)   printk("  CPU reset");
+        if (CSR & RCC_CSR_LPWRRSTF) printk("  Low power reset");
+        if (CSR & RCC_CSR_WWDGRSTF) printk("  Window watchdog reset");
+        if (CSR & RCC_CSR_IWDGRSTF) printk("  Watchdog reset");
+        if (CSR & RCC_CSR_SFTRSTF)  printk("  Software reset");
+        if (CSR & RCC_CSR_PORRSTF)  printk("  POR reset");
+        if (CSR & RCC_CSR_PINRSTF)  printk("  Pin reset");
+        if (CSR & RCC_CSR_BORRSTF)  printk("  BOR reset");
 #endif
 }
 
