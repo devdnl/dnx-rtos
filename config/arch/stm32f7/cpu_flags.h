@@ -206,6 +206,13 @@ __CPU_NAME__=STM32F756ZGxx
 #define __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ _YES_
 
 #/*--
+# this:AddWidget("Combobox", "Show and clear reset source")
+# this:AddItem("Disable", "_NO_")
+# this:AddItem("Enable", "_YES_")
+#--*/
+#define __CPU_SHOW_AND_CLEAR_RESET_SOURCE__ _YES_
+
+#/*--
 # this:AddWidget("Combobox", "ICACHE")
 # this:AddItem("Enable", "_YES_")
 # this:AddItem("Disable", "_NO_")

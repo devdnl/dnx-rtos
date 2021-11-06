@@ -291,6 +291,22 @@ void _cpuctl_init(void)
 
         static const char *FPU_TYPE[] = {"none", "single", "double"};
         printk("CPU: FPU type %s", FPU_TYPE[SCB_GetFPUType()]);
+
+#if __CPU_SHOW_AND_CLEAR_RESET_SOURCE__
+        u32_t RSR = RCC->RSR;
+        SET_BIT(RCC->RSR, RCC_RSR_RMVF);
+        printk("Reset source:");
+        if (RSR & RCC_RSR_LPWRRSTF)  printk("  Low power reset");
+        if (RSR & RCC_RSR_WWDG1RSTF) printk("  Window watchdog reset");
+        if (RSR & RCC_RSR_IWDG1RSTF) printk("  Watchdog reset");
+        if (RSR & RCC_RSR_SFTRSTF)   printk("  Software reset");
+        if (RSR & RCC_RSR_PORRSTF)   printk("  POR reset");
+        if (RSR & RCC_RSR_PINRSTF)   printk("  Pin reset");
+        if (RSR & RCC_RSR_BORRSTF)   printk("  BOR reset");
+        if (RSR & RCC_RSR_D2RSTF)    printk("  D2 reset");
+        if (RSR & RCC_RSR_D1RSTF)    printk("  D1 reset");
+        if (RSR & RCC_RSR_CPURSTF)   printk("  CPU reset");
+#endif
 }
 
 //==============================================================================
