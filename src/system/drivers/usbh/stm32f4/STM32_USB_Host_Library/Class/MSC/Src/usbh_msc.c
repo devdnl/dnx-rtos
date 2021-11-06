@@ -777,10 +777,16 @@ USBH_StatusTypeDef USBH_MSC_Read(USBH_HandleTypeDef *phost,
 
   timeout = phost->Timer;
 
+  u64_t tref = sys_get_uptime_ms();
+
   while (USBH_MSC_RdWrProcess(phost, lun) == USBH_BUSY)
   {
     if (((phost->Timer - timeout) > (10000U * length)) || (phost->device.is_connected == 0U))
     {
+      MSC_Handle->state = MSC_IDLE;
+      return USBH_FAIL;
+    }
+    if (sys_time_is_expired(tref, 5000)) {
       MSC_Handle->state = MSC_IDLE;
       return USBH_FAIL;
     }

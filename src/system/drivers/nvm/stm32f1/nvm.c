@@ -553,24 +553,13 @@ static int FLASH_erase_sector(uint32_t sector)
         int err = FLASH_wait_for_operation_finish(sec_addr);
 
         if (!err) {
+                *FLASH_CR |= FLASH_CR_PER;
+                *FLASH_AR  = sec_addr;
+                *FLASH_CR |= FLASH_CR_STRT;
 
-                u32_t *addr = cast(void*, sec_addr);
-                u32_t  len  = SECTOR_SIZE / sizeof(*addr);
+                err = FLASH_wait_for_operation_finish(sec_addr);
 
-                while (len--) {
-                        if (*addr++ != 0xFFFFFFFF) {
-
-                                *FLASH_CR |= FLASH_CR_PER;
-                                *FLASH_AR  = sec_addr;
-                                *FLASH_CR |= FLASH_CR_STRT;
-
-                                err = FLASH_wait_for_operation_finish(sec_addr);
-
-                                *FLASH_CR &= (~FLASH_CR_PER);
-
-                                break;
-                        }
-                }
+                *FLASH_CR &= (~FLASH_CR_PER);
         }
 
         return err;
@@ -639,39 +628,24 @@ static int FLASH_wait_for_operation_finish(uint32_t address)
 #endif
         }
 
-        int err = ETIME;
+        int err;
 
-        u32_t tref = sys_get_uptime_ms();
+        while (*FLASH_SR & FLASH_SR_BSY) {}
 
-        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+        if (*FLASH_SR & FLASH_SR_WRPRTERR) {
+                printk("%s: write protection error", GET_MODULE_NAME());
+                err = EIO;
 
-                if (*FLASH_SR & FLASH_SR_BSY) {
-                        //sys_sleep_ms(1);
-
-                } else {
-                        if (*FLASH_SR & FLASH_SR_WRPRTERR) {
-                                printk("%s: write protection error", GET_MODULE_NAME());
-                                err = EIO;
-                                break;
-
-                        } else if (*FLASH_SR & FLASH_SR_PGERR) {
-                                printk("%s: program error, cell @ 0x%X is not erased",
-                                       GET_MODULE_NAME(), FLASH->AR | FLASH_BASE);
-                                err = EIO;
-                                break;
-                        } else {
-                                err = ESUCC;
-                                break;
-                        }
-                }
+        } else if (*FLASH_SR & FLASH_SR_PGERR) {
+                printk("%s: program error, cell @ 0x%X is not erased",
+                       GET_MODULE_NAME(), FLASH->AR | FLASH_BASE);
+                err = EIO;
+        } else {
+                err = ESUCC;
         }
 
         // clear flags
         SET_BIT(*FLASH_SR, FLASH_SR_EOP | FLASH_SR_PGERR | FLASH_SR_WRPRTERR);
-
-        if (err == ETIME) {
-                printk("%s: operation timeout", GET_MODULE_NAME());
-        }
 
         return err;
 }

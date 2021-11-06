@@ -552,34 +552,23 @@ static int FLASH_erase_sector(uint32_t sector)
         int err = FLASH_wait_for_operation_finish();
 
         if (!err) {
-
-                u32_t *addr = cast(void*, SECTOR_INFO[sector].addr);
-                u32_t  len  = SECTOR_INFO[sector].size / sizeof(*addr);
-
-                while (len--) {
-                        if (*addr++ != 0xFFFFFFFF) {
-
-                                #ifdef FLASH_OPTCR_DB1M
-                                if (sector >= 12) {
-                                        sector += 4;
-                                }
-                                #endif
-
-                                FLASH->CR &= FLASH_CR_PSIZE_Msk;
-                                FLASH->CR |= FLASH_CR_PSIZE_BYTE;
-                                FLASH->CR &= FLASH_CR_SNB_Msk;
-                                FLASH->CR |= ((sector << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk);
-                                FLASH->CR |= FLASH_CR_SER;
-                                FLASH->CR |= FLASH_CR_STRT;
-
-                                err = FLASH_wait_for_operation_finish();
-
-                                FLASH->CR &= (~FLASH_CR_SER);
-                                FLASH->CR &= FLASH_CR_SNB_Msk;
-
-                                break;
-                        }
+                #ifdef FLASH_OPTCR_DB1M
+                if (sector >= 12) {
+                        sector += 4;
                 }
+                #endif
+
+                FLASH->CR &= FLASH_CR_PSIZE_Msk;
+                FLASH->CR |= FLASH_CR_PSIZE_BYTE;
+                FLASH->CR &= FLASH_CR_SNB_Msk;
+                FLASH->CR |= ((sector << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk);
+                FLASH->CR |= FLASH_CR_SER;
+                FLASH->CR |= FLASH_CR_STRT;
+
+                err = FLASH_wait_for_operation_finish();
+
+                FLASH->CR &= (~FLASH_CR_SER);
+                FLASH->CR &= FLASH_CR_SNB_Msk;
         }
 
         return err;
@@ -604,7 +593,10 @@ static int FLASH_program_byte(uint32_t address, uint8_t data)
                 FLASH->CR |= FLASH_CR_PSIZE_BYTE;
                 FLASH->CR |= FLASH_CR_PG;
 
+                sys_ISR_disable();
                 *cast(__IO uint8_t*, address) = data;
+                while (FLASH->SR & FLASH_SR_BSY) {}
+                sys_ISR_enable();
 
                 err = FLASH_wait_for_operation_finish();
 
@@ -628,44 +620,28 @@ static int FLASH_program_byte(uint32_t address, uint8_t data)
 //==============================================================================
 static int FLASH_wait_for_operation_finish(void)
 {
-        int err = ETIME;
+        int err;
 
-        u32_t tref = sys_get_uptime_ms();
+        while (FLASH->SR & FLASH_SR_BSY) {}
 
-        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+        if (FLASH->SR & FLASH_SR_WRPERR) {
+                printk("%s: write protection error", GET_MODULE_NAME());
+                err = EIO;
 
-                if (FLASH->SR & FLASH_SR_BSY) {
-                        //sys_sleep_ms(1);
+        } else if (FLASH->SR & ( FLASH_SR_PGSERR | FLASH_SR_PGPERR
+                               | FLASH_SR_PGAERR)) {
+                printk("%s: program error", GET_MODULE_NAME());
+                err = EIO;
 
-                } else {
-                        if (FLASH->SR & FLASH_SR_WRPERR) {
-                                printk("%s: write protection error", GET_MODULE_NAME());
-                                err = EIO;
-                                break;
-
-                        } else if (FLASH->SR & ( FLASH_SR_PGSERR | FLASH_SR_PGPERR
-                                               | FLASH_SR_PGAERR)) {
-                                printk("%s: program error", GET_MODULE_NAME());
-                                err = EIO;
-                                break;
-
-                        } else if (FLASH->SR & FLASH_SR_SOP) {
-                                printk("%s: operation error", GET_MODULE_NAME());
-                                err = EIO;
-                                break;
-                        } else {
-                                err = ESUCC;
-                                break;
-                        }
-                }
+        } else if (FLASH->SR & FLASH_SR_SOP) {
+                printk("%s: operation error", GET_MODULE_NAME());
+                err = EIO;
+        } else {
+                err = ESUCC;
         }
 
         SET_BIT(FLASH->SR, FLASH_SR_WRPERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR
                          | FLASH_SR_PGAERR | FLASH_SR_SOP);
-
-        if (err == ETIME) {
-                printk("%s: operation timeout", GET_MODULE_NAME());
-        }
 
         return err;
 }

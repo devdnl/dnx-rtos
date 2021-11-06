@@ -240,26 +240,28 @@ API_MOD_WRITE(I2C,
                 } else {
                         err = _I2C_LLD__master_start(hdl);
                         if (err) {
-                                printk("I2C%d:%d start error", hdl->major, hdl->minor);
+                                dev_dbg(hdl, "start fail %d", err);
                                 goto error;
                         }
 
                         err = _I2C_LLD__master_send_address(hdl, true, count);
                         if (err) {
-                                printk("I2C%d:%d address %Xh error",
-                                       hdl->major, hdl->minor, hdl->config.address);
+                                dev_dbg(hdl, "address+wr fail", err);
                                 goto error;
                         }
 
                         if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                                 err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
                                 if (err) {
-                                        printk("I2C%d:%d subaddress error", hdl->major, hdl->minor);
+                                        dev_dbg(hdl, "subaddress fail %d", err);
                                         goto error;
                                 }
                         }
 
                         err = _I2C_LLD__master_transmit(hdl, src, count, wrcnt, false);
+                        if (err) {
+                                dev_dbg(hdl, "transmit data error %d", err);
+                        }
 
                         error:
                         _I2C_LLD__master_stop(hdl);
@@ -269,7 +271,7 @@ API_MOD_WRITE(I2C,
         }
 
         if (err) {
-                printk("I2C%d:%d write error %d", hdl->major, hdl->minor, err);
+                dev_dbg(hdl, "write operation fail %d", err);
         }
 
         return err;
@@ -309,41 +311,39 @@ API_MOD_READ(I2C,
                 } else {
                         err = _I2C_LLD__master_start(hdl);
                         if (err) {
-                                printk("I2C%d:%d start error", hdl->major, hdl->minor, err);
+                                dev_dbg(hdl, "start fail %d", err);
                                 goto error;
                         }
 
                         if (hdl->config.sub_addr_mode != I2C_SUB_ADDR_MODE__DISABLED) {
                                 err = _I2C_LLD__master_send_address(hdl, true, count);
                                 if (err) {
-                                        printk("I2C%d:%d address %Xh error",
-                                               hdl->major, hdl->minor, hdl->config.address);
+                                        dev_dbg(hdl, "address+wr send fail %d", err);
                                         goto error;
                                 }
 
                                 err = send_subaddress(hdl, *fpos, hdl->config.sub_addr_mode);
                                 if (err) {
-                                        printk("I2C%d:%d subaddress error", hdl->major, hdl->minor);
+                                        dev_dbg(hdl, "subaddress send fail %d", err);
                                         goto error;
                                 }
 
                                 err = _I2C_LLD__master_repeat_start(hdl);
                                 if (err) {
-                                        printk("I2C%d:%d repeat start error", hdl->major, hdl->minor);
+                                        dev_dbg(hdl, "repeat start fail %d", err);
                                         goto error;
                                 }
                         }
 
                         err = _I2C_LLD__master_send_address(hdl, false, count);
                         if (err) {
-                                printk("I2C%d:%d address %Xh error",
-                                       hdl->major, hdl->minor, hdl->config.address);
+                                dev_dbg(hdl, "address+rd send fail %d", err);
                                 goto error;
                         }
 
                         err = _I2C_LLD__master_receive(hdl, dst, count, rdcnt);
                         if (err) {
-                                printk("I2C%d:%d receive error", hdl->major, hdl->minor);
+                                dev_dbg(hdl, "receive data error %d", err);
                         }
 
                         error:
@@ -354,7 +354,7 @@ API_MOD_READ(I2C,
         }
 
         if (err) {
-                printk("I2C%d:%d read error %d", hdl->major, hdl->minor, err);
+                dev_dbg(hdl, "read operation fail %d", err);
         }
 
         return err;

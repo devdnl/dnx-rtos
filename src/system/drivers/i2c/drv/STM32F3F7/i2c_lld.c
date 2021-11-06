@@ -207,7 +207,7 @@ static inline I2C_TypeDef *get_I2C(I2C_dev_t *hdl)
 //==============================================================================
 static void reset(I2C_dev_t *hdl, bool reinit)
 {
-        printk("I2C%d:%d interface reset", hdl->major, hdl->minor);
+        dev_dbg(hdl, "interface reset", 0);
 
         I2C_TypeDef *i2c = get_I2C(hdl);
 
@@ -233,13 +233,11 @@ static void reset(I2C_dev_t *hdl, bool reinit)
                                                  &SCL_mode);
 
                 if (err) {
-                        printk("I2C%d:%d invalid SCL pin - recovery skipped",
-                               hdl->major, hdl->minor);
+                        dev_dbg(hdl, "invalid SCL pin - recovery skipped", 0);
                 }
 
                 if ((state == 0) && (err == 0)) {
-                        printk("I2C%d:%d detected SDA low - bus recovery",
-                               hdl->major, hdl->minor);
+                        dev_dbg(hdl, "detected SDA low - bus recovery", 0);
 
                         #if defined(ARCH_stm32f3) || defined(ARCH_stm32f7)
                         int mode = GPIO_MODE__OD;
@@ -266,8 +264,7 @@ static void reset(I2C_dev_t *hdl, bool reinit)
                         state = _GPIO_DDI_get_pin(recovery->SDA.port_idx,
                                                   recovery->SDA.pin_idx);
 
-                        printk("I2C%d:%d recovery %s", hdl->major, hdl->minor,
-                               (state == 1) ? "success" : "fail");
+                        dev_dbg(hdl, "recovery %s", (state == 1) ? "success" : "fail");
                 }
         }
 }
@@ -325,7 +322,7 @@ static void compute_timing(u8_t major, i2c_timing_t *timing)
                                 timing->SCLH = 0;
                         }
 
-                        printk("%s%d: target SCL frequency: %u Hz", GET_MODULE_NAME(), major,
+                        printk("%s%u: target SCL frequency: %u Hz", GET_MODULE_NAME(), major,
                                fi2cclk / presc / div);
 
                         found = true;
@@ -333,7 +330,7 @@ static void compute_timing(u8_t major, i2c_timing_t *timing)
         }
 
         if (!found) {
-                printk("%s%d: SCL frequency out of bound", GET_MODULE_NAME(), major);
+                printk("%s%u: SCL frequency out of bound", GET_MODULE_NAME(), major);
         }
 }
 

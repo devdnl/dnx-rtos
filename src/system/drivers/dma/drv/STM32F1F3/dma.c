@@ -5,7 +5,7 @@ Author   Daniel Zorychta
 
 Brief    General usage DMA driver.
 
-         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -28,10 +28,16 @@ Brief    General usage DMA driver.
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f1/dma_ddi.h"
-#include "stm32f1/stm32f10x.h"
-#include "../dma_ioctl.h"
+#include "dma/dma_ioctl.h"
 #include "kernel/khooks.h"
+
+#if defined(ARCH_stm32f1)
+#include "stm32f1/stm32f10x.h"
+#include "stm32f1/dma_ddi.h"
+#elif defined(ARCH_stm32f3)
+#include "stm32f3/stm32f3xx.h"
+#include "stm32f3/dma_ddi.h"
+#endif
 
 /*==============================================================================
   Local macros
@@ -57,14 +63,14 @@ enum {
   Local object types
 ==============================================================================*/
 typedef struct {
-        DMA_t         *DMA;
-        DMA_Channel_t *channel[DMA1_CHANNELS];
-        IRQn_Type      IRQn[DMA1_CHANNELS];
-        u8_t           chcnt;
+        DMA_TypeDef          *DMA;
+        DMA_Channel_TypeDef  *channel[max(DMA1_CHANNELS, DMA2_CHANNELS)];
+        IRQn_Type             IRQn[max(DMA1_CHANNELS, DMA2_CHANNELS)];
+        u8_t                  chcnt;
 } DMA_HW_t;
 
 typedef struct {
-        void           *arg;
+        void           *user_ctx;
         _DMA_cb_t       cb_finish;
         _DMA_cb_t       cb_half;
         _DMA_cb_t       cb_next;
@@ -73,17 +79,21 @@ typedef struct {
 } DMA_RT_channel_t;
 
 typedef struct {
-        DMA_RT_channel_t  *channel;
-        queue_t          **queue;
-        u32_t              ID_cnt;
+        DMA_RT_channel_t   channel[max(DMA1_CHANNELS, DMA2_CHANNELS)];
+        queue_t          **m2m_queue;
+        u32_t              ID_ctr;
         u8_t               major;
 } DMA_RT_t;
+
+typedef struct {
+        DMA_RT_t DMA[DMA_COUNT];
+} DMA_mem_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
 static void clear_DMA_IRQ_flags(u8_t major, u8_t channel);
-static bool M2M_callback(DMA_Channel_t *channel, u8_t SR, void *arg);
+static bool M2M_callback(DMA_Channel_TypeDef *channel, u8_t SR, void *arg);
 
 /*==============================================================================
   Local object
@@ -127,7 +137,7 @@ static const DMA_HW_t DMA_HW[] = {
         #endif
 };
 
-static DMA_RT_t *DMA_RT[DMA_COUNT];
+static DMA_mem_t *DMA_mem;
 
 /*==============================================================================
   Exported object
@@ -155,41 +165,32 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor, const void *conf
 
         int err = EFAULT;
 
-        if (major < DMA_COUNT && minor == 0) {
-                err = sys_zalloc(sizeof(DMA_RT_t), device_handle);
+        if (major == 0 && minor == 0) {
+                err = sys_zalloc(sizeof(DMA_mem_t), device_handle);
                 if (!err) {
-                        DMA_RT_t *hdl = *device_handle;
-
-                        err = sys_zalloc(sizeof(queue_t*) * DMA_HW[major].chcnt,
-                                         cast(void*, &hdl->queue));
-                        if (err) goto finish;
-
-                        err = sys_zalloc(sizeof(DMA_RT_channel_t) * DMA_HW[major].chcnt,
-                                         cast(void*, &hdl->channel));
-                        if (err) goto finish;
+                        DMA_mem = *device_handle;
 
                         /*
-                         * NOTE: DMA1EN and DMA2EN are localized in this same
-                         *       register and DMA2EN is shifted left by
-                         *       1 bit relative to DMA1EN.
+                         * Only the DMA1 controller is used for memory-to-memory
+                         * transfers.
                          */
-                        RCC->AHBENR |= (RCC_AHBENR_DMA1EN << major);
-
-                        DMA_RT[major] = *device_handle;
-                        DMA_RT[major]->major = major;
-                        DMA_RT[major]->ID_cnt++;
-
-                        finish:
+                        DMA_RT_t *hdl = &DMA_mem->DMA[0];
+                        err = sys_zalloc(sizeof(queue_t*) * DMA1_CHANNELS,
+                                         cast(void*, &hdl->m2m_queue));
                         if (err) {
-                                if (hdl->queue) {
-                                        sys_free(cast(void **, &hdl->queue));
-                                }
-
-                                if (hdl->channel) {
-                                        sys_free(cast(void **, &hdl->channel));
-                                }
-
                                 sys_free(device_handle);
+                                DMA_mem = NULL;
+                        }
+
+                        if (!err) {
+                                RCC->AHBENR |= (RCC_AHBENR_DMA1EN
+                                #if defined(RCC_AHBENR_DMA2EN)
+                                               | RCC_AHBENR_DMA2EN
+                                #endif
+                                );
+                                DMA_mem->DMA[0].ID_ctr = 1;
+                                DMA_mem->DMA[1].ID_ctr = 1;
+                                DMA_mem->DMA[1].major  = 1;
                         }
                 }
         }
@@ -383,23 +384,23 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t channel)
         int dmad = 0;
         channel--;
 
-        if (DMA_RT[major] == NULL) {
-                printk("DMA%d: not initialized", major + 1);
+        if (DMA_mem == NULL) {
+                printk("DMA: driver not initialized");
                 return dmad;
         }
 
         if (major < DMA_COUNT && (channel < DMA_HW[major].chcnt)) {
                 sys_critical_section_begin();
                 {
-                        if (DMA_RT[major]->channel[channel].dmad == 0) {
-                                u32_t ID = DMA_RT[major]->ID_cnt++;
+                        if (DMA_mem->DMA[major].channel[channel].dmad == 0) {
+                                u32_t ID = DMA_mem->DMA[major].ID_ctr++;
 
                                 dmad = DMAD(major, channel, ID);
 
-                                DMA_RT[major]->channel[channel].dmad = dmad;
+                                DMA_mem->DMA[major].channel[channel].dmad = dmad;
 
-                                if (DMA_RT[major]->ID_cnt == 0) {
-                                        DMA_RT[major]->ID_cnt++;
+                                if (DMA_mem->DMA[major].ID_ctr == 0) {
+                                        DMA_mem->DMA[major].ID_ctr++;
                                 }
                         }
                 }
@@ -418,12 +419,12 @@ u32_t _DMA_DDI_reserve(u8_t major, u8_t channel)
 //==============================================================================
 void _DMA_DDI_release(u32_t dmad)
 {
-        if (dmad && DMA_RT[GETMAJOR(dmad)]) {
-                DMA_RT_channel_t *RT_channel = &DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
+        if (dmad && DMA_mem) {
+                DMA_RT_channel_t *RT_channel = &DMA_mem->DMA[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
 
                 if (RT_channel->dmad == dmad) {
 
-                        DMA_Channel_t *DMA_channel = DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
+                        DMA_Channel_TypeDef *DMA_channel = DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
 
                         RT_channel->cb_finish = NULL;
                         RT_channel->cb_half   = NULL;
@@ -452,16 +453,16 @@ void _DMA_DDI_release(u32_t dmad)
  * @return One of errno value.
  */
 //==============================================================================
-int _DMA_DDI_get_channel(u32_t dmad, DMA_Channel_t **channel)
+int _DMA_DDI_get_channel(u32_t dmad, DMA_Channel_TypeDef **channel)
 {
         int err = EINVAL;
 
-        if (dmad && DMA_RT[GETMAJOR(dmad)] && channel) {
-                DMA_RT_channel_t *RT_channel = &DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
+        if (dmad && DMA_mem && channel) {
+                DMA_RT_channel_t *RT_channel = &DMA_mem->DMA[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
 
                 if (RT_channel->dmad == dmad) {
 
-                        DMA_Channel_t *DMA_channel = DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
+                        DMA_Channel_TypeDef *DMA_channel = DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
                         *channel = DMA_channel;
                         err = 0;
 
@@ -489,23 +490,39 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
         int err = EINVAL;
 
         if (  dmad
-           && DMA_RT[GETMAJOR(dmad)]
+           && DMA_mem
            && config
-           && config->NDT
-           && config->PA
-           && config->MA) {
+           && config->data_number
+           && config->peripheral_address
+           && config->memory_address) {
 
-                DMA_RT_channel_t *RT_channel = &DMA_RT[GETMAJOR(dmad)]->channel[GETCHANNEL(dmad)];
-                DMA_Channel_t    *DMA_Stream = DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
-                IRQn_Type         IRQn       = DMA_HW[GETMAJOR(dmad)].IRQn[GETCHANNEL(dmad)];
+                DMA_RT_channel_t    *RT_channel = &DMA_mem->DMA[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
+                DMA_Channel_TypeDef *DMA_Stream = DMA_HW[GETMAJOR(dmad)].channel[GETCHANNEL(dmad)];
+                IRQn_Type            IRQn       = DMA_HW[GETMAJOR(dmad)].IRQn[GETCHANNEL(dmad)];
 
                 if (RT_channel->dmad == dmad) {
-                        DMA_Stream->CMAR  = config->MA;
-                        DMA_Stream->CNDTR = config->NDT;
-                        DMA_Stream->CPAR  = config->PA;
-                        DMA_Stream->CCR   = config->CR & ~DMA_CCR1_EN;
+                        DMA_Stream->CMAR  = config->memory_address;
+                        DMA_Stream->CNDTR = config->data_number;
+                        DMA_Stream->CPAR  = config->peripheral_address;
+                        DMA_Stream->CCR   = ((config->priority_level << DMA_CCR_PL_Pos) & DMA_CCR_PL_Msk)
+                                          | ((config->memory_data_size << DMA_CCR_MSIZE_Pos) & DMA_CCR_MSIZE_Msk)
+                                          | ((config->peripheral_data_size << DMA_CCR_PSIZE_Pos) & DMA_CCR_PSIZE_Msk)
+                                          | ((config->memory_address_increment << DMA_CCR_MINC_Pos) & DMA_CCR_MINC_Msk)
+                                          | ((config->peripheral_address_increment << DMA_CCR_PINC_Pos) & DMA_CCR_PINC_Msk)
+                                          | ((config->circular_mode << DMA_CCR_CIRC_Pos) & DMA_CCR_CIRC_Msk);
 
-                        RT_channel->arg       = config->arg;
+                        switch (config->transfer_direction) {
+                        case _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY:
+                                break;
+                        case _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL:
+                                SET_BIT(DMA_Stream->CCR, DMA_CCR_DIR);
+                                break;
+                        case _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY:
+                                SET_BIT(DMA_Stream->CCR, DMA_CCR_MEM2MEM);
+                                break;
+                        }
+
+                        RT_channel->user_ctx  = config->user_ctx;
                         RT_channel->cb_finish = config->cb_finish;
                         RT_channel->cb_half   = config->cb_half;
                         RT_channel->cb_next   = config->cb_next;
@@ -516,8 +533,8 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
                         NVIC_ClearPendingIRQ(IRQn);
                         NVIC_EnableIRQ(IRQn);
 
-                        SET_BIT(DMA_Stream->CCR, DMA_CCR1_TCIE | DMA_CCR1_TEIE | (config->cb_half ? DMA_CCR1_HTIE : 0));
-                        SET_BIT(DMA_Stream->CCR, DMA_CCR1_EN);
+                        SET_BIT(DMA_Stream->CCR, DMA_CCR_TCIE | DMA_CCR_TEIE | (config->cb_half ? DMA_CCR_HTIE : 0));
+                        SET_BIT(DMA_Stream->CCR, DMA_CCR_EN);
 
                         err = ESUCC;
                 }
@@ -539,18 +556,11 @@ int _DMA_DDI_transfer(u32_t dmad, _DMA_DDI_config_t *config)
 //==============================================================================
 int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
 {
-        /*
-         * Only DMA2 is able to transfer data in memory-to-memory mode.
-         */
-        if (DMA_COUNT < 2) {
-                return ENXIO;
-        }
-
         if (!sys_is_mem_dma_capable(dst) || !sys_is_mem_dma_capable(src)) {
                 return EIO;
         }
 
-        DMA_RT_t *hdl = DMA_RT[1];
+        DMA_RT_t *hdl = &DMA_mem->DMA[0];
         if (!hdl || !dst || !src || !size) {
                 return EINVAL;
         }
@@ -565,8 +575,8 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
                 if (dmad) break;
         }
 
-        if (dmad && (hdl->queue[channel] == NULL)) {
-                err = sys_queue_create(1, sizeof(int), &hdl->queue[channel]);
+        if (dmad && (hdl->m2m_queue[channel] == NULL)) {
+                err = sys_queue_create(1, sizeof(int), &hdl->m2m_queue[channel]);
                 if (err) {
                         _DMA_DDI_release(dmad);
                         return err;
@@ -574,47 +584,49 @@ int _DMA_DDI_memcpy(void *dst, const void *src, size_t size)
         }
 
         if (dmad) {
-                u32_t PMSIZE, NDT;
+                _DMA_DDI_config_t config = {0};
 
                 if (  ((size & 3) == 0)
                    && ((cast(u32_t, src) & 3) == 0)
                    && ((cast(u32_t, dst) & 3) == 0) ) {
 
-                        PMSIZE = (2 << 10) | (2 << 8);
-
-                        NDT = size / 4;
+                        config.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD;
+                        config.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_WORD;
+                        config.data_number                  = size / 4;
 
                 } else if (  ((size & 1) == 0)
                           && ((cast(u32_t, src) & 1) == 0)
                           && ((cast(u32_t, dst) & 1) == 0) ) {
 
-                        PMSIZE = (1 << 10) | (1 << 8);
-
-                        NDT = size / 2;
+                        config.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_HALF_WORD;
+                        config.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_HALF_WORD;
+                        config.data_number                  = size / 2;
 
                 } else {
-                        PMSIZE = 0;
-                        NDT    = size;
+                        config.peripheral_data_size = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                        config.memory_data_size     = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                        config.data_number                  = size;
                 }
 
-                if (NDT <= UINT16_MAX) {
-                        _DMA_DDI_config_t config;
-                        config.arg       = hdl->queue[channel];
-                        config.cb_finish = M2M_callback;
-                        config.cb_half   = NULL;
-                        config.cb_next   = NULL;
-                        config.release   = true;
-                        config.PA        = cast(u32_t, src);
-                        config.MA        = cast(u32_t, dst);
-                        config.NDT       = NDT;
-                        config.CR        = PMSIZE | DMA_CCR1_MEM2MEM
-                                         | DMA_CCR1_MINC | DMA_CCR1_PINC;
-                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+                if (config.data_number <= UINT16_MAX) {
+                        config.user_ctx                     = hdl->m2m_queue[channel];
+                        config.cb_finish                    = M2M_callback;
+                        config.cb_half                      = NULL;
+                        config.cb_next                      = NULL;
+                        config.release                      = true;
+                        config.peripheral_address           = cast(u32_t, src);
+                        config.memory_address               = cast(u32_t, dst);
+                        config.IRQ_priority                 = __CPU_DEFAULT_IRQ_PRIORITY__;
+                        config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                        config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+                        config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_INCREMENTED;
+                        config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                        config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_MEMORY;
 
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {
                                 int ferr = EIO;
-                                err = sys_queue_receive(hdl->queue[channel], &ferr,
+                                err = sys_queue_receive(hdl->m2m_queue[channel], &ferr,
                                                         M2M_TRANSFER_TIMEOUT);
                                 if (!err) {
                                         err = ferr;
@@ -656,7 +668,7 @@ static void clear_DMA_IRQ_flags(u8_t major, u8_t channel)
  * @return True if yield needed, false otherwise.
  */
 //==============================================================================
-static bool M2M_callback(DMA_Channel_t *channel, u8_t SR, void *arg)
+static bool M2M_callback(DMA_Channel_TypeDef *channel, u8_t SR, void *arg)
 {
         UNUSED_ARG1(channel);
 
@@ -678,25 +690,25 @@ static bool M2M_callback(DMA_Channel_t *channel, u8_t SR, void *arg)
 //==============================================================================
 static void IRQ_handle(u8_t major, u8_t channel)
 {
-        DMA_Channel_t    *DMA_channel = DMA_HW[major].channel[channel];
-        DMA_RT_channel_t *RT_channel  = &DMA_RT[major]->channel[channel];
+        DMA_Channel_TypeDef *DMA_channel = DMA_HW[major].channel[channel];
+        DMA_RT_channel_t    *RT_channel  = &DMA_mem->DMA[major].channel[channel];
 
         bool  yield = false;
 
         u32_t SR = DMA_HW[major].DMA->ISR >> (4 * channel);
 
-        if ((DMA_channel->CCR & DMA_CCR1_HTIE) && (SR & DMA_SR_HTIF)) {
+        if ((DMA_channel->CCR & DMA_CCR_HTIE) && (SR & DMA_SR_HTIF)) {
                 if (RT_channel->cb_half) {
-                        yield = RT_channel->cb_half(DMA_channel, SR & 0xF, RT_channel->arg);
+                        yield = RT_channel->cb_half(DMA_channel, SR & 0xF, RT_channel->user_ctx);
                 }
         } else {
                 if (RT_channel->cb_finish) {
-                        yield = RT_channel->cb_finish(DMA_channel, SR & 0xF, RT_channel->arg);
+                        yield = RT_channel->cb_finish(DMA_channel, SR & 0xF, RT_channel->user_ctx);
                 }
         }
 
-        if (!(DMA_channel->CCR & DMA_CCR1_CIRC)) {
-                CLEAR_BIT(DMA_channel->CCR, DMA_CCR1_EN);
+        if (!(DMA_channel->CCR & DMA_CCR_CIRC)) {
+                CLEAR_BIT(DMA_channel->CCR, DMA_CCR_EN);
 
                 RT_channel->cb_half   = NULL;
                 RT_channel->cb_finish = NULL;
@@ -713,13 +725,13 @@ static void IRQ_handle(u8_t major, u8_t channel)
                  * ready to be configured. It is therefore necessary to wait for
                  * the EN bit to be  cleared before starting any stream configuration.
                  */
-                while (DMA_channel->CCR & DMA_CCR1_EN);
+                while (DMA_channel->CCR & DMA_CCR_EN);
         }
 
         clear_DMA_IRQ_flags(major, channel);
 
         if (RT_channel->cb_next) {
-                yield |= RT_channel->cb_next(DMA_channel, SR & 0x3F,  RT_channel->arg);
+                yield |= RT_channel->cb_next(DMA_channel, SR & 0x3F,  RT_channel->user_ctx);
         }
 
         sys_thread_yield_from_ISR(yield);

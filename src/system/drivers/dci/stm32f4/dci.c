@@ -308,34 +308,40 @@ API_MOD_READ(DCI,
                 return EFAULT;
         }
 
-        u32_t dmad = _DMA_DDI_reserve(1, DMA_STREAM_PRI);
+        u32_t dmad = _DMA_DDI_reserve(_DMA_DDI_DMA2, DMA_STREAM_PRI);
         if (dmad == 0) {
-                dmad = _DMA_DDI_reserve(1, DMA_STREAM_AUX);
+                dmad = _DMA_DDI_reserve(_DMA_DDI_DMA2, DMA_STREAM_AUX);
                 if (dmad == 0) {
                         return EBUSY;
                 }
         }
 
-        _DMA_DDI_config_t config;
-        memset(&config, 0, sizeof(config));
-        config.MA[0]        = cast(u32_t, dst);
-        config.MA[1]        = cast(u32_t, dst) + (hdl->TSIZEW * sizeof(u32_t));
-        config.PA           = cast(u32_t, &DCMI->DR);
-        config.NDT          = hdl->TSIZEW;
-        config.arg          = DCI;
-        config.cb_finish    = DMA_callback;
-        config.cb_half      = NULL;
-        config.cb_next      = NULL;
-        config.release      = false;
-        config.FC           = DMA_SxFCR_FTH_FULL | DMA_SxFCR_FS_EMPTY | DMA_SxFCR_DMDIS_YES;
-        config.CR           = DMA_SxCR_CHSEL_SEL(DMA_CHANNEL)
-                            | DMA_SxCR_PL_HIGH
-                            | DMA_SxCR_MSIZE_BYTE
-                            | DMA_SxCR_PSIZE_WORD
-                            | DMA_SxCR_MINC_ENABLE
-                            | DMA_SxCR_DBM_ENABLE
-                            | DMA_SxCR_CIRC_ENABLE;
-        config.IRQ_priority = _DCI_IRQ_PRIORITY;
+        _DMA_DDI_config_t config = {0};
+        config.user_ctx                     = DCI;
+        config.cb_finish                    = DMA_callback;
+        config.cb_half                      = NULL;
+        config.cb_next                      = NULL;
+        config.data_number                  = hdl->TSIZEW;
+        config.peripheral_address           = cast(u32_t, &DCMI->DR);
+        config.memory_address[0]            = cast(u32_t, dst);
+        config.memory_address[1]            = cast(u32_t, dst) + (hdl->TSIZEW * sizeof(u32_t));
+        config.IRQ_priority                 = _DCI_IRQ_PRIORITY;
+        config.channel                      = DMA_CHANNEL;
+        config.release                      = false;
+        config.mode                         = _DMA_DDI_MODE_FIFO;
+        config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_1_2;
+        config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+        config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+        config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
+        config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_HIGH;
+        config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+        config.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+        config.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD;
+        config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+        config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+        config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_ENABLED;
+        config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY;
+        config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
 
         hdl->tleft = hdl->TCOUNT - 1;
 

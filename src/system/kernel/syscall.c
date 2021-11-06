@@ -452,7 +452,7 @@ static void syscall_do(void *rq)
 
         _process_syscall_stat_inc(sysrq->client_proc, _kworker_proc);
 
-        _process_enter_kernelspace(sysrq->client_proc);
+        _process_enter_kernelspace(sysrq->client_proc, sysrq->syscall_no);
         syscalltab[sysrq->syscall_no](sysrq);
         _process_exit_kernelspace(sysrq->client_proc);
 }

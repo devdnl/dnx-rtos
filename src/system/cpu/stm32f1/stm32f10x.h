@@ -820,13 +820,13 @@ typedef struct
   __IO uint32_t CNDTR;
   __IO uint32_t CPAR;
   __IO uint32_t CMAR;
-} DMA_Channel_t;
+} DMA_Channel_TypeDef;
 
 typedef struct
 {
   __IO uint32_t ISR;
   __IO uint32_t IFCR;
-} DMA_t;
+} DMA_TypeDef;
 
 /**
   * @brief Ethernet MAC
@@ -1449,20 +1449,20 @@ typedef struct
 #define TIM10               ((TIM_TypeDef *) TIM10_BASE)
 #define TIM11               ((TIM_TypeDef *) TIM11_BASE)
 #define SDIO                ((SDIO_t *) SDIO_BASE)
-#define DMA1                ((DMA_t *) DMA1_BASE)
-#define DMA2                ((DMA_t *) DMA2_BASE)
-#define DMA1_Channel1       ((DMA_Channel_t *) DMA1_Channel1_BASE)
-#define DMA1_Channel2       ((DMA_Channel_t *) DMA1_Channel2_BASE)
-#define DMA1_Channel3       ((DMA_Channel_t *) DMA1_Channel3_BASE)
-#define DMA1_Channel4       ((DMA_Channel_t *) DMA1_Channel4_BASE)
-#define DMA1_Channel5       ((DMA_Channel_t *) DMA1_Channel5_BASE)
-#define DMA1_Channel6       ((DMA_Channel_t *) DMA1_Channel6_BASE)
-#define DMA1_Channel7       ((DMA_Channel_t *) DMA1_Channel7_BASE)
-#define DMA2_Channel1       ((DMA_Channel_t *) DMA2_Channel1_BASE)
-#define DMA2_Channel2       ((DMA_Channel_t *) DMA2_Channel2_BASE)
-#define DMA2_Channel3       ((DMA_Channel_t *) DMA2_Channel3_BASE)
-#define DMA2_Channel4       ((DMA_Channel_t *) DMA2_Channel4_BASE)
-#define DMA2_Channel5       ((DMA_Channel_t *) DMA2_Channel5_BASE)
+#define DMA1                ((DMA_TypeDef *) DMA1_BASE)
+#define DMA2                ((DMA_TypeDef *) DMA2_BASE)
+#define DMA1_Channel1       ((DMA_Channel_TypeDef *) DMA1_Channel1_BASE)
+#define DMA1_Channel2       ((DMA_Channel_TypeDef *) DMA1_Channel2_BASE)
+#define DMA1_Channel3       ((DMA_Channel_TypeDef *) DMA1_Channel3_BASE)
+#define DMA1_Channel4       ((DMA_Channel_TypeDef *) DMA1_Channel4_BASE)
+#define DMA1_Channel5       ((DMA_Channel_TypeDef *) DMA1_Channel5_BASE)
+#define DMA1_Channel6       ((DMA_Channel_TypeDef *) DMA1_Channel6_BASE)
+#define DMA1_Channel7       ((DMA_Channel_TypeDef *) DMA1_Channel7_BASE)
+#define DMA2_Channel1       ((DMA_Channel_TypeDef *) DMA2_Channel1_BASE)
+#define DMA2_Channel2       ((DMA_Channel_TypeDef *) DMA2_Channel2_BASE)
+#define DMA2_Channel3       ((DMA_Channel_TypeDef *) DMA2_Channel3_BASE)
+#define DMA2_Channel4       ((DMA_Channel_TypeDef *) DMA2_Channel4_BASE)
+#define DMA2_Channel5       ((DMA_Channel_TypeDef *) DMA2_Channel5_BASE)
 #define RCC                 ((RCC_t *) RCC_BASE)
 #define CRC                 ((CRC_TypeDef *) CRC_BASE)
 #define FLASH               ((FLASH_t *) FLASH_R_BASE)
@@ -3481,6 +3481,54 @@ typedef struct
 #define  DMA_IFCR_CTCIF7                     ((uint32_t)0x02000000)        /*!< Channel 7 Transfer Complete clear */
 #define  DMA_IFCR_CHTIF7                     ((uint32_t)0x04000000)        /*!< Channel 7 Half Transfer clear */
 #define  DMA_IFCR_CTEIF7                     ((uint32_t)0x08000000)        /*!< Channel 7 Transfer Error clear */
+
+/*******************  Bit definition for DMA_CCRx register  *******************/
+#define DMA_CCR_EN_Pos         (0U)
+#define DMA_CCR_EN_Msk         (0x1UL << DMA_CCR_EN_Pos)                        /*!< 0x00000001 */
+#define DMA_CCR_EN             DMA_CCR_EN_Msk                                  /*!< Channel enable                      */
+#define DMA_CCR_TCIE_Pos       (1U)
+#define DMA_CCR_TCIE_Msk       (0x1UL << DMA_CCR_TCIE_Pos)                      /*!< 0x00000002 */
+#define DMA_CCR_TCIE           DMA_CCR_TCIE_Msk                                /*!< Transfer complete interrupt enable  */
+#define DMA_CCR_HTIE_Pos       (2U)
+#define DMA_CCR_HTIE_Msk       (0x1UL << DMA_CCR_HTIE_Pos)                      /*!< 0x00000004 */
+#define DMA_CCR_HTIE           DMA_CCR_HTIE_Msk                                /*!< Half Transfer interrupt enable      */
+#define DMA_CCR_TEIE_Pos       (3U)
+#define DMA_CCR_TEIE_Msk       (0x1UL << DMA_CCR_TEIE_Pos)                      /*!< 0x00000008 */
+#define DMA_CCR_TEIE           DMA_CCR_TEIE_Msk                                /*!< Transfer error interrupt enable     */
+#define DMA_CCR_DIR_Pos        (4U)
+#define DMA_CCR_DIR_Msk        (0x1UL << DMA_CCR_DIR_Pos)                       /*!< 0x00000010 */
+#define DMA_CCR_DIR            DMA_CCR_DIR_Msk                                 /*!< Data transfer direction             */
+#define DMA_CCR_CIRC_Pos       (5U)
+#define DMA_CCR_CIRC_Msk       (0x1UL << DMA_CCR_CIRC_Pos)                      /*!< 0x00000020 */
+#define DMA_CCR_CIRC           DMA_CCR_CIRC_Msk                                /*!< Circular mode                       */
+#define DMA_CCR_PINC_Pos       (6U)
+#define DMA_CCR_PINC_Msk       (0x1UL << DMA_CCR_PINC_Pos)                      /*!< 0x00000040 */
+#define DMA_CCR_PINC           DMA_CCR_PINC_Msk                                /*!< Peripheral increment mode           */
+#define DMA_CCR_MINC_Pos       (7U)
+#define DMA_CCR_MINC_Msk       (0x1UL << DMA_CCR_MINC_Pos)                      /*!< 0x00000080 */
+#define DMA_CCR_MINC           DMA_CCR_MINC_Msk                                /*!< Memory increment mode               */
+
+#define DMA_CCR_PSIZE_Pos      (8U)
+#define DMA_CCR_PSIZE_Msk      (0x3UL << DMA_CCR_PSIZE_Pos)                     /*!< 0x00000300 */
+#define DMA_CCR_PSIZE          DMA_CCR_PSIZE_Msk                               /*!< PSIZE[1:0] bits (Peripheral size)   */
+#define DMA_CCR_PSIZE_0        (0x1UL << DMA_CCR_PSIZE_Pos)                     /*!< 0x00000100 */
+#define DMA_CCR_PSIZE_1        (0x2UL << DMA_CCR_PSIZE_Pos)                     /*!< 0x00000200 */
+
+#define DMA_CCR_MSIZE_Pos      (10U)
+#define DMA_CCR_MSIZE_Msk      (0x3UL << DMA_CCR_MSIZE_Pos)                     /*!< 0x00000C00 */
+#define DMA_CCR_MSIZE          DMA_CCR_MSIZE_Msk                               /*!< MSIZE[1:0] bits (Memory size)       */
+#define DMA_CCR_MSIZE_0        (0x1UL << DMA_CCR_MSIZE_Pos)                     /*!< 0x00000400 */
+#define DMA_CCR_MSIZE_1        (0x2UL << DMA_CCR_MSIZE_Pos)                     /*!< 0x00000800 */
+
+#define DMA_CCR_PL_Pos         (12U)
+#define DMA_CCR_PL_Msk         (0x3UL << DMA_CCR_PL_Pos)                        /*!< 0x00003000 */
+#define DMA_CCR_PL             DMA_CCR_PL_Msk                                  /*!< PL[1:0] bits(Channel Priority level)*/
+#define DMA_CCR_PL_0           (0x1UL << DMA_CCR_PL_Pos)                        /*!< 0x00001000 */
+#define DMA_CCR_PL_1           (0x2UL << DMA_CCR_PL_Pos)                        /*!< 0x00002000 */
+
+#define DMA_CCR_MEM2MEM_Pos    (14U)
+#define DMA_CCR_MEM2MEM_Msk    (0x1UL << DMA_CCR_MEM2MEM_Pos)                   /*!< 0x00004000 */
+#define DMA_CCR_MEM2MEM        DMA_CCR_MEM2MEM_Msk                             /*!< Memory to memory mode               */
 
 /*******************  Bit definition for DMA_CCR1 register  *******************/
 #define  DMA_CCR1_EN                         ((uint16_t)0x0001)            /*!< Channel enable*/

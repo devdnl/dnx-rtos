@@ -268,6 +268,13 @@ __CPU_NAME__=STM32F429BIxx
 #define __CPU_DISABLE_INTER_OF_MCYCLE_INSTR__ _YES_
 
 #/*--
+# this:AddWidget("Combobox", "Show and clear reset source")
+# this:AddItem("Disable", "_NO_")
+# this:AddItem("Enable", "_YES_")
+#--*/
+#define __CPU_SHOW_AND_CLEAR_RESET_SOURCE__ _YES_
+
+#/*--
 # this:AddWidget("Editline", false, "Interrupt vector position")
 #--*/
 #define __CPU_VTOR_TAB_POSITION__ 0x00000

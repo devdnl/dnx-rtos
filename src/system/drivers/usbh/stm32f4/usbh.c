@@ -54,6 +54,11 @@ Brief   USB Host driver
 #define DEBUG(...)
 #endif
 
+#define _PASTER(x, y)           x##y
+#define _EVALUATOR(x, y)        _PASTER(x, y)
+#define RESET_PIN_PORT_IDX      _EVALUATOR(IOCTL_GPIO_PORT_IDX__, __USBH_PHY_RESET_PIN__)
+#define RESET_PIN_PIN_IDX       _EVALUATOR(IOCTL_GPIO_PIN_IDX__, __USBH_PHY_RESET_PIN__)
+
 #define RECOVERY_TIMEOUT        5000
 #define SECTOR_SIZE             512
 
@@ -67,6 +72,7 @@ typedef struct {
         USBH_HandleTypeDef hUSBHost;
         HCD_HandleTypeDef hhcd;
         bool class_active;
+        u32_t irq_ctr;
         alignas(_HEAP_ALIGN_) u8_t buffer[8 * SECTOR_SIZE];
 } USBH_t;
 
@@ -239,7 +245,8 @@ API_MOD_WRITE(USBH,
                 if (hdl->class_active) {
 
                         bool unaligned = hdl->hhcd.Init.dma_enable
-                                         && ((uintptr_t)src % _HEAP_ALIGN_);
+                                         && (  ((uintptr_t)src % _HEAP_ALIGN_)
+                                            || !sys_is_mem_dma_capable(src) );
 
                         if (unaligned) {
                                 DEBUG("write from unaligned source pointer");
@@ -249,10 +256,9 @@ API_MOD_WRITE(USBH,
 
                         while (!err && count) {
 
-                                size_t len = unaligned ? min(count, sizeof(hdl->buffer))
-                                                       : count;
+                                size_t len = unaligned ? min(count, sizeof(hdl->buffer)) : count;
 
-                                if (unaligned or not sys_is_mem_dma_capable(src)) {
+                                if (unaligned) {
                                         if (_DMA_DDI_memcpy(hdl->buffer, src, len) != 0) {
                                                 DEBUG("DMA M2M transfer fail!");
                                                 memcpy(hdl->buffer, src, len);
@@ -347,7 +353,8 @@ API_MOD_READ(USBH,
                 if (hdl->class_active) {
 
                         bool unaligned = hdl->hhcd.Init.dma_enable
-                                         && ((uintptr_t)dst % _HEAP_ALIGN_);
+                                         && (  ((uintptr_t)dst % _HEAP_ALIGN_)
+                                            || !sys_is_mem_dma_capable(dst) );
 
                         if (unaligned) {
                                 DEBUG("read to unaligned destination pointer");
@@ -357,12 +364,7 @@ API_MOD_READ(USBH,
 
                         while (!err && count) {
 
-                                size_t len = unaligned ? min(count, sizeof(hdl->buffer))
-                                                       : count;
-
-                                if (not sys_is_mem_dma_capable(dst)) {
-                                        unaligned = true;
-                                }
+                                size_t len = unaligned ? min(count, sizeof(hdl->buffer)) : count;
 
                                 u8_t *buf = unaligned ? hdl->buffer : dst;
                                 uint32_t sector_count = len / SECTOR_SIZE;
@@ -895,9 +897,9 @@ USBH_SpeedTypeDef USBH_LL_GetSpeed(USBH_HandleTypeDef *phost)
 //==============================================================================
 USBH_StatusTypeDef USBH_LL_ResetPort(USBH_HandleTypeDef *phost)
 {
-        _GPIO_DDI_set_pin(IOCTL_GPIO_PORT_IDX__UM_RESET, IOCTL_GPIO_PIN_IDX__UM_RESET);
+        _GPIO_DDI_set_pin(RESET_PIN_PORT_IDX, RESET_PIN_PIN_IDX);
         sys_sleep_ms(50);
-        _GPIO_DDI_clear_pin(IOCTL_GPIO_PORT_IDX__UM_RESET, IOCTL_GPIO_PIN_IDX__UM_RESET);
+        _GPIO_DDI_clear_pin(RESET_PIN_PORT_IDX, RESET_PIN_PIN_IDX);
 
         HAL_HCD_ResetPort(phost->pData);
         return USBH_OK;
@@ -1170,6 +1172,10 @@ void CAN3_SCE_OTG_HS_IRQHandler(void)
                 usbh_irq = true;
                 HAL_HCD_IRQHandler(&usbh->hhcd);
                 usbh_irq = false;
+
+                if (usbh->irq_ctr > 1000000) {
+                        //HAL_HCD_MspDeInit(&usbh->hhcd);
+                }
         }
 }
 

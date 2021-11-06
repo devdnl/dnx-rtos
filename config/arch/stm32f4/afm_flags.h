@@ -83,9 +83,19 @@ this:AddExtraWidget("Void", "VoidPMC")
 this:AddWidget("Combobox", "Ethernet PHY interface")
 this:AddItem("MII interface", "(0 << 23)")
 this:AddItem("RMII interface", "(1 << 23)")
-
 --*/
-#define __AFM_MII_RMII_SEL__ (0 << 23)
+#define __AFM_MII_RMII_SEL__ (1 << 23)
+
+/*--
+this:AddExtraWidget("Label", "LabelBKPRAM", "\nBackup RAM", -1, "bold")
+this:AddExtraWidget("Void", "VoidBKPRAM")
+++*/
+/*--
+this:AddWidget("Combobox", "Backup RAM")
+this:AddItem("Disable", "_NO_")
+this:AddItem("Enable", "_YES_")
+--*/
+#define __AFM_BKPRAM_ENABLE__ _NO_
 
 #endif /* _AFIO_FLAGS_H_ */
 /*==============================================================================

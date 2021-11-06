@@ -6284,7 +6284,11 @@
 			};
 			[4.000000]={
 				["key"]="__AFM_MII_RMII_SEL__";
-				["value"]="(0 << 23)";
+				["value"]="(1 << 23)";
+			};
+			[5.000000]={
+				["key"]="__AFM_BKPRAM_ENABLE__";
+				["value"]="_NO_";
 			};
 		};
 		["arch/stm32f4/can_flags.h"]={

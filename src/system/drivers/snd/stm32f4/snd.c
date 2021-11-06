@@ -48,7 +48,7 @@ enum {
         #if defined(RCC_APB2ENR_SAI1EN)
         _SAI1,
         #endif
-        #if defined(RCC_APB1ENR_SAI2EN)
+        #if defined(RCC_APB1ENR_SAI2EN) || defined(RCC_APB2ENR_SAI2EN)
         _SAI2,
         #endif
         SAI_PERIPHERALS,
@@ -111,7 +111,7 @@ static const struct SAI_info SAI_INFO[SAI_PERIPHERALS] = {
                 .APBRSTR         = &RCC->APB2RSTR,
                 .APBENR          = &RCC->APB2ENR,
                 .APBRSTRENR      = RCC_APB2ENR_SAI1EN,
-                .DMA_major       = {1, 1},
+                .DMA_major       = {_DMA_DDI_DMA2, _DMA_DDI_DMA2},
                 .DMA_channel_pri = {0, 0},
                 .DMA_channel_alt = {0, 1},
                 .DMA_stream_pri  = {1, 5},
@@ -122,14 +122,14 @@ static const struct SAI_info SAI_INFO[SAI_PERIPHERALS] = {
                 .SLOTR_CONF      = {_SND_CFG_SAI1_BLKA_SLOTR, _SND_CFG_SAI1_BLKB_SLOTR},
         },
 #endif
-#if defined(RCC_APB2ENR_SAI2EN)
+#if defined(RCC_APB1ENR_SAI2EN) || defined(RCC_APB2ENR_SAI2EN)
         {
                 .BASE            = SAI2,
                 .BLOCK           = {SAI2_Block_A, SAI2_Block_B},
                 .APBRSTR         = &RCC->APB2RSTR,
                 .APBENR          = &RCC->APB2ENR,
                 .APBRSTRENR      = RCC_APB2ENR_SAI2EN,
-                .DMA_major       = {1, 1},
+                .DMA_major       = {_DMA_DDI_DMA2, _DMA_DDI_DMA2},
                 .DMA_channel_pri = {3, 0},
                 .DMA_channel_alt = {3, 3},
                 .DMA_stream_pri  = {4, 7},
@@ -303,7 +303,7 @@ API_MOD_WRITE(SND,
         SND_t *hdl = device_handle;
 
         int err = (not hdl->configured) ? EIO : ESUCC;
-            err = (not sys_is_mem_dma_capable(src) ? err : EFAULT);
+            err = (sys_is_mem_dma_capable(src) ? err : EFAULT);
 
         if (!err) {
                 buf_t buf;
@@ -508,9 +508,9 @@ static int configure(SND_t *hdl, const SND_config_t *config)
 static int DMA_start(SND_t *hdl, const buf_t *buf)
 {
         const u32_t PSIZE[_SND_BITS_PER_SAMPLE_AMOUNT] = {
-                [SND_BITS_PER_SAMPLE__8]  = DMA_SxCR_PSIZE_BYTE,
-                [SND_BITS_PER_SAMPLE__16] = DMA_SxCR_PSIZE_HALFWORD,
-                [SND_BITS_PER_SAMPLE__32] = DMA_SxCR_PSIZE_WORD,
+                [SND_BITS_PER_SAMPLE__8]  = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE,
+                [SND_BITS_PER_SAMPLE__16] = _DMA_DDI_PERIPHERAL_DATA_SIZE_HALF_WORD,
+                [SND_BITS_PER_SAMPLE__32] = _DMA_DDI_PERIPHERAL_DATA_SIZE_WORD,
         };
 
         const u32_t WLEN[_SND_BITS_PER_SAMPLE_AMOUNT] = {
@@ -519,34 +519,32 @@ static int DMA_start(SND_t *hdl, const buf_t *buf)
                 [SND_BITS_PER_SAMPLE__32] = 4,
         };
 
-        _DMA_DDI_config_t config;
-        memset(&config, 0, sizeof(config));
-        config.cb_finish= NULL;
-        config.cb_half  = NULL;
-        config.cb_next  = DMA_next;
-        config.arg      = hdl;
-        config.release  = false;
-        config.PA       = cast(u32_t, &hdl->SAI->BLOCK[hdl->minor]->DR);
-        config.MA[0]    = cast(u32_t, buf->ptr);
-        config.MA[1]    = 0;
-        config.NDT      = buf->size / WLEN[hdl->conf.bits_per_sample];
-        config.CR       = DMA_SxCR_DIR_M2P
-                        | DMA_SxCR_CHSEL_SEL(hdl->DMA_channel)
-                        | DMA_SxCR_MBURST_SINGLE
-                        | DMA_SxCR_PBURST_SINGLE
-                        | DMA_SxCR_DBM_DISABLE
-                        | DMA_SxCR_PL_MEDIUM
-                        | DMA_SxCR_PINCOS_PSIZE
-                        | DMA_SxCR_PINC_FIXED
-                        | PSIZE[hdl->conf.bits_per_sample]
-                        | DMA_SxCR_MINC_ENABLE
-                        | DMA_SxCR_MSIZE_BYTE
-                        | DMA_SxCR_CIRC_DISABLE
-                        | DMA_SxCR_PFCTRL_DMA;
-        config.FC       = DMA_SxFCR_FEIE_DISABLE
-                        | DMA_SxFCR_DMDIS_YES
-                        | DMA_SxFCR_FTH_FULL;
-        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+        _DMA_DDI_config_t config = {0};
+        config.user_ctx                     = hdl;
+        config.cb_finish                    = NULL;
+        config.cb_half                      = NULL;
+        config.cb_next                      = DMA_next;
+        config.data_number                  = buf->size / WLEN[hdl->conf.bits_per_sample];
+        config.peripheral_address           = cast(u32_t, &hdl->SAI->BLOCK[hdl->minor]->DR);
+        config.memory_address[0]            = cast(u32_t, buf->ptr);
+        config.memory_address[1]            = 0;
+        config.IRQ_priority                 = __CPU_DEFAULT_IRQ_PRIORITY__;
+        config.channel                      = hdl->DMA_channel;
+        config.release                      = false;
+        config.mode                         = _DMA_DDI_MODE_FIFO;
+        config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
+        config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+        config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+        config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
+        config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_MEDIUM;
+        config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+        config.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+        config.peripheral_data_size         = PSIZE[hdl->conf.bits_per_sample];
+        config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+        config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+        config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+        config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
+        config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
 
         int err = _DMA_DDI_transfer(hdl->dmad, &config);
         if (!err) {

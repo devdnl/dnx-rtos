@@ -93,8 +93,8 @@ int _mount(const char            *FS_name,
                                                  &_FS_table[i].FS_if, opts);
 
                                 if (!err) {
-                                        printk("Filesystem '%s' mounted in %s",
-                                               FS_name, mount_point->PATH);
+                                        printk("Filesystem '%s' on '%s' mounted in %s",
+                                               FS_name, src_path->PATH, mount_point->PATH);
                                 } else {
                                         printk("Filesystem '%s' on '%s' mount error (%d)",
                                                FS_name, src_path->PATH, err);

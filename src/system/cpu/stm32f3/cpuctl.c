@@ -154,6 +154,19 @@ void _cpuctl_init(void)
         if (CCM_SIZE > 0) {
                 _mm_register_region(&ccm, CCM_START, CCM_SIZE, 0, _CPUCTL_FAST_MEM);
         }
+
+#if __CPU_SHOW_AND_CLEAR_RESET_SOURCE__
+        u32_t CSR = RCC->CSR;
+        SET_BIT(RCC->CSR, RCC_CSR_RMVF);
+        printk("Reset source:");
+        if (CSR & RCC_CSR_LPWRRSTF) printk("  Low power reset");
+        if (CSR & RCC_CSR_WWDGRSTF) printk("  Window watchdog reset");
+        if (CSR & RCC_CSR_IWDGRSTF) printk("  Watchdog reset");
+        if (CSR & RCC_CSR_SFTRSTF)  printk("  Software reset");
+        if (CSR & RCC_CSR_PORRSTF)  printk("  POR reset");
+        if (CSR & RCC_CSR_PINRSTF)  printk("  Pin reset");
+        if (CSR & RCC_CSR_OBLRSTF)  printk("  OBL reset");
+#endif
 }
 
 //==============================================================================

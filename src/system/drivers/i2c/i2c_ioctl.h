@@ -552,7 +552,7 @@ typedef struct {
  * @param  [WR] const I2C_recovery_t*   recovery configuration
  * @return On success 0 is returned, otherwise -1 and @ref errno code is set.
  */
-#define IOCTL_I2C__CONFIGURE_RECOVERY           _IOW(I2C, 2, I2C_selection_t*)
+#define IOCTL_I2C__CONFIGURE_RECOVERY           _IOW(I2C, 2, const I2C_recovery_t*)
 
 /*==============================================================================
   Exported objects

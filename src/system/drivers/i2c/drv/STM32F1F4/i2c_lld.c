@@ -82,7 +82,7 @@ static void IRQ_ER_handler(u8_t major);
 
 #if USE_DMA > 0
 #if defined(ARCH_stm32f1)
-static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg);
+static bool DMA_callback(DMA_Channel_TypeDef *channel, u8_t SR, void *arg);
 #elif defined(ARCH_stm32f4)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 #endif
@@ -92,6 +92,8 @@ static int  wait_for_event_DMA(I2C_dev_t *hdl);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+MODULE_NAME(I2C);
+
 // peripherals configuration
 static const I2C_info_t I2C_HW[_I2C_NUMBER_OF_PERIPHERALS] = {
 #if defined(ARCH_stm32f1)
@@ -214,7 +216,7 @@ static inline I2C_periph_t *get_I2C(I2C_dev_t *hdl)
 //==============================================================================
 static void reset(I2C_dev_t *hdl, bool reinit)
 {
-        printk("I2C%d:%d interface reset", hdl->major, hdl->minor);
+        dev_dbg(hdl, "interface reset", 0);
 
         I2C_periph_t *i2c = get_I2C(hdl);
 
@@ -257,13 +259,11 @@ static void reset(I2C_dev_t *hdl, bool reinit)
                                                  &SCL_mode);
 
                 if (err) {
-                        printk("I2C%d:%d invalid SCL pin - recovery skipped",
-                               hdl->major, hdl->minor);
+                        dev_dbg(hdl, "invalid SCL pin - recovery skipped", 0);
                 }
 
                 if ((state == 0) && (err == 0)) {
-                        printk("I2C%d:%d detected SDA low - bus recovery",
-                               hdl->major, hdl->minor);
+                        dev_dbg(hdl, "detected SDA low - bus recovery", 0);
 
                         #if defined(ARCH_stm32f1)
                         int mode = GPIO_MODE__OD_10MHz;
@@ -291,8 +291,7 @@ static void reset(I2C_dev_t *hdl, bool reinit)
                         state = _GPIO_DDI_get_pin(recovery->SDA.port_idx,
                                                   recovery->SDA.pin_idx);
 
-                        printk("I2C%d:%d recovery %s", hdl->major, hdl->minor,
-                               (state == 1) ? "success" : "fail");
+                        dev_dbg(hdl, "recovery %s", (state == 1) ? "success" : "fail");
                 }
         }
 }
@@ -348,14 +347,13 @@ static int wait_for_event_poll(I2C_dev_t *hdl, u32_t flags, u32_t timeout_ms)
         while (!(i2c->SR1 & flags)) {
 
                 if (sys_time_is_expired(tref, timeout_ms)) {
-                        printk("I2C%d:%d event poll timeout (SR1 mask: %Xh)",
-                               hdl->major, hdl->minor, flags);
+                        dev_dbg(hdl, "event poll timeout (SR1: %Xh)", flags);
                         reset(hdl, true);
                         return EIO;
                 }
 
                 if (i2c->SR1 & (PI2C_SR1_ARLO | PI2C_SR1_BERR | PI2C_SR1_AF)) {
-                        printk("I2C%d:%d event poll error", hdl->major, hdl->minor);
+                        dev_dbg(hdl, "event poll error (SR1: %Xh)", i2c->SR1);
                         reset(hdl, true);
                         return EIO;
                 }
@@ -412,7 +410,7 @@ int _I2C_LLD__init(u8_t major)
         LL_RCC_GetSystemClocksFreq(&clocks);
 
         if (clocks.PCLK1_Frequency < 2000000) {
-                printk("I2C: PCLK1 below recommended 2MHz");
+                printk("%s%u: PCLK1 below recommended 2MHz", GET_MODULE_NAME(), major);
                 return EIO;
         }
 
@@ -599,7 +597,7 @@ int _I2C_LLD__master_send_address(I2C_dev_t *hdl, bool write, size_t count)
 
                 finish:
                 if (err) {
-                        printk("I2C%d:%d send 10-bit address error", hdl->major, hdl->minor);
+                        dev_dbg(hdl, "send 10-bit address error", 0);
                 }
 
                 return err;
@@ -619,7 +617,7 @@ int _I2C_LLD__master_send_address(I2C_dev_t *hdl, bool write, size_t count)
 
                 int err =  wait_for_event_poll(hdl, PI2C_SR1_ADDR, _I2C_TIMEOUT_BYTE_TRANSFER);
                 if (err) {
-                        printk("I2C%d:%d send 7-bit address error", hdl->major, hdl->minor);
+                        dev_dbg(hdl, "send 7-bit address error", 0);
                 }
 
                 return err;
@@ -644,34 +642,48 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
 
         if (count >= 3) {
 #if USE_DMA > 0
-                if (I2C_HW[hdl->major].use_DMA) {
-                        u32_t dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_rx_stream_pri);
+                if (I2C_HW[hdl->major].use_DMA && sys_is_mem_dma_capable(dst)) {
+
+                        u32_t dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_rx_stream_pri);
                         if (dmad == 0) {
-                                dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_rx_stream_alt);
+                                dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_rx_stream_alt);
                         }
 
                         if (dmad) {
                                 CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
-                                _DMA_DDI_config_t config;
-                                memset(&config, 0, sizeof(config));
-                                config.arg      = _I2C[hdl->major];
-                                config.cb_finish= DMA_callback;
-                                config.cb_half  = NULL;
-                                config.cb_next  = NULL;
-                                config.release  = false;
-                                config.PA       = cast(u32_t, &i2c->DR);
-                                config.NDT      = count;
-                                #if defined(ARCH_stm32f1)
-                                config.MA       = cast(u32_t, dst);
-                                config.CR       = DMA_CCR1_MINC;
-                                #elif defined(ARCH_stm32f4)
-                                config.MA[0]    = cast(u32_t, dst);
-                                config.FC       = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
-                                config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
-                                                | DMA_SxCR_MINC;
-                                #endif
-                                config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
+                                _DMA_DDI_config_t config = {0};
+                                config.user_ctx                     = _I2C[hdl->major];
+                                config.cb_finish                    = DMA_callback;
+                                config.cb_half                      = NULL;
+                                config.cb_next                      = NULL;
+                                config.data_number                  = count;
+                                config.peripheral_address           = cast(u32_t, &i2c->DR);
+#if defined(ARCH_stm32f1) || defined(ARCH_stm32f3)
+                                config.memory_address               = cast(u32_t, dst);
+#elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+                                config.memory_address[0]            = cast(u32_t, dst);
+                                config.memory_address[1]            = 0;
+#endif
+                                config.IRQ_priority                 = __CPU_DEFAULT_IRQ_PRIORITY__;
+                                config.release                      = false;
+                                config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                                config.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                                config.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                                config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+                                config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+                                config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                                config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_PERIPHERAL_TO_MEMORY;
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+                                config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+                                config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+                                config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_DISABLED;
+                                config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                                config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
+                                config.mode                         = _DMA_DDI_MODE_FIFO;
+                                config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
+                                config.channel                      = I2C_HW[hdl->major].DMA_channel;
+#endif
 
                                 err = _DMA_DDI_transfer(dmad, &config);
                                 if (!err) {
@@ -682,16 +694,16 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: DMA Rx event error");
+                                                dev_dbg(hdl, "DMA Rx event error", 0);
                                         }
                                 } else {
-                                        printk("I2C: DMA receive error");
+                                        dev_dbg(hdl, "DMA receive error", 0);
                                 }
 
                                 _DMA_DDI_release(dmad);
                                 goto finish;
                         } else {
-                                printk("I2C: DMA read channel in use, using polling mode");
+                                dev_dbg(hdl, "DMA read channel in use, using IRQ mode", 0);
                         }
                 }
 #endif
@@ -795,7 +807,7 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
         *rdcnt = n;
 
         if (err) {
-                printk("I2C%d:%d receive error", hdl->major, hdl->minor);
+                dev_dbg(hdl, "receive error", 0);
         }
 
         return err;
@@ -823,36 +835,48 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
         clear_address_event(hdl);
 
 #if USE_DMA > 0
-        if (count >= 3 && I2C_HW[hdl->major].use_DMA) {
-                u32_t dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_tx_stream_pri);
+        if ((count >= 3) && I2C_HW[hdl->major].use_DMA && sys_is_mem_dma_capable(src)) {
+
+                u32_t dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_tx_stream_pri);
                 if (dmad == 0) {
-                        dmad = _DMA_DDI_reserve(0, I2C_HW[hdl->major].DMA_tx_stream_alt);
+                        dmad = _DMA_DDI_reserve(_DMA_DDI_DMA1, I2C_HW[hdl->major].DMA_tx_stream_alt);
                 }
 
                 if (dmad) {
                         CLEAR_BIT(i2c->CR2, PI2C_CR2_ITBUFEN | PI2C_CR2_ITERREN | PI2C_CR2_ITEVTEN);
 
-                        _DMA_DDI_config_t config;
-                        memset(&config, 0, sizeof(config));
-                        config.arg      = _I2C[hdl->major];
-                        config.cb_finish= DMA_callback;
-                        config.cb_half  = NULL;
-                        config.cb_next  = NULL;
-                        config.release  = false;
-                        config.PA       = cast(u32_t, &i2c->DR);
-                        config.NDT      = count;
-
-#if defined(ARCH_stm32f1)
-                        config.MA       = cast(u32_t, src);
-                        config.CR       = DMA_CCR1_MINC | DMA_CCR1_DIR;
-#elif defined(ARCH_stm32f4)
-                        config.MA[0]    = cast(u32_t, src);
-                        config.FC       = DMA_SxFCR_FTH_0 | DMA_SxFCR_FS_2;
-                        config.CR       = ((I2C_HW[hdl->major].DMA_channel & 7) << DMA_SxCR_CHSEL_Pos)
-                                        | DMA_SxCR_MINC | DMA_SxCR_DIR_0;
+                        _DMA_DDI_config_t config = {0};
+                        config.user_ctx                     = _I2C[hdl->major];
+                        config.cb_finish                    = DMA_callback;
+                        config.cb_half                      = NULL;
+                        config.cb_next                      = NULL;
+                        config.data_number                  = count;
+                        config.peripheral_address           = cast(u32_t, &i2c->DR);
+#if defined(ARCH_stm32f1) || defined(ARCH_stm32f3)
+                        config.memory_address               = cast(u32_t, src);
+#elif defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+                        config.memory_address[0]            = cast(u32_t, src);
+                        config.memory_address[1]            = 0;
 #endif
-                        config.IRQ_priority = __CPU_DEFAULT_IRQ_PRIORITY__;
-
+                        config.IRQ_priority                 = __CPU_DEFAULT_IRQ_PRIORITY__;
+                        config.release                      = false;
+                        config.priority_level               = _DMA_DDI_PRIORITY_LEVEL_LOW;
+                        config.memory_data_size             = _DMA_DDI_MEMORY_DATA_SIZE_BYTE;
+                        config.peripheral_data_size         = _DMA_DDI_PERIPHERAL_DATA_SIZE_BYTE;
+                        config.memory_address_increment     = _DMA_DDI_MEMORY_ADDRESS_POINTER_INCREMENTED;
+                        config.peripheral_address_increment = _DMA_DDI_PERIPHERAL_ADDRESS_POINTER_IS_FIXED;
+                        config.circular_mode                = _DMA_DDI_CIRCULAR_MODE_DISABLED;
+                        config.transfer_direction           = _DMA_DDI_TRANSFER_DIRECTION_MEMORY_TO_PERIPHERAL;
+#if defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+                        config.memory_burst                 = _DMA_DDI_MEMORY_BURST_SINGLE_TRANSFER;
+                        config.peripheral_burst             = _DMA_DDI_PERIPHERAL_BURST_SINGLE_TRANSFER;
+                        config.double_buffer_mode           = _DMA_DDI_DOUBLE_BUFFER_MODE_ENABLED;
+                        config.peripheral_increment_offset  = _DMA_DDI_PERIPHERAL_INCREMENT_OFFSET_ACCORDING_TO_PERIPHERAL_SIZE;
+                        config.flow_controller              = _DMA_DDI_FLOW_CONTROLLER_DMA;
+                        config.mode                         = _DMA_DDI_MODE_FIFO;
+                        config.fifo_threshold               = _DMA_DDI_FIFO_THRESHOLD_FULL;
+                        config.channel                      = I2C_HW[hdl->major].DMA_channel;
+#endif
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {
                                 err = wait_for_event_DMA(hdl);
@@ -868,20 +892,20 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                printk("I2C: write not finished correctly");
+                                                dev_dbg(hdl, "write not finished correctly", 0);
                                         }
                                 } else {
-                                        printk("I2C: DMA Tx event error");
+                                        dev_dbg(hdl, "DMA Tx event error", 0);
                                 }
                         } else {
-                                printk("I2C: DMA write error");
+                                dev_dbg(hdl, "DMA write error", 0);
                         }
 
                         _DMA_DDI_release(dmad);
                         goto finish;
 
                 } else {
-                        printk("I2C: DMA write channel in use, using polling mode");
+                        dev_dbg(hdl, "DMA write channel in use, using IRQ mode", 0);
                 }
         }
 #endif
@@ -912,7 +936,7 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
         *wrcnt = n;
 
         if (err) {
-                printk("I2C%d:%d transmit error", hdl->major, hdl->minor);
+                dev_dbg(hdl, "transmit error", 0);
         }
 
         return err;
@@ -1017,7 +1041,7 @@ int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size
                         }
 
                 } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
-                        printk("I2C%d: slave transmit timeout", hdl->major);
+                        dev_dbg(hdl, "slave transmit timeout", 0);
                         _I2C_LLD__master_stop(hdl);
                         err = ETIME;
                         break;
@@ -1080,7 +1104,7 @@ int _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdc
                         }
 
                 } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
-                        printk("I2C%d: slave receive timeout", hdl->major);
+                        dev_dbg(hdl, "slave receive timeout", 0);
                         _I2C_LLD__master_stop(hdl);
                         err = ETIME;
                         break;
@@ -1203,7 +1227,7 @@ static void IRQ_ER_handler(u8_t major)
 //==============================================================================
 #if USE_DMA > 0
 #if defined(ARCH_stm32f1)
-static bool DMA_callback(DMA_Channel_t *channel, u8_t SR, void *arg)
+static bool DMA_callback(DMA_Channel_TypeDef *channel, u8_t SR, void *arg)
 #elif defined(ARCH_stm32f4)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 #endif
