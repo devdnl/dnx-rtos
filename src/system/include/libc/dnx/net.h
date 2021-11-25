@@ -54,16 +54,22 @@ static const NET_INET_config_t DHCP_UP = {
 
 int_main(init, STACK_DEPTH_LOW, int argc, char *argv[])
 {
+        // create a new network interface
+        if (ifadd("inet", NET_FAMILY__INET, "/dev/eth") != 0) {
+                perror("ifadd");
+                return EXIT_FAILURE;
+        }
+
         // start DHCP client
-        if (ifup(NET_FAMILY__INET, &DHCP_UP) != 0) {
+        if (ifup("inet", &DHCP_UP) != 0) {
                 perror("ifup");
                 return EXIT_FAILURE;
         }
 
-
         // get connection status
         NET_INET_status_t stat;
-        if (ifstatus(NET_FAMILY__INET, &stat) != 0) {
+        NET_family_t family;
+        if (ifstatus("inet", &family, &stat) != 0) {
                 perror("ifstatus");
                 return EXIT_FAILURE;
         } else {
@@ -73,7 +79,7 @@ int_main(init, STACK_DEPTH_LOW, int argc, char *argv[])
 
 
         // shutdown network
-        ifdown(NET_FAMILY__INET);
+        ifdown("inet");
 
         return EXIT_SUCCESS;
 }
@@ -104,7 +110,7 @@ int_main(server, STACK_DEPTH_LOW, int argc, char *argv[])
 {
         UNUSED_ARG2(argc, argv);
 
-        SOCKET *socket = socket_open(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
         if (socket) {
                 if (socket_bind(socket, &ADDR_ANY) == 0) {
                         if (socket_listen(socket) == 0) {
@@ -166,7 +172,7 @@ static const NET_INET_sockaddr_t SERVER_ADDR = {
 
 int_main(client, STACK_DEPTH_LOW, int argc, char *argv[])
 {
-        SOCKET *socket = socket_open(NET_FAMILY__INET, NET_PROTOCOL__TCP);
+        SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
         if (socket) {
                 socket_set_send_timeout(socket, 2000);
                 socket_set_recv_timeout(socket, 2000);

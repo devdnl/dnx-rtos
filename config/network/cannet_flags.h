@@ -56,6 +56,21 @@
 #define __NETWORK_CANNET_MAX_SOCKETS__ 16
 
 #/*--
+# this:AddWidget("Spinbox", 3, 16, "Packet send repetitions")
+#--*/
+#define __NETWORK_CANNET_SEND_REPETITIONS__ 3
+
+#/*--
+# this:AddWidget("Spinbox", 5, 1000, "Packet repetition interval min [ms]")
+#--*/
+#define __NETWORK_CANNET_SEND_REPETITIONS_INTERVAL_MIN__ 3
+
+#/*--
+# this:AddWidget("Spinbox", 5, 1000, "Packet repetition interval max [ms]")
+#--*/
+#define __NETWORK_CANNET_SEND_REPETITIONS_INTERVAL_MAX__ 250
+
+#/*--
 # this:AddWidget("Combobox", "Debug messages")
 # this:AddItem("Disable", "_NO_")
 # this:AddItem("Enable", "_YES_")

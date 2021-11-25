@@ -86,7 +86,7 @@ static bool DMA_callback(DMA_Channel_TypeDef *channel, u8_t SR, void *arg);
 #elif defined(ARCH_stm32f4)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg);
 #endif
-static int  wait_for_event_DMA(I2C_dev_t *hdl);
+static int  wait_for_event_DMA(I2C_dev_t *hdl, uint32_t timeout);
 #endif
 
 /*==============================================================================
@@ -300,18 +300,18 @@ static void reset(I2C_dev_t *hdl, bool reinit)
 /**
  * @brief  Function wait for DMA event (IRQ)
  * @param  hdl                  device handle
- * @param  DMA                  DMA channel
+ * @param  timeout              timeout
  * @return One of errno value (errno.h)
  */
 //==============================================================================
 #if USE_DMA > 0
-static int wait_for_event_DMA(I2C_dev_t *hdl)
+static int wait_for_event_DMA(I2C_dev_t *hdl, uint32_t timeout)
 {
         I2C_periph_t *i2c = get_I2C(hdl);
         SET_BIT(i2c->CR2, PI2C_CR2_LAST | PI2C_CR2_DMAEN);
 
         int ferr = EIO;
-        int err  = sys_queue_receive(_I2C[hdl->major]->event, &ferr, _I2C_DEVICE_TIMEOUT);
+        int err  = sys_queue_receive(_I2C[hdl->major]->event, &ferr, timeout);
 
         CLEAR_BIT(i2c->CR2, PI2C_CR2_LAST | PI2C_CR2_DMAEN);
 
@@ -384,6 +384,21 @@ static void clear_address_event(I2C_dev_t *hdl)
                 (void)tmp;
         }
         sys_critical_section_end();
+}
+
+//==============================================================================
+/**
+ * @brief  Calculate timeout according to number of bytes to transfer.
+ *
+ * @param  hdl          handle
+ * @param  count        number of bytes to transfer
+ *
+ * @return Timeout in milliseconds.
+ */
+//==============================================================================
+static u32_t calc_timeout(I2C_dev_t *hdl, size_t count)
+{
+        return (6*((I2C_HW[hdl->major].freq / 10) * count) / 5) / 1000;
 }
 
 //==============================================================================
@@ -690,7 +705,8 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                                         SET_BIT(i2c->CR2, PI2C_CR2_LAST | PI2C_CR2_DMAEN);
                                         clear_address_event(hdl);
 
-                                        err = wait_for_event_DMA(hdl);
+                                        uint32_t timeout_ms = calc_timeout(hdl, count);
+                                        err = wait_for_event_DMA(hdl, timeout_ms);
                                         if (!err) {
                                                 n = count;
                                         } else {
@@ -879,7 +895,8 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
 #endif
                         err = _DMA_DDI_transfer(dmad, &config);
                         if (!err) {
-                                err = wait_for_event_DMA(hdl);
+                                uint32_t timeout_ms = calc_timeout(hdl, count);
+                                err = wait_for_event_DMA(hdl, timeout_ms);
                                 if (!err) {
 
                                         /*
@@ -1244,15 +1261,6 @@ static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 
         if (!err) {
                 err = (SR & DMA_SR_TCIF) ? ESUCC : EIO;
-        }
-
-        if (!err) {
-                #if defined(ARCH_stm32f1)
-                u32_t NDTR = channel->CNDTR;
-                #elif defined(ARCH_stm32f4)
-                u32_t NDTR = stream->NDTR;
-                #endif
-                err = (NDTR > 0) ? EIO : ESUCC;
         }
 
         bool yield = false;

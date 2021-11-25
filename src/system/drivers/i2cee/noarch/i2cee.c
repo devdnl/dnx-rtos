@@ -248,7 +248,7 @@ API_MOD_WRITE(I2CEE,
                         u32_t addr = *fpos;
                         err = sys_fseek(hdl->i2c_dev, addr, VFS_SEEK_SET);
 
-                        count = min(count, *fpos - hdl->memory_size);
+                        count = min(count, hdl->memory_size - *fpos);
 
                         while (!err && count) {
                                 size_t pbleft = (((addr / hdl->page_size) + 1) * hdl->page_size) - addr;
@@ -265,7 +265,7 @@ API_MOD_WRITE(I2CEE,
                                 }
                         }
                 } else {
-                        printk("I2CEE: write out of range 0x%02X", (u32_t)*fpos);
+                        dev_dbg(hdl, "write out of range 0x%02X", (u32_t)*fpos);
                         *wrcnt = 0;
                 }
 
@@ -305,14 +305,14 @@ API_MOD_READ(I2CEE,
         if (!err) {
 
                 if (*fpos < hdl->memory_size) {
-                        count = min(count, *fpos - hdl->memory_size);
+                        count = min(count, hdl->memory_size - *fpos);
 
                         err = sys_fseek(hdl->i2c_dev, *fpos, VFS_SEEK_SET);
                         if (!err) {
                                 err = sys_fread(dst, count, rdcnt, hdl->i2c_dev);
                         }
                 } else {
-                        printk("I2CEE: read out of range 0x%02X", (u32_t)*fpos);
+                        dev_dbg(hdl, "read out of range 0x%02X", (u32_t)*fpos);
                         *rdcnt = 0;
                 }
 
