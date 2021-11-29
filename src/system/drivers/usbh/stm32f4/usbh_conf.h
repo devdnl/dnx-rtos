@@ -48,7 +48,7 @@ extern "C" {
 #define USBH_MAX_NUM_INTERFACES               2U
 #define USBH_MAX_NUM_CONFIGURATION            1U
 #define USBH_KEEP_CFG_DESCRIPTOR              1U
-#define USBH_MAX_NUM_SUPPORTED_CLASS          1U
+#define USBH_MAX_NUM_SUPPORTED_CLASS          8U
 #define USBH_MAX_SIZE_CONFIGURATION           0x200U
 #define USBH_MAX_DATA_BUFFER                  0x200U
 #define USBH_DEBUG_LEVEL                      3U

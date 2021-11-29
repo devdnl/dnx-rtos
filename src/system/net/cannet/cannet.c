@@ -1514,10 +1514,25 @@ static inline uint16_t get_source_address(uint32_t can_id)
 //==============================================================================
 static int send_can_frame(cannet_t *cannet, CAN_msg_t *can_frame)
 {
-        int err = sys_ioctl(cannet->if_file, IOCTL_CAN__SEND_MSG, can_frame);
-        if (!err) {
-                cannet->stats.tx_packets++;
-                cannet->stats.tx_bytes += can_frame->data_length;
+        int err = EFAULT;
+
+        uint seed = (int)cannet->stats.tx_packets ^ (int)cannet->stats.tx_bytes;
+
+        for (int i = 0; i < __NETWORK_CANNET_SEND_REPETITIONS__; i++) {
+
+                err = sys_ioctl(cannet->if_file, IOCTL_CAN__SEND_MSG, can_frame);
+                if (!err) {
+                        cannet->stats.tx_packets++;
+                        cannet->stats.tx_bytes += can_frame->data_length;
+                        break;
+
+                } else {
+                        u32_t min = __NETWORK_CANNET_SEND_REPETITIONS_INTERVAL_MIN__;
+                        u32_t max = __NETWORK_CANNET_SEND_REPETITIONS_INTERVAL_MAX__;
+
+                        u32_t delay_ms = min + (sys_rand_r(&seed) % max);
+                        sys_sleep_ms(delay_ms);
+                }
         }
 
         return err;

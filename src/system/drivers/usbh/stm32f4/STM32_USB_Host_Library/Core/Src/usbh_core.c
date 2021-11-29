@@ -1303,13 +1303,58 @@ USBH_StatusTypeDef  USBH_LL_Disconnect(USBH_HandleTypeDef *phost)
 #if (osCMSIS < 0x20000U)
 static int USBH_Process_OS(void *argument)
 {
+   extern u32_t usbh_irq_ctr;
+   extern bool usbh_force_reinit;
+
    USBH_HandleTypeDef *phost = argument;
+
+   u32_t enumeration_ctr = 0;
 
    while (phost->thread_run)
    {
      u32_t item;
-     if (sys_queue_receive(phost->os_event, &item, osWaitForever) == 0) {
+     if (sys_queue_receive(phost->os_event, &item, 500) == 0) {
         USBH_Process(phost);
+        usbh_irq_ctr = 0;
+
+        if (phost->gState == HOST_ENUMERATION)
+        {
+          if (++enumeration_ctr > 1000)
+          {
+            USBH_UsrLog("Enumeration failed");
+            enumeration_ctr = 0;
+            usbh_force_reinit = true;
+          }
+        }
+        else if (phost->gState == HOST_ABORT_STATE)
+        {
+          USBH_UsrLog("Communication aborted");
+          usbh_force_reinit = true;
+
+        }
+        else
+        {
+          enumeration_ctr = 0;
+        }
+     }
+
+     if (usbh_force_reinit)
+     {
+        USBH_UsrLog("Force driver reinitalization");
+
+        usbh_force_reinit = false;
+        usbh_irq_ctr = 0;
+
+        USBH_Stop(phost);
+        USBH_LL_DeInit(phost);
+
+        sys_sleep_ms(250);
+
+        DeInitStateMachine(phost);
+        USBH_LL_Init(phost);
+        USBH_Start(phost);
+
+        sys_queue_reset(phost->os_event);
      }
    }
 

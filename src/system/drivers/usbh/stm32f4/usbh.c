@@ -72,7 +72,6 @@ typedef struct {
         USBH_HandleTypeDef hUSBHost;
         HCD_HandleTypeDef hhcd;
         bool class_active;
-        u32_t irq_ctr;
         alignas(_HEAP_ALIGN_) u8_t buffer[8 * SECTOR_SIZE];
 } USBH_t;
 
@@ -88,11 +87,13 @@ static int recovery_usb_connection(USBH_t *hdl);
 ==============================================================================*/
 MODULE_NAME(USBH);
 static USBH_t *usbh;
-bool usbh_irq;
 
 /*==============================================================================
   Exported object
 ==============================================================================*/
+bool  usbh_irq;
+u32_t usbh_irq_ctr;
+bool  usbh_force_reinit;
 
 /*==============================================================================
   Function definitions
@@ -124,8 +125,6 @@ API_MOD_INIT(USBH, void **device_handle, u8_t major, u8_t minor, const void *con
         if (!err) {
                 *device_handle = usbh;
                 USBH_t *hdl = usbh;
-
-                SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_OTGHSEN | RCC_AHB1ENR_OTGHSULPIEN);
 
                 err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mtx);
                 if (err) {
@@ -523,6 +522,7 @@ API_MOD_STAT(USBH, void *device_handle, struct vfs_dev_stat *device_stat)
 static void free_resources(void)
 {
         if (usbh) {
+                USBH_Stop(&usbh->hUSBHost);
                 USBH_DeInit(&usbh->hUSBHost);
 
                 if (usbh->mtx) {
@@ -656,16 +656,27 @@ void HAL_HCD_MspDeInit(HCD_HandleTypeDef *hhcd)
 
                 /* Disable USBFS Interrupt */
                 NVIC_DisableIRQ(OTG_FS_IRQn);
+                NVIC_ClearPendingIRQ(OTG_FS_IRQn);
 
         } else if (hhcd->Instance == USB_OTG_HS) {
-                /* Enable USB HS Clocks */
+                /* Reset USB peripheral */
+                SET_BIT(RCC->AHB1ENR, RCC_AHB1RSTR_OTGHRST);
+                CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1RSTR_OTGHRST);
+
+                /* Disable USB HS Clocks */
                 CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_OTGHSEN);
 
-                /* Enable ULPI clock */
+                /* Disable ULPI clock */
                 CLEAR_BIT(RCC->AHB1ENR, RCC_AHB1ENR_OTGHSULPIEN);
 
                 /* Disable USBHS Interrupt */
                 NVIC_DisableIRQ(OTG_HS_IRQn);
+                NVIC_ClearPendingIRQ(OTG_HS_IRQn);
+
+                /* Reset ULPI PHY */
+                _GPIO_DDI_set_pin(RESET_PIN_PORT_IDX, RESET_PIN_PIN_IDX);
+                if (!usbh_irq) sys_sleep_ms(50);
+                _GPIO_DDI_clear_pin(RESET_PIN_PORT_IDX, RESET_PIN_PIN_IDX);
         }
 }
 
@@ -1168,15 +1179,33 @@ void USBH_free(void *mem)
 //==============================================================================
 void CAN3_SCE_OTG_HS_IRQHandler(void)
 {
-        if (usbh) {
-                usbh_irq = true;
-                HAL_HCD_IRQHandler(&usbh->hhcd);
-                usbh_irq = false;
+        usbh_irq = true;
 
-                if (usbh->irq_ctr > 1000000) {
-                        //HAL_HCD_MspDeInit(&usbh->hhcd);
+        if (usbh) {
+                HAL_HCD_IRQHandler(&usbh->hhcd);
+
+                if (++usbh_irq_ctr > 50000) {
+
+                        /* Flush USB Fifo */
+                        (void)USB_FlushTxFifo(usbh->hhcd.Instance, 0x10U);
+                        (void)USB_FlushRxFifo(usbh->hhcd.Instance);
+
+                        /* Restore FS Clock */
+                        (void)USB_InitFSLSPClkSel(usbh->hhcd.Instance, HCFG_48_MHZ);
+
+                        /* Handle Host Port Disconnect Interrupt */
+#if (USE_HAL_HCD_REGISTER_CALLBACKS == 1U)
+                        hhcd->DisconnectCallback(&usbh->hhcd);
+#else
+                        HAL_HCD_Disconnect_Callback(&usbh->hhcd);
+#endif /* USE_HAL_HCD_REGISTER_CALLBACKS */
+
+                        HAL_HCD_MspDeInit(&usbh->hhcd);
+                        usbh_force_reinit = true;
                 }
         }
+
+        usbh_irq = false;
 }
 
 /*==============================================================================
