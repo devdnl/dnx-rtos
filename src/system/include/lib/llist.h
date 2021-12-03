@@ -193,6 +193,16 @@ extern int _llist_destroy(llist_t *list);
 
 //==============================================================================
 /**
+ * @brief  Set compare functor.
+ *
+ * @param  list         list object
+ * @param  functor      functor
+ */
+//==============================================================================
+extern void _llist_set_compare_functor(llist_t *list, llist_cmp_functor_t functor);
+
+//==============================================================================
+/**
  * @brief  Checks if list is empty
  * @param  list         list object
  * @return If list is empty then true is returned, otherwise false

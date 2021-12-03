@@ -716,6 +716,7 @@ void HAL_HCD_Connect_Callback(HCD_HandleTypeDef *hhcd)
 //==============================================================================
 void HAL_HCD_Disconnect_Callback(HCD_HandleTypeDef *hhcd)
 {
+        usbh_force_reinit = true;
         USBH_LL_Disconnect(hhcd->pData);
 }
 
@@ -1174,6 +1175,28 @@ void USBH_free(void *mem)
 
 //==============================================================================
 /**
+ * @brief  Flush Tx and Rx fifos.
+ */
+//==============================================================================
+void USBH_flush_fifo(void)
+{
+        /* Flush USB Fifo */
+        USB_FlushTxFifo(usbh->hhcd.Instance, 0x10);
+        USB_FlushRxFifo(usbh->hhcd.Instance);
+
+        /* Restore FS Clock */
+        USB_InitFSLSPClkSel(usbh->hhcd.Instance, HCFG_48_MHZ);
+
+        /* Handle Host Port Disconnect Interrupt */
+        #if (USE_HAL_HCD_REGISTER_CALLBACKS == 1U)
+        hhcd->DisconnectCallback(&usbh->hhcd);
+        #else
+        HAL_HCD_Disconnect_Callback(&usbh->hhcd);
+        #endif
+}
+
+//==============================================================================
+/**
  * @brief  USB HS IRQ handler
  */
 //==============================================================================
@@ -1184,22 +1207,7 @@ void CAN3_SCE_OTG_HS_IRQHandler(void)
         if (usbh) {
                 HAL_HCD_IRQHandler(&usbh->hhcd);
 
-                if (++usbh_irq_ctr > 50000) {
-
-                        /* Flush USB Fifo */
-                        (void)USB_FlushTxFifo(usbh->hhcd.Instance, 0x10U);
-                        (void)USB_FlushRxFifo(usbh->hhcd.Instance);
-
-                        /* Restore FS Clock */
-                        (void)USB_InitFSLSPClkSel(usbh->hhcd.Instance, HCFG_48_MHZ);
-
-                        /* Handle Host Port Disconnect Interrupt */
-#if (USE_HAL_HCD_REGISTER_CALLBACKS == 1U)
-                        hhcd->DisconnectCallback(&usbh->hhcd);
-#else
-                        HAL_HCD_Disconnect_Callback(&usbh->hhcd);
-#endif /* USE_HAL_HCD_REGISTER_CALLBACKS */
-
+                if (++usbh_irq_ctr > 5000) {
                         HAL_HCD_MspDeInit(&usbh->hhcd);
                         usbh_force_reinit = true;
                 }

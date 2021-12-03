@@ -36,6 +36,7 @@
   Local symbolic constants/macros
 ==============================================================================*/
 #define MUTEX_TIMEOUT   5000
+#define FATFILE_MAGIC   0xb812310e
 
 /*==============================================================================
   Local types, enums definitions
@@ -60,6 +61,7 @@ struct fatfs {
 static int    faterr_2_errno(FRESULT fresult);
 static time_t time_fat2unix(uint32_t fattime);
 static int    cmp_ptr(const void *a, const void *b);
+static void   dummy_free(void *obj);
 
 /*==============================================================================
   Local object definitions
@@ -94,7 +96,7 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path, const char *opts)
 
                 hdl->read_only = sys_stropt_is_flag(opts, "ro");
 
-                err = sys_llist_create(cmp_ptr, NULL, &hdl->file_list);
+                err = sys_llist_create(cmp_ptr, dummy_free, &hdl->file_list);
 
                 if (!err) {
                         err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mutex);
@@ -146,17 +148,32 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path, const char *opts)
 API_FS_RELEASE(fatfs, void *fs_handle)
 {
         struct fatfs *hdl = fs_handle;
-        int           err = EBUSY;
 
-        if ((hdl->opened_dirs == 0) && (sys_llist_size(hdl->file_list) == 0)) {
-                err = faterr_2_errno(f_unmount(&hdl->fatfs));
-                if (!err or hdl->read_only) {
-                        sys_fclose(hdl->fsfile);
-                        sys_mutex_destroy(hdl->mutex);
-                        sys_llist_destroy(hdl->file_list);
-                        sys_free(&fs_handle);
-                        err = 0;
+        mutex_t *mtx = hdl->mutex;
+
+        int err = sys_mutex_lock(mtx, MUTEX_TIMEOUT);
+        if (!err) {
+                if ((hdl->opened_dirs == 0) && (sys_llist_size(hdl->file_list) == 0)) {
+                        err = faterr_2_errno(f_unmount(&hdl->fatfs));
+                        if (!err or hdl->read_only) {
+
+                                hdl->mutex = NULL;
+                                sys_mutex_unlock(mtx);
+                                sys_mutex_lock(mtx, MAX_DELAY_MS);
+                                sys_mutex_unlock(mtx);
+
+                                sys_fclose(hdl->fsfile);
+                                sys_mutex_destroy(hdl->mutex);
+                                sys_llist_destroy(hdl->file_list);
+                                sys_free(&fs_handle);
+
+                                return 0;
+                        }
+                } else {
+                        err = EBUSY;
                 }
+
+                sys_mutex_unlock(mtx);
         }
 
         return err;
@@ -234,6 +251,8 @@ API_FS_OPEN(fatfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path,
         }
 
         if (sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT) == 0) {
+                fat_file->self = fat_file;
+                fat_file->magic = FATFILE_MAGIC;
                 sys_llist_push_back(hdl->file_list, fat_file);
                 sys_mutex_unlock(hdl->mutex);
         }
@@ -264,9 +283,17 @@ API_FS_CLOSE(fatfs, void *fs_handle, void *fhdl, bool force)
         if (!err) {
                 err = faterr_2_errno(f_close(fatfile));
                 if (!err or hdl->read_only) {
-                        int pos = sys_llist_find_begin(hdl->file_list, fatfile);
-                        sys_llist_take(hdl->file_list, pos);
+                        fatfile->self = NULL;
+                        fatfile->magic = 0;
                         sys_free(&fhdl);
+
+                        // remove all closed files from list
+                        sys_llist_foreach(FIL*, fatfile, hdl->file_list) {
+                                if ((fatfile->self != fatfile) or (fatfile->magic != FATFILE_MAGIC)) {
+                                        sys_llist_erase_by_iterator(&_iterator);
+                                }
+                        }
+
                         err = 0;
                 }
 
@@ -888,6 +915,18 @@ static int cmp_ptr(const void *a, const void *b)
         } else {
                 return 0;
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Dummy linked list free function.
+ *
+ * @param  obj          object to free
+ */
+//==============================================================================
+static void dummy_free(void *obj)
+{
+        UNUSED_ARG1(obj);
 }
 
 /*==============================================================================

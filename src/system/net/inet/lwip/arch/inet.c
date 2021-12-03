@@ -211,7 +211,8 @@ static int network_interface_thread(void *arg)
                 while (inet->thread_run) {
                         _inetdrv_handle_input(inet, INPUT_TIMEOUT);
 
-                        if (!_inetdrv_is_link_connected(inet)) {
+                        inet->disconnected = not _inetdrv_is_link_connected(inet);
+                        if (inet->disconnected) {
                                 restore_configuration(inet);
                         }
                 }

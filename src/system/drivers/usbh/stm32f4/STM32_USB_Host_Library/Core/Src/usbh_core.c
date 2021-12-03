@@ -1305,6 +1305,7 @@ static int USBH_Process_OS(void *argument)
 {
    extern u32_t usbh_irq_ctr;
    extern bool usbh_force_reinit;
+   extern void USBH_flush_fifo(void);
 
    USBH_HandleTypeDef *phost = argument;
 
@@ -1312,10 +1313,11 @@ static int USBH_Process_OS(void *argument)
 
    while (phost->thread_run)
    {
+     usbh_irq_ctr = 0;
+
      u32_t item;
-     if (sys_queue_receive(phost->os_event, &item, 500) == 0) {
+     if (sys_queue_receive(phost->os_event, &item, 100) == 0) {
         USBH_Process(phost);
-        usbh_irq_ctr = 0;
 
         if (phost->gState == HOST_ENUMERATION)
         {
@@ -1341,6 +1343,8 @@ static int USBH_Process_OS(void *argument)
      if (usbh_force_reinit)
      {
         USBH_UsrLog("Force driver reinitalization");
+
+        USBH_flush_fifo();
 
         usbh_force_reinit = false;
         usbh_irq_ctr = 0;

@@ -90,6 +90,18 @@ static inline int llist_delete(llist_t *list)
 
 //==============================================================================
 /**
+ * @brief  Set compare functor.
+ * @param  list         list object
+ * @param  functor      functor
+ */
+//==============================================================================
+static inline void llist_set_compare_functor(llist_t *list, llist_cmp_functor_t functor)
+{
+        _builtinfunc(llist_set_compare_functor, list, functor);
+}
+
+//==============================================================================
+/**
  * @brief  Checks if list is empty
  * @param  list         list object
  * @return If list is empty then true is returned, otherwise false

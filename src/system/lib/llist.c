@@ -248,6 +248,21 @@ int _llist_destroy(llist_t *this)
 
 //==============================================================================
 /**
+ * @brief  Set compare functor.
+ *
+ * @param  this         list object
+ * @param  functor      functor
+ */
+//==============================================================================
+void _llist_set_compare_functor(llist_t *this, llist_cmp_functor_t functor)
+{
+        if (is_llist_valid(this)) {
+                this->cmp_functor = functor;
+        }
+}
+
+//==============================================================================
+/**
  * @brief  Check if list is empty
  * @param  this         list object
  * @return If list is empty then true is returned, otherwise false
