@@ -42,6 +42,9 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
+/** Timeoffset feature */
+#define TIMEZONE_RECEIVE_ENABLE     1
+
 /** SNTP server port */
 #define SNTP_PORT                   123
 
@@ -348,6 +351,112 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
 
 //==============================================================================
 /**
+ * @brief  Set current time from NTP server.
+ *
+ * @param argc          number of arguments
+ * @param argv          argument list
+ */
+//==============================================================================
+static void set_NTP_time(int argc, char *argv[])
+{
+        int err = get_SNTP_host_IP(false, argc, argv);
+        if (err) {
+                return;
+        }
+
+        SOCKET *socket = socket_open("inet", NET_PROTOCOL__UDP);
+        if (socket) {
+                socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
+                socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
+
+                if (socket_connect(socket, &global->server) == 0) {
+
+                        if (send_request(socket) == 0) {
+
+                                time_t timestamp = 0;
+                                if (receive_response(socket, &timestamp) == 0) {
+                                        stime(&timestamp);
+                                } else {
+                                        select_next_host(argc);
+                                }
+                        }
+                }
+
+                socket_close(socket);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Set timezone.
+ *
+ * @param argc          number of arguments
+ * @param argv          argument list
+ */
+//==============================================================================
+static void set_timezone(int argc, char *argv[])
+{
+        UNUSED_ARG2(argc, argv);
+
+#if TIMEZONE_RECEIVE_ENABLE
+
+        static const char *provider = "worldtimeapi.org";
+
+        size_t buf_len = 1024;
+        char *buf = calloc(1, buf_len);
+        if (not buf) {
+                perror("Buffer");
+                return;
+        }
+
+        NET_INET_sockaddr_t provider_ip;
+        if (get_host_by_name("inet", provider, &provider_ip) == 0) {
+
+                SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
+                if (socket) {
+                        provider_ip.port = 80;
+                        errno = 0;
+                        if (socket_connect(socket, &provider_ip) == 0) {
+
+                                const char *request = "GET /api/ip HTTP/1.1\r\n"
+                                                      "Accept: */*\r\n"
+                                                      "\r\n";
+                                errno = 0;
+                                int request_len = strlen(request);
+                                int n = socket_write(socket, request, request_len);
+                                if (n == request_len) {
+                                        errno = 0;
+                                        n = socket_read(socket, buf, buf_len - 1);
+                                        if (n <= 0) {
+                                                perror("Response");
+                                        }
+                                } else {
+                                        perror("Request");
+                                }
+
+                        } else {
+                                perror("Timezone");
+                        }
+
+                        char *json = strstr(buf, "\"raw_offset\":");
+                        if (json) {
+                                char *value = strchr(json, ':');
+                                if (value) {
+                                        int toffset = atoi(++value);
+                                        tzset(toffset);
+                                }
+                        }
+
+                        socket_close(socket);
+                }
+        }
+
+        free(buf);
+#endif
+}
+
+//==============================================================================
+/**
  * @brief Program main function
  * @param argc          number of arguments
  * @param argv          argument list
@@ -373,33 +482,9 @@ int main(int argc, char *argv[])
         u32_t tref = prepare_sleep_until();
 
         do {
-                int err = get_SNTP_host_IP(interval == 0, argc, argv);
-                if (err) {
-                        continue;
-                }
-
-                SOCKET *socket = socket_open("inet", NET_PROTOCOL__UDP);
-                if (socket) {
-                        socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
-                        socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
-
-                        if (socket_connect(socket, &global->server) == 0) {
-
-                                if (send_request(socket) == 0) {
-
-                                        time_t timestamp = 0;
-                                        if (receive_response(socket, &timestamp) == 0) {
-                                                stime(&timestamp);
-                                        } else {
-                                                select_next_host(argc);
-                                        }
-                                }
-                        }
-
-                        socket_close(socket);
-
-                        sleep_until(interval, &tref);
-                }
+                set_NTP_time(argc, argv);
+                set_timezone(argc, argv);
+                sleep_until(interval, &tref);
         } while (interval);
 
         if (errno) {
