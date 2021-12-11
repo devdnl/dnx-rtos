@@ -1249,6 +1249,12 @@ static bool DMA_callback(DMA_Channel_TypeDef *channel, u8_t SR, void *arg)
 static bool DMA_callback(DMA_Stream_TypeDef *stream, u8_t SR, void *arg)
 #endif
 {
+        #if defined(ARCH_stm32f1)
+        UNUSED_ARG1(channel);
+        #elif defined(ARCH_stm32f4)
+        UNUSED_ARG1(stream);
+        #endif
+
         I2C_mem_t    *I2C_mem = arg;
         I2C_periph_t *i2c     = const_cast(I2C_HW[I2C_mem->major].I2C);
 
