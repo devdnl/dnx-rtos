@@ -1507,7 +1507,7 @@ static int block_read(EEFS_t *hdl, block_buf_t *blk)
                                         if (!hdl->cache_block[i].used) {
                                                 memcpy(&hdl->cache_block[i].buf, blk, sizeof(*blk));
                                                 hdl->cache_block[i].used = true;
-                                                hdl->cache_block[i].hit++;
+                                                hdl->cache_block[i].hit = 0;
                                                 return 0;
 
                                         } else {

@@ -43,6 +43,8 @@ Brief   Make flatfs in selected file/device
 #define MAGIC_BLOCK_FS          0x54414C46
 #define BLOCK_SIZE              512
 #define CRC32_INIT              0xFFFFFFFF
+#define MAX_FILE_SIZE_KiB       64
+#define BYTES_IN_KiB            1024
 
 /*==============================================================================
   Local object types
@@ -210,19 +212,19 @@ int main(int argc, char *argv[])
                                         args_correct = false;
                                 }
 
-                                if (max_file_size < 1024) {
-                                        fprintf(stderr, "Too small max file size! Min is 1024 KiB.\n");
+                                if (max_file_size < MAX_FILE_SIZE_KiB) {
+                                        fprintf(stderr, "Too small max file size! Min is %lu KiB.\n", MAX_FILE_SIZE_KiB);
                                         args_correct = false;
                                 }
 
-                                if ((max_file_size * 1024) >= ((i64_t)disc_size - (4 * (i64_t)BLOCK_SIZE))) {
+                                if ((max_file_size * BYTES_IN_KiB) >= ((i64_t)disc_size - (4 * (i64_t)BLOCK_SIZE))) {
                                         fprintf(stderr, "Too big max file size!\n");
                                         args_correct = false;
                                 }
 
                                 if (args_correct) {
                                         exit = format(disc_size / BLOCK_SIZE,
-                                                      max_file_size * 1024 / BLOCK_SIZE,
+                                                      max_file_size * BYTES_IN_KiB / BLOCK_SIZE,
                                                       fast_format);
 
                                 } else {

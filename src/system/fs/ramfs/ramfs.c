@@ -238,6 +238,10 @@ API_FS_MKDIR(ramfs, void *fs_handle, const char *path, mode_t mode)
 {
         struct RAMFS *hdl = fs_handle;
 
+        if (isstreq(path, "/")) {
+                return EEXIST;
+        }
+
         int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
         if (!err) {
 

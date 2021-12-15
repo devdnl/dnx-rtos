@@ -72,6 +72,7 @@ typedef struct {
         USBH_HandleTypeDef hUSBHost;
         HCD_HandleTypeDef hhcd;
         bool class_active;
+        u32_t irq_ctr_max;
         alignas(_HEAP_ALIGN_) u8_t buffer[8 * SECTOR_SIZE];
 } USBH_t;
 
@@ -125,6 +126,10 @@ API_MOD_INIT(USBH, void **device_handle, u8_t major, u8_t minor, const void *con
         if (!err) {
                 *device_handle = usbh;
                 USBH_t *hdl = usbh;
+
+                LL_RCC_ClocksTypeDef freq;
+                LL_RCC_GetSystemClocksFreq(&freq);
+                usbh->irq_ctr_max = freq.HCLK_Frequency / 1000UL / 32;
 
                 err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mtx);
                 if (err) {
@@ -1207,7 +1212,7 @@ void CAN3_SCE_OTG_HS_IRQHandler(void)
         if (usbh) {
                 HAL_HCD_IRQHandler(&usbh->hhcd);
 
-                if (++usbh_irq_ctr > 5000) {
+                if (++usbh_irq_ctr > usbh->irq_ctr_max) {
                         HAL_HCD_MspDeInit(&usbh->hhcd);
                         usbh_force_reinit = true;
                 }

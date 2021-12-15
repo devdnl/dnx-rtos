@@ -976,6 +976,11 @@ int main(int argc, char *argv[])
                         continue;
                 }
 
+                if (isstreq(cmd, "..")) {
+                        change_directory("cd ..");
+                        continue;
+                }
+
                 if (is_exit_cmd(cmd)) {
                         break;
                 }

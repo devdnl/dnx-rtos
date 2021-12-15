@@ -45,6 +45,11 @@ this:AddWidget("Checkbox", "Enable file system debug")
 --*/
 #define __FLATFS_LOG_ENABLE__ _NO_
 
+/*--
+this:AddWidget("Spinbox", 0, 512, "Number of index entries")
+--*/
+#define __FLATFS_INDEX_SIZE__ 0
+
 #endif /* _FLATFS_FLAGS_H_ */
 /*==============================================================================
   End of file
