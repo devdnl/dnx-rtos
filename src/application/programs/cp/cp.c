@@ -123,31 +123,7 @@ int main(int argc, char *argv[])
 
         if (global->buffer) {
                 if (global->opts) {
-
-                        DIR *dir = opendir(argv[2]);
-                        if (dir) {
-                                strlcpy(global->src_path, argv[2], sizeof(global->src_path));
-                                strlcpy(global->dst_path, argv[3], sizeof(global->dst_path));
-
-                                if (LAST_CHARACTER(global->src_path) == '/') {
-                                        LAST_CHARACTER(global->src_path) = '\0';
-                                }
-
-                                if (LAST_CHARACTER(global->dst_path) != '/') {
-                                        strlcat(global->dst_path, "/", sizeof(global->dst_path));
-                                }
-
-                                char *slash = strrchr(global->src_path, '/');
-                                if (slash) {
-                                        strlcat(global->dst_path, slash + 1, sizeof(global->dst_path));
-                                } else {
-                                        strlcat(global->dst_path, global->src_path, sizeof(global->dst_path));
-                                }
-
-                                closedir(dir);
-                        }
-
-                        err = copy_recursive(global->src_path, global->dst_path);
+                        err = copy_recursive(argv[2], argv[3]);
 
                 } else {
                         err = copy_file(argv[1], argv[2]);
@@ -168,7 +144,10 @@ int main(int argc, char *argv[])
 //==============================================================================
 static void print_help(char *argv[])
 {
-        printf("Usage: %s [ARG] <source file> <destination file>\n", argv[0]);
+        printf("Usage: %s [-Rvf] <source file> <destination file>\n", argv[0]);
+        printf(" -R    recursive copy\n");
+        printf(" -v    verbose\n");
+        printf(" -f    skip erros\n");
 }
 
 //==============================================================================
@@ -257,12 +236,12 @@ static int copy_recursive(const char *src_path, const char *dst_path)
                         strlcat(global->dst_path, "/", sizeof(global->dst_path));
                 }
 
-                VERBOSE("Coping: '%s' => '%s'\n", global->src_path, global->dst_path);
                 errno = 0;
                 err = mkdir(global->dst_path, 0666);
-                if (err) {
-                        perror(global->dst_path);
-                        if (global->force) err = 0;
+                if (!err) {
+                        VERBOSE("New directory: '%s'\n", global->dst_path);
+                } else {
+                        err = 0;
                 }
 
                 dirent_t *dirent;
@@ -308,7 +287,7 @@ static int copy_recursive(const char *src_path, const char *dst_path)
                 }
         }
 
-        return 0;
+        return err;
 }
 
 /*==============================================================================
