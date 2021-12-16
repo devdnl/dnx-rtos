@@ -310,7 +310,7 @@ void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
                                 put_char(chr);
 
                         } else {
-                                if (chr == '\t' || (chr >= ' ' && chr < 0x80)) {
+                                if (chr == '\t' || (chr >= ' ')) {
                                         put_char(chr);
                                         this->carriage++;
                                 }
