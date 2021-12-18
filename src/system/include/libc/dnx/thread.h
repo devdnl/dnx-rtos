@@ -937,7 +937,9 @@ static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
 {
         int r = -1;
 
-        if (tid >= 1 && tid <= __OS_TASK_MAX_USER_THREADS__) {
+        // TODO syscall(SYSCALL_THREADJOIN, &r, &tid, status, &timeout_ms);
+
+        if (tid > 0) {
 
                 pid_t pid = 0;
                 syscall(SYSCALL_PROCESSGETPID, &pid);
@@ -948,7 +950,7 @@ static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
                 if (flag && r == 0) {
                         bool flag_success = false;
                         const u32_t mask = _PROCESS_EXIT_FLAG(tid);
-                        syscall(SYSCALL_FLAGWAIT, &flag_success, flag, &mask, timeout_ms);
+                        syscall(SYSCALL_FLAGWAIT, &flag_success, flag, &mask, &timeout_ms);
 
                         if (flag_success) {
                                 if (status) {

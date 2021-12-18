@@ -183,6 +183,8 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
   Exported objects
 ==============================================================================*/
 extern struct _process *_kworker_proc;
+extern const char *const dnx_RTOS_version;
+extern const char *const dnx_RTOS_platform_name;
 
 /*==============================================================================
   Exported functions

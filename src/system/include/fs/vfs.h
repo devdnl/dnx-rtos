@@ -140,15 +140,15 @@ extern "C" {
 #define EOT                                     0x04
 
 /* IO operations on files */
-#define IOCTL_PIPE__CLOSE                       _IO(PIPE, 0x00)
-#define IOCTL_PIPE__CLEAR                       _IO(PIPE, 0x01)
-#define IOCTL_PIPE__PERMANENT                   _IO(PIPE, 0x02)
-#define IOCTL_VFS__NON_BLOCKING_RD_MODE         _IO(VFS,  0x00)
-#define IOCTL_VFS__DEFAULT_RD_MODE              _IO(VFS,  0x01)
-#define IOCTL_VFS__IS_NON_BLOCKING_RD_MODE      _IO(VFS,  0x02)
-#define IOCTL_VFS__NON_BLOCKING_WR_MODE         _IO(VFS,  0x03)
-#define IOCTL_VFS__DEFAULT_WR_MODE              _IO(VFS,  0x04)
-#define IOCTL_VFS__IS_NON_BLOCKING_WR_MODE      _IO(VFS,  0x05)
+#define IOCTL_PIPE__CLOSE                       0xF0000
+#define IOCTL_PIPE__CLEAR                       0xF0001
+#define IOCTL_PIPE__PERMANENT                   0xF0002
+#define IOCTL_VFS__NON_BLOCKING_RD_MODE         0xF0003
+#define IOCTL_VFS__DEFAULT_RD_MODE              0xF0004
+#define IOCTL_VFS__IS_NON_BLOCKING_RD_MODE      0xF0005
+#define IOCTL_VFS__NON_BLOCKING_WR_MODE         0xF0006
+#define IOCTL_VFS__DEFAULT_WR_MODE              0xF0007
+#define IOCTL_VFS__IS_NON_BLOCKING_WR_MODE      0xF0008
 
 /* file system identifier */
 #define _VFS_FILE_SYSTEM_MAGIC_NO               0xD9EFD24F

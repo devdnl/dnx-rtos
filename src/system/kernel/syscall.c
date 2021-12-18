@@ -358,6 +358,10 @@ static const syscallfunc_t syscalltab[] = {
   Exported objects
 ==============================================================================*/
 _process_t *_kworker_proc;
+const char *const dnx_RTOS_version = "3.0.1";
+const char *const dnx_RTOS_name = "dnx RTOS";
+const char *const dnx_RTOS_codename = "Hawk";
+const char *const dnx_RTOS_platform_name = _CPUCTL_PLATFORM_NAME;
 
 /*==============================================================================
   External objects
@@ -2459,7 +2463,7 @@ static void syscall_getavgcpuload(syscallrq_t *rq)
 //==============================================================================
 static void syscall_getplatformname(syscallrq_t *rq)
 {
-        SETRETURN(const char*, _CPUCTL_PLATFORM_NAME);
+        SETRETURN(const char*, dnx_RTOS_platform_name);
 }
 
 //==============================================================================
@@ -2471,7 +2475,7 @@ static void syscall_getplatformname(syscallrq_t *rq)
 //==============================================================================
 static void syscall_getosname(syscallrq_t *rq)
 {
-        SETRETURN(const char*, "dnx RTOS");
+        SETRETURN(const char*, dnx_RTOS_name);
 }
 
 //==============================================================================
@@ -2483,7 +2487,7 @@ static void syscall_getosname(syscallrq_t *rq)
 //==============================================================================
 static void syscall_getosver(syscallrq_t *rq)
 {
-        SETRETURN(const char*, "3.0.1");
+        SETRETURN(const char*, dnx_RTOS_version);
 }
 
 //==============================================================================
@@ -2495,7 +2499,7 @@ static void syscall_getosver(syscallrq_t *rq)
 //==============================================================================
 static void syscall_getoscodename(syscallrq_t *rq)
 {
-        SETRETURN(const char*, "Hawk");
+        SETRETURN(const char*, dnx_RTOS_codename);
 }
 
 //==============================================================================

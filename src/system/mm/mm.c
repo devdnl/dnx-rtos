@@ -332,6 +332,9 @@ int _kfree(enum _mm_mem mpur, void **mem, ...)
 int _mm_get_mem_usage_details(_mm_mem_usage_t *mem_usage)
 {
         if (mem_usage) {
+                mem_usage->used_memory              = _mm_get_mem_usage();
+                mem_usage->memory_size              = _mm_get_mem_size();
+                mem_usage->free_memory              = _mm_get_mem_free();
                 mem_usage->static_memory_usage      = STACK_START - RAM_START;
                 mem_usage->kernel_memory_usage      = memory_usage[_MM_KRN];
                 mem_usage->filesystems_memory_usage = memory_usage[_MM_FS];

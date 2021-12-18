@@ -524,7 +524,7 @@ static inline const char *get_kernel_version(void)
 static inline int get_host_name(char *hostname, size_t hostname_len)
 {
         int r = -1;
-        syscall(SYSCALL_GETHOSTNAME, hostname, &hostname_len);
+        syscall(SYSCALL_GETHOSTNAME, &r, hostname, &hostname_len);
         return r;
 }
 

@@ -87,8 +87,8 @@ void dnxinit(void *arg)
 {
         UNUSED_ARG1(arg);
 
-        printk("Welcome to dnx RTOS %s!", get_OS_version());
-        printk("Running on platform %s", get_platform_name());
+        printk("Welcome to dnx RTOS %s!", dnx_RTOS_version);
+        printk("Running on platform %s", dnx_RTOS_platform_name);
 
 #if __OS_ENABLE_SHARED_MEMORY__ > 0
         _assert(ESUCC == _shm_init());
