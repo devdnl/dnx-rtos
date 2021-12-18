@@ -52,6 +52,9 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 typedef struct {
+        u32_t memory_size;
+        u32_t free_memory;
+        u32_t used_memory;
         i32_t static_memory_usage;
         i32_t kernel_memory_usage;
         i32_t filesystems_memory_usage;

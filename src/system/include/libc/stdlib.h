@@ -50,7 +50,6 @@ extern "C" {
 #include <lib/cast.h>
 #include <kernel/syscall.h>
 #include <kernel/kwrapper.h>
-#include <kernel/builtinfunc.h>
 #include <machine/ieeefp.h>
 #include <_ansi.h>
 
@@ -650,8 +649,7 @@ static inline void *realloc(void *ptr, size_t size)
 //==============================================================================
 static inline void abort(void)
 {
-        extern void _process_abort(struct _process*);
-        _builtinfunc(process_abort, _builtinfunc(process_get_active));
+        syscall(SYSCALL_PROCESSABORT, NULL);
 }
 
 //==============================================================================
@@ -677,9 +675,7 @@ static inline void abort(void)
 //==============================================================================
 static inline void exit(int status)
 {
-        extern void _process_exit(struct _process*, int);
-        _builtinfunc(process_exit, _builtinfunc(process_get_active), status);
-        for (;;); // makes compiler happy
+        syscall(SYSCALL_PROCESSEXIT, NULL, &status);
 }
 
 //==============================================================================
@@ -807,7 +803,7 @@ static inline int getsubopt(char **optionp, char *const *tokens, char **valuep)
 //==============================================================================
 static inline int atoi(const char *str)
 {
-        return _builtinfunc(atoi, str);
+        return _atoi(str);
 }
 
 //==============================================================================
@@ -834,7 +830,7 @@ static inline int atoi(const char *str)
 //==============================================================================
 static inline long atol(const char *str)
 {
-        return _builtinfunc(atoi, str);
+        return _atoi(str);
 }
 
 //==============================================================================
@@ -902,7 +898,7 @@ static inline long atol(const char *str)
 static inline i32_t strtol(const char *nptr, char **endptr, int base)
 {
         i32_t result;
-        char *end = _builtinfunc(strtoi, nptr, base, &result);
+        char *end = _strtoi(nptr, base, &result);
         if (endptr)
                 *endptr = end;
         return result;
@@ -932,7 +928,7 @@ static inline i32_t strtol(const char *nptr, char **endptr, int base)
 //==============================================================================
 static inline double atof(const char *nptr)
 {
-        return _builtinfunc(atof, nptr);
+        return _atof(nptr);
 }
 
 //==============================================================================
@@ -959,7 +955,7 @@ static inline double atof(const char *nptr)
 //==============================================================================
 static inline double strtod(const char *nptr, char **endptr)
 {
-        return _builtinfunc(strtod, nptr, endptr);
+        return _strtod(nptr, endptr);
 }
 
 //==============================================================================
@@ -986,7 +982,7 @@ static inline double strtod(const char *nptr, char **endptr)
 //==============================================================================
 static inline float strtof(const char *nptr, char **endptr)
 {
-        return (float)_builtinfunc(strtof, nptr, endptr);
+        return (float)_strtof(nptr, endptr);
 }
 
 #ifdef __cplusplus

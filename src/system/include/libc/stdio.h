@@ -51,7 +51,6 @@ extern "C" {
 #include <stdarg.h>
 #include <kernel/process.h>
 #include <kernel/syscall.h>
-#include <kernel/builtinfunc.h>
 #include <kernel/errno.h>
 #include <lib/unarg.h>
 
@@ -461,7 +460,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
  * @see fsetpos(), fgetpos(), ftell()
  */
 //==============================================================================
-static inline int fseek(FILE *file, i64_t offset, int mode)
+static inline int fseek(FILE *file, int64_t offset, int mode)
 {
         size_t r = 1;
         syscall(SYSCALL_FSEEK, &r, file, &offset, &mode);
@@ -601,10 +600,10 @@ static inline void rewind(FILE *file)
  * @see fseek(), fsetpos(), fgetpos()
  */
 //==============================================================================
-static inline i64_t ftell(FILE *file)
+static inline int64_t ftell(FILE *file)
 {
-        i64_t lseek = 0;
-        _errno = _builtinfunc(vfs_ftell, file, &lseek);
+        int64_t lseek = 0;
+        syscall(SYSCALL_FTELL, &lseek, file);
         return lseek;
 }
 
@@ -654,7 +653,7 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 {
         if (pos) {
                 *pos = ftell(file);
-                return (i64_t)*pos < 0 ? EOF : 0;
+                return (int64_t)*pos < 0 ? EOF : 0;
         } else {
                 return EOF;
         }
@@ -751,8 +750,8 @@ static inline int fflush(FILE *file)
 static inline int feof(FILE *file)
 {
         int eof = 0;
-        _errno = _builtinfunc(vfs_feof, file, &eof);
-        return _errno | eof;
+        syscall(SYSCALL_FEOF, &eof, file);
+        return eof;
 }
 
 //==============================================================================
@@ -798,7 +797,7 @@ static inline int feof(FILE *file)
 //==============================================================================
 static inline void clearerr(FILE *file)
 {
-        _builtinfunc(vfs_clearerr, file);
+        syscall(SYSCALL_CLEARERR, NULL, file);
 }
 
 //==============================================================================
@@ -848,9 +847,9 @@ static inline void clearerr(FILE *file)
 //==============================================================================
 static inline int ferror(FILE *file)
 {
-        int iserr = 0;
-        int err   = _builtinfunc(vfs_ferror, file, &iserr);
-        return (iserr || err) ? 1 : 0;
+        int iserr = 1;
+        syscall(SYSCALL_FERROR, &iserr, file);
+        return iserr;
 }
 
 //==============================================================================

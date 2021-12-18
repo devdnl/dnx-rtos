@@ -121,8 +121,11 @@ static void clear_prompt()
 static void print_prompt(void)
 {
         if (global->prompt_enable && global->input == stdin) {
+                char hostname[64];
+                get_host_name(hostname, sizeof(hostname));
+
                 printf(VT100_FONT_COLOR_GREEN"%s:%s"VT100_RESET_ATTRIBUTES"\n",
-                       get_host_name(), global->cwd);
+                       hostname, global->cwd);
 
                 printf(VT100_FONT_COLOR_GREEN"$ "VT100_RESET_ATTRIBUTES);
 
@@ -594,7 +597,7 @@ static bool start_program(char *master, char *slave, char *std_in,
         if (master && slave) {
                 pipe_name = calloc(sizeof(char), strlen(global->pipe_file) + 7);
                 if (pipe_name) {
-                        u64_t uptime = get_time_ms();
+                        u64_t uptime = get_uptime_ms();
                         snprintf(pipe_name, strlen(global->pipe_file) + 7, "%s%llx", global->pipe_file, uptime);
 
                         if (mkfifo(pipe_name, 0666)) {

@@ -38,7 +38,6 @@
   Include files
 ==============================================================================*/
 #include "config.h"
-#include "kernel/builtinfunc.h"
 
 #ifdef __cplusplus
 extern "C" {

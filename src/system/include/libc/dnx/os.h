@@ -73,14 +73,17 @@ extern "C" {
  * @see get_memory_usage_details()
  */
 typedef struct {
-        i32_t static_memory_usage;      /*!< The amount of memory that is used statically at build time.*/
-        i32_t kernel_memory_usage;      /*!< The amount of memory used by kernel.*/
-        i32_t filesystems_memory_usage; /*!< The amount of memory used by file systems.*/
-        i32_t network_memory_usage;     /*!< The amount of memory used by network subsystem.*/
-        i32_t modules_memory_usage;     /*!< The amount of memory used by modules (drivers).*/
-        i32_t programs_memory_usage;    /*!< The amount of memory used by users' programs (applications).*/
-        i32_t shared_memory_usage;      /*!< The amount of memory used by shared buffers.*/
-        i32_t cached_memory_usage;      /*!< The anount of memory used by disc caches.*/
+        uint32_t memory_size;
+        uint32_t free_memory;
+        uint32_t used_memory;
+        int32_t  static_memory_usage;      /*!< The amount of memory that is used statically at build time.*/
+        int32_t  kernel_memory_usage;      /*!< The amount of memory used by kernel.*/
+        int32_t  filesystems_memory_usage; /*!< The amount of memory used by file systems.*/
+        int32_t  network_memory_usage;     /*!< The amount of memory used by network subsystem.*/
+        int32_t  modules_memory_usage;     /*!< The amount of memory used by modules (drivers).*/
+        int32_t  programs_memory_usage;    /*!< The amount of memory used by users' programs (applications).*/
+        int32_t  shared_memory_usage;      /*!< The amount of memory used by shared buffers.*/
+        int32_t  cached_memory_usage;      /*!< The anount of memory used by disc caches.*/
 } memstat_t;
 #else
 typedef _mm_mem_usage_t memstat_t;
@@ -96,10 +99,10 @@ typedef _mm_mem_usage_t memstat_t;
  * @see get_average_CPU_load()
  */
 typedef struct {
-        u16_t avg1sec;                  /*!< average CPU laod within 1 second (1% = 10).*/
-        u16_t avg1min;                  /*!< average CPU load within 1 minute (1% = 10).*/
-        u16_t avg5min;                  /*!< average CPU load within 5 minutes (1% = 10).*/
-        u16_t avg15min;                 /*!< average CPU load within 15 minutes (1% = 10).*/
+        u32_t avg1sec;                  /*!< average CPU laod within 1 second (1% = 10).*/
+        u32_t avg1min;                  /*!< average CPU load within 1 minute (1% = 10).*/
+        u32_t avg5min;                  /*!< average CPU load within 5 minutes (1% = 10).*/
+        u32_t avg15min;                 /*!< average CPU load within 15 minutes (1% = 10).*/
 } avg_CPU_load_t;
 #endif
 
@@ -120,6 +123,7 @@ typedef struct {
         tid_t       tid;             /*!< thread ID          */
         bool        kernelspace;     /*!< kernel space       */
         bool        kernel_panic;    /*!< kernel panic       */
+        bool        sycall;          /* syscall            */
 } kernel_panic_info_t;
 #else
 typedef struct _kernel_panic_info kernel_panic_info_t;
@@ -140,85 +144,6 @@ typedef struct _kernel_panic_info kernel_panic_info_t;
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief Function returns an amount of free memory.
- *
- * The function get_free_memory() return free memory in bytes. This is
- * the total amount of memory which can be used.
- *
- * @return Free memory in bytes.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Free memory: %d bytes\n", get_free_memory());
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline u32_t get_free_memory(void)
-{
-        return _builtinfunc(mm_get_mem_free);
-}
-
-//==============================================================================
-/**
- * @brief Function returns an amount of used memory.
- *
- * The function get_used_memory() return used RAM in bytes. This value
- * is a sum of static and dynamic allocated memory.
- *
- * @return Used memory in bytes.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Used memory: %d bytes\n", get_used_memory());
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline u32_t get_used_memory(void)
-{
-        return _builtinfunc(mm_get_mem_usage);
-}
-
-//==============================================================================
-/**
- * @brief Function returns the size of RAM.
- *
- * The function get_memory_size() return total memory size in bytes.
- *
- * @return Total memory size in bytes.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Memory size: %d bytes\n", get_memory_size());
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline u32_t get_memory_size(void)
-{
-        return _builtinfunc(mm_get_mem_size);
-}
 
 //==============================================================================
 /**
@@ -242,7 +167,7 @@ static inline u32_t get_memory_size(void)
 
         errno = 0;
         memstat_t stat;
-        if (get_memory_usage_details(&stat) == STD_RET_OK) {
+        if (get_memory_usage_details(&stat) == 0) {
                 printf("Used memory by kernel      : %d\n"
                        "Used memory by file system : %d\n"
                        "Used memory by network     : %d\n"
@@ -264,7 +189,9 @@ static inline u32_t get_memory_size(void)
 //==============================================================================
 static inline int get_memory_usage_details(memstat_t *stat)
 {
-        return _builtinfunc(mm_get_mem_usage_details, stat);
+        int r;
+        syscall(SYSCALL_GETMEMDETAILS, &r, stat);
+        return r;
 }
 
 //==============================================================================
@@ -275,9 +202,9 @@ static inline int get_memory_usage_details(memstat_t *stat)
  * module number <i>module_number</i>.
  *
  * @param module_number     module number
+ * @param usage             usage destination buffer
  *
- * @return On success, return an amount of used memory of module in bytes.
- * On error, \b -1 is returned.
+ * @return On success \b 0 is returned. On error, \b -1 is returned.
  *
  * @b Example
  * @code
@@ -287,7 +214,9 @@ static inline int get_memory_usage_details(memstat_t *stat)
 
         uint number_of_modules = get_number_of_modules();
         for (uint i = 0; i < number_of_modules; i++) {
-                printf("%s : %d\n", get_module_name(i), (int)get_module_memory_usage(i));
+                int32_t usage;
+                get_module_memory_usage(i);
+                printf("%s : %ld\n", get_module_name(i), usage);
         }
 
         // ...
@@ -295,11 +224,45 @@ static inline int get_memory_usage_details(memstat_t *stat)
    @endcode
  */
 //==============================================================================
-static inline i32_t get_module_memory_usage(uint module_number)
+static inline int get_driver_memory_usage(uint module_number, int32_t *usage)
 {
-        i32_t size = -1;
-        _builtinfunc(mm_get_module_mem_usage, module_number, &size);
-        return size;
+        int r = -1;
+        syscall(SYSCALL_GETMODMEMUSAGE, &r, &module_number, usage);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns up time in milliseconds.
+ *
+ * The function get_uptime_ms() return number of milliseconds which
+ * elapsed after kernel start. Function is similar to get_uptime(), except
+ * that return milliseconds instead of seconds. In this function the tick
+ * counter value is calculated to milliseconds, what means that resolution of
+ * this counter depends on system tick counter increase value.
+ *
+ * @return System work time in milliseconds.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        printf("System works by %llu ms\n", get_uptime_ms());
+
+        // ...
+
+   @endcode
+ *
+ * @see get_uptime()
+ */
+//==============================================================================
+static inline u64_t get_uptime_ms(void)
+{
+        uint64_t uptime = 0;
+        syscall(SYSCALL_GETUPTIMEMS, &uptime);
+        return uptime;
 }
 
 //==============================================================================
@@ -316,16 +279,16 @@ static inline i32_t get_module_memory_usage(uint module_number)
 
         // ...
 
-        printf("System works: %d seconds\n", get_uptime());
+        printf("System works: %lu seconds\n", get_uptime());
 
         // ...
 
    @endcode
  */
 //==============================================================================
-static inline u32_t get_uptime(void)
+static inline uint32_t get_uptime(void)
 {
-        return _builtinfunc(get_uptime_counter);
+        return get_uptime_ms() / 1000;
 }
 
 //==============================================================================
@@ -360,67 +323,9 @@ static inline u32_t get_uptime(void)
 //==============================================================================
 static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 {
-        return _builtinfunc(get_average_CPU_load, avg_CPU_load);
-}
-
-//==============================================================================
-/**
- * @brief Function returns system tick counter.
- *
- * The function get_tick_counter() return number of system clock ticks.
- * The value is mostly incremented less than 1 millisecond. Incrementation
- * interval depends on task switch frequency.
- *
- * @return Number of system's ticks.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Context was switched %llu times\n", get_tick_counter());
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline u64_t get_tick_counter(void)
-{
-        return _builtinfunc(kernel_get_tick_counter);
-}
-
-//==============================================================================
-/**
- * @brief Function returns up time in milliseconds.
- *
- * The function get_time_ms() return number of milliseconds which
- * elapsed after kernel start. Function is similar to get_uptime(), except
- * that return milliseconds instead of seconds. In this function the tick
- * counter value is calculated to milliseconds, what means that resolution of
- * this counter depends on system tick counter increase value.
- *
- * @return System work time in milliseconds.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("System works by %llu ms\n", get_time_ms());
-
-        // ...
-
-   @endcode
- *
- * @see get_uptime()
- */
-//==============================================================================
-static inline u64_t get_time_ms(void)
-{
-        return _builtinfunc(kernel_get_time_ms);
+        int r;
+        syscall(SYSCALL_GETAVGCPULOAD, &r, avg_CPU_load);
+        return r;
 }
 
 //==============================================================================
@@ -447,7 +352,9 @@ static inline u64_t get_time_ms(void)
 //==============================================================================
 static inline const char *get_platform_name(void)
 {
-        return _CPUCTL_PLATFORM_NAME;
+        const char *name = NULL;
+        syscall(SYSCALL_GETPLATFORMNAME, &name);
+        return name;
 }
 
 //==============================================================================
@@ -473,7 +380,9 @@ static inline const char *get_platform_name(void)
 //==============================================================================
 static inline const char *get_OS_name(void)
 {
-        return "dnx RTOS";
+        const char *buf = NULL;
+        syscall(SYSCALL_GETOSNAME, &buf);
+        return buf;
 }
 
 //==============================================================================
@@ -499,7 +408,9 @@ static inline const char *get_OS_name(void)
 //==============================================================================
 static inline const char *get_OS_version(void)
 {
-        return "2.4.13";
+        const char *buf = NULL;
+        syscall(SYSCALL_GETOSVER, &buf);
+        return buf;
 }
 
 //==============================================================================
@@ -525,7 +436,9 @@ static inline const char *get_OS_version(void)
 //==============================================================================
 static inline const char *get_OS_codename(void)
 {
-        return "Goose";
+        const char *buf = NULL;
+        syscall(SYSCALL_GETOSCODENAME, &buf);
+        return buf;
 }
 
 //==============================================================================
@@ -551,7 +464,9 @@ static inline const char *get_OS_codename(void)
 //==============================================================================
 static inline const char *get_kernel_name(void)
 {
-        return _KERNEL_NAME;
+        const char *buf = NULL;
+        syscall(SYSCALL_GETKERNELNAME, &buf);
+        return buf;
 }
 
 //==============================================================================
@@ -577,59 +492,9 @@ static inline const char *get_kernel_name(void)
 //==============================================================================
 static inline const char *get_kernel_version(void)
 {
-        return _KERNEL_VERSION;
-}
-
-//==============================================================================
-/**
- * @brief Function returns author name.
- *
- * The function get_author_name() return author name.
- *
- * @return Author name.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Author name: %s\n", get_author_name());
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline const char *get_author_name(void)
-{
-        return "Daniel Zorychta";
-}
-
-//==============================================================================
-/**
- * @brief Function returns author's email.
- *
- * The function get_author_email() return author's email address.
- *
- * @return Author's email address.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Author's email: %s\n", get_author_email());
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline const char *get_author_email(void)
-{
-        return "<daniel.zorychta@gmail.com>";
+        const char *buf = NULL;
+        syscall(SYSCALL_GETKERNELVER, &buf);
+        return buf;
 }
 
 //==============================================================================
@@ -639,7 +504,7 @@ static inline const char *get_author_email(void)
  * The function get_host_name() return host name string configured in
  * configuration files.
  *
- * @return Return host name.
+ * @return On success 0 is returned, otherwise -1.
  *
  * @b Example
  * @code
@@ -647,223 +512,20 @@ static inline const char *get_author_email(void)
 
         // ...
 
-        printf("Host name: %s\n", get_host_name());
+        char hostname[64];
+        get_host_name(hostname, sizeof(hostname));
+        printf("Host name: '%s'\n", hostname);
 
         // ...
 
    @endcode
  */
 //==============================================================================
-static inline const char *get_host_name(void)
+static inline int get_host_name(char *hostname, size_t hostname_len)
 {
-        return __OS_HOSTNAME__;
-}
-
-//==============================================================================
-/**
- * @brief Function returns a name of selected module.
- *
- * The function get_module_name() return name of selected module by using
- * <i>modno</i> index.
- *
- * @param modno     module number
- *
- * @return Return module name.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Module name: %s\n", get_module_name(0));
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline const char *get_module_name(size_t modno)
-{
-        return _builtinfunc(module_get_name, modno);
-}
-
-//==============================================================================
-/**
- * @brief Function returns an ID of selected module (by name).
- *
- * The function get_module_ID() return module ID selected by
- * name pointed by <i>name</i>.
- *
- * @param name     module name
- *
- * @return On success, return module index (ID). On error, \b -1 is returned.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Module ID: %d\n", get_module_ID("crc"));
-
-        // ...
-   @endcode
- */
-//==============================================================================
-static inline int get_module_ID(const char *name)
-{
-        return _builtinfunc(module_get_ID, name);
-}
-
-//==============================================================================
-/**
- * @brief Function returns an ID of selected module (by dev_t index).
- *
- * The function get_module_ID2() return module ID stored in dev_t type.
- *
- * @param dev           device ID
- *
- * @return Return module ID.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Module ID: %d\n", get_module_ID2(dev));
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline int get_module_ID2(dev_t dev)
-{
-        return _builtinfunc(dev_t__extract_modno, dev);
-}
-
-//==============================================================================
-/**
- * @brief Function returns a major number of selected module.
- *
- * The function get_module_major() return module major number stored in
- * dev_t type.
- *
- * @param dev           device ID
- *
- * @return Return module major number.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Module ID: %d\n", get_module_major(dev));
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline int get_module_major(dev_t dev)
-{
-        return _builtinfunc(dev_t__extract_major, dev);
-}
-
-//==============================================================================
-/**
- * @brief Function returns a minor number of selected module.
- *
- * The function get_module_minor() return module minor number stored in
- * dev_t type.
- *
- * @param dev           device ID
- *
- * @return Return module minor number.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("Module ID: %d\n", get_module_minor(dev));
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline int get_module_minor(dev_t dev)
-{
-        return _builtinfunc(dev_t__extract_minor, dev);
-}
-
-//==============================================================================
-/**
- * @brief Function returns number of modules.
- *
- * The function get_number_of_modules() return number of registered
- * modules in system.
- *
- * @return Return number of registered modules in system.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        uint number_of_modules = get_number_of_modules();
-        for (uint i = 0; i < number_of_modules; i++) {
-                printf("%s : %d\n", get_module_name(i), get_module_memory_usage(i));
-        }
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline uint get_number_of_modules(void)
-{
-        return _builtinfunc(module_get_count);
-}
-
-//==============================================================================
-/**
- * @brief Function returns number of instances of selected module index.
- *
- * The function get_number_of_module_instances() return number of instances
- * of selected module of index <i>n</i>.
- *
- * @param n             module index
- *
- * @return On success, number of instances is returned, otherwise \b -1 is returned.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        bool active;
-        if (is_module_active(0, &active) == ESUCC && active) {
-                // module active ...
-        } else {
-                // error or module inactive ...
-        }
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline ssize_t get_number_of_module_instances(size_t n)
-{
-        return _builtinfunc(module_get_number_of_instances, n);
+        int r = -1;
+        syscall(SYSCALL_GETHOSTNAME, hostname, &hostname_len);
+        return r;
 }
 
 //==============================================================================
@@ -891,7 +553,7 @@ static inline ssize_t get_number_of_module_instances(size_t n)
 //==============================================================================
 static inline void system_reboot(void)
 {
-        _builtinfunc(cpuctl_restart_system);
+        syscall(SYSCALL_SYSTEMRESTART, NULL);
 }
 
 //==============================================================================
@@ -919,7 +581,7 @@ static inline void system_reboot(void)
 //==============================================================================
 static inline void system_shutdown(void)
 {
-        _builtinfunc(cpuctl_shutdown_system);
+        syscall(SYSCALL_SYSTEMSHUTDOWN, NULL);
 }
 
 //==============================================================================
@@ -989,7 +651,7 @@ static inline size_t syslog_read(char *str, size_t len, const struct timeval *fr
 //==============================================================================
 static inline void syslog_clear(void)
 {
-        _builtinfunc(printk_clear);
+        syscall(SYSCALL_SYSLOGCLEAR, NULL);
 }
 
 //==============================================================================

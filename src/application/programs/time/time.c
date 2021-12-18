@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 
         errno = 0;
 
-        u64_t start_time = get_time_ms();
+        u64_t start_time = get_uptime_ms();
 
         process_attr_t attr;
         memset(&attr, 0, sizeof(attr));
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
                 perror(argv[1]);
         }
 
-        u32_t total_time = get_time_ms() - start_time;
+        u32_t total_time = get_uptime_ms() - start_time;
         printf("\nreal\t%um%u.%03us\n", total_time / 60000, (total_time / 1000) % 60, total_time % 1000);
 
         return EXIT_SUCCESS;

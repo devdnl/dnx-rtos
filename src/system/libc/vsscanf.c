@@ -74,7 +74,7 @@
 //==============================================================================
 int vsscanf(const char *str, const char *format, va_list args)
 {
-        return _builtinfunc(vsscanf, str, format, args);
+        return _vsscanf(str, format, args);
 }
 
 /*==============================================================================

@@ -73,7 +73,7 @@
 //==============================================================================
 time_t mktime(struct tm *tm)
 {
-        return cast(time_t, _builtinfunc(mktime, tm));
+        return cast(time_t, _mktime(tm));
 }
 #endif
 

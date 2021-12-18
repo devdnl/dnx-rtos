@@ -49,6 +49,7 @@ extern "C" {
 #include <kernel/syscall.h>
 #include <kernel/kwrapper.h>
 #include <kernel/process.h>
+#include <errno.h>
 
 /*==============================================================================
   Exported macros
@@ -395,16 +396,24 @@ static inline int process_kill(pid_t pid)
 //==============================================================================
 static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
 {
-        int r        = -1;
+        int r = -1;
+
         flag_t *flag = NULL;
         syscall(SYSCALL_PROCESSGETSYNCFLAG, &r, &pid, &flag);
+
         if (flag && r == 0) {
-                _errno = _builtinfunc(flag_wait, flag, _PROCESS_EXIT_FLAG(0), timeout);
-                if (_errno == 0) {
+                const uint32_t mask = _PROCESS_EXIT_FLAG(0);
+                bool flag_success = false;
+                syscall(SYSCALL_FLAGWAIT, &flag_success, flag, &mask, &timeout);
+
+                if (flag_success) {
                         syscall(SYSCALL_PROCESSCLEANZOMBIE, &r, &pid, status);
-                        _builtinfunc(sleep_ms, 1);
+
+                        const uint32_t sleep_ms = 1;
+                        syscall(SYSCALL_MSLEEP, NULL, &sleep_ms);
+                } else {
+                        r = -1;
                 }
-                r = _errno ? -1 : 0;
         }
 
         return r;
@@ -804,7 +813,9 @@ static inline int thread_cancel(tid_t tid)
 //==============================================================================
 static inline int thread_current(void)
 {
-        return _builtinfunc(process_get_active_thread, NULL);
+        int r = -1;
+        syscall(SYSCALL_GETACTIVETHREAD, &r);
+        return r;
 }
 
 //==============================================================================
@@ -858,7 +869,7 @@ static inline int thread_current(void)
 //==============================================================================
 static inline void thread_exit(int status)
 {
-        _process_thread_exit(status);
+        syscall(SYSCALL_THREADEXIT, NULL, &status);
 }
 
 //==============================================================================
@@ -935,10 +946,11 @@ static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
                 syscall(SYSCALL_PROCESSGETSYNCFLAG, &r, &pid, &flag);
 
                 if (flag && r == 0) {
-                        _errno = _builtinfunc(flag_wait, flag,
-                                              _PROCESS_EXIT_FLAG(tid),
-                                              timeout_ms);
-                        if (!_errno) {
+                        bool flag_success = false;
+                        const u32_t mask = _PROCESS_EXIT_FLAG(tid);
+                        syscall(SYSCALL_FLAGWAIT, &flag_success, flag, &mask, timeout_ms);
+
+                        if (flag_success) {
                                 if (status) {
                                         syscall(SYSCALL_THREADGETSTATUS, &r, &tid, status);
                                 }
@@ -947,7 +959,7 @@ static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
                         }
                 }
         } else {
-                _errno = 17;
+                _errno = EINVAL;
         }
 
         return r;
@@ -1237,8 +1249,9 @@ static inline void semaphore_delete(sem_t *sem)
 //==============================================================================
 static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
 {
-        _errno = _builtinfunc(semaphore_wait, sem, timeout);
-        return !_errno;
+        bool r = false;
+        syscall(SYSCALL_SEMAPHOREWAIT, &r, sem, &timeout);
+        return r;
 }
 
 //==============================================================================
@@ -1295,8 +1308,9 @@ static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
 //==============================================================================
 static inline bool semaphore_signal(sem_t *sem)
 {
-        _errno = _builtinfunc(semaphore_signal, sem);
-        return !_errno;
+        bool r = false;
+        syscall(SYSCALL_SEMAPHORESIGNAL, &r, sem);
+        return r;
 }
 
 //==============================================================================
@@ -1330,9 +1344,9 @@ static inline bool semaphore_signal(sem_t *sem)
 //==============================================================================
 static inline int semaphore_get_value(sem_t *sem)
 {
-        size_t value = 0;
-        _errno = _semaphore_get_value(sem, &value);
-        return _errno ? -1 : (int)value;
+        int r = -1;
+        syscall(SYSCALL_SEMAPHOREGETVALUE, &r, sem);
+        return r;
 }
 
 //==============================================================================
@@ -1524,8 +1538,9 @@ static inline void mutex_delete(mutex_t *mutex)
 //==============================================================================
 static inline bool mutex_lock(mutex_t *mutex, const u32_t timeout)
 {
-        _errno = _builtinfunc(mutex_lock, mutex, timeout);
-        return !_errno;
+        bool r = false;
+        syscall(SYSCALL_MUTEXLOCK, &r, mutex, &timeout);
+        return r;
 }
 
 //==============================================================================
@@ -1652,8 +1667,9 @@ static inline bool mutex_trylock(mutex_t *mutex)
 //==============================================================================
 static inline bool mutex_unlock(mutex_t *mutex)
 {
-        _errno = _builtinfunc(mutex_unlock, mutex);
-        return !_errno;
+        bool r = false;
+        syscall(SYSCALL_MUTEXUNLOCK, &r, mutex);
+        return r;
 }
 
 //==============================================================================
@@ -1850,8 +1866,9 @@ static inline void queue_delete(queue_t *queue)
 //==============================================================================
 static inline bool queue_reset(queue_t *queue)
 {
-        _errno = _builtinfunc(queue_reset, queue);
-        return !_errno;
+        bool r = false;
+        syscall(SYSCALL_QUEUERESET, &r, queue);
+        return r;
 }
 
 //==============================================================================
@@ -1920,8 +1937,9 @@ static inline bool queue_reset(queue_t *queue)
 //==============================================================================
 static inline bool queue_send(queue_t *queue, const void *item, const u32_t timeout)
 {
-        _errno = _builtinfunc(queue_send, queue, item, timeout);
-        return !_errno;
+        bool r = false;
+        syscall(SYSCALL_QUEUESEND, &r, queue, item, &timeout);
+        return r;
 }
 
 //==============================================================================
@@ -1989,8 +2007,9 @@ static inline bool queue_send(queue_t *queue, const void *item, const u32_t time
 //==============================================================================
 static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout)
 {
-        _errno = _builtinfunc(queue_receive, queue, item, timeout);
-        return !_errno;
+        bool r = false;
+        syscall(SYSCALL_QUEUERECEIVE, &r, queue, item, &timeout);
+        return r;
 }
 
 //==============================================================================
@@ -2057,8 +2076,9 @@ static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout
 //==============================================================================
 static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout)
 {
-        _errno = _builtinfunc(queue_receive_peek, queue, item, timeout);
-        return !_errno;
+        bool r = false;
+        syscall(SYSCALL_QUEUERECEIVEPEEK, &r, queue, item, &timeout);
+        return r;
 }
 
 //==============================================================================
@@ -2124,9 +2144,9 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t ti
 //==============================================================================
 static inline int queue_get_number_of_items(queue_t *queue)
 {
-        size_t len = -1;
-        _errno = _builtinfunc(queue_get_number_of_items, queue, &len);
-        return len;
+        int r = -1;
+        syscall(SYSCALL_QUEUEITEMSCOUNT, &r, queue);
+        return r;
 }
 
 //==============================================================================
@@ -2167,9 +2187,9 @@ static inline int queue_get_number_of_items(queue_t *queue)
 //==============================================================================
 static inline int queue_get_space_available(queue_t *queue)
 {
-        size_t space = -1;
-        _errno = _builtinfunc(queue_get_space_available, queue, &space);
-        return space;
+        int r = -1;
+        syscall(SYSCALL_QUEUEFREESPACE, &r, queue);
+        return r;
 }
 
 #ifdef __cplusplus

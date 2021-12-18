@@ -40,6 +40,7 @@
 #include <dnx/os.h>
 #include <dnx/misc.h>
 #include <sys/stat.h>
+#include <sys/mount.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -168,9 +169,9 @@ int main(int argc, char *argv[])
                                                 unit = "B";
                                         }
 
-                                        int mod_id    = get_module_ID2(st.st_dev);
-                                        int mod_major = get_module_major(st.st_dev);
-                                        int mod_minor = get_module_minor(st.st_dev);
+                                        int mod_id    = get_driver_ID2(st.st_dev);
+                                        int mod_major = get_driver_major(st.st_dev);
+                                        int mod_minor = get_driver_minor(st.st_dev);
 
                                         char mod[12];
                                         memset(mod, 0, sizeof(mod));

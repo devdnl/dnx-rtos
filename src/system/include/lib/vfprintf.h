@@ -33,7 +33,6 @@
   Include files
 ==============================================================================*/
 #include "fs/vfs.h"
-#include "kernel/builtinfunc.h"
 #include <stdarg.h>
 
 #ifdef __cplusplus

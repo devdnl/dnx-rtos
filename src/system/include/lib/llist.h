@@ -38,7 +38,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "mm/mm.h"
-#include "kernel/builtinfunc.h"
 
 #ifdef __cplusplus
 extern "C" {

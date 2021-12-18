@@ -78,9 +78,9 @@ int main(int argc, char *argv[])
         (void)argv;
 
         size_t max_name_len = 0;
-        ssize_t drv_number = get_number_of_modules();
-        for (ssize_t i = 0; i > -1 && i < drv_number; i++) {
-                max_name_len = max(max_name_len, strlen(get_module_name(i)));
+        size_t drv_number = get_number_of_drivers();
+        for (size_t i = 0; i < drv_number; i++) {
+                max_name_len = max(max_name_len, strlen(get_driver_name(i)));
         }
         max_name_len++;
 
@@ -89,13 +89,13 @@ int main(int argc, char *argv[])
                VT100_CURSOR_FORWARD(%u)"Instances"VT100_RESET_ATTRIBUTES"\n",
                max_name_len + 5);
 
-        for (ssize_t i = 0; i > -1 && i < drv_number; i++) {
+        for (size_t i = 0; i < drv_number; i++) {
 
                 printf("%d"VT100_CURSOR_BACKWARD(99)
                        VT100_CURSOR_FORWARD(4)"%s"VT100_CURSOR_BACKWARD(99)
                        VT100_CURSOR_FORWARD(%u)"%d\n",
-                       i, get_module_name(i), max_name_len + 5,
-                       get_number_of_module_instances(i));
+                       i, get_driver_name(i), max_name_len + 5,
+                       get_number_of_driver_instances(i));
         }
 
         return EXIT_SUCCESS;

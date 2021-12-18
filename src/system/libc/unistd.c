@@ -154,8 +154,9 @@ ssize_t read(fd_t fd, void *buf, size_t count)
                 syscall(SYSCALL_FREAD, &n, buf, &count, f);
 
                 int iserr = 0;
-                int err = _builtinfunc(vfs_ferror, f, &iserr);
-                return (iserr || err) ? -_errno : (ssize_t)n;
+                syscall(SYSCALL_FERROR, &iserr, f);
+
+                return (iserr) ? -_errno : (ssize_t)n;
 
         } else {
                 return -1;
@@ -190,8 +191,9 @@ ssize_t write(fd_t fd, const void *buf, size_t count)
                 syscall(SYSCALL_FWRITE, &n, buf, &count, f);
 
                 int iserr = 0;
-                int err = _builtinfunc(vfs_ferror, f, &iserr);
-                return (iserr || err) ? _errno : (ssize_t)n;
+                syscall(SYSCALL_FERROR, &iserr, f);
+
+                return (iserr) ? _errno : (ssize_t)n;
 
         } else {
                 return -1;
@@ -229,7 +231,10 @@ off_t lseek(fd_t fd, off_t offset, int whence)
 
                 if (!r) {
                         i64_t lseek = 0;
-                        if (_builtinfunc(vfs_ftell, f, &lseek) == 0) {
+                        int r = -1;
+                        syscall(SYSCALL_FSEEK, &r, f, &lseek);
+
+                        if (r == 0) {
                                 return lseek;
                         }
                 }

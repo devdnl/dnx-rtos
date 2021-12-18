@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
                         fseek(in, global->skip, SEEK_SET);
                         fseek(out, global->seek, SEEK_SET);
 
-                        u64_t start_time = get_time_ms();
+                        u64_t start_time = get_uptime_ms();
                         size_t s = 0;
 
                         while (global->block_count > 0) {
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
                                 global->block_count--;
                         }
 
-                        u64_t stop_time = get_time_ms();
+                        u64_t stop_time = get_uptime_ms();
 
                         float time = (float)(stop_time - start_time) / 1000.0f;
                               time = max(time, 0.0001f);

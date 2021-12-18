@@ -273,6 +273,217 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
 
 //==============================================================================
 /**
+ * @brief Function returns a name of selected driver.
+ *
+ * The function get_driver_name() return name of selected module by using
+ * <i>modno</i> index.
+ *
+ * @param modno     module number
+ *
+ * @return Return driver name.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        printf("Module name: %s\n", get_driver_name(0));
+
+        // ...
+
+   @endcode
+ */
+//==============================================================================
+static inline const char *get_driver_name(size_t modno)
+{
+        const char *name = NULL;
+        syscall(SYSCALL_GETDRIVERNAME, &name, &modno);
+        return name;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns an ID of selected module (by name).
+ *
+ * The function get_driver_ID() return module ID selected by
+ * name pointed by <i>name</i>.
+ *
+ * @param name     module name
+ *
+ * @return On success, return module index (ID). On error, \b -1 is returned.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        printf("Module ID: %d\n", get_driver_ID("crc"));
+
+        // ...
+   @endcode
+ */
+//==============================================================================
+static inline int get_driver_ID(const char *name)
+{
+        int midx = -1;
+        syscall(SYSCALL_GETDRIVERID, &midx, name);
+        return midx;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns an ID of selected module (by dev_t index).
+ *
+ * The function get_driver_ID2() return module ID stored in dev_t type.
+ *
+ * @param dev           device ID
+ *
+ * @return Return module ID.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        printf("Module ID: %d\n", get_driver_ID2(dev));
+
+        // ...
+
+   @endcode
+ */
+//==============================================================================
+static inline int get_driver_ID2(dev_t dev)
+{
+        return (dev >> 16) & 0x7FFF;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns a major number of selected module.
+ *
+ * The function get_driver_major() return module major number stored in
+ * dev_t type.
+ *
+ * @param dev           device ID
+ *
+ * @return Return module major number.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        printf("Module ID: %d\n", get_driver_major(dev));
+
+        // ...
+
+   @endcode
+ */
+//==============================================================================
+static inline int get_driver_major(dev_t dev)
+{
+        return (dev >> 8) & 0xFF;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns a minor number of selected module.
+ *
+ * The function get_driver_minor() return module minor number stored in
+ * dev_t type.
+ *
+ * @param dev           device ID
+ *
+ * @return Return module minor number.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        printf("Module ID: %d\n", get_driver_minor(dev));
+
+        // ...
+
+   @endcode
+ */
+//==============================================================================
+static inline int get_driver_minor(dev_t dev)
+{
+        return (dev >> 0) & 0xFF;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns number of modules.
+ *
+ * The function get_number_of_drivers() return number of registered
+ * modules in system.
+ *
+ * @return Return number of registered modules in system.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        size_t number_of_modules = get_number_of_drivers();
+        for (size_t i = 0; i < number_of_modules; i++) {
+                ...
+        }
+
+        // ...
+
+   @endcode
+ */
+//==============================================================================
+static inline size_t get_number_of_drivers(void)
+{
+        size_t r = 0;
+        syscall(SYSCALL_GETDRIVERCOUNT, &r);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns number of instances of selected module index (id).
+ *
+ * The function get_number_of_driver_instances() return number of instances
+ * of selected module of index <i>n</i>.
+ *
+ * @param n             module index
+ *
+ * @return On success, number of instances is returned, otherwise \b -1 is returned.
+ *
+ * @b Example
+ * @code
+        #include <dnx/os.h>
+
+        // ...
+
+        ssize_t n = get_number_of_driver_instances(get_module_ID("TTY"));
+        printf("Numer of TTY driver instances: %d\n", n);
+
+        // ...
+
+   @endcode
+ */
+//==============================================================================
+static inline ssize_t get_number_of_driver_instances(size_t id)
+{
+        ssize_t r = 0;
+        syscall(SYSCALL_GETDRIVERINSTANCES, &r, &id);
+        return r;
+}
+
+//==============================================================================
+/**
  * @brief Function releases selected driver.
  *
  * The driver_release() function release driver pointed by <i>mod_name</i>.
@@ -350,11 +561,11 @@ static inline int driver_release2(const char *path)
 
                 if (S_ISDEV(buf.st_mode)) {
 
-                        u8_t  major = _dev_t__extract_major(buf.st_dev);
-                        u8_t  minor = _dev_t__extract_minor(buf.st_dev);
-                        u16_t modno = _dev_t__extract_modno(buf.st_dev);
+                        u8_t  major = get_driver_major(buf.st_dev);
+                        u8_t  minor = get_driver_minor(buf.st_dev);
+                        u16_t modno = get_driver_ID2(buf.st_dev);
 
-                        const char *mod_name = _builtinfunc(module_get_name, modno);
+                        const char *mod_name = get_driver_name(modno);
 
                         syscall(SYSCALL_DRIVERRELEASE, &r, mod_name, &major, &minor);
                 } else {

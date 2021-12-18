@@ -35,7 +35,6 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "kernel/builtinfunc.h"
 
 #ifdef __cplusplus
 extern "C" {

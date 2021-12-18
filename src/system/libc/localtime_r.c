@@ -78,7 +78,7 @@
 //==============================================================================
 struct tm *localtime(const time_t *timer)
 {
-        return _builtinfunc(localtime_r, timer, &_tmbuf);
+        return _localtime_r(timer, &_tmbuf);
 }
 
 //==============================================================================
@@ -101,7 +101,7 @@ struct tm *localtime(const time_t *timer)
 //==============================================================================
 struct tm *localtime_r(const time_t *timer, struct tm *tm)
 {
-        return _builtinfunc(localtime_r, timer, tm);
+        return _localtime_r(timer, tm);
 }
 #endif
 

@@ -95,9 +95,10 @@ extern "C" {
  * @see msleep(), usleep(), sleep_until(), msleep_until()
  */
 //==============================================================================
-static inline void sleep(const uint seconds)
+static inline void sleep(uint32_t seconds)
 {
-        _builtinfunc(sleep, seconds);
+        uint32_t msec = seconds * 1000;
+        syscall(SYSCALL_MSLEEP, NULL, &msec);
 }
 
 //==============================================================================
@@ -124,9 +125,9 @@ static inline void sleep(const uint seconds)
  * @see sleep(), usleep(), sleep_until(), msleep_until()
  */
 //==============================================================================
-static inline void msleep(const uint milliseconds)
+static inline void msleep(uint32_t milliseconds)
 {
-        _builtinfunc(sleep_ms, milliseconds);
+        syscall(SYSCALL_MSLEEP, NULL, &milliseconds);
 }
 
 //==============================================================================
@@ -153,125 +154,9 @@ static inline void msleep(const uint milliseconds)
  * @see sleep(), msleep(), sleep_until(), msleep_until()
  */
 //==============================================================================
-static inline void usleep(const u32_t microseconds)
+static inline void usleep(uint32_t microseconds)
 {
-        u32_t ms = microseconds / 1000;
-        u32_t us = microseconds % 1000;
-
-        if (ms) {
-                _builtinfunc(sleep_ms, ms);
-        }
-
-        if (us) {
-                _builtinfunc(cpuctl_delay_us, us);
-        }
-}
-
-//==============================================================================
-/**
- * @brief Function prepares time reference to sleep.
- *
- * The prepare_sleep_until() function prepare tick counter to call
- * msleep_until_ms() and sleep_until() functions.
- *
- * @note dnx RTOS extension function.
- *
- * @return Time reference value.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-        #include <unistd.h>
-
-        // ...
-        u32_t ref_time = prepare_sleep_until();
-
-        for (;;) {
-                // ...
-
-                msleep_until(10, &ref_time);
-        }
-        // ...
-   @endcode
- *
- * @see sleep(), msleep(), sleep_until(), msleep_until()
- */
-//==============================================================================
-static inline u32_t prepare_sleep_until(void)
-{
-        return _builtinfunc(kernel_get_tick_counter);
-}
-
-//==============================================================================
-/**
- * @brief Function switches process to inactive state for selected time in milliseconds.
- *
- * The msleep_until() makes the calling thread sleep until milliseconds
- * <i>milliseconds</i> have elapsed. Function produces more precise delay.
- *
- * @note dnx RTOS extension function.
- *
- * @param milliseconds      number of milliseconds to sleep
- * @param time_ref          time reference
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-        #include <unistd.h>
-
-        // ...
-        u32_t ref_time = prepare_sleep_until();
-
-        for (;;) {
-                // ...
-
-                msleep_until(10, &ref_time);
-        }
-        // ...
-   @endcode
- *
- * @see sleep(), msleep(), prepare_sleep_until(), sleep_until()
- */
-//==============================================================================
-static inline void msleep_until(const u32_t milliseconds, u32_t *time_ref)
-{
-        _builtinfunc(sleep_until_ms, milliseconds, time_ref);
-}
-
-//==============================================================================
-/**
- * @brief Function switches process to inactive state for selected time in seconds.
- *
- * The sleep_until() makes the calling thread sleep until seconds
- * <i>seconds</i> have elapsed. Function produces more precise delay.
- *
- * @note dnx RTOS extension function.
- *
- * @param seconds               number of seconds to sleep
- * @param time_ref              time reference
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-        #include <unistd.h>
-
-        // ...
-        int ref_time = prepare_sleep_until();
-
-        for (;;) {
-                // ...
-
-                sleep_until(1, &ref_time);
-        }
-        // ...
-   @endcode
- *
- * @see sleep(), msleep(), prepare_sleep_until(), msleep_until()
- */
-//==============================================================================
-static inline void sleep_until(const uint seconds, u32_t *time_ref)
-{
-        _builtinfunc(sleep_until, seconds, time_ref);
+        syscall(SYSCALL_USLEEP, NULL, &microseconds);
 }
 
 //==============================================================================
@@ -463,7 +348,9 @@ static inline void sync(void)
 //==============================================================================
 static inline gid_t getgid(void)
 {
-        return 0;
+        gid_t gid = 0;
+        syscall(SYSCALL_GETGID, &gid);
+        return gid;
 }
 
 //==============================================================================
@@ -486,7 +373,9 @@ static inline gid_t getgid(void)
 //==============================================================================
 static inline uid_t getuid(void)
 {
-        return 0;
+        uid_t uid = 0;
+        syscall(SYSCALL_GETUID, &uid);
+        return uid;
 }
 
 //==============================================================================

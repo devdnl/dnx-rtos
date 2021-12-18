@@ -139,9 +139,9 @@ static int perf_thread(void *arg)
         UNUSED_ARG1(arg);
 
         u32_t n = 0;
-        u64_t tstart = get_time_ms();
+        u64_t tstart = get_uptime_ms();
 
-        while (get_time_ms() - tstart < 10000) {
+        while (get_uptime_ms() - tstart < 10000) {
 
                 for (size_t i = 0; i < sizeof(global->buf); i++) {
                         global->buf[i] = rand();
@@ -168,7 +168,7 @@ static int perf_thread(void *arg)
                 n++;
         }
 
-        u64_t tstop = get_time_ms();
+        u64_t tstop = get_uptime_ms();
         float dt = (tstop - tstart) / 1000.0;
         float pt = (double)n / dt;
 

@@ -90,7 +90,7 @@ extern "C" {
  * @see clock()
  */
 #ifndef __CLOCK_TYPE_DEFINED__
-typedef u32_t clock_t;
+typedef u64_t clock_t;
 #endif
 
 /**
@@ -371,7 +371,9 @@ extern int _ltimeoff;
 //==============================================================================
 static inline clock_t clock(void)
 {
-        return _builtinfunc(kernel_get_time_ms);
+        u64_t uptime = 0;
+        syscall(SYSCALL_GETUPTIMEMS, &uptime);
+        return uptime;
 }
 
 //==============================================================================
@@ -480,7 +482,7 @@ static inline time_t time(time_t *timer)
 #if __OS_ENABLE_TIMEMAN__ == _YES_
         struct timeval timeval;
         int err = -1;
-        syscall(SYSCALL_GETTIME, &err, &timeval);
+        syscall(SYSCALL_GETTIMEOFDAY, &err, &timeval);
 
         if (timer) {
                 *timer = timeval.tv_sec;
@@ -513,7 +515,7 @@ static inline int stime(time_t *timer)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
         int r = -1;
-        syscall(SYSCALL_SETTIME, &r, timer);
+        syscall(SYSCALL_SETTIMEOFDAY, &r, timer);
         return r;
 #else
         UNUSED_ARG1(timer);

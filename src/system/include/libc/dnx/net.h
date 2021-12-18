@@ -914,10 +914,12 @@ static inline int get_host_by_name(const char             *netname,
  * @see hton_u32(), hton_u64()
  */
 //==============================================================================
-static inline u16_t hton_u16(NET_family_t family, u16_t value)
+static inline uint16_t hton_u16(NET_family_t family, uint16_t value)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        return _builtinfunc(net_hton_u16, family, value);
+        uint16_t r;
+        syscall(SYSCALL_NETHTON16, &r, &family, &value);
+        return r;
 #else
         UNUSED_ARG1(family);
         return value;
@@ -936,10 +938,12 @@ static inline u16_t hton_u16(NET_family_t family, u16_t value)
  * @see hton_u16(), hton_u64()
  */
 //==============================================================================
-static inline u32_t hton_u32(NET_family_t family, u32_t value)
+static inline uint32_t hton_u32(NET_family_t family, uint32_t value)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        return _builtinfunc(net_hton_u32, family, value);
+        uint32_t r;
+        syscall(SYSCALL_NETHTON32, &r, &family, &value);
+        return r;
 #else
         UNUSED_ARG1(family);
         return value;
@@ -958,10 +962,12 @@ static inline u32_t hton_u32(NET_family_t family, u32_t value)
  * @see hton_u16(), hton_u32()
  */
 //==============================================================================
-static inline u64_t hton_u64(NET_family_t family, u64_t value)
+static inline uint64_t hton_u64(NET_family_t family, uint64_t value)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        return _builtinfunc(net_hton_u64, family, value);
+        uint64_t r;
+        syscall(SYSCALL_NETHTON64, &r, &family, &value);
+        return r;
 #else
         UNUSED_ARG1(family);
         return value;
@@ -980,14 +986,9 @@ static inline u64_t hton_u64(NET_family_t family, u64_t value)
  * @see ntoh_u32(), ntoh_u64()
  */
 //==============================================================================
-static inline u16_t ntoh_u16(NET_family_t family, u16_t value)
+static inline uint16_t ntoh_u16(NET_family_t family, uint16_t value)
 {
-#if _ENABLE_NETWORK_ == _YES_
-        return _builtinfunc(net_hton_u16, family, value);
-#else
-        UNUSED_ARG1(family);
-        return value;
-#endif
+        return hton_u16(family, value);
 }
 
 //==============================================================================
@@ -1002,14 +1003,9 @@ static inline u16_t ntoh_u16(NET_family_t family, u16_t value)
  * @see ntoh_u16(), ntoh_u64()
  */
 //==============================================================================
-static inline u32_t ntoh_u32(NET_family_t family, u32_t value)
+static inline uint32_t ntoh_u32(NET_family_t family, uint32_t value)
 {
-#if _ENABLE_NETWORK_ == _YES_
-        return _builtinfunc(net_hton_u32, family, value);
-#else
-        UNUSED_ARG1(family);
-        return value;
-#endif
+        return hton_u32(family, value);
 }
 
 //==============================================================================
@@ -1024,14 +1020,9 @@ static inline u32_t ntoh_u32(NET_family_t family, u32_t value)
  * @see ntoh_u16(), ntoh_u32()
  */
 //==============================================================================
-static inline u64_t ntoh_u64(NET_family_t family, u64_t value)
+static inline uint64_t ntoh_u64(NET_family_t family, uint64_t value)
 {
-#if _ENABLE_NETWORK_ == _YES_
-        return _builtinfunc(net_hton_u64, family, value);
-#else
-        UNUSED_ARG1(family);
-        return value;
-#endif
+        return hton_u64(family, value);
 }
 
 #ifdef __cplusplus

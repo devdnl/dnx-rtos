@@ -36,15 +36,14 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "drivers/ioctl_groups.h"
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _IO(g, n)               ((0 << 24) | ((int)((_IO_GROUP_##g) & 0xFF) << 16) | (((0) & 0xFF) << 8) | ((int)(n) & 0xFF))
-#define _IOR(g, n, t)           ((1 << 24) | ((int)((_IO_GROUP_##g) & 0xFF) << 16) | ((sizeof(*((t)(NULL))) & 0xFF) << 8) | ((int)(n) & 0xFF))
-#define _IOW(g, n, t)           ((2 << 24) | ((int)((_IO_GROUP_##g) & 0xFF) << 16) | ((sizeof(*((t)(NULL))) & 0xFF) << 8) | ((int)(n) & 0xFF))
-#define _IOWR(g, n, t)          ((3 << 24) | ((int)((_IO_GROUP_##g) & 0xFF) << 16) | ((sizeof(*((t)(NULL))) & 0xFF) << 8) | ((int)(n) & 0xFF))
+#define _IO(g, n)               ((0 << 16) | (((0)                  & 0xFF) << 8) | ((int)(n) & 0xFF))
+#define _IOR(g, n, t)           ((1 << 16) | ((sizeof(*((t)(NULL))) & 0xFF) << 8) | ((int)(n) & 0xFF))
+#define _IOW(g, n, t)           ((2 << 16) | ((sizeof(*((t)(NULL))) & 0xFF) << 8) | ((int)(n) & 0xFF))
+#define _IOWR(g, n, t)          ((3 << 16) | ((sizeof(*((t)(NULL))) & 0xFF) << 8) | ((int)(n) & 0xFF))
 
 /*==============================================================================
   Exported object types

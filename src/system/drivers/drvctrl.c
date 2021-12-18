@@ -592,7 +592,7 @@ size_t _module_get_count(void)
  * @return module number, -1 on error
  */
 //==============================================================================
-i32_t _module_get_ID(const char *module_name)
+int _module_get_ID(const char *module_name)
 {
         if (module_name) {
                 for (size_t module = 0; module < _drvreg_number_of_modules; module++) {

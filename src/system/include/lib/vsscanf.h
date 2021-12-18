@@ -33,7 +33,6 @@
   Include files
 ==============================================================================*/
 #include <stdarg.h>
-#include "kernel/builtinfunc.h"
 
 #ifdef __cplusplus
 extern "C" {

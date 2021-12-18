@@ -479,12 +479,10 @@ int main(int argc, char *argv[])
 
         global->current_host_arg = 2;
 
-        u32_t tref = prepare_sleep_until();
-
         do {
                 set_NTP_time(argc, argv);
                 set_timezone(argc, argv);
-                sleep_until(interval, &tref);
+                sleep(interval);
         } while (interval);
 
         if (errno) {

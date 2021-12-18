@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <dnx/os.h>
 #include <dnx/vt100.h>
+#include <sys/mount.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -70,8 +71,8 @@ int main(int argc, char *argv[])
 {
         (void)argc;
 
-        uint  drv_count = get_number_of_modules();
-        int *modmem = malloc(drv_count * sizeof(int));
+        uint32_t drv_count = get_number_of_drivers();
+        int32_t *modmem = malloc(drv_count * sizeof(int32_t));
         if (!modmem) {
                 perror(NULL);
                 return EXIT_FAILURE;
@@ -81,12 +82,13 @@ int main(int argc, char *argv[])
         get_memory_usage_details(&sysmem);
 
         for (uint module = 0; module < drv_count; module++) {
-                modmem[module] = get_module_memory_usage(module);
+                get_driver_memory_usage(module, &modmem[module]);
         }
 
-        u32_t m_free = get_free_memory();
-        u32_t m_used = get_used_memory();
-        u32_t m_size = get_memory_size();
+
+        u32_t m_free = sysmem.free_memory;
+        u32_t m_used = sysmem.used_memory;
+        u32_t m_size = sysmem.memory_size;
         u32_t m_perc = ((u64_t)m_used * 1000) / m_size;
 
         printf("Total: %u\n", m_size);
@@ -108,8 +110,8 @@ int main(int argc, char *argv[])
                 printf("Detailed modules memory usage:\n");
                 for (uint module = 0; module < drv_count; module++) {
                         printf("  %s"VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(14)": %d\n",
-                               get_module_name(module),
-                               get_module_memory_usage(module));
+                               get_driver_name(module),
+                               modmem[module]);
                 }
         }
 

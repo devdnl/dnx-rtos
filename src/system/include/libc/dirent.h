@@ -298,7 +298,7 @@ static inline struct dirent *readdir(DIR *dir)
 //==============================================================================
 static inline void seekdir(DIR *dir, u32_t seek)
 {
-        _errno = _builtinfunc(vfs_seekdir, dir, seek);
+        syscall(SYSCALL_DIRSEEK, NULL, dir, &seek);
 }
 
 //==============================================================================
@@ -346,7 +346,7 @@ static inline void seekdir(DIR *dir, u32_t seek)
 static inline u32_t telldir(DIR *dir)
 {
         u32_t seek = 0;
-        _errno = _builtinfunc(vfs_telldir, dir, &seek);
+        syscall(SYSCALL_DIRTELL, &seek, dir);
         return seek;
 }
 

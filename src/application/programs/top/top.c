@@ -127,10 +127,11 @@ int main(int argc, char *argv[])
                         avg.avg5min  / 10, avg.avg5min  % 10,
                         avg.avg15min / 10, avg.avg15min % 10);
 
-                printf("B Mem: %d total, %d used, %d free\n",
-                        get_memory_size(), get_used_memory(), get_free_memory());
-
                 get_memory_usage_details(&global->mem);
+
+                printf("B Mem: %d total, %d used, %d free\n",
+                        global->mem.memory_size, global->mem.used_memory, global->mem.free_memory);
+
                 printf("%d static, %d kernel, %d filesystems\n",
                         global->mem.static_memory_usage,
                         global->mem.kernel_memory_usage,
