@@ -129,8 +129,7 @@ static void syscall_syslogread(syscallrq_t *rq);
 static void syscall_kernelpanicinfo(syscallrq_t *rq);
 static void syscall_processcreate(syscallrq_t *rq);
 static void syscall_processkill(syscallrq_t *rq);
-static void syscall_processcleanzombie(syscallrq_t *rq);
-static void syscall_processgetsyncflag(syscallrq_t *rq);
+static void syscall_processwait(syscallrq_t *rq);
 static void syscall_processstatseek(syscallrq_t *rq);
 static void syscall_processstatpid(syscallrq_t *rq);
 static void syscall_processgetpid(syscallrq_t *rq);
@@ -142,7 +141,6 @@ static void syscall_getcwd(syscallrq_t *rq);
 static void syscall_setcwd(syscallrq_t *rq);
 static void syscall_threadcreate(syscallrq_t *rq);
 static void syscall_threadkill(syscallrq_t *rq);
-static void syscall_threadgetstatus(syscallrq_t *rq);
 static void syscall_semaphorecreate(syscallrq_t *rq);
 static void syscall_semaphoredestroy(syscallrq_t *rq);
 static void syscall_mutexcreate(syscallrq_t *rq);
@@ -201,7 +199,7 @@ static void syscall_systemrestart(syscallrq_t *rq);
 static void syscall_systemshutdown(syscallrq_t *rq);
 static void syscall_syslogclear(syscallrq_t *rq);
 static void syscall_flagwait(syscallrq_t *rq);
-static void sycall_getactivethread(syscallrq_t *rq);
+static void syscall_getactivethread(syscallrq_t *rq);
 static void syscall_threadexit(syscallrq_t *rq);
 static void syscall_semaphorewait(syscallrq_t *rq);
 static void syscall_semaphoresignal(syscallrq_t *rq);
@@ -218,6 +216,7 @@ static void syscall_dirtell(syscallrq_t *rq);
 static void syscall_dirseek(syscallrq_t *rq);
 static void syscall_schedulerlock(syscallrq_t *rq);
 static void syscall_schedulerunlock(syscallrq_t *rq);
+static void syscall_threadjoin(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -267,8 +266,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_KERNELPANICINFO] = syscall_kernelpanicinfo,
         [SYSCALL_PROCESSCREATE] = syscall_processcreate,
         [SYSCALL_PROCESSKILL] = syscall_processkill,
-        [SYSCALL_PROCESSCLEANZOMBIE] = syscall_processcleanzombie,
-        [SYSCALL_PROCESSGETSYNCFLAG] = syscall_processgetsyncflag,
+        [SYSCALL_PROCESSWAIT] = syscall_processwait,
         [SYSCALL_PROCESSSTATSEEK] = syscall_processstatseek,
         [SYSCALL_PROCESSSTATPID] = syscall_processstatpid,
         [SYSCALL_PROCESSGETPID] = syscall_processgetpid,
@@ -280,7 +278,6 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SETCWD] = syscall_setcwd,
         [SYSCALL_THREADCREATE] = syscall_threadcreate,
         [SYSCALL_THREADKILL] = syscall_threadkill,
-        [SYSCALL_THREADGETSTATUS] = syscall_threadgetstatus,
         [SYSCALL_SEMAPHORECREATE] = syscall_semaphorecreate,
         [SYSCALL_SEMAPHOREDESTROY] = syscall_semaphoredestroy,
         [SYSCALL_MUTEXCREATE] = syscall_mutexcreate,
@@ -335,7 +332,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SYSTEMSHUTDOWN] = syscall_systemshutdown,
         [SYSCALL_SYSLOGCLEAR] = syscall_syslogclear,
         [SYSCALL_FLAGWAIT] = syscall_flagwait,
-        [SYSCALL_GETACTIVETHREAD] = sycall_getactivethread,
+        [SYSCALL_GETACTIVETHREAD] = syscall_getactivethread,
         [SYSCALL_THREADEXIT] = syscall_threadexit,
         [SYSCALL_SEMAPHOREWAIT] = syscall_semaphorewait,
         [SYSCALL_SEMAPHORESIGNAL] = syscall_semaphoresignal,
@@ -352,6 +349,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_DIRTELL] = syscall_dirtell,
         [SYSCALL_SCHEDULERLOCK] = syscall_schedulerlock,
         [SYSCALL_SCHEDULERUNLOCK] = syscall_schedulerunlock,
+        [SYSCALL_THREADJOIN] = syscall_threadjoin,
 };
 
 /*==============================================================================
@@ -1278,32 +1276,20 @@ static void syscall_processcreate(syscallrq_t *rq)
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_processcleanzombie(syscallrq_t *rq)
+static void syscall_processkill(syscallrq_t *rq)
 {
-        GETARG(pid_t *, pid);
-        GETARG(int *, status);
+        GETARG(const pid_t *, pid);
 
         _process_t *proc = NULL;
         int err = _process_get_container(*pid, &proc);
         if (!err) {
-                _process_remove_zombie(proc, status);
+                err = _process_kill(*pid);
+                if (!err) {
+                        _process_remove_zombie(proc, NULL);
+                }
         }
 
         SETERRNO(err);
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall destroy existing process.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_processkill(syscallrq_t *rq)
-{
-        GETARG(pid_t *, pid);
-        SETERRNO(_process_kill(*pid));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -1315,15 +1301,25 @@ static void syscall_processkill(syscallrq_t *rq)
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_processgetsyncflag(syscallrq_t *rq)
+static void syscall_processwait(syscallrq_t *rq)
 {
-        GETARG(pid_t *, pid);
-        GETARG(flag_t **, flag);
+        GETARG(const pid_t *, pid);
+        GETARG(int*, status);
+        GETARG(const uint32_t*, timeout);
 
         _process_t *proc = NULL;
         int err = _process_get_container(*pid, &proc);
         if (!err) {
-                err = _process_get_event_flags(proc, flag);
+                flag_t *flag;
+                err = _process_get_event_flags(proc, &flag);
+                if (!err) {
+                        const uint32_t mask = _PROCESS_EXIT_FLAG(0);
+                        err = _flag_wait(flag, mask, *timeout);
+                        if (!err) {
+                                _process_remove_zombie(proc, status);
+                                _sleep_ms(1); // force scheduler switch
+                        }
+                }
         }
 
         SETERRNO(err);
@@ -1507,21 +1503,6 @@ static void syscall_threadkill(syscallrq_t *rq)
 {
         GETARG(tid_t *, tid);
         SETERRNO(_process_thread_kill(rq->client_proc, *tid));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
-}
-
-//==============================================================================
-/**
- * @brief  Return thread exit status.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_threadgetstatus(syscallrq_t *rq)
-{
-        GETARG(tid_t *, tid);
-        GETARG(int   *, status);
-        SETERRNO(_process_thread_get_status(GETPROCESS(), *tid, status));
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 }
 
@@ -2660,7 +2641,7 @@ static void syscall_flagwait(syscallrq_t *rq)
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void sycall_getactivethread(syscallrq_t *rq)
+static void syscall_getactivethread(syscallrq_t *rq)
 {
         SETRETURN(int, rq->client_thread);
 }
@@ -2897,6 +2878,40 @@ static void syscall_schedulerunlock(syscallrq_t *rq)
 {
         UNUSED_ARG1(rq);
         _kernel_scheduler_unlock();
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall wait for thread join.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_threadjoin(syscallrq_t *rq)
+{
+        GETARG(const tid_t*, tid);
+        GETARG(int*, status);
+        GETARG(const u32_t*, timeout);
+
+        int err = EINVAL;
+
+        if ((*tid > 0) and (*tid < __OS_TASK_MAX_USER_THREADS__)) {
+
+                flag_t *flag;
+                int err = _process_get_event_flags(rq->client_proc, &flag);
+                if (not err) {
+                        const u32_t mask = _PROCESS_EXIT_FLAG(*tid);
+                        err = _flag_wait(flag, mask, *timeout);
+                        if (not err) {
+                                if (status) {
+                                        err = _process_thread_get_status(GETPROCESS(), *tid, status);
+                                }
+                        }
+                }
+        }
+
+        SETERRNO(err);
+        SETRETURN(int, GETERRNO() ? -1 : 0);
 }
 
 /*==============================================================================

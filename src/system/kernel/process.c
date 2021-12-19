@@ -473,16 +473,19 @@ KERNELSPACE void _process_exit(_process_t *proc, int status)
                         _vfs_vfioctl(proc->f_stderr, IOCTL_VFS__DEFAULT_WR_MODE, none);
                 }
 
-                ATOMIC(process_mtx) {
-                        if (proc->event) {
-                                _flag_set(proc->event, _PROCESS_EXIT_FLAG(0));
-                        }
 
+                ATOMIC(process_mtx) {
                         destroy_all_tasks(proc, false);
 
                         process_move_list(proc, &active_process_list, &destroy_process_list);
 
                         proc->taskdata[0].task = NULL;
+
+                        _process_clean_up_killed_processes();
+
+                        if (proc->event) {
+                                _flag_set(proc->event, _PROCESS_EXIT_FLAG(0));
+                        }
                 }
 
                 _task_exit();

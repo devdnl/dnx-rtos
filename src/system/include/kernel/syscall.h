@@ -55,7 +55,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SHMATTACH,              // | int            | const char *key           | void **mem                          | size_t *size                        |                           |                                           |
         SYSCALL_SHMDETACH,              // | int            | const char *key           |                                     |                                     |                           |                                           |
         SYSCALL_SHMDESTROY,             // | int            | const char *key           |                                     |                                     |                           |                                           |
-        SYSCALL_PROCESSGETSYNCFLAG,     // | int            | pid_t *pid                | flag_t **obj                        |                                     |                           |                                           |
+        SYSCALL_PROCESSWAIT,            // | int            | const pid_t *pid          | int *status                         | const uint32_t *timeout             |                           |                                           |
         SYSCALL_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat                |                                     |                           |                                           |
         SYSCALL_THREADSTAT,             // | int            | pid_t *pid                | tid_t *tid                          | thread_stat_t *stat                 |                           |                                           |
         SYSCALL_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat                |                                     |                           |                                           |
@@ -83,10 +83,8 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_QUEUEITEMSCOUNT,        // | int            | queue_t *queue
         SYSCALL_QUEUEFREESPACE,         // | int            | queue_t *queue
         SYSCALL_THREADKILL,             // | int            | tid_t *tid                |                                     |                                     |                           |                                           |
-        SYSCALL_THREADGETSTATUS,        // | int            | tid_t *tid                | int *status                         |                                     |                           |                                           |
         SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr                |                                     |                           |                                           |
-        SYSCALL_PROCESSCLEANZOMBIE,     // | int            | pid_t *pid                | int *status                         |                                     |                           |                                           |
-        SYSCALL_PROCESSKILL,            // | int            | pid_t *pid                |                                     |                                     |                           |                                           |
+        SYSCALL_PROCESSKILL,            // | int            | const pid_t *pid          |                                     |                                     |                           |                                           |
         SYSCALL_PROCESSABORT,           // | int            |                           |                                     |                                     |                           |                                           |
         SYSCALL_PROCESSEXIT,            // | void           | int *status               |                                     |                                     |                           |                                           |
         SYSCALL_MOUNT,                  // | int            | const char *FS_name       | const char *src_path                | const char *mount_point             | const char *options       |                                           |
@@ -176,6 +174,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_THREADEXIT,             // | void           | int *status               |                                     |                                     |                           |                                           |
         SYSCALL_SCHEDULERLOCK,          // | void           |                           |                                     |                                     |                           |                                           |
         SYSCALL_SCHEDULERUNLOCK,        // | void           |                           |                                     |                                     |                           |                                           |
+        SYSCALL_THREADJOIN,             // | int            | const tid_t *tid          | int *status                         | const uint32_t *timeout
         _SYSCALL_COUNT,
 } syscall_t;
 

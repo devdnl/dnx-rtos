@@ -333,10 +333,6 @@ static inline int process_kill(pid_t pid)
 {
         int r = -1;
         syscall(SYSCALL_PROCESSKILL, &r, &pid);
-
-        int _;
-        syscall(SYSCALL_PROCESSCLEANZOMBIE, &_, &pid, NULL);
-
         return r;
 }
 
@@ -397,25 +393,7 @@ static inline int process_kill(pid_t pid)
 static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
 {
         int r = -1;
-
-        flag_t *flag = NULL;
-        syscall(SYSCALL_PROCESSGETSYNCFLAG, &r, &pid, &flag);
-
-        if (flag && r == 0) {
-                const uint32_t mask = _PROCESS_EXIT_FLAG(0);
-                bool flag_success = false;
-                syscall(SYSCALL_FLAGWAIT, &flag_success, flag, &mask, &timeout);
-
-                if (flag_success) {
-                        syscall(SYSCALL_PROCESSCLEANZOMBIE, &r, &pid, status);
-
-                        const uint32_t sleep_ms = 1;
-                        syscall(SYSCALL_MSLEEP, NULL, &sleep_ms);
-                } else {
-                        r = -1;
-                }
-        }
-
+        syscall(SYSCALL_PROCESSWAIT, &r, &pid, status, &timeout);
         return r;
 }
 
@@ -936,34 +914,7 @@ static inline void thread_exit(int status)
 static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
 {
         int r = -1;
-
-        // TODO syscall(SYSCALL_THREADJOIN, &r, &tid, status, &timeout_ms);
-
-        if (tid > 0) {
-
-                pid_t pid = 0;
-                syscall(SYSCALL_PROCESSGETPID, &pid);
-
-                flag_t *flag = NULL;
-                syscall(SYSCALL_PROCESSGETSYNCFLAG, &r, &pid, &flag);
-
-                if (flag && r == 0) {
-                        bool flag_success = false;
-                        const u32_t mask = _PROCESS_EXIT_FLAG(tid);
-                        syscall(SYSCALL_FLAGWAIT, &flag_success, flag, &mask, &timeout_ms);
-
-                        if (flag_success) {
-                                if (status) {
-                                        syscall(SYSCALL_THREADGETSTATUS, &r, &tid, status);
-                                }
-                        } else {
-                                r = -1;
-                        }
-                }
-        } else {
-                _errno = EINVAL;
-        }
-
+        syscall(SYSCALL_THREADJOIN, &r, &tid, status, &timeout_ms);
         return r;
 }
 
