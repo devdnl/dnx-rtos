@@ -1094,7 +1094,7 @@ static void syscall_gettimeofday(syscallrq_t *rq)
         }
 
         if (not err and tz) {
-                tz->tz_minuteswest = _ltimeoff_sec;
+                tz->tz_minuteswest = (_ltimeoff_sec / 60);
                 tz->tz_dsttime = 0;
         }
 
