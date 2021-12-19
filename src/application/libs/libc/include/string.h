@@ -50,7 +50,6 @@ extern "C" {
 #define __need_size_t
 #include <stddef.h>
 #include <kernel/syscall.h>
-#include <lib/strlcpy.h>
 #endif
 
 /*==============================================================================
@@ -846,6 +845,8 @@ extern const char *strerror(int errnum);
 //==============================================================================
 static inline char *strndup(const char *s, size_t n)
 {
+        extern size_t _strlcpy(char *dst, const char *src, size_t size);
+
         n += 1;
         char *dup = NULL;
         syscall(SYSCALL_MALLOC, &dup, &n);

@@ -560,9 +560,9 @@ static inline int driver_release2(const char *path)
 
                 if (S_ISDEV(buf.st_mode)) {
 
-                        u8_t  major = get_driver_major(buf.st_dev);
-                        u8_t  minor = get_driver_minor(buf.st_dev);
-                        u16_t modno = get_driver_ID2(buf.st_dev);
+                        uint8_t  major = get_driver_major(buf.st_dev);
+                        uint8_t  minor = get_driver_minor(buf.st_dev);
+                        uint16_t modno = get_driver_ID2(buf.st_dev);
 
                         const char *mod_name = get_driver_name(modno);
 

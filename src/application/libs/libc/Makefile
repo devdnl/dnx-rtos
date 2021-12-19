@@ -2,6 +2,7 @@
 
 CSRC_CORE  += ../application/libs/libc/source/ctime_r.c
 CSRC_CORE  += ../application/libs/libc/source/rand.c
+CSRC_LIB   += libc/source/conv.c
 CSRC_LIB   += libc/source/fgets.c
 CSRC_LIB   += libc/source/fputc.c
 CSRC_LIB   += libc/source/fputs.c

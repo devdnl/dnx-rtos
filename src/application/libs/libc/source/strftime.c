@@ -30,6 +30,7 @@
   Include files
 ==============================================================================*/
 #include <time.h>
+#include <sys/time.h>
 #include <config.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -258,11 +259,14 @@ size_t strftime(char *buf, size_t size, const char *format, const struct tm *tim
                                         break;
 
                                 case 'z': {
-                                        i32_t timeoff = timeptr->tm_isutc ? 0 : _ltimeoff;
+                                        struct timezone tz = {0, 0};
+                                        gettimeofday(NULL, &tz);
+
+                                        i32_t timeoff = timeptr->tm_isutc ? 0 : tz.tz_minuteswest;
                                         m = snprintf(buf, size, "%c%02d%02d",
                                                      (timeoff < 0 ? '-':'+'),
-                                                     (timeoff < 0 ? -timeoff : timeoff) / 3600,
-                                                     (timeoff < 0 ? -timeoff : timeoff) / 60 % 60);
+                                                     (timeoff < 0 ? -timeoff : timeoff) / 60,
+                                                     (timeoff < 0 ? -timeoff : timeoff) % 60);
                                         break;
                                 }
 

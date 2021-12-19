@@ -31,9 +31,11 @@
 ==============================================================================*/
 #include <stdio.h>
 #include <time.h>
+#include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local symbolic constants/macros
@@ -116,10 +118,11 @@ int main(int argc, char *argv[])
                         t.tm_mon  = month - 1;
                         t.tm_year = year - 1900;
 
-                        time_t tv = mktime(&t);
-
                         errno = 0;
-                        if (stime(&tv) != 0) {
+                        struct timeval tv;
+                        tv.tv_sec  = mktime(&t);
+                        tv.tv_usec = 0;
+                        if (settimeofday(&tv, NULL) != 0) {
                                 perror(argv[0]);
                                 return EXIT_FAILURE;
                         }
@@ -146,7 +149,15 @@ int main(int argc, char *argv[])
 
                         int diff = cast(int, (hour * 3600 + minute * 60))
                                  * (sign == '-' ? -1 : 1);
-                        tzset(diff);
+
+                        errno = 0;
+                        struct timezone tz;
+                        tz.tz_minuteswest = (diff / 60);
+                        tz.tz_dsttime = 0;
+                        if (settimeofday(NULL, &tz) != 0) {
+                                perror(argv[0]);
+                                return EXIT_FAILURE;
+                        }
 
                         show_date = false;
                         break;

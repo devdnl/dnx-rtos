@@ -46,13 +46,9 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
+#include <libc/include/sys/types.h>
 #include <kernel/syscall.h>
-#include <kernel/kwrapper.h>
-#include <kernel/errno.h>
-#include <cpu/cpuctl.h>
-#include <lib/unarg.h>
-#include <fs/vfs.h>
+#include <errno.h>
 
 /*==============================================================================
   Exported macros

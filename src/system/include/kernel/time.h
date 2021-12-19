@@ -54,7 +54,7 @@ extern "C" {
   Exported functions
 ==============================================================================*/
 extern int _gettime(struct timeval*);
-extern int _settime(time_t*);
+extern int _settime(const time_t*);
 
 /*==============================================================================
   Exported inline functions

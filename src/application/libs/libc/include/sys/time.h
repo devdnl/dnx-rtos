@@ -40,7 +40,7 @@ The library provides system set/get time functions.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
+#include <libc/include/sys/types.h>
 #include <stddef.h>
 #include <kernel/syscall.h>
 #include <errno.h>
@@ -85,17 +85,16 @@ struct timeval {
  *
  * @see gettimeofday(), settimeofday()
  */
+#ifndef __STRUCT_TIMEZONE_DEFINED__
 struct timezone {
         int tz_minuteswest;     /*!< minutes west of Greenwitch */
         int tz_dsttime;         /*!< type of DST correction */
 };
+#endif
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-#ifndef DOXYGEN
-extern int _ltimeoff;
-#endif
 
 /*==============================================================================
   Exported functions
@@ -111,8 +110,8 @@ extern int _ltimeoff;
  * The function can get the time as well as a timezone. If either tv or tz is
  * NULL, the corresponding structure is not get.
  *
- * @param  tv   time value
- * @param  tz   time zone
+ * @param  tv   time value      (can be NULL)
+ * @param  tz   time zone       (can be NULL)
  *
  * @return The function return 0 for success, or -1 for failure and errno is
  *         set appropriately.
@@ -146,18 +145,7 @@ static inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
 #if __OS_ENABLE_TIMEMAN__ ==_YES_
         int err = 0;
-
-        if (tv) {
-                tv->tv_sec  = 0;
-                tv->tv_usec = 0;
-                syscall(SYSCALL_GETTIMEOFDAY, &err, tv);
-        }
-
-        if (tz) {
-                tz->tz_minuteswest = _ltimeoff;
-                tz->tz_dsttime     = 0;
-        }
-
+        syscall(SYSCALL_GETTIMEOFDAY, &err, tv ,tz);
         return err;
 #else
         UNUSED_ARG2(tv, tz);
@@ -172,8 +160,8 @@ static inline int gettimeofday(struct timeval *tv, struct timezone *tz)
  * The function can set the time as well as a timezone. If either tv or tz is
  * NULL, the corresponding structure is not set.
  *
- * @param  tv   time value
- * @param  tz   time zone
+ * @param  tv   time value      (can be NULL)
+ * @param  tz   time zone       (can be NULL)
  *
  * @return The function return 0 for success, or -1 for failure and errno is
  *         set appropriately.
@@ -185,15 +173,7 @@ static inline int settimeofday(const struct timeval *tv, const struct timezone *
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
         int err = 0;
-
-        if (tv) {
-                syscall(SYSCALL_SETTIMEOFDAY, &err, &tv->tv_sec);
-        }
-
-        if (!err && tz) {
-                _ltimeoff = tz->tz_minuteswest;
-        }
-
+        syscall(SYSCALL_SETTIMEOFDAY, &err, tv, tz);
         return err;
 #else
         UNUSED_ARG2(tv, tz);

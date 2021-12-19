@@ -42,6 +42,7 @@
 #include "kernel/time.h"
 #include "kernel/khooks.h"
 #include "kernel/sysfunc.h"
+#include "lib/sys/types.h"
 #include "lib/cast.h"
 #include "lib/unarg.h"
 #include "lib/strlcat.h"
@@ -1084,7 +1085,20 @@ static void syscall_gettimeofday(syscallrq_t *rq)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
         GETARG(struct timeval*, timeval);
-        SETERRNO(_gettime(timeval));
+        GETARG(struct timezone*, tz);
+
+        int err = 0;
+
+        if (timeval) {
+                err = _gettime(timeval);
+        }
+
+        if (not err and tz) {
+                tz->tz_minuteswest = _ltimeoff_sec;
+                tz->tz_dsttime = 0;
+        }
+
+        SETERRNO(err);
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 #else
         SETERRNO(ENOSYS);
@@ -1102,8 +1116,20 @@ static void syscall_gettimeofday(syscallrq_t *rq)
 static void syscall_settimeofday(syscallrq_t *rq)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
-        GETARG(time_t *, time);
-        SETERRNO(_settime(time));
+        GETARG(const struct timeval*, tv);
+        GETARG(const struct timezone*, tz);
+
+        int err = 0;
+
+        if (tv) {
+                err = _settime(&tv->tv_sec);
+        }
+
+        if (not err and tz) {
+                _ltimeoff_sec = tz->tz_minuteswest * 60;
+        }
+
+        SETERRNO(err);
         SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
 #else
         SETERRNO(ENOSYS);

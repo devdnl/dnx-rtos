@@ -45,14 +45,13 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <config.h>
-#include <sys/types.h>
+#include <libc/include/sys/types.h>
 #include <limits.h>
 #include <stddef.h>
 #include <stdarg.h>
 #include <kernel/process.h>
 #include <kernel/syscall.h>
-#include <kernel/errno.h>
-#include <lib/unarg.h>
+#include <errno.h>
 
 /*==============================================================================
   Exported macros

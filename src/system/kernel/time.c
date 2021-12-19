@@ -167,7 +167,7 @@ int _gettime(struct timeval *timeval)
  * @return One of errno value.
  */
 //==============================================================================
-int _settime(time_t *timer)
+int _settime(const time_t *timer)
 {
         int err = EINVAL;
 

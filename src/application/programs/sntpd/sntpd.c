@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
+#include <sys/time.h>
 #include <dnx/net.h>
 #include <dnx/misc.h>
 
@@ -373,9 +374,10 @@ static void set_NTP_time(int argc, char *argv[])
 
                         if (send_request(socket) == 0) {
 
-                                time_t timestamp = 0;
-                                if (receive_response(socket, &timestamp) == 0) {
-                                        stime(&timestamp);
+                                struct timeval tv;
+                                if (receive_response(socket, &tv.tv_sec) == 0) {
+                                        tv.tv_usec = 0;
+                                        settimeofday(&tv, NULL);
                                 } else {
                                         select_next_host(argc);
                                 }
@@ -442,8 +444,10 @@ static void set_timezone(int argc, char *argv[])
                         if (json) {
                                 char *value = strchr(json, ':');
                                 if (value) {
-                                        int toffset = atoi(++value);
-                                        tzset(toffset);
+                                        struct timezone tz;
+                                        tz.tz_minuteswest = atoi(++value) / 60;
+                                        tz.tz_dsttime = 0;
+                                        settimeofday(NULL, &tz);
                                 }
                         }
 

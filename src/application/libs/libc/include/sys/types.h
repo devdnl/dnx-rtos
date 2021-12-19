@@ -34,8 +34,8 @@ The library contains system types.
 */
 /**@{*/
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef _LIBC_TYPES_H_
+#define _LIBC_TYPES_H_
 
 /*==============================================================================
   Include files
@@ -132,6 +132,7 @@ typedef u8_t tid_t;
 typedef i32_t dev_t;
 
 #ifndef DOXYGEN /* Doxygen description in time.h */
+#ifndef __TM_STRUCT_DEFINED__
 /** @brief Time representation type. */
 struct tm {
         int tm_sec;             //!< Seconds after the minute        (0-60*)
@@ -146,27 +147,35 @@ struct tm {
         int tm_isutc;           //!< UTC time flag (dnx RTOS extension)
 };
 #define __TM_STRUCT_DEFINED__
+#endif
 #endif /* DOXYGEN */
 
 #ifndef DOXYGEN /* Doxygen description in time.h */
+#ifndef __CLOCK_TYPE_DEFINED__
 /** @brief Clock representation type. */
 typedef u64_t clock_t;
 #define __CLOCK_TYPE_DEFINED__
+#endif
 #endif /* DOXYGEN */
 
 #ifndef DOXYGEN /* Doxygen description in time.h */
+#ifndef __TIME_TYPE_DEFINED__
 /** @brief Time representation type. */
 typedef u32_t time_t;
 #define __TIME_TYPE_DEFINED__
+#endif
 #endif /* DOXYGEN */
 
 #ifndef DOXYGEN /* Doxygen description in sys/time.h */
+#ifndef __SUSECONDS_TYPE_DEFINED__
 /** @brief Subseconds time representation */
 typedef u32_t suseconds_t;
 #define __SUSECONDS_TYPE_DEFINED__
 #endif
+#endif
 
 #ifndef DOXYGEN
+#ifndef __STRUCT_TIMEVAL_DEFINED__
 /** @brief Type representing time value. */
 struct timeval {
         time_t tv_sec;          /*!< seconds */
@@ -174,16 +183,36 @@ struct timeval {
 };
 #define __STRUCT_TIMEVAL_DEFINED__
 #endif
+#endif
 
 #ifndef DOXYGEN
+#ifndef __STRUCT_TIMEZONE_DEFINED__
+/**
+ * @brief Type representing timezone.
+ *
+ * @see gettimeofday(), settimeofday()
+ */
+struct timezone {
+        int tz_minuteswest;     /*!< minutes west of Greenwitch */
+        int tz_dsttime;         /*!< type of DST correction */
+};
+#define __STRUCT_TIMEZONE_DEFINED__
+#endif
+#endif
+
+#ifndef DOXYGEN
+#ifndef __STRUCT_TIMESPEC_DEFINED__
 /** @brief Structure holding an interval broken down into seconds and nanoseconds. */
 struct timespec {
         time_t tv_sec;
         long tv_nsec;
 };
+#define __STRUCT_TIMESPEC_DEFINED__
+#endif
 #endif
 
 #ifndef DOXYGEN // Doxygen documentation added to mntent.h file
+#ifndef __STRUCT_MNTENT_DEFINED__
 /** @brief Structure that describes a mount table entry. */
 struct mntent {
         const char *mnt_fsname; //!< Device or server for file system
@@ -191,9 +220,12 @@ struct mntent {
         u64_t       mnt_total;  //!< Device total size in bytes
         u64_t       mnt_free;   //!< Device free space in bytes
 };
+#define __STRUCT_MNTENT_DEFINED__
+#endif
 #endif
 
 #ifndef DOXYGEN // Doxygen documentation inserted in dirent.h file
+#ifndef __STRUCT_DIRENT_DEFINED__
 /** @brief Directory entry. */
 typedef struct dirent {
         const char *d_name;         //!< File name
@@ -201,9 +233,12 @@ typedef struct dirent {
         mode_t      mode;           //!< File mode (protection, file type)
         dev_t       dev;            //!< Device address (if file type is driver)
 } dirent_t;
+#define __STRUCT_DIRENT_DEFINED__
+#endif
 #endif
 
 /** @brief File information. */
+#ifndef __STRUCT_STAT_DEFINED__
 struct stat {
         u64_t   st_size;        /*!< Total size, in bytes.*/
         dev_t   st_dev;         /*!< ID of device containing file.*/
@@ -213,8 +248,11 @@ struct stat {
         time_t  st_ctime;       /*!< Time of creation.*/
         time_t  st_mtime;       /*!< Time of last modification.*/
 };
+#define __STRUCT_STAT_DEFINED__
+#endif
 
 /** file system statistic */
+#ifndef __STRUCT_STATFS_DEFINED__
 struct statfs {
         u32_t       f_type;     /*!< File system type. @see @ref SYS_FS_TYPE*/
         u32_t       f_bsize;    /*!< Block size.*/
@@ -224,6 +262,8 @@ struct statfs {
         u32_t       f_ffree;    /*!< Free file nodes in file system.*/
         const char *f_fsname;   /*!< File system name.*/
 };
+#define __STRUCT_STATFS_DEFINED__
+#endif
 
 /*==============================================================================
   Exported objects
@@ -241,7 +281,7 @@ struct statfs {
 }
 #endif
 
-#endif /* _TYPES_H_ */
+#endif /* _LIBC_TYPES_H_ */
 
 /**@}*/
 /*==============================================================================

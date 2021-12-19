@@ -35,6 +35,7 @@
 #include <stdbool.h>
 #include <dnx/misc.h>
 #include <sys/types.h>
+#include <sys/time.h>
 
 /*==============================================================================
   Local macros
@@ -70,13 +71,6 @@ static const uint8_t _ytab[2][12] = {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-#if __OS_ENABLE_TIMEMAN__ == _YES_
-/** statically allocated time structure */
-struct tm _tmbuf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-/** local time offset */
-int _ltimeoff_sec = 0;      // UTC timezone offset in seconds
-#endif
 
 /*==============================================================================
   Function definitions
@@ -693,13 +687,19 @@ struct tm *_gmtime_r(const time_t *timer, struct tm *tmbuf)
 struct tm *_localtime_r(const time_t *timer, struct tm *tmbuf)
 {
         if (timer) {
-                time_t localtime = *timer + _ltimeoff_sec;
-                struct tm *tm = _gmtime_r(&localtime, tmbuf);
-                tmbuf->tm_isutc = 0;
-                return tm;
-        } else {
-                return NULL;
+                struct timezone tz;
+                int r = -1;
+                syscall(SYSCALL_GETTIMEOFDAY, &r, NULL, &tz);
+
+                if (r == 0) {
+                        time_t localtime = *timer + (tz.tz_minuteswest * 60);
+                        struct tm *tm = _gmtime_r(&localtime, tmbuf);
+                        tmbuf->tm_isutc = 0;
+                        return tm;
+                }
         }
+
+        return NULL;
 }
 #endif
 

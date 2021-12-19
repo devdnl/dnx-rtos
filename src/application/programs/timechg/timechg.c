@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 #include <dnx/misc.h>
 
 /*==============================================================================
@@ -153,11 +154,18 @@ int main(int argc, char *argv[])
                         calculate_beginning_of_daylight_saving_time();
                         calculate_end_of_daylight_saving_time();
 
+                        struct timezone tz;
+
                         if (is_summer_time()) {
-                                tzset(TIMEZONE_CEST);
+                                tz.tz_minuteswest = TIMEZONE_CEST / 60;
+                                tz.tz_dsttime = 1;
+
                         } else {
-                                tzset(TIMEZONE_CET);
+                                tz.tz_minuteswest = TIMEZONE_CET / 60;
+                                tz.tz_dsttime = 1;
                         }
+
+                        settimeofday(NULL, &tz);
 
                         sleep(interval);
 

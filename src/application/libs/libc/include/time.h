@@ -40,12 +40,12 @@ The library provides time functions.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
+#include <libc/include/sys/types.h>
 #include <stddef.h>
 #include <kernel/syscall.h>
 #include <kernel/kwrapper.h>
-#include <kernel/errno.h>
-#include <lib/unarg.h>
+#include <errno.h>
+#include <dnx/misc.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -339,9 +339,6 @@ struct tm {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-#ifndef DOXYGEN
-extern int _ltimeoff;
-#endif
 
 /*==============================================================================
   Exported functions
@@ -492,68 +489,6 @@ static inline time_t time(time_t *timer)
 #else
         UNUSED_ARG1(timer);
         return -1;
-#endif
-}
-
-//==============================================================================
-/**
- * @brief  Set system's time
- *
- * stime() sets the system's idea of the time and date. The time, pointed to by
- * timer, is measured in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
- *
- * @param  timer        pointer to an object of type time_t, where the time
- *                      value is stored.
- *
- * @return On success 0 is returned.
- *         On error  -1 is returned.
- *
- * @see time_t, time()
- */
-//==============================================================================
-static inline int stime(time_t *timer)
-{
-#if __OS_ENABLE_TIMEMAN__ == _YES_
-        int r = -1;
-        syscall(SYSCALL_SETTIMEOFDAY, &r, timer);
-        return r;
-#else
-        UNUSED_ARG1(timer);
-        return -1;
-#endif
-}
-
-//==============================================================================
-/**
- * @brief  Setup time zone by setting difference between UTC and local time
- *
- * @param  tdiff        time difference in seconds (can be negative)
- *
- * @see timezone, stime(), time()
- */
-//==============================================================================
-static inline void tzset(int tdiff)
-{
-#if __OS_ENABLE_TIMEMAN__ == _YES_
-        _ltimeoff = tdiff;
-#else
-        UNUSED_ARG1(tdiff);
-#endif
-}
-
-//==============================================================================
-/**
- * @brief  Return difference in seconds between UTC and local time
- *
- * @return Difference between UTC and local time in seconds.
- */
-//==============================================================================
-static inline int timezone()
-{
-#if __OS_ENABLE_TIMEMAN__ == _YES_
-        return _ltimeoff;
-#else
-        return 0;
 #endif
 }
 

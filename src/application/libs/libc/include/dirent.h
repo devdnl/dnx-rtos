@@ -45,7 +45,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <kernel/syscall.h>
-#include <sys/types.h>
+#include <libc/include/sys/types.h>
 #include <errno.h>
 
 /*==============================================================================

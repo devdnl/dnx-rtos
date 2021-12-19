@@ -35,6 +35,7 @@ Brief   Performance measurement program
 #include <string.h>
 #include <dnx/os.h>
 #include <dnx/thread.h>
+#include <dnx/misc.h>
 #include <sys/ioctl.h>
 #include <sha256.h>
 

@@ -51,7 +51,7 @@ extern "C" {
   Exported objects
 ==============================================================================*/
 extern struct tm _tmbuf;
-extern int       _ltimeoff;
+extern int       _ltimeoff_sec;
 
 /*==============================================================================
   Exported functions
