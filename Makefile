@@ -152,7 +152,6 @@ SYS_LIB_LOC     = $(SYS_LOC)/lib
 SYS_MM_LOC      = $(SYS_LOC)/mm
 SYS_NET_LOC     = $(SYS_LOC)/net
 SYS_CPU_LOC     = $(SYS_LOC)/cpu
-SYS_LIBC_LOC    = $(SYS_LOC)/libc
 
 #---------------------------------------------------------------------------------------------------
 # BASIC PROGRAMS DEFINITIONS
@@ -347,7 +346,7 @@ quickcheck :
 	              --enable=warning,style,performance,portability,missingInclude \
 	              --force --inconclusive \
 	              --include=./config/project/flags.h \
-	              -I src/system/include/libc/dnx \
+	              -I src/application/libs/libc/include/dnx \
 	              $(CSRC) $(CXXSRC)
 
 ####################################################################################################

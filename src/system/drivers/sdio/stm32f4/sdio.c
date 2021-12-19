@@ -32,7 +32,7 @@ Brief   SD Card Interface Driver.
 #include "drivers/class/storage/sd.h"
 #include "stm32f4/sdio_cfg.h"
 #include "stm32f4/dma_ddi.h"
-#include "sys/ioctl.h"
+#include "drivers/ioctl_requests.h"
 #include "../sdio_ioctl.h"
 
 /*==============================================================================

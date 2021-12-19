@@ -29,9 +29,8 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <dnx/misc.h>
-#include <unistd.h>
-#include <errno.h>
+#include "lib/misc.h"
+#include "kernel/errno.h"
 #include <string.h>
 #include "fs/vfs.h"
 #include "lib/llist.h"

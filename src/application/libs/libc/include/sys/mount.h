@@ -45,9 +45,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <kernel/syscall.h>
-#include <drivers/drvctrl.h>
 #include <sys/stat.h>
-#include <kernel/errno.h>
+#include <errno.h>
 
 /*==============================================================================
   Exported macros

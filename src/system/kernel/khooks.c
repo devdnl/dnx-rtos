@@ -34,7 +34,7 @@
 #include "kernel/kpanic.h"
 #include "kernel/process.h"
 #include "kernel/printk.h"
-#include "dnx/misc.h"
+#include "lib/misc.h"
 #include "lib/unarg.h"
 #include "cpu/cpuctl.h"
 

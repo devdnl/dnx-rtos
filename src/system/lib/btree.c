@@ -31,8 +31,8 @@ Brief    BTree library.
 ==============================================================================*/
 #include <string.h>
 #include "lib/btree.h"
-#include "libc/errno.h"
-#include "dnx/misc.h"
+#include "kernel/errno.h"
+#include "lib/misc.h"
 
 /*==============================================================================
   Local macros

@@ -82,7 +82,7 @@ function create_driver_registration_file_c()
     content=$content'// file generated automatically at build process\n\n'
     content=$content'#include "drivers/drvctrl.h"\n'
     content=$content'#include "drivers/driver.h"\n'
-    content=$content'#include "dnx/misc.h"\n'
+    content=$content'#include "lib/misc.h"\n'
     content=$content'#include "config.h"\n\n'
     content=$content$ifimport
     content=$content$modtable

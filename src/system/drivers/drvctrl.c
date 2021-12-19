@@ -41,7 +41,7 @@
 #include "lib/vt100.h"
 #include "lib/llist.h"
 #include "fs/vfs.h"
-#include "dnx/misc.h"
+#include "lib/misc.h"
 
 /*==============================================================================
   Local macros

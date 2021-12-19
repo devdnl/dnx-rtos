@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    builtincall.h
+@file    stdio.h
 
 @author  Daniel Zorychta
 
-@brief   Built-in functions macro.
+@brief   Standard IO library.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -26,23 +26,33 @@
 
 *//*==========================================================================*/
 
-#ifndef _BUILTINCALL_H_
-#define _BUILTINCALL_H_
+/**
+\defgroup stdio-h <stdio.h>
 
-/*==============================================================================
-  Include files
-==============================================================================*/
+The library provides general purpose IO functions.
+
+*/
+/**@{*/
+
+#ifndef _STDIO_H_
+#define _STDIO_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
+  Include files
+==============================================================================*/
+#include <config.h>
+#include "sys/types.h"
+#include <limits.h>
+#include <stddef.h>
+#include <stdarg.h>
+
+/*==============================================================================
   Exported macros
 ==============================================================================*/
-#ifndef _builtinfunc
-#define _builtinfunc(_func, ...)       _##_func(__VA_ARGS__)
-#endif
 
 /*==============================================================================
   Exported object types
@@ -64,7 +74,9 @@ extern "C" {
 }
 #endif
 
-#endif /* _BUILTINCALL_H_ */
+#endif /* _STDIO_H_ */
+
+/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

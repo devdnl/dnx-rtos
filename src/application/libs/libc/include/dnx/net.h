@@ -221,10 +221,9 @@ extern "C" {
 ==============================================================================*/
 #include <stdint.h>
 #include <kernel/syscall.h>
-#include <kernel/builtinfunc.h>
 #include <stddef.h>
 #include <net/netm.h>
-#include <lib/unarg.h>
+#include <dnx/misc.h>
 #include <errno.h>
 
 /*==============================================================================

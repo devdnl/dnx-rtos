@@ -36,7 +36,7 @@ Brief    Shared memory management.
 #include "kernel/errno.h"
 #include "kernel/kwrapper.h"
 #include "lib/cast.h"
-#include "dnx/misc.h"
+#include "lib/misc.h"
 
 #if __OS_ENABLE_SHARED_MEMORY__ > 0
 

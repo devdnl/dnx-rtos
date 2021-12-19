@@ -31,7 +31,7 @@ Brief   SIPC Network management - buffer.
 #include <string.h>
 #include "sipcbuf.h"
 #include "kernel/errno.h"
-#include "dnx/misc.h"
+#include "lib/misc.h"
 #include "kernel/sysfunc.h"
 
 /*==============================================================================

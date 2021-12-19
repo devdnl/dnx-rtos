@@ -31,7 +31,7 @@
 ==============================================================================*/
 #include "lib/vsscanf.h"
 #include "lib/conv.h"
-#include "dnx/misc.h"
+#include "lib/misc.h"
 #include "config.h"
 #include <stdint.h>
 

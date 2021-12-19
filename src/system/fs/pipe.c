@@ -31,8 +31,8 @@
 ==============================================================================*/
 #include "config.h"
 #include <sys/types.h>
-#include "dnx/misc.h"
-#include "libc/errno.h"
+#include "lib/misc.h"
+#include "kernel/errno.h"
 #include "kernel/kwrapper.h"
 #include "fs/pipe.h"
 

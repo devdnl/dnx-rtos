@@ -40,7 +40,6 @@
 #include "kernel/kwrapper.h"
 #include "kernel/sysfunc.h"
 #include "kernel/khooks.h"
-#include "dnx/os.h"
 
 /*==============================================================================
   Local symbolic constants/macros

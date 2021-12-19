@@ -63,7 +63,7 @@ function create_registration_file()
     echo ''
     echo '#include "fs/fsctrl.h"'
     echo '#include "fs/fs.h"'
-    echo '#include <dnx/misc.h>'
+    echo '#include "lib/misc.h"'
     echo ''
 
     for fs in $list; do

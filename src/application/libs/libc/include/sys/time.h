@@ -43,9 +43,8 @@ The library provides system set/get time functions.
 #include <sys/types.h>
 #include <stddef.h>
 #include <kernel/syscall.h>
-#include <kernel/kwrapper.h>
-#include <kernel/errno.h>
-#include <lib/unarg.h>
+#include <errno.h>
+#include <dnx/misc.h>
 
 #ifdef __cplusplus
 extern "C" {

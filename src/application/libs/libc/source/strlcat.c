@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    vfprintf.c
+/*==============================================================================
+File     strlcat.c
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   Print functions.
+Brief    String functions.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,17 +24,13 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "config.h"
-#include "lib/misc.h"
-#include "lib/vfprintf.h"
-#include "lib/vsnprintf.h"
-#include "lib/cast.h"
-#include "mm/mm.h"
+#include <string.h>
+#include "lib/strlcat.h"
 
 /*==============================================================================
   Local macros
@@ -66,44 +62,53 @@
 
 //==============================================================================
 /**
- * @brief Function write to file formatted string
+ * @brief The strlcat() function concatenate strings.
  *
- * @param file                file
- * @param format              formated text
- * @param arg                 arguments
+ * The strlcat() function appends the NUL-terminated string src to the end of
+ * dst. It will append at most size - strlen(dst) - 1 bytes, NUL-terminating
+ * the result.
  *
- * @retval number of written characters
+ * @param  dst  destination buffer
+ * @param  src  source buffer
+ * @param  size destination buffer size
+ *
+ * @return The strlcat() function return the total length of the string it
+ *         tried to create. For strlcat() that means the initial length of dst
+ *         plus the length of src. While this may seem somewhat confusing, it
+ *         was done to make truncation detection simple.
  */
 //==============================================================================
-int _vfprintf(FILE *file, const char *format, va_list arg)
+size_t _strlcat(char *dst, const char *src, size_t size)
 {
-        int n = 0;
+        char       *d = dst;
+        const char *s = src;
+        size_t      n = size;
+        size_t      dlen;
 
-#if (__OS_PRINTF_ENABLE__ > 0)
-
-        if (file && format) {
-                va_list carg;
-                va_copy(carg, arg);
-                u32_t size = _vsnprintf(NULL, 0, format, carg) + 1;
-                va_end(carg);
-
-                char *str = NULL;
-                int err = _kzalloc(_MM_KRN, size, NULL, _MM_FLAG__DMA_CAPABLE,
-                                   _MM_FLAG__DMA_CAPABLE, cast(void*, &str));
-                if (!err && str) {
-                        n = _vsnprintf(str, size, format, arg);
-
-                        size_t wrcnt;
-                        _vfs_fwrite(str, n, &wrcnt, file);
-
-                        _kfree(_MM_KRN, cast(void*, &str));
-                }
+        /* Find the end of dst and adjust bytes left but don't go past end */
+        while (n-- != 0 && *d != '\0') {
+                d++;
         }
 
-#else
-        UNUSED_ARG3(file, format, arg);
-#endif
-        return n;
+        dlen = d - dst;
+        n    = size - dlen;
+
+        if (n == 0) {
+                return (dlen + strlen(s));
+        }
+
+        while (*s != '\0') {
+                if (n != 1) {
+                        *d++ = *s;
+                         n--;
+                }
+                s++;
+        }
+
+        *d = '\0';
+
+        /* count does not include NUL */
+        return (dlen + (s - src));
 }
 
 /*==============================================================================

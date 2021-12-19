@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    vfprintf.c
+/*==============================================================================
+File     strlcpy.c
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   Print functions.
+Brief    String functions.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2017 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,17 +24,13 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
+==============================================================================*/
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "config.h"
-#include "lib/misc.h"
-#include "lib/vfprintf.h"
-#include "lib/vsnprintf.h"
-#include "lib/cast.h"
-#include "mm/mm.h"
+#include <string.h>
+#include "lib/strlcpy.h"
 
 /*==============================================================================
   Local macros
@@ -66,44 +62,44 @@
 
 //==============================================================================
 /**
- * @brief Function write to file formatted string
+ * @brief The strlcpy() function copy strings.
  *
- * @param file                file
- * @param format              formated text
- * @param arg                 arguments
+ * The strlcpy() function copies up to size - 1 characters from the NUL-terminated
+ * string src to dst, NUL-terminating the result.
  *
- * @retval number of written characters
+ * Note, however, that if strlcat() traverses size characters without finding
+ * a NUL, the length of the string is considered to be size and the destination
+ * string will not be NUL-terminated (since there was no space for the NUL).
+ *
+ * @param  dst  destination buffer
+ * @param  src  source buffer
+ * @param  size destination buffer size
+ *
+ * @return The strlcpy() function return the total length of the string they
+ *         tried to create. For strlcpy() that means the length of src.
  */
 //==============================================================================
-int _vfprintf(FILE *file, const char *format, va_list arg)
+size_t _strlcpy(char *dst, const char *src, size_t size)
 {
-        int n = 0;
+        char       *d = dst;
+        const char *s = src;
+        size_t      n = size;
 
-#if (__OS_PRINTF_ENABLE__ > 0)
-
-        if (file && format) {
-                va_list carg;
-                va_copy(carg, arg);
-                u32_t size = _vsnprintf(NULL, 0, format, carg) + 1;
-                va_end(carg);
-
-                char *str = NULL;
-                int err = _kzalloc(_MM_KRN, size, NULL, _MM_FLAG__DMA_CAPABLE,
-                                   _MM_FLAG__DMA_CAPABLE, cast(void*, &str));
-                if (!err && str) {
-                        n = _vsnprintf(str, size, format, arg);
-
-                        size_t wrcnt;
-                        _vfs_fwrite(str, n, &wrcnt, file);
-
-                        _kfree(_MM_KRN, cast(void*, &str));
-                }
+        /* Copy as many bytes as will fit */
+        if (n != 0 && --n != 0) {
+                do {
+                        if ((*d++ = *s++) == 0) break;
+                } while (--n != 0);
         }
 
-#else
-        UNUSED_ARG3(file, format, arg);
-#endif
-        return n;
+        /* Not enough room in dst, add NUL and traverse rest of src */
+        if (n == 0) {
+                if (size != 0) *d = '\0';
+                while (*s++);
+        }
+
+        /* count does not include NUL */
+        return (s - src - 1);
 }
 
 /*==============================================================================

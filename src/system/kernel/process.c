@@ -43,7 +43,7 @@
 #include "kernel/khooks.h"
 #include "lib/llist.h"
 #include "lib/cast.h"
-#include "dnx/misc.h"
+#include "lib/misc.h"
 #include "mm/shm.h"
 
 /*==============================================================================

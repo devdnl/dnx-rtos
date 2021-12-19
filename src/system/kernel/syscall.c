@@ -48,7 +48,7 @@
 #include "lib/strlcpy.h"
 #include "net/netm.h"
 #include "mm/shm.h"
-#include "dnx/misc.h"
+#include "lib/misc.h"
 
 /*==============================================================================
   Local macros

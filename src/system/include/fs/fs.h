@@ -48,7 +48,7 @@ extern "C" {
 ==============================================================================*/
 #include "config.h"
 #include <sys/types.h>
-#include <dnx/misc.h>
+#include "lib/misc.h"
 #include <string.h>
 #include <errno.h>
 #include "drivers/drvctrl.h"

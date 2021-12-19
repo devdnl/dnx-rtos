@@ -45,9 +45,8 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <kernel/syscall.h>
-#include <kernel/errno.h>
-#include <kernel/builtinfunc.h>
-#include <lib/unarg.h>
+#include <sys/types.h>
+#include <errno.h>
 
 /*==============================================================================
   Exported macros

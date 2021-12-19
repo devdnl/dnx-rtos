@@ -46,7 +46,6 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <stdarg.h>
-#include <drivers/ioctl_macros.h>
 #include <drivers/ioctl_requests.h>
 #include <kernel/syscall.h>
 

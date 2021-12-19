@@ -31,7 +31,7 @@ Brief   Socket buffer.
 #include <string.h>
 #include "net/cannet/cannet.h"
 #include "kernel/errno.h"
-#include "dnx/misc.h"
+#include "lib/misc.h"
 #include "kernel/sysfunc.h"
 
 /*==============================================================================

@@ -31,8 +31,9 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "drivers/class/storage/sd.h"
+#include "drivers/class/storage/ioctl.h"
+#include "drivers/ioctl_requests.h"
 #include "noarch/sdspi_cfg.h"
-#include "sys/ioctl.h"
 #include "../sdspi_ioctl.h"
 
 /*==============================================================================

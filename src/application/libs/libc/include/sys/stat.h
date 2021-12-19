@@ -48,8 +48,8 @@ extern "C" {
 ==============================================================================*/
 #include <sys/types.h>
 #include <kernel/syscall.h>
-#include <kernel/errno.h>
-#include <lib/unarg.h>
+#include <dnx/misc.h>
+#include <errno.h>
 
 /*==============================================================================
   Exported macros

@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    errno.h
+/*==============================================================================
+File     strchrrep.c
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   Error codes.
+Brief    String character replace.
 
-@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2019 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,51 +24,68 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
-
-/*
-Doxygen documentation is in the kernel/errno.h file
-*/
-
-#ifndef _ERRNO_H_
-#define _ERRNO_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+==============================================================================*/
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <kernel/errno.h>
+#include <string.h>
+#include "lib/strchrrep.h"
 
 /*==============================================================================
-  Exported macros
+  Local macros
 ==============================================================================*/
-#define errno           _errno
 
 /*==============================================================================
-  Exported object types
+  Local object types
+==============================================================================*/
+
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local objects
 ==============================================================================*/
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-extern int _errno;
 
 /*==============================================================================
-  Exported functions
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported inline functions
+  Function definitions
 ==============================================================================*/
 
-#ifdef __cplusplus
+//==============================================================================
+/**
+ * @brief  Function replace characters in string.
+ *
+ * @param  str          string (in/out buffer)
+ * @param  from         find character
+ * @param  to           replace character
+ *
+ * @return Number of replaced characters.
+ */
+//==============================================================================
+int _strchrrep(char *str, char from, char to)
+{
+        int repl = 0;
+
+        while (str && *str != '\0') {
+                if (*str == from) {
+                        *str = to;
+                        repl++;
+                }
+                str++;
+        }
+
+        return repl;
 }
-#endif
 
-#endif /* _ERRNO_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/

@@ -42,11 +42,6 @@ dnx RTOS miscellaneous macros and functions.
 ==============================================================================*/
 #include <string.h>
 #include <stdbool.h>
-#include <lib/cast.h>
-#include <lib/unarg.h>
-#include <lib/strlcat.h>
-#include <lib/strlcpy.h>
-#include <kernel/syscall.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -137,11 +132,15 @@ extern "C" {
    @endcode
  */
 //==============================================================================
-#ifdef DOXYGEN
-#define UNUSED_ARGx(args)
-#else
-// defined in <lib/unarg.h>
-#endif
+#define UNUSED_ARG1(_arg1)                                                      ((void)_arg1)
+#define UNUSED_ARG2(_arg1, _arg2)                                               UNUSED_ARG1(_arg1); UNUSED_ARG1(_arg2)
+#define UNUSED_ARG3(_arg1, _arg2, _arg3)                                        UNUSED_ARG2(_arg1, _arg2); UNUSED_ARG1(_arg3)
+#define UNUSED_ARG4(_arg1, _arg2, _arg3, _arg4)                                 UNUSED_ARG3(_arg1, _arg2, _arg3); UNUSED_ARG1(_arg4)
+#define UNUSED_ARG5(_arg1, _arg2, _arg3, _arg4, _arg5)                          UNUSED_ARG4(_arg1, _arg2, _arg3, _arg4); UNUSED_ARG1(_arg5)
+#define UNUSED_ARG6(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6)                   UNUSED_ARG5(_arg1, _arg2, _arg3, _arg4, _arg5); UNUSED_ARG1(_arg6)
+#define UNUSED_ARG7(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7)            UNUSED_ARG6(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6); UNUSED_ARG1(_arg7)
+#define UNUSED_ARG8(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7, _arg8)     UNUSED_ARG7(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7); UNUSED_ARG1(_arg8)
+
 
 //==============================================================================
 /**
@@ -601,6 +600,56 @@ extern "C" {
 //==============================================================================
 #define auto_type __auto_type
 
+//==============================================================================
+/**
+ * @brief The macro casts variable <i>var</i> to type <i>void*</i>.
+ * Use this macro to remove <b>const</b> attribute.
+ *
+ * @param type          casting type
+ * @param var           variable to cast
+ *
+ * @b Example
+ * @code
+   // ...
+
+   void func(char *str)
+   {
+          // ...
+   }
+
+   const char *str = "test";
+
+   func(const_cast(str));
+
+   // ...
+ * @endcode
+ */
+//==============================================================================
+#ifndef __cplusplus
+#define const_cast(var) ((void*)(var))
+#endif
+
+//==============================================================================
+/**
+ * @brief The macro casts variable <i>var</i> to type <i>type</i>.
+ * Use this macro to cast selected variable to any type.
+ *
+ * @param type          casting type
+ * @param var           variable to cast
+ *
+ * @b Example
+ * @code
+   // ...
+
+   void   *data   = calloc(1, 10);
+   type_t *buffer = cast(type_t*, data);
+
+   // ...
+ * @endcode
+ */
+//==============================================================================
+#define cast(type, var) ((type)(var))
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -633,6 +682,7 @@ extern "C" {
 //==============================================================================
 static inline size_t strlcpy(char *dst, const char *src, size_t size)
 {
+        extern size_t _strlcpy(char *dst, const char *src, size_t size);
         return _strlcpy(dst, src, size);
 }
 
@@ -656,6 +706,7 @@ static inline size_t strlcpy(char *dst, const char *src, size_t size)
 //==============================================================================
 static inline size_t strlcat(char *dst, const char *src, size_t size)
 {
+        extern size_t _strlcat(char *dst, const char *src, size_t size);
         return _strlcat(dst, src, size);
 }
 

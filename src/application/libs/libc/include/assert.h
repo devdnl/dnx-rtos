@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    vt100.h
+@file    assert.h
 
 @author  Daniel Zorychta
 
-@brief   VT100 terminal codes.
+@brief   This file provides assert macro.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2013 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -26,26 +26,79 @@
 
 *//*==========================================================================*/
 
-/* Note: lib/vt100.h file is used in documentation
-\defgroup dnx-vt100-h <dnx/vt100.h>
+/**
+\defgroup assert-h <assert.h>
+
+The library provides assert macro.
+
 */
 /**@{*/
 
-#ifndef _LIBC_VT100_H_
-#define _LIBC_VT100_H_
-
-/*==============================================================================
-  Include files
-==============================================================================*/
-#include "lib/vt100.h"
+#ifndef _ASSERT_H_
+#define _ASSERT_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*==============================================================================
+  Include files
+==============================================================================*/
+#include <config.h>
+#include <stdlib.h>
+
+/*==============================================================================
   Exported macros
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief Macro creates assertion functionality.
+ *
+ * Aborts the program if user-defined condition is not <b>true</b>. Macro can be
+ * disabled if <b>NDEBUG</b> macro is defined.
+ *
+ * @param ignore        user-defined condition
+ *
+ * @b Example @b 1
+ * @code
+        #include <assert.h>
+
+        // ...
+
+        void some_function(int *number)
+        {
+                assert(number != NULL);      // pointer to number must be not NULL
+
+                // ...
+        }
+
+        // ...
+   @endcode
+ *
+ * @b Example @b 2
+ * @code
+         #define NDEBUG
+         #include <assert.h>
+
+         // all assert macros are disabled
+
+         assert(false); // has no effect for program flow
+
+         // ...
+   @endcode
+ */
+//==============================================================================
+#if !defined(NDEBUG)
+#   ifdef DOXYGEN
+#       define assert(ignore)
+#   else
+#       define assert(ignore) do{if ((ignore)) break; printf("Assertion failed: %s, file %s, line %d\n", #ignore, __FILE__, __LINE__); abort();}while(0)
+#   endif
+#endif
+
+#ifndef DOXYGEN
+#define static_assert(_expr, _msg) _Static_assert(_expr, _msg)
+#endif
 
 /*==============================================================================
   Exported object types
@@ -59,15 +112,11 @@ extern "C" {
   Exported functions
 ==============================================================================*/
 
-/*==============================================================================
-  Exported inline functions
-==============================================================================*/
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _LIBC_VT100_H_ */
+#endif /* _ASSERT_H_ */
 
 /**@}*/
 /*==============================================================================

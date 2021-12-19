@@ -35,9 +35,9 @@
 #include "config.h"
 #include "fs/vfs.h"
 #include "mm/mm.h"
-#include "dnx/misc.h"
+#include "lib/misc.h"
 #include "lib/vsnprintf.h"
-#include "libc/errno.h"
+#include "kernel/errno.h"
 
 #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
 

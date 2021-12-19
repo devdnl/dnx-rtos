@@ -43,7 +43,7 @@
   Include files
 ==============================================================================*/
 #include <stdbool.h>
-#include "dnx/misc.h"
+#include "lib/misc.h"
 #include "sys/types.h"
 #include "lib/unarg.h"
 #include "lib/conv.h"
