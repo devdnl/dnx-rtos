@@ -30,11 +30,11 @@
   Include files
 ==============================================================================*/
 #include "config.h"
-#include <ctype.h>
+#include "lib/ctype.h"
 #include <string.h>
 #include <stdbool.h>
-#include <dnx/misc.h>
-#include <sys/types.h>
+#include "lib/misc.h"
+#include "lib/sys/types.h"
 
 /*==============================================================================
   Local macros
