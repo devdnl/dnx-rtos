@@ -800,8 +800,8 @@ static inline int getsubopt(char **optionp, char *const *tokens, char **valuep)
 //==============================================================================
 static inline int atoi(const char *str)
 {
-        extern i32_t _atoi(const char *str);
-        return _atoi(str);
+        extern i32_t _libc_atoi(const char *str);
+        return _libc_atoi(str);
 }
 
 //==============================================================================
@@ -828,8 +828,8 @@ static inline int atoi(const char *str)
 //==============================================================================
 static inline long atol(const char *str)
 {
-        extern i32_t _atoi(const char *str);
-        return _atoi(str);
+        extern i32_t _libc_atoi(const char *str);
+        return _libc_atoi(str);
 }
 
 //==============================================================================
@@ -896,10 +896,10 @@ static inline long atol(const char *str)
 //==============================================================================
 static inline i32_t strtol(const char *nptr, char **endptr, int base)
 {
-        extern char *_strtoi(const char *string, int base, i32_t *value);
+        extern char *_libc_strtoi(const char *string, int base, i32_t *value);
 
         i32_t result;
-        char *end = _strtoi(nptr, base, &result);
+        char *end = _libc_strtoi(nptr, base, &result);
         if (endptr)
                 *endptr = end;
         return result;
@@ -929,8 +929,8 @@ static inline i32_t strtol(const char *nptr, char **endptr, int base)
 //==============================================================================
 static inline double atof(const char *nptr)
 {
-        extern double _atof(const char *str);
-        return _atof(nptr);
+        extern double _libc_atof(const char *str);
+        return _libc_atof(nptr);
 }
 
 //==============================================================================
@@ -957,8 +957,8 @@ static inline double atof(const char *nptr)
 //==============================================================================
 static inline double strtod(const char *nptr, char **endptr)
 {
-        extern double _strtod(const char *str, char **end);
-        return _strtod(nptr, endptr);
+        extern double _libc_strtod(const char *str, char **end);
+        return _libc_strtod(nptr, endptr);
 }
 
 //==============================================================================
@@ -985,8 +985,8 @@ static inline double strtod(const char *nptr, char **endptr)
 //==============================================================================
 static inline float strtof(const char *nptr, char **endptr)
 {
-        extern float _strtof(const char *str, char **end);
-        return (float)_strtof(nptr, endptr);
+        extern float _libc_strtof(const char *str, char **end);
+        return (float)_libc_strtof(nptr, endptr);
 }
 
 #ifdef __cplusplus

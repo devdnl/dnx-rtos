@@ -48,14 +48,14 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if (__OS_PRINTF_ENABLE__ > 0) && (__OS_ENABLE_TIMEMAN__ == _YES_)
-/** buffer used to store converted time to string */
-static char timestr[32];
-#endif
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+#if (__OS_PRINTF_ENABLE__ > 0) && (__OS_ENABLE_TIMEMAN__ == _YES_)
+/** buffer used to store converted time to string */
+extern char _libc_timestr[32];
+#endif
 
 /*==============================================================================
   External objects
@@ -82,7 +82,7 @@ static char *_ctime_r(const time_t *timer, const struct tm *tm, char *buf)
 #if (__OS_PRINTF_ENABLE__ > 0)
         if (timer || tm) {
                 if (buf == NULL) {
-                        buf = timestr;
+                        buf = _libc_timestr;
                 }
 
                 struct tm t;
@@ -93,7 +93,7 @@ static char *_ctime_r(const time_t *timer, const struct tm *tm, char *buf)
                         localtime_r(timer, &t);
                 }
 
-                strftime(buf, sizeof(timestr), "%a %b %d %X %z %Y%n", &t);
+                strftime(buf, sizeof(_libc_timestr), "%a %b %d %X %z %Y%n", &t);
 
                 return buf;
         } else {

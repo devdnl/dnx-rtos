@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    localtime_r.c
+@file    static.c
 
 @author  Daniel Zorychta
 
-@brief   Time functions.
+@brief   Static variables definition.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,9 +29,8 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <time.h>
 #include <config.h>
-#include <lib/conv.h>
+#include <sys/types.h>
 
 /*==============================================================================
   Local macros
@@ -52,58 +51,19 @@
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+#if (__OS_PRINTF_ENABLE__ > 0) && (__OS_ENABLE_TIMEMAN__ == _YES_)
+/** buffer used to store temporary time structure */
+struct tm _libc_tmbuf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-/*==============================================================================
-  External objects
-==============================================================================*/
+/** buffer used to store converted time to string */
+char _libc_timestr[32];
+#endif
+
+unsigned int _libc_seed = 123456789;
 
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-#if __OS_ENABLE_TIMEMAN__ == _YES_
-//==============================================================================
-/**
- * @brief  Convert time_t to tm as local time
- *
- * Uses the value pointed by timer to fill a tm structure with the values that
- * represent the corresponding time, expressed for the local timezone.
- *
- * @param  timer        Pointer to an object of type time_t that contains a time value.
- *                      time_t is an alias of a fundamental arithmetic type
- *                      capable of representing times as returned by function time.
- *
- * @return A pointer to a tm structure with its members filled with the values
- *         that correspond to the local time representation of timer.
- */
-//==============================================================================
-struct tm *localtime(const time_t *timer)
-{
-        return _localtime_r(timer, &_tmbuf);
-}
-
-//==============================================================================
-/**
- * @brief  Convert time_t to tm as local time
- *
- * Uses the value pointed by timer to fill a tm structure with the values that
- * represent the corresponding time, expressed for the local timezone.
- *
- * @param[in]  timer    Pointer to an object of type time_t that contains a time value.
- *                      time_t is an alias of a fundamental arithmetic type
- *                      capable of representing times as returned by function time.
- *
- * @param[out] tm       Pointer to an object of type struct tm that will contains
- *                      converted timer value to time structure.
- *
- * @return A pointer to a tm structure with its members filled with the values
- *         that correspond to the local time representation of timer.
- */
-//==============================================================================
-struct tm *localtime_r(const time_t *timer, struct tm *tm)
-{
-        return _localtime_r(timer, tm);
-}
-#endif
 
 /*==============================================================================
   End of file

@@ -73,7 +73,8 @@
 //==============================================================================
 time_t mktime(struct tm *tm)
 {
-        return cast(time_t, _mktime(tm));
+        extern time_t _libc_mktime(struct tm *tm);
+        return _libc_mktime(tm);
 }
 #endif
 

@@ -1,17 +1,16 @@
 # Makefile for GNU make
 
-CSRC_CORE  += ../application/libs/libc/source/ctime_r.c
-CSRC_CORE  += ../application/libs/libc/source/rand.c
+CSRC_CORE  += ../application/libs/libc/source/static.c
 CSRC_LIB   += libc/source/conv.c
+CSRC_LIB   += libc/source/ctime_r.c
 CSRC_LIB   += libc/source/fgets.c
 CSRC_LIB   += libc/source/fputc.c
 CSRC_LIB   += libc/source/fputs.c
 CSRC_LIB   += libc/source/getc.c
-CSRC_LIB   += libc/source/gmtime_r.c
 CSRC_LIB   += libc/source/locale.c
-CSRC_LIB   += libc/source/localtime_r.c
 CSRC_LIB   += libc/source/mktime.c
 CSRC_LIB   += libc/source/perror.c
+CSRC_LIB   += libc/source/rand.c
 CSRC_LIB   += libc/source/strcasecmp.c
 CSRC_LIB   += libc/source/strchrrep.c
 CSRC_LIB   += libc/source/strerror.c

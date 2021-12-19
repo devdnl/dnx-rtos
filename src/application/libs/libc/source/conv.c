@@ -71,6 +71,9 @@ static const uint8_t _ytab[2][12] = {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+#if __OS_ENABLE_TIMEMAN__ == _YES_
+extern struct tm _libc_tmbuf;
+#endif
 
 /*==============================================================================
   Function definitions
@@ -119,7 +122,7 @@ static void reverse_buffer(char *begin, char *end)
  * @return pointer in the buffer
  */
 //==============================================================================
-char *_itoa(i64_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req)
+char *_libc_itoa(i64_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req)
 {
         static const char digits[]  = "0123456789ABCDEF";
         char             *buf_start = buf;
@@ -178,7 +181,7 @@ char *_itoa(i64_t val, char *buf, u8_t base, bool usign_val, u8_t zeros_req)
  * @return number of characters
  */
 //==============================================================================
-int _dtoa(double value, char *str, int prec, int n)
+int _libc_dtoa(double value, char *str, int prec, int n)
 {
         const double pow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000,
                                 10000000, 100000000, 1000000000};
@@ -316,7 +319,7 @@ int _dtoa(double value, char *str, int prec, int n)
  * @return pointer in string when operation was finished
  */
 //==============================================================================
-char *_strtoi(const char *string, int base, i32_t *value)
+char *_libc_strtoi(const char *string, int base, i32_t *value)
 {
         *value = 0;
 
@@ -394,10 +397,10 @@ char *_strtoi(const char *string, int base, i32_t *value)
  * @return converted value
  */
 //==============================================================================
-i32_t _atoi(const char *str)
+i32_t _libc_atoi(const char *str)
 {
         i32_t result;
-        _strtoi(str, 10, &result);
+        _libc_strtoi(str, 10, &result);
         return result;
 }
 
@@ -411,7 +414,7 @@ i32_t _atoi(const char *str)
  * @return converted value
  */
 //==============================================================================
-double _strtod(const char *str, char **end)
+double _libc_strtod(const char *str, char **end)
 {
         double sign    = 1;
         double div     = 1;
@@ -499,7 +502,7 @@ double _strtod(const char *str, char **end)
  * @return converted value
  */
 //==============================================================================
-float _strtof(const char *str, char **end)
+float _libc_strtof(const char *str, char **end)
 {
         float  sign    = 1;
         float  div     = 1;
@@ -586,9 +589,9 @@ float _strtof(const char *str, char **end)
  * @return converted value
  */
 //==============================================================================
-double _atof(const char *str)
+double _libc_atof(const char *str)
 {
-        return _strtod(str, NULL);
+        return _libc_strtod(str, NULL);
 }
 
 #if __OS_ENABLE_TIMEMAN__ == _YES_
@@ -601,7 +604,7 @@ double _atof(const char *str)
  * @return UNIX time value (Epoch)
  */
 //==============================================================================
-u32_t _mktime(struct tm *tm)
+time_t _libc_mktime(struct tm *tm)
 {
         if (  tm->tm_mday >= 1
            && tm->tm_mday <= 31
@@ -636,7 +639,7 @@ u32_t _mktime(struct tm *tm)
  * @return On success return tmpbuf, otherwise NULL.
  */
 //==============================================================================
-struct tm *_gmtime_r(const time_t *timer, struct tm *tmbuf)
+struct tm *_libc_gmtime_r(const time_t *timer, struct tm *tmbuf)
 {
         if (timer && tmbuf) {
                 time_t time = *timer;
@@ -684,7 +687,7 @@ struct tm *_gmtime_r(const time_t *timer, struct tm *tmbuf)
  * @return On success return tmpbuf, otherwise NULL.
  */
 //==============================================================================
-struct tm *_localtime_r(const time_t *timer, struct tm *tmbuf)
+struct tm *_libc_localtime_r(const time_t *timer, struct tm *tmbuf)
 {
         if (timer) {
                 struct timezone tz;
@@ -693,13 +696,101 @@ struct tm *_localtime_r(const time_t *timer, struct tm *tmbuf)
 
                 if (r == 0) {
                         time_t localtime = *timer + (tz.tz_minuteswest * 60);
-                        struct tm *tm = _gmtime_r(&localtime, tmbuf);
+                        struct tm *tm = _libc_gmtime_r(&localtime, tmbuf);
                         tmbuf->tm_isutc = 0;
                         return tm;
                 }
         }
 
         return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time_t to tm as UTC time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed as a UTC time (i.e., the time
+ * at the GMT timezone).
+ *
+ * @param  timer        Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the UTC time representation of timer.
+ */
+//==============================================================================
+struct tm *gmtime(const time_t *timer)
+{
+        return _libc_gmtime_r(timer, &_libc_tmbuf);
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time_t to tm as UTC time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed as a UTC time (i.e., the time
+ * at the GMT timezone).
+ *
+ * @param[in]  timer    Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @param[out] tm       Pointer to an object of type struct tm that will contains
+ *                      converted timer value to time structure.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the UTC time representation of timer.
+ */
+//==============================================================================
+struct tm *gmtime_r(const time_t *timer, struct tm *tm)
+{
+        return _libc_gmtime_r(timer, tm);
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time_t to tm as local time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed for the local timezone.
+ *
+ * @param  timer        Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the local time representation of timer.
+ */
+//==============================================================================
+struct tm *localtime(const time_t *timer)
+{
+        return _libc_localtime_r(timer, &_libc_tmbuf);
+}
+
+//==============================================================================
+/**
+ * @brief  Convert time_t to tm as local time
+ *
+ * Uses the value pointed by timer to fill a tm structure with the values that
+ * represent the corresponding time, expressed for the local timezone.
+ *
+ * @param[in]  timer    Pointer to an object of type time_t that contains a time value.
+ *                      time_t is an alias of a fundamental arithmetic type
+ *                      capable of representing times as returned by function time.
+ *
+ * @param[out] tm       Pointer to an object of type struct tm that will contains
+ *                      converted timer value to time structure.
+ *
+ * @return A pointer to a tm structure with its members filled with the values
+ *         that correspond to the local time representation of timer.
+ */
+//==============================================================================
+struct tm *localtime_r(const time_t *timer, struct tm *tm)
+{
+        return _libc_localtime_r(timer, tm);
 }
 #endif
 

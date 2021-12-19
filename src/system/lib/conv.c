@@ -71,9 +71,6 @@ static const uint8_t _ytab[2][12] = {
   Exported objects
 ==============================================================================*/
 #if __OS_ENABLE_TIMEMAN__ == _YES_
-/** statically allocated time structure */
-struct tm _tmbuf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
 /** local time offset */
 int _ltimeoff_sec = 0;      // UTC timezone offset in seconds
 #endif
