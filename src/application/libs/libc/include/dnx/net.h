@@ -209,8 +209,8 @@ int_main(client, STACK_DEPTH_LOW, int argc, char *argv[])
 */
 /**@{*/
 
-#ifndef _DNX_NET_H_
-#define _DNX_NET_H_
+#ifndef _LIBC_NET_H_
+#define _LIBC_NET_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -220,9 +220,9 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdint.h>
-#include <kernel/syscall.h>
+#include <libc/source/syscall.h>
 #include <stddef.h>
-#include <net/netm.h>
+#include <net/netm.h>   // FIXME to remove
 #include <dnx/misc.h>
 #include <errno.h>
 
@@ -264,7 +264,7 @@ static inline int ifadd(const char *netname, NET_family_t family, const char *if
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETADD, &result, netname, &family, if_path);
+        libc_syscall(_LIBC_SYS_NETADD, &result, netname, &family, if_path);
         return result;
 #else
         UNUSED_ARG3(netname, family, if_path);
@@ -289,7 +289,7 @@ static inline int ifrm(const char *netname)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETRM, &result, netname);
+        libc_syscall(_LIBC_SYS_NETRM, &result, netname);
         return result;
 #else
         UNUSED_ARG1(netname);
@@ -315,7 +315,7 @@ static inline int iflist(char *netname[], size_t netname_len)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETIFLIST, &result, netname, &netname_len);
+        libc_syscall(_LIBC_SYS_NETIFLIST, &result, netname, &netname_len);
         return result;
 #else
         UNUSED_ARG2(netname, netname_len);
@@ -341,7 +341,7 @@ static inline int ifup(const char *netname, const NET_generic_config_t *config)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETIFUP, &result, netname, config);
+        libc_syscall(_LIBC_SYS_NETIFUP, &result, netname, config);
         return result;
 #else
         UNUSED_ARG2(netname, config);
@@ -366,7 +366,7 @@ static inline int ifdown(const char *netname)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETIFDOWN, &result, netname);
+        libc_syscall(_LIBC_SYS_NETIFDOWN, &result, netname);
         return result;
 #else
         UNUSED_ARG1(netname);
@@ -393,7 +393,7 @@ static inline int ifstatus(const char *netname, NET_family_t *family, NET_generi
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETIFSTATUS, &result, netname, family, status);
+        libc_syscall(_LIBC_SYS_NETIFSTATUS, &result, netname, family, status);
         return result;
 #else
         UNUSED_ARG3(netname, family, status);
@@ -420,7 +420,7 @@ static inline SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
 {
 #if _ENABLE_NETWORK_ == _YES_
         SOCKET *socket = NULL;
-        syscall(SYSCALL_NETSOCKETCREATE, &socket, netname, &protocol);
+        libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &socket, netname, &protocol);
         return socket;
 #else
         UNUSED_ARG2(netname, protocol);
@@ -444,7 +444,7 @@ static inline SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
 static inline int socket_close(SOCKET *socket)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        syscall(SYSCALL_NETSOCKETDESTROY, NULL, socket);
+        libc_syscall(_LIBC_SYS_NETSOCKETDESTROY, NULL, socket);
         return 0;
 #else
         UNUSED_ARG1(socket);
@@ -474,7 +474,7 @@ static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sock
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETBIND, &result, socket, sockAddr);
+        libc_syscall(_LIBC_SYS_NETBIND, &result, socket, sockAddr);
         return result;
 #else
         UNUSED_ARG2(socket, sockAddr);
@@ -500,7 +500,7 @@ static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *s
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETCONNECT, &result, socket, sockAddr);
+        libc_syscall(_LIBC_SYS_NETCONNECT, &result, socket, sockAddr);
         return result;
 #else
         UNUSED_ARG2(socket, sockAddr);
@@ -525,7 +525,7 @@ static inline int socket_disconnect(SOCKET *socket)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETDISCONNECT, &result, socket);
+        libc_syscall(_LIBC_SYS_NETDISCONNECT, &result, socket);
         return result;
 #else
         UNUSED_ARG1(socket);
@@ -550,7 +550,7 @@ static inline int socket_listen(SOCKET *socket)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETLISTEN, &result, socket);
+        libc_syscall(_LIBC_SYS_NETLISTEN, &result, socket);
         return result;
 #else
         UNUSED_ARG1(socket);
@@ -576,7 +576,7 @@ static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETACCEPT, &result, socket, new_socket);
+        libc_syscall(_LIBC_SYS_NETACCEPT, &result, socket, new_socket);
         return result;
 #else
         UNUSED_ARG2(socket, new_socket);
@@ -605,7 +605,7 @@ static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETRECV, &result, socket, buf, &len, &flags);
+        libc_syscall(_LIBC_SYS_NETRECV, &result, socket, buf, &len, &flags);
         return result;
 #else
         UNUSED_ARG4(socket, buf, len, flags);
@@ -668,7 +668,7 @@ static inline int socket_recvfrom(SOCKET                 *socket,
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETRECVFROM, &result, socket, buf, &len, &flags, from_sockaddr);
+        libc_syscall(_LIBC_SYS_NETRECVFROM, &result, socket, buf, &len, &flags, from_sockaddr);
         return result;
 #else
         UNUSED_ARG5(socket, buf, len, flags, from_sockaddr);
@@ -698,7 +698,7 @@ static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_f
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETSEND, &result, socket, buf, &len, &flags);
+        libc_syscall(_LIBC_SYS_NETSEND, &result, socket, buf, &len, &flags);
         return result;
 #else
         UNUSED_ARG4(socket, buf, len, flags);
@@ -761,7 +761,7 @@ static inline int socket_sendto(SOCKET                       *socket,
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETSENDTO, &result, socket, buf, &len, &flags, to_sockaddr);
+        libc_syscall(_LIBC_SYS_NETSENDTO, &result, socket, buf, &len, &flags, to_sockaddr);
         return result;
 #else
         UNUSED_ARG5(socket, buf, len, flags, to_sockaddr);
@@ -787,7 +787,7 @@ static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETSHUTDOWN, &result, socket, &how);
+        libc_syscall(_LIBC_SYS_NETSHUTDOWN, &result, socket, &how);
         return result;
 #else
         UNUSED_ARG2(socket, how);
@@ -813,7 +813,7 @@ static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETSETRECVTIMEOUT, &result, socket, &timeout);
+        libc_syscall(_LIBC_SYS_NETSETRECVTIMEOUT, &result, socket, &timeout);
         return result;
 #else
         UNUSED_ARG2(socket, timeout);
@@ -839,7 +839,7 @@ static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETSETSENDTIMEOUT, &result, socket, &timeout);
+        libc_syscall(_LIBC_SYS_NETSETSENDTIMEOUT, &result, socket, &timeout);
         return result;
 #else
         UNUSED_ARG2(socket, timeout);
@@ -865,7 +865,7 @@ static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *add
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETGETADDRESS, &result, socket, addr);
+        libc_syscall(_LIBC_SYS_NETGETADDRESS, &result, socket, addr);
         return result;
 #else
         UNUSED_ARG2(socket, addr);
@@ -892,7 +892,7 @@ static inline int get_host_by_name(const char             *netname,
 {
 #if _ENABLE_NETWORK_ == _YES_
         int result = -1;
-        syscall(SYSCALL_NETGETHOSTBYNAME, &result, netname, name, sock_addr);
+        libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, &result, netname, name, sock_addr);
         return result;
 #else
         UNUSED_ARG3(netname, name, sock_addr);
@@ -917,7 +917,7 @@ static inline uint16_t hton_u16(NET_family_t family, uint16_t value)
 {
 #if _ENABLE_NETWORK_ == _YES_
         uint16_t r;
-        syscall(SYSCALL_NETHTON16, &r, &family, &value);
+        libc_syscall(_LIBC_SYS_NETHTON16, &r, &family, &value);
         return r;
 #else
         UNUSED_ARG1(family);
@@ -941,7 +941,7 @@ static inline uint32_t hton_u32(NET_family_t family, uint32_t value)
 {
 #if _ENABLE_NETWORK_ == _YES_
         uint32_t r;
-        syscall(SYSCALL_NETHTON32, &r, &family, &value);
+        libc_syscall(_LIBC_SYS_NETHTON32, &r, &family, &value);
         return r;
 #else
         UNUSED_ARG1(family);
@@ -965,7 +965,7 @@ static inline uint64_t hton_u64(NET_family_t family, uint64_t value)
 {
 #if _ENABLE_NETWORK_ == _YES_
         uint64_t r;
-        syscall(SYSCALL_NETHTON64, &r, &family, &value);
+        libc_syscall(_LIBC_SYS_NETHTON64, &r, &family, &value);
         return r;
 #else
         UNUSED_ARG1(family);

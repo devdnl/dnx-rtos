@@ -37,9 +37,9 @@
   Local symbolic constants/macros
 ==============================================================================*/
 #define RELEASE_TIMEOUT                         100
-#define RX_WAIT_TIMEOUT                         MAX_DELAY_MS
+#define RX_WAIT_TIMEOUT                         _MAX_DELAY_MS
 #define TX_WAIT_TIMEOUT                         300000
-#define MTX_BLOCK_TIMEOUT                       MAX_DELAY_MS
+#define MTX_BLOCK_TIMEOUT                       _MAX_DELAY_MS
 
 /*==============================================================================
   Local types, enums definitions
@@ -211,11 +211,11 @@ API_MOD_INIT(UART, void **device_handle, u8_t major, u8_t minor, const void *con
                 if (err)
                         goto finish;
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->port_lock_rx_mtx);
+                err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->port_lock_rx_mtx);
                 if (err)
                         goto finish;
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->port_lock_tx_mtx);
+                err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->port_lock_tx_mtx);
                 if (err)
                         goto finish;
 

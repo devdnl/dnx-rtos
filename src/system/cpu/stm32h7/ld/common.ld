@@ -100,6 +100,8 @@ SECTIONS
       . = ALIGN(4);
       KEEP(*(.vectors));
       . = ALIGN(4);
+      KEEP(*(.syscall));
+      . = ALIGN(4);
       *(.text .text.* .gnu.linkonce.t.*);
       . = ALIGN(4);
       *(.glue_7t .glue_7);

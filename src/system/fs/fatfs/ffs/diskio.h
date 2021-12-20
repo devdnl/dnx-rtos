@@ -28,11 +28,11 @@ typedef enum {
 /* Prototypes for disk control functions */
 
 
-DSTATUS disk_initialize (FILE *pdrv);
-DSTATUS disk_status (FILE *pdrv);
-DRESULT disk_read (FILE *pdrv, BYTE* buff, LBA_t sector, UINT count);
-DRESULT disk_write (FILE *pdrv, const BYTE* buff, LBA_t sector, UINT count);
-DRESULT disk_ioctl (FILE *pdrv, BYTE cmd, void* buff);
+DSTATUS disk_initialize (kfile_t *pdrv);
+DSTATUS disk_status (kfile_t *pdrv);
+DRESULT disk_read (kfile_t *pdrv, BYTE* buff, LBA_t sector, UINT count);
+DRESULT disk_write (kfile_t *pdrv, const BYTE* buff, LBA_t sector, UINT count);
+DRESULT disk_ioctl (kfile_t *pdrv, BYTE cmd, void* buff);
 
 
 /* Disk Status Bits (DSTATUS) */

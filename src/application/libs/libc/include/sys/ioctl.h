@@ -46,13 +46,12 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <stdarg.h>
-#include <drivers/ioctl_requests.h>
-#include <kernel/syscall.h>
+#include <drivers/ioctl_requests.h> // FIXME ioctl include file needed
+#include <libc/source/syscall.h>
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#if DOXYGEN
 /**
  * @brief Request closes opened \b pipe device.
  *
@@ -60,7 +59,7 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_PIPE__CLOSE
+#define IOCTL_PIPE__CLOSE                       0xF0000
 
 /**
  * @brief Request clears \b pipe device.
@@ -69,7 +68,7 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_PIPE__CLEAR
+#define IOCTL_PIPE__CLEAR                       0xF0001
 
 /**
  * @brief Request set stream to non-blocking read mode.
@@ -78,7 +77,7 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__NON_BLOCKING_RD_MODE
+#define IOCTL_VFS__NON_BLOCKING_RD_MODE         0xF0003
 
 /**
  * @brief Request set stream to default read mode.
@@ -87,7 +86,7 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__DEFAULT_RD_MODE
+#define IOCTL_VFS__DEFAULT_RD_MODE              0xF0004
 
 /**
  * @brief Request set stream to non-blocking write mode.
@@ -96,7 +95,7 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__NON_BLOCKING_WR_MODE
+#define IOCTL_VFS__NON_BLOCKING_WR_MODE         0xF0006
 
 /**
  * @brief Request set stream to default write mode.
@@ -105,8 +104,11 @@ extern "C" {
  *
  * @see   ioctl()
  */
-#define IOCTL_VFS__DEFAULT_WR_MODE
-#endif
+#define IOCTL_VFS__DEFAULT_WR_MODE              0xF0007
+
+#define IOCTL_PIPE__PERMANENT                   0xF0002
+#define IOCTL_VFS__IS_NON_BLOCKING_RD_MODE      0xF0005
+#define IOCTL_VFS__IS_NON_BLOCKING_WR_MODE      0xF0008
 
 /*==============================================================================
   Exported object types
@@ -187,7 +189,7 @@ static inline int ioctl(fd_t fd, int request, ...)
         va_list arg;
         va_start(arg, request);
         int r = -1;
-        syscall(SYSCALL_IOCTL, &r, (FILE*)fd, &request, &arg);
+        libc_syscall(_LIBC_SYS_IOCTL, &r, (FILE*)fd, &request, &arg);
         va_end(arg);
         return r;
 }

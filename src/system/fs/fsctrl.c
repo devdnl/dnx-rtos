@@ -31,7 +31,7 @@
 ==============================================================================*/
 #include <errno.h>
 #include <string.h>
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include "fs/fsctrl.h"
 #include "fs/vfs.h"
 #include "kernel/sysfunc.h"

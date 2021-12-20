@@ -34,13 +34,11 @@ The library is used to check CPU endianness.
 */
 /**@{*/
 
-#ifndef _ENDIAN_H_
-#define _ENDIAN_H_
+#pragma once
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <cpu/cpuctl.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,12 +50,12 @@ extern "C" {
 /**
  * @brief Little endian switch
  */
-#define LITTLE_ENDIAN           _BYTE_ORDER_LITTLE
+#define LITTLE_ENDIAN           0xAABB
 
 /**
  * @brief Big endian switch
  */
-#define BIG_ENDIAN              _BYTE_ORDER_BIG
+#define BIG_ENDIAN              0xCCDD
 
 /**
  * @brief Macro determines current CPU endianness
@@ -78,7 +76,7 @@ extern "C" {
          #endif
    @endcode
  */
-#define BYTE_ORDER              _CPUCTL_BYTE_ORDER
+#define BYTE_ORDER              LITTLE_ENDIAN
 
 /*==============================================================================
   Exported object types
@@ -99,8 +97,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _ENDIAN_H_ */
 
 /**@}*/
 /*==============================================================================

@@ -35,7 +35,7 @@ Brief   EXT4 file system
   Local macros
 ==============================================================================*/
 #define SECTOR_SIZE     512
-#define LOCK_TIMEOUT    MAX_DELAY_MS
+#define LOCK_TIMEOUT    _MAX_DELAY_MS
 #define SYNC_TIMEOUT    100
 
 /*==============================================================================
@@ -45,8 +45,8 @@ typedef struct {
         struct ext4_mountpoint    *mp;
         struct ext4_blockdev_iface bdif;
         struct ext4_blockdev       bd;
-        FILE                      *dev;
-        mutex_t                   *fs_mutex;
+        kfile_t                   *dev;
+        kmtx_t                    *fs_mutex;
         u8_t                       buf[SECTOR_SIZE];
         u32_t                      open_files;
 } ext4fs_t;
@@ -105,14 +105,14 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path, const char *opts)
 
                 bool read_only = sys_stropt_is_flag(opts, "ro");
 
-                err = sys_fopen(src_path, read_only ? "r" : "r+", cast(FILE**, &hdl->dev));
+                err = sys_fopen(src_path, read_only ? "r" : "r+", cast(kfile_t**, &hdl->dev));
                 if (err) goto finish;
 
                 struct stat st;
                 err = sys_fstat(hdl->dev, &st);
                 if (err) goto finish;
 
-                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, cast(mutex_t**, &hdl->fs_mutex));
+                err = sys_mutex_create(KMTX_TYPE_RECURSIVE, cast(kmtx_t**, &hdl->fs_mutex));
                 if (err) goto finish;
 
                 hdl->bdif.open     = bopen;
@@ -150,7 +150,7 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path, const char *opts)
                         }
 
                         if (hdl->dev) {
-                                sys_fclose(cast(FILE*, hdl->dev));
+                                sys_fclose(cast(kfile_t*, hdl->dev));
                         }
 
                         sys_free(fs_handle);
@@ -184,7 +184,7 @@ API_FS_RELEASE(ext4fs, void *fs_handle)
                 if (err) goto finish;
 
                 sys_mutex_destroy(hdl->fs_mutex);
-                sys_fclose(cast(FILE*, hdl->dev));
+                sys_fclose(cast(kfile_t*, hdl->dev));
                 sys_free(&fs_handle);
         }
 
@@ -579,7 +579,7 @@ API_FS_MKNOD(ext4fs, void *fs_handle, const char *path, const dev_t dev)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, kdir_t *dir)
 {
         ext4fs_t *hdl = fs_handle;
 
@@ -611,7 +611,7 @@ API_FS_OPENDIR(ext4fs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_CLOSEDIR(ext4fs, void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(ext4fs, void *fs_handle, kdir_t *dir)
 {
         ext4fs_t *hdl = fs_handle;
 
@@ -634,7 +634,7 @@ API_FS_CLOSEDIR(ext4fs, void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_READDIR(ext4fs, void *fs_handle, DIR *dir)
+API_FS_READDIR(ext4fs, void *fs_handle, kdir_t *dir)
 {
         ext4fs_t *hdl = fs_handle;
         ext4_dir *d   = dir->d_hdl;

@@ -31,6 +31,7 @@
 ==============================================================================*/
 #include <config.h>
 #include <sys/types.h>
+#include <libc/source/syscall.h>
 
 /*==============================================================================
   Local macros
@@ -60,6 +61,28 @@ char _libc_timestr[32];
 #endif
 
 unsigned int _libc_seed = 123456789;
+
+/** @brief Standard input file (one for each application) */
+extern void *_stdin;
+
+/** @brief Standard output file (one for each application) */
+extern void *_stdout;
+
+/** @brief Standard error file (one for each application) */
+extern void *_stderr;
+
+extern void *_global;
+
+extern int _errno;
+
+/*
+ * Those variables are switched by kernel according to current process/thread.
+ */
+void **_libc_stdin  = &_stdin;
+void **_libc_stdout = &_stdout;
+void **_libc_stderr = &_stderr;
+int   *_libc_errno  = &_errno;
+void **_libc_global = &_global;
 
 /*==============================================================================
   Function definitions

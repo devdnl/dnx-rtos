@@ -34,14 +34,15 @@ dnx RTOS miscellaneous macros and functions.
 */
 /**@{*/
 
-#ifndef _MISC_H_
-#define _MISC_H_
+#ifndef _LIBC_MISC_H_
+#define _LIBC_MISC_H_
 
 /*==============================================================================
   Include files
 ==============================================================================*/
 #include <string.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -684,8 +685,8 @@ extern "C" {
 //==============================================================================
 static inline size_t strlcpy(char *dst, const char *src, size_t size)
 {
-        extern size_t _strlcpy(char *dst, const char *src, size_t size);
-        return _strlcpy(dst, src, size);
+        extern size_t _libc_strlcpy(char *dst, const char *src, size_t size);
+        return _libc_strlcpy(dst, src, size);
 }
 
 //==============================================================================
@@ -708,8 +709,8 @@ static inline size_t strlcpy(char *dst, const char *src, size_t size)
 //==============================================================================
 static inline size_t strlcat(char *dst, const char *src, size_t size)
 {
-        extern size_t _strlcat(char *dst, const char *src, size_t size);
-        return _strlcat(dst, src, size);
+        extern size_t _libc_strlcat(char *dst, const char *src, size_t size);
+        return _libc_strlcat(dst, src, size);
 }
 
 //==============================================================================
@@ -721,7 +722,7 @@ static inline size_t strlcat(char *dst, const char *src, size_t size)
  * @return If object is in heap then true is returned, otherwise false.
  */
 //==============================================================================
-static inline bool is_object_in_heap(void *ptr)
+static inline bool is_object_in_heap(void *ptr) // FIXME syscall for this?
 {
         extern bool _mm_is_object_in_heap(void *ptr);
         return _mm_is_object_in_heap(ptr);
@@ -736,7 +737,7 @@ static inline bool is_object_in_heap(void *ptr)
  * @return If object is in heap then true is returned, otherwise false.
  */
 //==============================================================================
-static inline bool is_rom_address(const void *ptr)
+static inline bool is_rom_address(const void *ptr) // FIXME syscall for this?
 {
         extern bool _mm_is_rom_address(const void *ptr);
         return _mm_is_rom_address(ptr);
@@ -755,8 +756,8 @@ static inline bool is_rom_address(const void *ptr)
 //==============================================================================
 static inline int strchrrep(char *str, char from, char to)
 {
-        extern int _strchrrep(char *str, char from, char to);
-        return _strchrrep(str, from, to);
+        extern int _libc_strchrrep(char *str, char from, char to);
+        return _libc_strchrrep(str, from, to);
 }
 
 //==============================================================================
@@ -783,7 +784,7 @@ extern char *fgets_buffered(char *str, int size, FILE *stream, char *buf, size_t
 }
 #endif
 
-#endif /* _MISC_H_ */
+#endif
 
 /**@}*/
 /*==============================================================================

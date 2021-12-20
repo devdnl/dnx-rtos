@@ -39,7 +39,7 @@ Detailed Doxygen description.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include "net/netm.h"
 #include "kernel/sysfunc.h"
 
@@ -55,7 +55,7 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 typedef struct SIPC_socket {
-        queue_t *ansq;
+        kqueue_t *ansq;
         void    *rxbuf;
         u32_t    recv_timeout;
         u32_t    send_timeout;

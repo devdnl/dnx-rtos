@@ -53,7 +53,7 @@
 #include "config.h"
 #if defined(ARCH_stm32f4) || defined(ARCH_stm32f7) || defined(ARCH_stm32h7)
 
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #if defined(ARCH_stm32f4)
 #include "stm32f4/stm32f4xx.h"
 #elif defined(ARCH_stm32f7)

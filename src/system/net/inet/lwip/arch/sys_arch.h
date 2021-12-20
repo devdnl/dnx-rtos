@@ -50,9 +50,9 @@ extern "C" {
 ==============================================================================*/
 typedef tid_t            sys_thread_t;
 typedef int              sys_prot_t;
-typedef mutex_t         *sys_mtx_t;
-typedef sem_t           *sys_sem_t;
-typedef queue_t         *sys_mbox_t;
+typedef kmtx_t           *sys_mtx_t;
+typedef ksem_t           *sys_sem_t;
+typedef kqueue_t         *sys_mbox_t;
 
 /*==============================================================================
   Exported objects

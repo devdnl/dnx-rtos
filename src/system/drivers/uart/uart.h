@@ -219,13 +219,13 @@ enum {
 
 /* USART handling structure */
 struct UART_mem {
-        queue_t *tx_queue;
-        queue_t *rx_queue;
-        mutex_t *port_lock_rx_mtx;
-        mutex_t *port_lock_tx_mtx;
-        void    *uarthdl;
-        u8_t     major;
-        u8_t     minor;
+        kqueue_t *tx_queue;
+        kqueue_t *rx_queue;
+        kmtx_t   *port_lock_rx_mtx;
+        kmtx_t   *port_lock_tx_mtx;
+        void     *uarthdl;
+        u8_t      major;
+        u8_t      minor;
 
         struct UART_rich_config {
                 GPIO_pin_in_port_t  RS485_DE_pin;

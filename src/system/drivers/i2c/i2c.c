@@ -102,7 +102,7 @@ API_MOD_INIT(I2C, void **device_handle, u8_t major, u8_t minor, const void *conf
                         goto finish;
                 }
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &_I2C[major]->lock_mtx);
+                err = sys_mutex_create(KMTX_TYPE_NORMAL, &_I2C[major]->lock_mtx);
                 if (err) {
                         goto finish;
                 }

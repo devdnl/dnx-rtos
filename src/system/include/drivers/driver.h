@@ -47,7 +47,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "config.h"
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include <string.h>
 #include "kernel/errno.h"
 #include "kernel/sysfunc.h"

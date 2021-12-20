@@ -43,8 +43,8 @@ Brief   SPI EEPROM
   Local object types
 ==============================================================================*/
 typedef struct {
-        FILE *spi_dev;
-        mutex_t *mtx;
+        kfile_t *spi_dev;
+        kmtx_t *mtx;
         u32_t memory_size;
         u16_t page_size;
         SPIEE_addr_t addr_size;
@@ -99,7 +99,7 @@ API_MOD_INIT(SPIEE, void **device_handle, u8_t major, u8_t minor, const void *co
         if (!err) {
                 SPIEE_t *hdl = *device_handle;
 
-                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
+                err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &hdl->mtx);
 
                 if (!err && config) {
                         err = configure(hdl, config);
@@ -128,7 +128,7 @@ API_MOD_RELEASE(SPIEE, void *device_handle)
 
         int err = sys_mutex_lock(hdl->mtx, 0);
         if (!err) {
-                mutex_t *mtx = hdl->mtx;
+                kmtx_t *mtx = hdl->mtx;
                 hdl->mtx = 0;
                 sys_mutex_unlock(mtx);
                 sys_mutex_destroy(mtx);

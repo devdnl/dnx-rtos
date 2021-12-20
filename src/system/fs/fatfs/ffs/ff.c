@@ -3632,7 +3632,7 @@ static FRESULT validate (	/* Returns FR_OK or FR_INVALID_OBJECT */
 
 FRESULT f_mount (
 	FATFS* fs,			/* Pointer to the filesystem object (NULL:unmount)*/
-	FILE* pdrv,	/* Logical drive number to be mounted/unmounted */
+	kfile_t* pdrv,	/* Logical drive number to be mounted/unmounted */
 	BYTE opt			/* Mode option 0:Do not mount (delayed mount), 1:Mount immediately */
 )
 {

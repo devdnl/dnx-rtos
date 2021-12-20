@@ -88,8 +88,8 @@
   Local object types
 ==============================================================================*/
 struct eth {
-        sem_t              *rx_semaphore;
-        mutex_t            *mutex;
+        ksem_t             *rx_semaphore;
+        kmtx_t             *mutex;
         ETH_DMADescTypeDef *DMA_rx_desc;
         ETH_DMADescTypeDef *DMA_tx_desc;
         uint8_t            *rx_buff;
@@ -166,13 +166,13 @@ API_MOD_INIT(ETH, void **device_handle, u8_t major, u8_t minor, const void *conf
         if (!err) {
                 struct eth *hdl = *device_handle;
 
-                hdl->rx_timeout_ms = MAX_DELAY_MS;
-                hdl->tx_timeout_ms = MAX_DELAY_MS;
+                hdl->rx_timeout_ms = _MAX_DELAY_MS;
+                hdl->tx_timeout_ms = _MAX_DELAY_MS;
 
                 err = sys_semaphore_create(__ETH_RXBUFNB__, 0, &hdl->rx_semaphore);
                 if (!err) {
 
-                        err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mutex);
+                        err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->mutex);
                         if (!err) {
 
                                 /*
@@ -238,9 +238,9 @@ API_MOD_RELEASE(ETH, void *device_handle)
         int err;
 
         if (not hdl->run) {
-                mutex_t *mtx = hdl->mutex;
+                kmtx_t *mtx = hdl->mutex;
 
-                err = sys_mutex_lock(mtx, MAX_DELAY_MS);
+                err = sys_mutex_lock(mtx, _MAX_DELAY_MS);
                 if (!err) {
 
                         hdl->mutex = NULL;

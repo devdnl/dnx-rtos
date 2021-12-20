@@ -39,7 +39,7 @@ Brief    Network management.
 ==============================================================================*/
 #include <stdint.h>
 #include <stddef.h>
-#include <sys/types.h>
+#include "lib/sys/types.h"
 
 #ifdef __cplusplus
 extern "C" {

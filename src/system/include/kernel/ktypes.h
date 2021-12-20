@@ -36,7 +36,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include <stdbool.h>
 #include <FreeRTOS.h>
 
@@ -83,7 +83,7 @@ typedef struct {
         res_header_t      header;
         void             *object;
         StaticSemaphore_t buffer;
-} sem_t;
+} ksem_t;
 
 /** KERNELSPACE/USERSPACE: queue type */
 typedef struct {
@@ -91,7 +91,7 @@ typedef struct {
         void         *object;
         StaticQueue_t buffer;
         uint8_t       storage[];
-} queue_t;
+} kqueue_t;
 
 /** KERNELSPACE/USERSPACE: mutex type */
 typedef struct {
@@ -99,14 +99,14 @@ typedef struct {
         void             *object;
         StaticSemaphore_t buffer;
         bool              recursive;
-} mutex_t;
+} kmtx_t;
 
 /** KERNELSPACE: flag type */
 typedef struct {
         res_header_t       header;
         void              *object;
         StaticEventGroup_t buffer;
-} flag_t;
+} kflag_t;
 
 /*==============================================================================
    Exported object declarations

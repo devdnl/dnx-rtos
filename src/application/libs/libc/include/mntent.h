@@ -45,7 +45,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <sys/types.h>
-#include <kernel/syscall.h>
+#include <libc/source/syscall.h>
 #include <errno.h>
 #include <dnx/misc.h>
 
@@ -117,7 +117,7 @@ static inline int getmntentry(int seek, struct mntent *mntent)
 {
 #if __OS_ENABLE_STATFS__ == _YES_
         int r = -1;
-        syscall(SYSCALL_GETMNTENTRY, &r, &seek, mntent);
+        libc_syscall(_LIBC_SYS_GETMNTENTRY, &r, &seek, mntent);
         return r;
 #else
         UNUSED_ARG2(seek, mntent);

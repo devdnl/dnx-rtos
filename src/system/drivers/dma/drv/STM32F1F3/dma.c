@@ -80,7 +80,7 @@ typedef struct {
 
 typedef struct {
         DMA_RT_channel_t   channel[max(DMA1_CHANNELS, DMA2_CHANNELS)];
-        queue_t          **m2m_queue;
+        kqueue_t          **m2m_queue;
         u32_t              ID_ctr;
         u8_t               major;
 } DMA_RT_t;
@@ -175,7 +175,7 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor, const void *conf
                          * transfers.
                          */
                         DMA_RT_t *hdl = &DMA_mem->DMA[0];
-                        err = sys_zalloc(sizeof(queue_t*) * DMA1_CHANNELS,
+                        err = sys_zalloc(sizeof(kqueue_t*) * DMA1_CHANNELS,
                                          cast(void*, &hdl->m2m_queue));
                         if (err) {
                                 sys_free(device_handle);

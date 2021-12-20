@@ -35,6 +35,7 @@
 #include <stdarg.h>
 #include <lib/vsnprintf.h>
 #include <dnx/misc.h>
+#include <errno.h>
 
 /*==============================================================================
   Local macros
@@ -89,9 +90,9 @@ int vfprintf(FILE *file, const char *format, va_list arg)
         if (str) {
                 n = vsnprintf(str, size, format, arg);
                 fwrite(str, sizeof(char), n, file);
-                int err = _errno;
+                int err = errno;
                 free(str);
-                _errno = err;
+                errno = err;
         }
 #else
         UNUSED_ARG3(file, format, arg);

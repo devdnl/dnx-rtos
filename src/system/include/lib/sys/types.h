@@ -27,7 +27,7 @@
 *//*==========================================================================*/
 
 /**
-\defgroup sys-types-h <sys/types.h>
+\defgroup sys-types-h "lib/sys/types.h"
 
 The library contains system types.
 
@@ -42,6 +42,7 @@ The library contains system types.
 ==============================================================================*/
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -264,6 +265,94 @@ struct statfs {
 };
 #define __STRUCT_STATFS_DEFINED__
 #endif
+
+/** process (program) function type */
+typedef int (*process_func_t)(int, char**);
+
+/** thread function */
+typedef int (*thread_func_t)(void *arg);
+
+/** program attributes. Doxygen documentation in fs.h. */
+struct _prog_data {
+        const char     *name;           //!< program name
+        const size_t   *globals_size;   //!< size of program global variables
+        const size_t   *stack_depth;    //!< stack depth
+        process_func_t  main;           //!< program main function
+};
+
+/** average CPU load */
+typedef struct {
+        u32_t avg1sec;                  //!< average CPU laod within 1 second (1% = 10)
+        u32_t avg1min;                  //!< average CPU load within 1 minute (1% = 10)
+        u32_t avg5min;                  //!< average CPU load within 5 minutes (1% = 10)
+        u32_t avg15min;                 //!< average CPU load within 15 minutes (1% = 10)
+} _avg_CPU_load_t;
+
+/**
+ * @brief Process attributes
+ *
+ * The type is used to configure process settings.
+ */
+typedef struct {
+        void       *f_stdin;            //!< stdin  file object pointer (major)
+        void       *f_stdout;           //!< stdout file object pointer (major)
+        void       *f_stderr;           //!< stderr file object pointer (major)
+        const char *p_stdin;            //!< stdin  file path (minor)
+        const char *p_stdout;           //!< stdout file path (minor)
+        const char *p_stderr;           //!< stderr file path (minor)
+        const char *cwd;                //!< working directory path
+        i16_t       priority;           //!< process priority
+        bool        detached;           //!< independent process (no parent)
+} _process_attr_t;
+
+/**
+ * @brief Process statistics container.
+ *
+ * The type represent process statistics.
+ */
+typedef struct {
+        const char *name;               //!< process name
+        pid_t       pid;                //!< process ID
+        size_t      memory_usage;       //!< memory usage (allocated by process)
+        u16_t       memory_block_count; //!< number of used memory blocks
+        u16_t       files_count;        //!< number of opened files
+        u16_t       dir_count;          //!< number of opened directories
+        u16_t       mutexes_count;      //!< number of used mutexes
+        u16_t       semaphores_count;   //!< number of used semaphores
+        u16_t       queue_count;        //!< number of used queues
+        u16_t       socket_count;       //!< number of used sockets
+        u16_t       threads_count;      //!< number of threads
+        u16_t       CPU_load;           //!< CPU load (1% = 10)
+        u16_t       stack_size;         //!< stack size
+        u16_t       stack_max_usage;    //!< max stack usage
+        i16_t       priority;           //!< priority
+        u16_t       syscalls_per_sec;   //!< syscalls per second
+} _process_stat_t;
+
+/**
+ * @brief Thread statistics type
+ *
+ * The type represent thread attributes that configures thread settings.
+ */
+typedef struct {
+        tid_t       tid;                //!< thread ID
+        u16_t       CPU_load;           //!< CPU load (1% = 10)
+        u16_t       stack_size;         //!< stack size
+        u16_t       stack_max_usage;    //!< max stack usage
+        i16_t       priority;           //!< priority
+        u16_t       syscalls_per_sec;   //!< syscalls per second
+} _thread_stat_t;
+
+/**
+ * @brief Thread attributes type
+ *
+ * The type represent thread attributes that configures thread settings.
+ */
+typedef struct {
+        size_t stack_depth;             //!< stack depth
+        i16_t  priority;                //!< thread priority
+        bool   detached;                //!< independent thread (without join possibility)
+} _thread_attr_t;
 
 /*==============================================================================
   Exported objects

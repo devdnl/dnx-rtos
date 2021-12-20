@@ -77,7 +77,7 @@ struct opened_file_info {
 /** main memory structure */
 struct RAMFS {
         node_t           root_dir;              //!< root dir '/'
-        mutex_t         *resource_mtx;          //!< lock mutex
+        kmtx_t          *resource_mtx;          //!< lock mutex
         llist_t         *opended_files;         //!< list with opened files
         size_t           file_count;            //!< number of files
 };
@@ -120,7 +120,7 @@ API_FS_INIT(ramfs, void **fs_handle, const char *src_path, const char *opts)
         if (!err) {
                 struct RAMFS *hdl = *fs_handle;
 
-                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->resource_mtx);
+                err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &hdl->resource_mtx);
                 if (err)
                         goto finish;
 
@@ -330,7 +330,7 @@ API_FS_MKFIFO(ramfs, void *fs_handle, const char *path, mode_t mode)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPENDIR(ramfs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(ramfs, void *fs_handle, const char *path, kdir_t *dir)
 {
         struct RAMFS *hdl = fs_handle;
 
@@ -365,7 +365,7 @@ API_FS_OPENDIR(ramfs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CLOSEDIR(ramfs, void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(ramfs, void *fs_handle, kdir_t *dir)
 {
         UNUSED_ARG2(fs_handle, dir);
         return ESUCC;
@@ -382,7 +382,7 @@ API_FS_CLOSEDIR(ramfs, void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_READDIR(ramfs, void *fs_handle, DIR *dir)
+API_FS_READDIR(ramfs, void *fs_handle, kdir_t *dir)
 {
         struct RAMFS *hdl = fs_handle;
 

@@ -183,7 +183,7 @@ extern const char __main_stack_end;          /* imported main stack end (from li
 
 void Reset_Handler(void);                    /* import the address of Reset_Handler()             */
 
-void (*const vectors[])(void) __attribute__ ((section(".vectors"))) =
+void (*const vectors[256])(void) __attribute__ ((section(".vectors"))) =
 {
         (void (*)(void))&__main_stack_end,      // Main stack end address
         Reset_Handler,                          // Reset

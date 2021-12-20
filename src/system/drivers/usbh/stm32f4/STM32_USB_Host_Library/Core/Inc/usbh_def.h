@@ -468,7 +468,7 @@ typedef struct _USBH_HandleTypeDef
   void (* pUser)(struct _USBH_HandleTypeDef *pHandle, uint8_t id);
 
 #if (USBH_USE_OS == 1U)
-  queue_t              *os_event;
+  kqueue_t             *os_event;
   tid_t                 thread;
 #endif
   uint32_t              os_msg;

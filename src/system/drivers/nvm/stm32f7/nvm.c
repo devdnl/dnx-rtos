@@ -53,7 +53,7 @@ Brief   NVM driver
   Local object types
 ==============================================================================*/
 typedef struct {
-        mutex_t *mtx;
+        kmtx_t *mtx;
         uint32_t start_sector;
         uint32_t sector_count;
         uint32_t total_size;
@@ -126,7 +126,7 @@ API_MOD_INIT(NVM, void **device_handle, u8_t major, u8_t minor, const void *conf
                 if (!err) {
                         NVM_t *hdl = *device_handle;
 
-                        err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mtx);
+                        err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->mtx);
 
                         if (!err && config) {
                                 err = configure(hdl, config);
@@ -160,7 +160,7 @@ API_MOD_RELEASE(NVM, void *device_handle)
 
         int err = sys_mutex_lock(hdl->mtx, TIMEOUT_MS);
         if (!err) {
-                mutex_t *mtx = hdl->mtx;
+                kmtx_t *mtx = hdl->mtx;
 
                 hdl->mtx = NULL;
 

@@ -47,10 +47,10 @@ struct fatdir {
 };
 
 struct fatfs {
-        FILE    *fsfile;
+        kfile_t    *fsfile;
         FATFS    fatfs;
         llist_t *file_list;
-        mutex_t *mutex;
+        kmtx_t  *mutex;
         int      opened_dirs;
         bool     read_only;
 };
@@ -99,7 +99,7 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path, const char *opts)
                 err = sys_llist_create(cmp_ptr, dummy_free, &hdl->file_list);
 
                 if (!err) {
-                        err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mutex);
+                        err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->mutex);
                 }
 
                 if (!err) {
@@ -149,7 +149,7 @@ API_FS_RELEASE(fatfs, void *fs_handle)
 {
         struct fatfs *hdl = fs_handle;
 
-        mutex_t *mtx = hdl->mutex;
+        kmtx_t *mtx = hdl->mutex;
 
         int err = sys_mutex_lock(mtx, MUTEX_TIMEOUT);
         if (!err) {
@@ -159,7 +159,7 @@ API_FS_RELEASE(fatfs, void *fs_handle)
 
                                 hdl->mutex = NULL;
                                 sys_mutex_unlock(mtx);
-                                sys_mutex_lock(mtx, MAX_DELAY_MS);
+                                sys_mutex_lock(mtx, _MAX_DELAY_MS);
                                 sys_mutex_unlock(mtx);
 
                                 sys_fclose(hdl->fsfile);
@@ -515,7 +515,7 @@ API_FS_MKNOD(fatfs, void *fs_handle, const char *path, const dev_t dev)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, kdir_t *dir)
 {
         struct fatfs *hdl = fs_handle;
 
@@ -563,7 +563,7 @@ API_FS_OPENDIR(fatfs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CLOSEDIR(fatfs, void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(fatfs, void *fs_handle, kdir_t *dir)
 {
         struct fatfs *hdl = fs_handle;
 
@@ -585,7 +585,7 @@ API_FS_CLOSEDIR(fatfs, void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_READDIR(fatfs, void *fs_handle, DIR *dir)
+API_FS_READDIR(fatfs, void *fs_handle, kdir_t *dir)
 {
         UNUSED_ARG1(fs_handle);
 
@@ -595,7 +595,7 @@ API_FS_READDIR(fatfs, void *fs_handle, DIR *dir)
         int err = faterr_2_errno(f_readdir(&fatdir->dir, &fno));
         if (!err) {
                 if (fno.fname[0] != 0) {
-                        strlcpy(fatdir->name, fno.fname, sizeof(fatdir->name));
+                        sys_strlcpy(fatdir->name, fno.fname, sizeof(fatdir->name));
                         dir->dirent.d_name = fatdir->name;
                         dir->dirent.size = fno.fsize;
                         dir->dirent.mode = (S_IRWXU | S_IRWXG | S_IRWXO)

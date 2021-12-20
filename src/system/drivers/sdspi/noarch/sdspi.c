@@ -47,8 +47,8 @@
 typedef struct {
         u8_t       major;
         u8_t       minor;
-        FILE      *SPI_file;
-        mutex_t   *protect_mtx;
+        kfile_t      *SPI_file;
+        kmtx_t    *protect_mtx;
         u32_t      timeout_ms;
         SD_type_t  type;
         bool       initialized;
@@ -105,7 +105,7 @@ API_MOD_INIT(SDSPI, void **device_handle, u8_t major, u8_t minor, const void *co
                 hdl->major = major;
                 hdl->minor = minor;
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->protect_mtx);
+                err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->protect_mtx);
                 if (!err) {
                         if (config) {
                                 err = configure(hdl, config);
@@ -209,7 +209,7 @@ API_MOD_WRITE(SDSPI,
         int      err = ENOMEDIUM;
 
         if (hdl->size_blocks > 0) {
-                err = sys_mutex_lock(hdl->protect_mtx, MAX_DELAY_MS);
+                err = sys_mutex_lock(hdl->protect_mtx, _MAX_DELAY_MS);
                 if (!err) {
                         u64_t lseek = *fpos;
                         err = card_write(hdl, src, count, lseek, wrcnt);
@@ -248,7 +248,7 @@ API_MOD_READ(SDSPI,
         int      err = ENOMEDIUM;
 
         if (hdl->size_blocks > 0) {
-                err = sys_mutex_lock(hdl->protect_mtx, MAX_DELAY_MS);
+                err = sys_mutex_lock(hdl->protect_mtx, _MAX_DELAY_MS);
                 if (!err) {
                         u64_t lseek = *fpos;
                         err = card_read(hdl, dst, count, lseek, rdcnt);
@@ -283,7 +283,7 @@ API_MOD_IOCTL(SDSPI, void *device_handle, int request, void *arg)
         }
 
         case IOCTL_SDSPI__INITIALIZE_CARD:
-                err = sys_mutex_lock(hdl->protect_mtx, MAX_DELAY_MS);
+                err = sys_mutex_lock(hdl->protect_mtx, _MAX_DELAY_MS);
                 if (!err) {
                         err = card_initialize(hdl);
                         sys_mutex_unlock(hdl->protect_mtx);

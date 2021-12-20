@@ -37,7 +37,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <stdbool.h>
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include "kernel/ktypes.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -58,22 +58,23 @@ extern "C" {
 
 /** OS BASIC DEFINITIONS */
 #define _THIS_TASK                      NULL
-#define MAX_DELAY_MS                    ((portMAX_DELAY) - 1000)
-#define MAX_DELAY_S                     (MAX_DELAY_MS / 1000)
+
+#define _MAX_DELAY_MS                   ((portMAX_DELAY) - 1000)
+#define _MAX_DELAY_S                    (_MAX_DELAY_MS / 1000)
 
 /** PRIORITIES */
-#define PRIORITY(prio)                  (prio + (configMAX_PRIORITIES / 2))
-#define PRIORITY_LOWEST                 (-(int)(configMAX_PRIORITIES / 2))
-#define PRIORITY_NORMAL                 0
-#define PRIORITY_HIGHEST                ((int)(configMAX_PRIORITIES / 2))
+#define _PRIORITY(prio)                 (prio + (configMAX_PRIORITIES / 2))
+#define _PRIORITY_LOWEST                (-(int)(configMAX_PRIORITIES / 2))
+#define _PRIORITY_NORMAL                0
+#define _PRIORITY_HIGHEST               ((int)(configMAX_PRIORITIES / 2))
 
 /*==============================================================================
   Exported types, enums definitions
 ==============================================================================*/
 /** USERSPACE/KERNELSPACE: mutex type */
-enum mutex_type {
-        MUTEX_TYPE_RECURSIVE,
-        MUTEX_TYPE_NORMAL
+enum kmtx_type {
+        KMTX_TYPE_RECURSIVE,
+        KMTX_TYPE_NORMAL
 };
 
 /*==============================================================================
@@ -110,38 +111,38 @@ extern task_t  *_task_get_handle                   (void);
 extern void     _task_set_storage_pointer          (task_t*, u8_t, void*);
 extern void    *_task_get_storage_pointer          (task_t*, u8_t);
 
-extern int      _semaphore_create                  (size_t, size_t, sem_t**);
-extern int      _semaphore_destroy                 (sem_t*);
-extern int      _semaphore_wait                    (sem_t*, const u32_t);
-extern int      _semaphore_signal                  (sem_t*);
-extern int      _semaphore_get_value               (sem_t *sem, size_t *value);
-extern int      _semaphore_wait_from_ISR           (sem_t*, bool*);
-extern int      _semaphore_signal_from_ISR         (sem_t*, bool*);
+extern int      _semaphore_create                  (size_t, size_t, ksem_t**);
+extern int      _semaphore_destroy                 (ksem_t*);
+extern int      _semaphore_wait                    (ksem_t*, const u32_t);
+extern int      _semaphore_signal                  (ksem_t*);
+extern int      _semaphore_get_value               (ksem_t *sem, size_t *value);
+extern int      _semaphore_wait_from_ISR           (ksem_t*, bool*);
+extern int      _semaphore_signal_from_ISR         (ksem_t*, bool*);
 
-extern int      _mutex_create                      (enum mutex_type, mutex_t**);
-extern int      _mutex_destroy                     (mutex_t*);
-extern int      _mutex_lock                        (mutex_t*, const u32_t);
-extern int      _mutex_unlock                      (mutex_t*);
+extern int      _mutex_create                      (enum kmtx_type, kmtx_t**);
+extern int      _mutex_destroy                     (kmtx_t*);
+extern int      _mutex_lock                        (kmtx_t*, const u32_t);
+extern int      _mutex_unlock                      (kmtx_t*);
 
-extern int      _flag_create                       (flag_t**);
-extern int      _flag_destroy                      (flag_t*);
-extern int      _flag_wait                         (flag_t*, u32_t, const u32_t);
-extern int      _flag_set                          (flag_t*, u32_t);
-extern int      _flag_clear                        (flag_t*, u32_t);
-extern u32_t    _flag_get                          (flag_t*);
-extern u32_t    _flag_get_from_ISR                 (flag_t*);
+extern int      _flag_create                       (kflag_t**);
+extern int      _flag_destroy                      (kflag_t*);
+extern int      _flag_wait                         (kflag_t*, u32_t, const u32_t);
+extern int      _flag_set                          (kflag_t*, u32_t);
+extern int      _flag_clear                        (kflag_t*, u32_t);
+extern u32_t    _flag_get                          (kflag_t*);
+extern u32_t    _flag_get_from_ISR                 (kflag_t*);
 
-extern int      _queue_create                      (size_t, size_t, queue_t**);
-extern int      _queue_destroy                     (queue_t*);
-extern int      _queue_reset                       (queue_t*);
-extern int      _queue_send                        (queue_t*, const void*, const u32_t);
-extern int      _queue_send_from_ISR               (queue_t*, const void*, bool*);
-extern int      _queue_receive                     (queue_t*, void*, const u32_t);
-extern int      _queue_receive_from_ISR            (queue_t*, void*, bool*);
-extern int      _queue_receive_peek                (queue_t*, void*, const u32_t);
-extern int      _queue_get_number_of_items         (queue_t*, size_t*);
-extern int      _queue_get_number_of_items_from_ISR(queue_t*, size_t*);
-extern int      _queue_get_space_available         (queue_t*, size_t*);
+extern int      _queue_create                      (size_t, size_t, kqueue_t**);
+extern int      _queue_destroy                     (kqueue_t*);
+extern int      _queue_reset                       (kqueue_t*);
+extern int      _queue_send                        (kqueue_t*, const void*, const u32_t);
+extern int      _queue_send_from_ISR               (kqueue_t*, const void*, bool*);
+extern int      _queue_receive                     (kqueue_t*, void*, const u32_t);
+extern int      _queue_receive_from_ISR            (kqueue_t*, void*, bool*);
+extern int      _queue_receive_peek                (kqueue_t*, void*, const u32_t);
+extern int      _queue_get_number_of_items         (kqueue_t*, size_t*);
+extern int      _queue_get_number_of_items_from_ISR(kqueue_t*, size_t*);
+extern int      _queue_get_space_available         (kqueue_t*, size_t*);
 
 extern void     _critical_section_begin            (void);
 extern void     _critical_section_end              (void);
@@ -150,7 +151,6 @@ extern void     _ISR_disable                       (void);
 extern void     _ISR_enable                        (void);
 
 extern void     _sleep_ms                          (const u32_t);
-extern void     _sleep                             (const u32_t);
 extern void     _sleep_until_ms                    (const u32_t, u32_t*);
 extern void     _sleep_until                       (const u32_t, u32_t*);
 

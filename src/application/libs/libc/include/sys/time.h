@@ -42,7 +42,7 @@ The library provides system set/get time functions.
 ==============================================================================*/
 #include <libc/include/sys/types.h>
 #include <stddef.h>
-#include <kernel/syscall.h>
+#include <libc/source/syscall.h>
 #include <errno.h>
 #include <dnx/misc.h>
 
@@ -145,7 +145,7 @@ static inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
 #if __OS_ENABLE_TIMEMAN__ ==_YES_
         int err = 0;
-        syscall(SYSCALL_GETTIMEOFDAY, &err, tv ,tz);
+        libc_syscall(_LIBC_SYS_GETTIMEOFDAY, &err, tv ,tz);
         return err;
 #else
         UNUSED_ARG2(tv, tz);
@@ -173,7 +173,7 @@ static inline int settimeofday(const struct timeval *tv, const struct timezone *
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
         int err = 0;
-        syscall(SYSCALL_SETTIMEOFDAY, &err, tv, tz);
+        libc_syscall(_LIBC_SYS_SETTIMEOFDAY, &err, tv, tz);
         return err;
 #else
         UNUSED_ARG2(tv, tz);

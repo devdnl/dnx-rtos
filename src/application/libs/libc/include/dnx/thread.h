@@ -36,8 +36,8 @@ threads.
 */
 /**@{*/
 
-#ifndef _THREAD_H_
-#define _THREAD_H_
+#ifndef _LIBC_DNX_THREAD_H_
+#define _LIBC_DNX_THREAD_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,9 +46,11 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <kernel/syscall.h>
-#include <kernel/kwrapper.h>
+#include <libc/source/syscall.h>
+#include <libc/include/sys/types.h>
+#include <stdio.h>
 #include <errno.h>
+#include <stdbool.h>
 
 /*==============================================================================
   Exported macros
@@ -112,37 +114,19 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-#ifdef DOXYGEN
-/**
- * @brief Process attributes
- *
- * The type is used to configure process settings.
- */
-typedef struct {
-        FILE       *f_stdin;            /*!< stdin  file object pointer (major).*/
-        FILE       *f_stdout;           /*!< stdout file object pointer (major).*/
-        FILE       *f_stderr;           /*!< stderr file object pointer (major).*/
-        const char *p_stdin;            /*!< stdin  file path (minor).*/
-        const char *p_stdout;           /*!< stdout file path (minor).*/
-        const char *p_stderr;           /*!< stderr file path (minor).*/
-        const char *cwd;                /*!< working directory path.*/
-        i16_t       priority;           /*!< process priority.*/
-        bool        detached;           /*!< process detached from parent.*/
-} process_attr_t;
-
 /**
  * @brief Semaphore object
  *
  * The type represent semaphore object. Fields are private.
  */
-typedef struct {} sem_t;
+typedef void sem_t;
 
 /**
  * @brief Mutex object
  *
  * The type represent mutex object. Fields are private.
  */
-typedef struct {} mutex_t;
+typedef void mutex_t;
 
 /**
  * @brief Mutex type
@@ -150,8 +134,8 @@ typedef struct {} mutex_t;
  * The enumerator represent type of mutex object.
  */
 enum mutex_type {
-        MUTEX_TYPE_RECURSIVE,   /*!< recursive mutex.*/
-        MUTEX_TYPE_NORMAL       /*!< normal mutex.*/
+        MUTEX_TYPE_RECURSIVE,
+        MUTEX_TYPE_NORMAL
 };
 
 /**
@@ -159,7 +143,29 @@ enum mutex_type {
  *
  * The type represent queue object. Fields are private.
  */
-typedef struct {} queue_t;
+typedef void queue_t;
+
+/**
+ * @brief Thread function pointer
+ */
+typedef int (*thread_func_t)(void *arg);
+
+/**
+ * @brief Process attributes
+ *
+ * The type is used to configure process settings.
+ */
+typedef struct {
+        void       *f_stdin;            //!< stdin  file object pointer (major)
+        void       *f_stdout;           //!< stdout file object pointer (major)
+        void       *f_stderr;           //!< stderr file object pointer (major)
+        const char *p_stdin;            //!< stdin  file path (minor)
+        const char *p_stdout;           //!< stdout file path (minor)
+        const char *p_stderr;           //!< stderr file path (minor)
+        const char *cwd;                //!< working directory path
+        i16_t       priority;           //!< process priority
+        bool        detached;           //!< independent process (no parent)
+} process_attr_t;
 
 /**
  * @brief Process statistics container.
@@ -167,28 +173,37 @@ typedef struct {} queue_t;
  * The type represent process statistics.
  */
 typedef struct {
-        const char *name;               /*!< process name.*/
-        pid_t       pid;                /*!< process ID.*/
-        size_t      memory_usage;       /*!< memory usage (allocated by process).*/
-        u16_t       memory_block_count; /*!< number of used memory blocks.*/
-        u16_t       files_count;        /*!< number of opened files.*/
-        u16_t       dir_count;          /*!< number of opened directories.*/
-        u16_t       mutexes_count;      /*!< number of used mutexes.*/
-        u16_t       semaphores_count;   /*!< number of used sempahores.*/
-        u16_t       queue_count;        /*!< number of used queues.*/
-        u16_t       socket_count;       /*!< number of used sockets.*/
-        u16_t       threads_count;      /*!< number of threads.*/
-        u16_t       CPU_load;           /*!< CPU load (1% = 10).*/
-        u16_t       stack_size;         /*!< stack size.*/
-        u16_t       stack_max_usage;    /*!< max stack usage.*/
-        i16_t       priority;           /*!< priority.*/
-        bool        zombie;             /*!< process finished and wait for destory.*/
+        const char *name;               //!< process name
+        pid_t       pid;                //!< process ID
+        size_t      memory_usage;       //!< memory usage (allocated by process)
+        u16_t       memory_block_count; //!< number of used memory blocks
+        u16_t       files_count;        //!< number of opened files
+        u16_t       dir_count;          //!< number of opened directories
+        u16_t       mutexes_count;      //!< number of used mutexes
+        u16_t       semaphores_count;   //!< number of used semaphores
+        u16_t       queue_count;        //!< number of used queues
+        u16_t       socket_count;       //!< number of used sockets
+        u16_t       threads_count;      //!< number of threads
+        u16_t       CPU_load;           //!< CPU load (1% = 10)
+        u16_t       stack_size;         //!< stack size
+        u16_t       stack_max_usage;    //!< max stack usage
+        i16_t       priority;           //!< priority
+        u16_t       syscalls_per_sec;   //!< syscalls per second
 } process_stat_t;
 
 /**
- * @brief Thread function pointer
+ * @brief Thread statistics type
+ *
+ * The type represent thread attributes that configures thread settings.
  */
-typedef void (*thread_func_t)(void *arg);
+typedef struct {
+        tid_t       tid;                //!< thread ID
+        u16_t       CPU_load;           //!< CPU load (1% = 10)
+        u16_t       stack_size;         //!< stack size
+        u16_t       stack_max_usage;    //!< max stack usage
+        i16_t       priority;           //!< priority
+        u16_t       syscalls_per_sec;   //!< syscalls per second
+} thread_stat_t;
 
 /**
  * @brief Thread attributes type
@@ -196,18 +211,14 @@ typedef void (*thread_func_t)(void *arg);
  * The type represent thread attributes that configures thread settings.
  */
 typedef struct {
-        size_t stack_depth;             /*!< stack depth.*/
-        i16_t  priority;                /*!< thread priority.*/
+        size_t stack_depth;             //!< stack depth
+        i16_t  priority;                //!< thread priority
+        bool   detached;                //!< independent thread (without join possibility)
 } thread_attr_t;
-
-#endif
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-#ifndef DOXYGEN
-extern int _errno;
-#endif
 
 /*==============================================================================
   Exported functions
@@ -274,7 +285,7 @@ extern int _errno;
 static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 {
         pid_t pid = 0;
-        syscall(SYSCALL_PROCESSCREATE, &pid, cmd, attr);
+        libc_syscall(_LIBC_SYS_PROCESSCREATE, &pid, cmd, attr);
         return pid;
 }
 
@@ -331,7 +342,7 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 static inline int process_kill(pid_t pid)
 {
         int r = -1;
-        syscall(SYSCALL_PROCESSKILL, &r, &pid);
+        libc_syscall(_LIBC_SYS_PROCESSKILL, &r, &pid);
         return r;
 }
 
@@ -392,7 +403,7 @@ static inline int process_kill(pid_t pid)
 static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
 {
         int r = -1;
-        syscall(SYSCALL_PROCESSWAIT, &r, &pid, status, &timeout);
+        libc_syscall(_LIBC_SYS_PROCESSWAIT, &r, &pid, status, &timeout);
         return r;
 }
 
@@ -490,7 +501,7 @@ static inline int wait(pid_t pid)
 static inline int process_stat_seek(size_t seek, process_stat_t *stat)
 {
         int r = -1;
-        syscall(SYSCALL_PROCESSSTATSEEK, &r, &seek, stat);
+        libc_syscall(_LIBC_SYS_PROCESSSTATSEEK, &r, &seek, stat);
         return r;
 }
 
@@ -531,7 +542,7 @@ static inline int process_stat_seek(size_t seek, process_stat_t *stat)
 static inline int process_stat(pid_t pid, process_stat_t *stat)
 {
         int r = -1;
-        syscall(SYSCALL_PROCESSSTATPID, &r, &pid, stat);
+        libc_syscall(_LIBC_SYS_PROCESSSTATPID, &r, &pid, stat);
         return r;
 }
 
@@ -565,7 +576,7 @@ static inline int process_stat(pid_t pid, process_stat_t *stat)
 static inline pid_t process_getpid(void)
 {
         pid_t pid = 0;
-        syscall(SYSCALL_PROCESSGETPID, &pid);
+        libc_syscall(_LIBC_SYS_PROCESSGETPID, &pid);
         return pid;
 }
 
@@ -597,7 +608,7 @@ static inline pid_t process_getpid(void)
 static inline int process_get_priority(pid_t pid)
 {
         int prio = 0;
-        syscall(SYSCALL_PROCESSGETPRIO, &prio, &pid);
+        libc_syscall(_LIBC_SYS_PROCESSGETPRIO, &prio, &pid);
         return prio;
 }
 
@@ -667,7 +678,7 @@ static inline int process_get_priority(pid_t pid)
 static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr, void *arg)
 {
         tid_t tid = 0;
-        syscall(SYSCALL_THREADCREATE, &tid, func, attr, arg);
+        libc_syscall(_LIBC_SYS_THREADCREATE, &tid, func, attr, arg);
         return tid;
 }
 
@@ -730,7 +741,7 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 static inline int thread_cancel(tid_t tid)
 {
         int r = -1;
-        syscall(SYSCALL_THREADKILL, &r, &tid);
+        libc_syscall(_LIBC_SYS_THREADKILL, &r, &tid);
         return r;
 }
 
@@ -791,7 +802,7 @@ static inline int thread_cancel(tid_t tid)
 static inline int thread_current(void)
 {
         int r = -1;
-        syscall(SYSCALL_GETACTIVETHREAD, &r);
+        libc_syscall(_LIBC_SYS_GETACTIVETHREAD, &r);
         return r;
 }
 
@@ -846,7 +857,7 @@ static inline int thread_current(void)
 //==============================================================================
 static inline void thread_exit(int status)
 {
-        syscall(SYSCALL_THREADEXIT, NULL, &status);
+        libc_syscall(_LIBC_SYS_THREADEXIT, NULL, &status);
 }
 
 //==============================================================================
@@ -913,7 +924,7 @@ static inline void thread_exit(int status)
 static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
 {
         int r = -1;
-        syscall(SYSCALL_THREADJOIN, &r, &tid, status, &timeout_ms);
+        libc_syscall(_LIBC_SYS_THREADJOIN, &r, &tid, status, &timeout_ms);
         return r;
 }
 
@@ -1020,7 +1031,7 @@ static inline int thread_join(tid_t tid, int *status)
 static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
 {
         int r = -1;
-        syscall(SYSCALL_THREADSTAT, &r, &pid, &tid, stat);
+        libc_syscall(_LIBC_SYS_THREADSTAT, &r, &pid, &tid, stat);
         return r;
 }
 
@@ -1092,7 +1103,7 @@ static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
 static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 {
         sem_t *sem = NULL;
-        syscall(SYSCALL_SEMAPHORECREATE, &sem, &cnt_max, &cnt_init);
+        libc_syscall(_LIBC_SYS_SEMAPHORECREATE, &sem, &cnt_max, &cnt_init);
         return sem;
 }
 
@@ -1133,7 +1144,7 @@ static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 //==============================================================================
 static inline void semaphore_delete(sem_t *sem)
 {
-        syscall(SYSCALL_SEMAPHOREDESTROY, NULL, sem);
+        libc_syscall(_LIBC_SYS_SEMAPHOREDESTROY, NULL, sem);
 }
 
 //==============================================================================
@@ -1202,7 +1213,7 @@ static inline void semaphore_delete(sem_t *sem)
 static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
 {
         bool r = false;
-        syscall(SYSCALL_SEMAPHOREWAIT, &r, sem, &timeout);
+        libc_syscall(_LIBC_SYS_SEMAPHOREWAIT, &r, sem, &timeout);
         return r;
 }
 
@@ -1261,7 +1272,7 @@ static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
 static inline bool semaphore_signal(sem_t *sem)
 {
         bool r = false;
-        syscall(SYSCALL_SEMAPHORESIGNAL, &r, sem);
+        libc_syscall(_LIBC_SYS_SEMAPHORESIGNAL, &r, sem);
         return r;
 }
 
@@ -1297,7 +1308,7 @@ static inline bool semaphore_signal(sem_t *sem)
 static inline int semaphore_get_value(sem_t *sem)
 {
         int r = -1;
-        syscall(SYSCALL_SEMAPHOREGETVALUE, &r, sem);
+        libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &r, sem);
         return r;
 }
 
@@ -1362,7 +1373,7 @@ static inline int semaphore_get_value(sem_t *sem)
 static inline mutex_t *mutex_new(enum mutex_type type)
 {
         mutex_t *mtx = NULL;
-        syscall(SYSCALL_MUTEXCREATE, &mtx, &type);
+        libc_syscall(_LIBC_SYS_MUTEXCREATE, &mtx, &type);
         return mtx;
 }
 
@@ -1425,7 +1436,7 @@ static inline mutex_t *mutex_new(enum mutex_type type)
 //==============================================================================
 static inline void mutex_delete(mutex_t *mutex)
 {
-        syscall(SYSCALL_MUTEXDESTROY, NULL, mutex);
+        libc_syscall(_LIBC_SYS_MUTEXDESTROY, NULL, mutex);
 }
 
 //==============================================================================
@@ -1491,7 +1502,7 @@ static inline void mutex_delete(mutex_t *mutex)
 static inline bool mutex_lock(mutex_t *mutex, const u32_t timeout)
 {
         bool r = false;
-        syscall(SYSCALL_MUTEXLOCK, &r, mutex, &timeout);
+        libc_syscall(_LIBC_SYS_MUTEXLOCK, &r, mutex, &timeout);
         return r;
 }
 
@@ -1620,7 +1631,7 @@ static inline bool mutex_trylock(mutex_t *mutex)
 static inline bool mutex_unlock(mutex_t *mutex)
 {
         bool r = false;
-        syscall(SYSCALL_MUTEXUNLOCK, &r, mutex);
+        libc_syscall(_LIBC_SYS_MUTEXUNLOCK, &r, mutex);
         return r;
 }
 
@@ -1690,7 +1701,7 @@ static inline bool mutex_unlock(mutex_t *mutex)
 static inline queue_t *queue_new(const size_t length, const size_t item_size)
 {
         queue_t *queue = NULL;
-        syscall(SYSCALL_QUEUECREATE, &queue, &length, &item_size);
+        libc_syscall(_LIBC_SYS_QUEUECREATE, &queue, &length, &item_size);
         return queue;
 }
 
@@ -1754,7 +1765,7 @@ static inline queue_t *queue_new(const size_t length, const size_t item_size)
 //==============================================================================
 static inline void queue_delete(queue_t *queue)
 {
-        syscall(SYSCALL_QUEUEDESTROY, NULL, queue);
+        libc_syscall(_LIBC_SYS_QUEUEDESTROY, NULL, queue);
 }
 
 //==============================================================================
@@ -1819,7 +1830,7 @@ static inline void queue_delete(queue_t *queue)
 static inline bool queue_reset(queue_t *queue)
 {
         bool r = false;
-        syscall(SYSCALL_QUEUERESET, &r, queue);
+        libc_syscall(_LIBC_SYS_QUEUERESET, &r, queue);
         return r;
 }
 
@@ -1890,7 +1901,7 @@ static inline bool queue_reset(queue_t *queue)
 static inline bool queue_send(queue_t *queue, const void *item, const u32_t timeout)
 {
         bool r = false;
-        syscall(SYSCALL_QUEUESEND, &r, queue, item, &timeout);
+        libc_syscall(_LIBC_SYS_QUEUESEND, &r, queue, item, &timeout);
         return r;
 }
 
@@ -1960,7 +1971,7 @@ static inline bool queue_send(queue_t *queue, const void *item, const u32_t time
 static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout)
 {
         bool r = false;
-        syscall(SYSCALL_QUEUERECEIVE, &r, queue, item, &timeout);
+        libc_syscall(_LIBC_SYS_QUEUERECEIVE, &r, queue, item, &timeout);
         return r;
 }
 
@@ -2029,7 +2040,7 @@ static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout
 static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout)
 {
         bool r = false;
-        syscall(SYSCALL_QUEUERECEIVEPEEK, &r, queue, item, &timeout);
+        libc_syscall(_LIBC_SYS_QUEUERECEIVEPEEK, &r, queue, item, &timeout);
         return r;
 }
 
@@ -2097,7 +2108,7 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t ti
 static inline int queue_get_number_of_items(queue_t *queue)
 {
         int r = -1;
-        syscall(SYSCALL_QUEUEITEMSCOUNT, &r, queue);
+        libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &r, queue);
         return r;
 }
 
@@ -2140,7 +2151,7 @@ static inline int queue_get_number_of_items(queue_t *queue)
 static inline int queue_get_space_available(queue_t *queue)
 {
         int r = -1;
-        syscall(SYSCALL_QUEUEFREESPACE, &r, queue);
+        libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &r, queue);
         return r;
 }
 

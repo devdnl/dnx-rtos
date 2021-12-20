@@ -150,7 +150,7 @@ static void restore_configuration(inet_t *inet)
 
         netif_set_down(&inet->netif);
 
-        if (sys_mutex_lock(inet->access, MAX_DELAY_MS) == ESUCC) {
+        if (sys_mutex_lock(inet->access, _MAX_DELAY_MS) == ESUCC) {
 
                 while (!_inetdrv_is_link_connected(inet)) {
                         sys_msleep(LINK_POLL_TIME);
@@ -476,16 +476,16 @@ int INET_ifinit(void **ctx, const char *if_path)
         if (!err) {
                 inet_t *inet = *ctx;
 
-                static const thread_attr_t attr = {
-                        .priority    = PRIORITY_NORMAL,
-                        .stack_depth = STACK_DEPTH_LOW,
+                static const _thread_attr_t attr = {
+                        .priority    = _PRIORITY_NORMAL,
+                        .stack_depth = _STACK_DEPTH_LOW,
                         .detached    = true
                 };
 
                 inet->thread_run = true;
 
                 int ferr = sys_fopen(if_path, "r+", &inet->if_file);
-                int merr = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &inet->access);
+                int merr = sys_mutex_create(KMTX_TYPE_RECURSIVE, &inet->access);
                 int terr = sys_thread_create(network_interface_thread, &attr, inet, &inet->if_thread);
 
                 if (!ferr && !merr && !terr) {

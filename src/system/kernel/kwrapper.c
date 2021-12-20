@@ -70,7 +70,7 @@ extern u64_t _tick_counter;
  * @return If object is valid then true is returned, false otherwise.
  */
 //==============================================================================
-static bool is_semaphore_valid(sem_t *sem)
+static bool is_semaphore_valid(ksem_t *sem)
 {
         return _mm_is_object_in_heap(sem)
             && (sem->header.self == sem)
@@ -85,7 +85,7 @@ static bool is_semaphore_valid(sem_t *sem)
  * @return If object is valid then true is returned, false otherwise.
  */
 //==============================================================================
-static bool is_mutex_valid(mutex_t *mtx)
+static bool is_mutex_valid(kmtx_t *mtx)
 {
         return _mm_is_object_in_heap(mtx)
             && (mtx->header.self == mtx)
@@ -100,7 +100,7 @@ static bool is_mutex_valid(mutex_t *mtx)
  * @return If object is valid then true is returned, false otherwise.
  */
 //==============================================================================
-static bool is_queue_valid(queue_t *queue)
+static bool is_queue_valid(kqueue_t *queue)
 {
         return _mm_is_object_in_heap(queue)
             && (queue->header.self == queue)
@@ -115,7 +115,7 @@ static bool is_queue_valid(queue_t *queue)
  * @return If object is valid then true is returned, false otherwise.
  */
 //==============================================================================
-static bool is_flag_valid(flag_t *flag)
+static bool is_flag_valid(kflag_t *flag)
 {
         return _mm_is_object_in_heap(flag)
             && (flag->header.self == flag)
@@ -241,7 +241,7 @@ int _task_create(task_func_t func, const char *name, const size_t stack_depth, v
 
         if (func && name && stack_depth) {
                 int         scheduler_status = xTaskGetSchedulerState();
-                UBaseType_t parent_priority  = PRIORITY(0);
+                UBaseType_t parent_priority  = _PRIORITY(0);
 
                 if (scheduler_status != taskSCHEDULER_NOT_STARTED) {
                         parent_priority = uxTaskPriorityGet(_THIS_TASK);
@@ -302,7 +302,7 @@ void _task_destroy(task_t *taskHdl)
 void _task_exit(void)
 {
         /* request to delete task */
-        _task_set_priority(_THIS_TASK, PRIORITY_NORMAL);
+        _task_set_priority(_THIS_TASK, _PRIORITY_NORMAL);
         _task_destroy(_THIS_TASK);
 
         /* wait for exit */
@@ -397,7 +397,7 @@ int _task_get_priority(task_t *taskhdl)
 //==============================================================================
 void _task_set_priority(task_t *taskhdl, const int priority)
 {
-        vTaskPrioritySet(taskhdl, PRIORITY(priority));
+        vTaskPrioritySet(taskhdl, _PRIORITY(priority));
 }
 
 //==============================================================================
@@ -497,12 +497,12 @@ void *_task_get_storage_pointer(task_t *taskhdl, u8_t index)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_create(size_t cnt_max, size_t cnt_init, sem_t **sem)
+int _semaphore_create(size_t cnt_max, size_t cnt_init, ksem_t **sem)
 {
         int err = EINVAL;
 
         if (cnt_max > 0 && sem) {
-                err = _kzalloc(_MM_KRN, sizeof(sem_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, sem));
+                err = _kzalloc(_MM_KRN, sizeof(ksem_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, sem));
                 if (err == ESUCC) {
 
                         if (cnt_max == 1) {
@@ -544,7 +544,7 @@ int _semaphore_create(size_t cnt_max, size_t cnt_init, sem_t **sem)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_destroy(sem_t *sem)
+int _semaphore_destroy(ksem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
                 sem->header.self = NULL;
@@ -568,7 +568,7 @@ int _semaphore_destroy(sem_t *sem)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_wait(sem_t *sem, const u32_t blocktime_ms)
+int _semaphore_wait(ksem_t *sem, const u32_t blocktime_ms)
 {
         if (is_semaphore_valid(sem)) {
                 bool r = xSemaphoreTake(sem->object, MS2TICK((TickType_t)blocktime_ms));
@@ -588,7 +588,7 @@ int _semaphore_wait(sem_t *sem, const u32_t blocktime_ms)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_signal(sem_t *sem)
+int _semaphore_signal(ksem_t *sem)
 {
         if (is_semaphore_valid(sem)) {
                 bool r = xSemaphoreGive(sem->object);
@@ -609,7 +609,7 @@ int _semaphore_signal(sem_t *sem)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_get_value(sem_t *sem, size_t *value)
+int _semaphore_get_value(ksem_t *sem, size_t *value)
 {
         if (is_semaphore_valid(sem) && value) {
                 *value = (size_t)uxSemaphoreGetCount(sem->object);
@@ -630,7 +630,7 @@ int _semaphore_get_value(sem_t *sem, size_t *value)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
+int _semaphore_wait_from_ISR(ksem_t *sem, bool *task_woken)
 {
         if (is_semaphore_valid(sem)) {
                 BaseType_t woken = 0;
@@ -656,7 +656,7 @@ int _semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
  * @return One of errno values.
  */
 //==============================================================================
-int _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
+int _semaphore_signal_from_ISR(ksem_t *sem, bool *task_woken)
 {
         if (is_semaphore_valid(sem)) {
                 BaseType_t woken = 0;
@@ -682,14 +682,14 @@ int _semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
  * @return One of errno values.
  */
 //==============================================================================
-int _mutex_create(enum mutex_type type, mutex_t **mtx)
+int _mutex_create(enum kmtx_type type, kmtx_t **mtx)
 {
         int err = EINVAL;
 
-        if (type <= MUTEX_TYPE_NORMAL && mtx) {
-                err = _kzalloc(_MM_KRN, sizeof(mutex_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, mtx));
+        if (type <= KMTX_TYPE_NORMAL && mtx) {
+                err = _kzalloc(_MM_KRN, sizeof(kmtx_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, mtx));
                 if (err == ESUCC) {
-                        if (type == MUTEX_TYPE_RECURSIVE) {
+                        if (type == KMTX_TYPE_RECURSIVE) {
                                 (*mtx)->object    = xSemaphoreCreateRecursiveMutexStatic(&(*mtx)->buffer);
                                 (*mtx)->recursive = true;
                         } else {
@@ -719,7 +719,7 @@ int _mutex_create(enum mutex_type type, mutex_t **mtx)
  * @return One of errno values.
  */
 //==============================================================================
-int _mutex_destroy(mutex_t *mutex)
+int _mutex_destroy(kmtx_t *mutex)
 {
         if (is_mutex_valid(mutex)) {
                 mutex->header.self = NULL;
@@ -743,7 +743,7 @@ int _mutex_destroy(mutex_t *mutex)
  * @return One of errno values.
  */
 //==============================================================================
-int _mutex_lock(mutex_t *mutex, const u32_t blocktime_ms)
+int _mutex_lock(kmtx_t *mutex, const u32_t blocktime_ms)
 {
         if (is_mutex_valid(mutex)) {
                 bool status;
@@ -769,7 +769,7 @@ int _mutex_lock(mutex_t *mutex, const u32_t blocktime_ms)
  * @return One of errno values.
  */
 //==============================================================================
-int _mutex_unlock(mutex_t *mutex)
+int _mutex_unlock(kmtx_t *mutex)
 {
         if (is_mutex_valid(mutex)) {
                 bool status;
@@ -796,12 +796,12 @@ int _mutex_unlock(mutex_t *mutex)
  * @return One of errno values.
  */
 //==============================================================================
-int _flag_create(flag_t **flag)
+int _flag_create(kflag_t **flag)
 {
         int err = EINVAL;
 
         if (flag) {
-                err = _kzalloc(_MM_KRN, sizeof(flag_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, flag));
+                err = _kzalloc(_MM_KRN, sizeof(kflag_t), _CPUCTL_FAST_MEM, 0, 0, cast(void**, flag));
                 if (err == ESUCC) {
                         (*flag)->object = xEventGroupCreateStatic(&(*flag)->buffer);
 
@@ -827,7 +827,7 @@ int _flag_create(flag_t **flag)
  * @return One of errno values.
  */
 //==============================================================================
-int _flag_destroy(flag_t *flag)
+int _flag_destroy(kflag_t *flag)
 {
         if (is_flag_valid(flag)) {
                 flag->header.type = RES_TYPE_UNKNOWN;
@@ -851,7 +851,7 @@ int _flag_destroy(flag_t *flag)
  * @return One of errno values.
  */
 //==============================================================================
-int _flag_wait(flag_t *flag, u32_t bits, const u32_t blocktime_ms)
+int _flag_wait(kflag_t *flag, u32_t bits, const u32_t blocktime_ms)
 {
         if (is_flag_valid(flag)) {
                 if (xEventGroupWaitBits(flag->object, bits, true, true, blocktime_ms)) {
@@ -876,7 +876,7 @@ int _flag_wait(flag_t *flag, u32_t bits, const u32_t blocktime_ms)
  * @return One of errno values.
  */
 //==============================================================================
-int _flag_set(flag_t *flag, u32_t bits)
+int _flag_set(kflag_t *flag, u32_t bits)
 {
         if (is_flag_valid(flag)) {
                 xEventGroupSetBits(flag->object, bits);
@@ -897,7 +897,7 @@ int _flag_set(flag_t *flag, u32_t bits)
  * @return One of errno values.
  */
 //==============================================================================
-int _flag_clear(flag_t *flag, u32_t bits)
+int _flag_clear(kflag_t *flag, u32_t bits)
 {
         if (is_flag_valid(flag)) {
                 xEventGroupClearBits(flag->object, bits);
@@ -917,7 +917,7 @@ int _flag_clear(flag_t *flag, u32_t bits)
  * @return Flags.
  */
 //==============================================================================
-u32_t _flag_get(flag_t *flag)
+u32_t _flag_get(kflag_t *flag)
 {
         if (is_flag_valid(flag)) {
                 return (u32_t)xEventGroupGetBits(flag->object);
@@ -936,7 +936,7 @@ u32_t _flag_get(flag_t *flag)
  * @return Flags.
  */
 //==============================================================================
-u32_t _flag_get_from_ISR(flag_t *flag)
+u32_t _flag_get_from_ISR(kflag_t *flag)
 {
         if (is_flag_valid(flag)) {
                 return (u32_t)xEventGroupGetBitsFromISR(flag->object);
@@ -956,12 +956,12 @@ u32_t _flag_get_from_ISR(flag_t *flag)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_create(size_t length, size_t item_size, queue_t **queue)
+int _queue_create(size_t length, size_t item_size, kqueue_t **queue)
 {
         int err = EINVAL;
 
         if (length && item_size && queue) {
-                err = _kzalloc(_MM_KRN, sizeof(queue_t) + (length * item_size),
+                err = _kzalloc(_MM_KRN, sizeof(kqueue_t) + (length * item_size),
                                _CPUCTL_FAST_MEM, 0, 0, cast(void**, queue));
                 if (err == ESUCC) {
                         (*queue)->object = xQueueCreateStatic(length,
@@ -990,7 +990,7 @@ int _queue_create(size_t length, size_t item_size, queue_t **queue)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_destroy(queue_t *queue)
+int _queue_destroy(kqueue_t *queue)
 {
         if (is_queue_valid(queue)) {
                 queue->header.self = NULL;
@@ -1014,7 +1014,7 @@ int _queue_destroy(queue_t *queue)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_reset(queue_t *queue)
+int _queue_reset(kqueue_t *queue)
 {
         if (is_queue_valid(queue)) {
                 BaseType_t r = xQueueReset(queue->object);
@@ -1036,7 +1036,7 @@ int _queue_reset(queue_t *queue)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_send(queue_t *queue, const void *item, const u32_t waittime_ms)
+int _queue_send(kqueue_t *queue, const void *item, const u32_t waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
                 BaseType_t r = xQueueSend(queue->object, item, MS2TICK((TickType_t)waittime_ms));
@@ -1058,7 +1058,7 @@ int _queue_send(queue_t *queue, const void *item, const u32_t waittime_ms)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
+int _queue_send_from_ISR(kqueue_t *queue, const void *item, bool *task_woken)
 {
         if (is_queue_valid(queue) && item) {
                 BaseType_t woken = 0;
@@ -1085,7 +1085,7 @@ int _queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_receive(queue_t *queue, void *item, const u32_t waittime_ms)
+int _queue_receive(kqueue_t *queue, void *item, const u32_t waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
                 BaseType_t r = xQueueReceive(queue->object, item, MS2TICK((TickType_t)waittime_ms));
@@ -1107,7 +1107,7 @@ int _queue_receive(queue_t *queue, void *item, const u32_t waittime_ms)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
+int _queue_receive_from_ISR(kqueue_t *queue, void *item, bool *task_woken)
 {
         if (is_queue_valid(queue) && item) {
                 BaseType_t woken = 0;
@@ -1134,7 +1134,7 @@ int _queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_receive_peek(queue_t *queue, void *item, const u32_t waittime_ms)
+int _queue_receive_peek(kqueue_t *queue, void *item, const u32_t waittime_ms)
 {
         if (is_queue_valid(queue) && item) {
                 BaseType_t r = xQueuePeek(queue->object, item, MS2TICK((TickType_t)waittime_ms));
@@ -1155,7 +1155,7 @@ int _queue_receive_peek(queue_t *queue, void *item, const u32_t waittime_ms)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_get_number_of_items(queue_t *queue, size_t *items)
+int _queue_get_number_of_items(kqueue_t *queue, size_t *items)
 {
         if (is_queue_valid(queue) && items) {
                 UBaseType_t nomsg = uxQueueMessagesWaiting(queue->object);
@@ -1177,7 +1177,7 @@ int _queue_get_number_of_items(queue_t *queue, size_t *items)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_get_number_of_items_from_ISR(queue_t *queue, size_t *items)
+int _queue_get_number_of_items_from_ISR(kqueue_t *queue, size_t *items)
 {
         if (is_queue_valid(queue) && items) {
                 UBaseType_t nomsg = uxQueueMessagesWaitingFromISR(queue->object);
@@ -1198,7 +1198,7 @@ int _queue_get_number_of_items_from_ISR(queue_t *queue, size_t *items)
  * @return One of errno values.
  */
 //==============================================================================
-int _queue_get_space_available(queue_t *queue, size_t *items)
+int _queue_get_space_available(kqueue_t *queue, size_t *items)
 {
         if (is_queue_valid(queue) && items) {
                 UBaseType_t nomsg = uxQueueSpacesAvailable(queue->object);
@@ -1278,20 +1278,6 @@ void _ISR_enable(void)
 void _sleep_ms(const u32_t milliseconds)
 {
         vTaskDelay(MS2TICK(milliseconds));
-}
-
-//==============================================================================
-/**
- * @brief Function put to sleep task in seconds
- *
- * @param[in] seconds
- *
- * @return None
- */
-//==============================================================================
-void _sleep(const u32_t seconds)
-{
-        vTaskDelay(MS2TICK(seconds * 1000UL));
 }
 
 //==============================================================================

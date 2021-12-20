@@ -63,8 +63,8 @@ typedef struct {
         u8_t minor;
         SD_HandleTypeDef hsd;
         u64_t card_size;
-        mutex_t *mtx;
-        sem_t *sem_xfer_complete;
+        kmtx_t *mtx;
+        ksem_t *sem_xfer_complete;
         bool irq_yield;
 } SDIO_t;
 
@@ -185,7 +185,7 @@ API_MOD_INIT(SDIO, void **device_handle, u8_t major, u8_t minor, const void *con
                         err = sys_semaphore_create(1, 0, &hdl->sem_xfer_complete);
                         if (!err) {
 
-                                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mtx);
+                                err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &hdl->mtx);
                                 if (!err) {
                                         err = card_initialize(hdl);
                                         if (!err) {
@@ -219,7 +219,7 @@ API_MOD_RELEASE(SDIO, void *device_handle)
 {
         SDIO_t *hdl = device_handle;
 
-        mutex_t *mtx = hdl->mtx;
+        kmtx_t *mtx = hdl->mtx;
 
         int err = sys_mutex_lock(mtx, MTX_TIMEOUT);
         if (!err) {
@@ -464,7 +464,7 @@ API_MOD_IOCTL(SDIO, void *device_handle, int request, void *arg)
 
         switch (request) {
         case IOCTL_SDIO__INITIALIZE_CARD:
-                err = sys_mutex_lock(hdl->mtx, MAX_DELAY_MS);
+                err = sys_mutex_lock(hdl->mtx, _MAX_DELAY_MS);
                 if (!err) {
                         err = card_initialize(hdl);
                         sys_mutex_unlock(hdl->mtx);

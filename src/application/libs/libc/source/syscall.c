@@ -1,27 +1,25 @@
 /*==============================================================================
-File     strchrrep.c
+File     syscall.c
 
 Author   Daniel Zorychta
 
-Brief    String character replace.
+Brief    Syscall handling.
 
-         Copyright (C) 2019 Daniel Zorychta <daniel.zorychta@gmail.com>
+	 Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
-         the Free Software Foundation and modified by the dnx RTOS exception.
+         the  Free Software  Foundation;  either version 2 of the License, or
+         any later version.
 
-         NOTE: The modification  to the GPL is  included to allow you to
-               distribute a combined work that includes dnx RTOS without
-               being obliged to provide the source  code for proprietary
-               components outside of the dnx RTOS.
-
-         The dnx RTOS  is  distributed  in the hope  that  it will be useful,
-         but WITHOUT  ANY  WARRANTY;  without  even  the implied  warranty of
+         This  program  is  distributed  in the hope that  it will be useful,
+         but  WITHOUT  ANY  WARRANTY;  without  even  the implied warranty of
          MERCHANTABILITY  or  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the
          GNU General Public License for more details.
 
-         Full license text is available on the following file: doc/license.txt.
+         You  should  have received a copy  of the GNU General Public License
+         along  with  this  program;  if not,  write  to  the  Free  Software
+         Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
 ==============================================================================*/
@@ -29,15 +27,24 @@ Brief    String character replace.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <string.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include "syscall.h"
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
+/*
+ * Syscall section address is 0x08000400 in normal mode. The syscall section
+ * compiled is in Thumb mode. To indicate this mode jump address is incremented
+ * by 1.
+ */
+#define dnx_syscall ((syscall_func)(0x08000401))
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
+typedef void (*syscall_func)(_libc_syscall_t, void*, va_list);
 
 /*==============================================================================
   Local function prototypes
@@ -58,31 +65,12 @@ Brief    String character replace.
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-
-//==============================================================================
-/**
- * @brief  Function replace characters in string.
- *
- * @param  str          string (in/out buffer)
- * @param  from         find character
- * @param  to           replace character
- *
- * @return Number of replaced characters.
- */
-//==============================================================================
-int _libc_strchrrep(char *str, char from, char to)
+void libc_syscall(_libc_syscall_t syscall, void *retptr, ...)
 {
-        int repl = 0;
-
-        while (str && *str != '\0') {
-                if (*str == from) {
-                        *str = to;
-                        repl++;
-                }
-                str++;
-        }
-
-        return repl;
+        va_list args;
+        va_start(args, retptr);
+        dnx_syscall(syscall, retptr, args);
+        va_end(args);
 }
 
 /*==============================================================================

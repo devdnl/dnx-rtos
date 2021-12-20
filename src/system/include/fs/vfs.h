@@ -39,8 +39,8 @@ extern "C" {
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <sys/types.h>
 #include "kernel/ktypes.h"
+#include "lib/sys/types.h"
 #include "drivers/ioctl_macros.h"
 
 /*==============================================================================
@@ -236,8 +236,7 @@ struct vfs_file {
         vfs_file_flags_t    f_flag;
 };
 
-typedef struct vfs_file FILE;
-#define __FILE_TYPE_DEFINED__
+typedef struct vfs_file kfile_t;
 
 /** directory type */
 struct vfs_dir {
@@ -250,8 +249,7 @@ struct vfs_dir {
         dirent_t            dirent;         //!< directory entry data
 };
 
-typedef struct vfs_dir DIR;
-#define __DIR_TYPE_DEFINED__
+typedef struct vfs_dir kdir_t;
 
 /** Path with CWD */
 struct vfs_path {
@@ -277,29 +275,29 @@ extern int  _vfs_getmntentry(int, struct mntent*);
 extern int  _vfs_mknod      (const struct vfs_path*, dev_t);
 extern int  _vfs_mkdir      (const struct vfs_path*, mode_t);
 extern int  _vfs_mkfifo     (const struct vfs_path*, mode_t);
-extern int  _vfs_opendir    (const struct vfs_path*, DIR**);
-extern int  _vfs_closedir   (DIR*);
-extern int  _vfs_readdir    (DIR*, dirent_t**);
-extern int  _vfs_seekdir    (DIR*, u32_t);
-extern int  _vfs_telldir    (DIR*, u32_t*);
+extern int  _vfs_opendir    (const struct vfs_path*, kdir_t**);
+extern int  _vfs_closedir   (kdir_t*);
+extern int  _vfs_readdir    (kdir_t*, dirent_t**);
+extern int  _vfs_seekdir    (kdir_t*, u32_t);
+extern int  _vfs_telldir    (kdir_t*, u32_t*);
 extern int  _vfs_remove     (const struct vfs_path*);
 extern int  _vfs_rename     (const struct vfs_path*, const struct vfs_path*);
 extern int  _vfs_chmod      (const struct vfs_path*, mode_t);
 extern int  _vfs_chown      (const struct vfs_path*, uid_t, gid_t);
 extern int  _vfs_stat       (const struct vfs_path*, struct stat*);
 extern int  _vfs_statfs     (const struct vfs_path*, struct statfs*);
-extern int  _vfs_fopen      (const struct vfs_path*, const char*, FILE**);
-extern int  _vfs_fclose     (FILE*, bool);
-extern int  _vfs_fwrite     (const void*, size_t, size_t*, FILE*);
-extern int  _vfs_fread      (void*, size_t, size_t*, FILE*);
-extern int  _vfs_fseek      (FILE*, i64_t, int);
-extern int  _vfs_ftell      (FILE*, i64_t*);
-extern int  _vfs_vfioctl    (FILE*, int, va_list);
-extern int  _vfs_fstat      (FILE*, struct stat*);
-extern int  _vfs_fflush     (FILE*);
-extern int  _vfs_feof       (FILE*, int*);
-extern int  _vfs_clearerr   (FILE*);
-extern int  _vfs_ferror     (FILE*, int*);
+extern int  _vfs_fopen      (const struct vfs_path*, const char*, kfile_t**);
+extern int  _vfs_fclose     (kfile_t*, bool);
+extern int  _vfs_fwrite     (const void*, size_t, size_t*, kfile_t*);
+extern int  _vfs_fread      (void*, size_t, size_t*, kfile_t*);
+extern int  _vfs_fseek      (kfile_t*, i64_t, int);
+extern int  _vfs_ftell      (kfile_t*, i64_t*);
+extern int  _vfs_vfioctl    (kfile_t*, int, va_list);
+extern int  _vfs_fstat      (kfile_t*, struct stat*);
+extern int  _vfs_fflush     (kfile_t*);
+extern int  _vfs_feof       (kfile_t*, int*);
+extern int  _vfs_clearerr   (kfile_t*);
+extern int  _vfs_ferror     (kfile_t*, int*);
 extern void _vfs_sync       (void);
 
 /*==============================================================================

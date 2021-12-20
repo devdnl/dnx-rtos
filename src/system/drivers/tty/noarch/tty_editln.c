@@ -42,7 +42,7 @@
   Local object types
 ==============================================================================*/
 struct ttyedit {
-        FILE  **out_file;
+        kfile_t  **out_file;
         void  *self;
         char   buffer[EDITLINE_LEN + 1];
         u16_t  length;
@@ -92,7 +92,7 @@ static inline bool is_valid(ttyedit_t *this)
  * @param On of errno value.
  */
 //==============================================================================
-int ttyedit_create(FILE **out_file, ttyedit_t **edit)
+int ttyedit_create(kfile_t **out_file, ttyedit_t **edit)
 {
         int err = sys_zalloc(sizeof(ttyedit_t), cast(void**, edit));
         if (err == ESUCC) {

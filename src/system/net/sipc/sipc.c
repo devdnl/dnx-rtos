@@ -114,11 +114,11 @@ typedef struct {
                 u64_t tx_bytes;
         } stats;
 
-        FILE *if_file;
+        kfile_t *if_file;
         tid_t if_thread;
         NET_SIPC_state_t state;
-        mutex_t *packet_send_mtx;
-        mutex_t *socket_list_mtx;
+        kmtx_t *packet_send_mtx;
+        kmtx_t *socket_list_mtx;
         llist_t *socket_list;
         uint16_t seq_ctr;
         bool run;
@@ -330,7 +330,7 @@ static int send_packet(sipc_t *sipc, u16_t seq, u8_t port, u8_t type, const u8_t
         packet.checksum[0] = checksum & 0xFF;
         packet.checksum[1] = (checksum >> 8) & 0xFF;
 
-        int err = sys_mutex_lock(sipc->packet_send_mtx, MAX_DELAY_MS);
+        int err = sys_mutex_lock(sipc->packet_send_mtx, _MAX_DELAY_MS);
         if (!err) {
 
                 size_t wrcnt;
@@ -400,7 +400,7 @@ static SIPC_socket_t *get_socket_by_port(sipc_t *sipc, u8_t port)
 {
         SIPC_socket_t *socket = NULL;
 
-        if (sys_mutex_lock(sipc->socket_list_mtx, MAX_DELAY_MS) == 0) {
+        if (sys_mutex_lock(sipc->socket_list_mtx, _MAX_DELAY_MS) == 0) {
 
                 SIPC_socket_t find_socket;
                 find_socket.port = port;
@@ -444,7 +444,7 @@ static int input_thread(void *arg)
 
                         clear_transfer_counters(sipc);
 
-                        if (sys_mutex_lock(sipc->socket_list_mtx, MAX_DELAY_MS) == 0) {
+                        if (sys_mutex_lock(sipc->socket_list_mtx, _MAX_DELAY_MS) == 0) {
 
                                 sys_llist_foreach(SIPC_socket_t*, socket, sipc->socket_list) {
                                         u8_t type = PACKET_TYPE_NACK;
@@ -581,7 +581,7 @@ static int input_thread(void *arg)
 //==============================================================================
 static int register_socket(sipc_t *sipc, SIPC_socket_t *socket)
 {
-        int err = sys_mutex_lock(sipc->socket_list_mtx, MAX_DELAY_MS);
+        int err = sys_mutex_lock(sipc->socket_list_mtx, _MAX_DELAY_MS);
         if (!err) {
 
                 if (sys_llist_contains(sipc->socket_list, socket) > 0) {
@@ -613,7 +613,7 @@ static bool is_socket_registered(sipc_t *sipc, SIPC_socket_t *socket)
 {
         bool is_registered = false;
 
-        if (sys_mutex_lock(sipc->socket_list_mtx, MAX_DELAY_MS) == 0) {
+        if (sys_mutex_lock(sipc->socket_list_mtx, _MAX_DELAY_MS) == 0) {
                 is_registered = sys_llist_contains(sipc->socket_list, socket) > 0;
                 sys_mutex_unlock(sipc->socket_list_mtx);
         }
@@ -630,7 +630,7 @@ static bool is_socket_registered(sipc_t *sipc, SIPC_socket_t *socket)
 //==============================================================================
 static void unregister_socket(sipc_t *sipc, SIPC_socket_t *socket)
 {
-        int err = sys_mutex_lock(sipc->socket_list_mtx, MAX_DELAY_MS);
+        int err = sys_mutex_lock(sipc->socket_list_mtx, _MAX_DELAY_MS);
         if (!err) {
                 int pos = sys_llist_find_begin(sipc->socket_list, socket);
 
@@ -656,17 +656,17 @@ int SIPC_ifinit(void **ctx, const char *if_path)
         if (!err) {
                 sipc_t *sipc = *ctx;
 
-                static const thread_attr_t attr = {
-                        .priority    = PRIORITY_NORMAL,
-                        .stack_depth = STACK_DEPTH_LOW,
+                static const _thread_attr_t attr = {
+                        .priority    = _PRIORITY_NORMAL,
+                        .stack_depth = _STACK_DEPTH_LOW,
                         .detached    = true
                 };
 
                 sipc->run = true;
 
                 int ferr  = sys_fopen(if_path, "r+", &sipc->if_file);
-                int merr  = sys_mutex_create(MUTEX_TYPE_NORMAL, &sipc->socket_list_mtx);
-                int serr  = sys_mutex_create(MUTEX_TYPE_NORMAL, &sipc->packet_send_mtx);
+                int merr  = sys_mutex_create(KMTX_TYPE_NORMAL, &sipc->socket_list_mtx);
+                int serr  = sys_mutex_create(KMTX_TYPE_NORMAL, &sipc->packet_send_mtx);
                 int lerr  = _llist_create_krn(_MM_NET, list_cmp_functor, NULL, &sipc->socket_list);
                 int tierr = sys_thread_create(input_thread, &attr, sipc, &sipc->if_thread);
 
@@ -806,8 +806,8 @@ int SIPC_socket_create(void *ctx, NET_protocol_t prot, SIPC_socket_t *socket)
         if (prot == NET_PROTOCOL__STREAM) {
 
                 socket->port         = 0;
-                socket->recv_timeout = MAX_DELAY_MS;
-                socket->send_timeout = MAX_DELAY_MS;
+                socket->recv_timeout = _MAX_DELAY_MS;
+                socket->send_timeout = _MAX_DELAY_MS;
 
                 err = sipcbuf__create((void*)&socket->rxbuf, __NETWORK_SIPC_RECV_BUF_SIZE__);
                 if (err) {

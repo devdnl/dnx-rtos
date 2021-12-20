@@ -31,8 +31,8 @@
 */
 /**@{*/
 
-#ifndef _LIBC_VT100_H_
-#define _LIBC_VT100_H_
+#ifndef _LIBC_DNX_VT100_H_
+#define _LIBC_DNX_VT100_H_
 
 /*==============================================================================
   Include files

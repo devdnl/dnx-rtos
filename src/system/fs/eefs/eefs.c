@@ -253,8 +253,8 @@ typedef struct {
  * File system handle.
  */
 typedef struct {
-        FILE        *srcdev;
-        mutex_t     *lock_mtx;
+        kfile_t     *srcdev;
+        kmtx_t      *lock_mtx;
         dir_desc_t  *open_dirs;
         file_desc_t *open_files;
         uint16_t     root_dir_block;
@@ -326,7 +326,7 @@ API_FS_INIT(eefs, void **fs_handle, const char *src_path, const char *opts)
                         goto finish;
                 }
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->lock_mtx);
+                err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->lock_mtx);
                 if (err) {
                         goto finish;
                 }
@@ -417,7 +417,7 @@ API_FS_RELEASE(eefs, void *fs_handle)
 
                         sys_fclose(hdl->srcdev);
 
-                        mutex_t *mtx = hdl->lock_mtx;
+                        kmtx_t *mtx = hdl->lock_mtx;
 
                         memset(hdl, 0, sizeof(EEFS_t));
 
@@ -530,7 +530,7 @@ API_FS_MKFIFO(eefs, void *fs_handle, const char *path, mode_t mode)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPENDIR(eefs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(eefs, void *fs_handle, const char *path, kdir_t *dir)
 {
         EEFS_t *hdl = fs_handle;
 
@@ -572,7 +572,7 @@ API_FS_OPENDIR(eefs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CLOSEDIR(eefs, void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(eefs, void *fs_handle, kdir_t *dir)
 {
         EEFS_t     *hdl = fs_handle;
         dir_desc_t *dd  = dir->d_hdl;
@@ -626,7 +626,7 @@ API_FS_CLOSEDIR(eefs, void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_READDIR(eefs, void *fs_handle, DIR *dir)
+API_FS_READDIR(eefs, void *fs_handle, kdir_t *dir)
 {
         EEFS_t *hdl = fs_handle;
 
@@ -777,7 +777,7 @@ API_FS_RENAME(eefs, void *fs_handle, const char *old_name, const char *new_name)
                                 if (  is_entry_item_used(dirent)
                                    && isstreqn(basenameold, dirent->name, NAME_LEN)) {
 
-                                        strlcpy(dirent->name, basenamenew, NAME_LEN);
+                                        sys_strlcpy(dirent->name, basenamenew, NAME_LEN);
 
                                         err = block_write(hdl, &hdl->block);
 
@@ -2223,7 +2223,7 @@ static int dir_add_item(EEFS_t *hdl, dir_entry_t *dirent, const char *name, u16_
                 // set directory entry
                 dirent->type       = type;
                 dirent->block_addr = hdl->tmpblock.num;
-                strlcpy(dirent->name, name, NAME_LEN);
+                sys_strlcpy(dirent->name, name, NAME_LEN);
 
                 // remove slash at the end if exist
                 char *lch = &LAST_CHARACTER(dirent->name);
@@ -2637,7 +2637,7 @@ static int dir_read_entry(EEFS_t *hdl, dir_desc_t *dd, dir_entry_t *eefs_entry, 
 {
         int err = EILSEQ;
 
-        strlcpy(dd->name, eefs_entry->name, sizeof(dd->name));
+        sys_strlcpy(dd->name, eefs_entry->name, sizeof(dd->name));
 
         dirent->dev       = -1;
         hdl->tmpblock.num = eefs_entry->block_addr;

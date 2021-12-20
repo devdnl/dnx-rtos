@@ -49,7 +49,7 @@ extern "C" {
 #ifndef DOXYGEN
 #define __need_size_t
 #include <stddef.h>
-#include <kernel/syscall.h>
+#include <libc/source/syscall.h>
 #endif
 
 /*==============================================================================
@@ -845,13 +845,13 @@ extern const char *strerror(int errnum);
 //==============================================================================
 static inline char *strndup(const char *s, size_t n)
 {
-        extern size_t _strlcpy(char *dst, const char *src, size_t size);
+        extern size_t _libc_strlcpy(char *dst, const char *src, size_t size);
 
         n += 1;
         char *dup = NULL;
-        syscall(SYSCALL_MALLOC, &dup, &n);
+        libc_syscall(_LIBC_SYS_MALLOC, &dup, &n);
         if (dup) {
-                _strlcpy(dup, s, n);
+                _libc_strlcpy(dup, s, n);
         }
         return dup;
 }

@@ -30,7 +30,7 @@
   Include files
 ==============================================================================*/
 #include "config.h"
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include "lib/misc.h"
 #include "kernel/errno.h"
 #include "kernel/kwrapper.h"
@@ -46,7 +46,7 @@
   Local object types
 ==============================================================================*/
 struct pipe {
-        queue_t     *queue;
+        kqueue_t    *queue;
         struct pipe *self;
         u32_t        flag;
 };
@@ -59,8 +59,8 @@ struct pipe {
   Local objects
 ==============================================================================*/
 #if __OS_ENABLE_MKFIFO__ == _YES_
-static const u32_t PIPE_READ_TIMEOUT  = MAX_DELAY_MS;
-static const u32_t PIPE_WRITE_TIMEOUT = MAX_DELAY_MS;
+static const u32_t PIPE_READ_TIMEOUT  = _MAX_DELAY_MS;
+static const u32_t PIPE_WRITE_TIMEOUT = _MAX_DELAY_MS;
 #endif
 
 /*==============================================================================

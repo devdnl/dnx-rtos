@@ -106,8 +106,8 @@ typedef enum {
 typedef struct {
         u8_t       major;
         u8_t       minor;
-        mutex_t   *protect;
-        queue_t   *event;
+        kmtx_t    *protect;
+        kqueue_t  *event;
         SD_type_t  card;
         u32_t      RCA;
         bool       initialized;
@@ -170,7 +170,7 @@ API_MOD_INIT(SDIO, void **device_handle, u8_t major, u8_t minor, const void *con
         SDIO_t *hdl = NULL;
 
         catcherr(err = sys_zalloc(sizeof(SDIO_t), cast(void**, &hdl)), finish);
-        catcherr(err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->protect), finish);
+        catcherr(err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->protect), finish);
         catcherr(err = sys_queue_create(1, sizeof(int), &hdl->event), finish);
 
         hdl->major = major;
@@ -310,7 +310,7 @@ API_MOD_WRITE(SDIO,
 
         SDIO_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(hdl->protect, MAX_DELAY_MS);
+        int err = sys_mutex_lock(hdl->protect, _MAX_DELAY_MS);
         if (!err) {
                 if (hdl->size_blocks > 0) {
                         u64_t lseek = *fpos;
@@ -351,7 +351,7 @@ API_MOD_READ(SDIO,
 
         SDIO_t *hdl = device_handle;
 
-        int err = sys_mutex_lock(hdl->protect, MAX_DELAY_MS);
+        int err = sys_mutex_lock(hdl->protect, _MAX_DELAY_MS);
         if (!err) {
                 if (hdl->size_blocks > 0) {
                         u64_t lseek = *fpos;
@@ -387,7 +387,7 @@ API_MOD_IOCTL(SDIO, void *device_handle, int request, void *arg)
 
         switch (request) {
         case IOCTL_SDIO__INITIALIZE_CARD:
-                err = sys_mutex_lock(hdl->protect, MAX_DELAY_MS);
+                err = sys_mutex_lock(hdl->protect, _MAX_DELAY_MS);
                 if (!err) {
                         err = card_initialize(hdl);
                         sys_mutex_unlock(hdl->protect);

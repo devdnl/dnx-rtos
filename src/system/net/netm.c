@@ -104,7 +104,7 @@ typedef u64_t (*proxy_func_u64_t)();
   Local objects
 ==============================================================================*/
 static struct netname net_list[16];
-static mutex_t *netm_mutex;
+static kmtx_t *netm_mutex;
 
 /*==============================================================================
   Exported objects
@@ -201,7 +201,7 @@ static void *get_stack_context(const char *netname, size_t *idx)
 {
         void *ctx = NULL;
 
-        if (sys_mutex_lock(netm_mutex, MAX_DELAY_MS) == 0) {
+        if (sys_mutex_lock(netm_mutex, _MAX_DELAY_MS) == 0) {
 
                 for (size_t n = 0; n < ARRAY_SIZE(net_list); n++) {
 
@@ -233,7 +233,7 @@ static NET_family_t get_net_family_by_name(const char *netname)
 {
         NET_family_t family = _NET_FAMILY__COUNT;
 
-        if (sys_mutex_lock(netm_mutex, MAX_DELAY_MS) == 0) {
+        if (sys_mutex_lock(netm_mutex, _MAX_DELAY_MS) == 0) {
 
                 for (size_t n = 0; n < ARRAY_SIZE(net_list); n++) {
 
@@ -278,10 +278,10 @@ int _net_ifadd(const char *netname, NET_family_t family, const char *if_path)
 
         if (netname && (family < _NET_FAMILY__COUNT) && if_path) {
                 if (not netm_mutex) {
-                        err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &netm_mutex);
+                        err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &netm_mutex);
                 }
 
-                err = sys_mutex_lock(netm_mutex, MAX_DELAY_MS);
+                err = sys_mutex_lock(netm_mutex, _MAX_DELAY_MS);
                 if (!err) {
 
                         void *ctx = get_stack_context(netname, NULL);
@@ -339,7 +339,7 @@ int _net_ifrm(const char *netname)
         int err = EINVAL;
 
         if (netname) {
-                err = sys_mutex_lock(netm_mutex, MAX_DELAY_MS);
+                err = sys_mutex_lock(netm_mutex, _MAX_DELAY_MS);
                 if (!err) {
 
                         size_t n = 0;
@@ -379,7 +379,7 @@ int _net_iflist(char *netname[], size_t netname_len)
 
                 memset(netname, 0, netname_len * sizeof(*netname));
 
-                err = sys_mutex_lock(netm_mutex, MAX_DELAY_MS);
+                err = sys_mutex_lock(netm_mutex, _MAX_DELAY_MS);
                 if (!err) {
 
                         size_t idx = 0;

@@ -34,21 +34,14 @@ The file provides all error codes.
 */
 /**@{*/
 
-#ifndef _LIBC_ERRNO_H_
-#define _LIBC_ERRNO_H_
-
 /*==============================================================================
   Include files
 ==============================================================================*/
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define errno           _errno
+#define errno           (*_libc_errno)
 
 #define ESUCC            0      //!< Success
 #define EPERM            1      //!< Operation not permitted
@@ -111,7 +104,8 @@ extern "C" {
  * Variable exists independently in each application and is set by miscellaneous
  * system functions.
  */
-extern int _errno;
+//extern int _errno;
+extern int *_libc_errno;
 
 /*==============================================================================
   Exported functions
@@ -120,12 +114,6 @@ extern int _errno;
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _LIBC_ERRNO_H_ */
 
 /**@}*/
 /*==============================================================================

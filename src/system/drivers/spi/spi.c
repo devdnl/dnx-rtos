@@ -36,7 +36,7 @@ Brief   SPI driver.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define DEV_LOCK_TIMEOUT        MAX_DELAY_MS
+#define DEV_LOCK_TIMEOUT        _MAX_DELAY_MS
 
 /*==============================================================================
   Local object types
@@ -109,7 +109,7 @@ API_MOD_INIT(SPI, void **device_handle, u8_t major, u8_t minor, const void *conf
                         goto finish;
                 }
 
-                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &_SPI[major]->periph_protect_mtx);
+                err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &_SPI[major]->periph_protect_mtx);
                 if (err) {
                         goto finish;
                 }

@@ -58,8 +58,8 @@ int ff_cre_syncobj (	/* 1:Function succeeded, 0:Could not create the sync object
 {
         UNUSED_ARG1(vol);
 
-        mutex_t *mutex = NULL;
-        int err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mutex);
+        kmtx_t *mutex = NULL;
+        int err = sys_mutex_create(KMTX_TYPE_NORMAL, &mutex);
         *sobj = mutex;
 
         return (!err and (mutex != NULL));

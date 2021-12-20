@@ -32,10 +32,40 @@ Brief    unistd function implementation.
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <errno.h>
+#include <libc/source/syscall.h>
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#ifndef O_RDONLY
+#define O_RDONLY                                00
+#endif
+
+#ifndef O_WRONLY
+#define O_WRONLY                                01
+#endif
+
+#ifndef O_RDWR
+#define O_RDWR                                  02
+#endif
+
+#ifndef O_CREAT
+#define O_CREAT                                 0100
+#endif
+
+#ifndef O_EXCL
+#define O_EXCL                                  0200
+#endif
+
+#ifndef O_TRUNC
+#define O_TRUNC                                 01000
+#endif
+
+#ifndef O_APPEND
+#define O_APPEND                                02000
+#endif
 
 /*==============================================================================
   Local object types
@@ -91,7 +121,7 @@ fd_t open(const char *path, int flags, ...)
         }
 
         FILE *f = NULL;
-        syscall(SYSCALL_FOPEN, &f, path, flag);
+        libc_syscall(_LIBC_SYS_FOPEN, &f, path, flag);
 
         return (f == NULL) ? -1 : (fd_t)f;
 }
@@ -119,7 +149,7 @@ int close(fd_t fd)
                 }
 
                 int r = EOF;
-                syscall(SYSCALL_FCLOSE, &r, f);
+                libc_syscall(_LIBC_SYS_FCLOSE, &r, f);
                 return r;
         }
 
@@ -151,12 +181,12 @@ ssize_t read(fd_t fd, void *buf, size_t count)
                 }
 
                 size_t n = 0;
-                syscall(SYSCALL_FREAD, &n, buf, &count, f);
+                libc_syscall(_LIBC_SYS_FREAD, &n, buf, &count, f);
 
                 int iserr = 0;
-                syscall(SYSCALL_FERROR, &iserr, f);
+                libc_syscall(_LIBC_SYS_FERROR, &iserr, f);
 
-                return (iserr) ? -_errno : (ssize_t)n;
+                return (iserr) ? -errno : (ssize_t)n;
 
         } else {
                 return -1;
@@ -188,12 +218,12 @@ ssize_t write(fd_t fd, const void *buf, size_t count)
                 }
 
                 size_t n = 0;
-                syscall(SYSCALL_FWRITE, &n, buf, &count, f);
+                libc_syscall(_LIBC_SYS_FWRITE, &n, buf, &count, f);
 
                 int iserr = 0;
-                syscall(SYSCALL_FERROR, &iserr, f);
+                libc_syscall(_LIBC_SYS_FERROR, &iserr, f);
 
-                return (iserr) ? _errno : (ssize_t)n;
+                return (iserr) ? errno : (ssize_t)n;
 
         } else {
                 return -1;
@@ -227,12 +257,12 @@ off_t lseek(fd_t fd, off_t offset, int whence)
 
                 size_t r = 1;
                 i64_t seek = offset;
-                syscall(SYSCALL_FSEEK, &r, f, &seek, &whence);
+                libc_syscall(_LIBC_SYS_FSEEK, &r, f, &seek, &whence);
 
                 if (!r) {
                         i64_t lseek = 0;
                         int r = -1;
-                        syscall(SYSCALL_FSEEK, &r, f, &lseek);
+                        libc_syscall(_LIBC_SYS_FTELL, &lseek, f);
 
                         if (r == 0) {
                                 return lseek;
@@ -255,7 +285,7 @@ off_t lseek(fd_t fd, off_t offset, int whence)
 int unlink(const char *pathname)
 {
         int r = EOF;
-        syscall(SYSCALL_REMOVE, &r, pathname);
+        libc_syscall(_LIBC_SYS_REMOVE, &r, pathname);
         return r;
 }
 

@@ -132,8 +132,8 @@ typedef struct {
  * File system handle.
  */
 typedef struct {
-        mutex_t     *mtx;
-        FILE        *disc;
+        kmtx_t      *mtx;
+        kfile_t        *disc;
         llist_t     *open_files;
         bool         read_only;
         bool         force_check;
@@ -296,7 +296,7 @@ API_FS_INIT(flatfs, void **fs_handle, const char *src_path, const char *opts)
                         MSG("indexing enabled");
                 }
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mtx);
+                err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->mtx);
                 if (!err) {
 
                         err = sys_llist_create(sys_llist_functor_cmp_pointers, NULL, &hdl->open_files);
@@ -336,7 +336,7 @@ API_FS_RELEASE(flatfs, void *fs_handle)
 {
         flatfs_t *hdl = fs_handle;
 
-        mutex_t *mtx = hdl->mtx;
+        kmtx_t *mtx = hdl->mtx;
 
         int err = sys_mutex_lock(mtx, MTX_TIMEOUT);
         if (!err) {
@@ -390,7 +390,7 @@ API_FS_OPEN(flatfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
                         /*
                          * Try to open directory that should contains selected file
                          */
-                        strlcpy(hdl->tmp_path, path, sizeof(hdl->tmp_path));
+                        sys_strlcpy(hdl->tmp_path, path, sizeof(hdl->tmp_path));
                         char *slash = strrchr(hdl->tmp_path, '/');
                         if (slash) {
                                 *slash = '\0';
@@ -898,7 +898,7 @@ API_FS_MKDIR(flatfs, void *fs_handle, const char *path, mode_t mode)
                 /*
                  * Try to open directory that should contains selected dir
                  */
-                strlcpy(hdl->tmp_path, path, sizeof(hdl->tmp_path));
+                sys_strlcpy(hdl->tmp_path, path, sizeof(hdl->tmp_path));
                 char *slash = strrchr(hdl->tmp_path, '/');
                 if (slash) {
                         *slash = '\0';
@@ -979,7 +979,7 @@ API_FS_MKNOD(flatfs, void *fs_handle, const char *path, const dev_t dev)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_OPENDIR(flatfs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(flatfs, void *fs_handle, const char *path, kdir_t *dir)
 {
         flatfs_t *hdl = fs_handle;
 
@@ -987,7 +987,7 @@ API_FS_OPENDIR(flatfs, void *fs_handle, const char *path, DIR *dir)
         if (not err) {
 
                 if (not isstreq(path, "/")) {
-                        strlcpy(hdl->tmp_path, path, sizeof(hdl->tmp_path));
+                        sys_strlcpy(hdl->tmp_path, path, sizeof(hdl->tmp_path));
                         LAST_CHARACTER(hdl->tmp_path) = '\0';
 
                         blk_file_t *blk = cast(blk_file_t*, hdl->block[0]);
@@ -1018,7 +1018,7 @@ API_FS_OPENDIR(flatfs, void *fs_handle, const char *path, DIR *dir)
 
                                                         if (strncmp(blk->name, dir_name, dir_name_len) == 0) {
 
-                                                                strlcpy(hdl->tmp_path, &blk->name[dir_name_len], sizeof(hdl->tmp_path));
+                                                                sys_strlcpy(hdl->tmp_path, &blk->name[dir_name_len], sizeof(hdl->tmp_path));
                                                                 char *slash = strchr(hdl->tmp_path, '/');
                                                                 if (slash) *slash = '\0';
 
@@ -1026,7 +1026,7 @@ API_FS_OPENDIR(flatfs, void *fs_handle, const char *path, DIR *dir)
                                                                 char *name;
                                                                 err = sys_zalloc(len, cast(void**, &name));
                                                                 if (!err) {
-                                                                        strlcpy(name, hdl->tmp_path, len);
+                                                                        sys_strlcpy(name, hdl->tmp_path, len);
 
                                                                         dirent_t entry;
                                                                         entry.d_name =  name;
@@ -1076,7 +1076,7 @@ API_FS_OPENDIR(flatfs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_CLOSEDIR(flatfs, void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(flatfs, void *fs_handle, kdir_t *dir)
 {
         UNUSED_ARG2(fs_handle, dir);
 
@@ -1097,7 +1097,7 @@ API_FS_CLOSEDIR(flatfs, void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_READDIR(flatfs, void *fs_handle, DIR *dir)
+API_FS_READDIR(flatfs, void *fs_handle, kdir_t *dir)
 {
         flatfs_t *hdl = fs_handle;
 
@@ -1149,8 +1149,8 @@ API_FS_REMOVE(flatfs, void *fs_handle, const char *path)
                 if (not err) {
                         if (S_IFMT(file->mode) == S_IFDIR) {
 
-                                strlcpy(hdl->tmp_path, path, sizeof(hdl->tmp_path));
-                                strlcat(hdl->tmp_path, "/", sizeof(hdl->tmp_path));
+                                sys_strlcpy(hdl->tmp_path, path, sizeof(hdl->tmp_path));
+                                sys_strlcat(hdl->tmp_path, "/", sizeof(hdl->tmp_path));
 
                                 size_t dir_name_len = strlen(hdl->tmp_path);
 
@@ -1215,7 +1215,7 @@ API_FS_RENAME(flatfs, void *fs_handle, const char *old_name, const char *new_nam
                                 FIND_ANY_NODE, file, &node);
 
                         if (!err) {
-                                strlcpy(file->name, new_name, MAX_FILE_NAME_LEN);
+                                sys_strlcpy(file->name, new_name, MAX_FILE_NAME_LEN);
                                 err = file_block_write(hdl, node, file);
                         }
 
@@ -1792,7 +1792,7 @@ static int node_create(flatfs_t *hdl, const char *name, mode_t mode,
                         blk->uid   = 0;
                         blk->gid   = 0;
                         blk->size  = 0;
-                        strlcpy(blk->name, name, MAX_FILE_NAME_LEN);
+                        sys_strlcpy(blk->name, name, MAX_FILE_NAME_LEN);
 
                         hdl->bitmap.word[i] |= mask;
                         int err = block_write(hdl, hdl->bitmap_address_primary, &hdl->bitmap, 1);

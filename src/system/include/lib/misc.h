@@ -42,11 +42,11 @@ dnx RTOS miscellaneous macros and functions.
 ==============================================================================*/
 #include <string.h>
 #include <stdbool.h>
-#include <lib/cast.h>
-#include <lib/unarg.h>
-#include <lib/strlcat.h>
-#include <lib/strlcpy.h>
-#include <kernel/syscall.h>
+#include "lib/cast.h"
+#include "lib/unarg.h"
+#include "lib/strlcat.h"
+#include "lib/strlcpy.h"
+#include "kernel/syscall.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -614,12 +614,12 @@ extern "C" {
 ==============================================================================*/
 //==============================================================================
 /**
- * @brief The strlcpy() function copy strings.
+ * @brief The sys_strlcpy() function copy strings.
  *
- * The strlcpy() function copies up to size - 1 characters from the NUL-terminated
+ * The sys_strlcpy() function copies up to size - 1 characters from the NUL-terminated
  * string src to dst, NUL-terminating the result.
  *
- * Note, however, that if strlcat() traverses size characters without finding
+ * Note, however, that if sys_strlcat() traverses size characters without finding
  * a NUL, the length of the string is considered to be size and the destination
  * string will not be NUL-terminated (since there was no space for the NUL).
  *
@@ -627,20 +627,20 @@ extern "C" {
  * @param  src  source buffer
  * @param  size destination buffer size
  *
- * @return The strlcpy() function return the total length of the string they
- *         tried to create. For strlcpy() that means the length of src.
+ * @return The sys_strlcpy() function return the total length of the string they
+ *         tried to create. For sys_strlcpy() that means the length of src.
  */
 //==============================================================================
-static inline size_t strlcpy(char *dst, const char *src, size_t size)
+static inline size_t sys_strlcpy(char *dst, const char *src, size_t size)
 {
         return _strlcpy(dst, src, size);
 }
 
 //==============================================================================
 /**
- * @brief The strlcat() function concatenate strings.
+ * @brief The sys_strlcat() function concatenate strings.
  *
- * The strlcat() function appends the NUL-terminated string src to the end of
+ * The sys_strlcat() function appends the NUL-terminated string src to the end of
  * dst. It will append at most size - strlen(dst) - 1 bytes, NUL-terminating
  * the result.
  *
@@ -648,13 +648,13 @@ static inline size_t strlcpy(char *dst, const char *src, size_t size)
  * @param  src  source buffer
  * @param  size destination buffer size
  *
- * @return The strlcat() function return the total length of the string it
- *         tried to create. For strlcat() that means the initial length of dst
+ * @return The sys_strlcat() function return the total length of the string it
+ *         tried to create. For sys_strlcat() that means the initial length of dst
  *         plus the length of src. While this may seem somewhat confusing, it
  *         was done to make truncation detection simple.
  */
 //==============================================================================
-static inline size_t strlcat(char *dst, const char *src, size_t size)
+static inline size_t sys_strlcat(char *dst, const char *src, size_t size)
 {
         return _strlcat(dst, src, size);
 }
@@ -668,7 +668,7 @@ static inline size_t strlcat(char *dst, const char *src, size_t size)
  * @return If object is in heap then true is returned, otherwise false.
  */
 //==============================================================================
-static inline bool is_object_in_heap(void *ptr)
+static inline bool sys_is_object_in_heap(void *ptr)
 {
         extern bool _mm_is_object_in_heap(void *ptr);
         return _mm_is_object_in_heap(ptr);
@@ -683,7 +683,7 @@ static inline bool is_object_in_heap(void *ptr)
  * @return If object is in heap then true is returned, otherwise false.
  */
 //==============================================================================
-static inline bool is_rom_address(const void *ptr)
+static inline bool sys_is_rom_address(const void *ptr)
 {
         extern bool _mm_is_rom_address(const void *ptr);
         return _mm_is_rom_address(ptr);
@@ -700,7 +700,7 @@ static inline bool is_rom_address(const void *ptr)
  * @return Number of replaced characters.
  */
 //==============================================================================
-static inline int strchrrep(char *str, char from, char to)
+static inline int sys_strchrrep(char *str, char from, char to)
 {
         extern int _strchrrep(char *str, char from, char to);
         return _strchrrep(str, from, to);

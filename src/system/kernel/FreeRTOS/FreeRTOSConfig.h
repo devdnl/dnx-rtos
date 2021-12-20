@@ -75,8 +75,8 @@
 /*-------------------------------------------------------------
  * Used prototypes from external modules
  *-----------------------------------------------------------*/
-extern void  vApplicationSwitchedIn (void);
-extern void  vApplicationSwitchedOut(void);
+extern void _task_switched_out(void*, void*, void*);
+extern void _task_switched_in(void*, void*, void*);
 
 /* Application specific definitions */
 #define configUSE_PREEMPTION                    1

@@ -61,8 +61,8 @@ typedef struct FS_entry {
 static bool is_first_fs      (const char *mount_point);
 static int  new_FS_entry     (FS_entry_t *parent_FS, const char *fs_mount_point, const char *fs_src_file, const vfs_FS_itf_t *fs_interface, const char *opts, FS_entry_t **fs_entry);
 static int  delete_FS_entry  (FS_entry_t *this);
-static bool is_file_valid    (FILE *file);
-static bool is_dir_valid     (DIR *dir);
+static bool is_file_valid    (kfile_t *file);
+static bool is_dir_valid     (kdir_t *dir);
 static int  parse_flags      (const char *str, u32_t *flags);
 static int  get_path_FS      (const char *path, size_t len, int *position, FS_entry_t **fs_entry);
 static int  get_path_base_FS (const char *path, const char **extPath, FS_entry_t **fs_entry);
@@ -73,7 +73,7 @@ static int  new_absolute_path(const struct vfs_path *path, enum path_correction 
 ==============================================================================*/
 static struct {
         llist_t *mnt_list;
-        mutex_t *resource_mtx;
+        kmtx_t  *resource_mtx;
 } VFS;
 
 /*==============================================================================
@@ -91,7 +91,7 @@ int _vfs_init(void)
 {
         int err = _llist_create_krn(_MM_KRN, NULL, NULL, &VFS.mnt_list);
         if (!err) {
-                err = _mutex_create(MUTEX_TYPE_RECURSIVE, &VFS.resource_mtx);
+                err = _mutex_create(KMTX_TYPE_RECURSIVE, &VFS.resource_mtx);
         }
 
         return err;
@@ -175,7 +175,7 @@ int _vfs_mount(const struct vfs_path   *src_path,
         }
 
         // create new entry
-        err = _mutex_lock(VFS.resource_mtx, MAX_DELAY_MS);
+        err = _mutex_lock(VFS.resource_mtx, _MAX_DELAY_MS);
         if (not err) {
 
                 FS_entry_t *new_fs;
@@ -199,7 +199,7 @@ int _vfs_mount(const struct vfs_path   *src_path,
                         }
 
                         if (err == ENOENT) {
-                                DIR dir;
+                                kdir_t dir;
                                 err = base_fs->interface->fs_opendir(base_fs->handle,
                                                                      ext_path, &dir);
                                 if (!err) {
@@ -260,7 +260,7 @@ int _vfs_umount(const struct vfs_path *path)
         char *cwd_path;
         int err = new_absolute_path(path, ADD_SLASH, &cwd_path);
         if (not err) {
-                err = _mutex_lock(VFS.resource_mtx, MAX_DELAY_MS);
+                err = _mutex_lock(VFS.resource_mtx, _MAX_DELAY_MS);
                 if (not err) {
 
                         int         position;
@@ -305,7 +305,7 @@ int _vfs_getmntentry(int seek, struct mntent *mntent)
         }
 
         FS_entry_t *fs = NULL;
-        int err = _mutex_lock(VFS.resource_mtx, MAX_DELAY_MS);
+        int err = _mutex_lock(VFS.resource_mtx, _MAX_DELAY_MS);
         if (!err) {
                 fs  = _llist_at(VFS.mnt_list, seek);
                 err = fs ? ESUCC : ENOENT;
@@ -447,13 +447,13 @@ int _vfs_mkfifo(const struct vfs_path *path, mode_t mode)
  * @return One of errno values
  */
 //==============================================================================
-int _vfs_opendir(const struct vfs_path *path, DIR **dir)
+int _vfs_opendir(const struct vfs_path *path, kdir_t **dir)
 {
         if (!path || !path->PATH || !dir) {
                 return EINVAL;
         }
 
-        int err = _kmalloc(_MM_KRN, sizeof(DIR), NULL, 0, 0, cast(void**, dir));
+        int err = _kmalloc(_MM_KRN, sizeof(kdir_t), NULL, 0, 0, cast(void**, dir));
         if (!err) {
                 char *cwd_path;
                 err = new_absolute_path(path, ADD_SLASH, &cwd_path);
@@ -493,7 +493,7 @@ int _vfs_opendir(const struct vfs_path *path, DIR **dir)
  * @return One of errno values
  */
 //==============================================================================
-int _vfs_closedir(DIR *dir)
+int _vfs_closedir(kdir_t *dir)
 {
         int err = EINVAL;
 
@@ -519,7 +519,7 @@ int _vfs_closedir(DIR *dir)
  * @return One of errno values
  */
 //==============================================================================
-int _vfs_readdir(DIR *dir, dirent_t **dirent)
+int _vfs_readdir(kdir_t *dir, dirent_t **dirent)
 {
         int err = EINVAL;
 
@@ -545,7 +545,7 @@ int _vfs_readdir(DIR *dir, dirent_t **dirent)
  * @return One of errno values.
  */
 //==============================================================================
-int _vfs_seekdir(DIR *dir, u32_t seek)
+int _vfs_seekdir(kdir_t *dir, u32_t seek)
 {
         if (is_dir_valid(dir)) {
                 dir->d_seek = seek;
@@ -565,7 +565,7 @@ int _vfs_seekdir(DIR *dir, u32_t seek)
  * @return One of errno values.
  */
 //==============================================================================
-int _vfs_telldir(DIR *dir, u32_t *seek)
+int _vfs_telldir(kdir_t *dir, u32_t *seek)
 {
         if (is_dir_valid(dir) && seek) {
                 *seek = dir->d_seek;
@@ -600,7 +600,7 @@ int _vfs_remove(const struct vfs_path *path)
                 FS_entry_t *mount_fs;
                 FS_entry_t *base_fs;
 
-                err = _mutex_lock(VFS.resource_mtx, MAX_DELAY_MS);
+                err = _mutex_lock(VFS.resource_mtx, _MAX_DELAY_MS);
                 if (!err) {
 
                         err = get_path_FS(cwd_path, PATH_MAX_LEN, NULL, &mount_fs);
@@ -661,7 +661,7 @@ int _vfs_rename(const struct vfs_path *old_name, const struct vfs_path *new_name
                 const char *old_extern_path;
                 const char *new_extern_path;
 
-                err = _mutex_lock(VFS.resource_mtx, MAX_DELAY_MS);
+                err = _mutex_lock(VFS.resource_mtx, _MAX_DELAY_MS);
                 if (!err) {
                         err = get_path_base_FS(cwd_old_name, &old_extern_path, &old_fs);
                         if (!err) {
@@ -845,7 +845,7 @@ int _vfs_statfs(const struct vfs_path *path, struct statfs *statfs)
  * @return One of errno values
  */
 //==============================================================================
-int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
+int _vfs_fopen(const struct vfs_path *path, const char *mode, kfile_t **file)
 {
         if (!path || !path->PATH || !mode || !file) {
                 return EINVAL;
@@ -874,8 +874,8 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
                 return err;
         }
 
-        FILE *file_obj = NULL;
-        err = _kzalloc(_MM_KRN, sizeof(FILE), NULL, 0, 0, cast(void**, &file_obj));
+        kfile_t *file_obj = NULL;
+        err = _kzalloc(_MM_KRN, sizeof(kfile_t), NULL, 0, 0, cast(void**, &file_obj));
         if (!err && file_obj) {
 
                 const char *external_path;
@@ -942,7 +942,7 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, FILE **file)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_fclose(FILE *file, bool force)
+int _vfs_fclose(kfile_t *file, bool force)
 {
         int err = EINVAL;
 
@@ -971,7 +971,7 @@ int _vfs_fclose(FILE *file, bool force)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *file)
+int _vfs_fwrite(const void *ptr, size_t size, size_t *wrcnt, kfile_t *file)
 {
         int err = EINVAL;
 
@@ -1025,7 +1025,7 @@ int _vfs_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *file)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
+int _vfs_fread(void *ptr, size_t size, size_t *rdcnt, kfile_t *file)
 {
         int err = EINVAL;
 
@@ -1072,7 +1072,7 @@ int _vfs_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_fseek(FILE *file, i64_t offset, int mode)
+int _vfs_fseek(kfile_t *file, i64_t offset, int mode)
 {
         struct stat stat;
 
@@ -1119,7 +1119,7 @@ int _vfs_fseek(FILE *file, i64_t offset, int mode)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_ftell(FILE *file, i64_t *lseek)
+int _vfs_ftell(kfile_t *file, i64_t *lseek)
 {
         if (is_file_valid(file) && lseek) {
                 *lseek = file->f_lseek;
@@ -1140,7 +1140,7 @@ int _vfs_ftell(FILE *file, i64_t *lseek)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_vfioctl(FILE *file, int rq, va_list arg)
+int _vfs_vfioctl(kfile_t *file, int rq, va_list arg)
 {
         if (is_file_valid(file)) {
                 switch (rq) {
@@ -1187,7 +1187,7 @@ int _vfs_vfioctl(FILE *file, int rq, va_list arg)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_fstat(FILE *file, struct stat *stat)
+int _vfs_fstat(kfile_t *file, struct stat *stat)
 {
         int err = EINVAL;
 
@@ -1207,7 +1207,7 @@ int _vfs_fstat(FILE *file, struct stat *stat)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_fflush(FILE *file)
+int _vfs_fflush(kfile_t *file)
 {
         int err = EINVAL;
 
@@ -1228,7 +1228,7 @@ int _vfs_fflush(FILE *file)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_feof(FILE *file, int *eof)
+int _vfs_feof(kfile_t *file, int *eof)
 {
         if (is_file_valid(file) && eof) {
                 *eof = file->f_flag.eof ? EOF : 0;
@@ -1247,7 +1247,7 @@ int _vfs_feof(FILE *file, int *eof)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_clearerr(FILE *file)
+int _vfs_clearerr(kfile_t *file)
 {
         if (is_file_valid(file)) {
                 file->f_flag.eof   = false;
@@ -1268,7 +1268,7 @@ int _vfs_clearerr(FILE *file)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int _vfs_ferror(FILE *file, int *error)
+int _vfs_ferror(kfile_t *file, int *error)
 {
         if (is_file_valid(file) && error) {
                 *error = file->f_flag.error ? 1 : 0;
@@ -1289,7 +1289,7 @@ int _vfs_ferror(FILE *file, int *error)
 //==============================================================================
 void _vfs_sync(void)
 {
-        if (_mutex_lock(VFS.resource_mtx, MAX_DELAY_MS) == ESUCC) {
+        if (_mutex_lock(VFS.resource_mtx, _MAX_DELAY_MS) == ESUCC) {
 
                 _llist_foreach(FS_entry_t*, fs, VFS.mnt_list) {
                         fs->interface->fs_sync(fs->handle);
@@ -1399,7 +1399,7 @@ static int delete_FS_entry(FS_entry_t *this)
  * @return true if object is valid, otherwise false
  */
 //==============================================================================
-static bool is_file_valid(FILE *file)
+static bool is_file_valid(kfile_t *file)
 {
         return (  _mm_is_object_in_heap(file)
                && file->FS_hdl          != NULL
@@ -1417,7 +1417,7 @@ static bool is_file_valid(FILE *file)
  * @return true if object is valid, otherwise false
  */
 //==============================================================================
-static bool is_dir_valid(DIR *dir)
+static bool is_dir_valid(kdir_t *dir)
 {
         return (_mm_is_object_in_heap(dir) && dir->header.type == RES_TYPE_DIR);
 }
@@ -1521,7 +1521,7 @@ static int get_path_base_FS(const char *path, const char **ext_path, FS_entry_t 
                 path_tail--;
         }
 
-        int err = _mutex_lock(VFS.resource_mtx, MAX_DELAY_MS);
+        int err = _mutex_lock(VFS.resource_mtx, _MAX_DELAY_MS);
         if (!err) {
 
                 while (path_tail >= path) {

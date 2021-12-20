@@ -21,7 +21,7 @@
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_status (
-	FILE *pdrv		/* Physical drive nmuber to identify the drive */
+	kfile_t *pdrv		/* Physical drive nmuber to identify the drive */
 )
 {
         UNUSED_ARG1(pdrv);
@@ -35,7 +35,7 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_initialize (
-	FILE *pdrv				/* Physical drive nmuber to identify the drive */
+	kfile_t *pdrv				/* Physical drive nmuber to identify the drive */
 )
 {
         UNUSED_ARG1(pdrv);
@@ -49,7 +49,7 @@ DSTATUS disk_initialize (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_read (
-	FILE *pdrv,		/* Physical drive nmuber to identify the drive */
+	kfile_t *pdrv,		/* Physical drive nmuber to identify the drive */
 	BYTE *buff,		/* Data buffer to store read data */
 	LBA_t sector,	/* Start sector in LBA */
 	UINT count		/* Number of sectors to read */
@@ -70,7 +70,7 @@ DRESULT disk_read (
 #if FF_FS_READONLY == 0
 
 DRESULT disk_write (
-	FILE *pdrv,			/* Physical drive nmuber to identify the drive */
+	kfile_t *pdrv,			/* Physical drive nmuber to identify the drive */
 	const BYTE *buff,	/* Data to be written */
 	LBA_t sector,		/* Start sector in LBA */
 	UINT count			/* Number of sectors to write */
@@ -90,7 +90,7 @@ DRESULT disk_write (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_ioctl (
-	FILE *pdrv,		/* Physical drive nmuber (0..) */
+	kfile_t *pdrv,		/* Physical drive nmuber (0..) */
 	BYTE cmd,		/* Control code */
 	void *buff		/* Buffer to send/receive control data */
 )

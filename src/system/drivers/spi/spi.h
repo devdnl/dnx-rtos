@@ -54,7 +54,7 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define _SPI_IRQ_WAIT_TIMEOUT           MAX_DELAY_MS
+#define _SPI_IRQ_WAIT_TIMEOUT           _MAX_DELAY_MS
 
 /*==============================================================================
   Exported object types
@@ -127,8 +127,8 @@ struct SPI_slave {
 
 /* general module data */
 struct SPI {
-        sem_t                   *wait_irq_sem;          //!< IRQ detect semaphore
-        mutex_t                 *periph_protect_mtx;    //!< SPI protection mutex
+        ksem_t                  *wait_irq_sem;          //!< IRQ detect semaphore
+        kmtx_t                  *periph_protect_mtx;    //!< SPI protection mutex
         struct SPI_slave        *slave;                 //!< current handled slave
         const u8_t              *tx_buffer;             //!< Tx buffer
         u8_t                    *rx_buffer;             //!< Rx buffer

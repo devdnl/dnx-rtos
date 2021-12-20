@@ -71,7 +71,7 @@ typedef struct {
 
 typedef struct {
         DMA_RT_stream_t stream[STREAM_COUNT];
-        queue_t       **m2m_queue;
+        kqueue_t       **m2m_queue;
         u32_t           ID_ctr;
         u8_t            major;
         u8_t            minor;
@@ -192,7 +192,7 @@ API_MOD_INIT(DMA, void **device_handle, u8_t major, u8_t minor, const void *conf
                          * Allocating memory for memory-to-memory queues.
                          */
                         DMA_RT_t *hdl = &DMA_mem->DMA[1];
-                        err = sys_zalloc(sizeof(queue_t*) * STREAM_COUNT,
+                        err = sys_zalloc(sizeof(kqueue_t*) * STREAM_COUNT,
                                          cast(void*, &hdl->m2m_queue));
                         if (err) {
                                 sys_free(device_handle);

@@ -39,7 +39,7 @@ Brief   ROM File System
   Local object types
 ==============================================================================*/
 typedef struct {
-        sem_t *openfiles;
+        ksem_t *openfiles;
 } romfs_t;
 
 /*==============================================================================
@@ -435,7 +435,7 @@ API_FS_MKNOD(romfs, void *fs_handle, const char *path, const dev_t dev)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_OPENDIR(romfs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(romfs, void *fs_handle, const char *path, kdir_t *dir)
 {
         romfs_t *hdl = fs_handle;
 
@@ -467,7 +467,7 @@ API_FS_OPENDIR(romfs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_CLOSEDIR(romfs, void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(romfs, void *fs_handle, kdir_t *dir)
 {
         UNUSED_ARG1(dir);
 
@@ -486,7 +486,7 @@ API_FS_CLOSEDIR(romfs, void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_FS_READDIR(romfs, void *fs_handle, DIR *dir)
+API_FS_READDIR(romfs, void *fs_handle, kdir_t *dir)
 {
         UNUSED_ARG1(fs_handle);
 

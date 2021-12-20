@@ -207,7 +207,7 @@ static void catch_process(enum _kernel_panic_desc_cause suggested_cause)
                 _kernel_panic_trap_proc = _process_get_active();
         }
         _assert_hook_suspend(true);
-        _task_set_priority(_kernel_get_idle_task_handle(), PRIORITY_HIGHEST);
+        _task_set_priority(_kernel_get_idle_task_handle(), _PRIORITY_HIGHEST);
         _assert_hook_suspend(false);
 
         if (kpanic_ctr > 1000000) {

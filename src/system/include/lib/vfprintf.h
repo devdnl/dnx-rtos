@@ -55,7 +55,7 @@ extern "C" {
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern int _vfprintf(FILE*, const char*, va_list);
+extern int _vfprintf(kfile_t*, const char*, va_list);
 
 /*==============================================================================
   Exported inline functions

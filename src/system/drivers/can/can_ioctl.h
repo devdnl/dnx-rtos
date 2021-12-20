@@ -281,6 +281,7 @@ baud = (fPCLK [Hz]) / (prescaler * (1 + TS1 + TS2)) [bps]
   Include files
 ==============================================================================*/
 #include "drivers/ioctl_macros.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {

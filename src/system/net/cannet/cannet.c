@@ -176,8 +176,8 @@ typedef struct {
 
 typedef struct {
         bool  thread_run;
-        FILE *if_file;
-        mutex_t *mutex;
+        kfile_t *if_file;
+        kmtx_t *mutex;
         tid_t if_thread;
         NET_CANNET_state_t state;
         u16_t addr;
@@ -359,13 +359,13 @@ int CANNET_ifinit(void **ctx, const char *if_path)
 
                 cannet->thread_run = true;
 
-                static const thread_attr_t attr = {
-                        .priority    = PRIORITY_NORMAL,
-                        .stack_depth = STACK_DEPTH_LOW,
+                static const _thread_attr_t attr = {
+                        .priority    = _PRIORITY_NORMAL,
+                        .stack_depth = _STACK_DEPTH_LOW,
                         .detached    = true
                 };
 
-                int merr  = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &cannet->mutex);
+                int merr  = sys_mutex_create(KMTX_TYPE_RECURSIVE, &cannet->mutex);
                 int ferr  = sys_fopen(if_path, "r+", &cannet->if_file);
                 int tierr = sys_thread_create(input_thread, &attr, cannet, &cannet->if_thread);
 
@@ -535,8 +535,8 @@ int CANNET_socket_create(void *ctx, NET_protocol_t prot, CANNET_socket_t *socket
                 socket->protocol     = prot;
                 socket->addr_remote  = UINT16_MAX;
                 socket->port         = UINT8_MAX;
-                socket->recv_timeout = MAX_DELAY_MS;
-                socket->send_timeout = MAX_DELAY_MS;
+                socket->recv_timeout = _MAX_DELAY_MS;
+                socket->send_timeout = _MAX_DELAY_MS;
                 socket->shutdown     = 0;
                 socket->connected    = (prot == NET_PROTOCOL__DATAGRAM);
                 err = 0;

@@ -49,7 +49,7 @@
 ==============================================================================*/
 struct procfs {
         llist_t *file_list;
-        mutex_t *resource_mtx;
+        kmtx_t  *resource_mtx;
         char    *offset_path;
 };
 
@@ -74,9 +74,9 @@ struct dir_info {
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int    procfs_readdir_root(struct procfs *hdl, DIR *dir);
-static int    procfs_readdir_pid (struct procfs *hdl, DIR *dir);
-static int    procfs_readdir_bin (struct procfs *hdl, DIR *dir);
+static int    procfs_readdir_root(struct procfs *hdl, kdir_t *dir);
+static int    procfs_readdir_pid (struct procfs *hdl, kdir_t *dir);
+static int    procfs_readdir_bin (struct procfs *hdl, kdir_t *dir);
 static int    add_file_to_list   (struct procfs *hdl, int16_t arg, enum path_content content, void **object);
 static size_t get_file_content   (struct file_info *file, u8_t *buff, size_t size, i32_t seek);
 static void   buf_snprintf(u8_t *buf, size_t *size, size_t *clen, i32_t *seek, const char *fmt, ...);
@@ -117,7 +117,7 @@ API_FS_INIT(procfs, void **fs_handle, const char *src_path, const char *opts)
                 if (err != ESUCC)
                         goto finish;
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &procfs->resource_mtx);
+                err = sys_mutex_create(KMTX_TYPE_NORMAL, &procfs->resource_mtx);
                 if (err != ESUCC)
                         goto finish;
 
@@ -181,7 +181,7 @@ API_FS_RELEASE(procfs, void *fs_handle)
                         err = EBUSY;
                 } else {
                         sys_llist_destroy(procfs->file_list);
-                        mutex_t *mtx = procfs->resource_mtx;
+                        kmtx_t *mtx = procfs->resource_mtx;
                         sys_free(cast(void*, &procfs->offset_path));
                         memset(procfs, 0, sizeof(struct procfs));
                         sys_mutex_unlock(mtx);
@@ -249,7 +249,7 @@ API_FS_OPEN(procfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
                 i32_t pid = 0;
                 sys_strtoi(mpath, 10, &pid);
 
-                process_stat_t stat;
+                _process_stat_t stat;
                 if (sys_process_get_stat_pid(pid, &stat) == ESUCC) {
                         err = add_file_to_list(hdl, pid, FILE_CONTENT_PID, fhdl);
                 } else {
@@ -304,7 +304,7 @@ API_FS_CLOSE(procfs, void *fs_handle, void *fhdl, bool force)
 
         struct procfs *fsctx = fs_handle;
 
-        int err = sys_mutex_lock(fsctx->resource_mtx, MAX_DELAY_MS);
+        int err = sys_mutex_lock(fsctx->resource_mtx, _MAX_DELAY_MS);
         if (!err) {
                 int pos = sys_llist_find_begin(fsctx->file_list, fhdl);
                 err = sys_llist_erase(fsctx->file_list, pos) ? ESUCC : ENOENT;
@@ -564,7 +564,7 @@ API_FS_MKNOD(procfs, void *fs_handle, const char *path, const dev_t dev)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
+API_FS_OPENDIR(procfs, void *fs_handle, const char *path, kdir_t *dir)
 {
         struct procfs *hdl = fs_handle;
         int err;
@@ -625,7 +625,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_CLOSEDIR(procfs, void *fs_handle, DIR *dir)
+API_FS_CLOSEDIR(procfs, void *fs_handle, kdir_t *dir)
 {
         UNUSED_ARG1(fs_handle);
 
@@ -646,7 +646,7 @@ API_FS_CLOSEDIR(procfs, void *fs_handle, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-API_FS_READDIR(procfs, void *fs_handle, DIR *dir)
+API_FS_READDIR(procfs, void *fs_handle, kdir_t *dir)
 {
         int err = EFAULT;
 
@@ -788,7 +788,7 @@ API_FS_SYNC(procfs, void *fs_handle)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int procfs_readdir_root(struct procfs *hdl, DIR *dir)
+static int procfs_readdir_root(struct procfs *hdl, kdir_t *dir)
 {
         UNUSED_ARG1(hdl);
 
@@ -834,11 +834,11 @@ static int procfs_readdir_root(struct procfs *hdl, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int procfs_readdir_pid(struct procfs *hdl, DIR *dir)
+static int procfs_readdir_pid(struct procfs *hdl, kdir_t *dir)
 {
         UNUSED_ARG1(hdl);
 
-        process_stat_t stat;
+        _process_stat_t stat;
         int err = sys_process_get_stat_seek(dir->d_seek++, &stat);
         if (!err) {
 
@@ -868,7 +868,7 @@ static int procfs_readdir_pid(struct procfs *hdl, DIR *dir)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-static int procfs_readdir_bin(struct procfs *hdl, DIR *dir)
+static int procfs_readdir_bin(struct procfs *hdl, kdir_t *dir)
 {
         UNUSED_ARG1(hdl);
 
@@ -911,7 +911,7 @@ static int add_file_to_list(struct procfs *hdl, int16_t arg,
                 file->content = content;
                 file->arg     = arg;
 
-                err = sys_mutex_lock(hdl->resource_mtx, MAX_DELAY_MS);
+                err = sys_mutex_lock(hdl->resource_mtx, _MAX_DELAY_MS);
                 if (!err) {
                         if (sys_llist_push_back(hdl->file_list, file)) {
                                 *object = file;
@@ -959,7 +959,7 @@ static size_t get_file_content(struct file_info *file, u8_t *buff, size_t size, 
 
         switch (file->content) {
         case FILE_CONTENT_PID: {
-                process_stat_t stat;
+                _process_stat_t stat;
                 if (sys_process_get_stat_pid(file->arg, &stat) == ESUCC) {
 
                         if (size) buf_snprintf(buff, &size, &clen, &seek, "Name: %s\n", stat.name);
@@ -989,7 +989,7 @@ static size_t get_file_content(struct file_info *file, u8_t *buff, size_t size, 
                              _CPUCTL_PLATFORM_NAME,
                              _CPUCTL_VENDOR_NAME);
 
-                FILE *pll;
+                kfile_t *pll;
                 if (sys_fopen(CLK_FILE_PATH, "r+", &pll) == ESUCC) {
 
                         CLK_info_t clkinf;

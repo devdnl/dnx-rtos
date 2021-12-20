@@ -293,7 +293,7 @@ extern char *strcat(char *dest, const char *src);
         // ...
    @endcode
  *
- * @see strcat(), strlcat()
+ * @see strcat(), sys_strlcat()
  */
 //==============================================================================
 extern char *strncat(char *dest, const char *src, size_t);
@@ -528,7 +528,7 @@ extern char *strcpy(char *dest, const char *src);
         // ...
    @endcode
  *
- * @ref strcpy(), memcpy(), strlcpy()
+ * @ref strcpy(), memcpy(), sys_strlcpy()
  */
 //==============================================================================
 extern char *strncpy(char *dest, const char *src, size_t n);

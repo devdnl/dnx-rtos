@@ -39,7 +39,7 @@ Detailed Doxygen description.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include "net/netm.h"
 
 #ifdef __cplusplus

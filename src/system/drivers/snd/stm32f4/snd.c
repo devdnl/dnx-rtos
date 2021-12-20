@@ -80,7 +80,7 @@ typedef struct {
 
 typedef struct {
         const struct SAI_info *SAI;
-        sem_t       *sem;
+        ksem_t      *sem;
         u32_t        dmad;
         SND_config_t conf;
         u8_t         major;
@@ -316,7 +316,7 @@ API_MOD_WRITE(SND,
                 } else {
                         hdl->next.ptr  = src;
                         hdl->next.size = count;
-                        err = sys_semaphore_wait(hdl->sem, MAX_DELAY_MS);
+                        err = sys_semaphore_wait(hdl->sem, _MAX_DELAY_MS);
                 }
         }
 

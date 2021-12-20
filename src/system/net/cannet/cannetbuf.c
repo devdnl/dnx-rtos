@@ -50,7 +50,7 @@ typedef struct data_chain {
 } data_chain_t;
 
 struct cannetbuf {
-        mutex_t      *mutex;
+        kmtx_t       *mutex;
         data_chain_t *begin;
         data_chain_t *end;
         size_t        total_size;
@@ -94,7 +94,7 @@ int cannetbuf__create(cannetbuf_t **cannetbuf, size_t max_capacity)
         int err = _kzalloc(_MM_NET, sizeof(cannetbuf_t), NULL, 0, 0, (void*)&this);
 
         if (!err) {
-                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &this->mutex);
+                err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &this->mutex);
 
                 if (!err) {
                         this->max_capacity = (CEILING(max(CHAIN_BUFFER_LENGTH, max_capacity),
@@ -119,15 +119,15 @@ int cannetbuf__create(cannetbuf_t **cannetbuf, size_t max_capacity)
 void cannetbuf__destroy(cannetbuf_t *cannetbuf)
 {
         if (cannetbuf) {
-                mutex_t *mtx = cannetbuf->mutex;
+                kmtx_t *mtx = cannetbuf->mutex;
 
-                if (sys_mutex_lock(cannetbuf->mutex, MAX_DELAY_MS)) {
+                if (sys_mutex_lock(cannetbuf->mutex, _MAX_DELAY_MS)) {
                         cannetbuf__clear(cannetbuf);
                         cannetbuf->mutex = NULL;
                         sys_mutex_unlock(mtx);
                 }
 
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS)) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS)) {
                         sys_mutex_unlock(mtx);
                 }
 
@@ -154,7 +154,7 @@ int cannetbuf__write(cannetbuf_t *cannetbuf, const u8_t *data, size_t size)
 
         if (cannetbuf && data && size) {
 
-                err = sys_mutex_lock(cannetbuf->mutex, MAX_DELAY_MS);
+                err = sys_mutex_lock(cannetbuf->mutex, _MAX_DELAY_MS);
                 if (!err) {
                         data_chain_t **chain = &cannetbuf->end;
 
@@ -249,7 +249,7 @@ int cannetbuf__read(cannetbuf_t *cannetbuf, u8_t *data, size_t size, size_t *rdc
 
         if (cannetbuf && data && size && rdctr) {
 
-                err = sys_mutex_lock(cannetbuf->mutex, MAX_DELAY_MS);
+                err = sys_mutex_lock(cannetbuf->mutex, _MAX_DELAY_MS);
                 if (!err) {
 
                         *rdctr = 0;
@@ -300,7 +300,7 @@ int cannetbuf__read(cannetbuf_t *cannetbuf, u8_t *data, size_t size, size_t *rdc
 void cannetbuf__clear(cannetbuf_t *cannetbuf)
 {
         if (cannetbuf) {
-                int err = sys_mutex_lock(cannetbuf->mutex, MAX_DELAY_MS);
+                int err = sys_mutex_lock(cannetbuf->mutex, _MAX_DELAY_MS);
                 if (!err) {
                         data_chain_t *chain = cannetbuf->begin;
 
@@ -333,7 +333,7 @@ bool cannetbuf__is_full(cannetbuf_t *cannetbuf)
         bool is_full = false;
 
         if (cannetbuf) {
-                int err = sys_mutex_lock(cannetbuf->mutex, MAX_DELAY_MS);
+                int err = sys_mutex_lock(cannetbuf->mutex, _MAX_DELAY_MS);
                 if (!err) {
                         is_full = cannetbuf->total_size >= cannetbuf->max_capacity;
                         sys_mutex_unlock(cannetbuf->mutex);
@@ -358,7 +358,7 @@ int cannetbuf__get_available(cannetbuf_t *cannetbuf, size_t *available)
         int err = EINVAL;
 
         if (cannetbuf and available) {
-                int err = sys_mutex_lock(cannetbuf->mutex, MAX_DELAY_MS);
+                int err = sys_mutex_lock(cannetbuf->mutex, _MAX_DELAY_MS);
                 if (!err) {
                         *available = cannetbuf->max_capacity - cannetbuf->total_size;
                         sys_mutex_unlock(cannetbuf->mutex);

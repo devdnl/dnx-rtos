@@ -46,7 +46,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <libc/include/sys/types.h>
-#include <kernel/syscall.h>
+#include <libc/source/syscall.h>
 #include <machine/ieeefp.h>
 #include <_ansi.h>
 
@@ -484,7 +484,7 @@ extern void srand(unsigned int seed);
 static inline void *malloc(size_t size)
 {
         void *mem = NULL;
-        syscall(SYSCALL_MALLOC, &mem, &size);
+        libc_syscall(_LIBC_SYS_MALLOC, &mem, &size);
         return mem;
 }
 
@@ -520,7 +520,7 @@ static inline void *calloc(size_t n, size_t size)
 {
         void   *mem   = NULL;
         size_t  bsize = n * size;
-        syscall(SYSCALL_ZALLOC, &mem, &bsize);
+        libc_syscall(_LIBC_SYS_ZALLOC, &mem, &bsize);
         return mem;
 }
 
@@ -557,7 +557,7 @@ static inline void *calloc(size_t n, size_t size)
 static inline void free(void *ptr)
 {
         if (ptr) {
-                syscall(SYSCALL_FREE, NULL, ptr);
+                libc_syscall(_LIBC_SYS_FREE, NULL, ptr);
         }
 }
 
@@ -646,7 +646,7 @@ static inline void *realloc(void *ptr, size_t size)
 //==============================================================================
 static inline void abort(void)
 {
-        syscall(SYSCALL_PROCESSABORT, NULL);
+        libc_syscall(_LIBC_SYS_PROCESSABORT, NULL);
 }
 
 //==============================================================================
@@ -672,7 +672,7 @@ static inline void abort(void)
 //==============================================================================
 static inline void exit(int status)
 {
-        syscall(SYSCALL_PROCESSEXIT, NULL, &status);
+        libc_syscall(_LIBC_SYS_PROCESSEXIT, NULL, &status);
 }
 
 //==============================================================================

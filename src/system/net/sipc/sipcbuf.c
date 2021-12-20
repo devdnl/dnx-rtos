@@ -49,7 +49,7 @@ typedef struct data_chain {
 } data_chain_t;
 
 struct sipcbuf {
-        mutex_t      *access;
+        kmtx_t       *access;
         data_chain_t *begin;
         data_chain_t *end;
         size_t        total_size;
@@ -94,7 +94,7 @@ int sipcbuf__create(sipcbuf_t **sipcbuf, size_t max_capacity)
         int err = _kzalloc(_MM_NET, sizeof(sipcbuf_t), NULL, 0, 0, (void*)&this);
 
         if (!err) {
-                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &this->access);
+                err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &this->access);
 
                 if (!err) {
                         this->soft_max_capacity = max(256, max_capacity);
@@ -117,15 +117,15 @@ int sipcbuf__create(sipcbuf_t **sipcbuf, size_t max_capacity)
 void sipcbuf__destroy(sipcbuf_t *sipcbuf)
 {
         if (sipcbuf) {
-                mutex_t *mtx = sipcbuf->access;
+                kmtx_t *mtx = sipcbuf->access;
 
-                if (sys_mutex_lock(sipcbuf->access, MAX_DELAY_MS)) {
+                if (sys_mutex_lock(sipcbuf->access, _MAX_DELAY_MS)) {
                         sipcbuf__clear(sipcbuf);
                         sipcbuf->access = NULL;
                         sys_mutex_unlock(mtx);
                 }
 
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS)) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS)) {
                         sys_mutex_unlock(mtx);
                 }
 
@@ -152,7 +152,7 @@ int sipcbuf__write(sipcbuf_t *sipcbuf, const u8_t *data, size_t size, bool refer
         int err = EINVAL;
 
         if (sipcbuf && data && size) {
-                err = sys_mutex_lock(sipcbuf->access, MAX_DELAY_MS);
+                err = sys_mutex_lock(sipcbuf->access, _MAX_DELAY_MS);
                 if (!err) {
                         data_chain_t *chain = NULL;
 
@@ -198,7 +198,7 @@ int sipcbuf__read(sipcbuf_t *sipcbuf, u8_t *data, size_t size, size_t *rdctr)
         int err = EINVAL;
 
         if (sipcbuf && data && size && rdctr) {
-                err = sys_mutex_lock(sipcbuf->access, MAX_DELAY_MS);
+                err = sys_mutex_lock(sipcbuf->access, _MAX_DELAY_MS);
                 if (!err) {
 
                         *rdctr = 0;
@@ -255,7 +255,7 @@ int sipcbuf__read(sipcbuf_t *sipcbuf, u8_t *data, size_t size, size_t *rdctr)
 void sipcbuf__clear(sipcbuf_t *sipcbuf)
 {
         if (sipcbuf) {
-                int err = sys_mutex_lock(sipcbuf->access, MAX_DELAY_MS);
+                int err = sys_mutex_lock(sipcbuf->access, _MAX_DELAY_MS);
                 if (!err) {
                         data_chain_t *data = sipcbuf->begin;
 
@@ -295,7 +295,7 @@ bool sipcbuf__is_full(sipcbuf_t *sipcbuf)
         bool is_full = false;
 
         if (sipcbuf) {
-                int err = sys_mutex_lock(sipcbuf->access, MAX_DELAY_MS);
+                int err = sys_mutex_lock(sipcbuf->access, _MAX_DELAY_MS);
                 if (!err) {
                         is_full = sipcbuf->total_size >= sipcbuf->soft_max_capacity;
                         sys_mutex_unlock(sipcbuf->access);

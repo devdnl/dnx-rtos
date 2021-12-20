@@ -43,8 +43,8 @@ Brief   Partition driver
 typedef struct {
         u8_t     major;
         u8_t     minor;
-        FILE    *dev;
-        mutex_t *mutex;
+        kfile_t    *dev;
+        kmtx_t  *mutex;
         u32_t    block_size;
         u64_t    offset_bytes;
         u64_t    total_bytes;
@@ -90,7 +90,7 @@ API_MOD_INIT(PART, void **device_handle, u8_t major, u8_t minor, const void *con
                 hdl->major = major;
                 hdl->minor = minor;
 
-                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->mutex);
+                err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &hdl->mutex);
                 if (!err) {
                         if (config) {
                                 err = configure(hdl, config);
@@ -120,7 +120,7 @@ API_MOD_RELEASE(PART, void *device_handle)
 
         int err = sys_mutex_lock(hdl->mutex, 0);
         if (!err) {
-                mutex_t *mtx = hdl->mutex;
+                kmtx_t *mtx = hdl->mutex;
                 hdl->mutex = NULL;
                 sys_mutex_unlock(mtx);
                 sys_mutex_destroy(mtx);

@@ -95,10 +95,10 @@ extern bool usbh_irq;
 #endif
 
 #define UNUSED(_u)              UNUSED_ARG1(_u)
-#define osWaitForever           MAX_DELAY_MS
+#define osWaitForever           _MAX_DELAY_MS
 
 
-static inline void osMessagePutX(queue_t *queue, uint32_t *msg, u32_t timeout)
+static inline void osMessagePutX(kqueue_t *queue, uint32_t *msg, u32_t timeout)
 {
         extern bool usbh_irq;
 

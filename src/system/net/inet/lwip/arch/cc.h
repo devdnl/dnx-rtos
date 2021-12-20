@@ -32,7 +32,7 @@
 #ifndef _CC_H_
 #define _CC_H_
 
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include <sys/time.h>
 #include "kernel/printk.h"
 #include "cpuctl.h"

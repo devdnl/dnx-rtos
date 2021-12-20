@@ -70,7 +70,7 @@
  * @return One of errno values
  */
 //==============================================================================
-int sys_opendir(const char *path, DIR **dir)
+int sys_opendir(const char *path, kdir_t **dir)
 {
         struct vfs_path cpath;
         cpath.CWD  = NULL;
@@ -92,7 +92,7 @@ int sys_opendir(const char *path, DIR **dir)
  * @return One of errno values
  */
 //==============================================================================
-int sys_closedir(DIR *dir)
+int sys_closedir(kdir_t *dir)
 {
         return _process_release_resource(_kworker_proc,
                                          cast(res_header_t *, dir),
@@ -110,7 +110,7 @@ int sys_closedir(DIR *dir)
  * @return One of errno values
  */
 //==============================================================================
-int sys_fopen(const char *name, const char *mode, FILE **file)
+int sys_fopen(const char *name, const char *mode, kfile_t **file)
 {
         struct vfs_path cpath;
         cpath.CWD  = NULL;
@@ -132,7 +132,7 @@ int sys_fopen(const char *name, const char *mode, FILE **file)
  * @return One of errno value (errno.h)
  */
 //==============================================================================
-int sys_fclose(FILE *file)
+int sys_fclose(kfile_t *file)
 {
         return _process_release_resource(_kworker_proc,
                                          cast(res_header_t *, file),
@@ -150,7 +150,7 @@ int sys_fclose(FILE *file)
  * @return One of errno values.
  */
 //==============================================================================
-int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem)
+int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, ksem_t **sem)
 {
         int r = _semaphore_create(cnt_max, cnt_init, sem);
         if (r == ESUCC) {
@@ -166,7 +166,7 @@ int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **se
  * @param[in] *sem      semaphore object
  */
 //==============================================================================
-int sys_semaphore_destroy(sem_t *sem)
+int sys_semaphore_destroy(ksem_t *sem)
 {
         return _process_release_resource(_kworker_proc,
                                          cast(res_header_t *, sem),
@@ -185,7 +185,7 @@ int sys_semaphore_destroy(sem_t *sem)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int sys_flag_create(flag_t **flag)
+int sys_flag_create(kflag_t **flag)
 {
         int r = _flag_create(flag);
         if (r == ESUCC) {
@@ -205,7 +205,7 @@ int sys_flag_create(flag_t **flag)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int sys_flag_destroy(flag_t *flag)
+int sys_flag_destroy(kflag_t *flag)
 {
         return _process_release_resource(_kworker_proc,
                                          cast(res_header_t *, flag),
@@ -222,7 +222,7 @@ int sys_flag_destroy(flag_t *flag)
  * @return One of errno values.
  */
 //==============================================================================
-int sys_mutex_create(enum mutex_type type, mutex_t **mtx)
+int sys_mutex_create(enum kmtx_type type, kmtx_t **mtx)
 {
         int r = _mutex_create(type, mtx);
         if (r == ESUCC) {
@@ -240,7 +240,7 @@ int sys_mutex_create(enum mutex_type type, mutex_t **mtx)
  * @return One of errno values.
  */
 //==============================================================================
-int sys_mutex_destroy(mutex_t *mutex)
+int sys_mutex_destroy(kmtx_t *mutex)
 {
         return _process_release_resource(_kworker_proc,
                                          cast(res_header_t *, mutex),
@@ -258,7 +258,7 @@ int sys_mutex_destroy(mutex_t *mutex)
  * @return One of errno values.
  */
 //==============================================================================
-int sys_queue_create(size_t length, size_t item_size, queue_t **queue)
+int sys_queue_create(size_t length, size_t item_size, kqueue_t **queue)
 {
         int r = _queue_create(length, item_size, queue);
         if (r == ESUCC) {
@@ -276,7 +276,7 @@ int sys_queue_create(size_t length, size_t item_size, queue_t **queue)
  * @return One of errno values.
  */
 //==============================================================================
-int sys_queue_destroy(queue_t *queue)
+int sys_queue_destroy(kqueue_t *queue)
 {
         return _process_release_resource(_kworker_proc,
                                          cast(res_header_t *, queue),
@@ -299,7 +299,7 @@ int sys_queue_destroy(queue_t *queue)
  * @return On of errno value.
  */
 //==============================================================================
-int sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg, tid_t *tid)
+int sys_thread_create(thread_func_t func, const _thread_attr_t *attr, void *arg, tid_t *tid)
 {
         return _process_thread_create(_kworker_proc, func, attr, arg, tid);
 }

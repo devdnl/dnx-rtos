@@ -47,7 +47,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "config.h"
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include "lib/misc.h"
 #include <string.h>
 #include <errno.h>
@@ -55,6 +55,7 @@ extern "C" {
 #include "drivers/ioctl_requests.h"
 #include "kernel/sysfunc.h"
 #include "kernel/process.h"
+#include "kernel/kwrapper.h"
 #include "fs/pipe.h"
 
 /*==============================================================================
@@ -882,7 +883,7 @@ static inline int sys_strndup(const char *str, size_t len, char **strdup)
         if (str && strdup) {
                 err = sys_malloc(len + 1, cast(void**, strdup));
                 if (!err) {
-                        strlcpy(*strdup, str, len + 1);
+                        sys_strlcpy(*strdup, str, len + 1);
                 }
         }
         return err;

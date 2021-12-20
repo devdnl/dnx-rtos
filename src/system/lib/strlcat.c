@@ -62,9 +62,9 @@ Brief    String functions.
 
 //==============================================================================
 /**
- * @brief The strlcat() function concatenate strings.
+ * @brief The _strlcat() function concatenate strings.
  *
- * The strlcat() function appends the NUL-terminated string src to the end of
+ * The _strlcat() function appends the NUL-terminated string src to the end of
  * dst. It will append at most size - strlen(dst) - 1 bytes, NUL-terminating
  * the result.
  *
@@ -72,8 +72,8 @@ Brief    String functions.
  * @param  src  source buffer
  * @param  size destination buffer size
  *
- * @return The strlcat() function return the total length of the string it
- *         tried to create. For strlcat() that means the initial length of dst
+ * @return The _strlcat() function return the total length of the string it
+ *         tried to create. For _strlcat() that means the initial length of dst
  *         plus the length of src. While this may seem somewhat confusing, it
  *         was done to make truncation detection simple.
  */

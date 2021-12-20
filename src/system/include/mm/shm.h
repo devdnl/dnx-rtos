@@ -41,7 +41,7 @@ Shared memory management.
 ==============================================================================*/
 #include <stdint.h>
 #include <stddef.h>
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include <config.h>
 
 #ifdef __cplusplus

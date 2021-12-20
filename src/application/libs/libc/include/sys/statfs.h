@@ -45,7 +45,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <sys/types.h>
-#include <kernel/syscall.h>
+#include <libc/source/syscall.h>
 
 /*==============================================================================
   Exported macros
@@ -109,7 +109,7 @@ extern "C" {
 static inline int statfs(const char *path, struct statfs *statfs)
 {
         int r = -1;
-        syscall(SYSCALL_STATFS, &r, path, statfs);
+        libc_syscall(_LIBC_SYS_STATFS, &r, path, statfs);
         return r;
 }
 

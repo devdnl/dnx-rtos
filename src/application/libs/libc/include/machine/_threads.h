@@ -37,7 +37,7 @@ Detailed Doxygen description.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <kernel/kwrapper.h>
+#include <dnx/thread.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -128,8 +128,8 @@ typedef struct {
 
 /// type defines main memory of this module
 typedef struct {
-        mutex_t                  *lock_mtx;             //!< mutex used to lock access to the particular peripheral
-        queue_t                  *event;                //!< queue used to indicate event (operation finished)
+        kmtx_t                   *lock_mtx;             //!< mutex used to lock access to the particular peripheral
+        kqueue_t                 *event;                //!< queue used to indicate event (operation finished)
         I2C_recovery_t            recovery;             //!< recovery configuration
         bool                      initialized:1;        //!< indicates that module for this peripheral is initialized
         u8_t                      dev_cnt;              //!< number of initialized devices

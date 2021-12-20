@@ -75,7 +75,7 @@
  * @retval number of written characters
  */
 //==============================================================================
-int _vfprintf(FILE *file, const char *format, va_list arg)
+int _vfprintf(kfile_t *file, const char *format, va_list arg)
 {
         int n = 0;
 

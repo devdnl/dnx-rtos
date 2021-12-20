@@ -47,7 +47,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include <sys/types.h>
-#include <kernel/syscall.h>
+#include <libc/source/syscall.h>
 #include <dnx/misc.h>
 #include <errno.h>
 
@@ -140,7 +140,7 @@ static inline int mknod(const char *pathname, const char *mod_name, int major, i
 {
 #if __OS_ENABLE_MKNOD__ == _YES_
         int r = -1;
-        syscall(SYSCALL_MKNOD, &r, pathname, mod_name, &major, &minor);
+        libc_syscall(_LIBC_SYS_MKNOD, &r, pathname, mod_name, &major, &minor);
         return r;
 #else
         UNUSED_ARG4(pathname, mod_name, major, minor);
@@ -185,7 +185,7 @@ static inline int mkdir(const char *pathname, mode_t mode)
 {
 #if __OS_ENABLE_MKDIR__ == _YES_
         int r = -1;
-        syscall(SYSCALL_MKDIR, &r, pathname, &mode);
+        libc_syscall(_LIBC_SYS_MKDIR, &r, pathname, &mode);
         return r;
 #else
         UNUSED_ARG2(pathname, mode);
@@ -233,7 +233,7 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 {
 #if __OS_ENABLE_MKFIFO__ == _YES_
         int r = -1;
-        syscall(SYSCALL_MKFIFO, &r, pathname, &mode);
+        libc_syscall(_LIBC_SYS_MKFIFO, &r, pathname, &mode);
         return r;
 #else
         UNUSED_ARG2(pathname, mode);
@@ -277,7 +277,7 @@ static inline int chmod(const char *pathname, mode_t mode)
 {
 #if __OS_ENABLE_CHMOD__ == _YES_
         int r = -1;
-        syscall(SYSCALL_CHMOD, &r, pathname, &mode);
+        libc_syscall(_LIBC_SYS_CHMOD, &r, pathname, &mode);
         return r;
 #else
         UNUSED_ARG2(pathname, mode);
@@ -328,7 +328,7 @@ static inline int stat(const char *pathname, struct stat *buf)
 {
 #if __OS_ENABLE_FSTAT__ == _YES_
         int r = -1;
-        syscall(SYSCALL_STAT, &r, pathname, buf);
+        libc_syscall(_LIBC_SYS_STAT, &r, pathname, buf);
         return r;
 #else
         UNUSED_ARG2(pathname, buf);
@@ -386,7 +386,7 @@ static inline int fstat(FILE *file, struct stat *buf)
 {
 #if __OS_ENABLE_FSTAT__ == _YES_
         int r = -1;
-        syscall(SYSCALL_FSTAT, &r, file, buf);
+        libc_syscall(_LIBC_SYS_FSTAT, &r, file, buf);
         return r;
 #else
         UNUSED_ARG2(file, buf);

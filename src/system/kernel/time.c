@@ -51,7 +51,7 @@
   Local objects
 ==============================================================================*/
 #if __OS_ENABLE_TIMEMAN__ == _YES_
-static FILE  *RTC;
+static kfile_t  *RTC;
 static time_t last_sec;
 static u32_t  last_msec;
 static u32_t  usec;

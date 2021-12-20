@@ -36,6 +36,7 @@
 #include <dnx/misc.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include "syscall.h"
 
 /*==============================================================================
   Local macros
@@ -692,7 +693,7 @@ struct tm *_libc_localtime_r(const time_t *timer, struct tm *tmbuf)
         if (timer) {
                 struct timezone tz;
                 int r = -1;
-                syscall(SYSCALL_GETTIMEOFDAY, &r, NULL, &tz);
+                libc_syscall(_LIBC_SYS_GETTIMEOFDAY, &r, NULL, &tz);
 
                 if (r == 0) {
                         time_t localtime = *timer + (tz.tz_minuteswest * 60);

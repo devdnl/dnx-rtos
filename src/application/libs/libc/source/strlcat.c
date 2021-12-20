@@ -78,7 +78,7 @@ Brief    String functions.
  *         was done to make truncation detection simple.
  */
 //==============================================================================
-size_t _strlcat(char *dst, const char *src, size_t size)
+size_t _libc_strlcat(char *dst, const char *src, size_t size)
 {
         char       *d = dst;
         const char *s = src;

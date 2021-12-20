@@ -141,10 +141,10 @@ typedef struct {
         u32_t    recv_timeout;
         u32_t    txpend_ctr;
         u32_t    rxpend_ctr;
-        mutex_t *config_mtx;
-        mutex_t *txmbox_mtx[TX_MAILBOXES];
-        queue_t *txrdy_q[TX_MAILBOXES];
-        queue_t *rxqueue_q;
+        kmtx_t *config_mtx;
+        kmtx_t *txmbox_mtx[TX_MAILBOXES];
+        kqueue_t *txrdy_q[TX_MAILBOXES];
+        kqueue_t *rxqueue_q;
         u64_t    tx_frames;
         u64_t    tx_bytes;
         u64_t    rx_frames;
@@ -265,11 +265,11 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
                         CAN_t *hdl = *device_handle;
 
                         hdl->major        = major;
-                        hdl->recv_timeout = MAX_DELAY_MS;
-                        hdl->send_timeout = MAX_DELAY_MS;
+                        hdl->recv_timeout = _MAX_DELAY_MS;
+                        hdl->send_timeout = _MAX_DELAY_MS;
                         hdl->mode         = CAN_MODE__INIT;
 
-                        err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->config_mtx);
+                        err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &hdl->config_mtx);
                         if (err) {
                                 goto finish;
                         }
@@ -282,7 +282,7 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
                         }
 
                         for (int i = 0; i < TX_MAILBOXES; i++) {
-                                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->txmbox_mtx[i]);
+                                err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->txmbox_mtx[i]);
                                 if (err) {
                                         goto finish;
                                 }

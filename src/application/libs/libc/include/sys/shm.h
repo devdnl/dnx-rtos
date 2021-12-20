@@ -38,7 +38,8 @@ The library is used to control shared memory regions used in IPC.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <kernel/syscall.h>
+#include <libc/source/syscall.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -112,7 +113,7 @@ static inline int shmget(const char *key, size_t size)
 {
         int r = -1;
 #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
-        syscall(SYSCALL_SHMCREATE, &r, key, &size);
+        libc_syscall(_LIBC_SYS_SHMCREATE, &r, key, &size);
 #else
         (void)key;
         (void)size;
@@ -179,7 +180,7 @@ static inline int shmrm(const char *key)
 {
         int r = -1;
 #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
-        syscall(SYSCALL_SHMDESTROY, &r, key);
+        libc_syscall(_LIBC_SYS_SHMDESTROY, &r, key);
 #else
         (void)key;
 #endif
@@ -240,7 +241,7 @@ static inline int shmat(const char *key, void **mem, size_t *size)
 {
         int r = -1;
 #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
-        syscall(SYSCALL_SHMATTACH, &r, key, mem, &size);
+        libc_syscall(_LIBC_SYS_SHMATTACH, &r, key, mem, &size);
 #else
         (void)key;
         (void)mem;
@@ -313,7 +314,7 @@ static inline int shmdt(const char *key)
 {
         int r = -1;
 #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
-        syscall(SYSCALL_SHMDETACH, &r, key);
+        libc_syscall(_LIBC_SYS_SHMDETACH, &r, key);
 #else
         (void)key;
 #endif

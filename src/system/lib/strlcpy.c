@@ -62,12 +62,12 @@ Brief    String functions.
 
 //==============================================================================
 /**
- * @brief The strlcpy() function copy strings.
+ * @brief The _strlcpy() function copy strings.
  *
- * The strlcpy() function copies up to size - 1 characters from the NUL-terminated
+ * The sys_strlcpy() function copies up to size - 1 characters from the NUL-terminated
  * string src to dst, NUL-terminating the result.
  *
- * Note, however, that if strlcat() traverses size characters without finding
+ * Note, however, that if _strlcat() traverses size characters without finding
  * a NUL, the length of the string is considered to be size and the destination
  * string will not be NUL-terminated (since there was no space for the NUL).
  *
@@ -75,8 +75,8 @@ Brief    String functions.
  * @param  src  source buffer
  * @param  size destination buffer size
  *
- * @return The strlcpy() function return the total length of the string they
- *         tried to create. For strlcpy() that means the length of src.
+ * @return The _strlcpy() function return the total length of the string they
+ *         tried to create. For _strlcpy() that means the length of src.
  */
 //==============================================================================
 size_t _strlcpy(char *dst, const char *src, size_t size)

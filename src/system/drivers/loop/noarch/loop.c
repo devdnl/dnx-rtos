@@ -39,7 +39,7 @@
 #define RELEASE_TIMEOUT         1000
 #define OPERATION_TIMEOUT       60000
 #define REQUEST_TIMEOUT         20000
-#define HOST_REQUEST_TIMEOUT    MAX_DELAY_MS
+#define HOST_REQUEST_TIMEOUT    _MAX_DELAY_MS
 
 #define FLAG_REQUEST            (1<<0)
 #define FLAG_RESPONSE           (1<<1)
@@ -72,8 +72,8 @@ typedef struct {
 
 
 typedef struct {
-        mutex_t    *mtx;
-        flag_t     *flag;
+        kmtx_t     *mtx;
+        kflag_t     *flag;
         dev_lock_t  host_lock;
         req_t       action;
 } loop_t;
@@ -130,7 +130,7 @@ API_MOD_INIT(LOOP, void **device_handle, u8_t major, u8_t minor, const void *con
                 sys_device_unlock(&hdl->host_lock, true);
 
                 if (!err) {
-                        err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mtx);
+                        err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->mtx);
                 }
 
                 if (!err) {
@@ -168,7 +168,7 @@ API_MOD_RELEASE(LOOP, void *device_handle)
 
         int err = sys_mutex_lock(hdl->mtx, RELEASE_TIMEOUT);
         if (!err) {
-                mutex_t *mtx = hdl->mtx;
+                kmtx_t *mtx = hdl->mtx;
                 sys_mutex_unlock(mtx);
                 sys_mutex_destroy(mtx);
                 sys_flag_destroy(hdl->flag);

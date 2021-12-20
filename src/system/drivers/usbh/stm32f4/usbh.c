@@ -68,7 +68,7 @@ Brief   USB Host driver
 typedef struct {
         u8_t major;
         u8_t minor;
-        mutex_t *mtx;
+        kmtx_t *mtx;
         USBH_HandleTypeDef hUSBHost;
         HCD_HandleTypeDef hhcd;
         bool class_active;
@@ -131,7 +131,7 @@ API_MOD_INIT(USBH, void **device_handle, u8_t major, u8_t minor, const void *con
                 LL_RCC_GetSystemClocksFreq(&freq);
                 usbh->irq_ctr_max = freq.HCLK_Frequency / 1000UL / 32;
 
-                err = sys_mutex_create(MUTEX_TYPE_NORMAL, &hdl->mtx);
+                err = sys_mutex_create(KMTX_TYPE_NORMAL, &hdl->mtx);
                 if (err) {
                         goto finish;
                 }
@@ -243,7 +243,7 @@ API_MOD_WRITE(USBH,
                 return EINVAL;
         }
 
-        int err = sys_mutex_lock(hdl->mtx, MAX_DELAY_MS);
+        int err = sys_mutex_lock(hdl->mtx, _MAX_DELAY_MS);
         if (!err) {
 
                 if (hdl->class_active) {
@@ -351,7 +351,7 @@ API_MOD_READ(USBH,
                 return EINVAL;
         }
 
-        int err = sys_mutex_lock(hdl->mtx, MAX_DELAY_MS);
+        int err = sys_mutex_lock(hdl->mtx, _MAX_DELAY_MS);
         if (!err) {
 
                 if (hdl->class_active) {
@@ -445,7 +445,7 @@ API_MOD_IOCTL(USBH, void *device_handle, int request, void *arg)
                 if (arg) {
                         usbh_buf_t *buf = arg;
                         if (buf->ptr && buf->len) {
-                                strlcpy(buf->ptr, hdl->hUSBHost.manufacturer_name, buf->len);
+                                sys_strlcpy(buf->ptr, hdl->hUSBHost.manufacturer_name, buf->len);
                                 err = 0;
                         }
                 }
@@ -455,7 +455,7 @@ API_MOD_IOCTL(USBH, void *device_handle, int request, void *arg)
                 if (arg) {
                         usbh_buf_t *buf = arg;
                         if (buf->ptr && buf->len) {
-                                strlcpy(buf->ptr, hdl->hUSBHost.product_name, buf->len);
+                                sys_strlcpy(buf->ptr, hdl->hUSBHost.product_name, buf->len);
                                 err = 0;
                         }
                 }
@@ -465,7 +465,7 @@ API_MOD_IOCTL(USBH, void *device_handle, int request, void *arg)
                 if (arg) {
                         usbh_buf_t *buf = arg;
                         if (buf->ptr && buf->len) {
-                                strlcpy(buf->ptr, hdl->hUSBHost.serial_number, buf->len);
+                                sys_strlcpy(buf->ptr, hdl->hUSBHost.serial_number, buf->len);
                                 err = 0;
                         }
                 }

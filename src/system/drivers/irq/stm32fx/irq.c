@@ -55,7 +55,7 @@ Brief   This driver support external interrupts (EXTI).
   Local types, enums definitions
 ==============================================================================*/
 typedef struct {
-        sem_t *sem[NUMBER_OF_IRQs];
+        ksem_t *sem[NUMBER_OF_IRQs];
         u32_t counter[NUMBER_OF_IRQs];
 } IRQ_t;
 

@@ -2202,7 +2202,7 @@ static inline int sys_mkfifo(const char *pathname, mode_t mode)
  * @see sys_closedir(), sys_readdir()
  */
 //==============================================================================
-extern int sys_opendir(const char *path, DIR **dir);
+extern int sys_opendir(const char *path, kdir_t **dir);
 
 //==============================================================================
 /**
@@ -2242,7 +2242,7 @@ extern int sys_opendir(const char *path, DIR **dir);
  * @see sys_opendir(), sys_readdir()
  */
 //==============================================================================
-extern int sys_closedir(DIR *dir);
+extern int sys_closedir(kdir_t *dir);
 
 //==============================================================================
 /**
@@ -2290,7 +2290,7 @@ extern int sys_closedir(DIR *dir);
  * @see sys_opendir(), sys_closedir()
  */
 //==============================================================================
-static inline int sys_readdir(DIR *dir, dirent_t **dirent)
+static inline int sys_readdir(kdir_t *dir, dirent_t **dirent)
 {
         return _vfs_readdir(dir, dirent);
 }
@@ -2597,7 +2597,7 @@ static inline int sys_statfs(const char *path, struct statfs *statfs)
  * @see sys_fclose()
  */
 //==============================================================================
-extern int sys_fopen(const char *path, const char *mode, FILE **file);
+extern int sys_fopen(const char *path, const char *mode, kfile_t **file);
 
 //==============================================================================
 /**
@@ -2630,7 +2630,7 @@ extern int sys_fopen(const char *path, const char *mode, FILE **file);
  * @see sys_fopen()
  */
 //==============================================================================
-extern int sys_fclose(FILE *file);
+extern int sys_fclose(kfile_t *file);
 
 //==============================================================================
 /**
@@ -2675,7 +2675,7 @@ extern int sys_fclose(FILE *file);
  * @see sys_fread()
  */
 //==============================================================================
-static inline int sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *file)
+static inline int sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, kfile_t *file)
 {
         return _vfs_fwrite(ptr, size, wrcnt, file);
 }
@@ -2723,7 +2723,7 @@ static inline int sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, FILE *
  * @see sys_fwrite()
  */
 //==============================================================================
-static inline int sys_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
+static inline int sys_fread(void *ptr, size_t size, size_t *rdcnt, kfile_t *file)
 {
         return _vfs_fread(ptr, size, rdcnt, file);
 }
@@ -2776,7 +2776,7 @@ static inline int sys_fread(void *ptr, size_t size, size_t *rdcnt, FILE *file)
  * @see sys_ftell()
  */
 //==============================================================================
-static inline int sys_fseek(FILE *file, i64_t offset, int mode)
+static inline int sys_fseek(kfile_t *file, i64_t offset, int mode)
 {
         return _vfs_fseek(file, offset, mode);
 }
@@ -2827,7 +2827,7 @@ static inline int sys_fseek(FILE *file, i64_t offset, int mode)
  * @see sys_fseek()
  */
 //==============================================================================
-static inline int sys_ftell(FILE *file, i64_t *lseek)
+static inline int sys_ftell(kfile_t *file, i64_t *lseek)
 {
         return _vfs_ftell(file, lseek);
 }
@@ -2894,7 +2894,7 @@ static inline int sys_ftell(FILE *file, i64_t *lseek)
  * The names of all requests are constructed in the same way: @b IOCTL_<MODULE_NAME>__<REQUEST_NAME>.
  */
 //==============================================================================
-static inline int sys_ioctl(FILE *file, int rq, ...)
+static inline int sys_ioctl(kfile_t *file, int rq, ...)
 {
     va_list arg;
     va_start(arg, rq);
@@ -2939,7 +2939,7 @@ static inline int sys_ioctl(FILE *file, int rq, ...)
    @endcode
  */
 //==============================================================================
-static inline int sys_fstat(FILE *file, struct stat *buf)
+static inline int sys_fstat(kfile_t *file, struct stat *buf)
 {
         return _vfs_fstat(file, buf);
 }
@@ -2986,7 +2986,7 @@ static inline int sys_fstat(FILE *file, struct stat *buf)
    @endcode
  */
 //==============================================================================
-static inline int sys_fflush(FILE *file)
+static inline int sys_fflush(kfile_t *file)
 {
         return _vfs_fflush(file);
 }
@@ -3030,7 +3030,7 @@ static inline int sys_fflush(FILE *file)
  * @see sys_clearerr()
  */
 //==============================================================================
-static inline int sys_feof(FILE *file, int *eof)
+static inline int sys_feof(kfile_t *file, int *eof)
 {
         return _vfs_feof(file, eof);
 }
@@ -3072,7 +3072,7 @@ static inline int sys_feof(FILE *file, int *eof)
  * @see sys_feof(), sys_ferror()
  */
 //==============================================================================
-static inline int sys_clearerr(FILE *file)
+static inline int sys_clearerr(kfile_t *file)
 {
         return _vfs_clearerr(file);
 }
@@ -3116,7 +3116,7 @@ static inline int sys_clearerr(FILE *file)
  * @see sys_clearerr()
  */
 //==============================================================================
-static inline int sys_ferror(FILE *file, int *error)
+static inline int sys_ferror(kfile_t *file, int *error)
 {
         return _vfs_ferror(file, error);
 }
@@ -3163,7 +3163,7 @@ static inline int sys_ferror(FILE *file, int *error)
  * @see sys_fseek()
  */
 //==============================================================================
-static inline int sys_rewind(FILE *file)
+static inline int sys_rewind(kfile_t *file)
 {
         return _vfs_fseek(file, 0, VFS_SEEK_SET);
 }
@@ -3519,7 +3519,7 @@ static inline int sys_snprintf(char *bfr, size_t size, const char *format, ...)
  * @see sys_vsnprintf(), sys_snprintf(), sys_fprintf()
  */
 //==============================================================================
-static inline int sys_vfprintf(FILE *file, const char *format, va_list args)
+static inline int sys_vfprintf(kfile_t *file, const char *format, va_list args)
 {
         return _vfprintf(file, format, args);
 }
@@ -3600,7 +3600,7 @@ static inline int sys_vfprintf(FILE *file, const char *format, va_list args)
  * @see sys_vsnprintf(), sys_snprintf(), sys_vfprintf()
  */
 //==============================================================================
-static inline int sys_fprintf(FILE *file, const char *format, ...)
+static inline int sys_fprintf(kfile_t *file, const char *format, ...)
 {
         va_list arg;
         va_start(arg, format);
@@ -3862,7 +3862,7 @@ static inline int sys_time_diff(u32_t time1, u32_t time2)
  * @code
         // ...
 
-        sem_t *sem = NULL;
+        ksem_t *sem = NULL;
         if (sys_semaphore_create(1, 0, &sem) == ESUCC) {
 
                 // ...
@@ -3876,7 +3876,7 @@ static inline int sys_time_diff(u32_t time1, u32_t time2)
  * @see sys_semaphore_destroy()
  */
 //==============================================================================
-extern int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, sem_t **sem);
+extern int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, ksem_t **sem);
 
 //==============================================================================
 /**
@@ -3892,7 +3892,7 @@ extern int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, sem
  * @code
         // ...
 
-        sem_t *sem = NULL;
+        ksem_t *sem = NULL;
         if (sys_semaphore_create(1, 0, &sem) == ESUCC) {
 
                 // ...
@@ -3906,7 +3906,7 @@ extern int sys_semaphore_create(const size_t cnt_max, const size_t cnt_init, sem
  * @see sys_semaphore_create()
  */
 //==============================================================================
-extern int sys_semaphore_destroy(sem_t *sem);
+extern int sys_semaphore_destroy(ksem_t *sem);
 
 //==============================================================================
 /**
@@ -3932,7 +3932,7 @@ extern int sys_semaphore_destroy(sem_t *sem);
         {
                 while (true) {
                         // this task will wait for semaphore signal
-                        sys_semaphore_wait(sem, MAX_DELAY_MS);
+                        sys_semaphore_wait(sem, _MAX_DELAY_MS);
 
                         // ...
                 }
@@ -3959,7 +3959,7 @@ extern int sys_semaphore_destroy(sem_t *sem);
  * @see sys_semaphore_signal()
  */
 //==============================================================================
-static inline int sys_semaphore_wait(sem_t *sem, const u32_t timeout)
+static inline int sys_semaphore_wait(ksem_t *sem, const u32_t timeout)
 {
         return _semaphore_wait(sem, timeout);
 }
@@ -3996,7 +3996,7 @@ static inline int sys_semaphore_wait(sem_t *sem, const u32_t timeout)
  * @see sys_semaphore_signal(), sys_semaphore_wait()
  */
 //==============================================================================
-static inline int sys_semaphore_get_value(sem_t *sem, size_t *value)
+static inline int sys_semaphore_get_value(ksem_t *sem, size_t *value)
 {
         return _semaphore_get_value(sem, value);
 }
@@ -4021,7 +4021,7 @@ static inline int sys_semaphore_get_value(sem_t *sem, size_t *value)
         {
                 while (true) {
                         // this task will wait for semaphore signal
-                        sys_semaphore_wait(sem, MAX_DELAY_MS);
+                        sys_semaphore_wait(sem, _MAX_DELAY_MS);
 
                         // ...
                 }
@@ -4048,7 +4048,7 @@ static inline int sys_semaphore_get_value(sem_t *sem, size_t *value)
  * @see sys_semaphore_wait()
  */
 //==============================================================================
-static inline int sys_semaphore_signal(sem_t *sem)
+static inline int sys_semaphore_signal(ksem_t *sem)
 {
         return _semaphore_signal(sem);
 }
@@ -4087,7 +4087,7 @@ static inline int sys_semaphore_signal(sem_t *sem)
  * @see sys_semaphore_signal_from_ISR()
  */
 //==============================================================================
-static inline int sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
+static inline int sys_semaphore_wait_from_ISR(ksem_t *sem, bool *task_woken)
 {
         return _semaphore_wait_from_ISR(sem, task_woken);
 }
@@ -4111,7 +4111,7 @@ static inline int sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
         {
                 while (true) {
                         // this task will wait for semaphore signal
-                        sys_semaphore_wait(sem, MAX_DELAY_MS);
+                        sys_semaphore_wait(sem, _MAX_DELAY_MS);
 
                         // ...
                 }
@@ -4140,7 +4140,7 @@ static inline int sys_semaphore_wait_from_ISR(sem_t *sem, bool *task_woken)
  * @see sys_semaphore_wait_from_ISR()
  */
 //==============================================================================
-static inline int sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
+static inline int sys_semaphore_signal_from_ISR(ksem_t *sem, bool *task_woken)
 {
         return _semaphore_signal_from_ISR(sem, task_woken);
 }
@@ -4165,8 +4165,8 @@ static inline int sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
 
 
         // create mutex instance
-        mutex_t *mtx = NULL;
-        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        kmtx_t *mtx = NULL;
+        int      err = sys_mutex_create(KMTX_TYPE_NORMAL, &mtx);
         if (err != ESUCC) {
                 return err;
         }
@@ -4177,7 +4177,7 @@ static inline int sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
         void thread1()
         {
                 // protected access to resource
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS) == ESUCC) {
                         // write to buffer is allowed
                         resource = ...;
 
@@ -4190,7 +4190,7 @@ static inline int sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
         void thread2()
         {
                 // protected access to resource
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS) == ESUCC) {
                         // write to buffer is allowed
                         resource = ...;
 
@@ -4217,7 +4217,7 @@ static inline int sys_semaphore_signal_from_ISR(sem_t *sem, bool *task_woken)
  * @see sys_mutex_destroy()
  */
 //==============================================================================
-extern int sys_mutex_create(enum mutex_type type, mutex_t **mtx);
+extern int sys_mutex_create(enum kmtx_type type, kmtx_t **mtx);
 
 //==============================================================================
 /**
@@ -4248,7 +4248,7 @@ extern int sys_mutex_create(enum mutex_type type, mutex_t **mtx);
  * @see sys_flag_destroy()
  */
 //==============================================================================
-extern int sys_flag_create(flag_t **flag);
+extern int sys_flag_create(kflag_t **flag);
 
 //==============================================================================
 /**
@@ -4278,7 +4278,7 @@ extern int sys_flag_create(flag_t **flag);
  * @see sys_flag_create()
  */
 //==============================================================================
-extern int sys_flag_destroy(flag_t *flag);
+extern int sys_flag_destroy(kflag_t *flag);
 
 //==============================================================================
 /**
@@ -4319,7 +4319,7 @@ extern int sys_flag_destroy(flag_t *flag);
  * @see sys_flag_set(), sys_flag_clear()
  */
 //==============================================================================
-static inline int sys_flag_wait(flag_t *flag, u32_t bits, const u32_t blocktime_ms)
+static inline int sys_flag_wait(kflag_t *flag, u32_t bits, const u32_t blocktime_ms)
 {
         return _flag_wait(flag, bits, blocktime_ms);
 }
@@ -4362,7 +4362,7 @@ static inline int sys_flag_wait(flag_t *flag, u32_t bits, const u32_t blocktime_
  * @see sys_flag_clear()
  */
 //==============================================================================
-static inline int sys_flag_set(flag_t *flag, u32_t bits)
+static inline int sys_flag_set(kflag_t *flag, u32_t bits)
 {
         return _flag_set(flag, bits);
 }
@@ -4405,7 +4405,7 @@ static inline int sys_flag_set(flag_t *flag, u32_t bits)
  * @see sys_flag_set()
  */
 //==============================================================================
-static inline int sys_flag_clear(flag_t *flag, u32_t bits)
+static inline int sys_flag_clear(kflag_t *flag, u32_t bits)
 {
         return _flag_clear(flag, bits);
 }
@@ -4445,7 +4445,7 @@ static inline int sys_flag_clear(flag_t *flag, u32_t bits)
  * @see sys_flag_get_from_ISR()
  */
 //==============================================================================
-static inline u32_t sys_flag_get(flag_t *flag)
+static inline u32_t sys_flag_get(kflag_t *flag)
 {
         return _flag_get(flag);
 }
@@ -4485,7 +4485,7 @@ static inline u32_t sys_flag_get(flag_t *flag)
  * @see sys_flag_get()
  */
 //==============================================================================
-static inline u32_t sys_flag_get_from_ISR(flag_t *flag)
+static inline u32_t sys_flag_get_from_ISR(kflag_t *flag)
 {
         return _flag_get_from_ISR(flag);
 }
@@ -4509,8 +4509,8 @@ static inline u32_t sys_flag_get_from_ISR(flag_t *flag)
 
 
         // create mutex instance
-        mutex_t *mtx = NULL;
-        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        kmtx_t *mtx = NULL;
+        int      err = sys_mutex_create(KMTX_TYPE_NORMAL, &mtx);
         if (err != ESUCC) {
                 return err;
         }
@@ -4521,7 +4521,7 @@ static inline u32_t sys_flag_get_from_ISR(flag_t *flag)
         void thread1()
         {
                 // protected access to resource
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS) == ESUCC) {
                         // write to buffer is allowed
                         resource = ...;
 
@@ -4534,7 +4534,7 @@ static inline u32_t sys_flag_get_from_ISR(flag_t *flag)
         void thread2()
         {
                 // protected access to resource
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS) == ESUCC) {
                         // write to buffer is allowed
                         resource = ...;
 
@@ -4561,7 +4561,7 @@ static inline u32_t sys_flag_get_from_ISR(flag_t *flag)
  * @see sys_mutex_create()
  */
 //==============================================================================
-extern int sys_mutex_destroy(mutex_t *mutex);
+extern int sys_mutex_destroy(kmtx_t *mutex);
 
 //==============================================================================
 /**
@@ -4583,8 +4583,8 @@ extern int sys_mutex_destroy(mutex_t *mutex);
 
 
         // create mutex instance
-        mutex_t *mtx = NULL;
-        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        kmtx_t *mtx = NULL;
+        int      err = sys_mutex_create(KMTX_TYPE_NORMAL, &mtx);
         if (err != ESUCC) {
                 return err;
         }
@@ -4595,7 +4595,7 @@ extern int sys_mutex_destroy(mutex_t *mutex);
         void thread1()
         {
                 // protected access to resource
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS) == ESUCC) {
                         // write to buffer is allowed
                         resource = ...;
 
@@ -4608,7 +4608,7 @@ extern int sys_mutex_destroy(mutex_t *mutex);
         void thread2()
         {
                 // protected access to resource
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS) == ESUCC) {
                         // write to buffer is allowed
                         resource = ...;
 
@@ -4635,7 +4635,7 @@ extern int sys_mutex_destroy(mutex_t *mutex);
  * @see sys_mutex_trylock(), sys_mutex_unlock()
  */
 //==============================================================================
-static inline int sys_mutex_lock(mutex_t *mutex, const u32_t timeout)
+static inline int sys_mutex_lock(kmtx_t *mutex, const u32_t timeout)
 {
         return _mutex_lock(mutex, timeout);
 }
@@ -4663,8 +4663,8 @@ static inline int sys_mutex_lock(mutex_t *mutex, const u32_t timeout)
 
 
         // create mutex instance
-        mutex_t *mtx = NULL;
-        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        kmtx_t *mtx = NULL;
+        int      err = sys_mutex_create(KMTX_TYPE_NORMAL, &mtx);
         if (err != ESUCC) {
                 return err;
         }
@@ -4715,7 +4715,7 @@ static inline int sys_mutex_lock(mutex_t *mutex, const u32_t timeout)
  * @see sys_mutex_lock(), sys_mutex_unlock()
  */
 //==============================================================================
-static inline int sys_mutex_trylock(mutex_t *mutex)
+static inline int sys_mutex_trylock(kmtx_t *mutex)
 {
         return _mutex_lock(mutex, 0);
 }
@@ -4739,8 +4739,8 @@ static inline int sys_mutex_trylock(mutex_t *mutex)
 
 
         // create mutex instance
-        mutex_t *mtx = NULL;
-        int      err = sys_mutex_create(MUTEX_TYPE_NORMAL, &mtx);
+        kmtx_t *mtx = NULL;
+        int      err = sys_mutex_create(KMTX_TYPE_NORMAL, &mtx);
         if (err != ESUCC) {
                 return err;
         }
@@ -4751,7 +4751,7 @@ static inline int sys_mutex_trylock(mutex_t *mutex)
         void thread1()
         {
                 // protected access to resource
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS) == ESUCC) {
                         // write to buffer is allowed
                         resource = ...;
 
@@ -4764,7 +4764,7 @@ static inline int sys_mutex_trylock(mutex_t *mutex)
         void thread2()
         {
                 // protected access to resource
-                if (sys_mutex_lock(mtx, MAX_DELAY_MS) == ESUCC) {
+                if (sys_mutex_lock(mtx, _MAX_DELAY_MS) == ESUCC) {
                         // write to buffer is allowed
                         resource = ...;
 
@@ -4791,7 +4791,7 @@ static inline int sys_mutex_trylock(mutex_t *mutex)
  * @see sys_mutex_trylock(), sys_mutex_lock()
  */
 //==============================================================================
-static inline int sys_mutex_unlock(mutex_t *mutex)
+static inline int sys_mutex_unlock(kmtx_t *mutex)
 {
         return _mutex_unlock(mutex);
 }
@@ -4809,7 +4809,7 @@ static inline int sys_mutex_unlock(mutex_t *mutex)
  * @return One of @ref errno value.
  */
 //==============================================================================
-extern int sys_queue_create(const size_t length, const size_t item_size, queue_t **queue);
+extern int sys_queue_create(const size_t length, const size_t item_size, kqueue_t **queue);
 
 //==============================================================================
 /**
@@ -4822,7 +4822,7 @@ extern int sys_queue_create(const size_t length, const size_t item_size, queue_t
  * @return One of @ref errno value.
  */
 //==============================================================================
-extern int sys_queue_destroy(queue_t *queue);
+extern int sys_queue_destroy(kqueue_t *queue);
 
 //==============================================================================
 /**
@@ -4835,7 +4835,7 @@ extern int sys_queue_destroy(queue_t *queue);
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_reset(queue_t *queue)
+static inline int sys_queue_reset(kqueue_t *queue)
 {
         return _queue_reset(queue);
 }
@@ -4853,7 +4853,7 @@ static inline int sys_queue_reset(queue_t *queue)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_send(queue_t *queue, const void *item, const u32_t waittime_ms)
+static inline int sys_queue_send(kqueue_t *queue, const void *item, const u32_t waittime_ms)
 {
         return _queue_send(queue, item, waittime_ms);
 }
@@ -4871,7 +4871,7 @@ static inline int sys_queue_send(queue_t *queue, const void *item, const u32_t w
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_send_from_ISR(queue_t *queue, const void *item, bool *task_woken)
+static inline int sys_queue_send_from_ISR(kqueue_t *queue, const void *item, bool *task_woken)
 {
         return _queue_send_from_ISR(queue, item, task_woken);
 }
@@ -4889,7 +4889,7 @@ static inline int sys_queue_send_from_ISR(queue_t *queue, const void *item, bool
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_receive(queue_t *queue, void *item, const u32_t waittime_ms)
+static inline int sys_queue_receive(kqueue_t *queue, void *item, const u32_t waittime_ms)
 {
         return _queue_receive(queue, item, waittime_ms);
 }
@@ -4907,7 +4907,7 @@ static inline int sys_queue_receive(queue_t *queue, void *item, const u32_t wait
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_receive_from_ISR(queue_t *queue, void *item, bool *task_woken)
+static inline int sys_queue_receive_from_ISR(kqueue_t *queue, void *item, bool *task_woken)
 {
         return _queue_receive_from_ISR(queue, item, task_woken);
 }
@@ -4925,7 +4925,7 @@ static inline int sys_queue_receive_from_ISR(queue_t *queue, void *item, bool *t
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_receive_peek(queue_t *queue, void *item, const u32_t waittime_ms)
+static inline int sys_queue_receive_peek(kqueue_t *queue, void *item, const u32_t waittime_ms)
 {
         return _queue_receive_peek(queue, item, waittime_ms);
 }
@@ -4942,7 +4942,7 @@ static inline int sys_queue_receive_peek(queue_t *queue, void *item, const u32_t
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_get_number_of_items(queue_t *queue, size_t *items)
+static inline int sys_queue_get_number_of_items(kqueue_t *queue, size_t *items)
 {
         return _queue_get_number_of_items(queue, items);
 }
@@ -4959,7 +4959,7 @@ static inline int sys_queue_get_number_of_items(queue_t *queue, size_t *items)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_get_number_of_items_from_ISR(queue_t *queue, size_t *items)
+static inline int sys_queue_get_number_of_items_from_ISR(kqueue_t *queue, size_t *items)
 {
         return _queue_get_number_of_items_from_ISR(queue, items);
 }
@@ -4976,7 +4976,7 @@ static inline int sys_queue_get_number_of_items_from_ISR(queue_t *queue, size_t 
  * @return One of @ref errno value.
  */
 //==============================================================================
-static inline int sys_queue_get_space_available(queue_t *queue, size_t *items)
+static inline int sys_queue_get_space_available(kqueue_t *queue, size_t *items)
 {
         return _queue_get_space_available(queue, items);
 }
@@ -5125,7 +5125,7 @@ static inline int sys_get_number_of_tasks(void)
  * @see sys_process_get_stat_seek()
  */
 //==============================================================================
-static inline int sys_process_get_stat_pid(pid_t pid, process_stat_t *stat)
+static inline int sys_process_get_stat_pid(pid_t pid, _process_stat_t *stat)
 {
         return _process_get_stat_pid(pid, stat);
 }
@@ -5144,7 +5144,7 @@ static inline int sys_process_get_stat_pid(pid_t pid, process_stat_t *stat)
  * @see sys_process_get_count(), sys_process_get_stat_pid()
  */
 //==============================================================================
-static inline int sys_process_get_stat_seek(size_t seek, process_stat_t *stat)
+static inline int sys_process_get_stat_seek(size_t seek, _process_stat_t *stat)
 {
         return _process_get_stat_seek(seek, stat);
 }
@@ -5180,7 +5180,7 @@ static inline size_t sys_process_get_count(void)
  * @return One of @ref errno value.
  */
 //==============================================================================
-extern int sys_thread_create(thread_func_t func, const thread_attr_t *attr, void *arg, tid_t *tid);
+extern int sys_thread_create(thread_func_t func, const _thread_attr_t *attr, void *arg, tid_t *tid);
 
 //==============================================================================
 /**
@@ -5501,22 +5501,6 @@ static inline void sys_sleep_us(const u32_t microseconds)
 static inline void sys_sleep_ms(const u32_t milliseconds)
 {
         _sleep_ms(milliseconds);
-}
-
-//==============================================================================
-/**
- * @brief Function put to sleep thread for seconds.
- *
- * @note Function can be used only by file system or driver code.
- *
- * @param seconds               number of seconds of sleep
- *
- * @see sys_sleep_ms(), sys_sleep_until(), sys_sleep_until_ms()
- */
-//==============================================================================
-static inline void sys_sleep(const u32_t seconds)
-{
-        _sleep(seconds);
 }
 
 //==============================================================================

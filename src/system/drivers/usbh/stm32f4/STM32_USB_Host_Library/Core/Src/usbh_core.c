@@ -134,9 +134,9 @@ USBH_StatusTypeDef  USBH_Init(USBH_HandleTypeDef *phost,
    }
 
   /* Create USB Host Task */
-  static const thread_attr_t USB_STACK_THREAD_ATTR = {
-    .stack_depth = STACK_DEPTH_MEDIUM,
-    .priority    = PRIORITY_NORMAL,
+  static const _thread_attr_t USB_STACK_THREAD_ATTR = {
+    .stack_depth = _STACK_DEPTH_MEDIUM,
+    .priority    = _PRIORITY_NORMAL,
     .detached    = true,
   };
 
@@ -1012,7 +1012,7 @@ static USBH_StatusTypeDef USBH_HandleEnum(USBH_HandleTypeDef *phost)
         {
           /* User callback for Manufacturing string */
           USBH_UsrLog("Manufacturer : %s", (char *)(void *)phost->device.Data);
-          strlcpy(phost->manufacturer_name, (char*)phost->device.Data, sizeof(phost->manufacturer_name));
+          sys_strlcpy(phost->manufacturer_name, (char*)phost->device.Data, sizeof(phost->manufacturer_name));
           phost->EnumState = ENUM_GET_PRODUCT_STRING_DESC;
 
 #if (USBH_USE_OS == 1U)
@@ -1070,7 +1070,7 @@ static USBH_StatusTypeDef USBH_HandleEnum(USBH_HandleTypeDef *phost)
         {
           /* User callback for Product string */
           USBH_UsrLog("Product : %s", (char *)(void *)phost->device.Data);
-          strlcpy(phost->product_name, (char*)phost->device.Data, sizeof(phost->product_name));
+          sys_strlcpy(phost->product_name, (char*)phost->device.Data, sizeof(phost->product_name));
           phost->EnumState = ENUM_GET_SERIALNUM_STRING_DESC;
         }
         else if (ReqStatus == USBH_NOT_SUPPORTED)
@@ -1119,7 +1119,7 @@ static USBH_StatusTypeDef USBH_HandleEnum(USBH_HandleTypeDef *phost)
         {
           /* User callback for Serial number string */
           USBH_UsrLog("Serial Number : %s", (char *)(void *)phost->device.Data);
-          strlcpy(phost->serial_number, (char*)phost->device.Data, sizeof(phost->serial_number));
+          sys_strlcpy(phost->serial_number, (char*)phost->device.Data, sizeof(phost->serial_number));
           Status = USBH_OK;
         }
         else if (ReqStatus == USBH_NOT_SUPPORTED)

@@ -39,7 +39,7 @@ Detailed Doxygen description.
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include "net/netm.h"
 #include "kernel/sysfunc.h"
 
@@ -57,7 +57,7 @@ extern "C" {
 typedef struct cannetbuf cannetbuf_t;
 
 typedef struct CANNET_socket {
-        queue_t *ansq;
+        kqueue_t *ansq;
         cannetbuf_t *rx_buf;
         cannetbuf_t *assembly_buf;
         u32_t recv_timeout;

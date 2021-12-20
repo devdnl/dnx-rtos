@@ -29,6 +29,7 @@ Brief   C11 threads library implementation.
   Include files
 ==============================================================================*/
 #include <threads.h>
+#include <stdbool.h>
 #include <dnx/thread.h>
 
 /*==============================================================================
@@ -77,17 +78,17 @@ Brief   C11 threads library implementation.
 int thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 {
         if (thr && func) {
-                thread_attr_t ATTR = {
-                        .stack_depth = STACK_DEPTH_LOW,
-                        .priority    = _task_get_priority(_THIS_TASK),
-                        .detached    = false,
-                };
-
-                tid_t tid = thread_create(func, &ATTR, arg);
-                if (tid > 0) {
-                        *thr = tid;
-                        return thrd_success;
-                }
+//                thread_attr_t ATTR = {
+//                        .stack_depth = STACK_DEPTH_LOW,
+//                        .priority    = _task_get_priority(_THIS_TASK),
+//                        .detached    = false,
+//                };
+//
+//                tid_t tid = thread_create(func, &ATTR, arg);
+//                if (tid > 0) {
+//                        *thr = tid;
+//                        return thrd_success;
+//                }
         }
 
         return thrd_error;
@@ -139,7 +140,7 @@ int thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 {
         u32_t sleep = (duration->tv_sec * 1000) + (duration->tv_nsec / 1000000);
 
-        syscall(SYSCALL_MSLEEP, NULL, &sleep);
+        libc_syscall(_LIBC_SYS_MSLEEP, NULL, &sleep);
 
         if (remaining) {
                 remaining->tv_nsec = 0;
@@ -157,7 +158,7 @@ int thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 //==============================================================================
 void thrd_yield(void)
 {
-        syscall(SYSCALL_MSLEEP, NULL, &(const uint32_t){0});
+        libc_syscall(_LIBC_SYS_MSLEEP, NULL, &(const uint32_t){0});
 }
 
 //==============================================================================
@@ -482,12 +483,12 @@ void call_once(once_flag *once, void (*func)(void))
         if (*once == ONCE_FLAG_INIT) {
                 bool call = false;
 
-                syscall(SYSCALL_SCHEDULERLOCK, NULL);
+                libc_syscall(_LIBC_SYS_SCHEDULERLOCK, NULL);
 
                 call = (*once == ONCE_FLAG_INIT);
                 *once = ONCE_FLAG_INIT + 1;
 
-                syscall(SYSCALL_SCHEDULERUNLOCK, NULL);
+                libc_syscall(_LIBC_SYS_SCHEDULERUNLOCK, NULL);
 
                 if (call) {
                         func();

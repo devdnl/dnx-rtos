@@ -46,7 +46,7 @@ Brief    Digital Camera Interface Driver
   Local object types
 ==============================================================================*/
 typedef struct {
-        sem_t     *event;       // event
+        ksem_t     *event;       // event
         dev_lock_t lock;        // device lock
         u16_t      lines;       // number of lines to capture
         u16_t      tleft;       // number of DMA transfers to do

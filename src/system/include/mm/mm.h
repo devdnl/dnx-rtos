@@ -33,7 +33,7 @@
   Include files
 ==============================================================================*/
 #include <stdbool.h>
-#include <sys/types.h>
+#include "lib/sys/types.h"
 #include "heap.h"
 
 #ifdef __cplusplus

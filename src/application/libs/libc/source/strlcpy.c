@@ -79,7 +79,7 @@ Brief    String functions.
  *         tried to create. For strlcpy() that means the length of src.
  */
 //==============================================================================
-size_t _strlcpy(char *dst, const char *src, size_t size)
+size_t _libc_strlcpy(char *dst, const char *src, size_t size)
 {
         char       *d = dst;
         const char *s = src;

@@ -44,7 +44,7 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <kernel/syscall.h>
+#include <libc/source/syscall.h>
 #include <sys/stat.h>
 #include <errno.h>
 
@@ -118,7 +118,7 @@ static inline int mount(const char *FS_name, const char *src_path,
                         const char *mount_point, const char *options)
 {
         int r = -1;
-        syscall(SYSCALL_MOUNT, &r, FS_name, src_path, mount_point, options);
+        libc_syscall(_LIBC_SYS_MOUNT, &r, FS_name, src_path, mount_point, options);
         return r;
 }
 
@@ -171,7 +171,7 @@ static inline int mount(const char *FS_name, const char *src_path,
 static inline int umount(const char *mount_point)
 {
         int r = -1;
-        syscall(SYSCALL_UMOUNT, &r, mount_point);
+        libc_syscall(_LIBC_SYS_UMOUNT, &r, mount_point);
         return r;
 }
 
@@ -223,7 +223,7 @@ static inline int umount(const char *mount_point)
 static inline dev_t driver_init2(const char *mod_name, int major, int minor, const char *node_path, const void *config)
 {
         dev_t r = -1;
-        syscall(SYSCALL_DRIVERINIT, &r, mod_name, &major, &minor, node_path, config);
+        libc_syscall(_LIBC_SYS_DRIVERINIT, &r, mod_name, &major, &minor, node_path, config);
         return r;
 }
 
@@ -297,7 +297,7 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
 static inline const char *get_driver_name(size_t modno)
 {
         const char *name = NULL;
-        syscall(SYSCALL_GETDRIVERNAME, &name, &modno);
+        libc_syscall(_LIBC_SYS_GETDRIVERNAME, &name, &modno);
         return name;
 }
 
@@ -327,7 +327,7 @@ static inline const char *get_driver_name(size_t modno)
 static inline int get_driver_ID(const char *name)
 {
         int midx = -1;
-        syscall(SYSCALL_GETDRIVERID, &midx, name);
+        libc_syscall(_LIBC_SYS_GETDRIVERID, &midx, name);
         return midx;
 }
 
@@ -445,7 +445,7 @@ static inline int get_driver_minor(dev_t dev)
 static inline size_t get_number_of_drivers(void)
 {
         size_t r = 0;
-        syscall(SYSCALL_GETDRIVERCOUNT, &r);
+        libc_syscall(_LIBC_SYS_GETDRIVERCOUNT, &r);
         return r;
 }
 
@@ -477,7 +477,7 @@ static inline size_t get_number_of_drivers(void)
 static inline ssize_t get_number_of_driver_instances(size_t id)
 {
         ssize_t r = 0;
-        syscall(SYSCALL_GETDRIVERINSTANCES, &r, &id);
+        libc_syscall(_LIBC_SYS_GETDRIVERINSTANCES, &r, &id);
         return r;
 }
 
@@ -516,7 +516,7 @@ static inline ssize_t get_number_of_driver_instances(size_t id)
 static inline int driver_release(const char *mod_name, int major, int minor)
 {
         int r = -1;
-        syscall(SYSCALL_DRIVERRELEASE, &r, mod_name, &major, &minor);
+        libc_syscall(_LIBC_SYS_DRIVERRELEASE, &r, mod_name, &major, &minor);
         return r;
 }
 
@@ -566,9 +566,9 @@ static inline int driver_release2(const char *path)
 
                         const char *mod_name = get_driver_name(modno);
 
-                        syscall(SYSCALL_DRIVERRELEASE, &r, mod_name, &major, &minor);
+                        libc_syscall(_LIBC_SYS_DRIVERRELEASE, &r, mod_name, &major, &minor);
                 } else {
-                        _errno = ENODEV;
+                        errno = ENODEV;
                 }
         }
 

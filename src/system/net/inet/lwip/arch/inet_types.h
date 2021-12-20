@@ -56,8 +56,8 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 typedef struct {
-        mutex_t        *access;
-        FILE           *if_file;
+        kmtx_t         *access;
+        kfile_t           *if_file;
         tid_t           if_thread;
         struct netif    netif;
         uint            rx_packets;

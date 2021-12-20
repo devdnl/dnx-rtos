@@ -95,7 +95,7 @@ extern const char      *ttybfr_get_fresh_line           (ttybfr_t*);
 extern void             ttybfr_clear_fresh_line_counter (ttybfr_t*);
 
 /* editline support --------------------------------------------------------- */
-extern int              ttyedit_create                  (FILE**, ttyedit_t**);
+extern int              ttyedit_create                  (kfile_t**, ttyedit_t**);
 extern int              ttyedit_destroy                 (ttyedit_t*);
 extern int              ttyedit_enable_echo             (ttyedit_t*);
 extern int              ttyedit_disable_echo            (ttyedit_t*);

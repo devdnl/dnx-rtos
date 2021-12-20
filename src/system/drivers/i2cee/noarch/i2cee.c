@@ -42,13 +42,13 @@
   Local object types
 ==============================================================================*/
 typedef struct {
-        mutex_t *mtx;
+        kmtx_t  *mtx;
         u8_t     devices;
 } I2CEE_main_t;
 
 typedef struct {
         I2CEE_main_t *main;
-        FILE         *i2c_dev;
+        kfile_t         *i2c_dev;
         u32_t         memory_size;
         u16_t         page_size;
         u16_t         page_prog_time_ms;
@@ -104,7 +104,7 @@ API_MOD_INIT(I2CEE, void **device_handle, u8_t major, u8_t minor, const void *co
                 if (minor == 0) {
                         err = sys_zalloc(sizeof(*hdl->main), cast(void*, &hdl->main));
                         if (!err) {
-                                err = sys_mutex_create(MUTEX_TYPE_RECURSIVE, &hdl->main->mtx);
+                                err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &hdl->main->mtx);
                         }
                 } else {
                         I2CEE_t *hdl0;
@@ -159,7 +159,7 @@ API_MOD_RELEASE(I2CEE, void *device_handle)
 
         int err = sys_mutex_lock(hdl->main->mtx, 0);
         if (!err) {
-                mutex_t *mtx = hdl->main->mtx;
+                kmtx_t *mtx = hdl->main->mtx;
 
                 if (hdl->i2c_dev) {
                         sys_fclose(hdl->i2c_dev);

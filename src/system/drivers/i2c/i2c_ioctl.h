@@ -271,7 +271,7 @@ int_main(slave, STACK_DEPTH_MEDIUM, int argc, char *argv[])
             ioctl(fileno(dev), IOCTL_I2C__CONFIGURE, &cfg);
 
             while (true) {
-                    I2C_selection_t sel = {.timeout_ms = MAX_DELAY_MS};
+                    I2C_selection_t sel = {.timeout_ms = _MAX_DELAY_MS};
 
                     if (ioctl(fileno(dev), IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION, &sel) == 0) {
 
@@ -403,7 +403,7 @@ int_main(slave, STACK_DEPTH_MEDIUM, int argc, char *argv[])
             ioctl(fileno(dev), IOCTL_I2C__CONFIGURE, &cfg);
 
             while (true) {
-                    I2C_selection_t sel = {.timeout_ms = MAX_DELAY_MS};
+                    I2C_selection_t sel = {.timeout_ms = _MAX_DELAY_MS};
 
                     if (ioctl(fileno(dev), IOCTL_I2C__SLAVE_WAIT_FOR_SELECTION, &sel) == 0) {
 

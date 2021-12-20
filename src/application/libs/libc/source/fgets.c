@@ -33,11 +33,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include "lib/unarg.h"
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local macros
 ==============================================================================*/
+#define EOF                                     (-1)
+#define ETX                                     0x03
+#define EOT                                     0x04
 
 /*==============================================================================
   Local object types

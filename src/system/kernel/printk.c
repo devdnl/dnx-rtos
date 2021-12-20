@@ -160,7 +160,7 @@ size_t _printk_read(char *str, size_t len, const struct timeval *from_time, stru
                                            || (  (m->timestamp.tv_sec == from_time->tv_sec)
                                               && (m->timestamp.tv_usec > from_time->tv_usec)) ) {
 
-                                                strlcpy(str, logbuf.msg[idx].str, len);
+                                                sys_strlcpy(str, logbuf.msg[idx].str, len);
 
                                                 n = min(len, strnlen(logbuf.msg[idx].str,
                                                                      __OS_SYSTEM_MSG_COLS__));
