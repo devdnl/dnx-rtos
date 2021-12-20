@@ -68,6 +68,19 @@ typedef struct _process _process_t;
 /** KERNELSPACE: thread descriptor */
 typedef struct _thread _thread_t;
 
+typedef struct {
+        const char     *name;           //!< program name
+        const size_t   *globals_size;   //!< size of program global variables
+        const size_t   *stack_depth;    //!< stack depth
+        process_func_t  main;           //!< program main function
+} _program_entry_t;
+
+typedef struct {
+        uint32_t magic;
+        uint32_t number_of_programs;
+        const _program_entry_t *const program_entry;
+} _program_table_desc_t;
+
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
@@ -76,9 +89,6 @@ extern void *_stdout;
 extern void *_stderr;
 extern void *_global;
 extern int   _errno;
-
-extern const struct _prog_data  _prog_table[];
-extern const int                _prog_table_size;
 
 /*==============================================================================
   Exported function prototypes
@@ -124,18 +134,11 @@ extern void        _calculate_CPU_load                  (void);
 extern int         _get_average_CPU_load                (_avg_CPU_load_t*);
 extern void        _task_get_process_container          (task_t*, _process_t**, tid_t*);
 
+extern const _program_table_desc_t *_get_programs_table(void);
+
 /*==============================================================================
   Exported inline functions
 ==============================================================================*/
-static inline const struct _prog_data *_get_programs_table(void)
-{
-        return _prog_table;
-}
-
-static inline int _get_programs_table_size(void)
-{
-        return _prog_table_size;
-}
 
 #ifdef __cplusplus
 }

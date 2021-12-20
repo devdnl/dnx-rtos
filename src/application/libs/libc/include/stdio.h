@@ -158,22 +158,10 @@ extern "C" {
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
         _PROGMAN_CXX int __builtin_app_##_name_##_main(int argc, char *argv[]) {return main(argc, argv);}
 
-#define _IMPORT_PROGRAM(_name_)\
-        _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_gs__;\
-        _PROGMAN_EXTERN_C const size_t __builtin_app_##_name_##_ss__;\
-        _PROGMAN_EXTERN_C int __builtin_app_##_name_##_main(int, char**)
-
 #define int_main(_name_, stack_depth, argc, argv)\
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_gs__ = sizeof(struct _GVAR_STRUCT_NAME);\
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
         _PROGMAN_CXX int __builtin_app_##_name_##_main(argc, argv)
-
-#define _PROGRAM_CONFIG(_name_) \
-        {.name          = #_name_,\
-         .main          = __builtin_app_##_name_##_main,\
-         .globals_size  = &__builtin_app_##_name_##_gs__,\
-         .stack_depth   = &__builtin_app_##_name_##_ss__}
-
 
 #define stdin  (*_libc_stdin)
 #define stdout (*_libc_stdout)

@@ -818,20 +818,6 @@ static inline int sys_pipe_clear(pipe_t *pipe)
 
 //==============================================================================
 /**
- * @brief  Function return size of programs table (number of programs)
- *
- * @note Function can be used only by file system code.
- *
- * @return Return number of programs
- */
-//==============================================================================
-static inline int sys_get_programs_table_size()
-{
-        return _get_programs_table_size();
-}
-
-//==============================================================================
-/**
  * @brief  Function return pointer to beginning of programs table
  *
  * @note Function can be used only by file system code.
@@ -839,7 +825,7 @@ static inline int sys_get_programs_table_size()
  * @return Return pointer to programs table
  */
 //==============================================================================
-static inline const struct _prog_data *sys_get_programs_table()
+static inline const _program_table_desc_t *sys_get_programs_table(void)
 {
         return _get_programs_table();
 }

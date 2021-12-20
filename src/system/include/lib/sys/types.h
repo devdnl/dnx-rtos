@@ -272,14 +272,6 @@ typedef int (*process_func_t)(int, char**);
 /** thread function */
 typedef int (*thread_func_t)(void *arg);
 
-/** program attributes. Doxygen documentation in fs.h. */
-struct _prog_data {
-        const char     *name;           //!< program name
-        const size_t   *globals_size;   //!< size of program global variables
-        const size_t   *stack_depth;    //!< stack depth
-        process_func_t  main;           //!< program main function
-};
-
 /** average CPU load */
 typedef struct {
         u32_t avg1sec;                  //!< average CPU laod within 1 second (1% = 10)

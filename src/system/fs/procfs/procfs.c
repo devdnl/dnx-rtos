@@ -264,9 +264,9 @@ API_FS_OPEN(procfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
         } else if (isstreqn(mpath, PATH_ROOT_BIN"/", strlen(PATH_ROOT_BIN) + 1)) {
                 mpath += strlen(PATH_ROOT_BIN) + 1;
 
-                int n = sys_get_programs_table_size();
-                for (int i = 0; i < n; i++) {
-                        if (isstreq(mpath, sys_get_programs_table()[i].name)) {
+                const _program_table_desc_t *const program_table = sys_get_programs_table();
+                for (size_t i = 0; i < program_table->number_of_programs; i++) {
+                        if (isstreq(mpath, program_table->program_entry[i].name)) {
                                 err = add_file_to_list(hdl, i, FILE_CONTENT_BIN, fhdl);
                                 break;
                         }
@@ -600,7 +600,7 @@ API_FS_OPENDIR(procfs, void *fs_handle, const char *path, kdir_t *dir)
 
                 } else if (isstreq(opath, PATH_ROOT_BIN"/")) {
                         dirinfo->dir_name = PATH_ROOT_BIN;
-                        dir->d_items      = sys_get_programs_table_size();
+                        dir->d_items      = sys_get_programs_table()->number_of_programs;
 
                 } else {
                         sys_free(&dir->d_hdl);
@@ -874,9 +874,11 @@ static int procfs_readdir_bin(struct procfs *hdl, kdir_t *dir)
 
         int err = ENOENT;
 
-        if (dir->d_seek < (size_t)sys_get_programs_table_size()) {
+        const _program_table_desc_t *const program_table = sys_get_programs_table();
 
-                dir->dirent.d_name = sys_get_programs_table()[dir->d_seek].name;
+        if (dir->d_seek < program_table->number_of_programs) {
+
+                dir->dirent.d_name = program_table->program_entry[dir->d_seek].name;
                 dir->dirent.mode   = S_IRUSR | S_IRGRP | S_IROTH | S_IXUSR | S_IFPROG;
 
                 struct file_info file = {.arg = dir->d_seek, .content = FILE_CONTENT_BIN};
@@ -1014,11 +1016,11 @@ static size_t get_file_content(struct file_info *file, u8_t *buff, size_t size, 
 
 #if __OS_SYSTEM_SHEBANG_ENABLE__ > 0
         case FILE_CONTENT_BIN: {
-                const struct _prog_data *pdata = sys_get_programs_table();
-                if (file->arg < sys_get_programs_table_size()) {
+                const _program_table_desc_t *const program_table = sys_get_programs_table();
+                if (file->arg < (int32_t)program_table->number_of_programs) {
 
                         buf_snprintf(buff, &size, &clen, &seek,
-                                     "#!%s\n", pdata[file->arg].name);
+                                     "#!%s\n", program_table->program_entry[file->arg].name);
                 }
                 break;
         }

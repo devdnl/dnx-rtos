@@ -92,15 +92,15 @@ typedef struct {
 
 struct _process {
         res_header_t     header;                //!< resource header
-        kflag_t          *event;                 //!< events for exit indicator and syscall finish
-        kfile_t          *f_stdin;               //!< stdin file
-        kfile_t          *f_stdout;              //!< stdout file
-        kfile_t          *f_stderr;              //!< stderr file
+        kflag_t          *event;                //!< events for exit indicator and syscall finish
+        kfile_t          *f_stdin;              //!< stdin file
+        kfile_t          *f_stdout;             //!< stdout file
+        kfile_t          *f_stderr;             //!< stderr file
         void            *globals;               //!< address to global variables
         res_header_t    *res_list;              //!< list of used resources
         u32_t            res_list_size;         //!< size of resources list
         char            *cwd;                   //!< current working path
-        const pdata_t   *pdata;                 //!< program data
+        const _program_entry_t *pdata;          //!< program data
         char            **argv;                 //!< program arguments
         u8_t             argc;                  //!< number of arguments
         pid_t            pid;                   //!< process ID
@@ -130,8 +130,8 @@ static void process_destroy_all_resources(_process_t *proc);
 static int  resource_destroy(res_header_t *resource);
 static int  argtab_create(const char *str, u8_t *argc, char **argv[]);
 static void argtab_destroy(char **argv);
-static int  find_program(const char *name, const struct _prog_data **prog);
-static int  allocate_process_globals(_process_t *proc, const struct _prog_data *usrprog);
+static int  find_program(const char *name, const _program_entry_t **prog);
+static int  allocate_process_globals(_process_t *proc, const _program_entry_t *usrprog);
 static int  process_apply_attributes(_process_t *proc, const _process_attr_t *attr);
 static void process_get_stat(_process_t *proc, _process_stat_t *stat);
 static void process_move_list(_process_t *proc, _process_t **list_from, _process_t **list_to);
@@ -181,10 +181,7 @@ void *_global = NULL;
 /*==============================================================================
   External object definitions
 ==============================================================================*/
-extern u32_t                   _uptime_counter_sec;
-
-extern const struct _prog_data _prog_table[];
-extern const int               _prog_table_size;
+extern u32_t _uptime_counter_sec;
 
 /*==============================================================================
   Function definitions
@@ -1484,8 +1481,9 @@ bool _process_is_consistent(void)
                         if (!sanity_ok) goto end;
 
                         bool found = (p->pdata->main == _syscall_kworker_process);
-                        for (int i = 0; (i < _prog_table_size) && !found; i++) {
-                                found = (p->pdata == &_prog_table[i]);
+                        const _program_table_desc_t *const program_table = _get_programs_table();
+                        for (size_t i = 0; (i < program_table->number_of_programs) && !found; i++) {
+                                found = (p->pdata == &program_table->program_entry[i]);
                         }
 
                         sanity_ok = (strnlen(p->pdata->name, 256) < 256);
@@ -2405,6 +2403,26 @@ static void argtab_destroy(char **argv)
 
 //==============================================================================
 /**
+ * @brief  Return program table pointer.
+ *
+ * @return Program table address.
+ */
+//==============================================================================
+const _program_table_desc_t *_get_programs_table(void)
+{
+        // standalone version
+//        extern void *__text_end;
+//        const _program_table_desc_t *const prog_table = ((void *)&__text_end);
+
+        // monolihtic version
+        extern const _program_table_desc_t _program_table_desc;
+        const _program_table_desc_t *const prog_table = &_program_table_desc;
+
+        return prog_table;
+}
+
+//==============================================================================
+/**
  * @brief Function find program by name and return program descriptor container.
  *
  * @param name         program name
@@ -2413,11 +2431,11 @@ static void argtab_destroy(char **argv)
  * @return One of errno value.
  */
 //==============================================================================
-static int find_program(const char *name, const struct _prog_data **prog)
+static int find_program(const char *name, const _program_entry_t **prog)
 {
         static const size_t kworker_stack_depth  = _STACK_DEPTH_CUSTOM(__OS_IO_STACK_DEPTH__);
         static const size_t kworker_globals_size = 0;
-        static const struct _prog_data kworker   = {.globals_size = &kworker_globals_size,
+        static const _program_entry_t kworker   = {.globals_size = &kworker_globals_size,
                                                     .main         = _syscall_kworker_process,
                                                     .name         = "kworker",
                                                     .stack_depth  = &kworker_stack_depth};
@@ -2429,11 +2447,17 @@ static int find_program(const char *name, const struct _prog_data **prog)
                 err   = ESUCC;
 
         } else {
-                for (int i = 0; i < _prog_table_size; i++) {
-                        if (strncmp(_prog_table[i].name, name, 128) == 0) {
-                                *prog  = &_prog_table[i];
-                                err = ESUCC;
-                                break;
+                const _program_table_desc_t *const prog_table = _get_programs_table();
+
+                if ((prog_table->magic == 0) and (prog_table->number_of_programs > 0)
+                    and (prog_table->number_of_programs != UINT32_MAX)) {
+
+                        for (size_t i = 0; i < prog_table->number_of_programs; i++) {
+                                if (strncmp(prog_table->program_entry[i].name, name, 128) == 0) {
+                                        *prog  = &prog_table->program_entry[i];
+                                        err = ESUCC;
+                                        break;
+                                }
                         }
                 }
         }
@@ -2451,7 +2475,7 @@ static int find_program(const char *name, const struct _prog_data **prog)
  * @return One of errno value.
  */
 //==============================================================================
-static int allocate_process_globals(_process_t *proc, const struct _prog_data *usrprog)
+static int allocate_process_globals(_process_t *proc, const _program_entry_t *usrprog)
 {
         int err = ESUCC;
 
