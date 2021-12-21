@@ -346,6 +346,17 @@ typedef struct {
         bool   detached;                //!< independent thread (without join possibility)
 } _thread_attr_t;
 
+/**
+ * @brief dnx RTOS application context.
+ */
+typedef struct {
+        void **stdin_ref;
+        void **stdout_ref;
+        void **stderr_ref;
+        void **global_ref;
+        int   *errno_ref;
+} _dnxrtctx_t;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/

@@ -62,27 +62,14 @@ char _libc_timestr[32];
 
 unsigned int _libc_seed = 123456789;
 
-/** @brief Standard input file (one for each application) */
-extern void *_stdin;
-
-/** @brief Standard output file (one for each application) */
-extern void *_stdout;
-
-/** @brief Standard error file (one for each application) */
-extern void *_stderr;
-
-extern void *_global;
-
-extern int _errno;
-
 /*
  * Those variables are switched by kernel according to current process/thread.
  */
-void **_libc_stdin  = &_stdin;
-void **_libc_stdout = &_stdout;
-void **_libc_stderr = &_stderr;
-int   *_libc_errno  = &_errno;
-void **_libc_global = &_global;
+void **_libc_stdin;
+void **_libc_stdout;
+void **_libc_stderr;
+int   *_libc_errno;
+void **_libc_global;
 
 /*==============================================================================
   Function definitions

@@ -35,16 +35,27 @@ Brief    Syscall handling.
   Local macros
 ==============================================================================*/
 /*
- * Syscall section address is 0x08000400 in normal mode. The syscall section
- * compiled is in Thumb mode. To indicate this mode jump address is incremented
- * by 1.
+ * Syscall section address is 0x08000400 (mapped to 0x400) in normal mode.
+ * The syscall section compiled is in the Thumb mode. To indicate this mode jump
+ * address is incremented by 1.
  */
-#define dnx_syscall ((syscall_func)(0x08000401))
+#define dnx_syscall ((syscall_func)(0x401))
 
 /*==============================================================================
   Local object types
 ==============================================================================*/
 typedef void (*syscall_func)(_libc_syscall_t, void*, va_list);
+
+/**
+ * @brief dnx RTOS application context.
+ */
+typedef struct {
+        void **stdin_ref;
+        void **stdout_ref;
+        void **stderr_ref;
+        void **global_ref;
+        int   *errno_ref;
+} dnxrtctx_t;
 
 /*==============================================================================
   Local function prototypes
@@ -57,6 +68,11 @@ typedef void (*syscall_func)(_libc_syscall_t, void*, va_list);
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern void **_libc_stdin;
+extern void **_libc_stdout;
+extern void **_libc_stderr;
+extern int   *_libc_errno;
+extern void **_libc_global;
 
 /*==============================================================================
   External objects
@@ -65,8 +81,58 @@ typedef void (*syscall_func)(_libc_syscall_t, void*, va_list);
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+
+//==============================================================================
+/**
+ * @brief  Get dnx RTOS application context.
+ *
+ * @param  retptr       return pointer
+ * @param  ...          arguments
+ */
+//==============================================================================
+static void get_context(void *retptr, ...)
+{
+        va_list args;
+        va_start(args, retptr);
+        dnx_syscall(_LIBC_SYS_GETRUNTIMECTX, retptr, args);
+        va_end(args);
+}
+
+//==============================================================================
+/**
+ * @brief  Syscall function.
+ *
+ * @param  syscall      syscall number
+ * @param  retptr       return variable pointer
+ * @param  ...          additional arguments
+ */
+//==============================================================================
 void libc_syscall(_libc_syscall_t syscall, void *retptr, ...)
 {
+        /*
+         * This part of code is called if dnx RTOS context is not referenced.
+         */
+        if (_libc_stdin == NULL) {
+                dnxrtctx_t dnxctx;
+                dnxctx.stdin_ref  = NULL;
+                dnxctx.stdout_ref = NULL;
+                dnxctx.stderr_ref = NULL;
+                dnxctx.global_ref = NULL;
+                dnxctx.errno_ref  = NULL;
+
+                int err = -1;
+                get_context(&err, &dnxctx);
+
+                _libc_stdin  = dnxctx.stdin_ref;
+                _libc_stdout = dnxctx.stdout_ref;
+                _libc_stderr = dnxctx.stderr_ref;
+                _libc_global = dnxctx.global_ref;
+                _libc_errno  = dnxctx.errno_ref;
+        }
+
+        /*
+         * dnx RTOS syscall execution.
+         */
         va_list args;
         va_start(args, retptr);
         dnx_syscall(syscall, retptr, args);

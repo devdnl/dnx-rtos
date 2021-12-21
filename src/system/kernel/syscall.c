@@ -78,6 +78,7 @@
 // SYSCALLS                                |----------------+---------------------------+-------------------------------------+-------------------------------------+---------------------------+-------------------------------------------+
 typedef enum {// NAME                      | RETURN TYPE    | ARG 1                     | ARG 2                               | ARG 3                               | ARG 4                     | ARG 5                                     |
                                         // |----------------+---------------------------+-------------------------------------+-------------------------------------+---------------------------+-------------------------------------------+
+        SYSCALL_GETRUNTIMECTX,          // | int            | _dnxrtctx_t *ctx
         SYSCALL_MALLOC,                 // | void*          | size_t *size              |                                     |                                     |                           |                                           |
         SYSCALL_ZALLOC,                 // | void*          | size_t *size              |                                     |                                     |                           |                                           |
         SYSCALL_FREE,                   // | void           | void *mem                 |                                     |                                     |                           |                                           |
@@ -224,6 +225,7 @@ typedef void (*syscallfunc_t)(syscallrq_t*);
 ==============================================================================*/
 static void syscall_do(void *rq);
 
+static void syscall_getruntimectx(syscallrq_t *rq);
 static void syscall_mount(syscallrq_t *rq);
 static void syscall_umount(syscallrq_t *rq);
 static void syscall_getmntentry(syscallrq_t *rq);
@@ -357,6 +359,7 @@ static void syscall_threadjoin(syscallrq_t *rq);
 ==============================================================================*/
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
+        [SYSCALL_GETRUNTIMECTX] = syscall_getruntimectx,
         [SYSCALL_MOUNT] = syscall_mount,
         [SYSCALL_UMOUNT] = syscall_umount,
         [SYSCALL_SHMCREATE] = syscall_shmcreate,
@@ -627,6 +630,27 @@ static void syscall_do(void *rq)
         _process_enter_kernelspace(sysrq->client_proc, sysrq->syscall_no);
         syscalltab[sysrq->syscall_no](sysrq);
         _process_exit_kernelspace(sysrq->client_proc);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall return dnx RTOS runtime context.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_getruntimectx(syscallrq_t *rq)
+{
+        GETARG(_dnxrtctx_t*, ctx);
+
+        ctx->stdin_ref  = &_stdin;
+        ctx->stdout_ref = &_stdout;
+        ctx->stderr_ref = &_stderr;
+        ctx->global_ref = &_global;
+        ctx->errno_ref  = &_errno;
+
+        SETERRNO(0);
+        SETRETURN(int, 0);
 }
 
 //==============================================================================
