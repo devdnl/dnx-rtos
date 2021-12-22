@@ -31,7 +31,6 @@
 ==============================================================================*/
 #include <time.h>
 #include <sys/time.h>
-#include <config.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <dnx/misc.h>
@@ -51,7 +50,6 @@
 /*==============================================================================
   Local objects
 ==============================================================================*/
-#if (__OS_PRINTF_ENABLE__ > 0) && (__OS_ENABLE_TIMEMAN__ == _YES_)
 /** days of week */
 static const char *week_day_abbr[] = {
         "Sun", "Mon", "Tue",
@@ -79,7 +77,6 @@ static const char *month_full[] = {
         "July",    "August",   "September",
         "October", "November", "December"
 };
-#endif
 
 /*==============================================================================
   Exported objects
@@ -92,7 +89,6 @@ static const char *month_full[] = {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-#if __OS_ENABLE_TIMEMAN__ == _YES_
 //==============================================================================
 /**
  * @brief  Format time as string
@@ -147,7 +143,6 @@ static const char *month_full[] = {
 //==============================================================================
 size_t strftime(char *buf, size_t size, const char *format, const struct tm *timeptr)
 {
-#if (__OS_PRINTF_ENABLE__ > 0)
         size_t n = 0;
 
         if (buf && size && format && timeptr) {
@@ -289,12 +284,7 @@ size_t strftime(char *buf, size_t size, const char *format, const struct tm *tim
         }
 
         return n;
-#else
-        UNUSED_ARG4(buf, size, format, timeptr);
-        return 0;
-#endif
 }
-#endif
 
 /*==============================================================================
   End of file

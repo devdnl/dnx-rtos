@@ -29,7 +29,6 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <sys/types.h>
 #include <libc/source/syscall.h>
 
@@ -52,13 +51,11 @@
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-#if (__OS_PRINTF_ENABLE__ > 0) && (__OS_ENABLE_TIMEMAN__ == _YES_)
 /** buffer used to store temporary time structure */
 struct tm _libc_tmbuf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 /** buffer used to store converted time to string */
 char _libc_timestr[32];
-#endif
 
 unsigned int _libc_seed = 123456789;
 

@@ -42,8 +42,8 @@ local plugin = {}
 -- @return none
 --------------------------------------------------------------------------------
 plugin.Loaded = function()
-    local PATH  = "../../src/system/include/libc/dnx/os.h"
-    local REGEX = "^%s*return%s+\"(%d+%.%d+%.%d+).*;"
+    local PATH  = "../../src/system/kernel/syscall.c"
+    local REGEX = ".*dnx_RTOS_version%s*=%s*\"(.*)\""
 
     local line = FindLine(PATH, 1, REGEX)
 

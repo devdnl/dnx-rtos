@@ -29,7 +29,6 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -71,15 +70,11 @@
 //==============================================================================
 void perror(const char *str)
 {
-#if (__OS_PRINTF_ENABLE__ > 0)
         if (str) {
                 fprintf(stderr, "%s: %s\n", str, strerror(errno));
         } else {
                 fprintf(stderr, "%s\n", strerror(errno));
         }
-#else
-        (void) str;
-#endif
 }
 
 /*==============================================================================

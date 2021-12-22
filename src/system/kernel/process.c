@@ -275,7 +275,7 @@ int _process_create(const char *cmd, const _process_attr_t *attr, pid_t *pid)
                 if (err) goto finish;
 
                 ATOMIC(process_mtx) {
-                        proc->taskdata[0].stack_size  = *proc->pdata->stack_depth;
+                        proc->taskdata[0].stack_size  = *proc->pdata->stack_depth + _STACK_DEPTH_MINIMAL;
                         proc->taskdata[0].kernelspace = (proc->flag & FLAG_KWORKER);
                         proc->taskdata[0].id = 0;
                         proc->taskdata[0].syscalls_per_sec = NO_SYSCALL;
@@ -286,7 +286,7 @@ int _process_create(const char *cmd, const _process_attr_t *attr, pid_t *pid)
 
                         err = _task_create(process_code,
                                            proc->pdata->name,
-                                           *proc->pdata->stack_depth,
+                                           *proc->pdata->stack_depth + _STACK_DEPTH_MINIMAL,
                                            task_args,
                                            &proc->taskdata[0].task);
                         if (!err) {
@@ -1101,7 +1101,7 @@ int _process_thread_create(_process_t           *proc,
                                 args->proc = proc;
                                 args->task_data = &proc->taskdata[id];
 
-                                proc->taskdata[id].stack_size  = (attr ? attr->stack_depth : _STACK_DEPTH_LOW);
+                                proc->taskdata[id].stack_size  = (attr ? attr->stack_depth : 0) + _STACK_DEPTH_MINIMAL;
                                 proc->taskdata[id].kernelspace = (proc->flag & FLAG_KWORKER);
                                 proc->taskdata[id].id = id;
                                 proc->taskdata[id].curr_syscall = NO_SYSCALL;
@@ -1241,7 +1241,7 @@ int _process_thread_get_stat(pid_t pid, tid_t tid, _thread_stat_t *stat)
                                 stat->tid              = tid;
                                 stat->CPU_load         = proc->taskdata[tid].CPU_load;
                                 stat->priority         = _task_get_priority(proc->taskdata[tid].task);
-                                stat->stack_size       = proc->taskdata[tid].stack_size;
+                                stat->stack_size       = proc->taskdata[tid].stack_size + _STACK_DEPTH_MINIMAL;
                                 stat->stack_max_usage  = stat->stack_size - _task_get_free_stack(proc->taskdata[tid].task);
                                 stat->syscalls_per_sec = proc->taskdata[tid].syscalls_per_sec;
 
@@ -2433,7 +2433,7 @@ const _program_table_desc_t *_get_programs_table(void)
 //==============================================================================
 static int find_program(const char *name, const _program_entry_t **prog)
 {
-        static const size_t kworker_stack_depth  = _STACK_DEPTH_CUSTOM(__OS_IO_STACK_DEPTH__);
+        static const size_t kworker_stack_depth  = 0;
         static const size_t kworker_globals_size = 0;
         static const _program_entry_t kworker   = {.globals_size = &kworker_globals_size,
                                                     .main         = _syscall_kworker_process,

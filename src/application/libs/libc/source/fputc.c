@@ -29,9 +29,7 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <stdio.h>
-#include "lib/unarg.h"
 
 /*==============================================================================
   Local macros
@@ -73,15 +71,10 @@
 //==============================================================================
 int fputc(int c, FILE *stream)
 {
-#if (__OS_PRINTF_ENABLE__ > 0)
         char ch = (char)c;
         if (fwrite(&ch, sizeof(char), 1, stream) == 1) {
                 return c;
         }
-#else
-        UNUSED_ARG1(c);
-        UNUSED_ARG1(stream);
-#endif
         return EOF;
 }
 

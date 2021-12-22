@@ -29,7 +29,6 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -82,7 +81,6 @@
 //==============================================================================
 char *fgets_buffered(char *str, int size, FILE *stream, char *buf, size_t buflen)
 {
-#if (__OS_PRINTF_ENABLE__ > 0)
         if (!str || size < 1 || !stream || !buf || !buflen) {
                 return NULL;
         }
@@ -147,9 +145,7 @@ char *fgets_buffered(char *str, int size, FILE *stream, char *buf, size_t buflen
 
                 return str;
         }
-#else
-        UNUSED_ARG3(str, size, stream);
-#endif
+
         return NULL;
 }
 

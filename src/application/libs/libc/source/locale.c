@@ -30,9 +30,8 @@ Brief    The library provides location specific settings.
   Include files
 ==============================================================================*/
 #include "locale.h"
-#include "lib/cast.h"
-#include "lib/unarg.h"
 #include "stddef.h"
+#include <dnx/misc.h>
 
 /*==============================================================================
   Local macros

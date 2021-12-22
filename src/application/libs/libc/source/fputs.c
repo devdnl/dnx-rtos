@@ -29,12 +29,10 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "lib/unarg.h"
 
 /*==============================================================================
   Local macros
@@ -77,7 +75,6 @@
 //==============================================================================
 static int f_puts(const char *s, FILE *file, bool puts)
 {
-#if (__OS_PRINTF_ENABLE__ > 0)
         if (file) {
                 int n = EOF;
 
@@ -97,9 +94,6 @@ static int f_puts(const char *s, FILE *file, bool puts)
                         return n;
                 }
         }
-#else
-        UNUSED_ARG3(s, file, puts);
-#endif
         return EOF;
 }
 

@@ -30,8 +30,6 @@
   Include files
 ==============================================================================*/
 #include <stdio.h>
-#include <config.h>
-#include <lib/vsscanf.h>
 
 /*==============================================================================
   Local macros
@@ -52,6 +50,7 @@
 /*==============================================================================
   Exported objects
 ==============================================================================*/
+extern double _libc_strtod(const char *str, char **end);
 
 /*==============================================================================
   External objects
@@ -74,7 +73,298 @@
 //==============================================================================
 int vsscanf(const char *str, const char *format, va_list args)
 {
-        return _vsscanf(str, format, args);
+        int       read_fields = 0;
+        int       long_ctr    = 0;
+        char      chr;
+        int64_t   value;
+        char     *strs;
+        int       sign;
+        char     *string;
+        uint16_t  bfr_size;
+
+        if (!str) {
+                return EOF;
+        }
+
+        if (str[0] == '\0') {
+                return EOF;
+        }
+
+        while (format && (chr = *format++) != '\0') {
+                if (chr == '%') {
+                        chr = *format++;
+
+                        /* calculate buffer size */
+                        bfr_size = 0;
+                        while (chr >= '0' && chr <= '9') {
+                                bfr_size *= 10;
+                                bfr_size += chr - '0';
+                                chr       = *format++;
+                        }
+
+                        if (bfr_size == 0)
+                            bfr_size = UINT16_MAX;
+
+                        loop:
+                        switch (chr) {
+                        case '\0':
+                                break;
+
+                        case '%':
+                                if (*str == '%') {
+                                        str++;
+                                        continue;
+                                } else {
+                                        goto sscanf_end;
+                                }
+                                break;
+
+                        case 'u':
+                        case 'd':
+                        case 'i':
+                                value = 0;
+                                sign  = 1;
+
+                                while (*str == ' ') {
+                                        str++;
+                                }
+
+                                if (*str == '-') {
+                                        sign = -1;
+                                        str++;
+                                }
+
+                                strs = (char*)str;
+
+                                while (*str >= '0' && *str <= '9' && bfr_size > 0) {
+                                        value *= 10;
+                                        value += *str - '0';
+                                        str++;
+                                        bfr_size--;
+                                }
+
+                                if (str != strs) {
+                                        int64_t v = value * sign;
+
+                                        switch (long_ctr) {
+                                        default:
+                                        case 0: {
+                                                int *var = va_arg(args, int*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case 1: {
+                                                int32_t *var = va_arg(args, int32_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case 2: {
+                                                int64_t *var = va_arg(args, int64_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        }
+                                        long_ctr = 0;
+                                        read_fields++;
+                                }
+                                break;
+
+                        case 'x':
+                        case 'X':
+                                value = 0;
+                                sign  = 1;
+
+                                while (*str == ' ') {
+                                        str++;
+                                }
+
+                                if (*str == '-') {
+                                        sign = -1;
+                                        str++;
+                                }
+
+                                strs  = (char*)str;
+
+                                while (  (  (*str >= '0' && *str <= '9')
+                                         || (*str >= 'a' && *str <= 'f')
+                                         || (*str >= 'A' && *str <= 'F') )
+                                      && (bfr_size > 0) ) {
+
+                                        int var;
+
+                                        if (*str >= 'a') {
+                                                var = *str - 'a' + 10;
+                                        } else if (*str >= 'A') {
+                                                var = *str - 'A' + 10;
+                                        } else if (*str >= '0') {
+                                                var = *str - '0';
+                                        } else {
+                                                var = 0;
+                                        }
+
+                                        value *= 16;
+                                        value += var;
+                                        str++;
+                                        bfr_size--;
+                                }
+
+                                if (strs != str) {
+                                        int64_t v = value * sign;
+
+                                        switch (long_ctr) {
+                                        default:
+                                        case 0: {
+                                                int *var = va_arg(args, int*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case 1: {
+                                                int32_t *var = va_arg(args, int32_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case 2: {
+                                                int64_t *var = va_arg(args, int64_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        }
+                                        long_ctr = 0;
+                                        read_fields++;
+                                }
+                                break;
+
+                        case 'o':
+                                value = 0;
+                                sign  = 1;
+
+                                while (*str == ' ') {
+                                        str++;
+                                }
+
+                                if (*str == '-') {
+                                        sign = -1;
+                                        str++;
+                                }
+
+                                strs  = (char*)str;
+
+                                while (*str >= '0' && *str <= '7' && bfr_size > 0) {
+                                        value *= 8;
+                                        value += *str - '0';
+                                        str++;
+                                        bfr_size--;
+                                }
+
+                                if (str != strs) {
+                                        int64_t v = value * sign;
+
+                                        switch (long_ctr) {
+                                        default:
+                                        case 0: {
+                                                int *var = va_arg(args, int*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case 1: {
+                                                int32_t *var = va_arg(args, int32_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case 2: {
+                                                int64_t *var = va_arg(args, int64_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        }
+                                        long_ctr = 0;
+                                        read_fields++;
+                                }
+                                break;
+
+                        case 'c':
+                                if (*str >= ' ') {
+                                        char *var = va_arg(args, char*);
+
+                                        if (var) {
+                                                *var = *str;
+                                                read_fields++;
+                                        }
+                                        str++;
+                                }
+                                break;
+
+                        case 's':
+                                string = va_arg(args, char*);
+                                if (string) {
+                                        while (*str != '\n' && *str != '\r' && *str != '\0' && *str != ' ' && bfr_size > 0) {
+                                                *string++ = *str++;
+                                                bfr_size--;
+                                        }
+                                        *string++ = '\0';
+
+                                        if (bfr_size != 0)
+                                                str++;
+
+                                        read_fields++;
+                                }
+                                break;
+
+                        case 'f':
+                        case 'F':
+                        case 'g':
+                        case 'G':
+                                if (str) {
+                                        while (*str == ' ') {
+                                                str++;
+                                        }
+
+                                        float *value = va_arg(args, float*);
+                                        if (value) {
+                                                char *end;
+                                                *value = _libc_strtod(str, &end);
+                                                str += ((int)end - (int)str);
+
+                                                if (*end != '\0')
+                                                        str++;
+
+                                                read_fields++;
+                                        }
+                                }
+                                break;
+
+                        case 'l':
+                                long_ctr++;
+                                chr = *format++;
+                                goto loop;
+                                break;
+                        }
+
+                } else if (chr <= ' ') {
+                        while (*str <= ' ' && *str != '\0') {
+                                str++;
+                        }
+
+                        if (*str == '\0') {
+                                break;
+                        }
+                } else {
+                        while (*str == chr && chr != '%' && chr > ' ' && chr != '\0') {
+                                str++;
+                                chr = *format++;
+                        }
+
+                        if (chr == '%' || chr <= ' ') {
+                                format--;
+                                continue;
+                        } else {
+                                break;
+                        }
+                }
+        }
+
+sscanf_end:
+        return read_fields;
 }
 
 /*==============================================================================

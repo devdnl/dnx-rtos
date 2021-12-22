@@ -30,7 +30,6 @@
   Include files
 ==============================================================================*/
 #include <libc/include/time.h>
-#include <config.h>
 #include <dnx/misc.h>
 
 /*==============================================================================
@@ -52,10 +51,8 @@
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-#if (__OS_PRINTF_ENABLE__ > 0) && (__OS_ENABLE_TIMEMAN__ == _YES_)
 /** buffer used to store converted time to string */
 extern char _libc_timestr[32];
-#endif
 
 /*==============================================================================
   External objects
@@ -64,7 +61,6 @@ extern char _libc_timestr[32];
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-#if __OS_ENABLE_TIMEMAN__ == _YES_
 //==============================================================================
 /**
  * @brief  Convert time value (Epoch) to human readable string: Www Mmm dd hh:mm:ss zzzzz yyyy
@@ -79,7 +75,6 @@ extern char _libc_timestr[32];
 //==============================================================================
 static char *_ctime_r(const time_t *timer, const struct tm *tm, char *buf)
 {
-#if (__OS_PRINTF_ENABLE__ > 0)
         if (timer || tm) {
                 if (buf == NULL) {
                         buf = _libc_timestr;
@@ -99,10 +94,6 @@ static char *_ctime_r(const time_t *timer, const struct tm *tm, char *buf)
         } else {
                 return NULL;
         }
-#else
-        UNUSED_ARG3(timer, tm, buf);
-        return NULL;
-#endif
 }
 
 //==============================================================================
@@ -244,7 +235,6 @@ char *asctime_r(const struct tm *timeptr, char *buf)
 {
         return _ctime_r(NULL, timeptr, buf);
 }
-#endif
 
 /*==============================================================================
   End of file

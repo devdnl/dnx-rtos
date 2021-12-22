@@ -29,7 +29,6 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -79,7 +78,6 @@ int vfscanf(FILE *stream, const char *format, va_list arg)
 {
         int n = 0;
 
-#if (__OS_SCANF_ENABLE__ > 0)
         char *str = calloc(BUFSIZ, sizeof(char));
         if (!str)
                 return 0;
@@ -94,9 +92,6 @@ int vfscanf(FILE *stream, const char *format, va_list arg)
         }
 
         free(str);
-#else
-        UNUSED_ARG3(stream, format, arg);
-#endif
 
         return n;
 }

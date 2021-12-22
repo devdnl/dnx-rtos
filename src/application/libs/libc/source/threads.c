@@ -78,17 +78,17 @@ Brief   C11 threads library implementation.
 int thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 {
         if (thr && func) {
-//                thread_attr_t ATTR = {
-//                        .stack_depth = STACK_DEPTH_LOW,
-//                        .priority    = _task_get_priority(_THIS_TASK),
-//                        .detached    = false,
-//                };
-//
-//                tid_t tid = thread_create(func, &ATTR, arg);
-//                if (tid > 0) {
-//                        *thr = tid;
-//                        return thrd_success;
-//                }
+                thread_attr_t ATTR = {
+                        .stack_depth = STACK_DEPTH_LOW,
+                        .priority    = PRIORITY_NORMAL,
+                        .detached    = false,
+                };
+
+                tid_t tid = thread_create(func, &ATTR, arg);
+                if (tid > 0) {
+                        *thr = tid;
+                        return thrd_success;
+                }
         }
 
         return thrd_error;

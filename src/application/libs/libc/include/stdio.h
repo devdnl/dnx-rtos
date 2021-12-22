@@ -44,7 +44,6 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <libc/include/sys/types.h>
 #include <limits.h>
 #include <stddef.h>
@@ -60,7 +59,7 @@ extern "C" {
  *
  * Buffer size is configurable from system configuration.
  */
-#define BUFSIZ                  __OS_STREAM_BUFFER_LENGTH__
+#define BUFSIZ                  128
 
 /** @brief Set stream to fully buffered.@see setvbuf() */
 #define _IOFBF                  0
@@ -121,15 +120,14 @@ extern "C" {
 
 
 
-#define STACK_DEPTH_MINIMAL            ((1   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (__OS_IO_STACK_DEPTH__))
-#define STACK_DEPTH_VERY_LOW           ((2   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (__OS_IO_STACK_DEPTH__))
-#define STACK_DEPTH_LOW                ((4   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (__OS_IO_STACK_DEPTH__))
-#define STACK_DEPTH_MEDIUM             ((8   * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (__OS_IO_STACK_DEPTH__))
-#define STACK_DEPTH_LARGE              ((16  * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (__OS_IO_STACK_DEPTH__))
-#define STACK_DEPTH_VERY_LARGE         ((32  * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (__OS_IO_STACK_DEPTH__))
-#define STACK_DEPTH_HUGE               ((64  * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (__OS_IO_STACK_DEPTH__))
-#define STACK_DEPTH_VERY_HUGE          ((128 * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (__OS_IO_STACK_DEPTH__))
-#define STACK_DEPTH_CUSTOM(depth)      ((depth) + (__OS_IRQ_STACK_DEPTH__))
+#define STACK_DEPTH_MINIMAL            (0)
+#define STACK_DEPTH_VERY_LOW           (256)
+#define STACK_DEPTH_LOW                (512)
+#define STACK_DEPTH_MEDIUM             (768)
+#define STACK_DEPTH_LARGE              (1024)
+#define STACK_DEPTH_VERY_LARGE         (1280)
+#define STACK_DEPTH_HUGE               (1545)
+#define STACK_DEPTH_VERY_HUGE          (1792)
 
 
 #define _GVAR_STRUCT_NAME               global_variables

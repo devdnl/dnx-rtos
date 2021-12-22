@@ -29,11 +29,9 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <lib/vsnprintf.h>
 #include <dnx/misc.h>
 #include <errno.h>
 
@@ -80,7 +78,6 @@ int vfprintf(FILE *file, const char *format, va_list arg)
 {
         int n = 0;
 
-#if (__OS_PRINTF_ENABLE__ > 0)
         va_list carg;
         va_copy(carg, arg);
         u32_t size = vsnprintf(NULL, 0, format, carg) + 1;
@@ -94,9 +91,6 @@ int vfprintf(FILE *file, const char *format, va_list arg)
                 free(str);
                 errno = err;
         }
-#else
-        UNUSED_ARG3(file, format, arg);
-#endif
 
         return n;
 }

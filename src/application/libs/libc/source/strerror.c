@@ -30,7 +30,6 @@
   Include files
 ==============================================================================*/
 #include <string.h>
-#include <config.h>
 #include <errno.h>
 
 /*==============================================================================
@@ -74,99 +73,7 @@
 //==============================================================================
 const char *strerror(int errnum)
 {
-#if (__OS_PRINTF_ENABLE__ > 0)
         static const char *errstr[] = {
-#if (__OS_ERRNO_STRING_LEN__ == 0)
-                /* empty */
-#elif (__OS_ERRNO_STRING_LEN__ == 1)
-                [ESUCC       ] = NUMBER_TO_STR(ESUCC),
-                [EPERM       ] = NUMBER_TO_STR(EPERM),
-                [ENOENT      ] = NUMBER_TO_STR(ENOENT),
-                [ESRCH       ] = NUMBER_TO_STR(ESRCH),
-                [EIO         ] = NUMBER_TO_STR(EIO),
-                [ENXIO       ] = NUMBER_TO_STR(ENXIO),
-                [E2BIG       ] = NUMBER_TO_STR(E2BIG),
-                [ENOEXEC     ] = NUMBER_TO_STR(ENOEXEC),
-                [EAGAIN      ] = NUMBER_TO_STR(EAGAIN),
-                [ENOMEM      ] = NUMBER_TO_STR(ENOMEM),
-                [EACCES      ] = NUMBER_TO_STR(EACCES),
-                [EFAULT      ] = NUMBER_TO_STR(EFAULT),
-                [EBUSY       ] = NUMBER_TO_STR(EBUSY),
-                [EEXIST      ] = NUMBER_TO_STR(EEXIST),
-                [ENODEV      ] = NUMBER_TO_STR(ENODEV),
-                [ENOTDIR     ] = NUMBER_TO_STR(ENOTDIR),
-                [EISDIR      ] = NUMBER_TO_STR(EISDIR),
-                [EINVAL      ] = NUMBER_TO_STR(EINVAL),
-                [EMFILE      ] = NUMBER_TO_STR(EMFILE),
-                [EFBIG       ] = NUMBER_TO_STR(EFBIG),
-                [ENOSPC      ] = NUMBER_TO_STR(ENOSPC),
-                [ESPIPE      ] = NUMBER_TO_STR(ESPIPE),
-                [EROFS       ] = NUMBER_TO_STR(EROFS),
-                [EDOM        ] = NUMBER_TO_STR(EDOM),
-                [ERANGE      ] = NUMBER_TO_STR(ERANGE),
-                [EILSEQ      ] = NUMBER_TO_STR(EILSEQ),
-                [ENAMETOOLONG] = NUMBER_TO_STR(ENAMETOOLONG),
-                [ENOTEMPTY   ] = NUMBER_TO_STR(ENOTEMPTY),
-                [EBADRQC     ] = NUMBER_TO_STR(EBADRQC),
-                [ETIME       ] = NUMBER_TO_STR(ETIME),
-                [ENONET      ] = NUMBER_TO_STR(ENONET),
-                [EUSERS      ] = NUMBER_TO_STR(EUSERS),
-                [EADDRINUSE  ] = NUMBER_TO_STR(EADDRINUSE),
-                [ENOMEDIUM   ] = NUMBER_TO_STR(ENOMEDIUM),
-                [EMEDIUMTYPE ] = NUMBER_TO_STR(EMEDIUMTYPE),
-                [ECANCELED   ] = NUMBER_TO_STR(ECANCELED),
-                [ENOTSUP     ] = NUMBER_TO_STR(ENOTSUP),
-                [ENOSYS      ] = NUMBER_TO_STR(ENOSYS),
-                [ECONNABORTED] = NUMBER_TO_STR(ECONNABORTED),
-                [ECONNREFUSED] = NUMBER_TO_STR(ECONNREFUSED),
-                [ECONNRESET  ] = NUMBER_TO_STR(ECONNRESET),
-                [EISCONN     ] = NUMBER_TO_STR(EISCONN),
-                [EALREADY    ] = NUMBER_TO_STR(EALREADY),
-#elif (__OS_ERRNO_STRING_LEN__ == 2)
-                [ESUCC       ] = TO_STR(ESUCC),
-                [EPERM       ] = TO_STR(EPERM),
-                [ENOENT      ] = TO_STR(ENOENT),
-                [ESRCH       ] = TO_STR(ESRCH),
-                [EIO         ] = TO_STR(EIO),
-                [ENXIO       ] = TO_STR(ENXIO),
-                [E2BIG       ] = TO_STR(E2BIG),
-                [ENOEXEC     ] = TO_STR(ENOEXEC),
-                [EAGAIN      ] = TO_STR(EAGAIN),
-                [ENOMEM      ] = TO_STR(ENOMEM),
-                [EACCES      ] = TO_STR(EACCES),
-                [EFAULT      ] = TO_STR(EFAULT),
-                [EBUSY       ] = TO_STR(EBUSY),
-                [EEXIST      ] = TO_STR(EEXIST),
-                [ENODEV      ] = TO_STR(ENODEV),
-                [ENOTDIR     ] = TO_STR(ENOTDIR),
-                [EISDIR      ] = TO_STR(EISDIR),
-                [EINVAL      ] = TO_STR(EINVAL),
-                [EMFILE      ] = TO_STR(EMFILE),
-                [EFBIG       ] = TO_STR(EFBIG),
-                [ENOSPC      ] = TO_STR(ENOSPC),
-                [ESPIPE      ] = TO_STR(ESPIPE),
-                [EROFS       ] = TO_STR(EROFS),
-                [EDOM        ] = TO_STR(EDOM),
-                [ERANGE      ] = TO_STR(ERANGE),
-                [EILSEQ      ] = TO_STR(EILSEQ),
-                [ENAMETOOLONG] = TO_STR(ENAMETOOLONG),
-                [ENOTEMPTY   ] = TO_STR(ENOTEMPTY),
-                [EBADRQC     ] = TO_STR(EBADRQC),
-                [ETIME       ] = TO_STR(ETIME),
-                [ENONET      ] = TO_STR(ENONET),
-                [EUSERS      ] = TO_STR(EUSERS),
-                [EADDRINUSE  ] = TO_STR(EADDRINUSE),
-                [ENOMEDIUM   ] = TO_STR(ENOMEDIUM),
-                [EMEDIUMTYPE ] = TO_STR(EMEDIUMTYPE),
-                [ECANCELED   ] = TO_STR(ECANCELED),
-                [ENOTSUP     ] = TO_STR(ENOTSUP),
-                [ENOSYS      ] = TO_STR(ENOSYS),
-                [ECONNABORTED] = TO_STR(ECONNABORTED),
-                [ECONNREFUSED] = TO_STR(ECONNREFUSED),
-                [ECONNRESET  ] = TO_STR(ECONNRESET),
-                [EISCONN     ] = TO_STR(EISCONN),
-                [EALREADY    ] = TO_STR(EALREADY),
-#elif (__OS_ERRNO_STRING_LEN__ == 3)
                 [ESUCC       ] = "Success",
                 [EPERM       ] = "Operation not permitted",
                 [ENOENT      ] = "No such file or directory",
@@ -210,22 +117,13 @@ const char *strerror(int errnum)
                 [ECONNRESET  ] = "Connection reset",
                 [EISCONN     ] = "Socket is connected",
                 [EALREADY    ] = "Connection already in progress",
-#else
-#error "__OS_ERRNO_STRING_LEN__ should be in range 0 - 3!"
-#endif
         };
 
-        if (__OS_ERRNO_STRING_LEN__ == 0) {
-                return "";
-        } else if ((errnum >= 0) && (errnum < _ENUMBER)) {
+        if ((errnum >= 0) && (errnum < _ENUMBER)) {
                 return errstr[errnum];
         } else {
                 return "Unknown error";
         }
-#else
-        (void) errnum;
-        return "";
-#endif
 }
 
 /*==============================================================================

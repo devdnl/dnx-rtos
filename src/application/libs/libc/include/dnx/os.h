@@ -44,7 +44,6 @@ extern "C" {
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <config.h>
 #include <stdbool.h>
 #include <libc/source/syscall.h>
 #include <libc/include/sys/types.h>
