@@ -302,6 +302,11 @@ API_MOD_WRITE(SDIO,
 
                         for (int i = 0; i < 5; i++) {
 
+                                err = card_wait_ready(hdl);
+                                if (err) {
+                                        dev_dbg(hdl, "card busy at write transfer", 0);
+                                }
+
                                 if (hdl->mode == _SDIO_MODE_POLLING) {
 
                                         err = HAL_SD_WriteBlocks(&hdl->hsd, src, block_address, blocks,
@@ -329,19 +334,15 @@ API_MOD_WRITE(SDIO,
                                 }
 
                                 if (!err) {
-                                        err = card_wait_ready(hdl);
-                                        if (!err) {
-                                                *wrcnt += count;
-                                        } else {
-                                                dev_dbg(hdl, "card busy at write transfer", 0);
-                                        }
-                                }
-
-                                if (!err) {
+                                        *wrcnt += count;
                                         break;
                                 } else {
                                         dev_dbg(hdl, "write error %d @ block %u", err, block_address);
-                                        sys_sleep_ms(50);
+                                        sys_sleep_ms(25);
+
+                                        if (i >= 3) {
+                                                card_initialize(hdl);
+                                        }
                                 }
                         }
 
@@ -390,6 +391,11 @@ API_MOD_READ(SDIO,
 
                         for (int i = 0; i < 5; i++) {
 
+                                err = card_wait_ready(hdl);
+                                if (err) {
+                                        dev_dbg(hdl, "card busy at read transfer", 0);
+                                }
+
                                 if (hdl->mode == _SDIO_MODE_POLLING) {
 
                                         err = HAL_SD_ReadBlocks(&hdl->hsd, dst, block_address, blocks,
@@ -417,19 +423,15 @@ API_MOD_READ(SDIO,
                                 }
 
                                 if (!err) {
-                                        err = card_wait_ready(hdl);
-                                        if (!err) {
-                                                *rdcnt += count;
-                                        } else {
-                                                dev_dbg(hdl, "card busy at read transfer", 0);
-                                        }
-                                }
-
-                                if (!err) {
+                                        *rdcnt += count;
                                         break;
                                 } else {
                                         dev_dbg(hdl, "read error %d @ block %u", err, block_address);
-                                        sys_sleep_ms(50);
+                                        sys_sleep_ms(25);
+
+                                        if (i >= 3) {
+                                                card_initialize(hdl);
+                                        }
                                 }
                         }
 

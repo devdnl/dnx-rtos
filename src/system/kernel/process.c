@@ -1108,8 +1108,7 @@ KERNELSPACE int _process_thread_create(_process_t          *proc,
                                 proc->taskdata[id].curr_syscall = NO_SYSCALL;
 
                                 if (proc->event) {
-                                        _flag_clear(proc->event, _PROCESS_EXIT_FLAG(id)
-                                                               | _PROCESS_SYSCALL_FLAG(id));
+                                        _flag_clear(proc->event, _PROCESS_EXIT_FLAG(id));
                                 }
 
                                 err = _task_create(thread_code, "",
@@ -1619,7 +1618,7 @@ KERNELSPACE void _process_exit_kernelspace(_process_t *proc)
                 ATOMIC(process_mtx) {
                         tid_t i = _process_get_active_thread(proc);
                         proc->taskdata[i].kernelspace = false;
-                        proc->taskdata[i].curr_syscall = 0xFF;
+                        proc->taskdata[i].curr_syscall = NO_SYSCALL;
                 }
         }
 }
