@@ -488,6 +488,47 @@ int vsnprintf(char *buf, size_t size, const char *format, va_list arg)
          return (scan_len - 1);
 }
 
+//==============================================================================
+/**
+ * @brief Function convert arguments to stream
+ *
+ * @param[in] *buf           buffer for stream
+ * @param[in]  size          buffer size
+ * @param[in] *format        message format
+ * @param[in]  ...           argument list
+ *
+ * @return number of printed characters
+ */
+//==============================================================================
+int _libc_snprintf(char *buf, size_t size, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        int status = vsnprintf(buf, size, format, arg);
+        va_end(arg);
+        return status;
+}
+
+//==============================================================================
+/**
+ * @brief Function convert arguments to stream
+ *
+ * @param[in] *buf           buffer for stream
+ * @param[in] *format        message format
+ * @param[in]  ...           argument list
+ *
+ * @return number of printed characters
+ */
+//==============================================================================
+int _libc_sprintf(char *s, const char *format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+        int status = vsnprintf(s, UINT16_MAX, format, arg);
+        va_end(arg);
+        return status;
+}
+
 /*==============================================================================
   End of file
 ==============================================================================*/

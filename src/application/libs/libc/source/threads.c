@@ -140,7 +140,7 @@ int thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 {
         u32_t sleep = (duration->tv_sec * 1000) + (duration->tv_nsec / 1000000);
 
-        libc_syscall(_LIBC_SYS_MSLEEP, NULL, &sleep);
+        _libc_syscall(_LIBC_SYS_MSLEEP, NULL, &sleep);
 
         if (remaining) {
                 remaining->tv_nsec = 0;
@@ -158,7 +158,7 @@ int thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 //==============================================================================
 void thrd_yield(void)
 {
-        libc_syscall(_LIBC_SYS_MSLEEP, NULL, &(const uint32_t){0});
+        _libc_syscall(_LIBC_SYS_MSLEEP, NULL, &(const uint32_t){0});
 }
 
 //==============================================================================
@@ -483,12 +483,12 @@ void call_once(once_flag *once, void (*func)(void))
         if (*once == ONCE_FLAG_INIT) {
                 bool call = false;
 
-                libc_syscall(_LIBC_SYS_SCHEDULERLOCK, NULL);
+                _libc_syscall(_LIBC_SYS_SCHEDULERLOCK, NULL);
 
                 call = (*once == ONCE_FLAG_INIT);
                 *once = ONCE_FLAG_INIT + 1;
 
-                libc_syscall(_LIBC_SYS_SCHEDULERUNLOCK, NULL);
+                _libc_syscall(_LIBC_SYS_SCHEDULERUNLOCK, NULL);
 
                 if (call) {
                         func();

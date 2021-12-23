@@ -206,6 +206,7 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SCHEDULERLOCK,          // | void           |                           |                                     |                                     |                           |                                           |
         SYSCALL_SCHEDULERUNLOCK,        // | void           |                           |                                     |                                     |                           |                                           |
         SYSCALL_THREADJOIN,             // | int            | const tid_t *tid          | int *status                         | const uint32_t *timeout
+        SYSCALL_ISHEAPADDR,             // | bool           | const void *addr
         _SYSCALL_COUNT,
 } syscall_t;
 
@@ -353,6 +354,7 @@ static void syscall_dirseek(syscallrq_t *rq);
 static void syscall_schedulerlock(syscallrq_t *rq);
 static void syscall_schedulerunlock(syscallrq_t *rq);
 static void syscall_threadjoin(syscallrq_t *rq);
+static void syscall_isheapaddr(syscallrq_t *rq);
 
 /*==============================================================================
   Local objects
@@ -487,6 +489,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SCHEDULERLOCK] = syscall_schedulerlock,
         [SYSCALL_SCHEDULERUNLOCK] = syscall_schedulerunlock,
         [SYSCALL_THREADJOIN] = syscall_threadjoin,
+        [SYSCALL_ISHEAPADDR] = syscall_isheapaddr,
 };
 
 /*==============================================================================
@@ -539,7 +542,7 @@ int _syscall_init()
 /**
  * @brief  Function call selected syscall [USERSPACE].
  *
- * @note   This function is accessible at address: 0x400 if start vector is set to 0.
+ * @note   This function is accessible at address: 0x08000400 if start vector is set to 0x08000000.
  *
  * @param  syscall      syscall number
  * @param  retptr       pointer to return value
@@ -3096,6 +3099,20 @@ static void syscall_threadjoin(syscallrq_t *rq)
 
         SETERRNO(err);
         SETRETURN(int, GETERRNO() ? -1 : 0);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall wait for thread join.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_isheapaddr(syscallrq_t *rq)
+{
+        GETARG(const void*, addr);
+        SETERRNO(ESUCC);
+        SETRETURN(bool, _mm_is_object_in_heap(addr));
 }
 
 /*==============================================================================

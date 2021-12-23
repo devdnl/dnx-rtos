@@ -715,36 +715,6 @@ static inline size_t strlcat(char *dst, const char *src, size_t size)
 
 //==============================================================================
 /**
- * @brief  Function check if selected object is allocated in heap.
- *
- * @param  ptr          object's pointer
- *
- * @return If object is in heap then true is returned, otherwise false.
- */
-//==============================================================================
-static inline bool is_object_in_heap(void *ptr) // FIXME syscall for this?
-{
-        extern bool _mm_is_object_in_heap(void *ptr);
-        return _mm_is_object_in_heap(ptr);
-}
-
-//==============================================================================
-/**
- * @brief  Function check if selected address is in .text section.
- *
- * @param  ptr          object's pointer
- *
- * @return If object is in heap then true is returned, otherwise false.
- */
-//==============================================================================
-static inline bool is_rom_address(const void *ptr) // FIXME syscall for this?
-{
-        extern bool _mm_is_rom_address(const void *ptr);
-        return _mm_is_rom_address(ptr);
-}
-
-//==============================================================================
-/**
  * @brief  Function replace characters in string.
  *
  * @param  str          string (in/out buffer)

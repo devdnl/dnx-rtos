@@ -685,7 +685,7 @@ struct tm *_libc_localtime_r(const time_t *timer, struct tm *tmbuf)
         if (timer) {
                 struct timezone tz;
                 int r = -1;
-                libc_syscall(_LIBC_SYS_GETTIMEOFDAY, &r, NULL, &tz);
+                _libc_syscall(_LIBC_SYS_GETTIMEOFDAY, &r, NULL, &tz);
 
                 if (r == 0) {
                         time_t localtime = *timer + (tz.tz_minuteswest * 60);

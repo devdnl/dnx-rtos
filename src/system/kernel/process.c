@@ -76,6 +76,11 @@
 ==============================================================================*/
 typedef struct _prog_data pdata_t;
 
+typedef struct res_node {
+        void *object[16];
+        struct res_node *next;
+} res_node_t;
+
 typedef struct {
         task_t          *task;                  //!< task
         u32_t            timecnt;               //!< counter used to calculate CPU load
@@ -92,10 +97,10 @@ typedef struct {
 
 struct _process {
         res_header_t     header;                //!< resource header
-        kflag_t          *event;                //!< events for exit indicator and syscall finish
-        kfile_t          *f_stdin;              //!< stdin file
-        kfile_t          *f_stdout;             //!< stdout file
-        kfile_t          *f_stderr;             //!< stderr file
+        kflag_t         *event;                 //!< events for exit indicator
+        kfile_t         *f_stdin;               //!< stdin file
+        kfile_t         *f_stdout;              //!< stdout file
+        kfile_t         *f_stderr;              //!< stderr file
         void            *globals;               //!< address to global variables
         res_header_t    *res_list;              //!< list of used resources
         u32_t            res_list_size;         //!< size of resources list
@@ -1107,8 +1112,7 @@ int _process_thread_create(_process_t           *proc,
                                 proc->taskdata[id].curr_syscall = NO_SYSCALL;
 
                                 if (proc->event) {
-                                        _flag_clear(proc->event, _PROCESS_EXIT_FLAG(id)
-                                                               | _PROCESS_SYSCALL_FLAG(id));
+                                        _flag_clear(proc->event, _PROCESS_EXIT_FLAG(id));
                                 }
 
                                 err = _task_create(thread_code, "",

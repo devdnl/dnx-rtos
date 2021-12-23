@@ -56,8 +56,7 @@ extern "C" {
 #define _STACK_DEPTH_VERY_HUGE          ((128 * (__OS_TASK_MIN_STACK_DEPTH__)) + (__OS_IRQ_STACK_DEPTH__) + (_FS_STACK))
 #define _STACK_DEPTH_CUSTOM(depth)      ((depth) + (__OS_IRQ_STACK_DEPTH__))
 
-#define _PROCESS_SYSCALL_FLAG(tid)      (1 << (tid))
-#define _PROCESS_EXIT_FLAG(tid)         (1 << ((tid) + 12))
+#define _PROCESS_EXIT_FLAG(tid)         (1 << (tid))
 
 /*==============================================================================
   Exported types, enums definitions

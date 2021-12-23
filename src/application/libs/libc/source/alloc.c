@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    vfprintf.c
+@file    alloc.c
 
 @author  Daniel Zorychta
 
-@brief   Print functions.
+@brief   Memory allocate functions.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -30,10 +30,6 @@
   Include files
 ==============================================================================*/
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <dnx/misc.h>
-#include <errno.h>
 
 /*==============================================================================
   Local macros
@@ -65,73 +61,27 @@
 
 //==============================================================================
 /**
- * @brief Function write to file formatted string.
+ * @brief Function allocates memory block.
  *
- * @param file                file
- * @param format              formated text
- * @param arg                 arguments
+ * The malloc() function allocates <i>size</i> bytes and returns a pointer to the
+ * allocated memory. The memory is not initialized.  If size is 0, then malloc()
+ * returns either @ref NULL.
  *
- * @retval number of written characters.
+ * @param size      size bytes to allocate
+ *
+ * @exception | @ref ENOMEM
+ *
+ * @return Returns a pointer to the allocated memory, which is suitably aligned
+ * for any built-in type.  On error, these functions return @ref NULL.  The
+ * @ref NULL pointer may also be returned by a successful call to function with
+ * a <i>size</i> of zero.
  */
 //==============================================================================
-int vfprintf(FILE *file, const char *format, va_list arg)
+void *_libc_malloc(size_t size)
 {
-        int n = 0;
-
-        va_list carg;
-        va_copy(carg, arg);
-        u32_t size = vsnprintf(NULL, 0, format, carg) + 1;
-        va_end(carg);
-
-        char *str = calloc(1, size);
-        if (str) {
-                n = vsnprintf(str, size, format, arg);
-                fwrite(str, sizeof(char), n, file);
-                int err = errno;
-                free(str);
-                errno = err;
-        }
-
-        return n;
-}
-
-//==============================================================================
-/**
- * @brief  Function write to stdout formatted string.
- *
- * @param format              formated text
- * @param ...                 format arguments
- *
- * @return number of written characters.
- */
-//==============================================================================
-int _libc_printf(const char *format, ...)
-{
-        va_list arg;
-        va_start(arg, format);
-        int status = vfprintf(stdout, format, arg);
-        va_end(arg);
-        return status;
-}
-
-//==============================================================================
-/**
- * @brief  Function write to file formatted string.
- *
- * @param streamm             stream
- * @param format              formated text
- * @param ...                 format arguments
- *
- * @return number of written characters.
- */
-//==============================================================================
-int _libc_fprintf(FILE *stream, const char *format, ...)
-{
-        va_list arg;
-        va_start(arg, format);
-        int status = vfprintf(stream, format, arg);
-        va_end(arg);
-        return status;
+        void *mem = NULL;
+        _libc_syscall(_LIBC_SYS_MALLOC, &mem, &size);
+        return mem;
 }
 
 /*==============================================================================

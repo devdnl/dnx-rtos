@@ -483,9 +483,8 @@ extern void srand(unsigned int seed);
 //==============================================================================
 static inline void *malloc(size_t size)
 {
-        void *mem = NULL;
-        libc_syscall(_LIBC_SYS_MALLOC, &mem, &size);
-        return mem;
+        extern void *_libc_malloc(size_t size);
+        return _libc_malloc(size);
 }
 
 //==============================================================================
@@ -520,7 +519,7 @@ static inline void *calloc(size_t n, size_t size)
 {
         void   *mem   = NULL;
         size_t  bsize = n * size;
-        libc_syscall(_LIBC_SYS_ZALLOC, &mem, &bsize);
+        _libc_syscall(_LIBC_SYS_ZALLOC, &mem, &bsize);
         return mem;
 }
 
@@ -557,7 +556,7 @@ static inline void *calloc(size_t n, size_t size)
 static inline void free(void *ptr)
 {
         if (ptr) {
-                libc_syscall(_LIBC_SYS_FREE, NULL, ptr);
+                _libc_syscall(_LIBC_SYS_FREE, NULL, ptr);
         }
 }
 
@@ -646,7 +645,7 @@ static inline void *realloc(void *ptr, size_t size)
 //==============================================================================
 static inline void abort(void)
 {
-        libc_syscall(_LIBC_SYS_PROCESSABORT, NULL);
+        _libc_syscall(_LIBC_SYS_PROCESSABORT, NULL);
 }
 
 //==============================================================================
@@ -672,7 +671,7 @@ static inline void abort(void)
 //==============================================================================
 static inline void exit(int status)
 {
-        libc_syscall(_LIBC_SYS_PROCESSEXIT, NULL, &status);
+        _libc_syscall(_LIBC_SYS_PROCESSEXIT, NULL, &status);
 }
 
 //==============================================================================
@@ -986,7 +985,7 @@ static inline double strtod(const char *nptr, char **endptr)
 static inline float strtof(const char *nptr, char **endptr)
 {
         extern float _libc_strtof(const char *str, char **end);
-        return (float)_libc_strtof(nptr, endptr);
+        return _libc_strtof(nptr, endptr);
 }
 
 #ifdef __cplusplus

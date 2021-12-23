@@ -139,7 +139,7 @@ extern "C" {
 static inline DIR *opendir(const char *name)
 {
         DIR *dir = NULL;
-        libc_syscall(_LIBC_SYS_OPENDIR, &dir, name);
+        _libc_syscall(_LIBC_SYS_OPENDIR, &dir, name);
         return dir;
 }
 
@@ -193,7 +193,7 @@ static inline DIR *opendir(const char *name)
 static inline int closedir(DIR *dir)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_CLOSEDIR, &r, dir);
+        _libc_syscall(_LIBC_SYS_CLOSEDIR, &r, dir);
         return r;
 }
 
@@ -249,7 +249,7 @@ static inline int closedir(DIR *dir)
 static inline struct dirent *readdir(DIR *dir)
 {
         struct dirent *dirent = NULL;
-        libc_syscall(_LIBC_SYS_READDIR, &dirent, dir);
+        _libc_syscall(_LIBC_SYS_READDIR, &dirent, dir);
         return dirent;
 }
 
@@ -297,7 +297,7 @@ static inline struct dirent *readdir(DIR *dir)
 //==============================================================================
 static inline void seekdir(DIR *dir, u32_t seek)
 {
-        libc_syscall(_LIBC_SYS_DIRSEEK, NULL, dir, &seek);
+        _libc_syscall(_LIBC_SYS_DIRSEEK, NULL, dir, &seek);
 }
 
 //==============================================================================
@@ -345,7 +345,7 @@ static inline void seekdir(DIR *dir, u32_t seek)
 static inline u32_t telldir(DIR *dir)
 {
         u32_t seek = 0;
-        libc_syscall(_LIBC_SYS_DIRTELL, &seek, dir);
+        _libc_syscall(_LIBC_SYS_DIRTELL, &seek, dir);
         return seek;
 }
 

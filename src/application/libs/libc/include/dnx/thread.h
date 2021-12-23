@@ -285,7 +285,7 @@ typedef struct {
 static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 {
         pid_t pid = 0;
-        libc_syscall(_LIBC_SYS_PROCESSCREATE, &pid, cmd, attr);
+        _libc_syscall(_LIBC_SYS_PROCESSCREATE, &pid, cmd, attr);
         return pid;
 }
 
@@ -342,7 +342,7 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 static inline int process_kill(pid_t pid)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_PROCESSKILL, &r, &pid);
+        _libc_syscall(_LIBC_SYS_PROCESSKILL, &r, &pid);
         return r;
 }
 
@@ -403,7 +403,7 @@ static inline int process_kill(pid_t pid)
 static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_PROCESSWAIT, &r, &pid, status, &timeout);
+        _libc_syscall(_LIBC_SYS_PROCESSWAIT, &r, &pid, status, &timeout);
         return r;
 }
 
@@ -501,7 +501,7 @@ static inline int wait(pid_t pid)
 static inline int process_stat_seek(size_t seek, process_stat_t *stat)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_PROCESSSTATSEEK, &r, &seek, stat);
+        _libc_syscall(_LIBC_SYS_PROCESSSTATSEEK, &r, &seek, stat);
         return r;
 }
 
@@ -542,7 +542,7 @@ static inline int process_stat_seek(size_t seek, process_stat_t *stat)
 static inline int process_stat(pid_t pid, process_stat_t *stat)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_PROCESSSTATPID, &r, &pid, stat);
+        _libc_syscall(_LIBC_SYS_PROCESSSTATPID, &r, &pid, stat);
         return r;
 }
 
@@ -576,7 +576,7 @@ static inline int process_stat(pid_t pid, process_stat_t *stat)
 static inline pid_t process_getpid(void)
 {
         pid_t pid = 0;
-        libc_syscall(_LIBC_SYS_PROCESSGETPID, &pid);
+        _libc_syscall(_LIBC_SYS_PROCESSGETPID, &pid);
         return pid;
 }
 
@@ -608,7 +608,7 @@ static inline pid_t process_getpid(void)
 static inline int process_get_priority(pid_t pid)
 {
         int prio = 0;
-        libc_syscall(_LIBC_SYS_PROCESSGETPRIO, &prio, &pid);
+        _libc_syscall(_LIBC_SYS_PROCESSGETPRIO, &prio, &pid);
         return prio;
 }
 
@@ -678,7 +678,7 @@ static inline int process_get_priority(pid_t pid)
 static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr, void *arg)
 {
         tid_t tid = 0;
-        libc_syscall(_LIBC_SYS_THREADCREATE, &tid, func, attr, arg);
+        _libc_syscall(_LIBC_SYS_THREADCREATE, &tid, func, attr, arg);
         return tid;
 }
 
@@ -741,7 +741,7 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 static inline int thread_cancel(tid_t tid)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_THREADKILL, &r, &tid);
+        _libc_syscall(_LIBC_SYS_THREADKILL, &r, &tid);
         return r;
 }
 
@@ -802,7 +802,7 @@ static inline int thread_cancel(tid_t tid)
 static inline int thread_current(void)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_GETACTIVETHREAD, &r);
+        _libc_syscall(_LIBC_SYS_GETACTIVETHREAD, &r);
         return r;
 }
 
@@ -857,7 +857,7 @@ static inline int thread_current(void)
 //==============================================================================
 static inline void thread_exit(int status)
 {
-        libc_syscall(_LIBC_SYS_THREADEXIT, NULL, &status);
+        _libc_syscall(_LIBC_SYS_THREADEXIT, NULL, &status);
 }
 
 //==============================================================================
@@ -924,7 +924,7 @@ static inline void thread_exit(int status)
 static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_THREADJOIN, &r, &tid, status, &timeout_ms);
+        _libc_syscall(_LIBC_SYS_THREADJOIN, &r, &tid, status, &timeout_ms);
         return r;
 }
 
@@ -1031,7 +1031,7 @@ static inline int thread_join(tid_t tid, int *status)
 static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_THREADSTAT, &r, &pid, &tid, stat);
+        _libc_syscall(_LIBC_SYS_THREADSTAT, &r, &pid, &tid, stat);
         return r;
 }
 
@@ -1103,7 +1103,7 @@ static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
 static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 {
         sem_t *sem = NULL;
-        libc_syscall(_LIBC_SYS_SEMAPHORECREATE, &sem, &cnt_max, &cnt_init);
+        _libc_syscall(_LIBC_SYS_SEMAPHORECREATE, &sem, &cnt_max, &cnt_init);
         return sem;
 }
 
@@ -1144,7 +1144,7 @@ static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 //==============================================================================
 static inline void semaphore_delete(sem_t *sem)
 {
-        libc_syscall(_LIBC_SYS_SEMAPHOREDESTROY, NULL, sem);
+        _libc_syscall(_LIBC_SYS_SEMAPHOREDESTROY, NULL, sem);
 }
 
 //==============================================================================
@@ -1213,7 +1213,7 @@ static inline void semaphore_delete(sem_t *sem)
 static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
 {
         bool r = false;
-        libc_syscall(_LIBC_SYS_SEMAPHOREWAIT, &r, sem, &timeout);
+        _libc_syscall(_LIBC_SYS_SEMAPHOREWAIT, &r, sem, &timeout);
         return r;
 }
 
@@ -1272,7 +1272,7 @@ static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
 static inline bool semaphore_signal(sem_t *sem)
 {
         bool r = false;
-        libc_syscall(_LIBC_SYS_SEMAPHORESIGNAL, &r, sem);
+        _libc_syscall(_LIBC_SYS_SEMAPHORESIGNAL, &r, sem);
         return r;
 }
 
@@ -1308,7 +1308,7 @@ static inline bool semaphore_signal(sem_t *sem)
 static inline int semaphore_get_value(sem_t *sem)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &r, sem);
+        _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &r, sem);
         return r;
 }
 
@@ -1373,7 +1373,7 @@ static inline int semaphore_get_value(sem_t *sem)
 static inline mutex_t *mutex_new(enum mutex_type type)
 {
         mutex_t *mtx = NULL;
-        libc_syscall(_LIBC_SYS_MUTEXCREATE, &mtx, &type);
+        _libc_syscall(_LIBC_SYS_MUTEXCREATE, &mtx, &type);
         return mtx;
 }
 
@@ -1436,7 +1436,7 @@ static inline mutex_t *mutex_new(enum mutex_type type)
 //==============================================================================
 static inline void mutex_delete(mutex_t *mutex)
 {
-        libc_syscall(_LIBC_SYS_MUTEXDESTROY, NULL, mutex);
+        _libc_syscall(_LIBC_SYS_MUTEXDESTROY, NULL, mutex);
 }
 
 //==============================================================================
@@ -1502,7 +1502,7 @@ static inline void mutex_delete(mutex_t *mutex)
 static inline bool mutex_lock(mutex_t *mutex, const u32_t timeout)
 {
         bool r = false;
-        libc_syscall(_LIBC_SYS_MUTEXLOCK, &r, mutex, &timeout);
+        _libc_syscall(_LIBC_SYS_MUTEXLOCK, &r, mutex, &timeout);
         return r;
 }
 
@@ -1631,7 +1631,7 @@ static inline bool mutex_trylock(mutex_t *mutex)
 static inline bool mutex_unlock(mutex_t *mutex)
 {
         bool r = false;
-        libc_syscall(_LIBC_SYS_MUTEXUNLOCK, &r, mutex);
+        _libc_syscall(_LIBC_SYS_MUTEXUNLOCK, &r, mutex);
         return r;
 }
 
@@ -1701,7 +1701,7 @@ static inline bool mutex_unlock(mutex_t *mutex)
 static inline queue_t *queue_new(const size_t length, const size_t item_size)
 {
         queue_t *queue = NULL;
-        libc_syscall(_LIBC_SYS_QUEUECREATE, &queue, &length, &item_size);
+        _libc_syscall(_LIBC_SYS_QUEUECREATE, &queue, &length, &item_size);
         return queue;
 }
 
@@ -1765,7 +1765,7 @@ static inline queue_t *queue_new(const size_t length, const size_t item_size)
 //==============================================================================
 static inline void queue_delete(queue_t *queue)
 {
-        libc_syscall(_LIBC_SYS_QUEUEDESTROY, NULL, queue);
+        _libc_syscall(_LIBC_SYS_QUEUEDESTROY, NULL, queue);
 }
 
 //==============================================================================
@@ -1830,7 +1830,7 @@ static inline void queue_delete(queue_t *queue)
 static inline bool queue_reset(queue_t *queue)
 {
         bool r = false;
-        libc_syscall(_LIBC_SYS_QUEUERESET, &r, queue);
+        _libc_syscall(_LIBC_SYS_QUEUERESET, &r, queue);
         return r;
 }
 
@@ -1901,7 +1901,7 @@ static inline bool queue_reset(queue_t *queue)
 static inline bool queue_send(queue_t *queue, const void *item, const u32_t timeout)
 {
         bool r = false;
-        libc_syscall(_LIBC_SYS_QUEUESEND, &r, queue, item, &timeout);
+        _libc_syscall(_LIBC_SYS_QUEUESEND, &r, queue, item, &timeout);
         return r;
 }
 
@@ -1971,7 +1971,7 @@ static inline bool queue_send(queue_t *queue, const void *item, const u32_t time
 static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout)
 {
         bool r = false;
-        libc_syscall(_LIBC_SYS_QUEUERECEIVE, &r, queue, item, &timeout);
+        _libc_syscall(_LIBC_SYS_QUEUERECEIVE, &r, queue, item, &timeout);
         return r;
 }
 
@@ -2040,7 +2040,7 @@ static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout
 static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout)
 {
         bool r = false;
-        libc_syscall(_LIBC_SYS_QUEUERECEIVEPEEK, &r, queue, item, &timeout);
+        _libc_syscall(_LIBC_SYS_QUEUERECEIVEPEEK, &r, queue, item, &timeout);
         return r;
 }
 
@@ -2108,7 +2108,7 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t ti
 static inline int queue_get_number_of_items(queue_t *queue)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &r, queue);
+        _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &r, queue);
         return r;
 }
 
@@ -2151,7 +2151,7 @@ static inline int queue_get_number_of_items(queue_t *queue)
 static inline int queue_get_space_available(queue_t *queue)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &r, queue);
+        _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &r, queue);
         return r;
 }
 

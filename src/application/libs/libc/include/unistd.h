@@ -94,7 +94,7 @@ extern "C" {
 static inline void sleep(uint32_t seconds)
 {
         uint32_t msec = seconds * 1000;
-        libc_syscall(_LIBC_SYS_MSLEEP, NULL, &msec);
+        _libc_syscall(_LIBC_SYS_MSLEEP, NULL, &msec);
 }
 
 //==============================================================================
@@ -123,7 +123,7 @@ static inline void sleep(uint32_t seconds)
 //==============================================================================
 static inline void msleep(uint32_t milliseconds)
 {
-        libc_syscall(_LIBC_SYS_MSLEEP, NULL, &milliseconds);
+        _libc_syscall(_LIBC_SYS_MSLEEP, NULL, &milliseconds);
 }
 
 //==============================================================================
@@ -152,7 +152,7 @@ static inline void msleep(uint32_t milliseconds)
 //==============================================================================
 static inline void usleep(uint32_t microseconds)
 {
-        libc_syscall(_LIBC_SYS_USLEEP, NULL, &microseconds);
+        _libc_syscall(_LIBC_SYS_USLEEP, NULL, &microseconds);
 }
 
 //==============================================================================
@@ -183,14 +183,9 @@ static inline void usleep(uint32_t microseconds)
 //==============================================================================
 static inline char *getcwd(char *buf, size_t size)
 {
-#if __OS_ENABLE_GETCWD__ == _YES_
         char *cwd;
-        libc_syscall(_LIBC_SYS_GETCWD, &cwd, buf, &size);
+        _libc_syscall(_LIBC_SYS_GETCWD, &cwd, buf, &size);
         return cwd;
-#else
-        UNUSED_ARG1(size);
-        return buf;
-#endif
 }
 
 //==============================================================================
@@ -218,15 +213,9 @@ static inline char *getcwd(char *buf, size_t size)
 //==============================================================================
 static inline int chdir(const char *cwd)
 {
-#if __OS_ENABLE_GETCWD__ == _YES_
         int result = -1;
-        libc_syscall(_LIBC_SYS_SETCWD, &result, cwd);
+        _libc_syscall(_LIBC_SYS_SETCWD, &result, cwd);
         return result;
-#else
-        UNUSED_ARG1(cwd);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -259,7 +248,7 @@ static inline int chdir(const char *cwd)
 static inline pid_t getpid(void)
 {
         pid_t pid = 0;
-        libc_syscall(_LIBC_SYS_PROCESSGETPID, &pid);
+        _libc_syscall(_LIBC_SYS_PROCESSGETPID, &pid);
         return pid;
 }
 
@@ -292,15 +281,9 @@ static inline pid_t getpid(void)
 //==============================================================================
 static inline int chown(const char *pathname, uid_t owner, gid_t group)
 {
-#if __OS_ENABLE_CHOWN__ == _YES_
         int r = -1;
-        libc_syscall(_LIBC_SYS_CHOWN, &r, pathname, &owner, &group);
+        _libc_syscall(_LIBC_SYS_CHOWN, &r, pathname, &owner, &group);
         return r;
-#else
-        UNUSED_ARG3(pathname, owner, group);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -321,7 +304,7 @@ static inline int chown(const char *pathname, uid_t owner, gid_t group)
 //==============================================================================
 static inline void sync(void)
 {
-        libc_syscall(_LIBC_SYS_SYNC, NULL);
+        _libc_syscall(_LIBC_SYS_SYNC, NULL);
 }
 
 //==============================================================================
@@ -345,7 +328,7 @@ static inline void sync(void)
 static inline gid_t getgid(void)
 {
         gid_t gid = 0;
-        libc_syscall(_LIBC_SYS_GETGID, &gid);
+        _libc_syscall(_LIBC_SYS_GETGID, &gid);
         return gid;
 }
 
@@ -370,7 +353,7 @@ static inline gid_t getgid(void)
 static inline uid_t getuid(void)
 {
         uid_t uid = 0;
-        libc_syscall(_LIBC_SYS_GETUID, &uid);
+        _libc_syscall(_LIBC_SYS_GETUID, &uid);
         return uid;
 }
 

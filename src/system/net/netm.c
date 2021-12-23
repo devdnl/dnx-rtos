@@ -73,7 +73,7 @@ Brief    Network management.
 #define PROXY_hton_u16(_family)                 PROXY_FUNCTION_U16(_family, hton_u16)
 #define PROXY_hton_u32(_family)                 PROXY_FUNCTION_U32(_family, hton_u32)
 #define PROXY_hton_u64(_family)                 PROXY_FUNCTION_U64(_family, hton_u64)
-#define call_proxy_function(family, ...)        proxy[family](__VA_ARGS__)
+#define call_proxy_function(family, ...)        (proxy[family] ? proxy[family](__VA_ARGS__) : ENOTSUP)
 
 /*==============================================================================
   Local object types

@@ -849,7 +849,7 @@ static inline char *strndup(const char *s, size_t n)
 
         n += 1;
         char *dup = NULL;
-        libc_syscall(_LIBC_SYS_MALLOC, &dup, &n);
+        _libc_syscall(_LIBC_SYS_MALLOC, &dup, &n);
         if (dup) {
                 _libc_strlcpy(dup, s, n);
         }

@@ -1,11 +1,11 @@
 /*=========================================================================*//**
-@file    vfprintf.c
+@file    file.c
 
 @author  Daniel Zorychta
 
-@brief   Print functions.
+@brief   File handling functions.
 
-@note    Copyright (C) 2015 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2021 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -30,10 +30,6 @@
   Include files
 ==============================================================================*/
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <dnx/misc.h>
-#include <errno.h>
 
 /*==============================================================================
   Local macros
@@ -65,73 +61,79 @@
 
 //==============================================================================
 /**
- * @brief Function write to file formatted string.
+ * @brief Function opens file.
  *
- * @param file                file
- * @param format              formated text
- * @param arg                 arguments
+ * The fopen() function opens the file whose name is the string pointed to by
+ * <i>path</i> and associates a stream with it. The argument <i>mode</i> points
+ * to a string beginning with one of the following sequences (possibly followed
+ * by additional characters, as described below):<p>
  *
- * @retval number of written characters.
+ * <b>r</b> - Open text file for reading. The stream is positioned at the
+ * beginning of the file.<p>
+ *
+ * <b>r+</b> - Open for reading and writing. The stream is positioned at the
+ * beginning of the file.<p>
+ *
+ * <b>w</b> - Truncate file to zero length or create text file for writing.
+ * The stream is positioned at the beginning of the file.<p>
+ *
+ * <b>w+</b> - Open for reading and writing. The file is created if it does
+ * not exist, otherwise it is truncated. The stream is positioned at the
+ * beginning of the file.<p>
+ *
+ * <b>a</b> - Open for appending (writing at end of file). The file is
+ * created if it does  not exist. The stream is positioned at the end of the
+ * file.<p>
+ *
+ * <b>a+</b> - Open for reading and appending (writing at end of file). The
+ * file is created if it does not exist. The initial file position for reading
+ * is at the beginning of the file, but output is always appended to the end of
+ * the file.
+ *
+ * @param path          path to file
+ * @param mode          file open mode
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EISDIR
+ * @exception | @ref ENOENT
+ *
+ * @return Upon successful completion fopen(), return a <b>FILE</b> pointer.
+ * Otherwise, @ref NULL is returned and @ref errno is set to indicate the
+ * error.
  */
 //==============================================================================
-int vfprintf(FILE *file, const char *format, va_list arg)
+FILE *_libc_fopen(const char *path, const char *mode)
 {
-        int n = 0;
-
-        va_list carg;
-        va_copy(carg, arg);
-        u32_t size = vsnprintf(NULL, 0, format, carg) + 1;
-        va_end(carg);
-
-        char *str = calloc(1, size);
-        if (str) {
-                n = vsnprintf(str, size, format, arg);
-                fwrite(str, sizeof(char), n, file);
-                int err = errno;
-                free(str);
-                errno = err;
-        }
-
-        return n;
+        FILE *f = NULL;
+        _libc_syscall(_LIBC_SYS_FOPEN, &f, path, mode);
+        return f;
 }
 
 //==============================================================================
 /**
- * @brief  Function write to stdout formatted string.
+ * @brief Function closes selected file.
  *
- * @param format              formated text
- * @param ...                 format arguments
+ * The fclose() function closes the created stream <i>file</i>.
  *
- * @return number of written characters.
+ * @param file          file to close
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOENT
+ * @exception | @ref EFAULT
+ *
+ * @return Upon successful completion \b 0 is returned. Otherwise, @ref EOF is
+ * returned and @ref errno is set to indicate the error. In either case any
+ * further access (including another call to fclose()) to the stream results
+ * in undefined behavior.
  */
 //==============================================================================
-int _libc_printf(const char *format, ...)
+int _libc_fclose(FILE *file)
 {
-        va_list arg;
-        va_start(arg, format);
-        int status = vfprintf(stdout, format, arg);
-        va_end(arg);
-        return status;
-}
-
-//==============================================================================
-/**
- * @brief  Function write to file formatted string.
- *
- * @param streamm             stream
- * @param format              formated text
- * @param ...                 format arguments
- *
- * @return number of written characters.
- */
-//==============================================================================
-int _libc_fprintf(FILE *stream, const char *format, ...)
-{
-        va_list arg;
-        va_start(arg, format);
-        int status = vfprintf(stream, format, arg);
-        va_end(arg);
-        return status;
+        int r = EOF;
+        _libc_syscall(_LIBC_SYS_FCLOSE, &r, file);
+        return r;
 }
 
 /*==============================================================================

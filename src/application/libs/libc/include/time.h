@@ -368,7 +368,7 @@ struct tm {
 static inline clock_t clock(void)
 {
         u64_t uptime = 0;
-        libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
+        _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
         return uptime;
 }
 
@@ -478,7 +478,7 @@ static inline time_t time(time_t *timer)
 #if __OS_ENABLE_TIMEMAN__ == _YES_
         struct timeval timeval;
         int err = -1;
-        libc_syscall(_LIBC_SYS_GETTIMEOFDAY, &err, &timeval);
+        _libc_syscall(_LIBC_SYS_GETTIMEOFDAY, &err, &timeval);
 
         if (timer) {
                 *timer = timeval.tv_sec;

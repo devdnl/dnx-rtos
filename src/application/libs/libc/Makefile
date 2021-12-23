@@ -1,9 +1,11 @@
 # Makefile for GNU make
 
 CSRC_CORE  += ../application/libs/libc/source/static.c
+CSRC_LIB   += libc/source/alloc.c
 CSRC_LIB   += libc/source/conv.c
 CSRC_LIB   += libc/source/ctime_r.c
 CSRC_LIB   += libc/source/fgets.c
+CSRC_LIB   += libc/source/file.c
 CSRC_LIB   += libc/source/fputc.c
 CSRC_LIB   += libc/source/fputs.c
 CSRC_LIB   += libc/source/getc.c

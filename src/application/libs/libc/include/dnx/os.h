@@ -34,8 +34,8 @@ This library contains macros and functions related directly with dnx RTOS system
 */
 /**@{*/
 
-#ifndef _LIBC_DNX_OS_H_
-#define _LIBC_DNX_OS_H_
+#ifndef _LIBC_DNX_LIBC_DNX_OS_H_
+#define _LIBC_DNX_LIBC_DNX_OS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,12 +76,12 @@ typedef struct {
         int32_t  modules_memory_usage;     /*!< The amount of memory used by modules (drivers).*/
         int32_t  programs_memory_usage;    /*!< The amount of memory used by users' programs (applications).*/
         int32_t  shared_memory_usage;      /*!< The amount of memory used by shared buffers.*/
-        int32_t  cached_memory_usage;      /*!< The anount of memory used by disc caches.*/
+        int32_t  cached_memory_usage;      /*!< The amount of memory used by disc caches.*/
 } memstat_t;
 
 /** average CPU load */
 typedef struct {
-        u32_t avg1sec;                  //!< average CPU laod within 1 second (1% = 10)
+        u32_t avg1sec;                  //!< average CPU load within 1 second (1% = 10)
         u32_t avg1min;                  //!< average CPU load within 1 minute (1% = 10)
         u32_t avg5min;                  //!< average CPU load within 5 minutes (1% = 10)
         u32_t avg15min;                 //!< average CPU load within 15 minutes (1% = 10)
@@ -166,7 +166,7 @@ typedef struct {
 static inline int get_memory_usage_details(memstat_t *stat)
 {
         int r;
-        libc_syscall(_LIBC_SYS_GETMEMDETAILS, &r, stat);
+        _libc_syscall(_LIBC_SYS_GETMEMDETAILS, &r, stat);
         return r;
 }
 
@@ -203,7 +203,7 @@ static inline int get_memory_usage_details(memstat_t *stat)
 static inline int get_driver_memory_usage(uint module_number, int32_t *usage)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_GETMODMEMUSAGE, &r, &module_number, usage);
+        _libc_syscall(_LIBC_SYS_GETMODMEMUSAGE, &r, &module_number, usage);
         return r;
 }
 
@@ -237,7 +237,7 @@ static inline int get_driver_memory_usage(uint module_number, int32_t *usage)
 static inline u64_t get_uptime_ms(void)
 {
         uint64_t uptime = 0;
-        libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
+        _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
         return uptime;
 }
 
@@ -300,7 +300,7 @@ static inline uint32_t get_uptime(void)
 static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 {
         int r;
-        libc_syscall(_LIBC_SYS_GETAVGCPULOAD, &r, avg_CPU_load);
+        _libc_syscall(_LIBC_SYS_GETAVGCPULOAD, &r, avg_CPU_load);
         return r;
 }
 
@@ -329,7 +329,7 @@ static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 static inline const char *get_platform_name(void)
 {
         const char *name = NULL;
-        libc_syscall(_LIBC_SYS_GETPLATFORMNAME, &name);
+        _libc_syscall(_LIBC_SYS_GETPLATFORMNAME, &name);
         return name;
 }
 
@@ -357,7 +357,7 @@ static inline const char *get_platform_name(void)
 static inline const char *get_OS_name(void)
 {
         const char *buf = NULL;
-        libc_syscall(_LIBC_SYS_GETOSNAME, &buf);
+        _libc_syscall(_LIBC_SYS_GETOSNAME, &buf);
         return buf;
 }
 
@@ -385,7 +385,7 @@ static inline const char *get_OS_name(void)
 static inline const char *get_OS_version(void)
 {
         const char *buf = NULL;
-        libc_syscall(_LIBC_SYS_GETOSVER, &buf);
+        _libc_syscall(_LIBC_SYS_GETOSVER, &buf);
         return buf;
 }
 
@@ -413,7 +413,7 @@ static inline const char *get_OS_version(void)
 static inline const char *get_OS_codename(void)
 {
         const char *buf = NULL;
-        libc_syscall(_LIBC_SYS_GETOSCODENAME, &buf);
+        _libc_syscall(_LIBC_SYS_GETOSCODENAME, &buf);
         return buf;
 }
 
@@ -441,7 +441,7 @@ static inline const char *get_OS_codename(void)
 static inline const char *get_kernel_name(void)
 {
         const char *buf = NULL;
-        libc_syscall(_LIBC_SYS_GETKERNELNAME, &buf);
+        _libc_syscall(_LIBC_SYS_GETKERNELNAME, &buf);
         return buf;
 }
 
@@ -469,7 +469,7 @@ static inline const char *get_kernel_name(void)
 static inline const char *get_kernel_version(void)
 {
         const char *buf = NULL;
-        libc_syscall(_LIBC_SYS_GETKERNELVER, &buf);
+        _libc_syscall(_LIBC_SYS_GETKERNELVER, &buf);
         return buf;
 }
 
@@ -500,7 +500,7 @@ static inline const char *get_kernel_version(void)
 static inline int get_host_name(char *hostname, size_t hostname_len)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_GETHOSTNAME, &r, hostname, &hostname_len);
+        _libc_syscall(_LIBC_SYS_GETHOSTNAME, &r, hostname, &hostname_len);
         return r;
 }
 
@@ -529,7 +529,7 @@ static inline int get_host_name(char *hostname, size_t hostname_len)
 //==============================================================================
 static inline void system_reboot(void)
 {
-        libc_syscall(_LIBC_SYS_SYSTEMRESTART, NULL);
+        _libc_syscall(_LIBC_SYS_SYSTEMRESTART, NULL);
 }
 
 //==============================================================================
@@ -557,7 +557,7 @@ static inline void system_reboot(void)
 //==============================================================================
 static inline void system_shutdown(void)
 {
-        libc_syscall(_LIBC_SYS_SYSTEMSHUTDOWN, NULL);
+        _libc_syscall(_LIBC_SYS_SYSTEMSHUTDOWN, NULL);
 }
 
 //==============================================================================
@@ -593,17 +593,9 @@ static inline void system_shutdown(void)
 //==============================================================================
 static inline size_t syslog_read(char *str, size_t len, const struct timeval *from_time, struct timeval *curr_time)
 {
-#if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         size_t n = 0;
-        libc_syscall(_LIBC_SYS_SYSLOGREAD, &n, str, &len, from_time, curr_time);
+        _libc_syscall(_LIBC_SYS_SYSLOGREAD, &n, str, &len, from_time, curr_time);
         return n;
-#else
-        (void)str;
-        (void)len;
-        (void)from_time;
-        (void)curr_time;
-        return 0;
-#endif
 }
 
 //==============================================================================
@@ -627,7 +619,7 @@ static inline size_t syslog_read(char *str, size_t len, const struct timeval *fr
 //==============================================================================
 static inline void syslog_clear(void)
 {
-        libc_syscall(_LIBC_SYS_SYSLOGCLEAR, NULL);
+        _libc_syscall(_LIBC_SYS_SYSLOGCLEAR, NULL);
 }
 
 //==============================================================================
@@ -661,7 +653,23 @@ static inline void syslog_clear(void)
 static inline bool get_kernel_panic_info(kernel_panic_info_t *info)
 {
         bool r = false;
-        libc_syscall(_LIBC_SYS_KERNELPANICINFO, &r, info);
+        _libc_syscall(_LIBC_SYS_KERNELPANICINFO, &r, info);
+        return r;
+}
+
+//==============================================================================
+/**
+ * @brief  Function check if selected object (address) is allocated in heap.
+ *
+ * @param  ptr          object's pointer
+ *
+ * @return If object is in heap then true is returned, otherwise false.
+ */
+//==============================================================================
+static inline bool is_object_in_heap(const void *ptr)
+{
+        bool r = false;
+        _libc_syscall(_LIBC_SYS_ISHEAPADDR, &r, ptr);
         return r;
 }
 
@@ -671,7 +679,7 @@ static inline bool get_kernel_panic_info(kernel_panic_info_t *info)
 }
 #endif
 
-#endif /* _OS_H_ */
+#endif /* _LIBC_DNX_OS_H_ */
 
 /**@}*/
 /*==============================================================================

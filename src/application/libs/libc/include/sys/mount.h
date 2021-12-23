@@ -34,8 +34,8 @@ The library is used to control file systems mounting and drivers initialization.
 */
 /**@{*/
 
-#ifndef _MOUNT_H_
-#define _MOUNT_H_
+#ifndef _LIBC_MOUNT_H_
+#define _LIBC_MOUNT_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -118,7 +118,7 @@ static inline int mount(const char *FS_name, const char *src_path,
                         const char *mount_point, const char *options)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_MOUNT, &r, FS_name, src_path, mount_point, options);
+        _libc_syscall(_LIBC_SYS_MOUNT, &r, FS_name, src_path, mount_point, options);
         return r;
 }
 
@@ -171,7 +171,7 @@ static inline int mount(const char *FS_name, const char *src_path,
 static inline int umount(const char *mount_point)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_UMOUNT, &r, mount_point);
+        _libc_syscall(_LIBC_SYS_UMOUNT, &r, mount_point);
         return r;
 }
 
@@ -223,7 +223,7 @@ static inline int umount(const char *mount_point)
 static inline dev_t driver_init2(const char *mod_name, int major, int minor, const char *node_path, const void *config)
 {
         dev_t r = -1;
-        libc_syscall(_LIBC_SYS_DRIVERINIT, &r, mod_name, &major, &minor, node_path, config);
+        _libc_syscall(_LIBC_SYS_DRIVERINIT, &r, mod_name, &major, &minor, node_path, config);
         return r;
 }
 
@@ -297,7 +297,7 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
 static inline const char *get_driver_name(size_t modno)
 {
         const char *name = NULL;
-        libc_syscall(_LIBC_SYS_GETDRIVERNAME, &name, &modno);
+        _libc_syscall(_LIBC_SYS_GETDRIVERNAME, &name, &modno);
         return name;
 }
 
@@ -327,7 +327,7 @@ static inline const char *get_driver_name(size_t modno)
 static inline int get_driver_ID(const char *name)
 {
         int midx = -1;
-        libc_syscall(_LIBC_SYS_GETDRIVERID, &midx, name);
+        _libc_syscall(_LIBC_SYS_GETDRIVERID, &midx, name);
         return midx;
 }
 
@@ -445,7 +445,7 @@ static inline int get_driver_minor(dev_t dev)
 static inline size_t get_number_of_drivers(void)
 {
         size_t r = 0;
-        libc_syscall(_LIBC_SYS_GETDRIVERCOUNT, &r);
+        _libc_syscall(_LIBC_SYS_GETDRIVERCOUNT, &r);
         return r;
 }
 
@@ -477,7 +477,7 @@ static inline size_t get_number_of_drivers(void)
 static inline ssize_t get_number_of_driver_instances(size_t id)
 {
         ssize_t r = 0;
-        libc_syscall(_LIBC_SYS_GETDRIVERINSTANCES, &r, &id);
+        _libc_syscall(_LIBC_SYS_GETDRIVERINSTANCES, &r, &id);
         return r;
 }
 
@@ -516,7 +516,7 @@ static inline ssize_t get_number_of_driver_instances(size_t id)
 static inline int driver_release(const char *mod_name, int major, int minor)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_DRIVERRELEASE, &r, mod_name, &major, &minor);
+        _libc_syscall(_LIBC_SYS_DRIVERRELEASE, &r, mod_name, &major, &minor);
         return r;
 }
 
@@ -566,7 +566,7 @@ static inline int driver_release2(const char *path)
 
                         const char *mod_name = get_driver_name(modno);
 
-                        libc_syscall(_LIBC_SYS_DRIVERRELEASE, &r, mod_name, &major, &minor);
+                        _libc_syscall(_LIBC_SYS_DRIVERRELEASE, &r, mod_name, &major, &minor);
                 } else {
                         errno = ENODEV;
                 }
@@ -579,7 +579,7 @@ static inline int driver_release2(const char *path)
 }
 #endif
 
-#endif /* _MOUNT_H_ */
+#endif /* _LIBC_MOUNT_H_ */
 
 /**@}*/
 /*==============================================================================

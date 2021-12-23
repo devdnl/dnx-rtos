@@ -324,9 +324,8 @@ extern void **_libc_global;
 //==============================================================================
 static inline FILE *fopen(const char *path, const char *mode)
 {
-        FILE *f = NULL;
-        libc_syscall(_LIBC_SYS_FOPEN, &f, path, mode);
-        return f;
+        extern FILE *_libc_fopen(const char *path, const char *mode);
+        return _libc_fopen(path, mode);
 }
 
 //==============================================================================
@@ -367,9 +366,8 @@ static inline FILE *fopen(const char *path, const char *mode)
 //==============================================================================
 static inline int fclose(FILE *file)
 {
-        int r = EOF;
-        libc_syscall(_LIBC_SYS_FCLOSE, &r, file);
-        return r;
+        extern int _libc_fclose(FILE *file);
+        return _libc_fclose(file);
 }
 
 //==============================================================================
@@ -472,7 +470,7 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 {
         size_t s = 0;
         size_t n = size * count;
-        libc_syscall(_LIBC_SYS_FWRITE, &s, ptr, &n, file);
+        _libc_syscall(_LIBC_SYS_FWRITE, &s, ptr, &n, file);
         return s / size;
 }
 
@@ -524,7 +522,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 {
         size_t s = 0;
         size_t n = size * count;
-        libc_syscall(_LIBC_SYS_FREAD, &s, ptr, &n, file);
+        _libc_syscall(_LIBC_SYS_FREAD, &s, ptr, &n, file);
         return s / size;
 }
 
@@ -577,7 +575,7 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 static inline int fseek(FILE *file, int64_t offset, int mode)
 {
         size_t r = 1;
-        libc_syscall(_LIBC_SYS_FSEEK, &r, file, &offset, &mode);
+        _libc_syscall(_LIBC_SYS_FSEEK, &r, file, &offset, &mode);
         return r;
 }
 
@@ -717,7 +715,7 @@ static inline void rewind(FILE *file)
 static inline int64_t ftell(FILE *file)
 {
         int64_t lseek = 0;
-        libc_syscall(_LIBC_SYS_FTELL, &lseek, file);
+        _libc_syscall(_LIBC_SYS_FTELL, &lseek, file);
         return lseek;
 }
 
@@ -816,7 +814,7 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 static inline int fflush(FILE *file)
 {
         int r = EOF;
-        libc_syscall(_LIBC_SYS_FFLUSH, &r, file);
+        _libc_syscall(_LIBC_SYS_FFLUSH, &r, file);
         return r;
 }
 
@@ -864,7 +862,7 @@ static inline int fflush(FILE *file)
 static inline int feof(FILE *file)
 {
         int eof = 0;
-        libc_syscall(_LIBC_SYS_FEOF, &eof, file);
+        _libc_syscall(_LIBC_SYS_FEOF, &eof, file);
         return eof;
 }
 
@@ -911,7 +909,7 @@ static inline int feof(FILE *file)
 //==============================================================================
 static inline void clearerr(FILE *file)
 {
-        libc_syscall(_LIBC_SYS_CLEARERR, NULL, file);
+        _libc_syscall(_LIBC_SYS_CLEARERR, NULL, file);
 }
 
 //==============================================================================
@@ -962,7 +960,7 @@ static inline void clearerr(FILE *file)
 static inline int ferror(FILE *file)
 {
         int iserr = 1;
-        libc_syscall(_LIBC_SYS_FERROR, &iserr, file);
+        _libc_syscall(_LIBC_SYS_FERROR, &iserr, file);
         return iserr;
 }
 
@@ -1218,15 +1216,9 @@ static inline char *tmpnam(char *str)
 //==============================================================================
 static inline int remove(const char *path)
 {
-#if __OS_ENABLE_REMOVE__ == _YES_
         int r = EOF;
-        libc_syscall(_LIBC_SYS_REMOVE, &r, path);
+        _libc_syscall(_LIBC_SYS_REMOVE, &r, path);
         return r;
-#else
-        UNUSED_ARG1(path);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -1261,15 +1253,9 @@ static inline int remove(const char *path)
 //==============================================================================
 static inline int rename(const char *old_name, const char *new_name)
 {
-#if __OS_ENABLE_RENAME__ == _YES_
         int r = EOF;
-        libc_syscall(_LIBC_SYS_RENAME, &r, old_name, new_name);
+        _libc_syscall(_LIBC_SYS_RENAME, &r, old_name, new_name);
         return r;
-#else
-        UNUSED_ARG2(old_name, new_name);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -1436,14 +1422,8 @@ extern int vfprintf(FILE *stream, const char *format, va_list arg);
  * @see vfprintf(), vprintf(), fprintf(), vsprintf(), vsnprintf(), snprintf(), sprintf()
  */
 //==============================================================================
-static inline int printf(const char *format, ...)
-{
-        va_list arg;
-        va_start(arg, format);
-        int status = vfprintf(stdout, format, arg);
-        va_end(arg);
-        return status;
-}
+#define printf _libc_printf
+extern int _libc_printf(const char *format, ...);
 
 //==============================================================================
 /**
@@ -1612,14 +1592,8 @@ static inline int vprintf(const char *format, va_list arg)
  * @see vfprintf(), printf(), vprintf(), vsprintf(), vsnprintf(), snprintf(), sprintf()
  */
 //==============================================================================
-static inline int fprintf(FILE *stream, const char *format, ...)
-{
-        va_list arg;
-        va_start(arg, format);
-        int status = vfprintf(stream, format, arg);
-        va_end(arg);
-        return status;
-}
+#define fprintf _libc_fprintf
+extern int _libc_fprintf(FILE *stream, const char *format, ...);
 
 //==============================================================================
 /**
@@ -1786,14 +1760,8 @@ extern int vsnprintf(char *bfr, size_t size, const char *format, va_list args);
  * @see vfprintf(), printf(), vprintf(), vsprintf(), fprintf(), vsnprintf(), sprintf()
  */
 //==============================================================================
-static inline int snprintf(char *s, size_t n, const char *format, ...)
-{
-        va_list arg;
-        va_start(arg, format);
-        int status = vsnprintf(s, n, format, arg);
-        va_end(arg);
-        return status;
-}
+#define snprintf _libc_snprintf
+extern int _libc_snprintf(char *s, size_t n, const char *format, ...);
 
 //==============================================================================
 /**
@@ -1875,14 +1843,8 @@ static inline int snprintf(char *s, size_t n, const char *format, ...)
  * @see vfprintf(), printf(), vprintf(), vsprintf(), fprintf(), vsnprintf(), snprintf()
  */
 //==============================================================================
-static inline int sprintf(char *s, const char *format, ...)
-{
-        va_list arg;
-        va_start(arg, format);
-        int status = vsnprintf(s, UINT16_MAX, format, arg);
-        va_end(arg);
-        return status;
-}
+#define sprintf _libc_sprintf
+extern int _libc_sprintf(char *s, const char *format, ...);
 
 //==============================================================================
 /**

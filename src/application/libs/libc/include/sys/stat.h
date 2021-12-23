@@ -36,8 +36,8 @@ contains functions that read file statistics.
 */
 /**@{*/
 
-#ifndef _STAT_H_
-#define _STAT_H_
+#ifndef _LIBC_STAT_H_
+#define _LIBC_STAT_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -138,15 +138,9 @@ extern "C" {
 //==============================================================================
 static inline int mknod(const char *pathname, const char *mod_name, int major, int minor)
 {
-#if __OS_ENABLE_MKNOD__ == _YES_
         int r = -1;
-        libc_syscall(_LIBC_SYS_MKNOD, &r, pathname, mod_name, &major, &minor);
+        _libc_syscall(_LIBC_SYS_MKNOD, &r, pathname, mod_name, &major, &minor);
         return r;
-#else
-        UNUSED_ARG4(pathname, mod_name, major, minor);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -183,15 +177,9 @@ static inline int mknod(const char *pathname, const char *mod_name, int major, i
 //==============================================================================
 static inline int mkdir(const char *pathname, mode_t mode)
 {
-#if __OS_ENABLE_MKDIR__ == _YES_
         int r = -1;
-        libc_syscall(_LIBC_SYS_MKDIR, &r, pathname, &mode);
+        _libc_syscall(_LIBC_SYS_MKDIR, &r, pathname, &mode);
         return r;
-#else
-        UNUSED_ARG2(pathname, mode);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -231,15 +219,9 @@ static inline int mkdir(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int mkfifo(const char *pathname, mode_t mode)
 {
-#if __OS_ENABLE_MKFIFO__ == _YES_
         int r = -1;
-        libc_syscall(_LIBC_SYS_MKFIFO, &r, pathname, &mode);
+        _libc_syscall(_LIBC_SYS_MKFIFO, &r, pathname, &mode);
         return r;
-#else
-        UNUSED_ARG2(pathname, mode);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -275,15 +257,9 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int chmod(const char *pathname, mode_t mode)
 {
-#if __OS_ENABLE_CHMOD__ == _YES_
         int r = -1;
-        libc_syscall(_LIBC_SYS_CHMOD, &r, pathname, &mode);
+        _libc_syscall(_LIBC_SYS_CHMOD, &r, pathname, &mode);
         return r;
-#else
-        UNUSED_ARG2(pathname, mode);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -326,15 +302,9 @@ static inline int chmod(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int stat(const char *pathname, struct stat *buf)
 {
-#if __OS_ENABLE_FSTAT__ == _YES_
         int r = -1;
-        libc_syscall(_LIBC_SYS_STAT, &r, pathname, buf);
+        _libc_syscall(_LIBC_SYS_STAT, &r, pathname, buf);
         return r;
-#else
-        UNUSED_ARG2(pathname, buf);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 //==============================================================================
@@ -384,22 +354,16 @@ static inline int stat(const char *pathname, struct stat *buf)
 //==============================================================================
 static inline int fstat(FILE *file, struct stat *buf)
 {
-#if __OS_ENABLE_FSTAT__ == _YES_
         int r = -1;
-        libc_syscall(_LIBC_SYS_FSTAT, &r, file, buf);
+        _libc_syscall(_LIBC_SYS_FSTAT, &r, file, buf);
         return r;
-#else
-        UNUSED_ARG2(file, buf);
-        _errno = ENOTSUP;
-        return -1;
-#endif
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _STAT_H_ */
+#endif /* _LIBC_STAT_H_ */
 
 /**@}*/
 /*==============================================================================

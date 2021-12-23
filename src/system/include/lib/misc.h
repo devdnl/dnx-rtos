@@ -668,9 +668,9 @@ static inline size_t sys_strlcat(char *dst, const char *src, size_t size)
  * @return If object is in heap then true is returned, otherwise false.
  */
 //==============================================================================
-static inline bool sys_is_object_in_heap(void *ptr)
+static inline bool sys_is_object_in_heap(const void *ptr)
 {
-        extern bool _mm_is_object_in_heap(void *ptr);
+        extern bool _mm_is_object_in_heap(const void *ptr);
         return _mm_is_object_in_heap(ptr);
 }
 

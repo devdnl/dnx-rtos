@@ -457,7 +457,7 @@ size_t _mm_get_mem_size(void)
  * @return If pointer is on heap true is returned, otherwise false.
  */
 //==============================================================================
-bool _mm_is_object_in_heap(void *ptr)
+bool _mm_is_object_in_heap(const void *ptr)
 {
         if (ptr == NULL) {
                 return false;

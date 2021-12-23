@@ -98,7 +98,7 @@ extern size_t _mm_get_block_size(void*);
 extern size_t _mm_get_mem_free(void);
 extern size_t _mm_get_mem_usage(void);
 extern size_t _mm_get_mem_size(void);
-extern bool   _mm_is_object_in_heap(void *ptr);
+extern bool   _mm_is_object_in_heap(const void *ptr);
 extern bool   _mm_is_rom_address(const void *ptr);
 extern bool   _mm_check_consistency(void);
 extern bool   _mm_is_dma_capable(const void *ptr);

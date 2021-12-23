@@ -204,6 +204,7 @@ typedef enum {// NAME                        | RETURN TYPE    | ARG 1           
         _LIBC_SYS_SCHEDULERLOCK,          // | void           |                           |                                     |                                     |                           |                                           |
         _LIBC_SYS_SCHEDULERUNLOCK,        // | void           |                           |                                     |                                     |                           |                                           |
         _LIBC_SYS_THREADJOIN,             // | int            | const tid_t *tid          | int *status                         | const uint32_t *timeout
+        _LIBC_SYS_ISHEAPADDR,             // | bool           | const void *addr
 } _libc_syscall_t;
 
 /*==============================================================================
@@ -213,7 +214,7 @@ typedef enum {// NAME                        | RETURN TYPE    | ARG 1           
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void libc_syscall(_libc_syscall_t syscall, void *retptr, ...);
+extern void _libc_syscall(_libc_syscall_t syscall, void *retptr, ...);
 
 /*==============================================================================
   Exported inline functions

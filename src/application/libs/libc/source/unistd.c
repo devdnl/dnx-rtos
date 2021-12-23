@@ -121,7 +121,7 @@ fd_t open(const char *path, int flags, ...)
         }
 
         FILE *f = NULL;
-        libc_syscall(_LIBC_SYS_FOPEN, &f, path, flag);
+        _libc_syscall(_LIBC_SYS_FOPEN, &f, path, flag);
 
         return (f == NULL) ? -1 : (fd_t)f;
 }
@@ -149,7 +149,7 @@ int close(fd_t fd)
                 }
 
                 int r = EOF;
-                libc_syscall(_LIBC_SYS_FCLOSE, &r, f);
+                _libc_syscall(_LIBC_SYS_FCLOSE, &r, f);
                 return r;
         }
 
@@ -181,10 +181,10 @@ ssize_t read(fd_t fd, void *buf, size_t count)
                 }
 
                 size_t n = 0;
-                libc_syscall(_LIBC_SYS_FREAD, &n, buf, &count, f);
+                _libc_syscall(_LIBC_SYS_FREAD, &n, buf, &count, f);
 
                 int iserr = 0;
-                libc_syscall(_LIBC_SYS_FERROR, &iserr, f);
+                _libc_syscall(_LIBC_SYS_FERROR, &iserr, f);
 
                 return (iserr) ? -errno : (ssize_t)n;
 
@@ -218,10 +218,10 @@ ssize_t write(fd_t fd, const void *buf, size_t count)
                 }
 
                 size_t n = 0;
-                libc_syscall(_LIBC_SYS_FWRITE, &n, buf, &count, f);
+                _libc_syscall(_LIBC_SYS_FWRITE, &n, buf, &count, f);
 
                 int iserr = 0;
-                libc_syscall(_LIBC_SYS_FERROR, &iserr, f);
+                _libc_syscall(_LIBC_SYS_FERROR, &iserr, f);
 
                 return (iserr) ? errno : (ssize_t)n;
 
@@ -257,12 +257,12 @@ off_t lseek(fd_t fd, off_t offset, int whence)
 
                 size_t r = 1;
                 i64_t seek = offset;
-                libc_syscall(_LIBC_SYS_FSEEK, &r, f, &seek, &whence);
+                _libc_syscall(_LIBC_SYS_FSEEK, &r, f, &seek, &whence);
 
                 if (!r) {
                         i64_t lseek = 0;
                         int r = -1;
-                        libc_syscall(_LIBC_SYS_FTELL, &lseek, f);
+                        _libc_syscall(_LIBC_SYS_FTELL, &lseek, f);
 
                         if (r == 0) {
                                 return lseek;
@@ -285,7 +285,7 @@ off_t lseek(fd_t fd, off_t offset, int whence)
 int unlink(const char *pathname)
 {
         int r = EOF;
-        libc_syscall(_LIBC_SYS_REMOVE, &r, pathname);
+        _libc_syscall(_LIBC_SYS_REMOVE, &r, pathname);
         return r;
 }
 

@@ -112,12 +112,7 @@ extern "C" {
 static inline int shmget(const char *key, size_t size)
 {
         int r = -1;
-#if __OS_ENABLE_SHARED_MEMORY__ == _YES_
-        libc_syscall(_LIBC_SYS_SHMCREATE, &r, key, &size);
-#else
-        (void)key;
-        (void)size;
-#endif
+        _libc_syscall(_LIBC_SYS_SHMCREATE, &r, key, &size);
         return r;
 }
 
@@ -179,11 +174,7 @@ static inline int shmget(const char *key, size_t size)
 static inline int shmrm(const char *key)
 {
         int r = -1;
-#if __OS_ENABLE_SHARED_MEMORY__ == _YES_
-        libc_syscall(_LIBC_SYS_SHMDESTROY, &r, key);
-#else
-        (void)key;
-#endif
+        _libc_syscall(_LIBC_SYS_SHMDESTROY, &r, key);
         return r;
 }
 
@@ -240,13 +231,7 @@ static inline int shmrm(const char *key)
 static inline int shmat(const char *key, void **mem, size_t *size)
 {
         int r = -1;
-#if __OS_ENABLE_SHARED_MEMORY__ == _YES_
-        libc_syscall(_LIBC_SYS_SHMATTACH, &r, key, mem, &size);
-#else
-        (void)key;
-        (void)mem;
-        (void)size;
-#endif
+        _libc_syscall(_LIBC_SYS_SHMATTACH, &r, key, mem, &size);
         return r;
 }
 
@@ -313,11 +298,7 @@ static inline int shmat(const char *key, void **mem, size_t *size)
 static inline int shmdt(const char *key)
 {
         int r = -1;
-#if __OS_ENABLE_SHARED_MEMORY__ == _YES_
-        libc_syscall(_LIBC_SYS_SHMDETACH, &r, key);
-#else
-        (void)key;
-#endif
+        _libc_syscall(_LIBC_SYS_SHMDETACH, &r, key);
         return r;
 }
 

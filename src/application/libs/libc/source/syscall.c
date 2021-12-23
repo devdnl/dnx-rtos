@@ -35,11 +35,11 @@ Brief    Syscall handling.
   Local macros
 ==============================================================================*/
 /*
- * Syscall section address is 0x08000400 (mapped to 0x400) in normal mode.
+ * Syscall section address is 0x08000400 in normal mode.
  * The syscall section compiled is in the Thumb mode. To indicate this mode jump
  * address is incremented by 1.
  */
-#define dnx_syscall ((syscall_func)(0x401))
+#define dnx_syscall ((syscall_func)(0x08000401))
 
 /*==============================================================================
   Local object types
@@ -107,7 +107,7 @@ static void get_context(void *retptr, ...)
  * @param  ...          additional arguments
  */
 //==============================================================================
-void libc_syscall(_libc_syscall_t syscall, void *retptr, ...)
+void _libc_syscall(_libc_syscall_t syscall, void *retptr, ...)
 {
         /*
          * This part of code is called if dnx RTOS context is not referenced.

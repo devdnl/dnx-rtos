@@ -109,7 +109,7 @@ extern "C" {
 static inline int statfs(const char *path, struct statfs *statfs)
 {
         int r = -1;
-        libc_syscall(_LIBC_SYS_STATFS, &r, path, statfs);
+        _libc_syscall(_LIBC_SYS_STATFS, &r, path, statfs);
         return r;
 }
 

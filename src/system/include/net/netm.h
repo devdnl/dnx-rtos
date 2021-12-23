@@ -95,24 +95,10 @@ extern "C" {
 ------------------------------------------------------------------------------*/
 /** Network family. */
 typedef enum {
-#if __ENABLE_TCPIP_STACK__ > 0
         NET_FAMILY__INET,                       //!< Internet network.
-#else
-#define NET_FAMILY__INET _NET_FAMILY__COUNT
-#endif
-#if __ENABLE_SIPC_STACK__ > 0
         NET_FAMILY__SIPC,                       //!< Serial Inter-Processor Communication
-#else
-#define NET_FAMILY__SIPC _NET_FAMILY__COUNT
-#endif
-#if __ENABLE_CANNET_STACK__ > 0
         NET_FAMILY__CANNET,                     //!< CAN network Communication
-#else
-#define NET_FAMILY__CANNET _NET_FAMILY__COUNT
-#endif
-    #ifndef DOXYGEN
         _NET_FAMILY__COUNT
-    #endif
 } NET_family_t;
 
 /** Protocol selection. Not all protocols are available for all family networks. */

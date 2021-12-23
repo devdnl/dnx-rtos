@@ -34,8 +34,8 @@ The library is used to control IO and files in non-standard way.
 */
 /**@{*/
 
-#ifndef _IOCTL_H_
-#define _IOCTL_H_
+#ifndef _LIBC_IOCTL_H_
+#define _LIBC_IOCTL_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,8 +46,9 @@ extern "C" {
 ==============================================================================*/
 #include <stdio.h>
 #include <stdarg.h>
-#include <drivers/ioctl_requests.h> // FIXME ioctl include file needed
+#include <drivers/ioctl_requests.h> // to remove in future
 #include <libc/source/syscall.h>
+#include <stdbool.h>
 
 /*==============================================================================
   Exported macros
@@ -89,6 +90,13 @@ extern "C" {
 #define IOCTL_VFS__DEFAULT_RD_MODE              0xF0004
 
 /**
+ * @brief Request return read mode status.
+ *
+ * @see   ioctl()
+ */
+#define IOCTL_VFS__IS_NON_BLOCKING_RD_MODE      0xF0005
+
+/**
  * @brief Request set stream to non-blocking write mode.
  *
  * Request set stream to non-blocking write mode.
@@ -106,8 +114,11 @@ extern "C" {
  */
 #define IOCTL_VFS__DEFAULT_WR_MODE              0xF0007
 
-#define IOCTL_PIPE__PERMANENT                   0xF0002
-#define IOCTL_VFS__IS_NON_BLOCKING_RD_MODE      0xF0005
+/**
+ * @brief Request return write mode status.
+ *
+ * @see   ioctl()
+ */
 #define IOCTL_VFS__IS_NON_BLOCKING_WR_MODE      0xF0008
 
 /*==============================================================================
@@ -189,7 +200,7 @@ static inline int ioctl(fd_t fd, int request, ...)
         va_list arg;
         va_start(arg, request);
         int r = -1;
-        libc_syscall(_LIBC_SYS_IOCTL, &r, (FILE*)fd, &request, &arg);
+        _libc_syscall(_LIBC_SYS_IOCTL, &r, (FILE*)fd, &request, &arg);
         va_end(arg);
         return r;
 }
@@ -198,7 +209,7 @@ static inline int ioctl(fd_t fd, int request, ...)
 }
 #endif
 
-#endif /* _IOCTL_H_ */
+#endif /* _LIBC_IOCTL_H_ */
 
 /**@}*/
 /*==============================================================================
