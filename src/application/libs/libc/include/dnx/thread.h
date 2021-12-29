@@ -143,7 +143,7 @@ enum mutex_type {
  *
  * The type represent queue object. Fields are private.
  */
-typedef void queue_t;
+typedef struct _libc_queue queue_t;
 
 /**
  * @brief Thread function pointer
@@ -1657,12 +1657,7 @@ extern bool mutex_unlock(mutex_t *mutex);
  * @see queue_delete()
  */
 //==============================================================================
-static inline queue_t *queue_new(const size_t length, const size_t item_size)
-{
-        queue_t *queue = NULL;
-        _libc_syscall(_LIBC_SYS_QUEUECREATE, &queue, &length, &item_size);
-        return queue;
-}
+extern queue_t *queue_new(const size_t length, const size_t item_size);
 
 //==============================================================================
 /**
@@ -1722,10 +1717,7 @@ static inline queue_t *queue_new(const size_t length, const size_t item_size)
  * @see queue_new()
  */
 //==============================================================================
-static inline void queue_delete(queue_t *queue)
-{
-        _libc_syscall(_LIBC_SYS_QUEUEDESTROY, NULL, queue);
-}
+extern void queue_delete(queue_t *queue);
 
 //==============================================================================
 /**
@@ -1786,12 +1778,7 @@ static inline void queue_delete(queue_t *queue)
    @endcode
  */
 //==============================================================================
-static inline bool queue_reset(queue_t *queue)
-{
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_QUEUERESET, &r, queue);
-        return r;
-}
+extern bool queue_reset(queue_t *queue);
 
 //==============================================================================
 /**
@@ -1857,12 +1844,7 @@ static inline bool queue_reset(queue_t *queue)
  * @see queue_receive(), queue_receive_peek()
  */
 //==============================================================================
-static inline bool queue_send(queue_t *queue, const void *item, const u32_t timeout)
-{
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_QUEUESEND, &r, queue, item, &timeout);
-        return r;
-}
+extern bool queue_send(queue_t *queue, const void *item, const u32_t timeout);
 
 //==============================================================================
 /**
@@ -1927,12 +1909,7 @@ static inline bool queue_send(queue_t *queue, const void *item, const u32_t time
  * @see queue_send(), queue_receive_peek()
  */
 //==============================================================================
-static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout)
-{
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_QUEUERECEIVE, &r, queue, item, &timeout);
-        return r;
-}
+extern bool queue_receive(queue_t *queue, void *item, const u32_t timeout);
 
 //==============================================================================
 /**
@@ -1996,12 +1973,7 @@ static inline bool queue_receive(queue_t *queue, void *item, const u32_t timeout
  * @see queue_send(), queue_receive()
  */
 //==============================================================================
-static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout)
-{
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_QUEUERECEIVEPEEK, &r, queue, item, &timeout);
-        return r;
-}
+extern bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout);
 
 //==============================================================================
 /**
@@ -2064,12 +2036,7 @@ static inline bool queue_receive_peek(queue_t *queue, void *item, const u32_t ti
  * @see queue_send(), queue_receive(), queue_reset()
  */
 //==============================================================================
-static inline int queue_get_number_of_items(queue_t *queue)
-{
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &r, queue);
-        return r;
-}
+extern int queue_get_number_of_items(queue_t *queue);
 
 //==============================================================================
 /**
@@ -2107,18 +2074,13 @@ static inline int queue_get_number_of_items(queue_t *queue)
  * @see queue_get_number_of_items(), queue_receive(), queue_send(), queue_reset()
  */
 //==============================================================================
-static inline int queue_get_space_available(queue_t *queue)
-{
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &r, queue);
-        return r;
-}
+extern int queue_get_space_available(queue_t *queue);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _THREAD_H_ */
+#endif
 
 /**@}*/
 /*==============================================================================

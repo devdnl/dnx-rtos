@@ -48,6 +48,10 @@ struct _libc_sem {
         int fd;
 };
 
+struct _libc_queue {
+        int fd;
+};
+
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
@@ -432,6 +436,244 @@ int semaphore_get_value(sem_t *sem)
         }
 
         return value;
+}
+
+//==============================================================================
+/**
+ * @brief Function creates new queue object.
+ *
+ * The function queue_new() create new queue with length <i>length</i>
+ * of item size <i>item_size</i>. Returns pointer to the created object or
+ * <b>NULL</b> on error. Both, <i>length</i> and <i>item_size</i> cannot be zero.
+ *
+ * @param length        queue length
+ * @param item_size     size of item
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref ESRCH
+ *
+ * @return On success returns pointer to the created object or <b>NULL</b> on
+ * error.
+ */
+//==============================================================================
+queue_t *queue_new(const size_t length, const size_t item_size)
+{
+        queue_t *queue = malloc(sizeof(*queue));
+        if (queue) {
+                queue->fd = -1;
+                _libc_syscall(_LIBC_SYS_QUEUEOPEN, &queue->fd, &length, &item_size);
+
+                if (queue->fd >= 0) {
+                        return queue;
+                }
+
+                free(queue);
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief Function deletes queue object.
+ *
+ * The function queue_delete() deletes the created queue pointed by
+ * <i>queue</i>. Make sure that neither task use queue before delete.
+ *
+ * @param queue         queue object
+ *
+ * @exception | @ref ESRCH
+ * @exception | @ref ENOENT
+ * @exception | @ref EFAULT
+ */
+//==============================================================================
+void queue_delete(queue_t *queue)
+{
+        if (queue && (queue->fd >= 0)) {
+                int r = -1;
+                _libc_syscall(_LIBC_SYS_CLOSE, &r, &queue->fd);
+                free(queue);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function removes all items from queue.
+ *
+ * The function queue_reset() reset the selected queue pointed by
+ * <i>queue</i>.
+ *
+ * @param queue         queue object
+ *
+ * @exception | @ref EBUSY
+ * @exception | @ref EINVAL
+ *
+ * @return On success true is returned, otherwise false.
+ */
+//==============================================================================
+bool queue_reset(queue_t *queue)
+{
+        bool done = false;
+
+        if (queue && (queue->fd >= 0)) {
+                int r = -1;
+                _libc_syscall(_LIBC_SYS_QUEUERESET, &r, &queue->fd);
+                done = (r == 0);
+        }
+
+        return done;
+}
+
+//==============================================================================
+/**
+ * @brief Function writes value to queue.
+ *
+ * The function queue_send() send specified item pointed by <i>item</i>
+ * to queue pointed by <i>queue</i>. If queue is full then system try to send
+ * item for <i>timeout</i> milliseconds. If <i>timeout</i> is set to zero then
+ * sending is aborted immediately if queue is full, and <b>false</b> value is
+ * returned.
+ *
+ * @param queue     queue object
+ * @param item      item to send
+ * @param timeout   send timeout (0 for polling)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOSPC
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ */
+//==============================================================================
+bool queue_send(queue_t *queue, const void *item, const u32_t timeout)
+{
+        bool done = false;
+
+        if (queue && (queue->fd >= 0)) {
+                int r = -1;
+                _libc_syscall(_LIBC_SYS_QUEUESEND, &r, &queue->fd, item, &timeout);
+                done = (r == 0);
+        }
+
+        return done;
+}
+
+//==============================================================================
+/**
+ * @brief Function receives item from queue.
+ *
+ * The function queue_receive() receive top item from queue pointed by
+ * <i>queue</i> and copy it to the item pointed by <i>item</i>. The item is
+ * removed from queue. Try of receive is doing for time <i>timeout</i>. If item
+ * was successfully received, then <b>true</b> is returned, otherwise <b>false</b>.
+ *
+ * @param queue         queue object
+ * @param item          item destination
+ * @param timeout       send timeout (0 for polling)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref EAGAIN
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ */
+//==============================================================================
+bool queue_receive(queue_t *queue, void *item, const u32_t timeout)
+{
+        bool done = false;
+
+        if (queue && (queue->fd >= 0)) {
+                int r = -1;
+                _libc_syscall(_LIBC_SYS_QUEUERECEIVE, &r, &queue->fd, item, &timeout);
+                done = (r == 0);
+        }
+
+        return done;
+}
+
+//==============================================================================
+/**
+ * @brief Function receives item from queue without remove.
+ *
+ * The function queue_receive_peek() is similar to queue_receive(),
+ * expect that top item is not removed from the queue.
+ *
+ * @param queue         queue object
+ * @param item          item destination
+ * @param timeout       send timeout (0 for polling)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref EAGAIN
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ */
+//==============================================================================
+bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout)
+{
+        bool done = false;
+
+        if (queue && (queue->fd >= 0)) {
+                int r = -1;
+                _libc_syscall(_LIBC_SYS_QUEUERECEIVEPEEK, &r, &queue->fd, item, &timeout);
+                done = (r == 0);
+        }
+
+        return done;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns number of items stored in queue.
+ *
+ * The function queue_get_number_of_items() returns a number of items
+ * stored in the queue pointed by <i>queue</i>.
+ *
+ * @param queue         queue object
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return Number of items stored in the queue. On error, -1 is returned.
+ */
+//==============================================================================
+int queue_get_number_of_items(queue_t *queue)
+{
+        int items = -1;
+
+        if (queue && (queue->fd >= 0)) {
+                int r = -1;
+                size_t count = 0;
+                _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &r, &queue->fd, &count);
+                if (r == 0) items = count;
+        }
+
+        return items;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns available space in queue.
+ *
+ * The function queue_get_space_available() returns a number of free
+ * items available in the queue pointed by <i>queue</i>.
+ *
+ * @param queue         queue object
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return Number of free items available in the queue. On error, -1 is returned.
+ */
+//==============================================================================
+int queue_get_space_available(queue_t *queue)
+{
+        int items = -1;
+
+        if (queue && (queue->fd >= 0)) {
+                int r = -1;
+                size_t count = 0;
+                _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &r, &queue->fd, &count);
+                if (r == 0) items = count;
+        }
+
+        return items;
 }
 
 /*==============================================================================

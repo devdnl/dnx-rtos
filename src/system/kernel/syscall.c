@@ -104,14 +104,13 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_MUTEXLOCK,              // | int            | int *mutex                | uint32_t *timeout
         SYSCALL_MUTEXUNLOCK,            // | int            | int *mutex
         SYSCALL_CLOSE,                  // | int            | int *descriptor           |                                     |                                     |                           |                                           |
-        SYSCALL_QUEUECREATE,            // | void*          | const size_t *length      | const size_t *item_size             |                                     |                           |                                           |
-        SYSCALL_QUEUEDESTROY,           // | void           | void *queue               |                                     |                                     |                           |                                           |
-        SYSCALL_QUEUERESET,             // | bool           | kqueue_t *queue
-        SYSCALL_QUEUESEND,              // | bool           | void *queue               | const void *item                    | const uint32_t *timeout
-        SYSCALL_QUEUERECEIVE,           // | bool           | void *queue               | void *item                          | const uint32_t *timeout
-        SYSCALL_QUEUERECEIVEPEEK,       // | bool           | void *queue               | void *item                          | const uint32_t *timeout
-        SYSCALL_QUEUEITEMSCOUNT,        // | int            | void *queue
-        SYSCALL_QUEUEFREESPACE,         // | int            | void *queue
+        SYSCALL_QUEUEOPEN,              // | int            | const size_t *length      | const size_t *item_size             |                                     |                           |                                           |
+        SYSCALL_QUEUERESET,             // | int            | int *queue
+        SYSCALL_QUEUESEND,              // | int            | int *queue                | const void *item                    | const uint32_t *timeout
+        SYSCALL_QUEUERECEIVE,           // | int            | int *queue                | void *item                          | const uint32_t *timeout
+        SYSCALL_QUEUERECEIVEPEEK,       // | int            | int *queue                | void *item                          | const uint32_t *timeout
+        SYSCALL_QUEUEITEMSCOUNT,        // | int            | int *queue                | size_t *count
+        SYSCALL_QUEUEFREESPACE,         // | int            | int *queue                | size_t *count
         SYSCALL_THREADKILL,             // | int            | tid_t *tid                |                                     |                                     |                           |                                           |
         SYSCALL_PROCESSCREATE,          // | pid_t          | const char *command       | _process_attr_t *attr               |                                     |                           |                                           |
         SYSCALL_PROCESSKILL,            // | int            | const pid_t *pid          |                                     |                                     |                           |                                           |
@@ -280,7 +279,7 @@ static void syscall_threadcreate(syscallrq_t *rq);
 static void syscall_threadkill(syscallrq_t *rq);
 static void syscall_semaphoreopen(syscallrq_t *rq);
 static void syscall_mutexopen(syscallrq_t *rq);
-static void syscall_queuecreate(syscallrq_t *rq);
+static void syscall_queueopen(syscallrq_t *rq);
 static void syscall_queuedestroy(syscallrq_t *rq);
 static void syscall_netifadd(syscallrq_t *rq);
 static void syscall_netifrm(syscallrq_t *rq);
@@ -418,8 +417,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_THREADKILL] = syscall_threadkill,
         [SYSCALL_SEMAPHOREOPEN] = syscall_semaphoreopen,
         [SYSCALL_MUTEXOPEN] = syscall_mutexopen,
-        [SYSCALL_QUEUECREATE] = syscall_queuecreate,
-        [SYSCALL_QUEUEDESTROY] = syscall_queuedestroy,
+        [SYSCALL_QUEUEOPEN] = syscall_queueopen,
         [SYSCALL_NETADD] = syscall_netifadd,
         [SYSCALL_NETRM] = syscall_netifrm,
         [SYSCALL_NETIFLIST] = syscall_netiflist,
@@ -1882,48 +1880,157 @@ static void syscall_mutexunlock(syscallrq_t *rq)
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_queuecreate(syscallrq_t *rq)
+static void syscall_queueopen(syscallrq_t *rq)
 {
         GETARG(const size_t *, length);
         GETARG(const size_t *, item_size);
 
-        kqueue_t *q = NULL;
-        int err    = _queue_create(*length, *item_size, &q);
-        if (err == ESUCC) {
-                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, q));
-                if (err != ESUCC) {
-                        _queue_destroy(q);
-                        q = NULL;
+        int desc = -1;
+        kqueue_t *queue = NULL;
+        int err = _queue_create(*length, *item_size, &queue);
+        if (not err) {
+                err = _process_descriptor_allocate(GETPROCESS(), &desc, &queue->header);
+                if (err) {
+                        _queue_destroy(queue);
                 }
         }
 
         SETERRNO(err);
-        SETRETURN(void*, q);
+        SETRETURN(int, err ? -1 : desc);
 }
 
 //==============================================================================
 /**
- * @brief  This syscall destroy selected queue.
+ * @brief  This syscall reset queue.
  *
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_queuedestroy(syscallrq_t *rq)
+static void syscall_queuereset(syscallrq_t *rq)
 {
-        GETARG(void *, q);
+        GETARG(int*, desc);
 
-        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, q), RES_TYPE_QUEUE);
-        if (err != ESUCC) {
-                const char *msg = "*** Error: object is not a queue! ***\n";
-                size_t wrcnt;
-                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-
-                pid_t pid = 0;
-                _process_get_pid(GETPROCESS(), &pid);
-                _process_kill(pid);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        if (!err) {
+                err = _queue_reset(cast(kqueue_t*, res));
         }
 
         SETERRNO(err);
+        SETRETURN(int, err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall send item to queue.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_queuesend(syscallrq_t *rq)
+{
+        GETARG(int*, desc);
+        GETARG(const void*, item);
+        GETARG(const u32_t*, timeout);
+
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        if (!err) {
+                err = _queue_send(cast(kqueue_t*, res), item, *timeout);
+        }
+
+        SETERRNO(err);
+        SETRETURN(int, err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall receive item from queue.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_queuereceive(syscallrq_t *rq)
+{
+        GETARG(int*, desc);
+        GETARG(void*, item);
+        GETARG(const u32_t*, timeout);
+
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        if (!err) {
+                err = _queue_receive(cast(kqueue_t*, res), item, *timeout);
+        }
+
+        SETERRNO(err);
+        SETRETURN(int, err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall receive item from queue without grab.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_queuereceviepeek(syscallrq_t *rq)
+{
+        GETARG(int*, desc);
+        GETARG(void*, item);
+        GETARG(const u32_t*, timeout);
+
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        if (!err) {
+                err = _queue_receive_peek(cast(kqueue_t*, res), item, *timeout);
+        }
+
+        SETERRNO(err);
+        SETRETURN(int, err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall return number of items in queue.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_queueitemscount(syscallrq_t *rq)
+{
+        GETARG(int*, desc);
+        GETARG(size_t*, count);
+
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        if (!err) {
+                err = _queue_get_number_of_items(cast(kqueue_t*, res), count);
+        }
+
+        SETERRNO(err);
+        SETRETURN(int, err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall return number of items in queue.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_queuefreespace(syscallrq_t *rq)
+{
+        GETARG(int*, desc);
+        GETARG(size_t*, count);
+
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        if (!err) {
+                err = _queue_get_space_available(cast(kqueue_t*, res), count);
+        }
+
+        SETERRNO(err);
+        SETRETURN(int, err);
 }
 
 //==============================================================================
@@ -2925,98 +3032,6 @@ static void syscall_threadexit(syscallrq_t *rq)
 {
         GETARG(int*, status);
         _process_thread_exit(*status);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall reset queue.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_queuereset(syscallrq_t *rq)
-{
-        GETARG(void*, queue);
-        SETERRNO(_queue_reset(queue));
-        SETRETURN(bool, GETERRNO() == 0);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall send item to queue.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_queuesend(syscallrq_t *rq)
-{
-        GETARG(void*, queue);
-        GETARG(const void*, item);
-        GETARG(const u32_t*, timeout);
-        SETERRNO(_queue_send(queue, item, *timeout));
-        SETRETURN(bool, GETERRNO() == 0);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall receive item from queue.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_queuereceive(syscallrq_t *rq)
-{
-        GETARG(void*, queue);
-        GETARG(void*, item);
-        GETARG(const u32_t*, timeout);
-        SETERRNO(_queue_receive(queue, item, *timeout));
-        SETRETURN(bool, GETERRNO() == 0);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall receive item from queue without grab.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_queuereceviepeek(syscallrq_t *rq)
-{
-        GETARG(void*, queue);
-        GETARG(void*, item);
-        GETARG(const u32_t*, timeout);
-        SETERRNO(_queue_receive_peek(queue, item, *timeout));
-        SETRETURN(bool, GETERRNO() == 0);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall return number of items in queue.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_queueitemscount(syscallrq_t *rq)
-{
-        GETARG(void*, queue);
-        size_t items = -1;
-        SETERRNO(_queue_get_number_of_items(queue, &items));
-        SETRETURN(int, items);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall return number of items in queue.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_queuefreespace(syscallrq_t *rq)
-{
-        GETARG(void*, queue);
-        size_t items = -1;
-        SETERRNO(_queue_get_space_available(queue, &items));
-        SETRETURN(int, items);
 }
 
 //==============================================================================

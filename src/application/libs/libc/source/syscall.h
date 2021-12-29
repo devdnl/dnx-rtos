@@ -102,14 +102,13 @@ typedef enum {// NAME                        | RETURN TYPE    | ARG 1           
         _LIBC_SYS_MUTEXLOCK,              // | int            | int *mutex                | uint32_t *timeout
         _LIBC_SYS_MUTEXUNLOCK,            // | int            | int *mutex
         _LIBC_SYS_CLOSE,                  // | int            | int *descriptor           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size             |                                     |                           |                                           |
-        _LIBC_SYS_QUEUEDESTROY,           // | void           | queue_t *queue            |                                     |                                     |                           |                                           |
-        _LIBC_SYS_QUEUERESET,             // | bool           | queue_t *queue
-        _LIBC_SYS_QUEUESEND,              // | bool           | queue_t *queue            | const void *item                    | const uint32_t *timeout
-        _LIBC_SYS_QUEUERECEIVE,           // | bool           | queue_t *queue            | void *item                          | const uint32_t *timeout
-        _LIBC_SYS_QUEUERECEIVEPEEK,       // | bool           | queue_t *queue            | void *item                          | const uint32_t *timeout
-        _LIBC_SYS_QUEUEITEMSCOUNT,        // | int            | queue_t *queue
-        _LIBC_SYS_QUEUEFREESPACE,         // | int            | queue_t *queue
+        _LIBC_SYS_QUEUEOPEN,              // | int            | const size_t *length      | const size_t *item_size             |                                     |                           |                                           |
+        _LIBC_SYS_QUEUERESET,             // | int            | int *queue
+        _LIBC_SYS_QUEUESEND,              // | int            | int *queue                | const void *item                    | const uint32_t *timeout
+        _LIBC_SYS_QUEUERECEIVE,           // | int            | int *queue                | void *item                          | const uint32_t *timeout
+        _LIBC_SYS_QUEUERECEIVEPEEK,       // | int            | int *queue                | void *item                          | const uint32_t *timeout
+        _LIBC_SYS_QUEUEITEMSCOUNT,        // | int            | int *queue                | size_t *count
+        _LIBC_SYS_QUEUEFREESPACE,         // | int            | int *queue                | size_t *count
         _LIBC_SYS_THREADKILL,             // | int            | tid_t *tid                |                                     |                                     |                           |                                           |
         _LIBC_SYS_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr                |                                     |                           |                                           |
         _LIBC_SYS_PROCESSKILL,            // | int            | const pid_t *pid          |                                     |                                     |                           |                                           |

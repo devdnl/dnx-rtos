@@ -2034,15 +2034,6 @@ static void process_get_stat(_process_t *proc, _process_stat_t *stat)
                         stat->dir_count++;
                         break;
 
-                case RES_TYPE_QUEUE:
-                        stat->queue_count++;
-                        break;
-
-                case RES_TYPE_FLAG:
-                case RES_TYPE_SEMAPHORE:
-                        stat->semaphores_count++;
-                        break;
-
                 case RES_TYPE_MEMORY:
                         stat->memory_block_count++;
                         stat->memory_usage += _mm_get_block_size(res);
