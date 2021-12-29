@@ -2,6 +2,7 @@
 
 CSRC_CORE  += ../application/libs/libc/source/static.c
 CSRC_LIB   += libc/source/alloc.c
+CSRC_LIB   += libc/source/concurrent.c
 CSRC_LIB   += libc/source/conv.c
 CSRC_LIB   += libc/source/ctime_r.c
 CSRC_LIB   += libc/source/fgets.c

@@ -708,20 +708,13 @@ int INET_socket_create(void *ctx, NET_protocol_t prot, INET_socket_t *inet_sock)
 
         if (prot == NET_PROTOCOL__TCP || prot == NET_PROTOCOL__UDP) {
 
-                _errno = 0;
-
                 inet_sock->netconn = netconn_new(prot == NET_PROTOCOL__TCP
                                                        ? NETCONN_TCP
                                                        : NETCONN_UDP);
-
                 if (inet_sock->netconn) {
                         err = ESUCC;
                 } else {
-                        if (_errno == ENOMEM) {
-                                err = _errno;
-                        } else {
-                                err = ENONET;
-                        }
+                        err = ENOMEM;
                 }
         }
 

@@ -76,10 +76,10 @@
 ==============================================================================*/
 typedef struct _prog_data pdata_t;
 
-typedef struct res_node {
-        void *object[16];
-        struct res_node *next;
-} res_node_t;
+typedef struct dchain {
+        struct dchain *next;
+        res_header_t *resorce[16];
+} dchain_t;
 
 typedef struct {
         task_t          *task;                  //!< task
@@ -98,12 +98,15 @@ typedef struct {
 struct _process {
         res_header_t     header;                //!< resource header
         kflag_t         *event;                 //!< events for exit indicator
+        dchain_t         objtab;               //!< objects accessible by descriptor
+
         kfile_t         *f_stdin;               //!< stdin file
         kfile_t         *f_stdout;              //!< stdout file
         kfile_t         *f_stderr;              //!< stderr file
-        void            *globals;               //!< address to global variables
-        res_header_t    *res_list;              //!< list of used resources
-        u32_t            res_list_size;         //!< size of resources list
+
+        void            *globals;               //!< address to process's global variables
+        res_header_t    *mem_list;              //!< list of used resources -- use btree for memory blocks (only)
+        u32_t            mem_list_size;         //!< size of resources list
         char            *cwd;                   //!< current working path
         const _program_entry_t *pdata;          //!< program data
         char            **argv;                 //!< program arguments
@@ -151,20 +154,29 @@ static int  analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg);
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
-static pid_t          PID_cnt;
-static _process_t    *active_process_list;
-static _process_t    *destroy_process_list;
-static _process_t    *zombie_process_list;
-static _process_t    *active_process;
-static u32_t          CPU_total_time_last;
+static pid_t           PID_cnt;
+static _process_t      *active_process_list;
+static _process_t      *destroy_process_list;
+static _process_t      *zombie_process_list;
+static _process_t      *active_process;
+static u32_t           CPU_total_time_last;
 static _avg_CPU_load_t avg_CPU_load_calc;
 static _avg_CPU_load_t avg_CPU_load_result;
-static kmtx_t        *process_mtx;
-static kmtx_t        *kworker_mtx;
+static kmtx_t          *process_mtx;
+static kmtx_t          *kworker_mtx;
 
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
+
+/*
+ * TODO
+ * - list of shared objects (mutex, semaphore, queue)
+ * - try to divide ram to half: system, application
+ * - RAM fs in separated RAM e.g. quadspi ram? (option)
+ * - memory blocks in btree
+ */
+
 /* CPU total time */
 u32_t _CPU_total_time = 0;
 
@@ -982,14 +994,14 @@ int _process_register_resource(_process_t *proc, res_header_t *resource)
                 kmtx_t *mtx = (proc == _kworker_proc) ? kworker_mtx : process_mtx;
 
                 ATOMIC(mtx) {
-                        if (proc->res_list == NULL) {
-                                proc->res_list = resource;
+                        if (proc->mem_list == NULL) {
+                                proc->mem_list = resource;
                         } else {
-                                resource->next = proc->res_list;
-                                proc->res_list = resource;
+                                resource->next = proc->mem_list;
+                                proc->mem_list = resource;
                         }
 
-                        proc->res_list_size++;
+                        proc->mem_list_size++;
                 }
 
                 return ESUCC;
@@ -1020,19 +1032,19 @@ int _process_release_resource(_process_t *proc, res_header_t *resource, res_type
 
                 ATOMIC(mtx) {
                         res_header_t *prev     = NULL;
-                        int           max_deep = proc->res_list_size + 1;
+                        int           max_deep = proc->mem_list_size + 1;
 
-                        foreach_resource(curr, proc->res_list) {
+                        foreach_resource(curr, proc->mem_list) {
                                 if (curr == resource) {
                                         if (curr->type == type) {
-                                                if (proc->res_list == curr) {
-                                                        proc->res_list = proc->res_list->next;
+                                                if (proc->mem_list == curr) {
+                                                        proc->mem_list = proc->mem_list->next;
                                                 } else {
                                                         prev->next = curr->next;
                                                 }
 
                                                 obj_to_destroy = curr;
-                                                proc->res_list_size--;
+                                                proc->mem_list_size--;
                                         } else {
                                                 err = EFAULT;
                                         }
@@ -1532,8 +1544,8 @@ bool _process_is_consistent(void)
                         if (!sanity_ok) goto end;
 
                         size_t n = 0;
-                        size_t m = p->res_list_size;
-                        res_header_t *res = p->res_list;
+                        size_t m = p->mem_list_size;
+                        res_header_t *res = p->mem_list;
                         while (res && m) {
 
                                 sanity_ok =  _mm_is_object_in_heap(res)
@@ -1555,7 +1567,7 @@ bool _process_is_consistent(void)
                                 m--;
                         }
 
-                        sanity_ok = (n == p->res_list_size) && (m == 0);
+                        sanity_ok = (n == p->mem_list_size) && (m == 0);
                         if (!sanity_ok) goto end;
 
                         sanity_ok = (p->cwd != NULL);
@@ -1675,6 +1687,135 @@ u8_t _process_get_curr_syscall(_process_t *proc, tid_t tid)
 
 //==============================================================================
 /**
+ * @brief  Function allocate descriptor.
+ *
+ * @param  process      process
+ * @param  descriptor   descriptor destination
+ * @param  res          resource pointer
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _process_descriptor_allocate(_process_t *process, int *desc, res_header_t *res)
+{
+        int err = EMFILE;
+
+        ATOMIC(process_mtx) {
+
+                dchain_t *chain = &process->objtab;
+                int node = 0;
+                bool found = false;
+
+                while (chain and (not found)) {
+                        for (size_t i = 0; not found and(i < ARRAY_SIZE(chain->resorce)); i++) {
+                                if (chain->resorce[i] == NULL) {
+                                        chain->resorce[i] = res;
+                                        *desc = (node << 4) | i;
+                                        found = true;
+                                        err   = ESUCC;
+                                        break;
+                                }
+                        }
+
+                        if (not found) {
+                                if (chain->next == NULL) {
+                                        err = _kzalloc(_MM_KRN, sizeof(dchain_t),
+                                                       _CPUCTL_FAST_MEM, 0, 0,
+                                                       cast(void**, &chain->next));
+                                        if (err) chain->next = NULL;
+                                }
+
+                                chain = chain->next;
+                                node++;
+                        }
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function free descriptor (and resource).
+ *
+ * @param  process      process
+ * @param  descriptor   descriptor
+ * @param  rtype        object type (validation)
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _process_descriptor_free(_process_t *process, int desc, res_type_t rtype)
+{
+        int err = ENOENT;
+
+        ATOMIC(process_mtx) {
+
+                dchain_t *chain = &process->objtab;
+                int node = 0;
+
+                while (chain) {
+                        if ((desc >> 4) == node) {
+                                res_type_t otype = chain->resorce[desc & 0xF]->type;
+
+                                err = resource_destroy(chain->resorce[desc & 0xF]);
+                                if (!err) {
+                                        chain->resorce[desc & 0xF] = NULL;
+
+                                        if (otype != rtype) {
+                                                printk("Descriptor %d points to incorrect object type!", desc);
+                                                err = EINVAL;
+                                        }
+                                }
+
+                                break;
+                        }
+
+                        chain = chain->next;
+                        node++;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  Function free descriptor.
+ *
+ * @param  process      process
+ * @param  desc         descriptor
+ * @param  res          resource pointer
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+int _process_descriptor_get_resource(_process_t *process, int desc, res_header_t **res)
+{
+        int err = ENOENT;
+
+        ATOMIC(process_mtx) {
+
+                dchain_t *chain = &process->objtab;
+                int node = 0;
+
+                while (chain) {
+                        if ((desc >> 4) == node) {
+                                *res = chain->resorce[desc & 0xF];
+                                err = 0;
+                                break;
+                        }
+
+                        chain = chain->next;
+                        node++;
+                }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
  * @brief  This function start user process code [USERLAND].
  *
  * @param  mainfn         process argument - process main function
@@ -1781,8 +1922,8 @@ static void process_destroy_all_resources(_process_t *proc)
                 proc->argc = 0;
         }
 
-        // close files, directories, sockets, etc
-        res_header_t *resource_curr = proc->res_list;
+        // close files, directories, sockets, etc FIXME to remove in future after adding full descriptors
+        res_header_t *resource_curr = proc->mem_list;
         res_header_t *resource_prev = NULL;
         res_header_t *resource_next = NULL;
 
@@ -1791,8 +1932,8 @@ static void process_destroy_all_resources(_process_t *proc)
 
                 if (resource_curr->type != RES_TYPE_MEMORY) {
 
-                        if (resource_curr == proc->res_list) {
-                                proc->res_list = resource_next;
+                        if (resource_curr == proc->mem_list) {
+                                proc->mem_list = resource_next;
                         } else {
                                 if (resource_prev) {
                                         resource_prev->next = resource_next;
@@ -1811,16 +1952,33 @@ static void process_destroy_all_resources(_process_t *proc)
                 resource_curr = resource_next;
         }
 
-        // free all other resources
-        while (proc->res_list) {
-                res_header_t *resource = proc->res_list;
-                proc->res_list = resource->next;
+        // free all objects (files, dirs, mutexes, semaphores, queues, sockets)
+        dchain_t *chain = &proc->objtab;
+        while (chain) {
+                for (size_t i = 0; i < ARRAY_SIZE(chain->resorce); i++) {
+                        if (chain->resorce[i]) {
+                                int err = resource_destroy(chain->resorce[i]);
+                                if (err != ESUCC) {
+                                        printk("PROCESS: PID %d: unknown object %p\n", proc->pid, chain->resorce[i]);
+                                }
+                        }
+                }
+
+                chain = chain->next;
+        }
+
+
+        // free all memory regions
+        while (proc->mem_list) {
+                res_header_t *resource = proc->mem_list;
+                proc->mem_list = resource->next;
 
                 int err = resource_destroy(resource);
                 if (err != ESUCC) {
                         printk("PROCESS: PID %d: unknown object %p\n", proc->pid, resource);
                 }
         }
+
 
         if (proc->cwd) {
                 _kfree(_MM_KRN, cast(void*, &proc->cwd));
@@ -1831,8 +1989,8 @@ static void process_destroy_all_resources(_process_t *proc)
         _shm_detach_anywhere(proc->pid);
 #endif
 
-        proc->res_list_size = 0;
-        proc->res_list = NULL;
+        proc->mem_list_size = 0;
+        proc->mem_list = NULL;
         proc->f_stdin  = NULL;
         proc->f_stdout = NULL;
         proc->f_stderr = NULL;
@@ -1866,7 +2024,7 @@ static void process_get_stat(_process_t *proc, _process_stat_t *stat)
                 }
         }
 
-        foreach_resource(res, proc->res_list) {
+        foreach_resource(res, proc->mem_list) {
                 switch (res->type) {
                 case RES_TYPE_FILE:
                         stat->files_count++;
@@ -1874,10 +2032,6 @@ static void process_get_stat(_process_t *proc, _process_stat_t *stat)
 
                 case RES_TYPE_DIR:
                         stat->dir_count++;
-                        break;
-
-                case RES_TYPE_MUTEX:
-                        stat->mutexes_count++;
                         break;
 
                 case RES_TYPE_QUEUE:
@@ -1901,6 +2055,45 @@ static void process_get_stat(_process_t *proc, _process_stat_t *stat)
                 default:
                         break;
                 }
+        }
+
+        dchain_t *chain = &proc->objtab;
+        while (chain) {
+                for (size_t i = 0; i < ARRAY_SIZE(chain->resorce); i++) {
+                        if (chain->resorce[i]) {
+                                switch (chain->resorce[i]->type) {
+                                case RES_TYPE_FILE:
+                                        stat->files_count++;
+                                        break;
+
+                                case RES_TYPE_DIR:
+                                        stat->dir_count++;
+                                        break;
+
+                                case RES_TYPE_MUTEX:
+                                        stat->mutexes_count++;
+                                        break;
+
+                                case RES_TYPE_QUEUE:
+                                        stat->queue_count++;
+                                        break;
+
+                                case RES_TYPE_FLAG:
+                                case RES_TYPE_SEMAPHORE:
+                                        stat->semaphores_count++;
+                                        break;
+
+                                case RES_TYPE_SOCKET:
+                                        stat->socket_count++;
+                                        break;
+
+                                default:
+                                        break;
+                                }
+                        }
+                }
+
+                chain = chain->next;
         }
 
         stat->memory_usage = _mm_align(stat->memory_usage);
@@ -2159,6 +2352,7 @@ static int resource_destroy(res_header_t *resource)
 #endif
 
         default:
+                printk("Unknown resource object type %p", resource);
                 return EINVAL;
         }
 

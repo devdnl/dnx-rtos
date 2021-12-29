@@ -227,19 +227,17 @@ typedef struct vfs_file_flags {
 } vfs_file_flags_t;
 
 /** file type */
-struct vfs_file {
+typedef struct vfs_file {
         res_header_t        header;
         void               *FS_hdl;
         const vfs_FS_itf_t *FS_if;
         void               *f_hdl;
         fpos_t              f_lseek;
         vfs_file_flags_t    f_flag;
-};
-
-typedef struct vfs_file kfile_t;
+} kfile_t;
 
 /** directory type */
-struct vfs_dir {
+typedef struct vfs_dir {
         res_header_t        header;
         void               *FS_hdl;
         const vfs_FS_itf_t *FS_if;
@@ -247,9 +245,7 @@ struct vfs_dir {
         size_t              d_items;        //!< number of items
         size_t              d_seek;         //!< seek
         dirent_t            dirent;         //!< directory entry data
-};
-
-typedef struct vfs_dir kdir_t;
+} kdir_t;
 
 /** Path with CWD */
 struct vfs_path {

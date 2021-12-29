@@ -99,10 +99,10 @@ typedef enum {// NAME                        | RETURN TYPE    | ARG 1           
         _LIBC_SYS_SEMAPHOREWAIT,          // | bool           | sem_t *semaphore          | uint32_t *timeout
         _LIBC_SYS_SEMAPHORESIGNAL,        // | bool           | sem_t *semaphore
         _LIBC_SYS_SEMAPHOREGETVALUE,      // | int            | sen_t *semaphore
-        _LIBC_SYS_MUTEXCREATE,            // | mutex_t*       | const enum mutex_type *tp |                                     |                                     |                           |                                           |
-        _LIBC_SYS_MUTEXDESTROY,           // | void           | mutex_t *mutex            |                                     |                                     |                           |                                           |
-        _LIBC_SYS_MUTEXLOCK,              // | bool           | mutex_t *mutex            | uint32_t *timeout
-        _LIBC_SYS_MUTEXUNLOCK,            // | bool           | mutex_t *mutex
+        _LIBC_SYS_MUTEXOPEN,              // | int            | const enum kmtx_type *mt  |                                     |                                     |                           |                                           |
+        _LIBC_SYS_MUTEXCLOSE,             // | int            | int *mutex                |                                     |                                     |                           |                                           |
+        _LIBC_SYS_MUTEXLOCK,              // | int            | int *mutex                | uint32_t *timeout
+        _LIBC_SYS_MUTEXUNLOCK,            // | int            | int *mutex
         _LIBC_SYS_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size             |                                     |                           |                                           |
         _LIBC_SYS_QUEUEDESTROY,           // | void           | queue_t *queue            |                                     |                                     |                           |                                           |
         _LIBC_SYS_QUEUERESET,             // | bool           | queue_t *queue

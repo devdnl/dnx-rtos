@@ -126,7 +126,7 @@ typedef void sem_t;
  *
  * The type represent mutex object. Fields are private.
  */
-typedef void mutex_t;
+typedef struct _lib_mutex mutex_t;
 
 /**
  * @brief Mutex type
@@ -1370,12 +1370,7 @@ static inline int semaphore_get_value(sem_t *sem)
  * @see mutex_delete()
  */
 //==============================================================================
-static inline mutex_t *mutex_new(enum mutex_type type)
-{
-        mutex_t *mtx = NULL;
-        _libc_syscall(_LIBC_SYS_MUTEXCREATE, &mtx, &type);
-        return mtx;
-}
+extern mutex_t *mutex_new(enum mutex_type type);
 
 //==============================================================================
 /**
@@ -1434,10 +1429,7 @@ static inline mutex_t *mutex_new(enum mutex_type type)
  * @see mutex_new()
  */
 //==============================================================================
-static inline void mutex_delete(mutex_t *mutex)
-{
-        _libc_syscall(_LIBC_SYS_MUTEXDESTROY, NULL, mutex);
-}
+extern void mutex_delete(mutex_t *mutex);
 
 //==============================================================================
 /**
@@ -1499,12 +1491,7 @@ static inline void mutex_delete(mutex_t *mutex)
  * @see mutex_unlock(), mutex_trylock()
  */
 //==============================================================================
-static inline bool mutex_lock(mutex_t *mutex, const u32_t timeout)
-{
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_MUTEXLOCK, &r, mutex, &timeout);
-        return r;
-}
+extern bool mutex_lock(mutex_t *mutex, const u32_t timeout);
 
 //==============================================================================
 /**
@@ -1628,12 +1615,7 @@ static inline bool mutex_trylock(mutex_t *mutex)
  * @see mutex_lock(), mutex_trylock()
  */
 //==============================================================================
-static inline bool mutex_unlock(mutex_t *mutex)
-{
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_MUTEXUNLOCK, &r, mutex);
-        return r;
-}
+extern bool mutex_unlock(mutex_t *mutex);
 
 //==============================================================================
 /**
