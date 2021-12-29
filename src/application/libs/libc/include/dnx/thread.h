@@ -119,14 +119,14 @@ extern "C" {
  *
  * The type represent semaphore object. Fields are private.
  */
-typedef void sem_t;
+typedef struct _libc_sem sem_t;
 
 /**
  * @brief Mutex object
  *
  * The type represent mutex object. Fields are private.
  */
-typedef struct _lib_mutex mutex_t;
+typedef struct _libc_mutex mutex_t;
 
 /**
  * @brief Mutex type
@@ -1100,12 +1100,7 @@ static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
  * @see semaphore_delete()
  */
 //==============================================================================
-static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
-{
-        sem_t *sem = NULL;
-        _libc_syscall(_LIBC_SYS_SEMAPHORECREATE, &sem, &cnt_max, &cnt_init);
-        return sem;
-}
+extern sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init);
 
 //==============================================================================
 /**
@@ -1142,10 +1137,7 @@ static inline sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
  * @see semaphore_new()
  */
 //==============================================================================
-static inline void semaphore_delete(sem_t *sem)
-{
-        _libc_syscall(_LIBC_SYS_SEMAPHOREDESTROY, NULL, sem);
-}
+extern void semaphore_delete(sem_t *sem);
 
 //==============================================================================
 /**
@@ -1210,12 +1202,7 @@ static inline void semaphore_delete(sem_t *sem)
  * @see semaphore_signal()
  */
 //==============================================================================
-static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
-{
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_SEMAPHOREWAIT, &r, sem, &timeout);
-        return r;
-}
+extern bool semaphore_wait(sem_t *sem, const u32_t timeout);
 
 //==============================================================================
 /**
@@ -1269,12 +1256,7 @@ static inline bool semaphore_wait(sem_t *sem, const u32_t timeout)
  * @see semaphore_wait()
  */
 //==============================================================================
-static inline bool semaphore_signal(sem_t *sem)
-{
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_SEMAPHORESIGNAL, &r, sem);
-        return r;
-}
+extern bool semaphore_signal(sem_t *sem);
 
 //==============================================================================
 /**
@@ -1305,12 +1287,7 @@ static inline bool semaphore_signal(sem_t *sem)
  * @see semaphore_signal(), semaphore_wait()
  */
 //==============================================================================
-static inline int semaphore_get_value(sem_t *sem)
-{
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &r, sem);
-        return r;
-}
+extern int semaphore_get_value(sem_t *sem);
 
 //==============================================================================
 /**

@@ -40,7 +40,11 @@
 /*==============================================================================
   Local object types
 ==============================================================================*/
-struct _lib_mutex {
+struct _libc_mutex {
+        int fd;
+};
+
+struct _libc_sem {
         int fd;
 };
 
@@ -84,7 +88,6 @@ struct _lib_mutex {
 //==============================================================================
 mutex_t *mutex_new(enum mutex_type type)
 {
-
         mutex_t *mutex = malloc(sizeof(*mutex));
         if (mutex) {
                 mutex->fd = -1;
@@ -117,7 +120,7 @@ void mutex_delete(mutex_t *mutex)
 {
         if (mutex && (mutex->fd >= 0)) {
                 int r = -1;
-                _libc_syscall(_LIBC_SYS_MUTEXCLOSE, &r, &mutex->fd);
+                _libc_syscall(_LIBC_SYS_CLOSE, &r, &mutex->fd);
                 free(mutex);
         }
 }
@@ -181,6 +184,254 @@ bool mutex_unlock(mutex_t *mutex)
         }
 
         return unlocked;
+}
+
+//==============================================================================
+/**
+ * @brief Function create new semaphore.
+ *
+ * The function semaphore_new() creates new semaphore object. The
+ * semaphore can be counting or binary. If counting then <i>cnt_max</i>
+ * is bigger that 2. The <i>cnt_init</i> is an initial value of semaphore.
+ * Semaphore can be used for task synchronization.
+ *
+ * @param cnt_max       max count value (1 for binary)
+ * @param cnt_init      initial value (0 or 1 for binary)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref ESRCH
+ *
+ * @return On success pointer to semaphore object is returned.
+ * On error, <b>NULL</b> pointer is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
+{
+        sem_t *sem = malloc(sizeof(*sem));
+        if (sem) {
+                sem->fd = -1;
+                _libc_syscall(_LIBC_SYS_SEMAPHOREOPEN, &sem->fd, &cnt_max, &cnt_init);
+
+                if (sem->fd >= 0) {
+                        return sem;
+                }
+
+                free(sem);
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief Function delete created semaphore.
+ *
+ * The function semaphore_delete() removes created semaphore pointed by
+ * <i>sem</i>. Be aware that if semaphore was removed when tasks use it, then
+ * process starvation can occur on tasks which wait for semaphore signal.
+ *
+ * @param sem           semaphore object pointer
+ *
+ * @exception | @ref ESRCH
+ * @exception | @ref ENOENT
+ * @exception | @ref EFAULT
+ */
+//==============================================================================
+void semaphore_delete(sem_t *sem)
+{
+        if (sem && (sem->fd >= 0)) {
+                int r = -1;
+                _libc_syscall(_LIBC_SYS_CLOSE, &r, &sem->fd);
+                free(sem);
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function wait for semaphore.
+ *
+ * The function semaphore_wait() waits for semaphore signal pointed by
+ * <i>sem</i> by <i>timeout</i> milliseconds. If semaphore was signaled then
+ * <b>true</b> is returned, otherwise (timeout) <b>false</b>. When <i>timeout</i>
+ * value is set to 0 then semaphore is polling without timeout.
+ *
+ * @param sem           semaphore object pointer
+ * @param timeout       timeout value in milliseconds
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ETIME
+ *
+ * @return On success, <b>true</b> is returned. On timeout or if semaphore is
+ * not signaled or object is invalid <b>false</b> is returned.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <stdbool.h>
+        #include <errno.h>
+        #include <stdlib.h>
+
+        // ...
+
+        errno = 0;
+        sem_t *sem = semaphore_new(1, 0); // binary semaphore
+        if (sem == NULL) {
+                perror("Semaphore error");
+                abort();
+        }
+
+        // ...
+
+        void thread2(void *arg)
+        {
+                while (true) {
+                        // this task will wait for semaphore signal
+                        semaphore_wait(sem, MAX_DELAY_MS);
+
+                        // ...
+                }
+        }
+
+        void thread1(void *arg)
+        {
+                while (true) {
+                       // ...
+
+                       // this task signal to thread2 that can execute part of code
+                       semaphore_signal(sem);
+                }
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see semaphore_signal()
+ */
+//==============================================================================
+bool semaphore_wait(sem_t *sem, const u32_t timeout)
+{
+        bool ready = false;
+
+        if (sem && (sem->fd >= 0)) {
+                int r = -1;
+                _libc_syscall(_LIBC_SYS_SEMAPHOREWAIT, &r, &sem->fd, &timeout);
+                ready = (r == 0);
+        }
+
+        return ready;
+}
+
+//==============================================================================
+/**
+ * @brief Function signal semaphore.
+ *
+ * The function semaphore_signal() signals semaphore pointed by <i>sem</i>.
+ *
+ * @param sem           semaphore object pointer
+ *
+ * @exception | @ref EBUSY
+ * @exception | @ref EINVAL
+ *
+ * @return On corrected signaling, <b>true</b> is returned. If semaphore cannot
+ * be signaled or object is invalid then <b>false</b> is returned.
+ *
+ * @b Example
+ * @code
+        #include <dnx/thread.h>
+        #include <stdbool.h>
+
+        // ...
+
+        sem_t *sem = semaphore_new(1, 0);
+
+        // ...
+
+        void thread2(void *arg)
+        {
+                while (true) {
+                        // this task will wait for semaphore signal
+                        semaphore_wait(sem, MAX_DELAY_MS);
+
+                        // ...
+                }
+        }
+
+        void thread1(void *arg)
+        {
+                while (true) {
+                       // ...
+
+                       // this task signal to thread2 that can execute part of code
+                       semaphore_signal(sem);
+                }
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see semaphore_wait()
+ */
+//==============================================================================
+bool semaphore_signal(sem_t *sem)
+{
+        bool signalled = false;
+
+        if (sem && (sem->fd >= 0)) {
+                int r = -1;
+                _libc_syscall(_LIBC_SYS_SEMAPHORESIGNAL, &r, &sem->fd);
+                signalled = (r == 0);
+        }
+
+        return signalled;
+}
+
+//==============================================================================
+/**
+ * @brief Function get counter value of semaphore.
+ *
+ * The function get value of semaphore pointed by <i>sem</i>. The counter value
+ * is modified by semaphore_wait() and semaphore_signal() family functions.
+ *
+ * @param sem           semaphore object pointer
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return On success return counter value, on error -1 is returned.
+ *
+ * @b Example
+ * @code
+        // ...
+
+        int value = semaphore_get_value(sem);
+        if (value > 0) {
+                // ...
+        }
+
+        // ...
+
+   @endcode
+ *
+ * @see semaphore_signal(), semaphore_wait()
+ */
+//==============================================================================
+int semaphore_get_value(sem_t *sem)
+{
+        int value = -1;
+
+        if (sem && (sem->fd >= 0)) {
+                int r = -1;
+                size_t val = 0;
+                _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &r, &sem->fd, &val);
+                if (r == 0) {
+                        value = val;
+                }
+        }
+
+        return value;
 }
 
 /*==============================================================================

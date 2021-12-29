@@ -96,15 +96,14 @@ typedef enum {// NAME                      | RETURN TYPE    | ARG 1             
         SYSCALL_SETCWD,                 // | int            | const char *cwd           |                                     |                                     |                           |                                           |
         SYSCALL_SYSLOGREAD,             // | size_t         | char *str                 | size_t *len                         | const struct timeval *from          | struct timeval *current   |                                           |
         SYSCALL_THREADCREATE,           // | tid_t          | thread_func_t             | _thread_attr_t *attr                | void *arg                           |                           |                                           |
-        SYSCALL_SEMAPHORECREATE,        // | void*          | const size_t *cnt_max     | const size_t *cnt_init              |                                     |                           |                                           |
-        SYSCALL_SEMAPHOREDESTROY,       // | void           | void   *semaphore         |                                     |                                     |                           |                                           |
-        SYSCALL_SEMAPHOREWAIT,          // | bool           | void   *semaphore         | uint32_t *timeout
-        SYSCALL_SEMAPHORESIGNAL,        // | bool           | void   *semaphore
-        SYSCALL_SEMAPHOREGETVALUE,      // | int            | sen_t *semaphore
+        SYSCALL_SEMAPHOREOPEN,          // | int            | const size_t *cnt_max     | const size_t *cnt_init              |                                     |                           |                                           |
+        SYSCALL_SEMAPHOREWAIT,          // | int            | int *semaphore            | uint32_t *timeout
+        SYSCALL_SEMAPHORESIGNAL,        // | int            | int *semaphore
+        SYSCALL_SEMAPHOREGETVALUE,      // | int            | int *semaphore            | size_t *value
         SYSCALL_MUTEXOPEN,              // | int            | const enum kmtx_type *mt  |                                     |                                     |                           |                                           |
-        SYSCALL_MUTEXCLOSE,             // | int            | int *mutex                |                                     |                                     |                           |                                           |
         SYSCALL_MUTEXLOCK,              // | int            | int *mutex                | uint32_t *timeout
         SYSCALL_MUTEXUNLOCK,            // | int            | int *mutex
+        SYSCALL_CLOSE,                  // | int            | int *descriptor           |                                     |                                     |                           |                                           |
         SYSCALL_QUEUECREATE,            // | void*          | const size_t *length      | const size_t *item_size             |                                     |                           |                                           |
         SYSCALL_QUEUEDESTROY,           // | void           | void *queue               |                                     |                                     |                           |                                           |
         SYSCALL_QUEUERESET,             // | bool           | kqueue_t *queue
@@ -245,6 +244,7 @@ static void syscall_stat(syscallrq_t *rq);
 static void syscall_fstat(syscallrq_t *rq);
 static void syscall_fopen(syscallrq_t *rq);
 static void syscall_fclose(syscallrq_t *rq);
+static void syscall_close(syscallrq_t *rq);
 static void syscall_fwrite(syscallrq_t *rq);
 static void syscall_fread(syscallrq_t *rq);
 static void syscall_fseek(syscallrq_t *rq);
@@ -278,10 +278,8 @@ static void syscall_getcwd(syscallrq_t *rq);
 static void syscall_setcwd(syscallrq_t *rq);
 static void syscall_threadcreate(syscallrq_t *rq);
 static void syscall_threadkill(syscallrq_t *rq);
-static void syscall_semaphorecreate(syscallrq_t *rq);
-static void syscall_semaphoredestroy(syscallrq_t *rq);
+static void syscall_semaphoreopen(syscallrq_t *rq);
 static void syscall_mutexopen(syscallrq_t *rq);
-static void syscall_mutexclose(syscallrq_t *rq);
 static void syscall_queuecreate(syscallrq_t *rq);
 static void syscall_queuedestroy(syscallrq_t *rq);
 static void syscall_netifadd(syscallrq_t *rq);
@@ -374,6 +372,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_MKFIFO] = syscall_mkfifo,
         [SYSCALL_OPENDIR] = syscall_opendir,
         [SYSCALL_CLOSEDIR] = syscall_closedir,
+        [SYSCALL_CLOSE] = syscall_close,
         [SYSCALL_READDIR] = syscall_readdir,
         [SYSCALL_REMOVE] = syscall_remove,
         [SYSCALL_RENAME] = syscall_rename,
@@ -417,10 +416,8 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SETCWD] = syscall_setcwd,
         [SYSCALL_THREADCREATE] = syscall_threadcreate,
         [SYSCALL_THREADKILL] = syscall_threadkill,
-        [SYSCALL_SEMAPHORECREATE] = syscall_semaphorecreate,
-        [SYSCALL_SEMAPHOREDESTROY] = syscall_semaphoredestroy,
+        [SYSCALL_SEMAPHOREOPEN] = syscall_semaphoreopen,
         [SYSCALL_MUTEXOPEN] = syscall_mutexopen,
-        [SYSCALL_MUTEXCLOSE] = syscall_mutexclose,
         [SYSCALL_QUEUECREATE] = syscall_queuecreate,
         [SYSCALL_QUEUEDESTROY] = syscall_queuedestroy,
         [SYSCALL_NETADD] = syscall_netifadd,
@@ -1695,53 +1692,93 @@ static void syscall_threadkill(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall create new semaphore.
+ * @brief  This syscall create new semaphore descriptor.
  *
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_semaphorecreate(syscallrq_t *rq)
+static void syscall_semaphoreopen(syscallrq_t *rq)
 {
         GETARG(const size_t *, cnt_max);
         GETARG(const size_t *, cnt_init);
 
+        int desc = -1;
         ksem_t *sem = NULL;
-        int err    = _semaphore_create(*cnt_max, *cnt_init, &sem);
-        if (err == ESUCC) {
-                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, sem));
-                if (err != ESUCC) {
+        int err = _semaphore_create(*cnt_max, *cnt_init, &sem);
+        if (not err) {
+                err = _process_descriptor_allocate(GETPROCESS(), &desc, &sem->header);
+                if (err) {
                         _semaphore_destroy(sem);
-                        sem = NULL;
                 }
         }
 
         SETERRNO(err);
-        SETRETURN(void*, sem);
+        SETRETURN(int, err ? -1 : desc);
 }
 
 //==============================================================================
 /**
- * @brief  This syscall destroy selected semaphore.
+ * @brief  This syscall wait for semaphore.
  *
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_semaphoredestroy(syscallrq_t *rq)
+static void syscall_semaphorewait(syscallrq_t *rq)
 {
-        GETARG(void *, sem);
+        GETARG(int*, desc);
+        GETARG(uint32_t*, timeout);
 
-        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, sem), RES_TYPE_SEMAPHORE);
-        if (err != ESUCC) {
-                const char *msg = "*** Error: object is not a semaphore! ***\n";
-                size_t wrcnt;
-                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-
-                pid_t pid = 0;
-                _process_get_pid(GETPROCESS(), &pid);
-                _process_kill(pid);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        if (!err) {
+                err = _semaphore_wait(cast(ksem_t*, res), *timeout);
         }
 
         SETERRNO(err);
+        SETRETURN(int, err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall signal semaphore.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_semaphoresignal(syscallrq_t *rq)
+{
+        GETARG(int*, desc);
+
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        if (!err) {
+                err = _semaphore_signal(cast(ksem_t*, res));
+        }
+
+        SETERRNO(err);
+        SETRETURN(int, err);
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall wait for semaphore.
+ *
+ * @param  rq                   syscall request
+ */
+//==============================================================================
+static void syscall_semaphoregetvalue(syscallrq_t *rq)
+{
+        GETARG(int*, desc);
+        GETARG(size_t*, value);
+
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        if (!err) {
+                err = _semaphore_get_value(cast(ksem_t*, res), value);
+        }
+
+        SETERRNO(err);
+        SETRETURN(int, err);
 }
 
 //==============================================================================
@@ -1771,18 +1808,18 @@ static void syscall_mutexopen(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall destroy selected mutex.
+ * @brief  This syscall destroy selected descriptor.
  *
  * @param  rq                   syscall request
  */
 //==============================================================================
-static void syscall_mutexclose(syscallrq_t *rq)
+static void syscall_close(syscallrq_t *rq)
 {
         GETARG(int *, desc);
 
-        int err = _process_descriptor_free(GETPROCESS(), *desc, RES_TYPE_MUTEX);
+        int err = _process_descriptor_free(GETPROCESS(), *desc, RES_TYPE_UNKNOWN);
         if (err) {
-                const char *msg = "*** Error: descriptor is not a mutex! ***\n";
+                const char *msg = "*** Error: descriptor is not valid! ***\n";
                 size_t wrcnt;
                 _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
 
@@ -2888,50 +2925,6 @@ static void syscall_threadexit(syscallrq_t *rq)
 {
         GETARG(int*, status);
         _process_thread_exit(*status);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall wait for semaphore.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_semaphorewait(syscallrq_t *rq)
-{
-        GETARG(void*, sem);
-        GETARG(u32_t*, timeout);
-        SETERRNO(_semaphore_wait(sem, *timeout));
-        SETRETURN(bool, GETERRNO() == 0);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall signal semaphore.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_semaphoresignal(syscallrq_t *rq)
-{
-        GETARG(void*, sem);
-        SETERRNO(_semaphore_signal(sem));
-        SETRETURN(bool, GETERRNO() == 0);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall wait for semaphore.
- *
- * @param  rq                   syscall request
- */
-//==============================================================================
-static void syscall_semaphoregetvalue(syscallrq_t *rq)
-{
-        GETARG(void*, sem);
-        size_t value = 0;
-        SETERRNO(_semaphore_get_value(sem, &value));
-        SETRETURN(int, value);
 }
 
 //==============================================================================

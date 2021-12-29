@@ -94,15 +94,14 @@ typedef enum {// NAME                        | RETURN TYPE    | ARG 1           
         _LIBC_SYS_SETCWD,                 // | int            | const char *cwd           |                                     |                                     |                           |                                           |
         _LIBC_SYS_SYSLOGREAD,             // | size_t         | char *str                 | size_t *len                         | const struct timeval *from          | struct timeval *current   |                                           |
         _LIBC_SYS_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr                 | void *arg                           |                           |                                           |
-        _LIBC_SYS_SEMAPHORECREATE,        // | sem_t*         | const size_t *cnt_max     | const size_t *cnt_init              |                                     |                           |                                           |
-        _LIBC_SYS_SEMAPHOREDESTROY,       // | void           | sem_t *semaphore          |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SEMAPHOREWAIT,          // | bool           | sem_t *semaphore          | uint32_t *timeout
-        _LIBC_SYS_SEMAPHORESIGNAL,        // | bool           | sem_t *semaphore
-        _LIBC_SYS_SEMAPHOREGETVALUE,      // | int            | sen_t *semaphore
+        _LIBC_SYS_SEMAPHOREOPEN,          // | int            | const size_t *cnt_max     | const size_t *cnt_init              |                                     |                           |                                           |
+        _LIBC_SYS_SEMAPHOREWAIT,          // | int            | int *semaphore            | uint32_t *timeout
+        _LIBC_SYS_SEMAPHORESIGNAL,        // | int            | int *semaphore
+        _LIBC_SYS_SEMAPHOREGETVALUE,      // | int            | int *semaphore            | size_t *value
         _LIBC_SYS_MUTEXOPEN,              // | int            | const enum kmtx_type *mt  |                                     |                                     |                           |                                           |
-        _LIBC_SYS_MUTEXCLOSE,             // | int            | int *mutex                |                                     |                                     |                           |                                           |
         _LIBC_SYS_MUTEXLOCK,              // | int            | int *mutex                | uint32_t *timeout
         _LIBC_SYS_MUTEXUNLOCK,            // | int            | int *mutex
+        _LIBC_SYS_CLOSE,                  // | int            | int *descriptor           |                                     |                                     |                           |                                           |
         _LIBC_SYS_QUEUECREATE,            // | queue_t*       | const size_t *length      | const size_t *item_size             |                                     |                           |                                           |
         _LIBC_SYS_QUEUEDESTROY,           // | void           | queue_t *queue            |                                     |                                     |                           |                                           |
         _LIBC_SYS_QUEUERESET,             // | bool           | queue_t *queue

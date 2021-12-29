@@ -78,7 +78,7 @@ typedef struct _prog_data pdata_t;
 
 typedef struct dchain {
         struct dchain *next;
-        res_header_t *resorce[16];
+        res_header_t *resource[16];
 } dchain_t;
 
 typedef struct {
@@ -1707,9 +1707,9 @@ int _process_descriptor_allocate(_process_t *process, int *desc, res_header_t *r
                 bool found = false;
 
                 while (chain and (not found)) {
-                        for (size_t i = 0; not found and(i < ARRAY_SIZE(chain->resorce)); i++) {
-                                if (chain->resorce[i] == NULL) {
-                                        chain->resorce[i] = res;
+                        for (size_t i = 0; not found and(i < ARRAY_SIZE(chain->resource)); i++) {
+                                if (chain->resource[i] == NULL) {
+                                        chain->resource[i] = res;
                                         *desc = (node << 4) | i;
                                         found = true;
                                         err   = ESUCC;
@@ -1756,13 +1756,13 @@ int _process_descriptor_free(_process_t *process, int desc, res_type_t rtype)
 
                 while (chain) {
                         if ((desc >> 4) == node) {
-                                res_type_t otype = chain->resorce[desc & 0xF]->type;
+                                res_type_t otype = chain->resource[desc & 0xF]->type;
 
-                                err = resource_destroy(chain->resorce[desc & 0xF]);
+                                err = resource_destroy(chain->resource[desc & 0xF]);
                                 if (!err) {
-                                        chain->resorce[desc & 0xF] = NULL;
+                                        chain->resource[desc & 0xF] = NULL;
 
-                                        if (otype != rtype) {
+                                        if ((rtype != RES_TYPE_UNKNOWN) and (otype != rtype)) {
                                                 printk("Descriptor %d points to incorrect object type!", desc);
                                                 err = EINVAL;
                                         }
@@ -1801,7 +1801,7 @@ int _process_descriptor_get_resource(_process_t *process, int desc, res_header_t
 
                 while (chain) {
                         if ((desc >> 4) == node) {
-                                *res = chain->resorce[desc & 0xF];
+                                *res = chain->resource[desc & 0xF];
                                 err = 0;
                                 break;
                         }
@@ -1955,11 +1955,11 @@ static void process_destroy_all_resources(_process_t *proc)
         // free all objects (files, dirs, mutexes, semaphores, queues, sockets)
         dchain_t *chain = &proc->objtab;
         while (chain) {
-                for (size_t i = 0; i < ARRAY_SIZE(chain->resorce); i++) {
-                        if (chain->resorce[i]) {
-                                int err = resource_destroy(chain->resorce[i]);
+                for (size_t i = 0; i < ARRAY_SIZE(chain->resource); i++) {
+                        if (chain->resource[i]) {
+                                int err = resource_destroy(chain->resource[i]);
                                 if (err != ESUCC) {
-                                        printk("PROCESS: PID %d: unknown object %p\n", proc->pid, chain->resorce[i]);
+                                        printk("PROCESS: PID %d: unknown object %p\n", proc->pid, chain->resource[i]);
                                 }
                         }
                 }
@@ -2059,9 +2059,9 @@ static void process_get_stat(_process_t *proc, _process_stat_t *stat)
 
         dchain_t *chain = &proc->objtab;
         while (chain) {
-                for (size_t i = 0; i < ARRAY_SIZE(chain->resorce); i++) {
-                        if (chain->resorce[i]) {
-                                switch (chain->resorce[i]->type) {
+                for (size_t i = 0; i < ARRAY_SIZE(chain->resource); i++) {
+                        if (chain->resource[i]) {
+                                switch (chain->resource[i]->type) {
                                 case RES_TYPE_FILE:
                                         stat->files_count++;
                                         break;
