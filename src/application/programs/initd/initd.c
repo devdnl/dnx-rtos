@@ -209,7 +209,7 @@ static void show_kernel_panic_message(void)
 //==============================================================================
 static void initialize_additional_drivers(void)
 {
-        fd_t fd;
+        int fd;
 
         /*
          * 1. Initialize next terminals that can be used to hold user applications.

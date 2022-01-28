@@ -1,11 +1,11 @@
-/*=========================================================================*//**
-@file    mntent.h
+/*==============================================================================
+File     strndup.c
 
-@author  Daniel Zorychta
+Author   Daniel Zorychta
 
-@brief   Mount entry information.
+Brief    String duplication.
 
-@note    Copyright (C) 2014 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -24,108 +24,69 @@
          Full license text is available on the following file: doc/license.txt.
 
 
-*//*==========================================================================*/
-
-/**
-\defgroup mntent-h <mntent.h>
-
-The library provides information about file system mount entry.
-
-*/
-/**@{*/
-
-#ifndef _MNTENT_H_
-#define _MNTENT_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+==============================================================================*/
 
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include <sys/types.h>
-#include <libc/source/syscall.h>
-#include <errno.h>
-#include <dnx/misc.h>
+#include <string.h>
 
 /*==============================================================================
-  Exported macros
+  Local macros
 ==============================================================================*/
 
 /*==============================================================================
-  Exported object types
+  Local object types
 ==============================================================================*/
-#ifdef DOXYGEN
-/** @brief Structure that describes a mount table entry. */
-struct mntent {
-        const char *mnt_fsname; /*!< Device or server for file system.*/
-        const char *mnt_dir;    /*!< Directory mounted on.*/
-        u64_t       mnt_total;  /*!< Device total size in bytes.*/
-        u64_t       mnt_free;   /*!< Device free space in bytes.*/
-};
-#endif
+
+/*==============================================================================
+  Local function prototypes
+==============================================================================*/
+
+/*==============================================================================
+  Local objects
+==============================================================================*/
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported functions
+  External objects
 ==============================================================================*/
 
 /*==============================================================================
-  Exported inline functions
+  Function definitions
 ==============================================================================*/
+
 //==============================================================================
 /**
- * @brief Function returns next mount entries.
+ * @brief The strndup() function is used to duplicate a string of size n.
  *
- * Function returns next file system entry according to file system order
- * <i>seek</i> (determined on mount time) and write information to mount entry
- * container pointed by <i>mntent</i>.
+ * This function returns a pointer to a null-terminated byte string, which is
+ * a duplicate of the string pointed to by s. The memory obtained is done
+ * dynamically using malloc and hence it can be freed using free().
  *
- * @param seek          n-item to read
- * @param mntent        pointer to container
+ * @param s             string
+ * @param n             string size
  *
- * @exception | @ref EINVAL
- * @exception | @ref ENOENT
- *
- * @return Returns \b 0 on success.
- * On error \b -1 is returned and <b>errno</b> is set appropriately.
- *
- * @b Example
- * @code
-        #include <mntent.h>
-
-        // ...
-
-        int i = 0;
-
-        struct mntent entry;
-        while (getmntentry(i++, &entry) == 0) {
-               // ...
-        }
-
-        // ...
-   @endcode
- *
- * @see mount(), umount()
+ * @return It returns a pointer to the duplicated string s.
  */
 //==============================================================================
-static inline int getmntentry(size_t seek, struct mntent *mntent)
+char *strndup(const char *s, size_t n)
 {
-        int err = _libc_syscall(_LIBC_SYS_GETMNTENTRY, &seek, mntent);
-        return err ? -1 : 0;
+        extern size_t _libc_strlcpy(char *dst, const char *src, size_t size);
+        extern void *_libc_malloc(size_t size);
+
+        n += 1;
+        char *dup = _libc_malloc(n);
+        if (dup) {
+                _libc_strlcpy(dup, s, n);
+        }
+
+        return dup;
 }
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _MNTENT_H_ */
-
-/**@}*/
 /*==============================================================================
   End of file
 ==============================================================================*/

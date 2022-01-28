@@ -94,10 +94,9 @@ mutex_t *mutex_new(enum mutex_type type)
 {
         mutex_t *mutex = malloc(sizeof(*mutex));
         if (mutex) {
-                mutex->fd = -1;
-                _libc_syscall(_LIBC_SYS_MUTEXOPEN, &mutex->fd, &type);
+                int err = _libc_syscall(_LIBC_SYS_MUTEXOPEN, &type, &mutex->fd);
 
-                if (mutex->fd >= 0) {
+                if (!err) {
                         return mutex;
                 }
 
@@ -123,8 +122,7 @@ mutex_t *mutex_new(enum mutex_type type)
 void mutex_delete(mutex_t *mutex)
 {
         if (mutex && (mutex->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_CLOSE, &r, &mutex->fd);
+                _libc_syscall(_LIBC_SYS_CLOSE, &mutex->fd);
                 free(mutex);
         }
 }
@@ -154,9 +152,8 @@ bool mutex_lock(mutex_t *mutex, const u32_t timeout)
         bool locked = false;
 
         if (mutex && (mutex->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_MUTEXLOCK, &r, &mutex->fd, &timeout);
-                locked = (r == 0);
+                int err = _libc_syscall(_LIBC_SYS_MUTEXLOCK, &mutex->fd, &timeout);
+                locked = (err == 0);
         }
 
         return locked;
@@ -182,9 +179,8 @@ bool mutex_unlock(mutex_t *mutex)
         bool unlocked = false;
 
         if (mutex && (mutex->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_MUTEXUNLOCK, &r, &mutex->fd);
-                unlocked = (r == 0);
+                int err = _libc_syscall(_LIBC_SYS_MUTEXUNLOCK, &mutex->fd);
+                unlocked = (err == 0);
         }
 
         return unlocked;
@@ -215,10 +211,9 @@ sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 {
         sem_t *sem = malloc(sizeof(*sem));
         if (sem) {
-                sem->fd = -1;
-                _libc_syscall(_LIBC_SYS_SEMAPHOREOPEN, &sem->fd, &cnt_max, &cnt_init);
+                int err = _libc_syscall(_LIBC_SYS_SEMAPHOREOPEN, &cnt_max, &cnt_init, &sem->fd);
 
-                if (sem->fd >= 0) {
+                if (!err) {
                         return sem;
                 }
 
@@ -246,8 +241,7 @@ sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 void semaphore_delete(sem_t *sem)
 {
         if (sem && (sem->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_CLOSE, &r, &sem->fd);
+                _libc_syscall(_LIBC_SYS_CLOSE, &sem->fd);
                 free(sem);
         }
 }
@@ -320,9 +314,8 @@ bool semaphore_wait(sem_t *sem, const u32_t timeout)
         bool ready = false;
 
         if (sem && (sem->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_SEMAPHOREWAIT, &r, &sem->fd, &timeout);
-                ready = (r == 0);
+                int err = _libc_syscall(_LIBC_SYS_SEMAPHOREWAIT, &sem->fd, &timeout);
+                ready = (err == 0);
         }
 
         return ready;
@@ -385,9 +378,8 @@ bool semaphore_signal(sem_t *sem)
         bool signalled = false;
 
         if (sem && (sem->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_SEMAPHORESIGNAL, &r, &sem->fd);
-                signalled = (r == 0);
+                int err = _libc_syscall(_LIBC_SYS_SEMAPHORESIGNAL, &sem->fd);
+                signalled = (err == 0);
         }
 
         return signalled;
@@ -427,10 +419,9 @@ int semaphore_get_value(sem_t *sem)
         int value = -1;
 
         if (sem && (sem->fd >= 0)) {
-                int r = -1;
                 size_t val = 0;
-                _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &r, &sem->fd, &val);
-                if (r == 0) {
+                int err = _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &sem->fd, &val);
+                if (err == 0) {
                         value = val;
                 }
         }
@@ -461,10 +452,9 @@ queue_t *queue_new(const size_t length, const size_t item_size)
 {
         queue_t *queue = malloc(sizeof(*queue));
         if (queue) {
-                queue->fd = -1;
-                _libc_syscall(_LIBC_SYS_QUEUEOPEN, &queue->fd, &length, &item_size);
+                int err = _libc_syscall(_LIBC_SYS_QUEUEOPEN, &length, &item_size, &queue->fd);
 
-                if (queue->fd >= 0) {
+                if (!err) {
                         return queue;
                 }
 
@@ -491,8 +481,7 @@ queue_t *queue_new(const size_t length, const size_t item_size)
 void queue_delete(queue_t *queue)
 {
         if (queue && (queue->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_CLOSE, &r, &queue->fd);
+                _libc_syscall(_LIBC_SYS_CLOSE, &queue->fd);
                 free(queue);
         }
 }
@@ -517,9 +506,8 @@ bool queue_reset(queue_t *queue)
         bool done = false;
 
         if (queue && (queue->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_QUEUERESET, &r, &queue->fd);
-                done = (r == 0);
+                int err = _libc_syscall(_LIBC_SYS_QUEUERESET, &queue->fd);
+                done = (err == 0);
         }
 
         return done;
@@ -550,9 +538,8 @@ bool queue_send(queue_t *queue, const void *item, const u32_t timeout)
         bool done = false;
 
         if (queue && (queue->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_QUEUESEND, &r, &queue->fd, item, &timeout);
-                done = (r == 0);
+                int err = _libc_syscall(_LIBC_SYS_QUEUESEND, &queue->fd, item, &timeout);
+                done = (err == 0);
         }
 
         return done;
@@ -582,9 +569,8 @@ bool queue_receive(queue_t *queue, void *item, const u32_t timeout)
         bool done = false;
 
         if (queue && (queue->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_QUEUERECEIVE, &r, &queue->fd, item, &timeout);
-                done = (r == 0);
+                int err = _libc_syscall(_LIBC_SYS_QUEUERECEIVE, &queue->fd, item, &timeout);
+                done = (err == 0);
         }
 
         return done;
@@ -612,9 +598,8 @@ bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout)
         bool done = false;
 
         if (queue && (queue->fd >= 0)) {
-                int r = -1;
-                _libc_syscall(_LIBC_SYS_QUEUERECEIVEPEEK, &r, &queue->fd, item, &timeout);
-                done = (r == 0);
+                int err = _libc_syscall(_LIBC_SYS_QUEUERECEIVEPEEK, &queue->fd, item, &timeout);
+                done = (err == 0);
         }
 
         return done;
@@ -639,10 +624,9 @@ int queue_get_number_of_items(queue_t *queue)
         int items = -1;
 
         if (queue && (queue->fd >= 0)) {
-                int r = -1;
                 size_t count = 0;
-                _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &r, &queue->fd, &count);
-                if (r == 0) items = count;
+                int err = _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &queue->fd, &count);
+                if (err == 0) items = count;
         }
 
         return items;
@@ -667,10 +651,9 @@ int queue_get_space_available(queue_t *queue)
         int items = -1;
 
         if (queue && (queue->fd >= 0)) {
-                int r = -1;
                 size_t count = 0;
-                _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &r, &queue->fd, &count);
-                if (r == 0) items = count;
+                int err = _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &queue->fd, &count);
+                if (err == 0) items = count;
         }
 
         return items;

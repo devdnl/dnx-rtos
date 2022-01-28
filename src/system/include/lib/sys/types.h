@@ -91,9 +91,6 @@ typedef uint64_t fpos_t;
 /** @brief Size type with negative values. */
 typedef int ssize_t;
 
-/** @brief File descriptor. */
-typedef intptr_t fd_t;
-
 /** @brief File offset. */
 typedef ssize_t off_t;
 
@@ -350,9 +347,6 @@ typedef struct {
  * @brief dnx RTOS application context.
  */
 typedef struct {
-        void **stdin_ref;
-        void **stdout_ref;
-        void **stderr_ref;
         void **global_ref;
         int   *errno_ref;
 } _dnxrtctx_t;

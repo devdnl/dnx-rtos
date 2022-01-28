@@ -285,8 +285,8 @@ typedef struct {
 static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 {
         pid_t pid = 0;
-        _libc_syscall(_LIBC_SYS_PROCESSCREATE, &pid, cmd, attr);
-        return pid;
+        int err = _libc_syscall(_LIBC_SYS_PROCESSCREATE, cmd, attr, &pid);
+        return err ? 0 : pid;
 }
 
 //==============================================================================
@@ -341,9 +341,8 @@ static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
 //==============================================================================
 static inline int process_kill(pid_t pid)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_PROCESSKILL, &r, &pid);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_PROCESSKILL, &pid);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -402,9 +401,8 @@ static inline int process_kill(pid_t pid)
 //==============================================================================
 static inline int process_wait(pid_t pid, int *status, const u32_t timeout)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_PROCESSWAIT, &r, &pid, status, &timeout);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_PROCESSWAIT, &pid, status, &timeout);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -500,9 +498,8 @@ static inline int wait(pid_t pid)
 //==============================================================================
 static inline int process_stat_seek(size_t seek, process_stat_t *stat)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_PROCESSSTATSEEK, &r, &seek, stat);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_PROCESSSTATSEEK, &seek, stat);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -541,9 +538,8 @@ static inline int process_stat_seek(size_t seek, process_stat_t *stat)
 //==============================================================================
 static inline int process_stat(pid_t pid, process_stat_t *stat)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_PROCESSSTATPID, &r, &pid, stat);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_PROCESSSTATPID, &pid, stat);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -576,8 +572,8 @@ static inline int process_stat(pid_t pid, process_stat_t *stat)
 static inline pid_t process_getpid(void)
 {
         pid_t pid = 0;
-        _libc_syscall(_LIBC_SYS_PROCESSGETPID, &pid);
-        return pid;
+        int err = _libc_syscall(_LIBC_SYS_PROCESSGETPID, &pid);
+        return err ? 0 : pid;
 }
 
 //==============================================================================
@@ -598,7 +594,7 @@ static inline pid_t process_getpid(void)
 
         // ...
 
-        print("Process priority is: %d\n, (int)process_get_priority(getpid()));
+        print("Process priority is: %d\n, process_get_priority(getpid()));
 
         //...
 
@@ -608,8 +604,8 @@ static inline pid_t process_getpid(void)
 static inline int process_get_priority(pid_t pid)
 {
         int prio = 0;
-        _libc_syscall(_LIBC_SYS_PROCESSGETPRIO, &prio, &pid);
-        return prio;
+        int err = _libc_syscall(_LIBC_SYS_PROCESSGETPRIO, &pid, &prio);
+        return err ? 0 : prio;
 }
 
 //==============================================================================
@@ -678,8 +674,8 @@ static inline int process_get_priority(pid_t pid)
 static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr, void *arg)
 {
         tid_t tid = 0;
-        _libc_syscall(_LIBC_SYS_THREADCREATE, &tid, func, attr, arg);
-        return tid;
+        int err = _libc_syscall(_LIBC_SYS_THREADCREATE, func, attr, arg, &tid);
+        return err ? 0 : tid;
 }
 
 //==============================================================================
@@ -740,9 +736,8 @@ static inline tid_t thread_create(thread_func_t func, const thread_attr_t *attr,
 //==============================================================================
 static inline int thread_cancel(tid_t tid)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_THREADKILL, &r, &tid);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_THREADKILL, &tid);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -801,9 +796,9 @@ static inline int thread_cancel(tid_t tid)
 //==============================================================================
 static inline int thread_current(void)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_GETACTIVETHREAD, &r);
-        return r;
+        tid_t tid = 0;
+        int err = _libc_syscall(_LIBC_SYS_GETACTIVETHREAD, &tid);
+        return err ? -1 : tid;
 }
 
 //==============================================================================
@@ -857,7 +852,7 @@ static inline int thread_current(void)
 //==============================================================================
 static inline void thread_exit(int status)
 {
-        _libc_syscall(_LIBC_SYS_THREADEXIT, NULL, &status);
+        _libc_syscall(_LIBC_SYS_THREADEXIT, &status);
 }
 
 //==============================================================================
@@ -923,9 +918,8 @@ static inline void thread_exit(int status)
 //==============================================================================
 static inline int thread_join2(tid_t tid, int *status, uint32_t timeout_ms)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_THREADJOIN, &r, &tid, status, &timeout_ms);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_THREADJOIN, &tid, status, &timeout_ms);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -1030,9 +1024,8 @@ static inline int thread_join(tid_t tid, int *status)
 //==============================================================================
 static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_THREADSTAT, &r, &pid, &tid, stat);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_THREADSTAT, &pid, &tid, stat);
+        return err ? -1 : 0;
 }
 
 //==============================================================================

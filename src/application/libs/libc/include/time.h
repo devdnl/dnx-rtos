@@ -368,8 +368,8 @@ struct tm {
 static inline clock_t clock(void)
 {
         u64_t uptime = 0;
-        _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
-        return uptime;
+        int err = _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
+        return err ? (clock_t)(-1LL) : uptime;
 }
 
 //==============================================================================
@@ -477,8 +477,8 @@ static inline time_t time(time_t *timer)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
         struct timeval timeval;
-        int err = -1;
-        _libc_syscall(_LIBC_SYS_GETTIMEOFDAY, &err, &timeval);
+        struct timezone timezone;
+        int err = _libc_syscall(_LIBC_SYS_GETTIMEOFDAY, &timeval, &timezone);
 
         if (timer) {
                 *timer = timeval.tv_sec;

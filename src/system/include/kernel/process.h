@@ -83,9 +83,6 @@ typedef struct {
 /*==============================================================================
   Exported object declarations
 ==============================================================================*/
-extern void *_stdin;
-extern void *_stdout;
-extern void *_stderr;
 extern void *_global;
 extern int   _errno;
 

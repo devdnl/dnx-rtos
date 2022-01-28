@@ -31,6 +31,7 @@
 ==============================================================================*/
 #include <sys/types.h>
 #include <libc/source/syscall.h>
+#include "common.h"
 
 /*==============================================================================
   Local macros
@@ -62,9 +63,22 @@ unsigned int _libc_seed = 123456789;
 /*
  * Those variables are switched by kernel according to current process/thread.
  */
-void **_libc_stdin;
-void **_libc_stdout;
-void **_libc_stderr;
+static struct _libc_file libc_stdin = {
+        .fd = 0,
+};
+
+static struct _libc_file libc_stdout = {
+        .fd = 1,
+};
+
+static struct _libc_file libc_stderr = {
+        .fd = 2,
+};
+
+struct _libc_file *_libc_stdin  = &libc_stdin;
+struct _libc_file *_libc_stdout = &libc_stdout;
+struct _libc_file *_libc_stderr = &libc_stderr;
+
 int   *_libc_errno;
 void **_libc_global;
 

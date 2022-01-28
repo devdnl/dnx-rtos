@@ -140,14 +140,15 @@ int thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 {
         u32_t sleep = (duration->tv_sec * 1000) + (duration->tv_nsec / 1000000);
 
-        _libc_syscall(_LIBC_SYS_MSLEEP, NULL, &sleep);
-
-        if (remaining) {
-                remaining->tv_nsec = 0;
-                remaining->tv_sec  = 0;
+        int err = _libc_syscall(_LIBC_SYS_MSLEEP, &sleep);
+        if (!err) {
+                if (remaining) {
+                        remaining->tv_nsec = 0;
+                        remaining->tv_sec  = 0;
+                }
         }
 
-        return 0;
+        return err ? -2 : 0;
 }
 
 //==============================================================================
@@ -158,7 +159,7 @@ int thrd_sleep(const struct timespec *duration, struct timespec *remaining)
 //==============================================================================
 void thrd_yield(void)
 {
-        _libc_syscall(_LIBC_SYS_MSLEEP, NULL, &(const uint32_t){0});
+        _libc_syscall(_LIBC_SYS_MSLEEP, &(const uint32_t){0});
 }
 
 //==============================================================================
@@ -483,15 +484,16 @@ void call_once(once_flag *once, void (*func)(void))
         if (*once == ONCE_FLAG_INIT) {
                 bool call = false;
 
-                _libc_syscall(_LIBC_SYS_SCHEDULERLOCK, NULL);
+                int err = _libc_syscall(_LIBC_SYS_SCHEDULERLOCK);
+                if (!err) {
+                        call = (*once == ONCE_FLAG_INIT);
+                        *once = ONCE_FLAG_INIT + 1;
 
-                call = (*once == ONCE_FLAG_INIT);
-                *once = ONCE_FLAG_INIT + 1;
+                        _libc_syscall(_LIBC_SYS_SCHEDULERUNLOCK);
 
-                _libc_syscall(_LIBC_SYS_SCHEDULERUNLOCK, NULL);
-
-                if (call) {
-                        func();
+                        if (call) {
+                                func();
+                        }
                 }
         }
 }

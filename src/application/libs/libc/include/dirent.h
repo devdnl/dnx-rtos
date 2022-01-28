@@ -139,8 +139,8 @@ extern "C" {
 static inline DIR *opendir(const char *name)
 {
         DIR *dir = NULL;
-        _libc_syscall(_LIBC_SYS_OPENDIR, &dir, name);
-        return dir;
+        int err = _libc_syscall(_LIBC_SYS_OPENDIR, name, &dir);
+        return err ? NULL : dir;
 }
 
 //==============================================================================
@@ -192,9 +192,8 @@ static inline DIR *opendir(const char *name)
 //==============================================================================
 static inline int closedir(DIR *dir)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_CLOSEDIR, &r, dir);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_CLOSEDIR, dir);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -249,8 +248,8 @@ static inline int closedir(DIR *dir)
 static inline struct dirent *readdir(DIR *dir)
 {
         struct dirent *dirent = NULL;
-        _libc_syscall(_LIBC_SYS_READDIR, &dirent, dir);
-        return dirent;
+        int err = _libc_syscall(_LIBC_SYS_READDIR, dir, &dirent);
+        return err ? NULL : dirent;
 }
 
 //==============================================================================
@@ -297,7 +296,7 @@ static inline struct dirent *readdir(DIR *dir)
 //==============================================================================
 static inline void seekdir(DIR *dir, u32_t seek)
 {
-        _libc_syscall(_LIBC_SYS_DIRSEEK, NULL, dir, &seek);
+        _libc_syscall(_LIBC_SYS_DIRSEEK, dir, &seek);
 }
 
 //==============================================================================
@@ -309,7 +308,8 @@ static inline void seekdir(DIR *dir, u32_t seek)
  * @exception | @ref EINVAL
  *
  * @return Upon successful completion, the function shall return the current
- *         location of the specified directory stream.
+ *         location of the specified directory stream. On error, -1 is rturned,
+ *         and errno is set appropriately.
  *
  * @b Example
  * @code
@@ -342,11 +342,11 @@ static inline void seekdir(DIR *dir, u32_t seek)
  * @see seekdir(), rewinddir()
  */
 //==============================================================================
-static inline u32_t telldir(DIR *dir)
+static inline i32_t telldir(DIR *dir)
 {
         u32_t seek = 0;
-        _libc_syscall(_LIBC_SYS_DIRTELL, &seek, dir);
-        return seek;
+        int err = _libc_syscall(_LIBC_SYS_DIRTELL, dir, &seek);
+        return err ? -1 : (i32_t)seek;
 }
 
 //==============================================================================

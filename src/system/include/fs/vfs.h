@@ -97,6 +97,10 @@ extern "C" {
 #define O_APPEND                                02000
 #endif
 
+#ifndef O_NONBLOCK
+#define O_NONBLOCK                              04000
+#endif
+
 /* modes */
 #define S_IRWXU                                 0000700    /* RWX mask for owner */
 #define S_IRUSR                                 0000400    /* R for owner */
@@ -282,7 +286,7 @@ extern int  _vfs_chmod      (const struct vfs_path*, mode_t);
 extern int  _vfs_chown      (const struct vfs_path*, uid_t, gid_t);
 extern int  _vfs_stat       (const struct vfs_path*, struct stat*);
 extern int  _vfs_statfs     (const struct vfs_path*, struct statfs*);
-extern int  _vfs_fopen      (const struct vfs_path*, const char*, kfile_t**);
+extern int  _vfs_fopen      (const struct vfs_path*, int, kfile_t**);
 extern int  _vfs_fclose     (kfile_t*, bool);
 extern int  _vfs_fwrite     (const void*, size_t, size_t*, kfile_t*);
 extern int  _vfs_fread      (void*, size_t, size_t*, kfile_t*);

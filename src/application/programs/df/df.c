@@ -70,19 +70,6 @@ PROGRAM_PARAMS(df, STACK_DEPTH_LOW);
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-static int thread(void *arg)
-{
-        tid_t id = thread_current();
-        pid_t pid = getpid();
-
-        for (size_t i = 0 ; i < 5; i++) {
-                msleep(1000);
-                printf("Jestem wątek nr %u z %u\n", id, pid);
-                thread_exit(10 + id);
-        }
-
-        return id;
-}
 
 //==============================================================================
 /**
@@ -94,30 +81,11 @@ int main(int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        pid_t pid = getpid();
-        printf("=====Jestem programem %u=====\n", pid);
-
-        if (argc == 1) {
-                pid = process_create("df --no-child", &(process_attr_t) {
-                        .f_stdin  = stdin,
-                        .f_stdout = stdout,
-                        .f_stderr = stderr,
-                        .p_stdin  = NULL,
-                        .p_stdout = NULL,
-                        .p_stderr = NULL,
-                        .cwd      = "/",
-                        .priority = PRIORITY_NORMAL,
-                        .detached = false
-                });
-        } else {
-//                sleep(7);
-        }
-
         printf(VT100_FONT_BOLD"File system"VT100_CURSOR_FORWARD(6)"Total"VT100_CURSOR_FORWARD(6)
                "Free"VT100_CURSOR_FORWARD(7)"%%Used  Mount point"VT100_RESET_ATTRIBUTES"\n");
 
         struct mntent mnt;
-        int           i = 0;
+        size_t i = 0;
         while (getmntentry(i++, &mnt) == 0) {
                 u32_t dtotal;
                 u32_t dfree;
@@ -146,30 +114,6 @@ int main(int argc, char *argv[])
                        "%s\n",
                        mnt.mnt_fsname, dtotal, unit, dfree, unit,
                        percent / 10, percent % 10, mnt.mnt_dir);
-        }
-
-        for (size_t i = 0; i < 5; i++) {
-                thread_create(thread, &(const thread_attr_t) {
-                        .priority = PRIORITY_NORMAL,
-                        .stack_depth = STACK_DEPTH_LOW,
-                        .detached = false
-                }, NULL);
-        }
-
-        sleep(1);
-
-        for (size_t i = 0; i < 5; i++) {
-                int status = -1;
-                thread_join(i + 1, &status);
-                printf("Status z wątku %d: %d\n", i+1, status);
-        }
-
-        if (argc == 1) {
-                int status = -1;
-                process_wait(pid, &status, MAX_DELAY_MS);
-                printf("Child pid return status: %d\n", status);
-        } else {
-                return pid;
         }
 
         return EXIT_SUCCESS;

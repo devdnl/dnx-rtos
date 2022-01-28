@@ -132,7 +132,7 @@ typedef struct {
  *
  * @exception | @ref EINVAL
  *
- * @return Return @b 0 on success. On error, @b positive value
+ * @return Return @b 0 on success. On error, @b -1 value
  * is returned, and @b errno is set appropriately.
  *
  * @b Example
@@ -165,9 +165,8 @@ typedef struct {
 //==============================================================================
 static inline int get_memory_usage_details(memstat_t *stat)
 {
-        int r;
-        _libc_syscall(_LIBC_SYS_GETMEMDETAILS, &r, stat);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_GETMEMDETAILS, stat);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -202,9 +201,8 @@ static inline int get_memory_usage_details(memstat_t *stat)
 //==============================================================================
 static inline int get_driver_memory_usage(uint module_number, int32_t *usage)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_GETMODMEMUSAGE, &r, &module_number, usage);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_GETMODMEMUSAGE, &module_number, usage);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -231,14 +229,14 @@ static inline int get_driver_memory_usage(uint module_number, int32_t *usage)
 
    @endcode
  *
- * @see get_uptime()
+ * @see get_uptime(), clock()
  */
 //==============================================================================
-static inline u64_t get_uptime_ms(void)
+static inline clock_t get_uptime_ms(void)
 {
         uint64_t uptime = 0;
-        _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
-        return uptime;
+        int err = _libc_syscall(_LIBC_SYS_GETUPTIMEMS, &uptime);
+        return err ? (clock_t)(-1LL) : uptime;
 }
 
 //==============================================================================
@@ -255,14 +253,14 @@ static inline u64_t get_uptime_ms(void)
 
         // ...
 
-        printf("System works: %lu seconds\n", get_uptime());
+        printf("System works: %llu seconds\n", get_uptime());
 
         // ...
 
    @endcode
  */
 //==============================================================================
-static inline uint32_t get_uptime(void)
+static inline clock_t get_uptime(void)
 {
         return get_uptime_ms() / 1000;
 }
@@ -299,9 +297,8 @@ static inline uint32_t get_uptime(void)
 //==============================================================================
 static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 {
-        int r;
-        _libc_syscall(_LIBC_SYS_GETAVGCPULOAD, &r, avg_CPU_load);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_GETAVGCPULOAD, avg_CPU_load);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -329,8 +326,8 @@ static inline int get_average_CPU_load(avg_CPU_load_t *avg_CPU_load)
 static inline const char *get_platform_name(void)
 {
         const char *name = NULL;
-        _libc_syscall(_LIBC_SYS_GETPLATFORMNAME, &name);
-        return name;
+        int err = _libc_syscall(_LIBC_SYS_GETPLATFORMNAME, &name);
+        return err ? "" : name;
 }
 
 //==============================================================================
@@ -357,8 +354,8 @@ static inline const char *get_platform_name(void)
 static inline const char *get_OS_name(void)
 {
         const char *buf = NULL;
-        _libc_syscall(_LIBC_SYS_GETOSNAME, &buf);
-        return buf;
+        int err = _libc_syscall(_LIBC_SYS_GETOSNAME, &buf);
+        return err ? "" : buf;
 }
 
 //==============================================================================
@@ -385,8 +382,8 @@ static inline const char *get_OS_name(void)
 static inline const char *get_OS_version(void)
 {
         const char *buf = NULL;
-        _libc_syscall(_LIBC_SYS_GETOSVER, &buf);
-        return buf;
+        int err = _libc_syscall(_LIBC_SYS_GETOSVER, &buf);
+        return err ? "" : buf;
 }
 
 //==============================================================================
@@ -413,8 +410,8 @@ static inline const char *get_OS_version(void)
 static inline const char *get_OS_codename(void)
 {
         const char *buf = NULL;
-        _libc_syscall(_LIBC_SYS_GETOSCODENAME, &buf);
-        return buf;
+        int err = _libc_syscall(_LIBC_SYS_GETOSCODENAME, &buf);
+        return err ? "" : buf;
 }
 
 //==============================================================================
@@ -441,8 +438,8 @@ static inline const char *get_OS_codename(void)
 static inline const char *get_kernel_name(void)
 {
         const char *buf = NULL;
-        _libc_syscall(_LIBC_SYS_GETKERNELNAME, &buf);
-        return buf;
+        int err = _libc_syscall(_LIBC_SYS_GETKERNELNAME, &buf);
+        return err ? "" : buf;
 }
 
 //==============================================================================
@@ -469,8 +466,8 @@ static inline const char *get_kernel_name(void)
 static inline const char *get_kernel_version(void)
 {
         const char *buf = NULL;
-        _libc_syscall(_LIBC_SYS_GETKERNELVER, &buf);
-        return buf;
+        int err = _libc_syscall(_LIBC_SYS_GETKERNELVER, &buf);
+        return err ? "" : buf;
 }
 
 //==============================================================================
@@ -499,9 +496,8 @@ static inline const char *get_kernel_version(void)
 //==============================================================================
 static inline int get_host_name(char *hostname, size_t hostname_len)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_GETHOSTNAME, &r, hostname, &hostname_len);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_GETHOSTNAME, hostname, &hostname_len);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -529,7 +525,7 @@ static inline int get_host_name(char *hostname, size_t hostname_len)
 //==============================================================================
 static inline void system_reboot(void)
 {
-        _libc_syscall(_LIBC_SYS_SYSTEMRESTART, NULL);
+        _libc_syscall(_LIBC_SYS_SYSTEMRESTART);
 }
 
 //==============================================================================
@@ -557,7 +553,7 @@ static inline void system_reboot(void)
 //==============================================================================
 static inline void system_shutdown(void)
 {
-        _libc_syscall(_LIBC_SYS_SYSTEMSHUTDOWN, NULL);
+        _libc_syscall(_LIBC_SYS_SYSTEMSHUTDOWN);
 }
 
 //==============================================================================
@@ -594,8 +590,8 @@ static inline void system_shutdown(void)
 static inline size_t syslog_read(char *str, size_t len, const struct timeval *from_time, struct timeval *curr_time)
 {
         size_t n = 0;
-        _libc_syscall(_LIBC_SYS_SYSLOGREAD, &n, str, &len, from_time, curr_time);
-        return n;
+        int err = _libc_syscall(_LIBC_SYS_SYSLOGREAD, str, &len, from_time, curr_time, &n);
+        return err ? 0 : n;
 }
 
 //==============================================================================
@@ -619,7 +615,7 @@ static inline size_t syslog_read(char *str, size_t len, const struct timeval *fr
 //==============================================================================
 static inline void syslog_clear(void)
 {
-        _libc_syscall(_LIBC_SYS_SYSLOGCLEAR, NULL);
+        _libc_syscall(_LIBC_SYS_SYSLOGCLEAR);
 }
 
 //==============================================================================
@@ -652,9 +648,8 @@ static inline void syslog_clear(void)
 //==============================================================================
 static inline bool get_kernel_panic_info(kernel_panic_info_t *info)
 {
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_KERNELPANICINFO, &r, info);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_KERNELPANICINFO, info);
+        return err ? false : true;
 }
 
 //==============================================================================
@@ -668,9 +663,8 @@ static inline bool get_kernel_panic_info(kernel_panic_info_t *info)
 //==============================================================================
 static inline bool is_object_in_heap(const void *ptr)
 {
-        bool r = false;
-        _libc_syscall(_LIBC_SYS_ISHEAPADDR, &r, ptr);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_ISHEAPADDR, ptr);
+        return err ? false : true;
 }
 
 /**@}*/

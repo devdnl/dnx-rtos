@@ -843,18 +843,7 @@ extern const char *strerror(int errnum);
  * @see strdup, free
  */
 //==============================================================================
-static inline char *strndup(const char *s, size_t n)
-{
-        extern size_t _libc_strlcpy(char *dst, const char *src, size_t size);
-
-        n += 1;
-        char *dup = NULL;
-        _libc_syscall(_LIBC_SYS_MALLOC, &dup, &n);
-        if (dup) {
-                _libc_strlcpy(dup, s, n);
-        }
-        return dup;
-}
+extern char *strndup(const char *s, size_t n);
 
 //==============================================================================
 /**

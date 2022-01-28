@@ -195,14 +195,13 @@ extern "C" {
  * The names of all requests are constructed in the same way: @b IOCTL_<MODULE_NAME>__<REQUEST_NAME>.
  */
 //==============================================================================
-static inline int ioctl(fd_t fd, int request, ...)
+static inline int ioctl(int fd, int request, ...)
 {
         va_list arg;
         va_start(arg, request);
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_IOCTL, &r, (FILE*)fd, &request, &arg);
+        int err = _libc_syscall(_LIBC_SYS_IOCTL, &fd, &request, &arg);
         va_end(arg);
-        return r;
+        return err ? -1 : 0;
 }
 
 #ifdef __cplusplus

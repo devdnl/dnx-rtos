@@ -74,135 +74,129 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef enum {// NAME                        | RETURN TYPE    | ARG 1                     | ARG 2                               | ARG 3                               | ARG 4                     | ARG 5                                     |
-                                          // |----------------+---------------------------+-------------------------------------+-------------------------------------+---------------------------+-------------------------------------------+
-        _LIBC_SYS_GETRUNTIMECTX,          // | int            | _dnxrtctx_t *ctx
-        _LIBC_SYS_MALLOC,                 // | void*          | size_t *size              |                                     |                                     |                           |                                           |
-        _LIBC_SYS_ZALLOC,                 // | void*          | size_t *size              |                                     |                                     |                           |                                           |
-        _LIBC_SYS_FREE,                   // | void           | void *mem                 |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SHMCREATE,              // | int            | const char *key           | size_t *size                        |                                     |                           |                                           |
-        _LIBC_SYS_SHMATTACH,              // | int            | const char *key           | void **mem                          | size_t *size                        |                           |                                           |
-        _LIBC_SYS_SHMDETACH,              // | int            | const char *key           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SHMDESTROY,             // | int            | const char *key           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_PROCESSWAIT,            // | int            | const pid_t *pid          | int *status                         | const uint32_t *timeout             |                           |                                           |
-        _LIBC_SYS_PROCESSSTATSEEK,        // | int            | size_t *seek              | process_stat_t *stat                |                                     |                           |                                           |
-        _LIBC_SYS_THREADSTAT,             // | int            | pid_t *pid                | tid_t *tid                          | thread_stat_t *stat                 |                           |                                           |
-        _LIBC_SYS_PROCESSSTATPID,         // | int            | pid_t *pid                | process_stat_t *stat                |                                     |                           |                                           |
-        _LIBC_SYS_PROCESSGETPID,          // | pid_t          |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_PROCESSGETPRIO,         // | int            | pid_t *pid                |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETCWD,                 // | char*          | char *buf                 | size_t *size                        |                                     |                           |                                           |
-        _LIBC_SYS_SETCWD,                 // | int            | const char *cwd           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SYSLOGREAD,             // | size_t         | char *str                 | size_t *len                         | const struct timeval *from          | struct timeval *current   |                                           |
-        _LIBC_SYS_THREADCREATE,           // | tid_t          | thread_func_t             | thread_attr_t *attr                 | void *arg                           |                           |                                           |
-        _LIBC_SYS_SEMAPHOREOPEN,          // | int            | const size_t *cnt_max     | const size_t *cnt_init              |                                     |                           |                                           |
-        _LIBC_SYS_SEMAPHOREWAIT,          // | int            | int *semaphore            | uint32_t *timeout
-        _LIBC_SYS_SEMAPHORESIGNAL,        // | int            | int *semaphore
-        _LIBC_SYS_SEMAPHOREGETVALUE,      // | int            | int *semaphore            | size_t *value
-        _LIBC_SYS_MUTEXOPEN,              // | int            | const enum kmtx_type *mt  |                                     |                                     |                           |                                           |
-        _LIBC_SYS_MUTEXLOCK,              // | int            | int *mutex                | uint32_t *timeout
-        _LIBC_SYS_MUTEXUNLOCK,            // | int            | int *mutex
-        _LIBC_SYS_CLOSE,                  // | int            | int *descriptor           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_QUEUEOPEN,              // | int            | const size_t *length      | const size_t *item_size             |                                     |                           |                                           |
-        _LIBC_SYS_QUEUERESET,             // | int            | int *queue
-        _LIBC_SYS_QUEUESEND,              // | int            | int *queue                | const void *item                    | const uint32_t *timeout
-        _LIBC_SYS_QUEUERECEIVE,           // | int            | int *queue                | void *item                          | const uint32_t *timeout
-        _LIBC_SYS_QUEUERECEIVEPEEK,       // | int            | int *queue                | void *item                          | const uint32_t *timeout
-        _LIBC_SYS_QUEUEITEMSCOUNT,        // | int            | int *queue                | size_t *count
-        _LIBC_SYS_QUEUEFREESPACE,         // | int            | int *queue                | size_t *count
-        _LIBC_SYS_THREADKILL,             // | int            | tid_t *tid                |                                     |                                     |                           |                                           |
-        _LIBC_SYS_PROCESSCREATE,          // | pid_t          | const char *command       | process_attr_t *attr                |                                     |                           |                                           |
-        _LIBC_SYS_PROCESSKILL,            // | int            | const pid_t *pid          |                                     |                                     |                           |                                           |
-        _LIBC_SYS_PROCESSABORT,           // | int            |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_PROCESSEXIT,            // | void           | int *status               |                                     |                                     |                           |                                           |
-        _LIBC_SYS_MOUNT,                  // | int            | const char *FS_name       | const char *src_path                | const char *mount_point             | const char *options       |                                           |
-        _LIBC_SYS_UMOUNT,                 // | int            | const char *mount_point   |                                     |                                     |                           |                                           |
-        _LIBC_SYS_MKNOD,                  // | int            | const char *pathname      | const char *mod_name                | int *major                          | int *minor                |                                           |
-        _LIBC_SYS_GETMNTENTRY,            // | int            | int *seek                 | struct mntent *mntent               |                                     |                           |                                           |
-        _LIBC_SYS_MKFIFO,                 // | int            | const char *pathname      | mode_t *mode                        |                                     |                           |                                           |
-        _LIBC_SYS_MKDIR,                  // | int            | const char *pathname      | mode_t *mode                        |                                     |                           |                                           |
-        _LIBC_SYS_OPENDIR,                // | DIR*           | const char *pathname      |                                     |                                     |                           |                                           |
-        _LIBC_SYS_CLOSEDIR,               // | int            | DIR *dir                  |                                     |                                     |                           |                                           |
-        _LIBC_SYS_DIRSEEK,                // | void           | DIR *dir                  | const uint32_t *seek
-        _LIBC_SYS_DIRTELL,                // | u32_t          | DIR *dir
-        _LIBC_SYS_READDIR,                // | dirent_t*      | DIR *dir                  |                                     |                                     |                           |                                           |
-        _LIBC_SYS_REMOVE,                 // | int            | const char *path          |                                     |                                     |                           |                                           |
-        _LIBC_SYS_RENAME,                 // | int            | const char *old_name      | const char *new_name                |                                     |                           |                                           |
-        _LIBC_SYS_CHMOD,                  // | int            | const char *pathname      | mode_t *mode                        |                                     |                           |                                           |
-        _LIBC_SYS_CHOWN,                  // | int            | const char *pathname      | uid_t *owner                        | gid_t *group                        |                           |                                           |
-        _LIBC_SYS_STATFS,                 // | int            | const char *path          | struct statfs *buf                  |                                     |                           |                                           |
-        _LIBC_SYS_STAT,                   // | int            | const char *pathname      | struct stat *buf                    |                                     |                           |                                           |
-        _LIBC_SYS_FSTAT,                  // | int            | FILE *file                | struct stat *buf                    |                                     |                           |                                           |
-        _LIBC_SYS_FOPEN,                  // | FILE*          | const char *path          | const char *mode                    |                                     |                           |                                           |
-        _LIBC_SYS_FCLOSE,                 // | int            | FILE *file                |                                     |                                     |                           |                                           |
-        _LIBC_SYS_FWRITE,                 // | size_t         | const void *src           | size_t *count                       | FILE *file                          |                           |                                           |
-        _LIBC_SYS_FREAD,                  // | size_t         | void *dst                 | size_t *count                       | FILE *file                          |                           |                                           |
-        _LIBC_SYS_FSEEK,                  // | int            | FILE *file                | i64_t  *seek                        | int    *origin                      |                           |                                           |
-        _LIBC_SYS_FTELL,                  // | i64_t          | FILE *file                |                                     |                                     |                           |                                           |
-        _LIBC_SYS_IOCTL,                  // | int            | FILE *file                | int *request                        | va_list *arg                        |                           |                                           |
-        _LIBC_SYS_FFLUSH,                 // | int            | FILE *file                |                                     |                                     |                           |                                           |
-        _LIBC_SYS_FEOF,                   // | int            | FILE *file                |                                     |                                     |                           |                                           |
-        _LIBC_SYS_FERROR,                 // | int            | FILE *file                |                                     |                                     |                           |                                           |
-        _LIBC_SYS_CLEARERR,               // | void           | FILE *file                |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SYNC,                   // | void           |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETTIMEOFDAY,           // | int            | struct timeval *tv        | struct timezone *tz                 |                                     |                           |                                           |
-        _LIBC_SYS_SETTIMEOFDAY,           // | int            | const struct timeval *tv  | const struct timezone *tz           |                                     |                           |                                           |
-        _LIBC_SYS_DRIVERINIT,             // | dev_t          | const char *mod_name      | int *major                          | int *minor                          | const char *node_path     | const void *config                        |
-        _LIBC_SYS_DRIVERRELEASE,          // | int            | const char *mod_name      | int *major                          | int *minor                          |                           |                                           |
-        _LIBC_SYS_KERNELPANICINFO,        // | bool           | kernel_panic_info_t *info |                                     |                                     |                           |                                           |
-        _LIBC_SYS_NETADD,                 // | int            | char *netname             | NET_family_t *family                | const char *if_path                 |                           |                                           |
-        _LIBC_SYS_NETRM    ,              // | int            | char *netname             |                                     |                                     |                           |                                           |
-        _LIBC_SYS_NETIFLIST,              // | int            | char *netname[]           | size_t *netname_len                 |                                     |                           |                                           |
-        _LIBC_SYS_NETIFUP,                // | int            | const char *netname       | const NET_generic_config_t *config  |                                     |                           |                                           |
-        _LIBC_SYS_NETIFDOWN,              // | int            | const char *netname       |                                     |                                     |                           |                                           |
-        _LIBC_SYS_NETIFSTATUS,            // | int            | const char *netname       | NET_family_t *family                | NET_generic_status_t *status        |                           |                                           |
-        _LIBC_SYS_NETSOCKETCREATE,        // | SOCKET*        | const char *netname       | NET_protocol_t *protocol            |                                     |                           |                                           |
-        _LIBC_SYS_NETGETHOSTBYNAME,       // | int            | const char *netname       | const char *name                    | void *addr                          | size_t *addr_size         |                                           |
-        _LIBC_SYS_NETSOCKETDESTROY,       // | void           | SOCKET *socket            |                                     |                                     |                           |                                           |
-        _LIBC_SYS_NETBIND,                // | int            | SOCKET *socket            | const NET_generic_sockaddr_t *addr  |                                     |                           |                                           |
-        _LIBC_SYS_NETLISTEN,              // | int            | SOCKET *socket            |                                     |                                     |                           |                                           |
-        _LIBC_SYS_NETACCEPT,              // | int            | SOCKET *socket            | SOCKET **new_socket                 |                                     |                           |                                           |
-        _LIBC_SYS_NETRECV,                // | int            | SOCKET *socket            | void *buf                           | size_t *len                         | NET_flags_t *flags        |                                           |
-        _LIBC_SYS_NETSEND,                // | int            | SOCKET *socket            | const void *buf                     | size_t *len                         | NET_flags_t *flags        |                                           |
-        _LIBC_SYS_NETSETRECVTIMEOUT,      // | int            | SOCKET *socket            | uint32_t *timeout                   |                                     |                           |                                           |
-        _LIBC_SYS_NETSETSENDTIMEOUT,      // | int            | SOCKET *socket            | uint32_t *timeout                   |                                     |                           |                                           |
-        _LIBC_SYS_NETCONNECT,             // | int            | SOCKET *socket            | const NET_generic_sockaddr_t *addr  |                                     |                           |                                           |
-        _LIBC_SYS_NETDISCONNECT,          // | int            | SOCKET *socket            |                                     |                                     |                           |                                           |
-        _LIBC_SYS_NETSHUTDOWN,            // | int            | SOCKET *socket            | NET_shut_t *how                     |                                     |                           |                                           |
-        _LIBC_SYS_NETSENDTO,              // | int            | SOCKET *socket            | const void *buf                     | size_t *len                         | NET_flags_t *flags        | const NET_generic_sockaddr_t *to_sockaddr |
-        _LIBC_SYS_NETRECVFROM,            // | int            | SOCKET *socket            | void *buf                           | size_t *len                         | NET_flags_t *flags        | NET_generic_sockaddr_t *from_sockaddr     |
-        _LIBC_SYS_NETGETADDRESS,          // | int            | SOCKET *socket            | NET_generic_sockaddr_t *addr        |                                     |                           |                                           |
-        _LIBC_SYS_NETHTON16,              // | uint16_t       | NET_family_t *family      | uint16_t *value                     |                                     |                           |                                           |
-        _LIBC_SYS_NETHTON32,              // | uint32_t       | NET_family_t *family      | uint32_t *value                     |                                     |                           |                                           |
-        _LIBC_SYS_NETHTON64,              // | uint64_t       | NET_family_t *family      | uint64_t *value                     |                                     |                           |                                           |
-        _LIBC_SYS_MSLEEP,                 // | void           | const uint32_t *mseconds  |                                     |                                     |                           |                                           |
-        _LIBC_SYS_USLEEP,                 // | void           | const uint32_t *useconds  |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETUID,                 // | uid_t          |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETGID,                 // | gid_t          |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETMEMDETAILS,          // | int            | memstat_t *stat           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETMODMEMUSAGE,         // | int            | uint *module              | int32_t *usage                      |                                     |                           |                                           |
-        _LIBC_SYS_GETUPTIMEMS,            // | uint64_t       |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETAVGCPULOAD,          // | int            | avg_CPU_load_t *stat      |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETPLATFORMNAME,        // | const char*    |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETOSNAME,              // | const char*    |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETOSVER,               // | const char*    |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETOSCODENAME,          // | const char*    |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETKERNELNAME,          // | const char*    |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETKERNELVER,           // | const char*    |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETHOSTNAME,            // | int            | char *buf                 | size_t *buf_len                     |                                     |                           |                                           |
-        _LIBC_SYS_GETDRIVERNAME,          // | const char*    | size_t *modno             |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETDRIVERID,            // | int            | const char *name          |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETDRIVERCOUNT,         // | size_t         |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_GETDRIVERINSTANCES,     // | ssize_t        | size_t id                 |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SYSTEMRESTART,          // | void           |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SYSTEMSHUTDOWN,         // | void           |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SYSLOGCLEAR,            // | void           |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_FLAGWAIT,               // | bool           | flag_t *flag              | uint32_t *mask                      | uint32_t *timeout                   |                           |                                           |
-        _LIBC_SYS_GETACTIVETHREAD,        // | int            |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_THREADEXIT,             // | void           | int *status               |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SCHEDULERLOCK,          // | void           |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_SCHEDULERUNLOCK,        // | void           |                           |                                     |                                     |                           |                                           |
-        _LIBC_SYS_THREADJOIN,             // | int            | const tid_t *tid          | int *status                         | const uint32_t *timeout
-        _LIBC_SYS_ISHEAPADDR,             // | bool           | const void *addr
+typedef enum {
+        _LIBC_SYS_GETRUNTIMECTX,          // int errno (_dnxrtctx_t *ctx)
+        _LIBC_SYS_MALLOC,                 // int errno (size_t *blk_size, void **alloc_mem)
+        _LIBC_SYS_ZALLOC,                 // int errno (size_t *blk_size, void **alloc_mem)
+        _LIBC_SYS_FREE,                   // int errno (void *mem)
+        _LIBC_SYS_SHMCREATE,              // int errno (const char *key, size_t *size)
+        _LIBC_SYS_SHMATTACH,              // int errno (const char *key, void **mem, size_t *size)
+        _LIBC_SYS_SHMDETACH,              // int errno (const char *key)
+        _LIBC_SYS_SHMDESTROY,             // int errno (const char *key)
+        _LIBC_SYS_PROCESSWAIT,            // int errno (const pid_t *pid, int *status, const uint32_t *timeout)
+        _LIBC_SYS_PROCESSSTATSEEK,        // int errno (size_t *seek, _process_stat_t *stat)
+        _LIBC_SYS_THREADSTAT,             // int errno (pid_t *pid , tid_t *tid, _thread_stat_t *stat)
+        _LIBC_SYS_PROCESSSTATPID,         // int errno (pid_t *pid, _process_stat_t *stat)
+        _LIBC_SYS_PROCESSGETPID,          // int errno (pid_t *pid)
+        _LIBC_SYS_PROCESSGETPRIO,         // int errno (pid_t *pid, int *priority)
+        _LIBC_SYS_GETCWD,                 // int errno (char *buf, size_t *size)
+        _LIBC_SYS_SETCWD,                 // int errno (const char *cwd)
+        _LIBC_SYS_SYSLOGREAD,             // int errno (char *str, size_t *len, const struct timeval *from, struct timeval *current, size_t *count)
+        _LIBC_SYS_THREADCREATE,           // int errno (thread_func_t, _thread_attr_t *attr, void *arg, tid_t *tid)
+        _LIBC_SYS_SEMAPHOREOPEN,          // int errno (const size_t *cnt_max, const size_t *cnt_init, int *fd)
+        _LIBC_SYS_SEMAPHOREWAIT,          // int errno (int *fd_semaphore, uint32_t *timeout)
+        _LIBC_SYS_SEMAPHORESIGNAL,        // int errno (int *fd_semaphore)
+        _LIBC_SYS_SEMAPHOREGETVALUE,      // int errno (int *fd_semaphore, size_t *value)
+        _LIBC_SYS_MUTEXOPEN,              // int errno (const enum kmtx_type *mt, int *fd)
+        _LIBC_SYS_MUTEXLOCK,              // int errno (int *mutex, uint32_t *timeout)
+        _LIBC_SYS_MUTEXUNLOCK,            // int errno (int *mutex)
+        _LIBC_SYS_CLOSE,                  // int errno (int *fd)
+        _LIBC_SYS_QUEUEOPEN,              // int errno (const size_t *length, const size_t *item_size, int *fd)
+        _LIBC_SYS_QUEUERESET,             // int errno (int *fd_queue)
+        _LIBC_SYS_QUEUESEND,              // int errno (int *fd_queue, const void *item, const uint32_t *timeout)
+        _LIBC_SYS_QUEUERECEIVE,           // int errno (int *fd_queue, void *item, const uint32_t *timeout)
+        _LIBC_SYS_QUEUERECEIVEPEEK,       // int errno (int *fd_queue, void *item, const uint32_t *timeout)
+        _LIBC_SYS_QUEUEITEMSCOUNT,        // int errno (int *fd_queue, size_t *count)
+        _LIBC_SYS_QUEUEFREESPACE,         // int errno (int *fd_queue, size_t *count)
+        _LIBC_SYS_THREADKILL,             // int errno (tid_t *tid)
+        _LIBC_SYS_PROCESSCREATE,          // int errno (const char *command, _process_attr_t *attr, pid_t *pid)
+        _LIBC_SYS_PROCESSKILL,            // int errno (const pid_t *pid)
+        _LIBC_SYS_PROCESSABORT,           // int errno (void)
+        _LIBC_SYS_PROCESSEXIT,            // int errno (int *status)
+        _LIBC_SYS_MOUNT,                  // int errno (const char *FS_name, const char *src_path, const char *mount_point, const char *options)
+        _LIBC_SYS_UMOUNT,                 // int errno (const char *mount_point)
+        _LIBC_SYS_MKNOD,                  // int errno (const char *pathname, const char *mod_name, int *major, int *minor)
+        _LIBC_SYS_GETMNTENTRY,            // int errno (size_t *seek, struct mntent *mntent)
+        _LIBC_SYS_MKFIFO,                 // int errno (const char *pathname, mode_t *mode)
+        _LIBC_SYS_MKDIR,                  // int errno (const char *pathname, mode_t *mode)
+        _LIBC_SYS_OPENDIR,                // int errno (const char *pathname, DIR**)
+        _LIBC_SYS_CLOSEDIR,               // int errno (DIR *dir)
+        _LIBC_SYS_DIRSEEK,                // int errno (DIR *dir, const uint32_t *seek)
+        _LIBC_SYS_DIRTELL,                // int errno (DIR *dir, u32_t *pos)
+        _LIBC_SYS_READDIR,                // int errno (DIR *dir, dirent_t *dirent)
+        _LIBC_SYS_REMOVE,                 // int errno (const char *path)
+        _LIBC_SYS_RENAME,                 // int errno (const char *old_name, const char *new_name)
+        _LIBC_SYS_CHMOD,                  // int errno (const char *pathname, mode_t *mode)
+        _LIBC_SYS_CHOWN,                  // int errno (const char *pathname, uid_t *owner, gid_t *group)
+        _LIBC_SYS_STATFS,                 // int errno (const char *path, struct statfs *buf)
+        _LIBC_SYS_STAT,                   // int errno (const char *pathname, struct stat *buf)
+        _LIBC_SYS_FSTAT,                  // int errno (int *fd, struct stat *buf)
+        _LIBC_SYS_OPEN,                   // int errno (int *fd, const char *path, int flags)
+        _LIBC_SYS_WRITE,                  // int errno (int *fd, const void *src, size_t *count, size_t *written)
+        _LIBC_SYS_READ,                   // int errno (int *fd, void *dst, size_t *count, size_t *read)
+        _LIBC_SYS_SEEK64,                 // int errno (int *fd, i64_t *seek, int *origin)
+        _LIBC_SYS_IOCTL,                  // int errno (int *fd, int *request, va_list *arg)
+        _LIBC_SYS_FLUSH,                  // int errno (int *fd)
+        _LIBC_SYS_SYNC,                   // int errno (void)
+        _LIBC_SYS_GETTIMEOFDAY,           // int errno (struct timeval *tv, struct timezone *tz)
+        _LIBC_SYS_SETTIMEOFDAY,           // int errno (const struct timeval *tv, const struct timezone *tz)
+        _LIBC_SYS_DRIVERINIT,             // int errno (const char *mod_name, int *major, int *minor  const char *node_path, const void *config)
+        _LIBC_SYS_DRIVERRELEASE,          // int errno (const char *mod_name, int *major, int *minor)
+        _LIBC_SYS_KERNELPANICINFO,        // int errno (kernel_panic_info_t *info)
+        _LIBC_SYS_NETADD,                 // int errno (char *netname, NET_family_t *family, const char *if_path)
+        _LIBC_SYS_NETRM,                  // int errno (char *netname)
+        _LIBC_SYS_NETIFLIST,              // int errno (char *netname[], size_t *netname_len, size_t *count)
+        _LIBC_SYS_NETIFUP,                // int errno (const char *netname, const NET_generic_config_t *config)
+        _LIBC_SYS_NETIFDOWN,              // int errno (const char *netname)
+        _LIBC_SYS_NETIFSTATUS,            // int errno (const char *netname, NET_family_t *family, NET_generic_status_t *status)
+        _LIBC_SYS_NETSOCKETCREATE,        // int errno (const char *netname, NET_protocol_t *protocol, SOCKET**)
+        _LIBC_SYS_NETGETHOSTBYNAME,       // int errno (const char *netname, const char *name, void *addr)
+        _LIBC_SYS_NETSOCKETDESTROY,       // int errno (SOCKET *socket)
+        _LIBC_SYS_NETBIND,                // int errno (SOCKET *socket, const NET_generic_sockaddr_t *addr)
+        _LIBC_SYS_NETLISTEN,              // int errno (SOCKET *socket)
+        _LIBC_SYS_NETACCEPT,              // int errno (SOCKET *socket, SOCKET **new_socket)
+        _LIBC_SYS_NETRECV,                // int errno (SOCKET *socket, void *buf, size_t *len, NET_flags_t *flags, size_t *rcved)
+        _LIBC_SYS_NETSEND,                // int errno (SOCKET *socket, const void *buf,size_t *len, NET_flags_t *flags, size_t *sent)
+        _LIBC_SYS_NETSETRECVTIMEOUT,      // int errno (SOCKET *socket, uint32_t *timeout)
+        _LIBC_SYS_NETSETSENDTIMEOUT,      // int errno (SOCKET *socket, uint32_t *timeout)
+        _LIBC_SYS_NETCONNECT,             // int errno (SOCKET *socket, const NET_generic_sockaddr_t *addr)
+        _LIBC_SYS_NETDISCONNECT,          // int errno (SOCKET *socket)
+        _LIBC_SYS_NETSHUTDOWN,            // int errno (SOCKET *socket, NET_shut_t *how)
+        _LIBC_SYS_NETSENDTO,              // int errno (SOCKET *socket, const void *buf, size_t *len, NET_flags_t *flags, const NET_generic_sockaddr_t *to_sockaddr, size_t *sent)
+        _LIBC_SYS_NETRECVFROM,            // int errno (SOCKET *socket, void *buf, size_t *len, NET_flags_t *flags, NET_generic_sockaddr_t *from_sockaddr, size_t *rcved)
+        _LIBC_SYS_NETGETADDRESS,          // int errno (SOCKET *socket, NET_generic_sockaddr_t *addr)
+        _LIBC_SYS_NETHTON16,              // int errno (NET_family_t *family, uint16_t *value_in, uint16_t *value_out)
+        _LIBC_SYS_NETHTON32,              // int errno (NET_family_t *family, uint32_t *value_in, uint32_t *value_out)
+        _LIBC_SYS_NETHTON64,              // int errno (NET_family_t *family, uint64_t *value_in, uint64_t *value_out)
+        _LIBC_SYS_MSLEEP,                 // int errno (const uint32_t *mseconds)
+        _LIBC_SYS_USLEEP,                 // int errno (const uint32_t *useconds)
+        _LIBC_SYS_GETUID,                 // int errno (uid_t *uid)
+        _LIBC_SYS_GETGID,                 // int errno (gid_t *gid)
+        _LIBC_SYS_GETMEMDETAILS,          // int errno (memstat_t *stat)
+        _LIBC_SYS_GETMODMEMUSAGE,         // int errno (uint *module, int32_t *usage)
+        _LIBC_SYS_GETUPTIMEMS,            // int errno (uint64_t *uptime_ms)
+        _LIBC_SYS_GETAVGCPULOAD,          // int errno (_avg_CPU_load_t *stat)
+        _LIBC_SYS_GETPLATFORMNAME,        // int errno (const char **ref)
+        _LIBC_SYS_GETOSNAME,              // int errno (const char **ref)
+        _LIBC_SYS_GETOSVER,               // int errno (const char **ref)
+        _LIBC_SYS_GETOSCODENAME,          // int errno (const char **ref)
+        _LIBC_SYS_GETKERNELNAME,          // int errno (const char **ref)
+        _LIBC_SYS_GETKERNELVER,           // int errno (const char **ref)
+        _LIBC_SYS_GETHOSTNAME,            // int errno (char *buf, size_t *buf_len)
+        _LIBC_SYS_SETHOSTNAME,            // int errno (char *hostname)
+        _LIBC_SYS_GETDRIVERNAME,          // int errno (size_t *modno, const char **name_ref)
+        _LIBC_SYS_GETDRIVERID,            // int errno (const char *name, size_t *driver_id)
+        _LIBC_SYS_GETDRIVERCOUNT,         // int errno (size_t *count)
+        _LIBC_SYS_GETDRIVERINSTANCES,     // int errno (size_t id, size_t *count)
+        _LIBC_SYS_SYSTEMRESTART,          // int errno (void)
+        _LIBC_SYS_SYSTEMSHUTDOWN,         // int errno (void)
+        _LIBC_SYS_SYSLOGCLEAR,            // int errno (void)
+        _LIBC_SYS_GETACTIVETHREAD,        // int errno (tid_t *tid)
+        _LIBC_SYS_THREADEXIT,             // int errno (int *status)
+        _LIBC_SYS_SCHEDULERLOCK,          // int errno (void)
+        _LIBC_SYS_SCHEDULERUNLOCK,        // int errno (void)
+        _LIBC_SYS_THREADJOIN,             // int errno (const tid_t *tid , int *status, const uint32_t *timeout)
+        _LIBC_SYS_ISHEAPADDR,             // int errno (const void *addr)
 } _libc_syscall_t;
 
 /*==============================================================================
@@ -212,7 +206,7 @@ typedef enum {// NAME                        | RETURN TYPE    | ARG 1           
 /*==============================================================================
   Exported functions
 ==============================================================================*/
-extern void _libc_syscall(_libc_syscall_t syscall, void *retptr, ...);
+extern int _libc_syscall(_libc_syscall_t syscall, ...);
 
 /*==============================================================================
   Exported inline functions

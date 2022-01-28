@@ -119,6 +119,77 @@ extern "C" {
 
 
 
+#ifndef O_RDONLY
+#define O_RDONLY                                00
+#endif
+
+#ifndef O_WRONLY
+#define O_WRONLY                                01
+#endif
+
+#ifndef O_RDWR
+#define O_RDWR                                  02
+#endif
+
+#ifndef O_CREAT
+#define O_CREAT                                 0100
+#endif
+
+#ifndef O_EXCL
+#define O_EXCL                                  0200
+#endif
+
+#ifndef O_TRUNC
+#define O_TRUNC                                 01000
+#endif
+
+#ifndef O_APPEND
+#define O_APPEND                                02000
+#endif
+
+#ifndef O_NONBLOCK
+#define O_NONBLOCK                              04000
+#endif
+
+/* modes */
+#define S_IRWXU                                 0000700    /* RWX mask for owner */
+#define S_IRUSR                                 0000400    /* R for owner */
+#define S_IWUSR                                 0000200    /* W for owner */
+#define S_IXUSR                                 0000100    /* X for owner */
+
+#define S_IRWXG                                 0000070    /* RWX mask for group */
+#define S_IRGRP                                 0000040    /* R for group */
+#define S_IWGRP                                 0000020    /* W for group */
+#define S_IXGRP                                 0000010    /* X for group */
+
+#define S_IRWXO                                 0000007    /* RWX mask for other */
+#define S_IROTH                                 0000004    /* R for other */
+#define S_IWOTH                                 0000002    /* W for other */
+#define S_IXOTH                                 0000001    /* X for other */
+
+#define S_ISUID                                 0004000    /* set user id on execution */
+#define S_ISGID                                 0002000    /* set group id on execution */
+#define S_ISVTX                                 0001000    /* save swapped text even after use */
+
+#define S_IPMT(mode_t_m)                        ((mode_t_m) & 000777)
+#define S_IFMT(mode_t_m)                        ((mode_t_m) & 070000)
+
+#define S_ISREG(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFREG)
+#define S_ISDIR(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFDIR)
+#define S_ISDEV(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFDEV)
+#define S_ISLNK(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFLNK)
+#define S_ISPROG(mode_t_m)                      (S_IFMT(mode_t_m) == S_IFPROG)
+#define S_ISFIFO(mode_t_m)                      (S_IFMT(mode_t_m) == S_IFIFO)
+
+#define S_IFREG                                 0000000
+#define S_IFDIR                                 0010000
+#define S_IFDEV                                 0020000
+#define S_IFLNK                                 0030000
+#define S_IFPROG                                0040000
+#define S_IFIFO                                 0050000
+
+
+
 
 #define STACK_DEPTH_MINIMAL            (0)
 #define STACK_DEPTH_VERY_LOW           (256)
@@ -161,94 +232,28 @@ extern "C" {
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
         _PROGMAN_CXX int __builtin_app_##_name_##_main(argc, argv)
 
-#define stdin  (*_libc_stdin)
-#define stdout (*_libc_stdout)
-#define stderr (*_libc_stderr)
+#define stdin  (_libc_stdin)
+#define stdout (_libc_stdout)
+#define stderr (_libc_stderr)
 #define global ((struct _GVAR_STRUCT_NAME*)(*_libc_global))
-
-
-#ifndef O_RDONLY
-#define O_RDONLY                                00
-#endif
-
-#ifndef O_WRONLY
-#define O_WRONLY                                01
-#endif
-
-#ifndef O_RDWR
-#define O_RDWR                                  02
-#endif
-
-#ifndef O_CREAT
-#define O_CREAT                                 0100
-#endif
-
-#ifndef O_EXCL
-#define O_EXCL                                  0200
-#endif
-
-#ifndef O_TRUNC
-#define O_TRUNC                                 01000
-#endif
-
-#ifndef O_APPEND
-#define O_APPEND                                02000
-#endif
-
-/* modes */
-#define S_IRWXU                                 0000700    /* RWX mask for owner */
-#define S_IRUSR                                 0000400    /* R for owner */
-#define S_IWUSR                                 0000200    /* W for owner */
-#define S_IXUSR                                 0000100    /* X for owner */
-
-#define S_IRWXG                                 0000070    /* RWX mask for group */
-#define S_IRGRP                                 0000040    /* R for group */
-#define S_IWGRP                                 0000020    /* W for group */
-#define S_IXGRP                                 0000010    /* X for group */
-
-#define S_IRWXO                                 0000007    /* RWX mask for other */
-#define S_IROTH                                 0000004    /* R for other */
-#define S_IWOTH                                 0000002    /* W for other */
-#define S_IXOTH                                 0000001    /* X for other */
-
-#define S_ISUID                                 0004000    /* set user id on execution */
-#define S_ISGID                                 0002000    /* set group id on execution */
-#define S_ISVTX                                 0001000    /* save swapped text even after use */
-
-#define S_IPMT(mode_t_m)                        ((mode_t_m) & 000777)
-#define S_IFMT(mode_t_m)                        ((mode_t_m) & 070000)
-
-#define S_ISREG(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFREG)
-#define S_ISDIR(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFDIR)
-#define S_ISDEV(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFDEV)
-#define S_ISLNK(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFLNK)
-#define S_ISPROG(mode_t_m)                      (S_IFMT(mode_t_m) == S_IFPROG)
-#define S_ISFIFO(mode_t_m)                      (S_IFMT(mode_t_m) == S_IFIFO)
-
-#define S_IFREG                                 0000000
-#define S_IFDIR                                 0010000
-#define S_IFDEV                                 0020000
-#define S_IFLNK                                 0030000
-#define S_IFPROG                                0040000
-#define S_IFIFO                                 0050000
 
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef void FILE;
+typedef struct _libc_file FILE;
 
 /*==============================================================================
   Exported objects
 ==============================================================================*/
 /** @brief Standard input file (one for each application) */
-extern void **_libc_stdin;
+extern FILE *_libc_stdin;
 
 /** @brief Standard output file (one for each application) */
-extern void **_libc_stdout;
+extern FILE *_libc_stdout;
 
 /** @brief Standard error file (one for each application) */
-extern void **_libc_stderr;
+extern FILE *_libc_stderr;
 
 extern void **_libc_global;
 
@@ -468,10 +473,8 @@ static inline FILE *freopen(const char *path, const char *mode, FILE *file)
 //==============================================================================
 static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file)
 {
-        size_t s = 0;
-        size_t n = size * count;
-        _libc_syscall(_LIBC_SYS_FWRITE, &s, ptr, &n, file);
-        return s / size;
+        extern size_t _libc_fwrite(const void *ptr, size_t size, size_t count, FILE *file);
+        return _libc_fwrite(ptr, size, count, file);
 }
 
 //==============================================================================
@@ -520,10 +523,8 @@ static inline size_t fwrite(const void *ptr, size_t size, size_t count, FILE *fi
 //==============================================================================
 static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 {
-        size_t s = 0;
-        size_t n = size * count;
-        _libc_syscall(_LIBC_SYS_FREAD, &s, ptr, &n, file);
-        return s / size;
+        extern size_t _libc_fread(void *ptr, size_t size, size_t count, FILE *file);
+        return _libc_fread(ptr, size, count, file);
 }
 
 //==============================================================================
@@ -574,9 +575,8 @@ static inline size_t fread(void *ptr, size_t size, size_t count, FILE *file)
 //==============================================================================
 static inline int fseek(FILE *file, int64_t offset, int mode)
 {
-        size_t r = 1;
-        _libc_syscall(_LIBC_SYS_FSEEK, &r, file, &offset, &mode);
-        return r;
+        extern int _libc_fseek(FILE *file, int64_t offset, int mode);
+        return _libc_fseek(file, offset, mode);
 }
 
 //==============================================================================
@@ -714,9 +714,8 @@ static inline void rewind(FILE *file)
 //==============================================================================
 static inline int64_t ftell(FILE *file)
 {
-        int64_t lseek = 0;
-        _libc_syscall(_LIBC_SYS_FTELL, &lseek, file);
-        return lseek;
+        extern int64_t _libc_ftell(FILE *file);
+        return _libc_ftell(file);
 }
 
 //==============================================================================
@@ -813,9 +812,8 @@ static inline int fgetpos(FILE *file, fpos_t *pos)
 //==============================================================================
 static inline int fflush(FILE *file)
 {
-        int r = EOF;
-        _libc_syscall(_LIBC_SYS_FFLUSH, &r, file);
-        return r;
+        extern int _libc_fflush(FILE *file);
+        return _libc_fflush(file);
 }
 
 //==============================================================================
@@ -861,9 +859,8 @@ static inline int fflush(FILE *file)
 //==============================================================================
 static inline int feof(FILE *file)
 {
-        int eof = 0;
-        _libc_syscall(_LIBC_SYS_FEOF, &eof, file);
-        return eof;
+        extern int _libc_feof(FILE *file);
+        return _libc_feof(file);
 }
 
 //==============================================================================
@@ -909,7 +906,8 @@ static inline int feof(FILE *file)
 //==============================================================================
 static inline void clearerr(FILE *file)
 {
-        _libc_syscall(_LIBC_SYS_CLEARERR, NULL, file);
+        extern void _libc_clearerr(FILE *file);
+        return _libc_clearerr(file);
 }
 
 //==============================================================================
@@ -959,9 +957,8 @@ static inline void clearerr(FILE *file)
 //==============================================================================
 static inline int ferror(FILE *file)
 {
-        int iserr = 1;
-        _libc_syscall(_LIBC_SYS_FERROR, &iserr, file);
-        return iserr;
+        extern int _libc_ferror(FILE *file);
+        return _libc_ferror(file);
 }
 
 //==============================================================================
@@ -1083,12 +1080,7 @@ static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
 
 //==============================================================================
 /**
- * @brief Function creates temporary file.
- *
- * The routine exist in dnx RTOS only for compatible reasons. Function in this
- * case do nothing.
- *
- * @note Function not supported.
+ * @brief Function creates temporary file in "/tmp" directory.
  *
  * @return The tmpfile() function returns a stream descriptor, or @ref NULL
  * if a unique filename cannot be generated or the unique file cannot be opened.
@@ -1110,7 +1102,8 @@ static inline int setvbuf(FILE *file, char *buffer, int mode, size_t size)
 //==============================================================================
 static inline FILE *tmpfile(void)
 {
-        return NULL;
+        extern FILE *_libc_tmpfile(void);
+        return _libc_tmpfile();
 }
 
 //==============================================================================
@@ -1120,6 +1113,8 @@ static inline FILE *tmpfile(void)
  * This function returns the file descriptor associated with the stream
  * <i>stream</i>. If an error is detected (for example, if the stream is not
  * valid) or if stream does not do I/O to a file, fileno returns -1.
+ *
+ * @param fp    FILE pointer
  *
  * @return The fileno() function returns a file descriptor, or -1 on error.
  *
@@ -1139,13 +1134,10 @@ static inline FILE *tmpfile(void)
    @endcode
  */
 //==============================================================================
-static inline fd_t fileno(FILE *fd)
+static inline int fileno(FILE *fp)
 {
-        if (fd) {
-                return (fd_t)fd;
-        } else {
-                return -1;
-        }
+        extern int _libc_fileno(FILE *fp);
+        return _libc_fileno(fp);
 }
 
 //==============================================================================
@@ -1216,9 +1208,8 @@ static inline char *tmpnam(char *str)
 //==============================================================================
 static inline int remove(const char *path)
 {
-        int r = EOF;
-        _libc_syscall(_LIBC_SYS_REMOVE, &r, path);
-        return r;
+        extern int _libc_remove(const char *path);
+        return _libc_remove(path);
 }
 
 //==============================================================================
@@ -1253,9 +1244,8 @@ static inline int remove(const char *path)
 //==============================================================================
 static inline int rename(const char *old_name, const char *new_name)
 {
-        int r = EOF;
-        _libc_syscall(_LIBC_SYS_RENAME, &r, old_name, new_name);
-        return r;
+        extern int _libc_rename(const char *old_name, const char *new_name);
+        return _libc_rename(old_name, new_name);
 }
 
 //==============================================================================

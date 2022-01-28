@@ -517,10 +517,8 @@ static inline void *malloc(size_t size)
 //==============================================================================
 static inline void *calloc(size_t n, size_t size)
 {
-        void   *mem   = NULL;
-        size_t  bsize = n * size;
-        _libc_syscall(_LIBC_SYS_ZALLOC, &mem, &bsize);
-        return mem;
+        extern void *_libc_zalloc(size_t size);
+        return _libc_zalloc(n * size);
 }
 
 //==============================================================================
@@ -555,9 +553,8 @@ static inline void *calloc(size_t n, size_t size)
 //==============================================================================
 static inline void free(void *ptr)
 {
-        if (ptr) {
-                _libc_syscall(_LIBC_SYS_FREE, NULL, ptr);
-        }
+        extern void _libc_free(void *ptr);
+        _libc_free(ptr);
 }
 
 //==============================================================================
@@ -645,7 +642,7 @@ static inline void *realloc(void *ptr, size_t size)
 //==============================================================================
 static inline void abort(void)
 {
-        _libc_syscall(_LIBC_SYS_PROCESSABORT, NULL);
+        _libc_syscall(_LIBC_SYS_PROCESSABORT);
 }
 
 //==============================================================================
@@ -671,7 +668,7 @@ static inline void abort(void)
 //==============================================================================
 static inline void exit(int status)
 {
-        _libc_syscall(_LIBC_SYS_PROCESSEXIT, NULL, &status);
+        _libc_syscall(_LIBC_SYS_PROCESSEXIT, &status);
 }
 
 //==============================================================================

@@ -138,9 +138,8 @@ extern "C" {
 //==============================================================================
 static inline int mknod(const char *pathname, const char *mod_name, int major, int minor)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_MKNOD, &r, pathname, mod_name, &major, &minor);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_MKNOD, pathname, mod_name, &major, &minor);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -177,9 +176,8 @@ static inline int mknod(const char *pathname, const char *mod_name, int major, i
 //==============================================================================
 static inline int mkdir(const char *pathname, mode_t mode)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_MKDIR, &r, pathname, &mode);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_MKDIR, pathname, &mode);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -219,9 +217,8 @@ static inline int mkdir(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int mkfifo(const char *pathname, mode_t mode)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_MKFIFO, &r, pathname, &mode);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_MKFIFO, pathname, &mode);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -257,9 +254,8 @@ static inline int mkfifo(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int chmod(const char *pathname, mode_t mode)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_CHMOD, &r, pathname, &mode);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_CHMOD, pathname, &mode);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -302,9 +298,8 @@ static inline int chmod(const char *pathname, mode_t mode)
 //==============================================================================
 static inline int stat(const char *pathname, struct stat *buf)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_STAT, &r, pathname, buf);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_STAT, pathname, buf);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -354,9 +349,8 @@ static inline int stat(const char *pathname, struct stat *buf)
 //==============================================================================
 static inline int fstat(FILE *file, struct stat *buf)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_FSTAT, &r, file, buf);
-        return r;
+        extern int _libc_fstat(FILE *file, struct stat *buf);
+        return _libc_fstat(file , buf);
 }
 
 #ifdef __cplusplus

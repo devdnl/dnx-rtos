@@ -180,15 +180,6 @@ static kmtx_t          *kworker_mtx;
 /* CPU total time */
 u32_t _CPU_total_time = 0;
 
-/* standard input */
-void *_stdin = NULL;
-
-/* standard output */
-void *_stdout = NULL;
-
-/* standard error */
-void *_stderr = NULL;
-
 /* error number */
 int _errno = ESUCC;
 
@@ -1347,6 +1338,8 @@ void _process_syscall_stat_inc(_process_t *proc, _process_t *kworker)
                         proc->taskdata[i].syscalls_ctr++;
                         kworker->taskdata[0].syscalls_ctr++;
                 }
+        } else {
+                printk("Invalid process %p!\n", proc);
         }
 }
 
@@ -2703,15 +2696,9 @@ void _task_switched_in(task_t *task, void *proc, void *task_data)
         if (active_process && (active_process->header.type == RES_TYPE_PROCESS)) {
                 active_process->curr_task = cast(task_data_t*, task_data)->id;
                 _errno  = cast(task_data_t*, task_data)->errnov;
-                _stdin  = active_process->f_stdin;
-                _stdout = active_process->f_stdout;
-                _stderr = active_process->f_stderr;
                 _global = active_process->globals;
 
         } else {
-                _stdin  = NULL;
-                _stdout = NULL;
-                _stderr = NULL;
                 _global = NULL;
                 _errno  = 0;
         }
@@ -2735,9 +2722,6 @@ void _task_switched_out(task_t *task, void *proc, void *task_data)
 
         if (active_process && (active_process->header.type == RES_TYPE_PROCESS)) {
                 cast(task_data_t*, task_data)->errnov = _errno;
-                active_process->f_stdin  = _stdin;
-                active_process->f_stdout = _stdout;
-                active_process->f_stderr = _stderr;
                 active_process->globals  = _global;
 
                 #if (__OS_MONITOR_CPU_LOAD__ > 0)

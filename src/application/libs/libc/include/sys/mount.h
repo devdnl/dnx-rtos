@@ -89,7 +89,7 @@ extern "C" {
  *
  * @exception | ...
  *
- * @return On success, <b>0</b> is returned. On error, <b>-1</b>
+ * @return On success, <b>0</b> is returned. On error, <b> -1</b>
  * is returned, and <b>errno</b> is set appropriately.
  *
  * @b Example
@@ -117,9 +117,8 @@ extern "C" {
 static inline int mount(const char *FS_name, const char *src_path,
                         const char *mount_point, const char *options)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_MOUNT, &r, FS_name, src_path, mount_point, options);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_MOUNT, FS_name, src_path, mount_point, options);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -135,7 +134,7 @@ static inline int mount(const char *FS_name, const char *src_path,
  * @exception | @ref EINVAL
  * @exception | @ref EBUSY
  *
- * @return On success, <b>0</b> is returned. On error, <b>-1</b>
+ * @return On success, <b>0</b> is returned. On error, <b> -1</b>
  * is returned, and <b>errno</b> is set appropriately.
  *
  * @b Example
@@ -170,9 +169,8 @@ static inline int mount(const char *FS_name, const char *src_path,
 //==============================================================================
 static inline int umount(const char *mount_point)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_UMOUNT, &r, mount_point);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_UMOUNT, mount_point);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -222,9 +220,8 @@ static inline int umount(const char *mount_point)
 //==============================================================================
 static inline dev_t driver_init2(const char *mod_name, int major, int minor, const char *node_path, const void *config)
 {
-        dev_t r = -1;
-        _libc_syscall(_LIBC_SYS_DRIVERINIT, &r, mod_name, &major, &minor, node_path, config);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_DRIVERINIT, mod_name, &major, &minor, node_path, config);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -279,7 +276,7 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
  *
  * @param modno     module number
  *
- * @return Return driver name.
+ * @return On success return driver name reference. On error, NULL is returned.
  *
  * @b Example
  * @code
@@ -297,8 +294,8 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
 static inline const char *get_driver_name(size_t modno)
 {
         const char *name = NULL;
-        _libc_syscall(_LIBC_SYS_GETDRIVERNAME, &name, &modno);
-        return name;
+        int err = _libc_syscall(_LIBC_SYS_GETDRIVERNAME, &name, &modno);
+        return err ? NULL : name;
 }
 
 //==============================================================================
@@ -326,9 +323,9 @@ static inline const char *get_driver_name(size_t modno)
 //==============================================================================
 static inline int get_driver_ID(const char *name)
 {
-        int midx = -1;
-        _libc_syscall(_LIBC_SYS_GETDRIVERID, &midx, name);
-        return midx;
+        int midx;
+        int err = _libc_syscall(_LIBC_SYS_GETDRIVERID, name, &midx);
+        return err ? -1 : midx;
 }
 
 //==============================================================================
@@ -424,7 +421,8 @@ static inline int get_driver_minor(dev_t dev)
  * The function get_number_of_drivers() return number of registered
  * modules in system.
  *
- * @return Return number of registered modules in system.
+ * @return Return number of registered modules in system. On failure, 0 is
+ * returned.
  *
  * @b Example
  * @code
@@ -444,9 +442,9 @@ static inline int get_driver_minor(dev_t dev)
 //==============================================================================
 static inline size_t get_number_of_drivers(void)
 {
-        size_t r = 0;
-        _libc_syscall(_LIBC_SYS_GETDRIVERCOUNT, &r);
-        return r;
+        size_t count;
+        int err = _libc_syscall(_LIBC_SYS_GETDRIVERCOUNT, &count);
+        return err ? 0 : count;
 }
 
 //==============================================================================
@@ -476,9 +474,9 @@ static inline size_t get_number_of_drivers(void)
 //==============================================================================
 static inline ssize_t get_number_of_driver_instances(size_t id)
 {
-        ssize_t r = 0;
-        _libc_syscall(_LIBC_SYS_GETDRIVERINSTANCES, &r, &id);
-        return r;
+        size_t count;
+        int err = _libc_syscall(_LIBC_SYS_GETDRIVERINSTANCES, &id, &count);
+        return err ? -1 : (ssize_t)count;
 }
 
 //==============================================================================
@@ -515,9 +513,8 @@ static inline ssize_t get_number_of_driver_instances(size_t id)
 //==============================================================================
 static inline int driver_release(const char *mod_name, int major, int minor)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_DRIVERRELEASE, &r, mod_name, &major, &minor);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_DRIVERRELEASE, mod_name, &major, &minor);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -552,10 +549,9 @@ static inline int driver_release(const char *mod_name, int major, int minor)
 //==============================================================================
 static inline int driver_release2(const char *path)
 {
-        int r = -1;
+        int err = -1;
 
         struct stat buf;
-
         if (stat(path, &buf) == 0) {
 
                 if (S_ISDEV(buf.st_mode)) {
@@ -565,14 +561,14 @@ static inline int driver_release2(const char *path)
                         uint16_t modno = get_driver_ID2(buf.st_dev);
 
                         const char *mod_name = get_driver_name(modno);
+                        err = driver_release(mod_name, major, minor);
 
-                        _libc_syscall(_LIBC_SYS_DRIVERRELEASE, &r, mod_name, &major, &minor);
                 } else {
                         errno = ENODEV;
                 }
         }
 
-        return r;
+        return err;
 }
 
 #ifdef __cplusplus

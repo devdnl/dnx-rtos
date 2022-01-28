@@ -144,9 +144,8 @@ struct timezone {
 static inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
 #if __OS_ENABLE_TIMEMAN__ ==_YES_
-        int err = 0;
-        _libc_syscall(_LIBC_SYS_GETTIMEOFDAY, &err, tv ,tz);
-        return err;
+        int err = _libc_syscall(_LIBC_SYS_GETTIMEOFDAY, tv ,tz);
+        return err ? -1 : 0;
 #else
         UNUSED_ARG2(tv, tz);
         return -1;
@@ -172,9 +171,8 @@ static inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 static inline int settimeofday(const struct timeval *tv, const struct timezone *tz)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
-        int err = 0;
-        _libc_syscall(_LIBC_SYS_SETTIMEOFDAY, &err, tv, tz);
-        return err;
+        int err = _libc_syscall(_LIBC_SYS_SETTIMEOFDAY, tv, tz);
+        return err ? -1 : 0;
 #else
         UNUSED_ARG2(tv, tz);
         return -1;

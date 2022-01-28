@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
                 printf("Usage: %s <can-interface-path>\n", argv[0]);
 
         } else {
-                fd_t fd = open(argv[1], O_RDONLY);
+                int fd = open(argv[1], O_RDONLY);
                 if (fd != -1) {
                         errno = 0;
                         err = ioctl(fd, IOCTL_CAN__GET_STATUS, &global->status);

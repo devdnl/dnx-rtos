@@ -90,9 +90,6 @@ typedef uint64_t fpos_t;
 /** @brief Size type with negative values. */
 typedef int ssize_t;
 
-/** @brief File descriptor. */
-typedef intptr_t fd_t;
-
 /** @brief File offset. */
 typedef ssize_t off_t;
 

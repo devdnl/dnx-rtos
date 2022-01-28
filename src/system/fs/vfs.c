@@ -63,7 +63,6 @@ static int  new_FS_entry     (FS_entry_t *parent_FS, const char *fs_mount_point,
 static int  delete_FS_entry  (FS_entry_t *this);
 static bool is_file_valid    (kfile_t *file);
 static bool is_dir_valid     (kdir_t *dir);
-static int  parse_flags      (const char *str, u32_t *flags);
 static int  get_path_FS      (const char *path, size_t len, int *position, FS_entry_t **fs_entry);
 static int  get_path_base_FS (const char *path, const char **extPath, FS_entry_t **fs_entry);
 static int  new_absolute_path(const struct vfs_path *path, enum path_correction corr, char **new_path);
@@ -839,15 +838,15 @@ int _vfs_statfs(const struct vfs_path *path, struct statfs *statfs)
  * @brief Function open selected file
  *
  * @param[in]  *name             file path
- * @param[in]  *mode             file mode
+ * @param[in]  flags             file flags (O_RDONLY, O_WRONLY, O_RDWR, O_CREAT, O_TRUNC, O_APPEND, O_NONBLOCK, O_EXCL)
  * @param[out] **file            pointer to file pointer
  *
  * @return One of errno values
  */
 //==============================================================================
-int _vfs_fopen(const struct vfs_path *path, const char *mode, kfile_t **file)
+int _vfs_fopen(const struct vfs_path *path, int flags, kfile_t **file)
 {
-        if (!path || !path->PATH || !mode || !file) {
+        if (!path || !path->PATH || !file) {
                 return EINVAL;
         }
 
@@ -855,21 +854,15 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, kfile_t **file)
                 return EISDIR;
         }
 
-        u32_t            o_flags;
         vfs_file_flags_t f_flags;
 
-        int err = parse_flags(mode, &o_flags);
-        if (err) {
-                return err;
-        }
-
         memset(&f_flags, 0, sizeof(vfs_file_flags_t));
-        f_flags.rd     = ((o_flags == O_RDONLY) || (o_flags & O_RDWR));
-        f_flags.wr     = (o_flags & (O_RDWR | O_WRONLY));
-        f_flags.append = (o_flags & (O_APPEND));
+        f_flags.rd     = ((flags == O_RDONLY) || (flags & O_RDWR));
+        f_flags.wr     = (flags & (O_RDWR | O_WRONLY));
+        f_flags.append = (flags & (O_APPEND));
 
         char *cwd_path = NULL;
-        err = new_absolute_path(path, NO_SLASH_ACTION, &cwd_path);
+        int err = new_absolute_path(path, NO_SLASH_ACTION, &cwd_path);
         if (err) {
                 return err;
         }
@@ -886,7 +879,7 @@ int _vfs_fopen(const struct vfs_path *path, const char *mode, kfile_t **file)
                                                      &file_obj->f_hdl,
                                                      &file_obj->f_lseek,
                                                      external_path,
-                                                     o_flags);
+                                                     flags);
 
                         struct stat stat;
                         if (!err) {
@@ -1420,51 +1413,6 @@ static bool is_file_valid(kfile_t *file)
 static bool is_dir_valid(kdir_t *dir)
 {
         return (_mm_is_object_in_heap(dir) && dir->header.type == RES_TYPE_DIR);
-}
-
-//==============================================================================
-/**
- * @brief Function convert file open mode string to flags
- *
- * @param[in]  str      file open mode string
- * @param[out] flags    file flags (for internal file use)
- *
- * @return One of errno value.
- */
-//==============================================================================
-static int parse_flags(const char *str, u32_t *flags)
-{
-        if (strcmp("r", str) == 0 || strcmp("rb", str) == 0) {
-                *flags = O_RDONLY;
-                return ESUCC;
-        }
-
-        if (strcmp("r+", str) == 0 || strcmp("rb+", str) == 0 || strcmp("r+b", str) == 0) {
-                *flags = O_RDWR;
-                return ESUCC;
-        }
-
-        if (strcmp("w", str) == 0 || strcmp("wb", str) == 0) {
-                *flags = O_WRONLY | O_CREAT | O_TRUNC;
-                return ESUCC;
-        }
-
-        if (strcmp("w+", str) == 0 || strcmp("wb+", str) == 0 || strcmp("w+b", str) == 0) {
-                *flags = O_RDWR | O_CREAT | O_TRUNC;
-                return ESUCC;
-        }
-
-        if (strcmp("a", str) == 0 || strcmp("ab", str) == 0) {
-                *flags = O_WRONLY | O_CREAT | O_APPEND;
-                return ESUCC;
-        }
-
-        if (strcmp("a+", str) == 0 || strcmp("ab+", str) == 0 || strcmp("a+b", str) == 0) {
-                *flags = O_RDWR | O_CREAT | O_APPEND;
-                return ESUCC;
-        }
-
-        return EINVAL;
 }
 
 //==============================================================================

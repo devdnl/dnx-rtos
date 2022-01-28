@@ -94,7 +94,7 @@ extern "C" {
 static inline void sleep(uint32_t seconds)
 {
         uint32_t msec = seconds * 1000;
-        _libc_syscall(_LIBC_SYS_MSLEEP, NULL, &msec);
+        _libc_syscall(_LIBC_SYS_MSLEEP, &msec);
 }
 
 //==============================================================================
@@ -123,7 +123,7 @@ static inline void sleep(uint32_t seconds)
 //==============================================================================
 static inline void msleep(uint32_t milliseconds)
 {
-        _libc_syscall(_LIBC_SYS_MSLEEP, NULL, &milliseconds);
+        _libc_syscall(_LIBC_SYS_MSLEEP, &milliseconds);
 }
 
 //==============================================================================
@@ -152,7 +152,7 @@ static inline void msleep(uint32_t milliseconds)
 //==============================================================================
 static inline void usleep(uint32_t microseconds)
 {
-        _libc_syscall(_LIBC_SYS_USLEEP, NULL, &microseconds);
+        _libc_syscall(_LIBC_SYS_USLEEP, &microseconds);
 }
 
 //==============================================================================
@@ -161,7 +161,9 @@ static inline void usleep(uint32_t microseconds)
  *
  * The getcwd() function copies an absolute pathname of the current
  * working directory to the array pointed to by <i>buf</i>, which is of length
- * <i>size</i>.
+ * <i>size</i>. On failure, these functions return NULL, and errno is set to
+ * indicate the error. The contents of the array pointed to by buf are undefined
+ * on error.
  *
  * @param buf       buffer to store path
  * @param size      buffer length
@@ -183,9 +185,8 @@ static inline void usleep(uint32_t microseconds)
 //==============================================================================
 static inline char *getcwd(char *buf, size_t size)
 {
-        char *cwd;
-        _libc_syscall(_LIBC_SYS_GETCWD, &cwd, buf, &size);
-        return cwd;
+        int err = _libc_syscall(_LIBC_SYS_GETCWD, buf, &size);
+        return err ? NULL : buf;
 }
 
 //==============================================================================
@@ -213,9 +214,8 @@ static inline char *getcwd(char *buf, size_t size)
 //==============================================================================
 static inline int chdir(const char *cwd)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_SETCWD, &result, cwd);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_SETCWD, cwd);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -248,8 +248,8 @@ static inline int chdir(const char *cwd)
 static inline pid_t getpid(void)
 {
         pid_t pid = 0;
-        _libc_syscall(_LIBC_SYS_PROCESSGETPID, &pid);
-        return pid;
+        int err = _libc_syscall(_LIBC_SYS_PROCESSGETPID, &pid);
+        return err ? 0 : pid;
 }
 
 //==============================================================================
@@ -281,9 +281,8 @@ static inline pid_t getpid(void)
 //==============================================================================
 static inline int chown(const char *pathname, uid_t owner, gid_t group)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_CHOWN, &r, pathname, &owner, &group);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_CHOWN, pathname, &owner, &group);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -304,16 +303,14 @@ static inline int chown(const char *pathname, uid_t owner, gid_t group)
 //==============================================================================
 static inline void sync(void)
 {
-        _libc_syscall(_LIBC_SYS_SYNC, NULL);
+        _libc_syscall(_LIBC_SYS_SYNC);
 }
 
 //==============================================================================
 /**
  * @brief Function return group ID of current user.
  *
- * The getpid() function returns current group ID.
- *
- * @note Function returns always the root group ID (0).
+ * The getpid() function returns current group ID. This function is always successful.
  *
  * @b Example
  * @code
@@ -338,7 +335,7 @@ static inline gid_t getgid(void)
  *
  * The getuid() function returns ID of current user.
  *
- * @note Function returns always the root user ID (0).
+ * @note Function returns always the root user ID (0). This function is always successful.
  *
  * @b Example
  * @code
@@ -375,7 +372,7 @@ static inline uid_t getuid(void)
         #include <sys/unistd.h>
 
         // ...
-        fd_t fd = open(path, O_RDWR);
+        int fd = open(path, O_RDWR);
         if (fd != -1) {
                 // ...
                 close(fd);
@@ -384,7 +381,7 @@ static inline uid_t getuid(void)
    @endcode
  */
 //==============================================================================
-extern fd_t open(const char *path, int flags, ...);
+extern int open(const char *path, int flags, ...);
 
 //==============================================================================
 /**
@@ -395,7 +392,7 @@ extern fd_t open(const char *path, int flags, ...);
  * @return On success 0 is returned.
  */
 //==============================================================================
-extern int close(fd_t fd);
+extern int close(int fd);
 
 //==============================================================================
 /**
@@ -408,7 +405,7 @@ extern int close(fd_t fd);
  * @return On success number of read bytes is returned, otherwise negative value.
  */
 //==============================================================================
-extern ssize_t read(fd_t fd, void *buf, size_t count);
+extern ssize_t read(int fd, void *buf, size_t count);
 
 //==============================================================================
 /**
@@ -421,7 +418,7 @@ extern ssize_t read(fd_t fd, void *buf, size_t count);
  * @return On success number of written bytes is returned, otherwise negative value.
  */
 //==============================================================================
-extern ssize_t write(fd_t fd, const void *buf, size_t count);
+extern ssize_t write(int fd, const void *buf, size_t count);
 
 //==============================================================================
 /**
@@ -435,7 +432,21 @@ extern ssize_t write(fd_t fd, const void *buf, size_t count);
  *         on error.
  */
 //==============================================================================
-extern off_t lseek(fd_t fd, off_t offset, int whence);
+extern off_t lseek(int fd, off_t offset, int whence);
+
+//==============================================================================
+/**
+ * @brief  Function set file position.
+ *
+ * @param  fd           file descriptor
+ * @param  offset       offset
+ * @param  whence       seek mode
+ *
+ * @return On success return file offset after operation, otherwise negative value
+ *         on error.
+ */
+//==============================================================================
+extern int64_t lseek64(int fd, int64_t offset, int whence);
 
 //==============================================================================
 /**

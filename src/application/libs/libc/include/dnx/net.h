@@ -262,9 +262,8 @@ extern "C" {
 //==============================================================================
 static inline int ifadd(const char *netname, NET_family_t family, const char *if_path)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETADD, &result, netname, &family, if_path);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETADD, netname, &family, if_path);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -281,9 +280,8 @@ static inline int ifadd(const char *netname, NET_family_t family, const char *if
 //==============================================================================
 static inline int ifrm(const char *netname)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETRM, &result, netname);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETRM, netname);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -293,17 +291,17 @@ static inline int ifrm(const char *netname)
  * @param  netname      network name
  * @param  netname_len  network name buffer length
  *
- * @return On success 0 is returned, otherwise -1 and @ref errno value is set
- *         appropriately.
+ * @return On success number of network is returned, otherwise -1 and @ref errno
+ *         value is set appropriately.
  *
  * @see ifadd(), ifrm()
  */
 //==============================================================================
 static inline int iflist(char *netname[], size_t netname_len)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETIFLIST, &result, netname, &netname_len);
-        return result;
+        size_t count;
+        int err = _libc_syscall(_LIBC_SYS_NETIFLIST, netname, &netname_len, &count);
+        return err ? -1 : (int)count;
 }
 
 //==============================================================================
@@ -321,9 +319,8 @@ static inline int iflist(char *netname[], size_t netname_len)
 //==============================================================================
 static inline int ifup(const char *netname, const NET_generic_config_t *config)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETIFUP, &result, netname, config);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETIFUP, netname, config);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -340,9 +337,8 @@ static inline int ifup(const char *netname, const NET_generic_config_t *config)
 //==============================================================================
 static inline int ifdown(const char *netname)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETIFDOWN, &result, netname);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETIFDOWN, netname);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -361,9 +357,8 @@ static inline int ifdown(const char *netname)
 //==============================================================================
 static inline int ifstatus(const char *netname, NET_family_t *family, NET_generic_status_t *status)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETIFSTATUS, &result, netname, family, status);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETIFSTATUS, netname, family, status);
+        return err ? -1 : 0;
 }
 
 
@@ -382,9 +377,9 @@ static inline int ifstatus(const char *netname, NET_family_t *family, NET_generi
 //==============================================================================
 static inline SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
 {
-        SOCKET *socket = NULL;
-        _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &socket, netname, &protocol);
-        return socket;
+        SOCKET *socket;
+        int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, netname, &protocol, &socket);
+        return err ? NULL : socket;
 }
 
 //==============================================================================
@@ -401,8 +396,8 @@ static inline SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
 //==============================================================================
 static inline int socket_close(SOCKET *socket)
 {
-        _libc_syscall(_LIBC_SYS_NETSOCKETDESTROY, NULL, socket);
-        return 0;
+        int err = _libc_syscall(_LIBC_SYS_NETSOCKETDESTROY, socket);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -424,9 +419,8 @@ static inline int socket_close(SOCKET *socket)
 //==============================================================================
 static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETBIND, &result, socket, sockAddr);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETBIND, socket, sockAddr);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -444,9 +438,8 @@ static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sock
 //==============================================================================
 static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETCONNECT, &result, socket, sockAddr);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETCONNECT, socket, sockAddr);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -463,9 +456,8 @@ static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *s
 //==============================================================================
 static inline int socket_disconnect(SOCKET *socket)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETDISCONNECT, &result, socket);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETDISCONNECT, socket);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -482,9 +474,8 @@ static inline int socket_disconnect(SOCKET *socket)
 //==============================================================================
 static inline int socket_listen(SOCKET *socket)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETLISTEN, &result, socket);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETLISTEN, socket);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -502,9 +493,8 @@ static inline int socket_listen(SOCKET *socket)
 //==============================================================================
 static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETACCEPT, &result, socket, new_socket);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETACCEPT, socket, new_socket);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -525,9 +515,9 @@ static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
 //==============================================================================
 static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETRECV, &result, socket, buf, &len, &flags);
-        return result;
+        size_t rcved;
+        int err = _libc_syscall(_LIBC_SYS_NETRECV, socket, buf, &len, &flags, &rcved);
+        return err ? -1 : (int)rcved;
 }
 
 //==============================================================================
@@ -576,9 +566,9 @@ static inline int socket_recvfrom(SOCKET                 *socket,
                                   NET_flags_t             flags,
                                   NET_generic_sockaddr_t *from_sockaddr)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETRECVFROM, &result, socket, buf, &len, &flags, from_sockaddr);
-        return result;
+        size_t rcved;
+        int err = _libc_syscall(_LIBC_SYS_NETRECVFROM, socket, buf, &len, &flags, from_sockaddr, &rcved);
+        return err ? -1 : rcved;
 }
 
 //==============================================================================
@@ -600,9 +590,9 @@ static inline int socket_recvfrom(SOCKET                 *socket,
 //==============================================================================
 static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETSEND, &result, socket, buf, &len, &flags);
-        return result;
+        size_t sent;
+        int err = _libc_syscall(_LIBC_SYS_NETSEND, socket, buf, &len, &flags, &sent);
+        return err ? -1 : sent;
 }
 
 //==============================================================================
@@ -651,9 +641,9 @@ static inline int socket_sendto(SOCKET                       *socket,
                                 NET_flags_t                   flags,
                                 const NET_generic_sockaddr_t *to_sockaddr)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETSENDTO, &result, socket, buf, &len, &flags, to_sockaddr);
-        return result;
+        size_t sent;
+        int err = _libc_syscall(_LIBC_SYS_NETSENDTO, socket, buf, &len, &flags, to_sockaddr, &sent);
+        return err ? -1 : sent;
 }
 
 //==============================================================================
@@ -671,9 +661,8 @@ static inline int socket_sendto(SOCKET                       *socket,
 //==============================================================================
 static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETSHUTDOWN, &result, socket, &how);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETSHUTDOWN, socket, &how);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -691,9 +680,8 @@ static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
 //==============================================================================
 static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETSETRECVTIMEOUT, &result, socket, &timeout);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETSETRECVTIMEOUT, socket, &timeout);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -711,9 +699,8 @@ static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
 //==============================================================================
 static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETSETSENDTIMEOUT, &result, socket, &timeout);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETSETSENDTIMEOUT, socket, &timeout);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -731,9 +718,8 @@ static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
 //==============================================================================
 static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETGETADDRESS, &result, socket, addr);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETGETADDRESS, socket, addr);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -752,9 +738,8 @@ static inline int get_host_by_name(const char             *netname,
                                    const char             *name,
                                    NET_generic_sockaddr_t *sock_addr)
 {
-        int result = -1;
-        _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, &result, netname, name, sock_addr);
-        return result;
+        int err = _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, netname, name, sock_addr);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -771,9 +756,9 @@ static inline int get_host_by_name(const char             *netname,
 //==============================================================================
 static inline uint16_t hton_u16(NET_family_t family, uint16_t value)
 {
-        uint16_t r;
-        _libc_syscall(_LIBC_SYS_NETHTON16, &r, &family, &value);
-        return r;
+        uint16_t out;
+        int err = _libc_syscall(_LIBC_SYS_NETHTON16, &family, &value, &out);
+        return err ? value : out;
 }
 
 //==============================================================================
@@ -790,9 +775,9 @@ static inline uint16_t hton_u16(NET_family_t family, uint16_t value)
 //==============================================================================
 static inline uint32_t hton_u32(NET_family_t family, uint32_t value)
 {
-        uint32_t r;
-        _libc_syscall(_LIBC_SYS_NETHTON32, &r, &family, &value);
-        return r;
+        uint32_t out;
+        int err = _libc_syscall(_LIBC_SYS_NETHTON32, &family, &value, &out);
+        return err ? value : out;
 }
 
 //==============================================================================
@@ -809,9 +794,9 @@ static inline uint32_t hton_u32(NET_family_t family, uint32_t value)
 //==============================================================================
 static inline uint64_t hton_u64(NET_family_t family, uint64_t value)
 {
-        uint64_t r;
-        _libc_syscall(_LIBC_SYS_NETHTON64, &r, &family, &value);
-        return r;
+        uint64_t out;
+        int err = _libc_syscall(_LIBC_SYS_NETHTON64, &family, &value, &out);
+        return err ? value : out;
 }
 
 //==============================================================================
