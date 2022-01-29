@@ -186,9 +186,9 @@ static int telnet_thread(void *arg)
         // start program
         process_attr_t process_attr = {
                 .cwd = "/",
-                .f_stderr = fout,
-                .f_stdout = fout,
-                .f_stdin  = fin,
+                .fd_stderr = fileno(fout),
+                .fd_stdout = fileno(fout),
+                .fd_stdin  = fileno(fin),
                 .priority = PRIORITY_NORMAL,
                 .detached = false
         };

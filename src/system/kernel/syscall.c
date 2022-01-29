@@ -237,9 +237,6 @@ static int syscall_read(syscallrq_t *rq);
 static int syscall_seek64(syscallrq_t *rq);
 static int syscall_ioctl(syscallrq_t *rq);
 static int syscall_flush(syscallrq_t *rq);
-static int syscall_feof(syscallrq_t *rq);
-static int syscall_ferror(syscallrq_t *rq);
-static int syscall_clearerr(syscallrq_t *rq);
 static int syscall_sync(syscallrq_t *rq);
 static int syscall_gettimeofday(syscallrq_t *rq);
 static int syscall_settimeofday(syscallrq_t *rq);
@@ -267,7 +264,6 @@ static int syscall_threadkill(syscallrq_t *rq);
 static int syscall_semaphoreopen(syscallrq_t *rq);
 static int syscall_mutexopen(syscallrq_t *rq);
 static int syscall_queueopen(syscallrq_t *rq);
-static int syscall_queuedestroy(syscallrq_t *rq);
 static int syscall_netifadd(syscallrq_t *rq);
 static int syscall_netifrm(syscallrq_t *rq);
 static int syscall_netiflist(syscallrq_t *rq);
@@ -312,6 +308,7 @@ static int syscall_getoscodename(syscallrq_t *rq);
 static int syscall_getkernelname(syscallrq_t *rq);
 static int syscall_getkernelver(syscallrq_t *rq);
 static int syscall_gethostname(syscallrq_t *rq);
+static int syscall_sethostname(syscallrq_t *rq);
 static int syscall_getdrivername(syscallrq_t *rq);
 static int syscall_getdriverid(syscallrq_t *rq);
 static int syscall_getdrivercount(syscallrq_t *rq);
@@ -319,7 +316,6 @@ static int syscall_getdriverinstances(syscallrq_t *rq);
 static int syscall_systemrestart(syscallrq_t *rq);
 static int syscall_systemshutdown(syscallrq_t *rq);
 static int syscall_syslogclear(syscallrq_t *rq);
-static int syscall_flagwait(syscallrq_t *rq);
 static int syscall_getactivethread(syscallrq_t *rq);
 static int syscall_threadexit(syscallrq_t *rq);
 static int syscall_semaphorewait(syscallrq_t *rq);
@@ -440,6 +436,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_GETKERNELNAME] = syscall_getkernelname,
         [SYSCALL_GETKERNELVER] = syscall_getkernelver,
         [SYSCALL_GETHOSTNAME] = syscall_gethostname,
+        [SYSCALL_SETHOSTNAME] = syscall_sethostname,
         [SYSCALL_GETDRIVERNAME] = syscall_getdrivername,
         [SYSCALL_GETDRIVERID] = syscall_getdriverid,
         [SYSCALL_GETDRIVERCOUNT] = syscall_getdrivercount,
@@ -493,24 +490,22 @@ const char *const dnx_RTOS_platform_name = _CPUCTL_PLATFORM_NAME;
 int _syscall_init()
 {
         static const _process_attr_t attr = {
-                .f_stdin  = NULL,
-                .f_stdout = NULL,
-                .f_stderr = NULL,
-                .p_stdin  = NULL,
-                .p_stdout = NULL,
-                .p_stderr = NULL,
-                .cwd      = "/",
-                .priority = _PRIORITY_NORMAL,
-                .detached = true
+                .fd_stdin  = -1,
+                .fd_stdout = -1,
+                .fd_stderr = -1,
+                .p_stdin   = NULL,
+                .p_stdout  = NULL,
+                .p_stderr  = NULL,
+                .cwd       = "/",
+                .priority  = _PRIORITY_NORMAL,
+                .detached  = true
         };
 
-        int err;
+        int err = _process_create("kworker", &attr, NULL);
+        if (!err) {
+                err = _process_create(__OS_INIT_PROG__, &attr, NULL);
+        }
 
-        catcherr(err = _process_create("kworker", &attr, NULL), exit);
-
-        catcherr(err = _process_create(__OS_INIT_PROG__, &attr, NULL), exit);
-
-        exit:
         return err;
 }
 
@@ -682,6 +677,7 @@ static int syscall_getmntentry(syscallrq_t *rq)
 
         return _vfs_getmntentry(*seek, mntent);
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -707,6 +703,7 @@ static int syscall_mknod(syscallrq_t *rq)
 
         return _vfs_mknod(&pathname, _dev_t__create(_module_get_ID(mod_name), *major, *minor));
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -730,6 +727,7 @@ static int syscall_mkdir(syscallrq_t *rq)
 
         return _vfs_mkdir(&path, *mode);
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -753,6 +751,7 @@ static int syscall_mkfifo(syscallrq_t *rq)
 
         return _vfs_mkfifo(&path, *mode);
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -803,9 +802,12 @@ static int syscall_closedir(syscallrq_t *rq)
 
         int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, dir), RES_TYPE_DIR);
         if (err == EFAULT) {
-                const char *msg = "*** Error: object is not a dir! ***\n";
-                size_t wrcnt;
-                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+                res_header_t *res;
+                if (_process_descriptor_get_resource(GETPROCESS(), 2, &res) == 0) {
+                        const char *msg = "*** Error: object is not a dir! ***\n";
+                        size_t wrcnt;
+                        _vfs_fwrite(msg, strlen(msg), &wrcnt, cast(kfile_t*, res));
+                }
 
                 pid_t pid = 0;
                 _process_get_pid(GETPROCESS(), &pid);
@@ -850,6 +852,7 @@ static int syscall_remove(syscallrq_t *rq)
 
         return _vfs_remove(&path);
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -876,6 +879,7 @@ static int syscall_rename(syscallrq_t *rq)
 
         return _vfs_rename(&oldname, &newname);
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -899,6 +903,7 @@ static int syscall_chmod(syscallrq_t *rq)
 
         return _vfs_chmod(&path, *mode);
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -923,6 +928,7 @@ static int syscall_chown(syscallrq_t *rq)
 
         return _vfs_chown(&path, *owner, *group);
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -946,6 +952,7 @@ static int syscall_stat(syscallrq_t *rq)
 
         return _vfs_stat(&path, buf);
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -977,6 +984,7 @@ static int syscall_fstat(syscallrq_t *rq)
 
         return err;
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -1000,6 +1008,7 @@ static int syscall_statfs(syscallrq_t *rq)
 
         return _vfs_statfs(&path, buf);
 #else
+        UNUSED_ARG1(rq);
         return ENOSYS;
 #endif
 }
@@ -1031,6 +1040,36 @@ static int syscall_open(syscallrq_t *rq)
                 } else {
                         *fd = desc;
                 }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall destroy selected descriptor.
+ *
+ * @param  rq                   syscall request
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int syscall_close(syscallrq_t *rq)
+{
+        GETARG(int *, desc);
+
+        int err = _process_descriptor_free(GETPROCESS(), *desc, RES_TYPE_UNKNOWN);
+        if (err) {
+                res_header_t *res;
+                if (_process_descriptor_get_resource(GETPROCESS(), 2, &res) == 0) {
+                        const char *msg = "*** Error: descriptor is not valid! ***\n";
+                        size_t wrcnt;
+                        _vfs_fwrite(msg, strlen(msg), &wrcnt, cast(kfile_t*, res));
+                }
+
+                pid_t pid = 0;
+                _process_get_pid(GETPROCESS(), &pid);
+                _process_kill(pid);
         }
 
         return err;
@@ -1162,60 +1201,21 @@ static int syscall_ioctl(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_flush(syscallrq_t *rq)
+static int syscall_flush(syscallrq_t *rq)
 {
-        GETARG(kfile_t *, file);
-        SETERRNO(_vfs_fflush(file));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
-}
+        GETARG(int *, fd);
 
-//==============================================================================
-/**
- * @brief  This syscall check file end.
- *
- * @param  rq                   syscall request
- *
- * @return One of errno value.
- */
-//==============================================================================
-static void syscall_feof(syscallrq_t *rq)
-{
-        GETARG(kfile_t *, file);
-        int eof = 1;
-        SETERRNO(_vfs_feof(file, &eof));
-        SETRETURN(int, eof);
-}
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                if (res->type == RES_TYPE_FILE) {
+                        err = _vfs_fflush(cast(kfile_t*, res));
+                } else {
+                        err = EINVAL;
+                }
+        }
 
-//==============================================================================
-/**
- * @brief  This syscall check file error.
- *
- * @param  rq                   syscall request
- *
- * @return One of errno value.
- */
-//==============================================================================
-static void syscall_ferror(syscallrq_t *rq)
-{
-        GETARG(kfile_t *, file);
-        int error = 1;
-        SETERRNO(_vfs_ferror(file, &error));
-        SETRETURN(int, error);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall clear file EOF and err flags.
- *
- * @param  rq                   syscall request
- *
- * @return One of errno value.
- */
-//==============================================================================
-static void syscall_clearerr(syscallrq_t *rq)
-{
-        GETARG(kfile_t *, file);
-        SETERRNO(_vfs_clearerr(file));
+        return err;
 }
 
 //==============================================================================
@@ -1227,10 +1227,11 @@ static void syscall_clearerr(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_sync(syscallrq_t *rq)
+static int syscall_sync(syscallrq_t *rq)
 {
         UNUSED_RQ();
         _vfs_sync();
+        return 0;
 }
 
 //==============================================================================
@@ -1242,7 +1243,7 @@ static void syscall_sync(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_gettimeofday(syscallrq_t *rq)
+static int syscall_gettimeofday(syscallrq_t *rq)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
         GETARG(struct timeval*, timeval);
@@ -1259,11 +1260,10 @@ static void syscall_gettimeofday(syscallrq_t *rq)
                 tz->tz_dsttime = 0;
         }
 
-        SETERRNO(err);
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return err;
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -1276,7 +1276,7 @@ static void syscall_gettimeofday(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_settimeofday(syscallrq_t *rq)
+static int syscall_settimeofday(syscallrq_t *rq)
 {
 #if __OS_ENABLE_TIMEMAN__ == _YES_
         GETARG(const struct timeval*, tv);
@@ -1292,11 +1292,10 @@ static void syscall_settimeofday(syscallrq_t *rq)
                 _ltimeoff_sec = tz->tz_minuteswest * 60;
         }
 
-        SETERRNO(err);
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return err;
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -1309,16 +1308,16 @@ static void syscall_settimeofday(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_driverinit(syscallrq_t *rq)
+static int syscall_driverinit(syscallrq_t *rq)
 {
         GETARG(const char *, mod_name);
         GETARG(int *, major);
         GETARG(int *, minor);
         GETARG(const char *, node_path);
         GETARG(const void *, config);
+
         dev_t drvid = -1;
-        SETERRNO(_driver_init(mod_name, *major, *minor,  node_path, config, &drvid));
-        SETRETURN(dev_t, GETERRNO() == ESUCC ? drvid : -1);
+        return _driver_init(mod_name, *major, *minor,  node_path, config, &drvid);
 }
 
 //==============================================================================
@@ -1330,13 +1329,13 @@ static void syscall_driverinit(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_driverrelease(syscallrq_t *rq)
+static int syscall_driverrelease(syscallrq_t *rq)
 {
         GETARG(const char *, mod_name);
         GETARG(int *, major);
         GETARG(int *, minor);
-        SETERRNO(_driver_release(_dev_t__create(_module_get_ID(mod_name), *major, *minor)));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
+        return _driver_release(_dev_t__create(_module_get_ID(mod_name), *major, *minor));
 }
 
 //==============================================================================
@@ -1348,21 +1347,23 @@ static void syscall_driverrelease(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_malloc(syscallrq_t *rq)
+static int syscall_malloc(syscallrq_t *rq)
 {
         GETARG(size_t *, size);
+        GETARG(void **, blk);
 
         void *mem = NULL;
         int   err = _kmalloc(_MM_PROG, *size, NULL, _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, &mem);
-        if (err == ESUCC) {
+        if (!err) {
                 err = _process_register_resource(GETPROCESS(), mem);
-                if (err != ESUCC) {
+                if (err) {
                         _kfree(_MM_PROG, &mem);
+                } else {
+                        *blk = mem;
                 }
         }
 
-        SETERRNO(err);
-        SETRETURN(void*, mem ? &cast(res_header_t*, mem)[1] : NULL);
+        return err;
 }
 
 //==============================================================================
@@ -1374,21 +1375,23 @@ static void syscall_malloc(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_zalloc(syscallrq_t *rq)
+static int syscall_zalloc(syscallrq_t *rq)
 {
         GETARG(size_t *, size);
+        GETARG(void **, blk);
 
         void *mem = NULL;
         int   err = _kzalloc(_MM_PROG, *size, NULL, _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, &mem);
-        if (err == ESUCC) {
+        if (!err) {
                 err = _process_register_resource(GETPROCESS(), mem);
-                if (err != ESUCC) {
+                if (err) {
                         _kfree(_MM_PROG, &mem);
+                } else {
+                        *blk = mem;
                 }
         }
 
-        SETERRNO(err);
-        SETRETURN(void*,  mem ? &cast(res_header_t*, mem)[1] : NULL);
+        return err;
 }
 
 //==============================================================================
@@ -1400,22 +1403,25 @@ static void syscall_zalloc(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_free(syscallrq_t *rq)
+static int syscall_free(syscallrq_t *rq)
 {
         GETARG(void *, mem);
 
         int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, mem) - 1, RES_TYPE_MEMORY);
-        if (err != ESUCC) {
-                const char *msg = "*** Error: double free or corruption ***\n";
-                size_t wrcnt;
-                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+        if (err) {
+                res_header_t *res;
+                if (_process_descriptor_get_resource(GETPROCESS(), 2, &res) == 0) {
+                        const char *msg = "*** Error: double free or corruption ***\n";
+                        size_t wrcnt;
+                        _vfs_fwrite(msg, strlen(msg), &wrcnt, cast(kfile_t*, res));
+                }
 
                 pid_t pid = 0;
                 _process_get_pid(GETPROCESS(), &pid);
                 _process_kill(pid);
         }
 
-        SETERRNO(err);
+        return err;
 }
 
 //==============================================================================
@@ -1427,17 +1433,20 @@ static void syscall_free(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_syslogread(syscallrq_t *rq)
+static int syscall_syslogread(syscallrq_t *rq)
 {
 #if ((__OS_SYSTEM_MSG_ENABLE__ > 0) && (__OS_PRINTF_ENABLE__ > 0))
         GETARG(char *, str);
         GETARG(size_t *, len);
         GETARG(const struct timeval *, from_time);
         GETARG(struct timeval *, curr_time);
-        SETRETURN(size_t, _printk_read(str, *len, from_time, curr_time));
+        GETARG(size_t *, count);
+
+        *count = _printk_read(str, *len, from_time, curr_time);
+        return 0;
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(size_t, 0);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -1450,10 +1459,15 @@ static void syscall_syslogread(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_kernelpanicinfo(syscallrq_t *rq)
+static int syscall_kernelpanicinfo(syscallrq_t *rq)
 {
         GETARG(struct _kernel_panic_info*, info);
-        SETRETURN(bool, _kernel_panic_info(info));
+
+        if (_kernel_panic_info(info)) {
+                return 0;
+        } else {
+                return ENOENT;
+        }
 }
 
 //==============================================================================
@@ -1465,13 +1479,13 @@ static void syscall_kernelpanicinfo(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_processcreate(syscallrq_t *rq)
+static int syscall_processcreate(syscallrq_t *rq)
 {
         GETARG(const char *, cmd);
         GETARG(_process_attr_t *, attr);
-        pid_t pid = 0;
-        SETERRNO(_process_create(cmd, attr, &pid));
-        SETRETURN(pid_t, pid);
+        GETARG(pid_t *, pid);
+
+        return _process_create(cmd, attr, pid);
 }
 
 //==============================================================================
@@ -1483,7 +1497,7 @@ static void syscall_processcreate(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_processkill(syscallrq_t *rq)
+static int syscall_processkill(syscallrq_t *rq)
 {
         GETARG(const pid_t *, pid);
 
@@ -1496,8 +1510,7 @@ static void syscall_processkill(syscallrq_t *rq)
                 }
         }
 
-        SETERRNO(err);
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return err;
 }
 
 //==============================================================================
@@ -1509,11 +1522,11 @@ static void syscall_processkill(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_processwait(syscallrq_t *rq)
+static int syscall_processwait(syscallrq_t *rq)
 {
         GETARG(const pid_t *, pid);
-        GETARG(int*, status);
-        GETARG(const uint32_t*, timeout);
+        GETARG(int *, status);
+        GETARG(const uint32_t *, timeout);
 
         _process_t *proc = NULL;
         int err = _process_get_container(*pid, &proc);
@@ -1530,8 +1543,7 @@ static void syscall_processwait(syscallrq_t *rq)
                 }
         }
 
-        SETERRNO(err);
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return err;
 }
 
 //==============================================================================
@@ -1543,12 +1555,12 @@ static void syscall_processwait(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_processstatseek(syscallrq_t *rq)
+static int syscall_processstatseek(syscallrq_t *rq)
 {
         GETARG(size_t *, seek);
         GETARG(_process_stat_t*, stat);
-        SETERRNO(_process_get_stat_seek(*seek, stat));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
+        return _process_get_stat_seek(*seek, stat);
 }
 
 //==============================================================================
@@ -1560,13 +1572,13 @@ static void syscall_processstatseek(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_threadstat(syscallrq_t *rq)
+static int syscall_threadstat(syscallrq_t *rq)
 {
-        GETARG(pid_t*, pid);
-        GETARG(tid_t*, tid);
-        GETARG(_thread_stat_t*, stat);
-        SETERRNO(_process_thread_get_stat(*pid, *tid, stat));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        GETARG(pid_t *, pid);
+        GETARG(tid_t *, tid);
+        GETARG(_thread_stat_t *, stat);
+
+        return _process_thread_get_stat(*pid, *tid, stat);
 }
 
 //==============================================================================
@@ -1578,12 +1590,12 @@ static void syscall_threadstat(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_processstatpid(syscallrq_t *rq)
+static int syscall_processstatpid(syscallrq_t *rq)
 {
         GETARG(pid_t *, pid);
         GETARG(_process_stat_t*, stat);
-        SETERRNO(_process_get_stat_pid(*pid, stat));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
+        return _process_get_stat_pid(*pid, stat);
 }
 
 //==============================================================================
@@ -1595,11 +1607,11 @@ static void syscall_processstatpid(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_processgetpid(syscallrq_t *rq)
+static int syscall_processgetpid(syscallrq_t *rq)
 {
-        pid_t pid = -1;
-        SETERRNO(_process_get_pid(GETPROCESS(), &pid));
-        SETRETURN(pid_t, pid);
+        GETARG(pid_t *, pid);
+
+        return _process_get_pid(GETPROCESS(), pid);
 }
 
 //==============================================================================
@@ -1611,12 +1623,12 @@ static void syscall_processgetpid(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_processgetprio(syscallrq_t *rq)
+static int syscall_processgetprio(syscallrq_t *rq)
 {
         GETARG(pid_t *, pid);
-        int prio = 0;
-        SETERRNO(_process_get_priority(*pid, &prio));
-        SETRETURN(int, prio);
+        GETARG(int *, prio);
+
+        return _process_get_priority(*pid, prio);
 }
 
 //==============================================================================
@@ -1628,11 +1640,12 @@ static void syscall_processgetprio(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_processabort(syscallrq_t *rq)
+static int syscall_processabort(syscallrq_t *rq)
 {
         UNUSED_ARG1(rq);
         _process_abort(_process_get_active());
-        for (;;);
+        for (;;) _sleep_ms(100);
+        return EFAULT;
 }
 
 //==============================================================================
@@ -1644,11 +1657,12 @@ static void syscall_processabort(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_processexit(syscallrq_t *rq)
+static int syscall_processexit(syscallrq_t *rq)
 {
         GETARG(int *, status);
         _process_exit(_process_get_active(), *status);
-        for (;;);
+        for (;;) _sleep_ms(100);
+        return EFAULT;
 }
 
 //==============================================================================
@@ -1660,22 +1674,25 @@ static void syscall_processexit(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getcwd(syscallrq_t *rq)
+static int syscall_getcwd(syscallrq_t *rq)
 {
 #if __OS_ENABLE_GETCWD__ == _YES_
         GETARG(char *, buf);
         GETARG(size_t *, size);
 
+        int err = EINVAL;
+
         const char *cwd = NULL;
         if (buf && *size) {
                 cwd = _process_get_CWD(GETPROCESS());
                _strlcpy(buf, cwd, *size);
+               err = 0;
         }
 
-        SETRETURN(char*, cwd ? buf : NULL);
+        return err;
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(char*, NULL);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -1688,15 +1705,14 @@ static void syscall_getcwd(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_setcwd(syscallrq_t *rq)
+static int syscall_setcwd(syscallrq_t *rq)
 {
 #if __OS_ENABLE_GETCWD__ == _YES_
         GETARG(const char *, cwd);
-        SETERRNO(_process_set_CWD(GETPROCESS(), cwd));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _process_set_CWD(GETPROCESS(), cwd);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -1709,15 +1725,14 @@ static void syscall_setcwd(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_threadcreate(syscallrq_t *rq)
+static int syscall_threadcreate(syscallrq_t *rq)
 {
         GETARG(thread_func_t, func);
         GETARG(_thread_attr_t *, attr);
         GETARG(void *, arg);
+        GETARG(tid_t *, tid);
 
-        tid_t tid = 0;
-        SETERRNO(_process_thread_create(GETPROCESS(), func, attr, arg, &tid));
-        SETRETURN(tid_t, tid);
+        return _process_thread_create(GETPROCESS(), func, attr, arg, tid);
 }
 
 //==============================================================================
@@ -1729,11 +1744,11 @@ static void syscall_threadcreate(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_threadkill(syscallrq_t *rq)
+static int syscall_threadkill(syscallrq_t *rq)
 {
         GETARG(tid_t *, tid);
-        SETERRNO(_process_thread_kill(rq->client_proc, *tid));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
+        return _process_thread_kill(rq->client_proc, *tid);
 }
 
 //==============================================================================
@@ -1745,10 +1760,11 @@ static void syscall_threadkill(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_semaphoreopen(syscallrq_t *rq)
+static int syscall_semaphoreopen(syscallrq_t *rq)
 {
         GETARG(const size_t *, cnt_max);
         GETARG(const size_t *, cnt_init);
+        GETARG(int *, fd);
 
         int desc = -1;
         ksem_t *sem = NULL;
@@ -1757,11 +1773,12 @@ static void syscall_semaphoreopen(syscallrq_t *rq)
                 err = _process_descriptor_allocate(GETPROCESS(), &desc, &sem->header);
                 if (err) {
                         _semaphore_destroy(sem);
+                } else {
+                        *fd = desc;
                 }
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err ? -1 : desc);
+        return err;
 }
 
 //==============================================================================
@@ -1773,19 +1790,18 @@ static void syscall_semaphoreopen(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_semaphorewait(syscallrq_t *rq)
+static int syscall_semaphorewait(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
         GETARG(uint32_t*, timeout);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _semaphore_wait(cast(ksem_t*, res), *timeout);
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -1797,18 +1813,17 @@ static void syscall_semaphorewait(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_semaphoresignal(syscallrq_t *rq)
+static int syscall_semaphoresignal(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _semaphore_signal(cast(ksem_t*, res));
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -1820,19 +1835,18 @@ static void syscall_semaphoresignal(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_semaphoregetvalue(syscallrq_t *rq)
+static int syscall_semaphoregetvalue(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
         GETARG(size_t*, value);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _semaphore_get_value(cast(ksem_t*, res), value);
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -1844,9 +1858,10 @@ static void syscall_semaphoregetvalue(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_mutexopen(syscallrq_t *rq)
+static int syscall_mutexopen(syscallrq_t *rq)
 {
         GETARG(const enum kmtx_type *, type);
+        GETARG(int *, fd);
 
         int desc = -1;
         kmtx_t *mtx = NULL;
@@ -1855,39 +1870,12 @@ static void syscall_mutexopen(syscallrq_t *rq)
                 err = _process_descriptor_allocate(GETPROCESS(), &desc, &mtx->header);
                 if (err) {
                         _mutex_destroy(mtx);
+                } else {
+                        *fd = desc;
                 }
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err ? -1 : desc);
-}
-
-//==============================================================================
-/**
- * @brief  This syscall destroy selected descriptor.
- *
- * @param  rq                   syscall request
- *
- * @return One of errno value.
- */
-//==============================================================================
-static void syscall_close(syscallrq_t *rq)
-{
-        GETARG(int *, desc);
-
-        int err = _process_descriptor_free(GETPROCESS(), *desc, RES_TYPE_UNKNOWN);
-        if (err) {
-                const char *msg = "*** Error: descriptor is not valid! ***\n";
-                size_t wrcnt;
-                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
-
-                pid_t pid = 0;
-                _process_get_pid(GETPROCESS(), &pid);
-                _process_kill(pid);
-        }
-
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -1899,19 +1887,18 @@ static void syscall_close(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_mutexlock(syscallrq_t *rq)
+static int syscall_mutexlock(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
         GETARG(uint32_t*, timeout);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _mutex_lock(cast(kmtx_t*, res), *timeout);
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -1923,18 +1910,17 @@ static void syscall_mutexlock(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_mutexunlock(syscallrq_t *rq)
+static int syscall_mutexunlock(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _mutex_unlock(cast(kmtx_t*, res));
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -1946,10 +1932,11 @@ static void syscall_mutexunlock(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_queueopen(syscallrq_t *rq)
+static int syscall_queueopen(syscallrq_t *rq)
 {
         GETARG(const size_t *, length);
         GETARG(const size_t *, item_size);
+        GETARG(int *, fd);
 
         int desc = -1;
         kqueue_t *queue = NULL;
@@ -1958,11 +1945,12 @@ static void syscall_queueopen(syscallrq_t *rq)
                 err = _process_descriptor_allocate(GETPROCESS(), &desc, &queue->header);
                 if (err) {
                         _queue_destroy(queue);
+                } else {
+                        *fd = desc;
                 }
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err ? -1 : desc);
+        return err;
 }
 
 //==============================================================================
@@ -1974,18 +1962,17 @@ static void syscall_queueopen(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_queuereset(syscallrq_t *rq)
+static int syscall_queuereset(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _queue_reset(cast(kqueue_t*, res));
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -1997,20 +1984,19 @@ static void syscall_queuereset(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_queuesend(syscallrq_t *rq)
+static int syscall_queuesend(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
         GETARG(const void*, item);
         GETARG(const u32_t*, timeout);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _queue_send(cast(kqueue_t*, res), item, *timeout);
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -2022,20 +2008,19 @@ static void syscall_queuesend(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_queuereceive(syscallrq_t *rq)
+static int syscall_queuereceive(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
         GETARG(void*, item);
         GETARG(const u32_t*, timeout);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _queue_receive(cast(kqueue_t*, res), item, *timeout);
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -2047,20 +2032,19 @@ static void syscall_queuereceive(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_queuereceviepeek(syscallrq_t *rq)
+static int syscall_queuereceviepeek(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
         GETARG(void*, item);
         GETARG(const u32_t*, timeout);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _queue_receive_peek(cast(kqueue_t*, res), item, *timeout);
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -2072,19 +2056,18 @@ static void syscall_queuereceviepeek(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_queueitemscount(syscallrq_t *rq)
+static int syscall_queueitemscount(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
         GETARG(size_t*, count);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _queue_get_number_of_items(cast(kqueue_t*, res), count);
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -2096,19 +2079,18 @@ static void syscall_queueitemscount(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_queuefreespace(syscallrq_t *rq)
+static int syscall_queuefreespace(syscallrq_t *rq)
 {
-        GETARG(int*, desc);
+        GETARG(int*, fd);
         GETARG(size_t*, count);
 
         res_header_t *res;
-        int err = _process_descriptor_get_resource(GETPROCESS(), *desc, &res);
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
                 err = _queue_get_space_available(cast(kqueue_t*, res), count);
         }
 
-        SETERRNO(err);
-        SETRETURN(int, err);
+        return err;
 }
 
 //==============================================================================
@@ -2120,18 +2102,17 @@ static void syscall_queuefreespace(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netifadd(syscallrq_t *rq)
+static int syscall_netifadd(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
         GETARG(NET_family_t *, family);
         GETARG(const char *, if_path);
 
-        SETERRNO(_net_ifadd(netname, *family, if_path));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_ifadd(netname, *family, if_path);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2144,16 +2125,15 @@ static void syscall_netifadd(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netifrm(syscallrq_t *rq)
+static int syscall_netifrm(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
 
-        SETERRNO(_net_ifrm(netname));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_ifrm(netname);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2166,17 +2146,17 @@ static void syscall_netifrm(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netiflist(syscallrq_t *rq)
+static int syscall_netiflist(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(char **, netname);
         GETARG(size_t *, netname_len);
+        GETARG(size_t *, count);
 
-        SETERRNO(_net_iflist(netname, *netname_len));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_iflist(netname, *netname_len, count);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2189,17 +2169,16 @@ static void syscall_netiflist(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netifup(syscallrq_t *rq)
+static int syscall_netifup(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
         GETARG(const NET_generic_config_t *, config);
 
-        SETERRNO(_net_ifup(netname, config));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_ifup(netname, config);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2212,16 +2191,15 @@ static void syscall_netifup(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netifdown(syscallrq_t *rq)
+static int syscall_netifdown(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
 
-        SETERRNO(_net_ifdown(netname));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_ifdown(netname);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2234,18 +2212,17 @@ static void syscall_netifdown(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netifstatus(syscallrq_t *rq)
+static int syscall_netifstatus(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
         GETARG(NET_family_t *, family);
         GETARG(NET_generic_status_t *, status);
 
-        SETERRNO(_net_ifstatus(netname, family, status));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_ifstatus(netname, family, status);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2258,27 +2235,26 @@ static void syscall_netifstatus(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netsocketcreate(syscallrq_t *rq)
+static int syscall_netsocketcreate(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
         GETARG(NET_protocol_t*, protocol);
+        GETARG(SOCKET **, socket);
 
-        SOCKET *socket = NULL;
-        int     err    = _net_socket_create(netname, *protocol, &socket);
-        if (err == ESUCC) {
+        int err = _net_socket_create(netname, *protocol, socket);
+        if (!err) {
                 err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socket));
-                if (err != ESUCC) {
-                        _net_socket_destroy(socket);
-                        socket = NULL;
+                if (err) {
+                        _net_socket_destroy(*socket);
+                        *socket = NULL;
                 }
         }
 
-        SETERRNO(err);
-        SETRETURN(SOCKET*, socket);
+        return err;
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(SOCKET*, NULL);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2291,25 +2267,29 @@ static void syscall_netsocketcreate(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netsocketdestroy(syscallrq_t *rq)
+static int syscall_netsocketdestroy(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
 
         int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, socket), RES_TYPE_SOCKET);
-        if (err != ESUCC) {
-                const char *msg = "*** Error: object is not a socket! ***\n";
-                size_t wrcnt;
-                _vfs_fwrite(msg, strlen(msg), &wrcnt, _process_get_stderr(GETPROCESS()));
+        if (err) {
+                res_header_t *res;
+                if (_process_descriptor_get_resource(GETPROCESS(), 2, &res) == 0) {
+                        const char *msg = "*** Error: object is not a socket! ***\n";
+                        size_t wrcnt;
+                        _vfs_fwrite(msg, strlen(msg), &wrcnt, cast(kfile_t*, res));
+                }
 
                 pid_t pid = 0;
                 _process_get_pid(GETPROCESS(), &pid);
                 _process_kill(pid);
         }
 
-        SETERRNO(err);
+        return err;
 #else
-        SETERRNO(ENOSYS);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2322,17 +2302,16 @@ static void syscall_netsocketdestroy(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netbind(syscallrq_t *rq)
+static int syscall_netbind(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
         GETARG(const NET_generic_sockaddr_t *, addr);
 
-        SETERRNO(_net_socket_bind(socket, addr));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_socket_bind(socket, addr);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2345,16 +2324,15 @@ static void syscall_netbind(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netlisten(syscallrq_t *rq)
+static int syscall_netlisten(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
 
-        SETERRNO(_net_socket_listen(socket));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_socket_listen(socket);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2367,14 +2345,14 @@ static void syscall_netlisten(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netaccept(syscallrq_t *rq)
+static int syscall_netaccept(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
         GETARG(SOCKET **, new_socket);
 
         SOCKET *socknew = NULL;
-        int     err     = _net_socket_accept(socket, &socknew);
+        int err = _net_socket_accept(socket, &socknew);
         if (!err) {
                 err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socknew));
                 if (err) {
@@ -2385,11 +2363,10 @@ static void syscall_netaccept(syscallrq_t *rq)
 
         *new_socket = socknew;
 
-        SETERRNO(err);
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return err;
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2402,20 +2379,19 @@ static void syscall_netaccept(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netrecv(syscallrq_t *rq)
+static int syscall_netrecv(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
         GETARG(void *, buf);
         GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
+        GETARG(size_t *, recved);
 
-        size_t recved = 0;
-        SETERRNO(_net_socket_recv(socket, buf, *len, *flags, &recved));
-        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, recved) : -1);
+        return _net_socket_recv(socket, buf, *len, *flags, recved);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2428,7 +2404,7 @@ static void syscall_netrecv(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netrecvfrom(syscallrq_t *rq)
+static int syscall_netrecvfrom(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
@@ -2436,13 +2412,12 @@ static void syscall_netrecvfrom(syscallrq_t *rq)
         GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
         GETARG(NET_generic_sockaddr_t *, sockaddr);
+        GETARG(size_t *, recved);
 
-        size_t recved = 0;
-        SETERRNO(_net_socket_recvfrom(socket, buf, *len, *flags, sockaddr, &recved));
-        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, recved) : -1);
+        return _net_socket_recvfrom(socket, buf, *len, *flags, sockaddr, recved);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2455,20 +2430,19 @@ static void syscall_netrecvfrom(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netsend(syscallrq_t *rq)
+static int syscall_netsend(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
         GETARG(const void *, buf);
         GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
+        GETARG(size_t *, sent);
 
-        size_t sent = 0;
-        SETERRNO(_net_socket_send(socket, buf, *len, *flags, &sent));
-        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, sent) : -1);
+        return _net_socket_send(socket, buf, *len, *flags, sent);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2481,7 +2455,7 @@ static void syscall_netsend(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netsendto(syscallrq_t *rq)
+static int syscall_netsendto(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
@@ -2489,13 +2463,12 @@ static void syscall_netsendto(syscallrq_t *rq)
         GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
         GETARG(const NET_generic_sockaddr_t *, to_addr);
+        GETARG(size_t *, sent);
 
-        size_t sent = 0;
-        SETERRNO(_net_socket_sendto(socket, buf, *len, *flags, to_addr, &sent));
-        SETRETURN(int, GETERRNO() == ESUCC ? cast(int, sent) : -1);
+        return _net_socket_sendto(socket, buf, *len, *flags, to_addr, sent);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2508,18 +2481,17 @@ static void syscall_netsendto(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netgethostbyname(syscallrq_t *rq)
+static int syscall_netgethostbyname(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
         GETARG(const char *, name);
         GETARG(NET_generic_sockaddr_t *, addr);
 
-        SETERRNO(_net_gethostbyname(netname, name, addr));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_gethostbyname(netname, name, addr);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2532,17 +2504,16 @@ static void syscall_netgethostbyname(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netsetrecvtimeout(syscallrq_t *rq)
+static int syscall_netsetrecvtimeout(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
         GETARG(uint32_t *, timeout);
 
-        SETERRNO(_net_socket_set_recv_timeout(socket, *timeout));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_socket_set_recv_timeout(socket, *timeout);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2555,17 +2526,16 @@ static void syscall_netsetrecvtimeout(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netsetsendtimeout(syscallrq_t *rq)
+static int syscall_netsetsendtimeout(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
         GETARG(uint32_t *, timeout);
 
-        SETERRNO(_net_socket_set_send_timeout(socket, *timeout));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_socket_set_send_timeout(socket, *timeout);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2578,17 +2548,16 @@ static void syscall_netsetsendtimeout(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netconnect(syscallrq_t *rq)
+static int syscall_netconnect(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
         GETARG(const NET_generic_sockaddr_t *, addr);
 
-        SETERRNO(_net_socket_connect(socket, addr));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_socket_connect(socket, addr);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2601,16 +2570,15 @@ static void syscall_netconnect(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netdisconnect(syscallrq_t *rq)
+static int syscall_netdisconnect(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
 
-        SETERRNO(_net_socket_disconnect(socket));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_socket_disconnect(socket);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2623,17 +2591,16 @@ static void syscall_netdisconnect(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netshutdown(syscallrq_t *rq)
+static int syscall_netshutdown(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
         GETARG(NET_shut_t *, how);
 
-        SETERRNO(_net_socket_shutdown(socket, *how));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_socket_shutdown(socket, *how);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2646,17 +2613,16 @@ static void syscall_netshutdown(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_netgetaddress(syscallrq_t *rq)
+static int syscall_netgetaddress(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(SOCKET *, socket);
         GETARG(NET_generic_sockaddr_t *, sockaddr);
 
-        SETERRNO(_net_socket_getaddress(socket, sockaddr));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return _net_socket_getaddress(socket, sockaddr);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2670,17 +2636,18 @@ static void syscall_netgetaddress(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_nethton16(syscallrq_t *rq)
+static int syscall_nethton16(syscallrq_t *rq)
 {
-        GETARG(NET_family_t*, family);
-        GETARG(uint16_t*, value);
-
 #if _ENABLE_NETWORK_ == _YES_
-        SETRETURN(uint16_t, _net_hton_u16(*family, *value));
+        GETARG(NET_family_t*, family);
+        GETARG(uint16_t*, value_in);
+        GETARG(uint16_t*, value_out);
+
+        *value_out = _net_hton_u16(*family, *value_in);
+        return 0;
 #else
-        UNUSED_ARG1(family);
-        SETERRNO(ENOSYS);
-        SETRETURN(uint16_t, *value);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2694,17 +2661,18 @@ static void syscall_nethton16(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_nethton32(syscallrq_t *rq)
+static int syscall_nethton32(syscallrq_t *rq)
 {
-        GETARG(NET_family_t*, family);
-        GETARG(uint32_t*, value);
-
 #if _ENABLE_NETWORK_ == _YES_
-        SETRETURN(uint32_t, _net_hton_u32(*family, *value));
+        GETARG(NET_family_t*, family);
+        GETARG(uint32_t*, value_in);
+        GETARG(uint32_t*, value_out);
+
+        *value_out = _net_hton_u32(*family, *value_in);
+        return 0;
 #else
-        UNUSED_ARG1(family);
-        SETERRNO(ENOSYS);
-        SETRETURN(uint32_t, *value);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2718,17 +2686,18 @@ static void syscall_nethton32(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_nethton64(syscallrq_t *rq)
+static int syscall_nethton64(syscallrq_t *rq)
 {
-        GETARG(NET_family_t*, family);
-        GETARG(uint64_t*, value);
-
 #if _ENABLE_NETWORK_ == _YES_
-        SETRETURN(uint64_t, _net_hton_u64(*family, *value));
+        GETARG(NET_family_t*, family);
+        GETARG(uint64_t*, value_in);
+        GETARG(uint64_t*, value_out);
+
+        *value_out = _net_hton_u64(*family, *value_in);
+        return 0;
 #else
-        UNUSED_ARG1(family);
-        SETERRNO(ENOSYS);
-        SETRETURN(uint64_t, *value);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2741,16 +2710,16 @@ static void syscall_nethton64(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_shmcreate(syscallrq_t *rq)
+static int syscall_shmcreate(syscallrq_t *rq)
 {
 #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
         GETARG(const char *, key);
         GETARG(const size_t *, size);
-        SETERRNO(_shm_create(key, *size));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
+        return _shm_create(key, *size);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2763,7 +2732,7 @@ static void syscall_shmcreate(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_shmattach(syscallrq_t *rq)
+static int syscall_shmattach(syscallrq_t *rq)
 {
 #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
         GETARG(const char *, key);
@@ -2771,15 +2740,15 @@ static void syscall_shmattach(syscallrq_t *rq)
         GETARG(size_t *, size);
 
         pid_t pid = 0;
-        SETERRNO(_process_get_pid(GETPROCESS(), &pid));
-        if (GETERRNO() == ESUCC) {
-                SETERRNO(_shm_attach(key, mem, size, pid));
+        int err = _process_get_pid(GETPROCESS(), &pid);
+        if (!err) {
+                err = _shm_attach(key, mem, size, pid);
         }
 
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return err;
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2792,21 +2761,21 @@ static void syscall_shmattach(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_shmdetach(syscallrq_t *rq)
+static int syscall_shmdetach(syscallrq_t *rq)
 {
 #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
         GETARG(const char *, key);
 
         pid_t pid = 0;
-        SETERRNO(_process_get_pid(GETPROCESS(), &pid));
-        if (GETERRNO() == ESUCC) {
-                SETERRNO(_shm_detach(key, pid));
+        int err = _process_get_pid(GETPROCESS(), &pid);
+        if (!err) {
+                err = _shm_detach(key, pid);
         }
 
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+        return err;
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2819,15 +2788,15 @@ static void syscall_shmdetach(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_shmdestroy(syscallrq_t *rq)
+static int syscall_shmdestroy(syscallrq_t *rq)
 {
 #if __OS_ENABLE_SHARED_MEMORY__ == _YES_
         GETARG(const char *, key);
-        SETERRNO(_shm_destroy(key));
-        SETRETURN(int, GETERRNO() == ESUCC ? 0 : -1);
+
+        return _shm_destroy(key);
 #else
-        SETERRNO(ENOSYS);
-        SETRETURN(int, -1);
+        UNUSED_ARG1(rq);
+        return ENOSYS;
 #endif
 }
 
@@ -2840,10 +2809,11 @@ static void syscall_shmdestroy(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_msleep(syscallrq_t *rq)
+static int syscall_msleep(syscallrq_t *rq)
 {
         GETARG(const uint32_t *, msec);
         _sleep_ms(*msec);
+        return 0;
 }
 
 //==============================================================================
@@ -2855,7 +2825,7 @@ static void syscall_msleep(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_usleep(syscallrq_t *rq)
+static int syscall_usleep(syscallrq_t *rq)
 {
         GETARG(const uint32_t *, usec);
 
@@ -2869,6 +2839,8 @@ static void syscall_usleep(syscallrq_t *rq)
         if (us) {
                 _cpuctl_delay_us(us);
         }
+
+        return 0;
 }
 
 //==============================================================================
@@ -2880,9 +2852,16 @@ static void syscall_usleep(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getgid(syscallrq_t *rq)
+static int syscall_getgid(syscallrq_t *rq)
 {
-        SETRETURN(gid_t, 0);
+        GETARG(gid_t *, gid);
+
+        if (gid) {
+                *gid = 0;
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -2894,9 +2873,16 @@ static void syscall_getgid(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getuid(syscallrq_t *rq)
+static int syscall_getuid(syscallrq_t *rq)
 {
-        SETRETURN(gid_t, 0);
+        GETARG(uid_t *, uid);
+
+        if (uid) {
+                *uid = 0;
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -2908,11 +2894,11 @@ static void syscall_getuid(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getmemdetails(syscallrq_t *rq)
+static int syscall_getmemdetails(syscallrq_t *rq)
 {
         GETARG(_mm_mem_usage_t*, details);
-        SETERRNO(_mm_get_mem_usage_details(details));
-        SETRETURN(int, _mm_get_mem_free());
+
+        return _mm_get_mem_usage_details(details);
 }
 
 //==============================================================================
@@ -2924,12 +2910,12 @@ static void syscall_getmemdetails(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getmodmemusage(syscallrq_t *rq)
+static int syscall_getmodmemusage(syscallrq_t *rq)
 {
         GETARG(uint*, module);
         GETARG(int32_t*, usage);
-        SETERRNO(_mm_get_module_mem_usage(*module, usage));
-        SETRETURN(int, GETERRNO() ? -1 : 0);
+
+        return _mm_get_module_mem_usage(*module, usage);
 }
 
 //==============================================================================
@@ -2941,9 +2927,16 @@ static void syscall_getmodmemusage(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getuptimems(syscallrq_t *rq)
+static int syscall_getuptimems(syscallrq_t *rq)
 {
-        SETRETURN(uint64_t, _kernel_get_time_ms());
+        GETARG(uint64_t*, uptime_ms);
+
+        if (uptime_ms) {
+                *uptime_ms = _kernel_get_time_ms();
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -2955,11 +2948,11 @@ static void syscall_getuptimems(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getavgcpuload(syscallrq_t *rq)
+static int syscall_getavgcpuload(syscallrq_t *rq)
 {
         GETARG(_avg_CPU_load_t*, stat);
-        SETERRNO(_get_average_CPU_load(stat));
-        SETRETURN(int, GETERRNO() ? -1 : 0);
+
+        return _get_average_CPU_load(stat);
 }
 
 //==============================================================================
@@ -2971,9 +2964,16 @@ static void syscall_getavgcpuload(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getplatformname(syscallrq_t *rq)
+static int syscall_getplatformname(syscallrq_t *rq)
 {
-        SETRETURN(const char*, dnx_RTOS_platform_name);
+        GETARG(const char **, ref);
+
+        if (ref) {
+                *ref = dnx_RTOS_platform_name;
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -2985,9 +2985,16 @@ static void syscall_getplatformname(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getosname(syscallrq_t *rq)
+static int syscall_getosname(syscallrq_t *rq)
 {
-        SETRETURN(const char*, dnx_RTOS_name);
+        GETARG(const char **, ref);
+
+        if (ref) {
+                *ref = dnx_RTOS_name;
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -2999,9 +3006,16 @@ static void syscall_getosname(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getosver(syscallrq_t *rq)
+static int syscall_getosver(syscallrq_t *rq)
 {
-        SETRETURN(const char*, dnx_RTOS_version);
+        GETARG(const char **, ref);
+
+        if (ref) {
+                *ref = dnx_RTOS_version;
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -3013,9 +3027,16 @@ static void syscall_getosver(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getoscodename(syscallrq_t *rq)
+static int syscall_getoscodename(syscallrq_t *rq)
 {
-        SETRETURN(const char*, dnx_RTOS_codename);
+        GETARG(const char **, ref);
+
+        if (ref) {
+                *ref = dnx_RTOS_codename;
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -3027,9 +3048,16 @@ static void syscall_getoscodename(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getkernelname(syscallrq_t *rq)
+static int syscall_getkernelname(syscallrq_t *rq)
 {
-        SETRETURN(const char*, _KERNEL_NAME);
+        GETARG(const char **, ref);
+
+        if (ref) {
+                *ref = _KERNEL_NAME;
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -3041,9 +3069,16 @@ static void syscall_getkernelname(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getkernelver(syscallrq_t *rq)
+static int syscall_getkernelver(syscallrq_t *rq)
 {
-        SETRETURN(const char*, _KERNEL_VERSION);
+        GETARG(const char **, ref);
+
+        if (ref) {
+                *ref = _KERNEL_VERSION;
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -3055,17 +3090,36 @@ static void syscall_getkernelver(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_gethostname(syscallrq_t *rq)
+static int syscall_gethostname(syscallrq_t *rq)
 {
         GETARG(char*, buf);
         GETARG(size_t*, buf_len);
 
         if (buf and buf_len and *buf_len) {
                 _strlcpy(buf, __OS_HOSTNAME__, *buf_len);
-                SETRETURN(int, 0);
+                return 0;
         } else {
-                SETERRNO(EINVAL);
-                SETRETURN(int, -1);
+                return EINVAL;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  This syscall get host name.
+ *
+ * @param  rq                   syscall request
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int syscall_sethostname(syscallrq_t *rq)
+{
+        GETARG(char*, buf);
+
+        if (buf) {
+                return ENOSYS;
+        } else {
+                return EINVAL;
         }
 }
 
@@ -3078,10 +3132,21 @@ static void syscall_gethostname(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getdrivername(syscallrq_t *rq)
+static int syscall_getdrivername(syscallrq_t *rq)
 {
         GETARG(size_t*, modno);
-        SETRETURN(const char*, _module_get_name(*modno));
+        GETARG(const char **, name_ref);
+
+        if (name_ref) {
+                *name_ref = _module_get_name(*modno);
+                if (name_ref) {
+                        return 0;
+                } else {
+                        return ENOENT;
+                }
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -3093,10 +3158,19 @@ static void syscall_getdrivername(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getdriverid(syscallrq_t *rq)
+static int syscall_getdriverid(syscallrq_t *rq)
 {
         GETARG(const char*, modname);
-        SETRETURN(int, _module_get_ID(modname));
+        GETARG(size_t *, driver_id);
+
+        int id = _module_get_ID(modname);
+
+        if (id < 0) {
+                return ENOENT;
+        } else {
+                *driver_id = id;
+                return 0;
+        }
 }
 
 //==============================================================================
@@ -3108,9 +3182,16 @@ static void syscall_getdriverid(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getdrivercount(syscallrq_t *rq)
+static int syscall_getdrivercount(syscallrq_t *rq)
 {
-        SETRETURN(size_t, _module_get_count());
+        GETARG(size_t *, count);
+
+        if (count) {
+                *count = _module_get_count();
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -3122,10 +3203,22 @@ static void syscall_getdrivercount(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getdriverinstances(syscallrq_t *rq)
+static int syscall_getdriverinstances(syscallrq_t *rq)
 {
         GETARG(size_t*, id);
-        SETRETURN(ssize_t, _module_get_number_of_instances(*id));
+        GETARG(size_t *, count);
+
+        if (count) {
+                ssize_t n =  _module_get_number_of_instances(*id);
+                if (n >= 0) {
+                        *count = n;
+                        return 0;
+                } else {
+                        return ENOENT;
+                }
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -3137,10 +3230,11 @@ static void syscall_getdriverinstances(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_systemrestart(syscallrq_t *rq)
+static int syscall_systemrestart(syscallrq_t *rq)
 {
         UNUSED_ARG1(rq);
         _cpuctl_restart_system();
+        return EFAULT;
 }
 
 //==============================================================================
@@ -3152,10 +3246,11 @@ static void syscall_systemrestart(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_systemshutdown(syscallrq_t *rq)
+static int syscall_systemshutdown(syscallrq_t *rq)
 {
         UNUSED_ARG1(rq);
         _cpuctl_shutdown_system();
+        return EFAULT;
 }
 
 //==============================================================================
@@ -3167,10 +3262,11 @@ static void syscall_systemshutdown(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_syslogclear(syscallrq_t *rq)
+static int syscall_syslogclear(syscallrq_t *rq)
 {
         UNUSED_ARG1(rq);
         _printk_clear();
+        return 0;
 }
 
 //==============================================================================
@@ -3182,9 +3278,16 @@ static void syscall_syslogclear(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_getactivethread(syscallrq_t *rq)
+static int syscall_getactivethread(syscallrq_t *rq)
 {
-        SETRETURN(int, rq->client_thread);
+        GETARG(tid_t *, tid);
+
+        if (tid) {
+                *tid = rq->client_thread;
+                return 0;
+        } else {
+                return EINVAL;
+        }
 }
 
 //==============================================================================
@@ -3196,10 +3299,11 @@ static void syscall_getactivethread(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_threadexit(syscallrq_t *rq)
+static int syscall_threadexit(syscallrq_t *rq)
 {
         GETARG(int*, status);
-        _process_thread_exit(*status);
+
+        return _process_thread_exit(*status);
 }
 
 //==============================================================================
@@ -3211,11 +3315,12 @@ static void syscall_threadexit(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_dirseek(syscallrq_t *rq)
+static int syscall_dirseek(syscallrq_t *rq)
 {
         GETARG(kdir_t*, dir);
         GETARG(const u32_t*, seek);
-        SETERRNO(_vfs_seekdir(dir, *seek));
+
+        return _vfs_seekdir(dir, *seek);
 }
 
 //==============================================================================
@@ -3227,12 +3332,12 @@ static void syscall_dirseek(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_dirtell(syscallrq_t *rq)
+static int syscall_dirtell(syscallrq_t *rq)
 {
         GETARG(kdir_t*, dir);
-        u32_t seek = 0;
-        SETERRNO(_vfs_telldir(dir, &seek));
-        SETRETURN(u32_t, seek);
+        GETARG(u32_t *, pos);
+
+        return _vfs_telldir(dir, pos);
 }
 
 //==============================================================================
@@ -3244,10 +3349,11 @@ static void syscall_dirtell(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_schedulerlock(syscallrq_t *rq)
+static int syscall_schedulerlock(syscallrq_t *rq)
 {
         UNUSED_ARG1(rq);
         _kernel_scheduler_lock();
+        return 0;
 }
 
 //==============================================================================
@@ -3259,10 +3365,11 @@ static void syscall_schedulerlock(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_schedulerunlock(syscallrq_t *rq)
+static int syscall_schedulerunlock(syscallrq_t *rq)
 {
         UNUSED_ARG1(rq);
         _kernel_scheduler_unlock();
+        return 0;
 }
 
 //==============================================================================
@@ -3274,7 +3381,7 @@ static void syscall_schedulerunlock(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_threadjoin(syscallrq_t *rq)
+static int syscall_threadjoin(syscallrq_t *rq)
 {
         GETARG(const tid_t*, tid);
         GETARG(int*, status);
@@ -3297,8 +3404,7 @@ static void syscall_threadjoin(syscallrq_t *rq)
                 }
         }
 
-        SETERRNO(err);
-        SETRETURN(int, GETERRNO() ? -1 : 0);
+        return err;
 }
 
 //==============================================================================
@@ -3310,11 +3416,15 @@ static void syscall_threadjoin(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static void syscall_isheapaddr(syscallrq_t *rq)
+static int syscall_isheapaddr(syscallrq_t *rq)
 {
         GETARG(const void*, addr);
-        SETERRNO(ESUCC);
-        SETRETURN(bool, _mm_is_object_in_heap(addr));
+
+        if (_mm_is_object_in_heap(addr)) {
+                return 0;
+        } else {
+                return ENOENT;
+        }
 }
 
 /*==============================================================================

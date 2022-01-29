@@ -102,7 +102,6 @@ extern int         _process_release_resource            (_process_t*, res_header
 extern int         _process_descriptor_free             (_process_t *process, int desc, res_type_t rtype);
 extern int         _process_descriptor_allocate         (_process_t *process, int *desc, res_header_t *res);
 extern int         _process_descriptor_get_resource     (_process_t *process, int desc, res_header_t **res);
-extern kfile_t    *_process_get_stderr                  (_process_t*);
 extern const char *_process_get_name                    (_process_t*);
 extern size_t      _process_get_count                   (void);
 extern _process_t *_process_get_active                  (void);
@@ -119,7 +118,7 @@ extern int         _process_thread_create               (_process_t*, thread_fun
 extern int         _process_thread_kill                 (_process_t*, tid_t);
 extern task_t     *_process_thread_get_task             (_process_t*, tid_t);
 extern int         _process_thread_get_stat             (pid_t, tid_t, _thread_stat_t*);
-extern void        _process_thread_exit                 (int);
+extern int         _process_thread_exit                 (int);
 extern int         _process_thread_get_status           (_process_t*, tid_t, int*);
 extern void        _process_syscall_stat_inc            (_process_t*, _process_t*);
 extern bool        _process_is_consistent               (void);

@@ -619,9 +619,9 @@ static bool start_program(char *master, char *slave, char *std_in,
         memset(&global->pidmaster_attr, 0, sizeof(process_attr_t));
 
         if (master && slave && file) {
-                global->pidmaster_attr.f_stdin    = stdin;
-                global->pidmaster_attr.f_stdout   = pipe;
-                global->pidmaster_attr.f_stderr   = stderr;
+                global->pidmaster_attr.fd_stdin   = fileno(stdin);
+                global->pidmaster_attr.fd_stdout  = pipe;
+                global->pidmaster_attr.fd_stderr  = fileno(stderr);
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -631,9 +631,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                         goto free_resources;
                 }
 
-                global->pidslave_attr.f_stdin    = pipe;
-                global->pidslave_attr.f_stdout   = fout;
-                global->pidslave_attr.f_stderr   = stderr;
+                global->pidslave_attr.fd_stdin   = pipe;
+                global->pidslave_attr.fd_stdout  = fout;
+                global->pidslave_attr.fd_stderr  = fileno(stderr);
                 global->pidslave_attr.cwd        = global->cwd;
                 global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
@@ -645,13 +645,13 @@ static bool start_program(char *master, char *slave, char *std_in,
                 }
 
                 process_wait(pidmaster, NULL, MAX_DELAY_MS);
-                ioctl(fileno(pipe), IOCTL_PIPE__CLOSE);
+                ioctl(pipe, IOCTL_PIPE__CLOSE);
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && slave) {
-                global->pidmaster_attr.f_stdin    = stdin;
-                global->pidmaster_attr.f_stdout   = pipe;
-                global->pidmaster_attr.f_stderr   = stderr;
+                global->pidmaster_attr.fd_stdin   = fileno(stdin);
+                global->pidmaster_attr.fd_stdout  = pipe;
+                global->pidmaster_attr.fd_stderr  = fileno(stderr);
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -661,9 +661,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                         goto free_resources;
                 }
 
-                global->pidslave_attr.f_stdin    = pipe;
-                global->pidslave_attr.f_stdout   = stdout;
-                global->pidslave_attr.f_stderr   = stderr;
+                global->pidslave_attr.fd_stdin   = pipe;
+                global->pidslave_attr.fd_stdout  = fileno(stdout);
+                global->pidslave_attr.fd_stderr  = fileno(stderr);
                 global->pidslave_attr.cwd        = global->cwd;
                 global->pidslave_attr.detached   = false;
                 global->pidslave_attr.priority   = PRIORITY_NORMAL;
@@ -675,7 +675,7 @@ static bool start_program(char *master, char *slave, char *std_in,
                 }
 
                 process_wait(pidmaster, NULL, MAX_DELAY_MS);
-                ioctl(fileno(pipe), IOCTL_PIPE__CLOSE);
+                ioctl(pipe, IOCTL_PIPE__CLOSE);
                 process_wait(pidslave, NULL, MAX_DELAY_MS);
 
         } else if (master && file && std_in) {
@@ -697,8 +697,8 @@ static bool start_program(char *master, char *slave, char *std_in,
 
         } else if (master && std_in) {
                 global->pidmaster_attr.p_stdin    = std_in;
-                global->pidmaster_attr.f_stdout   = stdout;
-                global->pidmaster_attr.f_stderr   = stderr;
+                global->pidmaster_attr.fd_stdout  = fileno(stdout);
+                global->pidmaster_attr.fd_stderr  = fileno(stderr);
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = detached;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -713,9 +713,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 }
 
         } else if (master && file) {
-                global->pidmaster_attr.f_stdin    = stdin;
-                global->pidmaster_attr.f_stdout   = fout;
-                global->pidmaster_attr.f_stderr   = stderr;
+                global->pidmaster_attr.fd_stdin   = fileno(stdin);
+                global->pidmaster_attr.fd_stdout  = fout;
+                global->pidmaster_attr.fd_stderr  = fileno(stderr);
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = false;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;
@@ -728,9 +728,9 @@ static bool start_program(char *master, char *slave, char *std_in,
                 process_wait(pidmaster, NULL, MAX_DELAY_MS);
 
         } else if (master) {
-                global->pidmaster_attr.f_stdin    = detached ? NULL : stdin;
-                global->pidmaster_attr.f_stdout   = detached ? NULL : stdout;
-                global->pidmaster_attr.f_stderr   = detached ? NULL : stderr;
+                global->pidmaster_attr.fd_stdin   = detached ? -1 : fileno(stdin);
+                global->pidmaster_attr.fd_stdout  = detached ? -1 : fileno(stdout);
+                global->pidmaster_attr.fd_stderr  = detached ? -1 : fileno(stderr);
                 global->pidmaster_attr.cwd        = global->cwd;
                 global->pidmaster_attr.detached   = detached;
                 global->pidmaster_attr.priority   = PRIORITY_NORMAL;

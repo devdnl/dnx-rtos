@@ -261,7 +261,7 @@ typedef struct {
 extern int   _net_ifadd(const char*, NET_family_t, const char*);
 extern int   _net_ifrm(const char*);
 extern int   _net_ifdelete(const char*);
-extern int   _net_iflist(char**, size_t);
+extern int   _net_iflist(char**, size_t, size_t*);
 extern int   _net_ifup(const char*, const NET_generic_config_t*);
 extern int   _net_ifdown(const char*);
 extern int   _net_ifstatus(const char*, NET_family_t*, NET_generic_status_t*);

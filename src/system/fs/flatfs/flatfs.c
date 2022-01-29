@@ -302,7 +302,7 @@ API_FS_INIT(flatfs, void **fs_handle, const char *src_path, const char *opts)
                         err = sys_llist_create(sys_llist_functor_cmp_pointers, NULL, &hdl->open_files);
                         if (!err) {
 
-                                err = sys_fopen(src_path, hdl->read_only ? "r" : "r+", &hdl->disc);
+                                err = sys_fopen(src_path, hdl->read_only ? O_RDONLY : O_RDWR, &hdl->disc);
                                 if (!err) {
 
                                         err = mount(hdl);

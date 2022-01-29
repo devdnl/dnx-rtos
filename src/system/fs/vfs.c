@@ -916,10 +916,32 @@ int _vfs_fopen(const struct vfs_path *path, int flags, kfile_t **file)
 
         if (file_obj) {
                 if (file_obj->header.type == RES_TYPE_FILE) {
+                        file_obj->references = 1;
                         *file = file_obj;
                 } else {
                         _kfree(_MM_KRN, cast(void**, &file_obj));
                 }
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Function increase open reference.
+ *
+ * @param[in] file              file
+ *
+ * @return One of errno value (errno.h)
+ */
+//==============================================================================
+int _vfs_fopen_ref(kfile_t *file)
+{
+        int err = EINVAL;
+
+        if (is_file_valid(file)) {
+                file->references++;
+                err = 0;
         }
 
         return err;
@@ -940,12 +962,17 @@ int _vfs_fclose(kfile_t *file, bool force)
         int err = EINVAL;
 
         if (is_file_valid(file) && file->FS_if->fs_close) {
-                err = file->FS_if->fs_close(file->FS_hdl, file->f_hdl, force);
-                if (!err) {
-                        file->header.self = NULL;
-                        file->header.type = RES_TYPE_UNKNOWN;
-                        file->FS_hdl      = NULL;
-                        _kfree(_MM_KRN, cast(void**, &file));
+                if ((file->references >= 0) and (file->references < 2)) {
+                        err = file->FS_if->fs_close(file->FS_hdl, file->f_hdl, force);
+                        if (!err) {
+                                file->header.self = NULL;
+                                file->header.type = RES_TYPE_UNKNOWN;
+                                file->FS_hdl      = NULL;
+                                _kfree(_MM_KRN, cast(void**, &file));
+                        }
+                } else {
+                        file->references--;
+                        err = 0;
                 }
         }
 

@@ -238,6 +238,7 @@ typedef struct vfs_file {
         void               *f_hdl;
         fpos_t              f_lseek;
         vfs_file_flags_t    f_flag;
+        int                 references;
 } kfile_t;
 
 /** directory type */
@@ -287,6 +288,7 @@ extern int  _vfs_chown      (const struct vfs_path*, uid_t, gid_t);
 extern int  _vfs_stat       (const struct vfs_path*, struct stat*);
 extern int  _vfs_statfs     (const struct vfs_path*, struct statfs*);
 extern int  _vfs_fopen      (const struct vfs_path*, int, kfile_t**);
+extern int  _vfs_fopen_ref  (kfile_t*);
 extern int  _vfs_fclose     (kfile_t*, bool);
 extern int  _vfs_fwrite     (const void*, size_t, size_t*, kfile_t*);
 extern int  _vfs_fread      (void*, size_t, size_t*, kfile_t*);

@@ -283,9 +283,9 @@ typedef struct {
  * The type is used to configure process settings.
  */
 typedef struct {
-        void       *f_stdin;            //!< stdin  file object pointer (major)
-        void       *f_stdout;           //!< stdout file object pointer (major)
-        void       *f_stderr;           //!< stderr file object pointer (major)
+        int         fd_stdin;           //!< stdin  file object pointer (major)
+        int         fd_stdout;          //!< stdout file object pointer (major)
+        int         fd_stderr;          //!< stderr file object pointer (major)
         const char *p_stdin;            //!< stdin  file path (minor)
         const char *p_stdout;           //!< stdout file path (minor)
         const char *p_stderr;           //!< stderr file path (minor)

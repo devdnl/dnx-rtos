@@ -98,12 +98,7 @@ typedef struct {
 struct _process {
         res_header_t     header;                //!< resource header
         kflag_t         *event;                 //!< events for exit indicator
-        dchain_t         objtab;               //!< objects accessible by descriptor
-
-        kfile_t         *f_stdin;               //!< stdin file
-        kfile_t         *f_stdout;              //!< stdout file
-        kfile_t         *f_stderr;              //!< stderr file
-
+        dchain_t         objtab;                //!< objects accessible by descriptor
         void            *globals;               //!< address to process's global variables
         res_header_t    *mem_list;              //!< list of used resources -- use btree for memory blocks (only)
         u32_t            mem_list_size;         //!< size of resources list
@@ -463,6 +458,7 @@ void _process_exit(_process_t *proc, int status)
 
                 va_list none;
                 if (proc->f_stdin) {
+                        // TODO only cast(kfile_t*, proc->objtab.resource[0]) ?
                         _vfs_vfioctl(proc->f_stdin, IOCTL_VFS__DEFAULT_RD_MODE, none);
                         _vfs_vfioctl(proc->f_stdin, IOCTL_VFS__DEFAULT_WR_MODE, none);
                 }
@@ -677,24 +673,6 @@ int _process_get_stat_pid(pid_t pid, _process_stat_t *stat)
         }
 
         return err;
-}
-
-//==============================================================================
-/**
- * @brief  Function return stderr file of selected process.
- *
- * @param  proc         process container
- *
- * @return File pointer. Can be NULL if process does not exists or file not set.
- */
-//==============================================================================
-kfile_t *_process_get_stderr(_process_t *proc)
-{
-        if (is_proc_valid(proc)) {
-                return proc->f_stderr;
-        } else {
-                return NULL;
-        }
 }
 
 //==============================================================================
@@ -1265,9 +1243,11 @@ int _process_thread_get_stat(pid_t pid, tid_t tid, _thread_stat_t *stat)
  * Function exit from calling thread.
  *
  * @param  exit         exit code
+ *
+ * @return One of errno value.
  */
 //==============================================================================
-void _process_thread_exit(int exit)
+int _process_thread_exit(int exit)
 {
         void _kill_thread_helper(void *arg)
         {
@@ -1279,6 +1259,8 @@ void _process_thread_exit(int exit)
 
         _process_t *proc; tid_t tid;
         _task_get_process_container(NULL, &proc, &tid);
+
+        int err = EINVAL;
 
         if (is_proc_valid(proc) and is_tid_in_range(proc, tid)) {
 
@@ -1299,6 +1281,8 @@ void _process_thread_exit(int exit)
                         }
                 }
         }
+
+        return err;
 }
 
 //==============================================================================
@@ -2405,7 +2389,7 @@ static int analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg)
         struct vfs_path path;
         path.CWD  = proc->cwd;
         path.PATH = filename;
-        err       = _vfs_fopen(&path, "r", &file);
+        err       = _vfs_fopen(&path, O_RDONLY, &file);
         if (err) goto finish;
 
         // check that file is set to execute

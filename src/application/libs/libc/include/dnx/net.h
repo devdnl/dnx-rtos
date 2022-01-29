@@ -568,7 +568,7 @@ static inline int socket_recvfrom(SOCKET                 *socket,
 {
         size_t rcved;
         int err = _libc_syscall(_LIBC_SYS_NETRECVFROM, socket, buf, &len, &flags, from_sockaddr, &rcved);
-        return err ? -1 : rcved;
+        return err ? -1 : (int)rcved;
 }
 
 //==============================================================================
@@ -592,7 +592,7 @@ static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_f
 {
         size_t sent;
         int err = _libc_syscall(_LIBC_SYS_NETSEND, socket, buf, &len, &flags, &sent);
-        return err ? -1 : sent;
+        return err ? -1 : (int)sent;
 }
 
 //==============================================================================
@@ -643,7 +643,7 @@ static inline int socket_sendto(SOCKET                       *socket,
 {
         size_t sent;
         int err = _libc_syscall(_LIBC_SYS_NETSENDTO, socket, buf, &len, &flags, to_sockaddr, &sent);
-        return err ? -1 : sent;
+        return err ? -1 : (int)sent;
 }
 
 //==============================================================================

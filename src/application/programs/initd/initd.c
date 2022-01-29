@@ -390,9 +390,9 @@ static void start_user_programs(void)
          */
         static const process_attr_t attr0 = {
                .cwd        = "/",
-               .f_stderr   = NULL,
-               .f_stdin    = NULL,
-               .f_stdout   = NULL,
+               .fd_stderr  = -1,
+               .fd_stdin   = -1,
+               .fd_stdout  = -1,
                .detached   = true,
                .p_stderr   = "/dev/tty0",
                .p_stdin    = "/dev/tty0",
@@ -408,9 +408,9 @@ static void start_user_programs(void)
          */
         static const process_attr_t attr1 = {
                .cwd        = "/",
-               .f_stderr   = NULL,
-               .f_stdin    = NULL,
-               .f_stdout   = NULL,
+               .fd_stderr  = -1,
+               .fd_stdin   = -1,
+               .fd_stdout  = -1,
                .detached   = true,
                .p_stderr   = "/dev/tty1",
                .p_stdin    = "/dev/tty1",
@@ -426,9 +426,9 @@ static void start_user_programs(void)
          */
         static const process_attr_t attr2 = {
                .cwd        = "/",
-               .f_stderr   = NULL,
-               .f_stdin    = NULL,
-               .f_stdout   = NULL,
+               .fd_stderr  = -1,
+               .fd_stdin   = -1,
+               .fd_stdout  = -1,
                .detached   = true,
                .p_stderr   = "/dev/tty2",
                .p_stdin    = "/dev/tty2",

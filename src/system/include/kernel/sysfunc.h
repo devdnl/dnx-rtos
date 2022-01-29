@@ -2573,7 +2573,7 @@ static inline int sys_statfs(const char *path, struct statfs *statfs)
  * @note Function can be used only by file system or driver code.
  *
  * @param path          path to file
- * @param mode          file open mode
+ * @param flags         flags
  * @param file          pointer to file object
  *
  * @return One of @ref errno value.
@@ -2583,7 +2583,7 @@ static inline int sys_statfs(const char *path, struct statfs *statfs)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_RDWR, &file) == ESUCC) {
                // ...
 
                sys_fclose(file);
@@ -2597,7 +2597,7 @@ static inline int sys_statfs(const char *path, struct statfs *statfs)
  * @see sys_fclose()
  */
 //==============================================================================
-extern int sys_fopen(const char *path, const char *mode, kfile_t **file);
+extern int sys_fopen(const char *path, int flags, kfile_t **file);
 
 //==============================================================================
 /**

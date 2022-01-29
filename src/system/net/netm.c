@@ -368,26 +368,31 @@ int _net_ifrm(const char *netname)
  * @brief Function list network interfaces.
  * @param netname       pointer to array of network names
  * @param netname_len   size of destination array
+ * @param count         number of interfaces
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_iflist(char *netname[], size_t netname_len)
+int _net_iflist(char *netname[], size_t netname_len, size_t *count)
 {
         int err = EINVAL;
 
-        if (netname && netname_len) {
+        if (netname && netname_len && count) {
 
                 memset(netname, 0, netname_len * sizeof(*netname));
 
                 err = sys_mutex_lock(netm_mutex, _MAX_DELAY_MS);
                 if (!err) {
 
+                        size_t n = 0;
                         size_t idx = 0;
                         for (size_t i = 0; i < ARRAY_SIZE(net_list); i++) {
                                 if (net_list[i].netname && (idx < netname_len)) {
                                         netname[idx++] = (char*)net_list[i].netname;
+                                        n++;
                                 }
                         }
+
+                        *count = n;
 
                         sys_mutex_unlock(netm_mutex);
                 }

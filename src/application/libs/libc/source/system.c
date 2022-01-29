@@ -89,15 +89,15 @@ int system(const char *command)
                 getcwd(cwd, CWDLEN);
 
                 process_attr_t attr = {
-                      .f_stdin  = stdin,
-                      .f_stdout = stdout,
-                      .f_stderr = stderr,
-                      .p_stdin  = NULL,
-                      .p_stdout = NULL,
-                      .p_stderr = NULL,
-                      .cwd      = cwd,
-                      .priority = PRIORITY_NORMAL,
-                      .detached = false
+                      .fd_stdin  = 0,
+                      .fd_stdout = 1,
+                      .fd_stderr = 2,
+                      .p_stdin   = NULL,
+                      .p_stdout  = NULL,
+                      .p_stderr  = NULL,
+                      .cwd       = cwd,
+                      .priority  = PRIORITY_NORMAL,
+                      .detached  = false
                 };
 
                 process_wait(process_create(cmd, &attr), &status, MAX_DELAY_MS);

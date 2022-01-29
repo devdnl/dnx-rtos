@@ -98,11 +98,11 @@ int main(int argc, char *argv[])
 
         process_attr_t attr;
         memset(&attr, 0, sizeof(attr));
-        attr.cwd      = global->cwd;
-        attr.f_stdin  = stdin;
-        attr.f_stdout = stdout;
-        attr.f_stderr = stderr;
-        attr.detached = false;
+        attr.cwd       = global->cwd;
+        attr.fd_stdin  = STDIN_FILENO;
+        attr.fd_stdout = STDOUT_FILENO;
+        attr.fd_stderr = STDERR_FILENO;
+        attr.detached  = false;
 
         pid_t pid = process_create(global->cmd, &attr);
         if (pid) {
