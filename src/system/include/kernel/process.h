@@ -85,6 +85,7 @@ typedef struct {
 ==============================================================================*/
 extern void *_global;
 extern int   _errno;
+extern void *_app_ctx;
 
 /*==============================================================================
   Exported function prototypes

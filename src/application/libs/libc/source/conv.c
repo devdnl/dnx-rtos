@@ -715,7 +715,7 @@ struct tm *_libc_localtime_r(const time_t *timer, struct tm *tmbuf)
 //==============================================================================
 struct tm *gmtime(const time_t *timer)
 {
-        return _libc_gmtime_r(timer, &_libc_tmbuf);
+        return _libc_gmtime_r(timer, &(((_libc_app_ctx_t*)(*_libc_app_ctx))->_tmbuf));
 }
 
 //==============================================================================
@@ -759,7 +759,7 @@ struct tm *gmtime_r(const time_t *timer, struct tm *tm)
 //==============================================================================
 struct tm *localtime(const time_t *timer)
 {
-        return _libc_localtime_r(timer, &_libc_tmbuf);
+        return _libc_localtime_r(timer, &(((_libc_app_ctx_t*)(*_libc_app_ctx))->_tmbuf));
 }
 
 //==============================================================================

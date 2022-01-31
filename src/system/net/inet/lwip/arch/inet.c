@@ -484,7 +484,7 @@ int INET_ifinit(void **ctx, const char *if_path)
 
                 inet->thread_run = true;
 
-                int ferr = sys_fopen(if_path, "r+", &inet->if_file);
+                int ferr = sys_fopen(if_path, O_RDWR, &inet->if_file);
                 int merr = sys_mutex_create(KMTX_TYPE_RECURSIVE, &inet->access);
                 int terr = sys_thread_create(network_interface_thread, &attr, inet, &inet->if_thread);
 

@@ -537,7 +537,7 @@ __attribute__((section (".syscall"))) int syscall(syscall_t syscall, va_list arg
                 _assert(syscallrq.client_proc);
                 _assert(is_tid_in_range(syscallrq.client_proc, syscallrq.client_thread));
 
-                int err = syscall_do(&syscallrq);
+                err = syscall_do(&syscallrq);
                 if (err) _errno = err;
         }
 
@@ -610,8 +610,9 @@ static int syscall_getruntimectx(syscallrq_t *rq)
 {
         GETARG(_dnxrtctx_t*, ctx);
 
-        ctx->global_ref = &_global;
-        ctx->errno_ref  = &_errno;
+        ctx->global_ref  = &_global;
+        ctx->errno_ref   = &_errno;
+        ctx->app_ctx_ref = &_app_ctx;
 
         return 0;
 }
@@ -1359,7 +1360,7 @@ static int syscall_malloc(syscallrq_t *rq)
                 if (err) {
                         _kfree(_MM_PROG, &mem);
                 } else {
-                        *blk = mem;
+                        *blk = &cast(res_header_t*, mem)[1];
                 }
         }
 
@@ -1387,7 +1388,7 @@ static int syscall_zalloc(syscallrq_t *rq)
                 if (err) {
                         _kfree(_MM_PROG, &mem);
                 } else {
-                        *blk = mem;
+                        *blk = &cast(res_header_t*, mem)[1];
                 }
         }
 

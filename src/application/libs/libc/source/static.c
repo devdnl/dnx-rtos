@@ -52,34 +52,8 @@
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-/** buffer used to store temporary time structure */
-struct tm _libc_tmbuf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-/** buffer used to store converted time to string */
-char _libc_timestr[32];
-
-unsigned int _libc_seed = 123456789;
-
-/*
- * Those variables are switched by kernel according to current process/thread.
- */
-static struct _libc_file libc_stdin = {
-        .fd = 0,
-};
-
-static struct _libc_file libc_stdout = {
-        .fd = 1,
-};
-
-static struct _libc_file libc_stderr = {
-        .fd = 2,
-};
-
-struct _libc_file *_libc_stdin  = &libc_stdin;
-struct _libc_file *_libc_stdout = &libc_stdout;
-struct _libc_file *_libc_stderr = &libc_stderr;
-
 int   *_libc_errno;
+void **_libc_app_ctx;
 void **_libc_global;
 
 /*==============================================================================

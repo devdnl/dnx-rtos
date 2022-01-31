@@ -50,6 +50,7 @@ extern "C" {
 #include <stdarg.h>
 #include <libc/source/syscall.h>
 #include <errno.h>
+#include <libc/source/common.h>
 
 /*==============================================================================
   Exported macros
@@ -232,11 +233,10 @@ extern "C" {
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
         _PROGMAN_CXX int __builtin_app_##_name_##_main(argc, argv)
 
-#define stdin  (_libc_stdin)
-#define stdout (_libc_stdout)
-#define stderr (_libc_stderr)
+#define stdin  (((_libc_app_ctx_t*)(*_libc_app_ctx))->_stdin)
+#define stdout (((_libc_app_ctx_t*)(*_libc_app_ctx))->_stdout)
+#define stderr (((_libc_app_ctx_t*)(*_libc_app_ctx))->_stderr)
 #define global ((struct _GVAR_STRUCT_NAME*)(*_libc_global))
-
 
 /*==============================================================================
   Exported object types
@@ -246,16 +246,8 @@ typedef struct _libc_file FILE;
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-/** @brief Standard input file (one for each application) */
-extern FILE *_libc_stdin;
-
-/** @brief Standard output file (one for each application) */
-extern FILE *_libc_stdout;
-
-/** @brief Standard error file (one for each application) */
-extern FILE *_libc_stderr;
-
 extern void **_libc_global;
+extern void **_libc_app_ctx;
 
 /*==============================================================================
   Exported functions

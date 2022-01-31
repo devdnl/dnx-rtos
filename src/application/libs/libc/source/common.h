@@ -36,6 +36,7 @@ Detailed Doxygen description.
   Include files
 ==============================================================================*/
 #include <stdbool.h>
+#include <libc/include/sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,14 +62,27 @@ struct _libc_file {
         } flag;
 };
 
+typedef struct {
+        /** buffer used to store temporary time structure */
+        struct tm _tmbuf;
+
+        /** buffer used to store converted time to string */
+        char _timestr[32];
+
+        /** rand() seed */
+        unsigned int _rand_seed;
+
+        struct _libc_file *_stdin;
+        struct _libc_file *_stdout;
+        struct _libc_file *_stderr;
+} _libc_app_ctx_t;
+
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-extern struct _libc_file *_libc_stdin;
-extern struct _libc_file *_libc_stdout;
-extern struct _libc_file *_libc_stderr;
 extern int   *_libc_errno;
 extern void **_libc_global;
+extern void **_libc_app_ctx;
 
 /*==============================================================================
   Exported functions

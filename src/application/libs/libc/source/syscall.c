@@ -52,6 +52,7 @@ typedef int (*syscall_func)(_libc_syscall_t, va_list);
  */
 typedef struct {
         void **global_ref;
+        void **app_ctx_ref;
         int   *errno_ref;
 } dnxrtctx_t;
 
@@ -109,13 +110,11 @@ int _libc_syscall(_libc_syscall_t syscall, ...)
          */
         if (_libc_global == NULL) {
                 dnxrtctx_t dnxctx;
-                dnxctx.global_ref = NULL;
-                dnxctx.errno_ref  = NULL;
-
                 int err = dnx_syscall_vargs(_LIBC_SYS_GETRUNTIMECTX, &dnxctx);
                 if (!err) {
-                        _libc_global = dnxctx.global_ref;
-                        _libc_errno  = dnxctx.errno_ref;
+                        _libc_global  = dnxctx.global_ref;
+                        _libc_errno   = dnxctx.errno_ref;
+                        _libc_app_ctx = dnxctx.app_ctx_ref;
                 }
         }
 

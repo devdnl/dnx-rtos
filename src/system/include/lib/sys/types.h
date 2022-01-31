@@ -348,6 +348,7 @@ typedef struct {
  */
 typedef struct {
         void **global_ref;
+        void **app_ctx_ref;
         int   *errno_ref;
 } _dnxrtctx_t;
 
