@@ -833,9 +833,9 @@ static int syscall_closedir(syscallrq_t *rq)
 static int syscall_readdir(syscallrq_t *rq)
 {
         GETARG(kdir_t *, dir);
-        GETARG(dirent_t *, dirent);
+        GETARG(dirent_t **, dirent);
 
-        return _vfs_readdir(dir, &dirent);
+        return _vfs_readdir(dir, dirent);
 }
 
 //==============================================================================
