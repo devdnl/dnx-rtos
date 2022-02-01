@@ -749,11 +749,11 @@ static bool start_program(char *master, char *slave, char *std_in,
         }
 
         // clear stdin
-        if (global->input == stdin) {
-                ioctl(fileno(global->input), IOCTL_VFS__NON_BLOCKING_RD_MODE);
-                while (getc(global->input) != EOF);
-                ioctl(fileno(global->input), IOCTL_VFS__DEFAULT_RD_MODE);
-        }
+//        if (global->input == stdin) {
+//                ioctl(fileno(global->input), IOCTL_VFS__NON_BLOCKING_RD_MODE);
+//                while (getc(global->input) != EOF);
+//                ioctl(fileno(global->input), IOCTL_VFS__DEFAULT_RD_MODE);
+//        }
 
 free_resources:
         if (fout) {

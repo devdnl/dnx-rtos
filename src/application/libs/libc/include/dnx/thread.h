@@ -282,12 +282,7 @@ typedef struct {
  * @see process_kill()
  */
 //==============================================================================
-static inline pid_t process_create(const char *cmd, const process_attr_t *attr)
-{
-        pid_t pid = 0;
-        int err = _libc_syscall(_LIBC_SYS_PROCESSCREATE, cmd, attr, &pid);
-        return err ? 0 : pid;
-}
+extern pid_t process_create(const char *cmd, const process_attr_t *attr);
 
 //==============================================================================
 /**

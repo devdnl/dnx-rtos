@@ -277,7 +277,7 @@ static int transmit_file(struct thread *self, SOCKET *socket)
         FILE *file = fopen(self->cmd_args, "r");
         if (file) {
                 struct stat stat;
-                err = fstat(file, &stat);
+                err = fstat(fileno(file), &stat);
 
                 while (!err && (stat.st_size > 0)) {
 

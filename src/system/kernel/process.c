@@ -101,8 +101,8 @@ struct _process {
         dchain_t         desctab;               //!< objects accessible by descriptor
         void            *globals;               //!< address to process's global variables
         void            *app_ctx;               //!< application context (user, stdlib reference)
-        res_header_t    *mem_list;              //!< list of used resources -- use btree for memory blocks (only)
-        u32_t            mem_list_size;         //!< size of resources list
+        res_header_t    *res_list;              //!< list of used resources
+        u32_t            res_list_size;         //!< size of resources list
         char            *cwd;                   //!< current working path
         const _program_entry_t *pdata;          //!< program data
         char            **argv;                 //!< program arguments
@@ -115,6 +115,8 @@ struct _process {
 
 typedef struct {
         void            *func;
+        void            (*at_init)(void*);
+        void            *at_init_ctx;
         struct _process *proc;
         task_data_t     *task_data;
         void            *arg;
@@ -135,7 +137,7 @@ static int  resource_destroy(res_header_t *resource);
 static int  argtab_create(const char *str, u8_t *argc, char **argv[]);
 static void argtab_destroy(char **argv);
 static int  find_program(const char *name, const _program_entry_t **prog);
-static int  allocate_process_globals(_process_t *proc, const _program_entry_t *usrprog);
+static int  allocate_process_globals(_process_t *proc, size_t app_ctx_size, const _program_entry_t *usrprog);
 static int  process_apply_attributes(_process_t *proc, const _process_attr_t *attr);
 static void process_get_stat(_process_t *proc, _process_stat_t *stat);
 static void process_move_list(_process_t *proc, _process_t **list_from, _process_t **list_to);
@@ -164,15 +166,6 @@ static kmtx_t          *kworker_mtx;
 /*==============================================================================
   Exported object definitions
 ==============================================================================*/
-
-/*
- * TODO
- * - list of shared objects (mutex, semaphore, queue)
- * - try to divide ram to half: system, application
- * - RAM fs in separated RAM e.g. quadspi ram? (option)
- * - memory blocks in btree
- */
-
 /* CPU total time */
 u32_t _CPU_total_time = 0;
 
@@ -265,7 +258,7 @@ int _process_create(const char *cmd, const _process_attr_t *attr, pid_t *pid)
                 err = find_program(proc->argv[0], &proc->pdata);
                 if (err) goto finish;
 
-                err = allocate_process_globals(proc, proc->pdata);
+                err = allocate_process_globals(proc, attr->app_ctx_size, proc->pdata);
                 if (err) goto finish;
 
                 err = get_pid(&proc->pid);
@@ -290,6 +283,8 @@ int _process_create(const char *cmd, const _process_attr_t *attr, pid_t *pid)
                         task_args->func = proc->pdata->main;
                         task_args->proc = proc;
                         task_args->task_data = &proc->taskdata[0];
+                        task_args->at_init = attr->at_init;
+                        task_args->at_init_ctx = attr->at_init_ctx;
 
                         err = _task_create(process_code,
                                            proc->pdata->name,
@@ -465,17 +460,17 @@ void _process_exit(_process_t *proc, int status)
                 kfile_t *stderr = cast(kfile_t*, proc->desctab.resource[2]);
 
                 va_list none;
-                if (stdin) {
+                if (stdin and (stdin->header.type == RES_TYPE_FILE)) {
                         _vfs_vfioctl(stdin, IOCTL_VFS__DEFAULT_RD_MODE, none);
                         _vfs_vfioctl(stdin, IOCTL_VFS__DEFAULT_WR_MODE, none);
                 }
 
-                if (stdout) {
+                if (stdout and (stdout->header.type == RES_TYPE_FILE)) {
                         _vfs_vfioctl(stdout, IOCTL_VFS__DEFAULT_RD_MODE, none);
                         _vfs_vfioctl(stdout, IOCTL_VFS__DEFAULT_WR_MODE, none);
                 }
 
-                if (stderr) {
+                if (stderr and (stderr->header.type == RES_TYPE_FILE)) {
                         _vfs_vfioctl(stderr, IOCTL_VFS__DEFAULT_RD_MODE, none);
                         _vfs_vfioctl(stderr, IOCTL_VFS__DEFAULT_WR_MODE, none);
                 }
@@ -972,14 +967,14 @@ int _process_register_resource(_process_t *proc, res_header_t *resource)
                 kmtx_t *mtx = (proc == _kworker_proc) ? kworker_mtx : process_mtx;
 
                 ATOMIC(mtx) {
-                        if (proc->mem_list == NULL) {
-                                proc->mem_list = resource;
+                        if (proc->res_list == NULL) {
+                                proc->res_list = resource;
                         } else {
-                                resource->next = proc->mem_list;
-                                proc->mem_list = resource;
+                                resource->next = proc->res_list;
+                                proc->res_list = resource;
                         }
 
-                        proc->mem_list_size++;
+                        proc->res_list_size++;
                 }
 
                 return ESUCC;
@@ -1010,19 +1005,19 @@ int _process_release_resource(_process_t *proc, res_header_t *resource, res_type
 
                 ATOMIC(mtx) {
                         res_header_t *prev     = NULL;
-                        int           max_deep = proc->mem_list_size + 1;
+                        int           max_deep = proc->res_list_size + 1;
 
-                        foreach_resource(curr, proc->mem_list) {
+                        foreach_resource(curr, proc->res_list) {
                                 if (curr == resource) {
                                         if (curr->type == type) {
-                                                if (proc->mem_list == curr) {
-                                                        proc->mem_list = proc->mem_list->next;
+                                                if (proc->res_list == curr) {
+                                                        proc->res_list = proc->res_list->next;
                                                 } else {
                                                         prev->next = curr->next;
                                                 }
 
                                                 obj_to_destroy = curr;
-                                                proc->mem_list_size--;
+                                                proc->res_list_size--;
                                         } else {
                                                 err = EFAULT;
                                         }
@@ -1508,11 +1503,15 @@ bool _process_is_consistent(void)
                         dchain_t *chain = &p->desctab;
                         while (chain and sanity_ok) {
                                 for (size_t i = 0; sanity_ok and (i < ARRAY_SIZE(chain->resource)); i++) {
-                                        if (not _mm_is_object_in_heap(chain->resource[i])) {
-                                                sanity_ok = false;
-                                                break;
+                                        if (chain->resource[i]) {
+                                                if (not _mm_is_object_in_heap(chain->resource[i])) {
+                                                        sanity_ok = false;
+                                                        goto end;
+                                                }
                                         }
                                 }
+
+                                chain = chain->next;
                         }
 
                         sanity_ok = (p->pdata->globals_size && (*p->pdata->globals_size > 0))
@@ -1520,15 +1519,19 @@ bool _process_is_consistent(void)
                         if (!sanity_ok) goto end;
 
                         size_t n = 0;
-                        size_t m = p->mem_list_size;
-                        res_header_t *res = p->mem_list;
+                        size_t m = p->res_list_size;
+                        res_header_t *res = p->res_list;
                         while (res && m) {
 
-                                // FIXME on mem list should be only MEMORY resource type
                                 sanity_ok =  _mm_is_object_in_heap(res)
                                           && (res->self == res)
                                           && (  (res->type == RES_TYPE_DIR)
                                              || (res->type == RES_TYPE_MEMORY)
+                                             || (res->type == RES_TYPE_SEMAPHORE)
+                                             || (res->type == RES_TYPE_FILE)
+                                             || (res->type == RES_TYPE_FLAG)
+                                             || (res->type == RES_TYPE_MUTEX)
+                                             || (res->type == RES_TYPE_QUEUE)
                                              || (res->type == RES_TYPE_SOCKET) );
                                 if (!sanity_ok) goto end;
 
@@ -1537,7 +1540,7 @@ bool _process_is_consistent(void)
                                 m--;
                         }
 
-                        sanity_ok = (n == p->mem_list_size) && (m == 0);
+                        sanity_ok = (n == p->res_list_size) && (m == 0);
                         if (!sanity_ok) goto end;
 
                         sanity_ok = (p->cwd != NULL);
@@ -1802,6 +1805,10 @@ static void process_code(void *arg)
         _task_set_storage_pointer(NULL, STORAGE_IDX_TASK_DATA, args.task_data);
         _task_yield();
 
+        if (args.at_init) {
+                args.at_init(args.at_init_ctx);
+        }
+
         process_func_t func = args.func;
         args.task_data->status = func(args.proc->argc, args.proc->argv);
 
@@ -1892,8 +1899,8 @@ static void process_destroy_all_resources(_process_t *proc)
                 proc->argc = 0;
         }
 
-        // close files, directories, sockets, etc FIXME to remove in future after adding full descriptors
-        res_header_t *resource_curr = proc->mem_list;
+        // close files, directories, sockets
+        res_header_t *resource_curr = proc->res_list;
         res_header_t *resource_prev = NULL;
         res_header_t *resource_next = NULL;
 
@@ -1902,8 +1909,8 @@ static void process_destroy_all_resources(_process_t *proc)
 
                 if (resource_curr->type != RES_TYPE_MEMORY) {
 
-                        if (resource_curr == proc->mem_list) {
-                                proc->mem_list = resource_next;
+                        if (resource_curr == proc->res_list) {
+                                proc->res_list = resource_next;
                         } else {
                                 if (resource_prev) {
                                         resource_prev->next = resource_next;
@@ -1922,7 +1929,7 @@ static void process_destroy_all_resources(_process_t *proc)
                 resource_curr = resource_next;
         }
 
-        // free all objects (files, dirs, mutexes, semaphores, queues, sockets)
+        // free all objects accessed from descriptor (files, dirs, mutexes, semaphores, queues, sockets)
         dchain_t *chain = &proc->desctab;
         while (chain) {
                 for (size_t i = 0; i < ARRAY_SIZE(chain->resource); i++) {
@@ -1939,9 +1946,9 @@ static void process_destroy_all_resources(_process_t *proc)
 
 
         // free all memory regions
-        while (proc->mem_list) {
-                res_header_t *resource = proc->mem_list;
-                proc->mem_list = resource->next;
+        while (proc->res_list) {
+                res_header_t *resource = proc->res_list;
+                proc->res_list = resource->next;
 
                 int err = resource_destroy(resource);
                 if (err != ESUCC) {
@@ -1959,8 +1966,8 @@ static void process_destroy_all_resources(_process_t *proc)
         _shm_detach_anywhere(proc->pid);
 #endif
 
-        proc->mem_list_size = 0;
-        proc->mem_list = NULL;
+        proc->res_list_size = 0;
+        proc->res_list = NULL;
         proc->globals  = NULL;
 }
 
@@ -1991,11 +1998,27 @@ static void process_get_stat(_process_t *proc, _process_stat_t *stat)
                 }
         }
 
-        // FIXME on mem list will be only memory
-        foreach_resource(res, proc->mem_list) {
+        foreach_resource(res, proc->res_list) {
                 switch (res->type) {
+                case RES_TYPE_FILE:
+                        stat->files_count++;
+                        break;
+
                 case RES_TYPE_DIR:
                         stat->dir_count++;
+                        break;
+
+                case RES_TYPE_MUTEX:
+                        stat->mutexes_count++;
+                        break;
+
+                case RES_TYPE_QUEUE:
+                        stat->queue_count++;
+                        break;
+
+                case RES_TYPE_FLAG:
+                case RES_TYPE_SEMAPHORE:
+                        stat->semaphores_count++;
                         break;
 
                 case RES_TYPE_MEMORY:
@@ -2088,81 +2111,69 @@ static int process_apply_attributes(_process_t *proc, const _process_attr_t *att
                 }
 
                 /*
-                 * Apply stdin settings
-                 * - if fd_stdin is set then function use this resource as reference
-                 * - if fd_stdin is NULL and p_stdin is NULL then function set stdin as NULL
-                 * - if fd_stdin is NULL and p_stdin is valid then function open new file and use as stdin
+                 * Create stdin/out/err descriptors
                  */
-                if (attr->fd_stdin >= 0) {
-                        if (active_process->desctab.resource[0]) {
-                                _vfs_fopen_ref(active_process->desctab.resource[0]->self);
-                                proc->desctab.resource[0] = active_process->desctab.resource[0];
-                        }
+                struct vfs_path cpath;
+                cpath.CWD  = proc->cwd;
 
+                if (attr->fd_stdin >= 0) {
+                        res_header_t *res;
+                        if (_process_descriptor_get_resource(active_process, attr->fd_stdin, &res) == 0) {
+                                if (_vfs_fopen_ref(res->self) == 0) {
+                                        proc->desctab.resource[0] = res;
+                                }
+                        }
                 } else if (attr->p_stdin) {
-                        struct vfs_path cpath;
-                        cpath.CWD  = proc->cwd;
                         cpath.PATH = attr->p_stdin;
 
-                        kfile_t *stdin;
-                        err = _vfs_fopen(&cpath, O_CREAT | O_APPEND | O_RDWR, &stdin);
+                        kfile_t *file;
+                        err = _vfs_fopen(&cpath, O_RDONLY, &file);
                         if (!err) {
-                                proc->desctab.resource[0] = &stdin->header;
+                                int fd;
+                                err = _process_descriptor_allocate(proc, &fd, &file->header);
+                                if (err) goto finish;
                         } else {
                                 goto finish;
                         }
                 }
 
-                /*
-                 * Apply stdout settings
-                 * - if fd_stdout is set then function use this resource as reference
-                 * - if fd_stdout is NULL and p_stdout is NULL then function set stdout as NULL
-                 * - if fd_stdout is NULL and p_stdout is valid then function open new file and use as stdout
-                 * - if p_stdout is the same as p_stdin then function use stdin as reference of stdout
-                 */
                 if (attr->fd_stdout >= 0) {
-                        if (active_process->desctab.resource[1]) {
-                                _vfs_fopen_ref(active_process->desctab.resource[1]->self);
-                                proc->desctab.resource[1] = active_process->desctab.resource[1];
+                        res_header_t *res;
+                        if (_process_descriptor_get_resource(active_process, attr->fd_stdout, &res) == 0) {
+                                if (_vfs_fopen_ref(res->self) == 0) {
+                                        proc->desctab.resource[1] = res;
+                                }
                         }
-
                 } else if (attr->p_stdout) {
-                        struct vfs_path cpath;
-                        cpath.CWD  = proc->cwd;
                         cpath.PATH = attr->p_stdout;
 
-                        kfile_t *stdout;
-                        err = _vfs_fopen(&cpath, O_CREAT | O_APPEND | O_RDWR, &stdout);
+                        kfile_t *file;
+                        err = _vfs_fopen(&cpath, O_RDWR | O_APPEND, &file);
                         if (!err) {
-                                proc->desctab.resource[1] = &stdout->header;
+                                int fd;
+                                err = _process_descriptor_allocate(proc, &fd, &file->header);
+                                if (err) goto finish;
                         } else {
                                 goto finish;
                         }
                 }
 
-                /*
-                 * Apply stderr settings
-                 * - if fd_stderr is set then function use this resource as reference
-                 * - if fd_stderr is NULL and p_stderr is NULL then function set stderr as NULL
-                 * - if fd_stderr is NULL and p_stderr is valid then function open new file and use as stderr
-                 * - if p_stderr is the same as p_stdin then function use stdin as reference of stderr
-                 * - if p_stderr is the same as p_stdout then function use stdout as reference of stderr
-                 */
                 if (attr->fd_stderr >= 0) {
-                        if (active_process->desctab.resource[2]) {
-                                _vfs_fopen_ref(active_process->desctab.resource[2]->self);
-                                proc->desctab.resource[2] = active_process->desctab.resource[2];
+                        res_header_t *res;
+                        if (_process_descriptor_get_resource(active_process, attr->fd_stderr, &res) == 0) {
+                                if (_vfs_fopen_ref(res->self) == 0) {
+                                        proc->desctab.resource[2] = res;
+                                }
                         }
-
                 } else if (attr->p_stderr) {
-                        struct vfs_path cpath;
-                        cpath.CWD  = proc->cwd;
-                        cpath.PATH = attr->p_stderr;
+                        cpath.PATH = attr->p_stdout;
 
-                        kfile_t *stderr;
-                        err = _vfs_fopen(&cpath, O_CREAT | O_APPEND | O_RDWR, &stderr);
+                        kfile_t *file;
+                        err = _vfs_fopen(&cpath, O_RDWR | O_APPEND, &file);
                         if (!err) {
-                                proc->desctab.resource[2] = &stderr->header;
+                                int fd;
+                                err = _process_descriptor_allocate(proc, &fd, &file->header);
+                                if (err) goto finish;
                         } else {
                                 goto finish;
                         }
@@ -2621,13 +2632,14 @@ static int find_program(const char *name, const _program_entry_t **prog)
 /**
  * @brief  Function allocate global variables for selected process.
  *
- * @param  proc         process
- * @param  usrprog      program descriptor
+ * @param  proc                 process
+ * @param  app_ctx_size         size of application context
+ * @param  usrprog              program descriptor
  *
  * @return One of errno value.
  */
 //==============================================================================
-static int allocate_process_globals(_process_t *proc, const _program_entry_t *usrprog)
+static int allocate_process_globals(_process_t *proc, size_t app_ctx_size, const _program_entry_t *usrprog)
 {
         int err = ESUCC;
 
@@ -2642,14 +2654,15 @@ static int allocate_process_globals(_process_t *proc, const _program_entry_t *us
                 }
         }
 
-        // FIXME app ctx size should be set in different way
-        res_header_t *ctx;
-        err = _kzalloc(_MM_PROG, 1024, NULL,
-                       _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE,
-                       cast(void*, &ctx));
-        if (!err) {
-                proc->app_ctx = &ctx[1];
-                _process_register_resource(proc, ctx);
+        if (!err and (app_ctx_size > 0)) {
+                res_header_t *ctx;
+                err = _kzalloc(_MM_PROG, app_ctx_size, NULL,
+                               _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE,
+                               cast(void*, &ctx));
+                if (!err) {
+                        proc->app_ctx = &ctx[1];
+                        _process_register_resource(proc, ctx);
+                }
         }
 
         return err;

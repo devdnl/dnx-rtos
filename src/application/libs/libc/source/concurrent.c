@@ -31,6 +31,9 @@
 ==============================================================================*/
 #include <dnx/thread.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+#include <sys/stat.h>
 #include "libc/source/syscall.h"
 
 /*==============================================================================
@@ -52,6 +55,24 @@ struct _libc_queue {
         int fd;
 };
 
+/**
+ * @brief Process attributes passed to the syscall.
+ */
+typedef struct {
+        void       (*at_init)(void*);   //!< function called at init before main()
+        void       *at_init_ctx;        //!< context of at_init function
+        const char *cwd;                //!< working directory path
+        size_t      app_ctx_size;       //!< size of application context object
+        int         fd_stdin;           //!< stdin file descriptor (major)
+        int         fd_stdout;          //!< stdin file descriptor (major)
+        int         fd_stderr;          //!< stdin file descriptor (major)
+        const char *p_stdin;            //!< stdin  file path (minor)
+        const char *p_stdout;           //!< stdout file path (minor)
+        const char *p_stderr;           //!< stderr file path (minor)
+        i16_t       priority;           //!< process priority
+        bool        detached;           //!< independent process (no parent)
+} _syscall_process_attr_t;
+
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
@@ -71,6 +92,64 @@ struct _libc_queue {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  Setup stdio by libc.
+ *
+ * @param  arg          context argument
+ */
+//==============================================================================
+static void process_at_init(void *arg)
+{
+        (void)arg;
+        struct stat buf;
+
+        if (fstat(0, &buf) == 0) {
+                stdin = fdopen(0, "r");
+        }
+
+        if (fstat(1, &buf) == 0) {
+                stdout = fdopen(1, "r");
+        }
+
+        if (fstat(2, &buf) == 0) {
+                stderr = fdopen(2, "r");
+        }
+}
+
+//==============================================================================
+/**
+ * @brief  Create new process.
+ *
+ * @param  cmd          command
+ * @param  attr         process attributes
+ *
+ * @return On success PID is returned, otherwise 0.
+ */
+//==============================================================================
+pid_t process_create(const char *cmd, const process_attr_t *attr)
+{
+        pid_t pid = 0;
+
+        _syscall_process_attr_t sys_attr;
+        sys_attr.fd_stdin     = attr->fd_stdin;
+        sys_attr.fd_stdout    = attr->fd_stdout;
+        sys_attr.fd_stderr    = attr->fd_stderr;
+        sys_attr.p_stdin      = attr->p_stdin;
+        sys_attr.p_stdout     = attr->p_stdout;
+        sys_attr.p_stderr     = attr->p_stderr;
+        sys_attr.cwd          = attr->cwd;
+        sys_attr.detached     = attr->detached;
+        sys_attr.priority     = attr->priority;
+        sys_attr.at_init      = process_at_init;
+        sys_attr.at_init_ctx  = (void*)attr;
+        sys_attr.app_ctx_size = sizeof(_libc_app_ctx_t);
+
+        static_assert(sizeof(_libc_app_ctx_t) < 128, "_libc_app_ctx_t is bigger than 128 bytes!");
+
+        int err = _libc_syscall(_LIBC_SYS_PROCESSCREATE, cmd, &sys_attr, &pid);
+        return err ? 0 : pid;
+}
 
 //==============================================================================
 /**

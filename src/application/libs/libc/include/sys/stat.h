@@ -306,9 +306,9 @@ static inline int stat(const char *pathname, struct stat *buf)
 /**
  * @brief Function gets file information.
  *
- * The fstat() function return information about a file pointed by <i>file</i>.
+ * The fstat() function return information about a descriptor <i>fd</i>.
  *
- * @param file          file object
+ * @param fd            file descriptor
  * @param buf           file's information
  *
  * @exception | @ref EINVAL
@@ -330,7 +330,7 @@ static inline int stat(const char *pathname, struct stat *buf)
         FILE *file = fopen("/foo/bar", "r");
         if (file) {
                 struct stat info;
-                if (fstat(file, &info) == 0) {
+                if (fstat(fileno(file), &info) == 0) {
                         // ...
                 } else {
                         perror("stat()");
@@ -347,10 +347,10 @@ static inline int stat(const char *pathname, struct stat *buf)
    @endcode
  */
 //==============================================================================
-static inline int fstat(FILE *file, struct stat *buf)
+static inline int fstat(int fd, struct stat *buf)
 {
-        extern int _libc_fstat(FILE *file, struct stat *buf);
-        return _libc_fstat(file , buf);
+        extern int _libc_fstat(int fd, struct stat *buf);
+        return _libc_fstat(fd , buf);
 }
 
 #ifdef __cplusplus

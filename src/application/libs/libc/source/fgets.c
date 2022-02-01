@@ -86,7 +86,7 @@ char *fgets_buffered(char *str, int size, FILE *stream, char *buf, size_t buflen
         }
 
         struct stat file_stat;
-        if (fstat(stream, &file_stat) == 0) {
+        if (fstat(fileno(stream), &file_stat) == 0) {
 
                 char *p = str;
                 int   c = EOF;

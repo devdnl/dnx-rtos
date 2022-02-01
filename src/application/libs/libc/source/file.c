@@ -217,6 +217,38 @@ FILE *_libc_fopen(const char *path, const char *mode)
 
 //==============================================================================
 /**
+ * @brief  Function open file by using selected descriptor.
+ *
+ * @param  fd           file descriptor
+ * @param  mode         file mode
+ *
+ * @return Upon successful completion fdopen(), return a <b>FILE</b> pointer.
+ * Otherwise, @ref NULL is returned and @ref errno is set to indicate the
+ * error.
+ */
+//==============================================================================
+FILE *_libc_fdopen(int fd, const char *mode)
+{
+        (void)mode;
+
+        if (fd < 0) {
+                return NULL;
+        }
+
+        FILE *f = _libc_malloc(sizeof(*f));
+        if (!f) {
+                return NULL;
+        }
+
+        f->tmppath = NULL;
+        f->flag.eof = false;
+        f->flag.error = false;
+        f->fd = fd;
+        return f;
+}
+
+//==============================================================================
+/**
  * @brief Function creates temporary file.
  *
  * The routine exist in dnx RTOS only for compatible reasons. Function in this
@@ -751,9 +783,9 @@ int _libc_rename(const char *old_name, const char *new_name)
 /**
  * @brief Function gets file information.
  *
- * The fstat() function return information about a file pointed by <i>file</i>.
+ * The fstat() function return information about a descriptor <i>fd</i>.
  *
- * @param file          file object
+ * @param fd            file descriptor
  * @param buf           file's information
  *
  * @exception | @ref EINVAL
@@ -768,10 +800,10 @@ int _libc_rename(const char *old_name, const char *new_name)
  * is set appropriately.
  */
 //==============================================================================
-int _libc_fstat(FILE *file, struct stat *buf)
+int _libc_fstat(int fd, struct stat *buf)
 {
-        if (file) {
-                int err = _libc_syscall(_LIBC_SYS_FSTAT, file->fd, buf);
+        if (fd >= 0) {
+                int err = _libc_syscall(_LIBC_SYS_FSTAT, &fd, buf);
                 return err ? -1 : 0;
         } else {
                 errno = EINVAL;

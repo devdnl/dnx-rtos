@@ -490,15 +490,18 @@ const char *const dnx_RTOS_platform_name = _CPUCTL_PLATFORM_NAME;
 int _syscall_init()
 {
         static const _process_attr_t attr = {
-                .fd_stdin  = -1,
-                .fd_stdout = -1,
-                .fd_stderr = -1,
-                .p_stdin   = NULL,
-                .p_stdout  = NULL,
-                .p_stderr  = NULL,
-                .cwd       = "/",
-                .priority  = _PRIORITY_NORMAL,
-                .detached  = true
+                .at_init      = NULL,
+                .at_init_ctx  = NULL,
+                .cwd          = "/",
+                .app_ctx_size = 128,
+                .fd_stdin     = -1,
+                .fd_stdout    = -1,
+                .fd_stderr    = -1,
+                .p_stdin      = NULL,
+                .p_stdout     = NULL,
+                .p_stderr     = NULL,
+                .priority     = _PRIORITY_NORMAL,
+                .detached     = true,
         };
 
         int err = _process_create("kworker", &attr, NULL);

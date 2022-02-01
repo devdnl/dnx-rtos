@@ -327,6 +327,24 @@ static inline FILE *fopen(const char *path, const char *mode)
 
 //==============================================================================
 /**
+ * @brief  Function open file by using selected descriptor.
+ *
+ * @param  fd           file descriptor
+ * @param  mode         file mode (not used, mode the same as open() does)
+ *
+ * @return Upon successful completion fdopen(), return a <b>FILE</b> pointer.
+ * Otherwise, @ref NULL is returned and @ref errno is set to indicate the
+ * error.
+ */
+//==============================================================================
+static inline FILE *fdopen(int fd, const char *mode)
+{
+        extern FILE *_libc_fdopen(int fd, const char *mode);
+        return _libc_fdopen(fd, mode);
+}
+
+//==============================================================================
+/**
  * @brief Function closes selected file.
  *
  * The fclose() function closes the created stream <i>file</i>.

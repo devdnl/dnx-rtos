@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
                 if (global->disc) {
 
                         struct stat bufstat;
-                        if (fstat(global->disc, &bufstat) == 0) {
+                        if (fstat(fileno(global->disc), &bufstat) == 0) {
 
                                 bool args_correct = true;
 

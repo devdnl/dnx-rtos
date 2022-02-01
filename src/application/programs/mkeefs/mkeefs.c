@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
                 } else {
                         struct stat buf;
                         memset(&buf, 0, sizeof(struct stat));
-                        fstat(global->file, &buf);
+                        fstat(fileno(global->file), &buf);
                         global->mem_size = buf.st_size;
 
                         if (global->mem_size >= 8388352) {

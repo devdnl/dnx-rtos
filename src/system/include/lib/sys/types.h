@@ -283,13 +283,16 @@ typedef struct {
  * The type is used to configure process settings.
  */
 typedef struct {
-        int         fd_stdin;           //!< stdin  file object pointer (major)
-        int         fd_stdout;          //!< stdout file object pointer (major)
-        int         fd_stderr;          //!< stderr file object pointer (major)
+        void       (*at_init)(void*);   //!< function called at init before main()
+        void       *at_init_ctx;        //!< context of at_init function
+        const char *cwd;                //!< working directory path
+        size_t      app_ctx_size;       //!< size of application context object
+        int         fd_stdin;           //!< stdin file descriptor (major)
+        int         fd_stdout;          //!< stdin file descriptor (major)
+        int         fd_stderr;          //!< stdin file descriptor (major)
         const char *p_stdin;            //!< stdin  file path (minor)
         const char *p_stdout;           //!< stdout file path (minor)
         const char *p_stderr;           //!< stderr file path (minor)
-        const char *cwd;                //!< working directory path
         i16_t       priority;           //!< process priority
         bool        detached;           //!< independent process (no parent)
 } _process_attr_t;
