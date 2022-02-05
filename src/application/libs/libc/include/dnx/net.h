@@ -222,7 +222,6 @@ extern "C" {
 #include <stdint.h>
 #include <libc/source/syscall.h>
 #include <stddef.h>
-//#include <net/netm.h>   // to remove in future
 #include <dnx/misc.h>
 #include <errno.h>
 
@@ -318,9 +317,6 @@ typedef void NET_generic_config_t;
 
 /** Generic network status. This type accept all network family statuses. */
 typedef void NET_generic_status_t;
-
-/** Socket object definition. Protected object fields. */
-typedef struct ksocket ksocket_t;
 
 /*------------------------------------------------------------------------------
   INET NETWORK FAMILY

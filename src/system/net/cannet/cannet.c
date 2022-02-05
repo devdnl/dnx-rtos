@@ -179,7 +179,7 @@ typedef struct {
         kfile_t *if_file;
         kmtx_t *mutex;
         tid_t if_thread;
-        NET_CANNET_state_t state;
+        NETM_CANNET_state_t state;
         u16_t addr;
         CANNET_socket_t *sockets[__NETWORK_CANNET_MAX_SOCKETS__];
 
@@ -329,7 +329,7 @@ static int input_thread(void *arg)
                 CAN_msg_t can_frame;
                 int err = sys_ioctl(cannet->if_file, IOCTL_CAN__RECV_MSG, &can_frame);
                 if (!err) {
-                        if (cannet->state == NET_CANNET_STATE__UP) {
+                        if (cannet->state == NETM_CANNET_STATE__UP) {
 
                                 if (can_frame.extended_ID and (can_frame.data_length >= 1)
                                    and not can_frame.remote_transmission) {
@@ -378,7 +378,7 @@ int CANNET_ifinit(void **ctx, const char *if_path)
                         sys_ioctl(cannet->if_file, IOCTL_CAN__SET_SEND_TIMEOUT, &CAN_SEND_TIMEOUT);
 
                         printk("CANNET (%s): thread ID: %u", if_path, cannet->if_thread);
-                        cannet->state = NET_CANNET_STATE__DOWN;
+                        cannet->state = NETM_CANNET_STATE__DOWN;
                 }
         }
 
@@ -418,7 +418,7 @@ int CANNET_ifdeinit(void *ctx)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_ifup(void *ctx, const NET_CANNET_config_t *cfg, size_t cfg_size)
+int CANNET_ifup(void *ctx, const NETM_CANNET_config_t *cfg, size_t cfg_size)
 {
         if (cfg_size != sizeof(*cfg)) {
                 return EINVAL;
@@ -430,7 +430,7 @@ int CANNET_ifup(void *ctx, const NET_CANNET_config_t *cfg, size_t cfg_size)
 
         if (cannet and cfg) {
 
-                if (cannet->state == NET_CANNET_STATE__DOWN) {
+                if (cannet->state == NETM_CANNET_STATE__DOWN) {
 
                         cannet->addr = cfg->addr;
                         clear_transfer_counters(cannet);
@@ -442,7 +442,7 @@ int CANNET_ifup(void *ctx, const NET_CANNET_config_t *cfg, size_t cfg_size)
                                 CAN_filter_t filter;
                                 filter.number = 0;
                                 filter.ID = cfg->addr;
-                                filter.mask = NET_CANNET_CAN_ID_MASK;
+                                filter.mask = NETM_CANNET_CAN_ID_MASK;
                                 filter.extended_ID = true;
                                 err = sys_ioctl(cannet->if_file, IOCTL_CAN__SET_FILTER, &filter);
                         }
@@ -450,8 +450,8 @@ int CANNET_ifup(void *ctx, const NET_CANNET_config_t *cfg, size_t cfg_size)
                         if (!err) {
                                 CAN_filter_t filter;
                                 filter.number = 1;
-                                filter.ID = NET_CANNET_ADDR_BROADCAST;
-                                filter.mask = NET_CANNET_CAN_ID_MASK;
+                                filter.ID = NETM_CANNET_ADDR_BROADCAST;
+                                filter.mask = NETM_CANNET_CAN_ID_MASK;
                                 filter.extended_ID = true;
                                 err = sys_ioctl(cannet->if_file, IOCTL_CAN__SET_FILTER, &filter);
                         }
@@ -462,7 +462,7 @@ int CANNET_ifup(void *ctx, const NET_CANNET_config_t *cfg, size_t cfg_size)
                         }
 
                         if (!err) {
-                                cannet->state = NET_CANNET_STATE__UP;
+                                cannet->state = NETM_CANNET_STATE__UP;
                         }
                 } else {
                         err = EALREADY;
@@ -486,7 +486,7 @@ int CANNET_ifdown(void *ctx)
 
         if (cannet) {
                 clear_transfer_counters(cannet);
-                cannet->state = NET_CANNET_STATE__DOWN;
+                cannet->state = NETM_CANNET_STATE__DOWN;
                 err = 0;
         }
 
@@ -501,7 +501,7 @@ int CANNET_ifdown(void *ctx)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_ifstatus(void *ctx, NET_CANNET_status_t *status, size_t status_size)
+int CANNET_ifstatus(void *ctx, NETM_CANNET_status_t *status, size_t status_size)
 {
         if (status_size < sizeof(*status)) {
                 return EINVAL;
@@ -532,7 +532,7 @@ int CANNET_ifstatus(void *ctx, NET_CANNET_status_t *status, size_t status_size)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_socket_create(void *ctx, NET_protocol_t prot, CANNET_socket_t *socket)
+int CANNET_socket_create(void *ctx, NETM_protocol_t prot, CANNET_socket_t *socket)
 {
         UNUSED_ARG1(ctx);
 
@@ -548,7 +548,7 @@ int CANNET_socket_create(void *ctx, NET_protocol_t prot, CANNET_socket_t *socket
                 socket->recv_timeout = _MAX_DELAY_MS;
                 socket->send_timeout = _MAX_DELAY_MS;
                 socket->shutdown     = 0;
-                socket->connected    = (prot == NET_PROTOCOL__DATAGRAM);
+                socket->connected    = (prot == NETM_PROTOCOL__DATAGRAM);
                 err = 0;
         } else {
                 sys_queue_destroy(socket->ansq);
@@ -589,7 +589,7 @@ int CANNET_socket_destroy(void *ctx, CANNET_socket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_socket_connect(void *ctx, CANNET_socket_t *socket, const NET_CANNET_sockaddr_t *addr, size_t addr_size)
+int CANNET_socket_connect(void *ctx, CANNET_socket_t *socket, const NETM_CANNET_sockaddr_t *addr, size_t addr_size)
 {
         if (addr_size != sizeof(*addr)) {
                 return EINVAL;
@@ -690,7 +690,7 @@ int CANNET_socket_disconnect(void *ctx, CANNET_socket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_socket_shutdown(void *ctx, CANNET_socket_t *socket, NET_shut_t how)
+int CANNET_socket_shutdown(void *ctx, CANNET_socket_t *socket, NETM_shut_t how)
 {
         UNUSED_ARG1(ctx);
 
@@ -708,7 +708,7 @@ int CANNET_socket_shutdown(void *ctx, CANNET_socket_t *socket, NET_shut_t how)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_socket_bind(void *ctx, CANNET_socket_t *socket, const NET_CANNET_sockaddr_t *addr, size_t addr_size)
+int CANNET_socket_bind(void *ctx, CANNET_socket_t *socket, const NETM_CANNET_sockaddr_t *addr, size_t addr_size)
 {
         if (addr_size != sizeof(*addr)) {
                 return EINVAL;
@@ -721,7 +721,7 @@ int CANNET_socket_bind(void *ctx, CANNET_socket_t *socket, const NET_CANNET_sock
 
         int err = ESUCC;
 
-        if (socket->protocol == NET_PROTOCOL__DATAGRAM) {
+        if (socket->protocol == NETM_PROTOCOL__DATAGRAM) {
                 err = register_socket(cannet, socket);
         }
 
@@ -741,7 +741,7 @@ int CANNET_socket_listen(void *ctx, CANNET_socket_t *socket)
 
         int err = ESUCC;
 
-        if (socket->protocol == NET_PROTOCOL__STREAM) {
+        if (socket->protocol == NETM_PROTOCOL__STREAM) {
                 err = register_socket(cannet, socket);
         }
 
@@ -762,7 +762,7 @@ int CANNET_socket_accept(void *ctx, CANNET_socket_t *socket, CANNET_socket_t *ne
 
         int err = ECANCELED;
 
-        if (socket->protocol == NET_PROTOCOL__DATAGRAM) {
+        if (socket->protocol == NETM_PROTOCOL__DATAGRAM) {
                 return err;
         }
 
@@ -819,10 +819,10 @@ int CANNET_socket_recv(void            *ctx,
                        CANNET_socket_t *socket,
                        void            *buf,
                        size_t           len,
-                       NET_flags_t      flags,
+                       NETM_flags_t     flags,
                        size_t          *recved)
 {
-        NET_CANNET_sockaddr_t sockaddr;
+        NETM_CANNET_sockaddr_t sockaddr;
         return CANNET_socket_recvfrom(ctx, socket, buf, len, flags, &sockaddr, sizeof(sockaddr), recved);
 }
 
@@ -843,8 +843,8 @@ int CANNET_socket_recvfrom(void                  *ctx,
                            CANNET_socket_t       *socket,
                            void                  *buf,
                            size_t                 len,
-                           NET_flags_t            flags,
-                           NET_CANNET_sockaddr_t *addr,
+                           NETM_flags_t           flags,
+                           NETM_CANNET_sockaddr_t *addr,
                            size_t                 addr_size,
                            size_t                *recved)
 {
@@ -858,7 +858,7 @@ int CANNET_socket_recvfrom(void                  *ctx,
                 return ENOENT;
         }
 
-        if (socket->shutdown & NET_SHUT__RD) {
+        if (socket->shutdown & NETM_SHUT__RD) {
                 return EPERM;
         }
 
@@ -894,7 +894,7 @@ int CANNET_socket_recvfrom(void                  *ctx,
                 }
         }
 
-        if (flags & NET_FLAGS__FREEBUF) {
+        if (flags & NETM_FLAGS__FREEBUF) {
                 cannetbuf__clear(socket->rx_buf);
         }
 
@@ -916,7 +916,7 @@ int CANNET_socket_send(void            *ctx,
                        CANNET_socket_t *socket,
                        const void      *buf,
                        size_t           len,
-                       NET_flags_t      flags,
+                       NETM_flags_t     flags,
                        size_t          *sent)
 {
         UNUSED_ARG1(flags);
@@ -927,11 +927,11 @@ int CANNET_socket_send(void            *ctx,
                 return ENOENT;
         }
 
-        if (socket->shutdown & NET_SHUT__WR) {
+        if (socket->shutdown & NETM_SHUT__WR) {
                 return EPERM;
         }
 
-        if (socket->protocol != NET_PROTOCOL__STREAM) {
+        if (socket->protocol != NETM_PROTOCOL__STREAM) {
                 return ECANCELED;
         }
 
@@ -1010,8 +1010,8 @@ int CANNET_socket_sendto(void                        *ctx,
                          CANNET_socket_t             *socket,
                          const void                  *buf,
                          size_t                       len,
-                         NET_flags_t                  flags,
-                         const NET_CANNET_sockaddr_t *to_addr,
+                         NETM_flags_t                 flags,
+                         const NETM_CANNET_sockaddr_t *to_addr,
                          size_t                       to_addr_size,
                          size_t                      *sent)
 {
@@ -1023,11 +1023,11 @@ int CANNET_socket_sendto(void                        *ctx,
 
         cannet_t *cannet = ctx;
 
-        if (socket->shutdown & NET_SHUT__WR) {
+        if (socket->shutdown & NETM_SHUT__WR) {
                 return EPERM;
         }
 
-        if (socket->protocol != NET_PROTOCOL__DATAGRAM) {
+        if (socket->protocol != NETM_PROTOCOL__DATAGRAM) {
                 return ECANCELED;
         }
 
@@ -1061,7 +1061,7 @@ int CANNET_socket_sendto(void                        *ctx,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_gethostbyname(void *ctx, const char *name, NET_CANNET_sockaddr_t *addr, size_t addr_size)
+int CANNET_gethostbyname(void *ctx, const char *name, NETM_CANNET_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG4(ctx, name, addr, addr_size);
         return ENOTSUP;
@@ -1136,7 +1136,7 @@ int CANNET_socket_get_send_timeout(void *ctx, CANNET_socket_t *socket, uint32_t 
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_socket_getaddress(void *ctx, CANNET_socket_t *socket, NET_CANNET_sockaddr_t *addr, size_t addr_size)
+int CANNET_socket_getaddress(void *ctx, CANNET_socket_t *socket, NETM_CANNET_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG1(ctx);
 
@@ -1229,7 +1229,7 @@ static int register_socket(cannet_t *cannet, CANNET_socket_t *socket)
 {
         int err = EINVAL;
 
-        if (socket->port > NET_CANNET_MAX_PORT) {
+        if (socket->port > NETM_CANNET_MAX_PORT) {
                 return err;
         }
 
@@ -1903,7 +1903,7 @@ static void handle_incoming_frame(cannet_t *cannet, CAN_msg_t *can_frame)
 
         u16_t dst_addr  = get_destination_address(can_frame->ID);
         u16_t src_addr  = get_source_address(can_frame->ID);
-        bool  broadcast = (dst_addr == NET_CANNET_ADDR_BROADCAST);
+        bool  broadcast = (dst_addr == NETM_CANNET_ADDR_BROADCAST);
 
         if ((dst_addr == cannet->addr) or broadcast) {
 
@@ -1943,7 +1943,7 @@ static void handle_incoming_frame(cannet_t *cannet, CAN_msg_t *can_frame)
                 if (socket == NULL) {
                         for (size_t i = 0; i < ARRAY_SIZE(cannet->sockets); i++) {
                                 CANNET_socket_t *s = cannet->sockets[i];
-                                if (s and (s->addr_remote == NET_CANNET_ADDR_ANY) and (s->port == port)) {
+                                if (s and (s->addr_remote == NETM_CANNET_ADDR_ANY) and (s->port == port)) {
                                         socket = s;
                                         break;
                                 }
@@ -1952,7 +1952,7 @@ static void handle_incoming_frame(cannet_t *cannet, CAN_msg_t *can_frame)
 
 
                 if (socket) {
-                        if (broadcast and (socket->protocol == NET_PROTOCOL__STREAM)) {
+                        if (broadcast and (socket->protocol == NETM_PROTOCOL__STREAM)) {
                                 DEBUG("[%u] broadcast is not allowed in stream mode, socket [%u:%u]",
                                       cannet->addr, src_addr, port);
 
@@ -2115,7 +2115,7 @@ static int received_last_frame(cannet_t *cannet, CANNET_socket_t *socket, const 
                         err = EAGAIN;
                 }
 
-                if (socket->protocol == NET_PROTOCOL__STREAM) {
+                if (socket->protocol == NETM_PROTOCOL__STREAM) {
                         send_ack_frame(cannet, socket, err);
                 }
 
@@ -2154,7 +2154,7 @@ static int received_single_frame(cannet_t *cannet, CANNET_socket_t *socket, cons
 
         int err = cannetbuf__write(socket->rx_buf, frame->data, len);
 
-        if (socket->protocol == NET_PROTOCOL__STREAM) {
+        if (socket->protocol == NETM_PROTOCOL__STREAM) {
                 send_ack_frame(cannet, socket, err);
         }
 

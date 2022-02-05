@@ -226,17 +226,17 @@ static int network_interface_thread(void *arg)
 
 //==============================================================================
 /**
- * @brief Function createNET_INET_IPv4_t address from lwIP address.
+ * @brief Function createNETM_INET_IPv4_t address from lwIP address.
  * @param addr          INET address
  * @param lwip_addr     lwIP address
  */
 //==============================================================================
-static void create_addr(NET_INET_IPv4_t *addr, const ip_addr_t *lwip_addr)
+static void create_addr(NETM_INET_IPv4_t *addr, const ip_addr_t *lwip_addr)
 {
-        *addr = NET_INET_IPv4(ip4_addr1(lwip_addr),
-                              ip4_addr2(lwip_addr),
-                              ip4_addr3(lwip_addr),
-                              ip4_addr4(lwip_addr));
+        *addr = NETM_INET_IPv4(ip4_addr1(lwip_addr),
+                               ip4_addr2(lwip_addr),
+                               ip4_addr3(lwip_addr),
+                               ip4_addr4(lwip_addr));
 }
 
 //==============================================================================
@@ -246,13 +246,13 @@ static void create_addr(NET_INET_IPv4_t *addr, const ip_addr_t *lwip_addr)
  * @param addr          INET address
  */
 //==============================================================================
-static void create_lwIP_addr(ip_addr_t *lwip_addr, const NET_INET_IPv4_t *addr)
+static void create_lwIP_addr(ip_addr_t *lwip_addr, const NETM_INET_IPv4_t *addr)
 {
         IP4_ADDR(lwip_addr,
-                 NET_INET_IPv4_a(*addr),
-                 NET_INET_IPv4_b(*addr),
-                 NET_INET_IPv4_c(*addr),
-                 NET_INET_IPv4_d(*addr));
+                 NETM_INET_IPv4_a(*addr),
+                 NETM_INET_IPv4_b(*addr),
+                 NETM_INET_IPv4_c(*addr),
+                 NETM_INET_IPv4_d(*addr));
 }
 
 //==============================================================================
@@ -562,7 +562,7 @@ int INET_ifdeinit(void *ctx)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_ifup(void *ctx, const NET_INET_config_t *cfg, size_t cfg_size)
+int INET_ifup(void *ctx, const NETM_INET_config_t *cfg, size_t cfg_size)
 {
         if (cfg_size != sizeof(*cfg)) {
                 return EINVAL;
@@ -576,7 +576,7 @@ int INET_ifup(void *ctx, const NET_INET_config_t *cfg, size_t cfg_size)
 
         if (cfg) {
                 switch (cfg->mode) {
-                case NET_INET_MODE__STATIC: {
+                case NETM_INET_MODE__STATIC: {
                         ip_addr_t addr, mask, gateway;
                         create_lwIP_addr(&addr, &cfg->address);
                         create_lwIP_addr(&mask, &cfg->mask);
@@ -587,15 +587,15 @@ int INET_ifup(void *ctx, const NET_INET_config_t *cfg, size_t cfg_size)
                         break;
                 }
 
-                case NET_INET_MODE__DHCP_START:
+                case NETM_INET_MODE__DHCP_START:
                         err = DHCP_start_client(inet);
                         break;
 
-                case NET_INET_MODE__DHCP_INFORM:
+                case NETM_INET_MODE__DHCP_INFORM:
                         err = DHCP_inform_server(inet);
                         break;
 
-                case NET_INET_MODE__DHCP_RENEW:
+                case NETM_INET_MODE__DHCP_RENEW:
                         err = DHCP_renew_connection(inet);
                         break;
 
@@ -647,7 +647,7 @@ int INET_ifdown(void *ctx)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_ifstatus(void *ctx, NET_INET_status_t *status, size_t status_size)
+int INET_ifstatus(void *ctx, NETM_INET_status_t *status, size_t status_size)
 {
         if (status_size < sizeof(*status)) {
                 return EINVAL;
@@ -660,30 +660,30 @@ int INET_ifstatus(void *ctx, NET_INET_status_t *status, size_t status_size)
         if (inet) {
                 memcpy(status->hw_addr, inet->netif.hwaddr, sizeof(status->hw_addr));
 
-                status->address    = NET_INET_IPv4_ANY;
-                status->mask       = NET_INET_IPv4_ANY;
-                status->gateway    = NET_INET_IPv4_ANY;
+                status->address    = NETM_INET_IPv4_ANY;
+                status->mask       = NETM_INET_IPv4_ANY;
+                status->gateway    = NETM_INET_IPv4_ANY;
 
                 status->rx_packets = inet->rx_packets;
                 status->rx_bytes   = inet->rx_bytes;
                 status->tx_packets = inet->tx_packets;
                 status->tx_bytes   = inet->tx_bytes;
 
-                status->state      = NET_INET_STATE__NOT_CONFIGURED;
+                status->state      = NETM_INET_STATE__NOT_CONFIGURED;
 
                 if (inet->configured) {
                         if (inet->disconnected) {
-                                status->state = NET_INET_STATE__LINK_DISCONNECTED;
+                                status->state = NETM_INET_STATE__LINK_DISCONNECTED;
 
                         } else if (netif_is_up(&inet->netif)) {
                                 if ((DHCP_get_state(inet) != DHCP_STATE_OFF)) {
                                         if (DHCP_get_state(inet) != DHCP_STATE_BOUND) {
-                                                status->state = NET_INET_STATE__DHCP_CONFIGURING;
+                                                status->state = NETM_INET_STATE__DHCP_CONFIGURING;
                                         } else {
-                                                status->state = NET_INET_STATE__DHCP_CONFIGURED;
+                                                status->state = NETM_INET_STATE__DHCP_CONFIGURED;
                                         }
                                 } else {
-                                        status->state = NET_INET_STATE__STATIC_IP;
+                                        status->state = NETM_INET_STATE__STATIC_IP;
                                 }
 
                                 create_addr(&status->address, &inet->netif.ip_addr);
@@ -692,7 +692,7 @@ int INET_ifstatus(void *ctx, NET_INET_status_t *status, size_t status_size)
                         }
                 } else {
                         if (inet->disconnected) {
-                                status->state = NET_INET_STATE__LINK_DISCONNECTED;
+                                status->state = NETM_INET_STATE__LINK_DISCONNECTED;
                         }
                 }
 
@@ -710,15 +710,15 @@ int INET_ifstatus(void *ctx, NET_INET_status_t *status, size_t status_size)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_socket_create(void *ctx, NET_protocol_t prot, INET_socket_t *inet_sock)
+int INET_socket_create(void *ctx, NETM_protocol_t prot, INET_socket_t *inet_sock)
 {
         UNUSED_ARG1(ctx);
 
         int err = EINVAL;
 
-        if (prot == NET_PROTOCOL__TCP || prot == NET_PROTOCOL__UDP) {
+        if (prot == NETM_PROTOCOL__TCP || prot == NETM_PROTOCOL__UDP) {
 
-                inet_sock->netconn = netconn_new(prot == NET_PROTOCOL__TCP
+                inet_sock->netconn = netconn_new(prot == NETM_PROTOCOL__TCP
                                                        ? NETCONN_TCP
                                                        : NETCONN_UDP);
                 if (inet_sock->netconn) {
@@ -763,7 +763,7 @@ int INET_socket_destroy(void *ctx, INET_socket_t *inet_sock)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_socket_connect(void *ctx, INET_socket_t *inet_sock, const NET_INET_sockaddr_t *addr, size_t addr_size)
+int INET_socket_connect(void *ctx, INET_socket_t *inet_sock, const NETM_INET_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG1(ctx);
 
@@ -800,13 +800,13 @@ int INET_socket_disconnect(void *ctx, INET_socket_t *inet_sock)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_socket_shutdown(void *ctx, INET_socket_t *inet_sock, NET_shut_t how)
+int INET_socket_shutdown(void *ctx, INET_socket_t *inet_sock, NETM_shut_t how)
 {
         UNUSED_ARG1(ctx);
 
         return err_to_errno(netconn_shutdown(inet_sock->netconn,
-                                             how & NET_SHUT__RD,
-                                             how & NET_SHUT__WR));
+                                             how & NETM_SHUT__RD,
+                                             how & NETM_SHUT__WR));
 }
 
 //==============================================================================
@@ -818,7 +818,7 @@ int INET_socket_shutdown(void *ctx, INET_socket_t *inet_sock, NET_shut_t how)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_socket_bind(void *ctx, INET_socket_t *inet_sock, const NET_INET_sockaddr_t *addr, size_t addr_size)
+int INET_socket_bind(void *ctx, INET_socket_t *inet_sock, const NETM_INET_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG1(ctx);
 
@@ -877,12 +877,12 @@ int INET_socket_recv(void          *ctx,
                      INET_socket_t *inet_sock,
                      void          *buf,
                      size_t         len,
-                     NET_flags_t    flags,
+                     NETM_flags_t   flags,
                      size_t        *recved)
 {
         UNUSED_ARG1(ctx);
 
-        if (flags & NET_FLAGS__REWIND) {
+        if (flags & NETM_FLAGS__REWIND) {
                 inet_sock->seek = 0;
         }
 
@@ -897,7 +897,7 @@ int INET_socket_recv(void          *ctx,
                 inet_sock->seek += sz;
                 *recved          = sz;
 
-                if (  (flags & NET_FLAGS__FREEBUF)
+                if (  (flags & NETM_FLAGS__FREEBUF)
                    || (inet_sock->seek >= netbuf_len(inet_sock->netbuf)) ) {
 
                         netbuf_delete(inet_sock->netbuf);
@@ -926,8 +926,8 @@ int INET_socket_recvfrom(void                *ctx,
                          INET_socket_t       *inet_sock,
                          void                *buf,
                          size_t               len,
-                         NET_flags_t          flags,
-                         NET_INET_sockaddr_t *sockaddr,
+                         NETM_flags_t         flags,
+                         NETM_INET_sockaddr_t *sockaddr,
                          size_t               sockaddr_size,
                          size_t              *recved)
 {
@@ -973,7 +973,7 @@ int INET_socket_send(void          *ctx,
                      INET_socket_t *inet_sock,
                      const void    *buf,
                      size_t         len,
-                     NET_flags_t    flags,
+                     NETM_flags_t   flags,
                      size_t        *sent)
 {
         UNUSED_ARG1(ctx);
@@ -984,12 +984,12 @@ int INET_socket_send(void          *ctx,
 
         if (type & NETCONN_TCP) {
                 u8_t lwip_flags = 0;
-                if (flags & NET_FLAGS__NOCOPY)
+                if (flags & NETM_FLAGS__NOCOPY)
                         lwip_flags |= NETCONN_NOCOPY;
                 else
                         lwip_flags |= NETCONN_COPY;
 
-                if (flags & NET_FLAGS__MORE)
+                if (flags & NETM_FLAGS__MORE)
                         lwip_flags |= NETCONN_MORE;
 
 
@@ -1002,7 +1002,7 @@ int INET_socket_send(void          *ctx,
 
                         inet_sock->netbuf = netbuf_new();
                         if (inet_sock->netbuf) {
-                                if (flags & NET_FLAGS__NOCOPY) {
+                                if (flags & NETM_FLAGS__NOCOPY) {
                                         err = err_to_errno(
                                                 netbuf_ref(inet_sock->netbuf,
                                                            buf, len)
@@ -1063,8 +1063,8 @@ int INET_socket_sendto(void                      *ctx,
                        INET_socket_t             *inet_sock,
                        const void                *buf,
                        size_t                     len,
-                       NET_flags_t                flags,
-                       const NET_INET_sockaddr_t *to_sockaddr,
+                       NETM_flags_t               flags,
+                       const NETM_INET_sockaddr_t *to_sockaddr,
                        size_t                     to_sockaddr_size,
                        size_t                    *sent)
 {
@@ -1081,7 +1081,7 @@ int INET_socket_sendto(void                      *ctx,
         if (type & NETCONN_UDP) {
 
                 ip_addr_t           lwip_addr;
-                NET_INET_sockaddr_t sockaddr;
+                NETM_INET_sockaddr_t sockaddr;
 
                 // get the peer if currently connected
                 err = err_to_errno(netconn_peer(inet_sock->netconn, &lwip_addr,
@@ -1114,7 +1114,7 @@ int INET_socket_sendto(void                      *ctx,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_gethostbyname(void *ctx, const char *name, NET_INET_sockaddr_t *sock_addr, size_t sock_addr_size)
+int INET_gethostbyname(void *ctx, const char *name, NETM_INET_sockaddr_t *sock_addr, size_t sock_addr_size)
 {
         UNUSED_ARG1(ctx);
 
@@ -1206,7 +1206,7 @@ int INET_socket_get_send_timeout(void *ctx, INET_socket_t *inet_sock, uint32_t *
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_socket_getaddress(void *ctx, INET_socket_t *inet_sock, NET_INET_sockaddr_t *sockaddr, size_t sockaddr_size)
+int INET_socket_getaddress(void *ctx, INET_socket_t *inet_sock, NETM_INET_sockaddr_t *sockaddr, size_t sockaddr_size)
 {
         UNUSED_ARG1(ctx);
 

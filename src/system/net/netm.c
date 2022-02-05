@@ -39,14 +39,14 @@ Brief    Network management.
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define PROXY_TABLE                             static const proxy_func_t proxy[_NET_FAMILY__COUNT]
-#define PROXY_TABLE_U16                         static const proxy_func_u16_t proxy[_NET_FAMILY__COUNT]
-#define PROXY_TABLE_U32                         static const proxy_func_u32_t proxy[_NET_FAMILY__COUNT]
-#define PROXY_TABLE_U64                         static const proxy_func_u64_t proxy[_NET_FAMILY__COUNT]
-#define PROXY_FUNCTION(_family, _proxy_func)    [NET_FAMILY__##_family] = (proxy_func_t)_family##_##_proxy_func
-#define PROXY_FUNCTION_U16(_family, _proxy_func)[NET_FAMILY__##_family] = (proxy_func_u16_t)_family##_##_proxy_func
-#define PROXY_FUNCTION_U32(_family, _proxy_func)[NET_FAMILY__##_family] = (proxy_func_u32_t)_family##_##_proxy_func
-#define PROXY_FUNCTION_U64(_family, _proxy_func)[NET_FAMILY__##_family] = (proxy_func_u64_t)_family##_##_proxy_func
+#define PROXY_TABLE                             static const proxy_func_t proxy[_NETM_FAMILY__COUNT]
+#define PROXY_TABLE_U16                         static const proxy_func_u16_t proxy[_NETM_FAMILY__COUNT]
+#define PROXY_TABLE_U32                         static const proxy_func_u32_t proxy[_NETM_FAMILY__COUNT]
+#define PROXY_TABLE_U64                         static const proxy_func_u64_t proxy[_NETM_FAMILY__COUNT]
+#define PROXY_FUNCTION(_family, _proxy_func)    [NETM_FAMILY__##_family] = (proxy_func_t)_family##_##_proxy_func
+#define PROXY_FUNCTION_U16(_family, _proxy_func)[NETM_FAMILY__##_family] = (proxy_func_u16_t)_family##_##_proxy_func
+#define PROXY_FUNCTION_U32(_family, _proxy_func)[NETM_FAMILY__##_family] = (proxy_func_u32_t)_family##_##_proxy_func
+#define PROXY_FUNCTION_U64(_family, _proxy_func)[NETM_FAMILY__##_family] = (proxy_func_u64_t)_family##_##_proxy_func
 #define PROXY_ifinit(_family)                   PROXY_FUNCTION(_family, ifinit)
 #define PROXY_ifdeinit(_family)                 PROXY_FUNCTION(_family, ifdeinit)
 #define PROXY_ifup(_family)                     PROXY_FUNCTION(_family, ifup)
@@ -80,7 +80,7 @@ Brief    Network management.
 ==============================================================================*/
 struct ksocket {
         res_header_t header;
-        NET_family_t family;
+        NETM_family_t family;
         const char  *netname;
         void        *ctx;
 };
@@ -88,7 +88,7 @@ struct ksocket {
 struct netname {
         const char *netname;
         void *stack_ctx;
-        NET_family_t family;
+        NETM_family_t family;
 };
 
 typedef int (*proxy_func_t)();
@@ -127,17 +127,17 @@ static kmtx_t *netm_mutex;
  * @return One of @ref errno value.
  */
 //==============================================================================
-static int socket_alloc(ksocket_t **socket, NET_family_t family, const char *netname)
+static int socket_alloc(ksocket_t **socket, NETM_family_t family, const char *netname)
 {
-        static const uint8_t net_socket_size[_NET_FAMILY__COUNT] = {
+        static const uint8_t net_socket_size[_NETM_FAMILY__COUNT] = {
                 #if __ENABLE_TCPIP_STACK__ > 0
-                [NET_FAMILY__INET] = _mm_align(sizeof(INET_socket_t)),
+                [NETM_FAMILY__INET] = _mm_align(sizeof(INET_socket_t)),
                 #endif
                 #if __ENABLE_SIPC_STACK__ > 0
-                [NET_FAMILY__SIPC] = _mm_align(sizeof(SIPC_socket_t)),
+                [NETM_FAMILY__SIPC] = _mm_align(sizeof(SIPC_socket_t)),
                 #endif
                 #if __ENABLE_CANNET_STACK__ > 0
-                [NET_FAMILY__CANNET] = _mm_align(sizeof(CANNET_socket_t)),
+                [NETM_FAMILY__CANNET] = _mm_align(sizeof(CANNET_socket_t)),
                 #endif
         };
 
@@ -183,7 +183,7 @@ static bool is_socket_valid(ksocket_t *socket)
         return _mm_is_object_in_heap(socket)
             && (socket->header.type == RES_TYPE_SOCKET)
             && (socket->header.self == socket)
-            && (socket->family < _NET_FAMILY__COUNT)
+            && (socket->family < _NETM_FAMILY__COUNT)
             && (socket->netname != NULL)
             && (socket->ctx == cast(void *, cast(size_t, socket)
                                           + _mm_align(sizeof(ksocket_t))));
@@ -229,9 +229,9 @@ static void *get_stack_context(const char *netname, size_t *idx)
  * @return Network family.
  */
 //==============================================================================
-static NET_family_t get_net_family_by_name(const char *netname)
+static NETM_family_t get_net_family_by_name(const char *netname)
 {
-        NET_family_t family = _NET_FAMILY__COUNT;
+        NETM_family_t family = _NETM_FAMILY__COUNT;
 
         if (sys_mutex_lock(netm_mutex, _MAX_DELAY_MS) == 0) {
 
@@ -260,7 +260,7 @@ static NET_family_t get_net_family_by_name(const char *netname)
  * @return Stack context.
  */
 //==============================================================================
-int _net_ifadd(const char *netname, NET_family_t family, const char *if_path)
+int _net_ifadd(const char *netname, NETM_family_t family, const char *if_path)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -276,7 +276,7 @@ int _net_ifadd(const char *netname, NET_family_t family, const char *if_path)
 
         int err = EINVAL;
 
-        if (netname && (family < _NET_FAMILY__COUNT) && if_path) {
+        if (netname && (family < _NETM_FAMILY__COUNT) && if_path) {
                 if (not netm_mutex) {
                         err = sys_mutex_create(KMTX_TYPE_RECURSIVE, &netm_mutex);
                 }
@@ -410,7 +410,7 @@ int _net_iflist(char *netname[], size_t netname_len, size_t *count)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_ifup(const char *netname, const NET_generic_config_t *config, size_t config_size)
+int _net_ifup(const char *netname, const NETM_generic_config_t *config, size_t config_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -477,7 +477,7 @@ int _net_ifdown(const char *netname)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_ifstatus(const char *netname, NET_family_t *family,  NET_generic_status_t *status, size_t status_size)
+int _net_ifstatus(const char *netname, NETM_family_t *family,  NETM_generic_status_t *status, size_t status_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -512,7 +512,7 @@ int _net_ifstatus(const char *netname, NET_family_t *family,  NET_generic_status
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_create(const char *netname, NET_protocol_t protocol, ksocket_t **socket)
+int _net_socket_create(const char *netname, NETM_protocol_t protocol, ksocket_t **socket)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -528,10 +528,10 @@ int _net_socket_create(const char *netname, NET_protocol_t protocol, ksocket_t *
 
         int err = EINVAL;
 
-        if (netname && (protocol < _NET_PROTOCOL__COUNT) && socket) {
+        if (netname && (protocol < _NETM_PROTOCOL__COUNT) && socket) {
 
-                NET_family_t family = get_net_family_by_name(netname);
-                if (family < _NET_FAMILY__COUNT) {
+                NETM_family_t family = get_net_family_by_name(netname);
+                if (family < _NETM_FAMILY__COUNT) {
 
                         err = socket_alloc(socket, family, netname);
 
@@ -594,7 +594,7 @@ int _net_socket_destroy(ksocket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_bind(ksocket_t *socket, const NET_generic_sockaddr_t *addr, size_t addr_size)
+int _net_socket_bind(ksocket_t *socket, const NETM_generic_sockaddr_t *addr, size_t addr_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -700,7 +700,7 @@ int _net_socket_accept(ksocket_t *socket, ksocket_t **new_socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_recv(ksocket_t *socket, void *buf, size_t len, NET_flags_t flags, size_t *recved)
+int _net_socket_recv(ksocket_t *socket, void *buf, size_t len, NETM_flags_t flags, size_t *recved)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -739,8 +739,8 @@ int _net_socket_recv(ksocket_t *socket, void *buf, size_t len, NET_flags_t flags
 int _net_socket_recvfrom(ksocket_t              *socket,
                          void                   *buf,
                          size_t                  len,
-                         NET_flags_t             flags,
-                         NET_generic_sockaddr_t *sockaddr,
+                         NETM_flags_t             flags,
+                         NETM_generic_sockaddr_t *sockaddr,
                          size_t                  sockaddr_size,
                          size_t                 *recved)
 {
@@ -776,7 +776,7 @@ int _net_socket_recvfrom(ksocket_t              *socket,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_send(ksocket_t *socket, const void *buf, size_t len, NET_flags_t flags, size_t *sent)
+int _net_socket_send(ksocket_t *socket, const void *buf, size_t len, NETM_flags_t flags, size_t *sent)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -814,8 +814,8 @@ int _net_socket_send(ksocket_t *socket, const void *buf, size_t len, NET_flags_t
 int _net_socket_sendto(ksocket_t                    *socket,
                        const void                   *buf,
                        size_t                        len,
-                       NET_flags_t                   flags,
-                       const NET_generic_sockaddr_t *to_addr,
+                       NETM_flags_t                  flags,
+                       const NETM_generic_sockaddr_t *to_addr,
                        size_t                        to_addr_size,
                        size_t                       *sent)
 {
@@ -969,7 +969,7 @@ int _net_socket_get_send_timeout(ksocket_t *socket, uint32_t *timeout)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_connect(ksocket_t *socket, const NET_generic_sockaddr_t *addr, size_t addr_size)
+int _net_socket_connect(ksocket_t *socket, const NETM_generic_sockaddr_t *addr, size_t addr_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1028,7 +1028,7 @@ int _net_socket_disconnect(ksocket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_shutdown(ksocket_t *socket, NET_shut_t how)
+int _net_socket_shutdown(ksocket_t *socket, NETM_shut_t how)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1059,7 +1059,7 @@ int _net_socket_shutdown(ksocket_t *socket, NET_shut_t how)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_getaddress(ksocket_t *socket, NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size)
+int _net_socket_getaddress(ksocket_t *socket, NETM_generic_sockaddr_t *sockaddr, size_t sockaddr_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1091,7 +1091,7 @@ int _net_socket_getaddress(ksocket_t *socket, NET_generic_sockaddr_t *sockaddr, 
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_gethostbyname(const char *netname, const char *name, NET_generic_sockaddr_t *addr, size_t addr_size)
+int _net_gethostbyname(const char *netname, const char *name, NETM_generic_sockaddr_t *addr, size_t addr_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1109,8 +1109,8 @@ int _net_gethostbyname(const char *netname, const char *name, NET_generic_sockad
 
         if (netname && name && addr) {
 
-                NET_family_t family = get_net_family_by_name(netname);
-                if (family < _NET_FAMILY__COUNT) {
+                NETM_family_t family = get_net_family_by_name(netname);
+                if (family < _NETM_FAMILY__COUNT) {
                         void *ctx = get_stack_context(netname, NULL);
                         err = call_proxy_function(family, ctx, name, addr, addr_size);
                 }
@@ -1127,7 +1127,7 @@ int _net_gethostbyname(const char *netname, const char *name, NET_generic_sockad
  * @return Converted value.
  */
 //==============================================================================
-u16_t _net_hton_u16(NET_family_t family, u16_t value)
+u16_t _net_hton_u16(NETM_family_t family, u16_t value)
 {
         PROXY_TABLE_U16 = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1141,7 +1141,7 @@ u16_t _net_hton_u16(NET_family_t family, u16_t value)
                 #endif
         };
 
-        if (family < _NET_FAMILY__COUNT) {
+        if (family < _NETM_FAMILY__COUNT) {
                 return call_proxy_function(family, value);
         } else {
                 return value;
@@ -1156,7 +1156,7 @@ u16_t _net_hton_u16(NET_family_t family, u16_t value)
  * @return Converted value.
  */
 //==============================================================================
-u32_t _net_hton_u32(NET_family_t family, u32_t value)
+u32_t _net_hton_u32(NETM_family_t family, u32_t value)
 {
         PROXY_TABLE_U32 = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1170,7 +1170,7 @@ u32_t _net_hton_u32(NET_family_t family, u32_t value)
                 #endif
         };
 
-        if (family < _NET_FAMILY__COUNT) {
+        if (family < _NETM_FAMILY__COUNT) {
                 return call_proxy_function(family, value);
         } else {
                 return value;
@@ -1185,7 +1185,7 @@ u32_t _net_hton_u32(NET_family_t family, u32_t value)
  * @return Converted value.
  */
 //==============================================================================
-u64_t _net_hton_u64(NET_family_t family, u64_t value)
+u64_t _net_hton_u64(NETM_family_t family, u64_t value)
 {
         PROXY_TABLE_U64 = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1199,7 +1199,7 @@ u64_t _net_hton_u64(NET_family_t family, u64_t value)
                 #endif
         };
 
-        if (family < _NET_FAMILY__COUNT) {
+        if (family < _NETM_FAMILY__COUNT) {
                 return call_proxy_function(family, value);
         } else {
                 return value;

@@ -116,7 +116,7 @@ typedef struct {
 
         kfile_t *if_file;
         tid_t if_thread;
-        NET_SIPC_state_t state;
+        NETM_SIPC_state_t state;
         kmtx_t *packet_send_mtx;
         kmtx_t *socket_list_mtx;
         llist_t *socket_list;
@@ -301,7 +301,7 @@ static int send_packet(sipc_t *sipc, u16_t seq, u8_t port, u8_t type, const u8_t
                 return ENONET;
         }
 
-        if (sipc->state == NET_SIPC_STATE__DOWN) {
+        if (sipc->state == NETM_SIPC_STATE__DOWN) {
                 return ENONET;
         }
 
@@ -440,7 +440,7 @@ static int input_thread(void *arg)
                 u8_t *payload;
                 receive_packet(sipc, &packet, &payload);
 
-                if (sipc->state == NET_SIPC_STATE__DOWN) {
+                if (sipc->state == NETM_SIPC_STATE__DOWN) {
 
                         clear_transfer_counters(sipc);
 
@@ -726,7 +726,7 @@ int SIPC_ifdeinit(void *ctx)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_ifup(void *ctx, const NET_SIPC_config_t *cfg, size_t cfg_size)
+int SIPC_ifup(void *ctx, const NETM_SIPC_config_t *cfg, size_t cfg_size)
 {
         if (cfg_size != sizeof(*cfg)) {
                 return EINVAL;
@@ -738,7 +738,7 @@ int SIPC_ifup(void *ctx, const NET_SIPC_config_t *cfg, size_t cfg_size)
 
         if (cfg) {
                 sipc->conf.MTU = max(64, cfg->MTU);
-                sipc->state = NET_SIPC_STATE__UP;
+                sipc->state = NETM_SIPC_STATE__UP;
                 err = 0;
         }
 
@@ -757,9 +757,9 @@ int SIPC_ifdown(void *ctx)
 
         int err = ENONET;
 
-        if ((sipc != NULL) && (sipc->state == NET_SIPC_STATE__UP)) {
+        if ((sipc != NULL) && (sipc->state == NETM_SIPC_STATE__UP)) {
 
-                sipc->state = NET_SIPC_STATE__DOWN;
+                sipc->state = NETM_SIPC_STATE__DOWN;
 
                 clear_transfer_counters(sipc);
 
@@ -777,7 +777,7 @@ int SIPC_ifdown(void *ctx)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_ifstatus(void *ctx, NET_SIPC_status_t *status, size_t status_size)
+int SIPC_ifstatus(void *ctx, NETM_SIPC_status_t *status, size_t status_size)
 {
         if (status_size < sizeof(*status)) {
                 return EINVAL;
@@ -807,13 +807,13 @@ int SIPC_ifstatus(void *ctx, NET_SIPC_status_t *status, size_t status_size)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_create(void *ctx, NET_protocol_t prot, SIPC_socket_t *socket)
+int SIPC_socket_create(void *ctx, NETM_protocol_t prot, SIPC_socket_t *socket)
 {
         UNUSED_ARG1(ctx);
 
         int err = EINVAL;
 
-        if (prot == NET_PROTOCOL__STREAM) {
+        if (prot == NETM_PROTOCOL__STREAM) {
 
                 socket->port         = 0;
                 socket->recv_timeout = _MAX_DELAY_MS;
@@ -875,7 +875,7 @@ int SIPC_socket_destroy(void *ctx, SIPC_socket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_connect(void *ctx, SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr, size_t addr_size)
+int SIPC_socket_connect(void *ctx, SIPC_socket_t *socket, const NETM_SIPC_sockaddr_t *addr, size_t addr_size)
 {
         if (addr_size != sizeof(*addr)) {
                 return EINVAL;
@@ -956,7 +956,7 @@ int SIPC_socket_disconnect(void *ctx, SIPC_socket_t *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_shutdown(void *ctx, SIPC_socket_t *socket, NET_shut_t how)
+int SIPC_socket_shutdown(void *ctx, SIPC_socket_t *socket, NETM_shut_t how)
 {
         UNUSED_ARG3(ctx, socket, how);
         return ENOTSUP;
@@ -971,7 +971,7 @@ int SIPC_socket_shutdown(void *ctx, SIPC_socket_t *socket, NET_shut_t how)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_bind(void *ctx, SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr, size_t addr_size)
+int SIPC_socket_bind(void *ctx, SIPC_socket_t *socket, const NETM_SIPC_sockaddr_t *addr, size_t addr_size)
 {
         if (addr_size != sizeof(*addr)) {
                 return EINVAL;
@@ -1041,7 +1041,7 @@ int SIPC_socket_recv(void          *ctx,
                      SIPC_socket_t *socket,
                      void          *buf,
                      size_t         len,
-                     NET_flags_t    flags,
+                     NETM_flags_t    flags,
                      size_t        *recved)
 {
         sipc_t *sipc = ctx;
@@ -1074,7 +1074,7 @@ int SIPC_socket_recv(void          *ctx,
                 break;
         }
 
-        if (flags & NET_FLAGS__FREEBUF) {
+        if (flags & NETM_FLAGS__FREEBUF) {
                 sipcbuf__clear(socket->rxbuf);
         }
 
@@ -1098,8 +1098,8 @@ int SIPC_socket_recvfrom(void                *ctx,
                          SIPC_socket_t       *socket,
                          void                *buf,
                          size_t               len,
-                         NET_flags_t          flags,
-                         NET_SIPC_sockaddr_t *addr,
+                         NETM_flags_t         flags,
+                         NETM_SIPC_sockaddr_t *addr,
                          size_t               addr_size,
                          size_t              *recved)
 {
@@ -1122,7 +1122,7 @@ int SIPC_socket_send(void          *ctx,
                      SIPC_socket_t *socket,
                      const void    *buf,
                      size_t         len,
-                     NET_flags_t    flags,
+                     NETM_flags_t   flags,
                      size_t        *sent)
 {
         UNUSED_ARG1(flags);
@@ -1139,7 +1139,7 @@ int SIPC_socket_send(void          *ctx,
 
         void *bufcopy = NULL;
 
-        if (flags & NET_FLAGS__COPY) {
+        if (flags & NETM_FLAGS__COPY) {
                 err = kalloc(len, &bufcopy);
                 if (!err && bufcopy) {
                         memcpy(bufcopy, buf, len);
@@ -1222,8 +1222,8 @@ int SIPC_socket_sendto(void                      *ctx,
                        SIPC_socket_t             *socket,
                        const void                *buf,
                        size_t                     len,
-                       NET_flags_t                flags,
-                       const NET_SIPC_sockaddr_t *to_addr,
+                       NETM_flags_t               flags,
+                       const NETM_SIPC_sockaddr_t *to_addr,
                        size_t                     to_addr_size,
                        size_t                    *sent)
 {
@@ -1240,7 +1240,7 @@ int SIPC_socket_sendto(void                      *ctx,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_gethostbyname(void *ctx, const char *name, NET_SIPC_sockaddr_t *addr, size_t addr_size)
+int SIPC_gethostbyname(void *ctx, const char *name, NETM_SIPC_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG4(ctx, name, addr, addr_size);
 
@@ -1324,7 +1324,7 @@ int SIPC_socket_get_send_timeout(void *ctx, SIPC_socket_t *socket, uint32_t *tim
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_getaddress(void *ctx, SIPC_socket_t *socket, NET_SIPC_sockaddr_t *addr, size_t addr_size)
+int SIPC_socket_getaddress(void *ctx, SIPC_socket_t *socket, NETM_SIPC_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG1(ctx);
 

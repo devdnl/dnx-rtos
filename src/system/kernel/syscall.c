@@ -142,30 +142,30 @@ typedef enum {
         SYSCALL_DRIVERINIT,             // int errno (const char *mod_name, int *major, int *minor  const char *node_path, const void *config)
         SYSCALL_DRIVERRELEASE,          // int errno (const char *mod_name, int *major, int *minor)
         SYSCALL_KERNELPANICINFO,        // int errno (kernel_panic_info_t *info)
-        SYSCALL_NETADD,                 // int errno (char *netname, NET_family_t *family, const char *if_path)
+        SYSCALL_NETADD,                 // int errno (char *netname, NETM_family_t *family, const char *if_path)
         SYSCALL_NETRM,                  // int errno (char *netname)
         SYSCALL_NETIFLIST,              // int errno (char *netname[], size_t *netname_len, size_t *count)
-        SYSCALL_NETIFUP,                // int errno (const char *netname, const NET_generic_config_t *config, size_t *config_size)
+        SYSCALL_NETIFUP,                // int errno (const char *netname, const NETM_generic_config_t *config, size_t *config_size)
         SYSCALL_NETIFDOWN,              // int errno (const char *netname)
-        SYSCALL_NETIFSTATUS,            // int errno (const char *netname, NET_family_t *family, NET_generic_status_t *status, size_t *status_size)
+        SYSCALL_NETIFSTATUS,            // int errno (const char *netname, NETM_family_t *family, NETM_generic_status_t *status, size_t *status_size)
         SYSCALL_NETGETHOSTBYNAME,       // int errno (const char *netname, const char *name, void *addr, size_t *addr_size)
-        SYSCALL_NETSOCKETCREATE,        // int errno (int *fd, const char *netname, NET_protocol_t *protocol)
-        SYSCALL_NETBIND,                // int errno (int *fd, const NET_generic_sockaddr_t *addr, size_t *addr_size)
+        SYSCALL_NETSOCKETCREATE,        // int errno (int *fd, const char *netname, NETM_protocol_t *protocol)
+        SYSCALL_NETBIND,                // int errno (int *fd, const NETM_generic_sockaddr_t *addr, size_t *addr_size)
         SYSCALL_NETLISTEN,              // int errno (int *fd)
         SYSCALL_NETACCEPT,              // int errno (int *fd, int *new_fd)
-        SYSCALL_NETRECV,                // int errno (int *fd, void *buf, size_t *len, NET_flags_t *flags, size_t *rcved)
-        SYSCALL_NETSEND,                // int errno (int *fd, const void *buf,size_t *len, NET_flags_t *flags, size_t *sent)
+        SYSCALL_NETRECV,                // int errno (int *fd, void *buf, size_t *len, NETM_flags_t *flags, size_t *rcved)
+        SYSCALL_NETSEND,                // int errno (int *fd, const void *buf,size_t *len, NETM_flags_t *flags, size_t *sent)
         SYSCALL_NETSETRECVTIMEOUT,      // int errno (int *fd, uint32_t *timeout)
         SYSCALL_NETSETSENDTIMEOUT,      // int errno (int *fd, uint32_t *timeout)
-        SYSCALL_NETCONNECT,             // int errno (int *fd, const NET_generic_sockaddr_t *addr, size_t *addr_size)
+        SYSCALL_NETCONNECT,             // int errno (int *fd, const NETM_generic_sockaddr_t *addr, size_t *addr_size)
         SYSCALL_NETDISCONNECT,          // int errno (int *fd)
-        SYSCALL_NETSHUTDOWN,            // int errno (int *fd, NET_shut_t *how)
-        SYSCALL_NETSENDTO,              // int errno (int *fd, const void *buf, size_t *len, NET_flags_t *flags, const NET_generic_sockaddr_t *to_sockaddr, size_t *to_sockaddr_size, size_t *sent)
-        SYSCALL_NETRECVFROM,            // int errno (int *fd, void *buf, size_t *len, NET_flags_t *flags, NET_generic_sockaddr_t *from_sockaddr, size_t *from_sockaddr_size, size_t *rcved)
-        SYSCALL_NETGETADDRESS,          // int errno (int *fd, NET_generic_sockaddr_t *addr, size_t *addr_size)
-        SYSCALL_NETHTON16,              // int errno (NET_family_t *family, uint16_t *value_in, uint16_t *value_out)
-        SYSCALL_NETHTON32,              // int errno (NET_family_t *family, uint32_t *value_in, uint32_t *value_out)
-        SYSCALL_NETHTON64,              // int errno (NET_family_t *family, uint64_t *value_in, uint64_t *value_out)
+        SYSCALL_NETSHUTDOWN,            // int errno (int *fd, NETM_shut_t *how)
+        SYSCALL_NETSENDTO,              // int errno (int *fd, const void *buf, size_t *len, NETM_flags_t *flags, const NETM_generic_sockaddr_t *to_sockaddr, size_t *to_sockaddr_size, size_t *sent)
+        SYSCALL_NETRECVFROM,            // int errno (int *fd, void *buf, size_t *len, NETM_flags_t *flags, NETM_generic_sockaddr_t *from_sockaddr, size_t *from_sockaddr_size, size_t *rcved)
+        SYSCALL_NETGETADDRESS,          // int errno (int *fd, NETM_generic_sockaddr_t *addr, size_t *addr_size)
+        SYSCALL_NETHTON16,              // int errno (NETM_family_t *family, uint16_t *value_in, uint16_t *value_out)
+        SYSCALL_NETHTON32,              // int errno (NETM_family_t *family, uint32_t *value_in, uint32_t *value_out)
+        SYSCALL_NETHTON64,              // int errno (NETM_family_t *family, uint64_t *value_in, uint64_t *value_out)
         SYSCALL_MSLEEP,                 // int errno (const uint32_t *mseconds)
         SYSCALL_USLEEP,                 // int errno (const uint32_t *useconds)
         SYSCALL_GETUID,                 // int errno (uid_t *uid)
@@ -1099,7 +1099,7 @@ static int syscall_write(syscallrq_t *rq)
                         err = _vfs_fwrite(buf, *count, wrctr, cast(kfile_t*, res));
 
                 } else if (res->type == RES_TYPE_SOCKET) {
-                        err = _net_socket_send(res->self, buf, *count, NET_FLAGS__COPY, wrctr);
+                        err = _net_socket_send(res->self, buf, *count, NETM_FLAGS__COPY, wrctr);
 
                 } else {
                         err = EINVAL;
@@ -2115,7 +2115,7 @@ static int syscall_netifadd(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
-        GETARG(NET_family_t *, family);
+        GETARG(NETM_family_t *, family);
         GETARG(const char *, if_path);
 
         return _net_ifadd(netname, *family, if_path);
@@ -2182,7 +2182,7 @@ static int syscall_netifup(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
-        GETARG(const NET_generic_config_t *, config);
+        GETARG(const NETM_generic_config_t *, config);
         GETARG(const size_t *, config_size);
 
         return _net_ifup(netname, config, *config_size);
@@ -2226,8 +2226,8 @@ static int syscall_netifstatus(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
-        GETARG(NET_family_t *, family);
-        GETARG(NET_generic_status_t *, status);
+        GETARG(NETM_family_t *, family);
+        GETARG(NETM_generic_status_t *, status);
         GETARG(const size_t *, status_size);
 
         return _net_ifstatus(netname, family, status, *status_size);
@@ -2251,7 +2251,7 @@ static int syscall_netsocketcreate(syscallrq_t *rq)
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(int *, fd);
         GETARG(const char *, netname);
-        GETARG(NET_protocol_t*, protocol);
+        GETARG(NETM_protocol_t*, protocol);
 
         ksocket_t *socket;
         int err = _net_socket_create(netname, *protocol, &socket);
@@ -2282,7 +2282,7 @@ static int syscall_netbind(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(int *, fd);
-        GETARG(const NET_generic_sockaddr_t *, addr);
+        GETARG(const NETM_generic_sockaddr_t *, addr);
         GETARG(const size_t *, addr_size);
 
         res_header_t *res;
@@ -2375,7 +2375,7 @@ static int syscall_netrecv(syscallrq_t *rq)
         GETARG(int *, fd);
         GETARG(void *, buf);
         GETARG(size_t *, len);
-        GETARG(NET_flags_t *, flags);
+        GETARG(NETM_flags_t *, flags);
         GETARG(size_t *, recved);
 
         res_header_t *res;
@@ -2406,8 +2406,8 @@ static int syscall_netrecvfrom(syscallrq_t *rq)
         GETARG(int *, fd);
         GETARG(void *, buf);
         GETARG(size_t *, len);
-        GETARG(NET_flags_t *, flags);
-        GETARG(NET_generic_sockaddr_t *, sockaddr);
+        GETARG(NETM_flags_t *, flags);
+        GETARG(NETM_generic_sockaddr_t *, sockaddr);
         GETARG(const size_t *, sockaddr_size);
         GETARG(size_t *, recved);
 
@@ -2439,7 +2439,7 @@ static int syscall_netsend(syscallrq_t *rq)
         GETARG(int *, fd);
         GETARG(const void *, buf);
         GETARG(size_t *, len);
-        GETARG(NET_flags_t *, flags);
+        GETARG(NETM_flags_t *, flags);
         GETARG(size_t *, sent);
 
         res_header_t *res;
@@ -2470,8 +2470,8 @@ static int syscall_netsendto(syscallrq_t *rq)
         GETARG(int *, fd);
         GETARG(const void *, buf);
         GETARG(size_t *, len);
-        GETARG(NET_flags_t *, flags);
-        GETARG(const NET_generic_sockaddr_t *, to_addr);
+        GETARG(NETM_flags_t *, flags);
+        GETARG(const NETM_generic_sockaddr_t *, to_addr);
         GETARG(const size_t *, to_addr_size);
         GETARG(size_t *, sent);
 
@@ -2502,7 +2502,7 @@ static int syscall_netgethostbyname(syscallrq_t *rq)
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
         GETARG(const char *, name);
-        GETARG(NET_generic_sockaddr_t *, addr);
+        GETARG(NETM_generic_sockaddr_t *, addr);
         GETARG(const size_t *, addr_size);
 
         return _net_gethostbyname(netname, name, addr, *addr_size);
@@ -2581,7 +2581,7 @@ static int syscall_netconnect(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(int *, fd);
-        GETARG(const NET_generic_sockaddr_t *, addr);
+        GETARG(const NETM_generic_sockaddr_t *, addr);
         GETARG(const size_t *, addr_size);
 
         res_header_t *res;
@@ -2637,7 +2637,7 @@ static int syscall_netshutdown(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(int *, fd);
-        GETARG(NET_shut_t *, how);
+        GETARG(NETM_shut_t *, how);
 
         res_header_t *res;
         int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
@@ -2665,7 +2665,7 @@ static int syscall_netgetaddress(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(int *, fd);
-        GETARG(NET_generic_sockaddr_t *, sockaddr);
+        GETARG(NETM_generic_sockaddr_t *, sockaddr);
         GETARG(const size_t *, sockaddr_size);
 
         res_header_t *res;
@@ -2694,7 +2694,7 @@ static int syscall_netgetaddress(syscallrq_t *rq)
 static int syscall_nethton16(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(NET_family_t*, family);
+        GETARG(NETM_family_t*, family);
         GETARG(uint16_t*, value_in);
         GETARG(uint16_t*, value_out);
 
@@ -2719,7 +2719,7 @@ static int syscall_nethton16(syscallrq_t *rq)
 static int syscall_nethton32(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(NET_family_t*, family);
+        GETARG(NETM_family_t*, family);
         GETARG(uint32_t*, value_in);
         GETARG(uint32_t*, value_out);
 
@@ -2744,7 +2744,7 @@ static int syscall_nethton32(syscallrq_t *rq)
 static int syscall_nethton64(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(NET_family_t*, family);
+        GETARG(NETM_family_t*, family);
         GETARG(uint64_t*, value_in);
         GETARG(uint64_t*, value_out);
 
