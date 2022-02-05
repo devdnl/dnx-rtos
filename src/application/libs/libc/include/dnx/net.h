@@ -61,7 +61,7 @@ int_main(init, STACK_DEPTH_LOW, int argc, char *argv[])
         }
 
         // start DHCP client
-        if (ifup("inet", &DHCP_UP) != 0) {
+        if (ifup("inet", &DHCP_UP, sizeof(DHCP_UP) != 0) {
                 perror("ifup");
                 return EXIT_FAILURE;
         }
@@ -69,7 +69,7 @@ int_main(init, STACK_DEPTH_LOW, int argc, char *argv[])
         // get connection status
         NET_INET_status_t stat;
         NET_family_t family;
-        if (ifstatus("inet", &family, &stat) != 0) {
+        if (ifstatus("inet", &family, &stat, sizeof(stat) != 0) {
                 perror("ifstatus");
                 return EXIT_FAILURE;
         } else {
@@ -112,7 +112,7 @@ int_main(server, STACK_DEPTH_LOW, int argc, char *argv[])
 
         SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
         if (socket) {
-                if (socket_bind(socket, &ADDR_ANY) == 0) {
+                if (socket_bind(socket, &ADDR_ANY, sizeof(ADDR_ANY)) == 0) {
                         if (socket_listen(socket) == 0) {
                                 SOCKET *new_socket;
                                 while (socket_accept(socket, &new_socket) == 0) {
