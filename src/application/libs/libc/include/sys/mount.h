@@ -294,7 +294,7 @@ static inline dev_t driver_init(const char *mod_name, int major, int minor, cons
 static inline const char *get_driver_name(size_t modno)
 {
         const char *name = NULL;
-        int err = _libc_syscall(_LIBC_SYS_GETDRIVERNAME, &name, &modno);
+        int err = _libc_syscall(_LIBC_SYS_GETDRIVERNAME, &modno, &name);
         return err ? NULL : name;
 }
 

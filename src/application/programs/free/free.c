@@ -92,24 +92,24 @@ int main(int argc, char *argv[])
         u32_t m_perc = ((u64_t)m_used * 1000) / m_size;
 
         printf("Total: %u\n", m_size);
-        printf("Free : %u\n", m_free);
-        printf("Used : %u\n", m_used);
+        printf("Free: %u\n", m_free);
+        printf("Used: %u\n", m_used);
         printf("Memory usage: %u.%u%%\n", m_perc / 10, m_perc % 10);
 
         if (strcmp(argv[1], "-d") == 0) {
                 printf("\nDetailed memory usage:\n");
-                printf("  Kernel     : %d\n", sysmem.kernel_memory_usage);
+                printf("  Kernel: %d\n", sysmem.kernel_memory_usage);
                 printf("  Filesystems: %d\n", sysmem.filesystems_memory_usage);
-                printf("  Modules    : %d\n", sysmem.modules_memory_usage);
-                printf("  Network    : %d\n", sysmem.network_memory_usage);
-                printf("  Programs   : %d\n", sysmem.programs_memory_usage);
-                printf("  Shared     : %d\n", sysmem.shared_memory_usage);
-                printf("  Cached     : %d\n", sysmem.cached_memory_usage);
-                printf("  Static     : %d\n\n", sysmem.static_memory_usage);
+                printf("  Modules: %d\n", sysmem.modules_memory_usage);
+                printf("  Network: %d\n", sysmem.network_memory_usage);
+                printf("  Programs: %d\n", sysmem.programs_memory_usage);
+                printf("  Shared: %d\n", sysmem.shared_memory_usage);
+                printf("  Cached: %d\n", sysmem.cached_memory_usage);
+                printf("  Static: %d\n\n", sysmem.static_memory_usage);
 
                 printf("Detailed modules memory usage:\n");
                 for (uint module = 0; module < drv_count; module++) {
-                        printf("  %s"VT100_CURSOR_BACKWARD(99)VT100_CURSOR_FORWARD(14)": %d\n",
+                        printf("  %s: %d\n",
                                get_driver_name(module),
                                modmem[module]);
                 }

@@ -752,6 +752,7 @@ static bool start_program(char *master, char *slave, char *std_in,
         if (global->input == stdin) {
                 ioctl(fileno(global->input), IOCTL_VFS__NON_BLOCKING_RD_MODE);
                 while (getc(global->input) != EOF);
+                clearerr(global->input);
                 ioctl(fileno(global->input), IOCTL_VFS__DEFAULT_RD_MODE);
         }
 

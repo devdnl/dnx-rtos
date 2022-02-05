@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
                         }
 
                         if (loop) {
+                                clearerr(stdin);
                                 int c = getchar();
                                 if (c == ETX) {
                                         loop = false;
