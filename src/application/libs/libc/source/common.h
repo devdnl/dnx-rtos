@@ -62,6 +62,10 @@ struct _libc_file {
         } flag;
 };
 
+struct _libc_socket {
+        int fd;
+};
+
 typedef struct {
         /** buffer used to store temporary time structure */
         struct tm _tmbuf;
@@ -87,6 +91,9 @@ extern void **_libc_app_ctx;
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+extern void *_libc_malloc(size_t size);
+extern void  _libc_free(void *mem);
+extern int close(int fd);
 
 /*==============================================================================
   Exported inline functions

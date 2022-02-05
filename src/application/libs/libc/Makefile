@@ -23,6 +23,7 @@ CSRC_LIB   += libc/source/strlcpy.c
 CSRC_LIB   += libc/source/strncasecmp.c
 CSRC_LIB   += libc/source/strndup.c
 CSRC_LIB   += libc/source/system.c
+CSRC_LIB   += libc/source/socket.c
 CSRC_LIB   += libc/source/syscall.c
 CSRC_LIB   += libc/source/threads.c
 CSRC_LIB   += libc/source/vfprintf.c

@@ -137,7 +137,7 @@ static void INET_up(const char *netname, const char *options)
                         .gateway = NET_INET_IPv4_ANY
                 };
 
-                if (ifup(netname, &DHCP) != 0) {
+                if (ifup(netname, &DHCP, sizeof(DHCP)) != 0) {
                         perror(netname);
                 }
 
@@ -176,7 +176,7 @@ static void INET_up(const char *netname, const char *options)
                         .gateway = NET_INET_IPv4(ga,gb,gc,gd)
                 };
 
-                if (ifup(netname, &config) != 0) {
+                if (ifup(netname, &config, sizeof(config)) != 0) {
                         perror(netname);
                 }
         }
@@ -257,7 +257,7 @@ static void SIPC_up(const char *netname, const char *options)
                 conf.MTU = MTU;
         }
 
-        if (ifup(netname, &conf) != 0) {
+        if (ifup(netname, &conf, sizeof(conf)) != 0) {
                 perror(netname);
         }
 }
@@ -304,7 +304,7 @@ static void CANNET_up(const char *netname, const char *options)
         sscanf(options, "%lu", &addr);
         conf.addr = addr;
 
-        if (ifup(netname, &conf) != 0) {
+        if (ifup(netname, &conf, sizeof(conf)) != 0) {
                 perror(netname);
         }
 }
@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
                 char **network = global->network;
                 while (*network) {
                         NET_family_t family;
-                        if (ifstatus(*network, &family, &global->status) == 0) {
+                        if (ifstatus(*network, &family, &global->status, sizeof(global->status)) == 0) {
                                 print_network_status(*network, family);
                         }
                         network++;
@@ -421,7 +421,7 @@ int main(int argc, char *argv[])
                 // configure selected network
                 if (netname) {
                         NET_family_t family;
-                        if (ifstatus(netname, &family, &global->status) == 0) {
+                        if (ifstatus(netname, &family, &global->status, sizeof(global->status)) == 0) {
                                 if (down) {
                                         ifdown(netname);
 

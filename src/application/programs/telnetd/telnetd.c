@@ -160,7 +160,7 @@ static int telnet_thread(void *arg)
 
         // print client IP
         NET_INET_sockaddr_t addr;
-        socket_get_address(sock, &addr);
+        socket_get_address(sock, &addr, sizeof(addr));
 
         printf("New connection from: %d.%d.%d.%d\n",
                NET_INET_IPv4_a(addr.addr),
@@ -258,7 +258,7 @@ exit:
         }
 
         NET_INET_sockaddr_t sockaddr;
-        socket_get_address(sock, &sockaddr);
+        socket_get_address(sock, &sockaddr, sizeof(sockaddr));
         printf("Connection closed: %d.%d.%d.%d\n",
                NET_INET_IPv4_a(sockaddr.addr),
                NET_INET_IPv4_b(sockaddr.addr),
@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
 
         do {
                 NET_family_t family;
-                ifstatus("inet", &family, &netstat);
+                ifstatus("inet", &family, &netstat, sizeof(netstat));
                 msleep(500);
         } while (! ( (netstat.state == NET_INET_STATE__DHCP_CONFIGURED)
                    ||(netstat.state == NET_INET_STATE__STATIC_IP) ) );
@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
                 goto exit;
         }
 
-        if (socket_bind(listener, &IP_ADDR_ANY) != 0) {
+        if (socket_bind(listener, &IP_ADDR_ANY, sizeof(IP_ADDR_ANY)) != 0) {
                 global->msg = "Bind failed";
                 goto exit;
         }

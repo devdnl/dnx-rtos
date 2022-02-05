@@ -321,7 +321,7 @@ API_FS_INIT(eefs, void **fs_handle, const char *src_path, const char *opts)
         if (!err) {
                 EEFS_t *hdl = *fs_handle;
 
-                err = sys_fopen(src_path, "r+", &hdl->srcdev);
+                err = sys_fopen(src_path, O_RDWR, &hdl->srcdev);
                 if (err) {
                         goto finish;
                 }

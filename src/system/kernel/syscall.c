@@ -145,25 +145,24 @@ typedef enum {
         SYSCALL_NETADD,                 // int errno (char *netname, NET_family_t *family, const char *if_path)
         SYSCALL_NETRM,                  // int errno (char *netname)
         SYSCALL_NETIFLIST,              // int errno (char *netname[], size_t *netname_len, size_t *count)
-        SYSCALL_NETIFUP,                // int errno (const char *netname, const NET_generic_config_t *config)
+        SYSCALL_NETIFUP,                // int errno (const char *netname, const NET_generic_config_t *config, size_t *config_size)
         SYSCALL_NETIFDOWN,              // int errno (const char *netname)
-        SYSCALL_NETIFSTATUS,            // int errno (const char *netname, NET_family_t *family, NET_generic_status_t *status)
-        SYSCALL_NETSOCKETCREATE,        // int errno (const char *netname, NET_protocol_t *protocol, SOCKET**)
-        SYSCALL_NETGETHOSTBYNAME,       // int errno (const char *netname, const char *name, void *addr)
-        SYSCALL_NETSOCKETDESTROY,       // int errno (SOCKET *socket)
-        SYSCALL_NETBIND,                // int errno (SOCKET *socket, const NET_generic_sockaddr_t *addr)
-        SYSCALL_NETLISTEN,              // int errno (SOCKET *socket)
-        SYSCALL_NETACCEPT,              // int errno (SOCKET *socket, SOCKET **new_socket)
-        SYSCALL_NETRECV,                // int errno (SOCKET *socket, void *buf, size_t *len, NET_flags_t *flags, size_t *rcved)
-        SYSCALL_NETSEND,                // int errno (SOCKET *socket, const void *buf,size_t *len, NET_flags_t *flags, size_t *sent)
-        SYSCALL_NETSETRECVTIMEOUT,      // int errno (SOCKET *socket, uint32_t *timeout)
-        SYSCALL_NETSETSENDTIMEOUT,      // int errno (SOCKET *socket, uint32_t *timeout)
-        SYSCALL_NETCONNECT,             // int errno (SOCKET *socket, const NET_generic_sockaddr_t *addr)
-        SYSCALL_NETDISCONNECT,          // int errno (SOCKET *socket)
-        SYSCALL_NETSHUTDOWN,            // int errno (SOCKET *socket, NET_shut_t *how)
-        SYSCALL_NETSENDTO,              // int errno (SOCKET *socket, const void *buf, size_t *len, NET_flags_t *flags, const NET_generic_sockaddr_t *to_sockaddr, size_t *sent)
-        SYSCALL_NETRECVFROM,            // int errno (SOCKET *socket, void *buf, size_t *len, NET_flags_t *flags, NET_generic_sockaddr_t *from_sockaddr, size_t *rcved)
-        SYSCALL_NETGETADDRESS,          // int errno (SOCKET *socket, NET_generic_sockaddr_t *addr)
+        SYSCALL_NETIFSTATUS,            // int errno (const char *netname, NET_family_t *family, NET_generic_status_t *status, size_t *status_size)
+        SYSCALL_NETGETHOSTBYNAME,       // int errno (const char *netname, const char *name, void *addr, size_t *addr_size)
+        SYSCALL_NETSOCKETCREATE,        // int errno (int *fd, const char *netname, NET_protocol_t *protocol)
+        SYSCALL_NETBIND,                // int errno (int *fd, const NET_generic_sockaddr_t *addr, size_t *addr_size)
+        SYSCALL_NETLISTEN,              // int errno (int *fd)
+        SYSCALL_NETACCEPT,              // int errno (int *fd, int *new_fd)
+        SYSCALL_NETRECV,                // int errno (int *fd, void *buf, size_t *len, NET_flags_t *flags, size_t *rcved)
+        SYSCALL_NETSEND,                // int errno (int *fd, const void *buf,size_t *len, NET_flags_t *flags, size_t *sent)
+        SYSCALL_NETSETRECVTIMEOUT,      // int errno (int *fd, uint32_t *timeout)
+        SYSCALL_NETSETSENDTIMEOUT,      // int errno (int *fd, uint32_t *timeout)
+        SYSCALL_NETCONNECT,             // int errno (int *fd, const NET_generic_sockaddr_t *addr, size_t *addr_size)
+        SYSCALL_NETDISCONNECT,          // int errno (int *fd)
+        SYSCALL_NETSHUTDOWN,            // int errno (int *fd, NET_shut_t *how)
+        SYSCALL_NETSENDTO,              // int errno (int *fd, const void *buf, size_t *len, NET_flags_t *flags, const NET_generic_sockaddr_t *to_sockaddr, size_t *to_sockaddr_size, size_t *sent)
+        SYSCALL_NETRECVFROM,            // int errno (int *fd, void *buf, size_t *len, NET_flags_t *flags, NET_generic_sockaddr_t *from_sockaddr, size_t *from_sockaddr_size, size_t *rcved)
+        SYSCALL_NETGETADDRESS,          // int errno (int *fd, NET_generic_sockaddr_t *addr, size_t *addr_size)
         SYSCALL_NETHTON16,              // int errno (NET_family_t *family, uint16_t *value_in, uint16_t *value_out)
         SYSCALL_NETHTON32,              // int errno (NET_family_t *family, uint32_t *value_in, uint32_t *value_out)
         SYSCALL_NETHTON64,              // int errno (NET_family_t *family, uint64_t *value_in, uint64_t *value_out)
@@ -271,7 +270,6 @@ static int syscall_netifup(syscallrq_t *rq);
 static int syscall_netifdown(syscallrq_t *rq);
 static int syscall_netifstatus(syscallrq_t *rq);
 static int syscall_netsocketcreate(syscallrq_t *rq);
-static int syscall_netsocketdestroy(syscallrq_t *rq);
 static int syscall_netbind(syscallrq_t *rq);
 static int syscall_netlisten(syscallrq_t *rq);
 static int syscall_netaccept(syscallrq_t *rq);
@@ -403,7 +401,6 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_NETIFDOWN] = syscall_netifdown,
         [SYSCALL_NETIFSTATUS] = syscall_netifstatus,
         [SYSCALL_NETSOCKETCREATE] = syscall_netsocketcreate,
-        [SYSCALL_NETSOCKETDESTROY] = syscall_netsocketdestroy,
         [SYSCALL_NETBIND] = syscall_netbind,
         [SYSCALL_NETLISTEN] = syscall_netlisten,
         [SYSCALL_NETACCEPT] = syscall_netaccept,
@@ -1100,6 +1097,10 @@ static int syscall_write(syscallrq_t *rq)
         if (!err) {
                 if (res->type == RES_TYPE_FILE) {
                         err = _vfs_fwrite(buf, *count, wrctr, cast(kfile_t*, res));
+
+                } else if (res->type == RES_TYPE_SOCKET) {
+                        err = _net_socket_send(res->self, buf, *count, NET_FLAGS__COPY, wrctr);
+
                 } else {
                         err = EINVAL;
                 }
@@ -1129,6 +1130,10 @@ static int syscall_read(syscallrq_t *rq)
         if (!err) {
                 if (res->type == RES_TYPE_FILE) {
                         err = _vfs_fread(buf, *count, rdctr, cast(kfile_t*, res));
+
+                } else if (res->type == RES_TYPE_SOCKET) {
+                        err = _net_socket_recv(res->self, buf, *count, 0, rdctr);
+
                 } else {
                         err = EINVAL;
                 }
@@ -2178,8 +2183,9 @@ static int syscall_netifup(syscallrq_t *rq)
 #if _ENABLE_NETWORK_ == _YES_
         GETARG(const char *, netname);
         GETARG(const NET_generic_config_t *, config);
+        GETARG(const size_t *, config_size);
 
-        return _net_ifup(netname, config);
+        return _net_ifup(netname, config, *config_size);
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2222,8 +2228,9 @@ static int syscall_netifstatus(syscallrq_t *rq)
         GETARG(const char *, netname);
         GETARG(NET_family_t *, family);
         GETARG(NET_generic_status_t *, status);
+        GETARG(const size_t *, status_size);
 
-        return _net_ifstatus(netname, family, status);
+        return _net_ifstatus(netname, family, status, *status_size);
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2242,52 +2249,17 @@ static int syscall_netifstatus(syscallrq_t *rq)
 static int syscall_netsocketcreate(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
+        GETARG(int *, fd);
         GETARG(const char *, netname);
         GETARG(NET_protocol_t*, protocol);
-        GETARG(SOCKET **, socket);
 
-        int err = _net_socket_create(netname, *protocol, socket);
+        ksocket_t *socket;
+        int err = _net_socket_create(netname, *protocol, &socket);
         if (!err) {
-                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socket));
+                err = _process_descriptor_allocate(GETPROCESS(), fd, cast(res_header_t*, socket));
                 if (err) {
-                        _net_socket_destroy(*socket);
-                        *socket = NULL;
+                        _net_socket_destroy(socket);
                 }
-        }
-
-        return err;
-#else
-        UNUSED_ARG1(rq);
-        return ENOSYS;
-#endif
-}
-
-//==============================================================================
-/**
- * @brief  This syscall destroy socket.
- *
- * @param  rq                   syscall request
- *
- * @return One of errno value.
- */
-//==============================================================================
-static int syscall_netsocketdestroy(syscallrq_t *rq)
-{
-#if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
-
-        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, socket), RES_TYPE_SOCKET);
-        if (err) {
-                res_header_t *res;
-                if (_process_descriptor_get_resource(GETPROCESS(), 2, &res) == 0) {
-                        const char *msg = "*** Error: object is not a socket! ***\n";
-                        size_t wrcnt;
-                        _vfs_fwrite(msg, strlen(msg), &wrcnt, cast(kfile_t*, res));
-                }
-
-                pid_t pid = 0;
-                _process_get_pid(GETPROCESS(), &pid);
-                _process_kill(pid);
         }
 
         return err;
@@ -2309,10 +2281,17 @@ static int syscall_netsocketdestroy(syscallrq_t *rq)
 static int syscall_netbind(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(const NET_generic_sockaddr_t *, addr);
+        GETARG(const size_t *, addr_size);
 
-        return _net_socket_bind(socket, addr);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_bind(res->self, addr, *addr_size);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2331,9 +2310,15 @@ static int syscall_netbind(syscallrq_t *rq)
 static int syscall_netlisten(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
 
-        return _net_socket_listen(socket);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_listen(res->self);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2352,20 +2337,21 @@ static int syscall_netlisten(syscallrq_t *rq)
 static int syscall_netaccept(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
-        GETARG(SOCKET **, new_socket);
+        GETARG(int *, fd);
+        GETARG(int *, new_fd);
 
-        SOCKET *socknew = NULL;
-        int err = _net_socket_accept(socket, &socknew);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
         if (!err) {
-                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, socknew));
-                if (err) {
-                        _net_socket_destroy(socknew);
-                        socknew = NULL;
+                ksocket_t *socknew;
+                err = _net_socket_accept(res->self, &socknew);
+                if (!err) {
+                        err = _process_descriptor_allocate(GETPROCESS(), new_fd, cast(res_header_t*, socknew));
+                        if (err) {
+                                _net_socket_destroy(socknew);
+                        }
                 }
         }
-
-        *new_socket = socknew;
 
         return err;
 #else
@@ -2386,13 +2372,19 @@ static int syscall_netaccept(syscallrq_t *rq)
 static int syscall_netrecv(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(void *, buf);
         GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
         GETARG(size_t *, recved);
 
-        return _net_socket_recv(socket, buf, *len, *flags, recved);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_recv(res->self, buf, *len, *flags, recved);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2411,14 +2403,21 @@ static int syscall_netrecv(syscallrq_t *rq)
 static int syscall_netrecvfrom(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(void *, buf);
         GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
         GETARG(NET_generic_sockaddr_t *, sockaddr);
+        GETARG(const size_t *, sockaddr_size);
         GETARG(size_t *, recved);
 
-        return _net_socket_recvfrom(socket, buf, *len, *flags, sockaddr, recved);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_recvfrom(res->self, buf, *len, *flags, sockaddr, *sockaddr_size, recved);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2437,13 +2436,19 @@ static int syscall_netrecvfrom(syscallrq_t *rq)
 static int syscall_netsend(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(const void *, buf);
         GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
         GETARG(size_t *, sent);
 
-        return _net_socket_send(socket, buf, *len, *flags, sent);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_send(res->self, buf, *len, *flags, sent);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2462,14 +2467,21 @@ static int syscall_netsend(syscallrq_t *rq)
 static int syscall_netsendto(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(const void *, buf);
         GETARG(size_t *, len);
         GETARG(NET_flags_t *, flags);
         GETARG(const NET_generic_sockaddr_t *, to_addr);
+        GETARG(const size_t *, to_addr_size);
         GETARG(size_t *, sent);
 
-        return _net_socket_sendto(socket, buf, *len, *flags, to_addr, sent);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_sendto(res->self, buf, *len, *flags, to_addr, *to_addr_size, sent);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2491,8 +2503,9 @@ static int syscall_netgethostbyname(syscallrq_t *rq)
         GETARG(const char *, netname);
         GETARG(const char *, name);
         GETARG(NET_generic_sockaddr_t *, addr);
+        GETARG(const size_t *, addr_size);
 
-        return _net_gethostbyname(netname, name, addr);
+        return _net_gethostbyname(netname, name, addr, *addr_size);
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2511,10 +2524,16 @@ static int syscall_netgethostbyname(syscallrq_t *rq)
 static int syscall_netsetrecvtimeout(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(uint32_t *, timeout);
 
-        return _net_socket_set_recv_timeout(socket, *timeout);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_set_recv_timeout(res->self, *timeout);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2533,10 +2552,16 @@ static int syscall_netsetrecvtimeout(syscallrq_t *rq)
 static int syscall_netsetsendtimeout(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(uint32_t *, timeout);
 
-        return _net_socket_set_send_timeout(socket, *timeout);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_set_send_timeout(res->self, *timeout);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2555,10 +2580,17 @@ static int syscall_netsetsendtimeout(syscallrq_t *rq)
 static int syscall_netconnect(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(const NET_generic_sockaddr_t *, addr);
+        GETARG(const size_t *, addr_size);
 
-        return _net_socket_connect(socket, addr);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_connect(res->self, addr, *addr_size);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2577,9 +2609,15 @@ static int syscall_netconnect(syscallrq_t *rq)
 static int syscall_netdisconnect(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
 
-        return _net_socket_disconnect(socket);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_disconnect(res->self);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2598,10 +2636,16 @@ static int syscall_netdisconnect(syscallrq_t *rq)
 static int syscall_netshutdown(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(NET_shut_t *, how);
 
-        return _net_socket_shutdown(socket, *how);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_shutdown(res->self, *how);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;
@@ -2620,10 +2664,17 @@ static int syscall_netshutdown(syscallrq_t *rq)
 static int syscall_netgetaddress(syscallrq_t *rq)
 {
 #if _ENABLE_NETWORK_ == _YES_
-        GETARG(SOCKET *, socket);
+        GETARG(int *, fd);
         GETARG(NET_generic_sockaddr_t *, sockaddr);
+        GETARG(const size_t *, sockaddr_size);
 
-        return _net_socket_getaddress(socket, sockaddr);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                err = _net_socket_getaddress(res->self, sockaddr, *sockaddr_size);
+        }
+
+        return err;
 #else
         UNUSED_ARG1(rq);
         return ENOSYS;

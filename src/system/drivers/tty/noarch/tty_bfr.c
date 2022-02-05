@@ -283,8 +283,10 @@ void ttybfr_put(ttybfr_t *this, const char *src, size_t len)
                                 this->carriage = 0;
                                 this->new_line_bfr_idx = 0;
 
-                                if (LAST_CHARACTER(this->line[this->line_head]) != '\n') {
-                                        clear_last_line(this);
+                                if (this->line[this->line_head]) {
+                                        if (LAST_CHARACTER(this->line[this->line_head]) != '\n') {
+                                                clear_last_line(this);
+                                        }
                                 }
 
                         } else if (chr == '\n') {

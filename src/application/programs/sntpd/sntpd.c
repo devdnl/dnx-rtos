@@ -328,7 +328,7 @@ static int get_SNTP_host_IP(bool once, int argc, char *argv[])
         int err;
         while ((err = get_host_by_name("inet",
                                        argv[global->current_host_arg],
-                                       &global->server))) {
+                                       &global->server, sizeof(global->server)))) {
 
                 fprintf(stderr, "[%d] %s: no host\n",
                         clock() / CLOCKS_PER_SEC,
@@ -370,7 +370,7 @@ static void set_NTP_time(int argc, char *argv[])
                 socket_set_send_timeout(socket, SNTP_SEND_TIMEOUT);
                 socket_set_recv_timeout(socket, SNTP_RECV_TIMEOUT);
 
-                if (socket_connect(socket, &global->server) == 0) {
+                if (socket_connect(socket, &global->server, sizeof(global->server)) == 0) {
 
                         if (send_request(socket) == 0) {
 
@@ -412,13 +412,13 @@ static void set_timezone(int argc, char *argv[])
         }
 
         NET_INET_sockaddr_t provider_ip;
-        if (get_host_by_name("inet", provider, &provider_ip) == 0) {
+        if (get_host_by_name("inet", provider, &provider_ip, sizeof(provider_ip)) == 0) {
 
                 SOCKET *socket = socket_open("inet", NET_PROTOCOL__TCP);
                 if (socket) {
                         provider_ip.port = 80;
                         errno = 0;
-                        if (socket_connect(socket, &provider_ip) == 0) {
+                        if (socket_connect(socket, &provider_ip, sizeof(provider_ip)) == 0) {
 
                                 const char *request = "GET /api/ip HTTP/1.1\r\n"
                                                       "Accept: */*\r\n"

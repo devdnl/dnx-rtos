@@ -322,12 +322,12 @@ static int input_thread(void *arg)
         cannet_t *cannet = arg;
 
         if (cannet->thread_run) {
-                ioctl(fileno(cannet->if_file), IOCTL_CAN__SET_RECV_TIMEOUT, &THREAD_CAN_RECV_TIMEOUT_ms);
+                sys_ioctl(cannet->if_file, IOCTL_CAN__SET_RECV_TIMEOUT, &THREAD_CAN_RECV_TIMEOUT_ms);
         }
 
         while (cannet->thread_run) {
                 CAN_msg_t can_frame;
-                int err = ioctl(fileno(cannet->if_file), IOCTL_CAN__RECV_MSG, &can_frame);
+                int err = sys_ioctl(cannet->if_file, IOCTL_CAN__RECV_MSG, &can_frame);
                 if (!err) {
                         if (cannet->state == NET_CANNET_STATE__UP) {
 
@@ -366,7 +366,7 @@ int CANNET_ifinit(void **ctx, const char *if_path)
                 };
 
                 int merr  = sys_mutex_create(KMTX_TYPE_RECURSIVE, &cannet->mutex);
-                int ferr  = sys_fopen(if_path, "r+", &cannet->if_file);
+                int ferr  = sys_fopen(if_path, O_RDWR, &cannet->if_file);
                 int tierr = sys_thread_create(input_thread, &attr, cannet, &cannet->if_thread);
 
                 if (merr or tierr or ferr) {
@@ -412,13 +412,18 @@ int CANNET_ifdeinit(void *ctx)
 //==============================================================================
 /**
  * @brief  Function up the network.
- * @param  ctx   context
- * @param  cfg   configuration structure
+ * @param  ctx          context
+ * @param  cfg          configuration structure
+ * @param  cfg_size     configuration size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_ifup(void *ctx, const NET_CANNET_config_t *cfg)
+int CANNET_ifup(void *ctx, const NET_CANNET_config_t *cfg, size_t cfg_size)
 {
+        if (cfg_size != sizeof(*cfg)) {
+                return EINVAL;
+        }
+
         cannet_t *cannet = ctx;
 
         int err = EINVAL;
@@ -492,11 +497,16 @@ int CANNET_ifdown(void *ctx)
 /**
  * @brief  Function returns interface status.
  * @param  status       status container
+ * @param  status_size  status size (at least)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_ifstatus(void *ctx, NET_CANNET_status_t *status)
+int CANNET_ifstatus(void *ctx, NET_CANNET_status_t *status, size_t status_size)
 {
+        if (status_size < sizeof(*status)) {
+                return EINVAL;
+        }
+
         cannet_t *cannet = ctx;
 
         if (cannet) {
@@ -575,11 +585,16 @@ int CANNET_socket_destroy(void *ctx, CANNET_socket_t *socket)
  * @brief  Function connect socket to selected address. Client side function.
  * @param  socket    socket
  * @param  addr      sipc address
+ * @param  addr_size address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_socket_connect(void *ctx, CANNET_socket_t *socket, const NET_CANNET_sockaddr_t *addr)
+int CANNET_socket_connect(void *ctx, CANNET_socket_t *socket, const NET_CANNET_sockaddr_t *addr, size_t addr_size)
 {
+        if (addr_size != sizeof(*addr)) {
+                return EINVAL;
+        }
+
         cannet_t *cannet = ctx;
 
         socket->addr_remote = addr->addr;
@@ -687,13 +702,18 @@ int CANNET_socket_shutdown(void *ctx, CANNET_socket_t *socket, NET_shut_t how)
 //==============================================================================
 /**
  * @brief  Function bind selected address with socket. Host side function.
- * @param  socket     socket
- * @param  addr          inet address
+ * @param  socket       socket
+ * @param  addr         address
+ * @param  addr_size    address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_socket_bind(void *ctx, CANNET_socket_t *socket, const NET_CANNET_sockaddr_t *addr)
+int CANNET_socket_bind(void *ctx, CANNET_socket_t *socket, const NET_CANNET_sockaddr_t *addr, size_t addr_size)
 {
+        if (addr_size != sizeof(*addr)) {
+                return EINVAL;
+        }
+
         cannet_t *cannet = ctx;
 
         socket->addr_remote = addr->addr;
@@ -803,7 +823,7 @@ int CANNET_socket_recv(void            *ctx,
                        size_t          *recved)
 {
         NET_CANNET_sockaddr_t sockaddr;
-        return CANNET_socket_recvfrom(ctx, socket, buf, len, flags, &sockaddr, recved);
+        return CANNET_socket_recvfrom(ctx, socket, buf, len, flags, &sockaddr, sizeof(sockaddr), recved);
 }
 
 //==============================================================================
@@ -813,7 +833,8 @@ int CANNET_socket_recv(void            *ctx,
  * @param  buf          buffer for data
  * @param  len          number of bytes to receive
  * @param  flags        flags
- * @param  sockaddr     socket address
+ * @param  addr         address
+ * @param  addr_size    address size
  * @param  recved       number of received bytes
  * @return One of @ref errno value.
  */
@@ -823,9 +844,14 @@ int CANNET_socket_recvfrom(void                  *ctx,
                            void                  *buf,
                            size_t                 len,
                            NET_flags_t            flags,
-                           NET_CANNET_sockaddr_t *sockaddr,
+                           NET_CANNET_sockaddr_t *addr,
+                           size_t                 addr_size,
                            size_t                *recved)
 {
+        if (addr_size != sizeof(*addr)) {
+                return EINVAL;
+        }
+
         cannet_t *cannet = ctx;
 
         if (not is_socket_registered(cannet, socket)) {
@@ -843,8 +869,8 @@ int CANNET_socket_recvfrom(void                  *ctx,
         *recved = 0;
         u32_t tref = sys_time_get_reference();
 
-        sockaddr->addr = 0;
-        sockaddr->port = socket->port;
+        addr->addr = 0;
+        addr->port = socket->port;
 
         int err = ETIME;
 
@@ -853,7 +879,7 @@ int CANNET_socket_recvfrom(void                  *ctx,
                 err = cannetbuf__read(socket->rx_buf, buf, len, recved);
                 if (!err) {
                         if (*recved > 0) {
-                                sockaddr->addr = socket->datagram_source;
+                                addr->addr = socket->datagram_source;
                                 break;
 
                         } else {
@@ -974,7 +1000,8 @@ int CANNET_socket_send(void            *ctx,
  * @param  buf          buffer to send
  * @param  len          number of bytes to send
  * @param  flags        flags
- * @param  to_sockaddr  socket address
+ * @param  to_addr      address
+ * @param  to_addr_size address size
  * @param  sent         number of sent bytes
  * @return One of @ref errno value.
  */
@@ -984,10 +1011,15 @@ int CANNET_socket_sendto(void                        *ctx,
                          const void                  *buf,
                          size_t                       len,
                          NET_flags_t                  flags,
-                         const NET_CANNET_sockaddr_t *to_sockaddr,
+                         const NET_CANNET_sockaddr_t *to_addr,
+                         size_t                       to_addr_size,
                          size_t                      *sent)
 {
         UNUSED_ARG1(flags);
+
+        if (to_addr_size != sizeof(*to_addr)) {
+                return EINVAL;
+        }
 
         cannet_t *cannet = ctx;
 
@@ -1002,14 +1034,14 @@ int CANNET_socket_sendto(void                        *ctx,
         int err = ESUCC;
 
         if (not is_socket_registered(cannet, socket)) {
-                socket->addr_remote = to_sockaddr->addr;
-                socket->port = to_sockaddr->port;
+                socket->addr_remote = to_addr->addr;
+                socket->port = to_addr->port;
                 err = register_socket(cannet, socket);
         }
 
         if (!err) {
                 CANNET_socket_t tmpsoc = *socket;
-                tmpsoc.addr_remote = to_sockaddr->addr;
+                tmpsoc.addr_remote = to_addr->addr;
 
                 err = send_payload(cannet, &tmpsoc, buf, len);
                 if (!err) {
@@ -1025,12 +1057,13 @@ int CANNET_socket_sendto(void                        *ctx,
  * @brief  Function gets host address by name. Client side function.
  * @param  name         address name
  * @param  addr         received address
+ * @param  addr_size    address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_gethostbyname(void *ctx, const char *name, NET_CANNET_sockaddr_t *sock_addr)
+int CANNET_gethostbyname(void *ctx, const char *name, NET_CANNET_sockaddr_t *addr, size_t addr_size)
 {
-        UNUSED_ARG3(ctx, name, sock_addr);
+        UNUSED_ARG4(ctx, name, addr, addr_size);
         return ENOTSUP;
 }
 
@@ -1098,16 +1131,23 @@ int CANNET_socket_get_send_timeout(void *ctx, CANNET_socket_t *socket, uint32_t 
 /**
  * @brief  Function returns address of socket (remote connection address).
  * @param  socket    socket
- * @param  sockaddr     socket address (address and port)
+ * @param  addr      socket address (address and port)
+ * @param  addr_size address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int CANNET_socket_getaddress(void *ctx, CANNET_socket_t *socket, NET_CANNET_sockaddr_t *sockaddr)
+int CANNET_socket_getaddress(void *ctx, CANNET_socket_t *socket, NET_CANNET_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG1(ctx);
-        sockaddr->addr = socket->addr_remote;
-        sockaddr->port = socket->port;
-        return EINVAL;
+
+        if (addr_size != sizeof(*addr)) {
+                return EINVAL;
+        }
+
+        addr->addr = socket->addr_remote;
+        addr->port = socket->port;
+
+        return 0;
 }
 
 //==============================================================================

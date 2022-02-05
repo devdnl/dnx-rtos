@@ -459,6 +459,9 @@ size_t _libc_fread(void *ptr, size_t size, size_t count, FILE *file)
 
                 } else if (n < (ssize_t)(count * size)) {
                         file->flag.eof = true;
+
+                } else {
+                        file->flag.eof = false;
                 }
 
                 return n / size;

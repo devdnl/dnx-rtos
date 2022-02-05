@@ -664,7 +664,7 @@ int SIPC_ifinit(void **ctx, const char *if_path)
 
                 sipc->run = true;
 
-                int ferr  = sys_fopen(if_path, "r+", &sipc->if_file);
+                int ferr  = sys_fopen(if_path, O_RDWR, &sipc->if_file);
                 int merr  = sys_mutex_create(KMTX_TYPE_NORMAL, &sipc->socket_list_mtx);
                 int serr  = sys_mutex_create(KMTX_TYPE_NORMAL, &sipc->packet_send_mtx);
                 int lerr  = _llist_create_krn(_MM_NET, list_cmp_functor, NULL, &sipc->socket_list);
@@ -721,12 +721,17 @@ int SIPC_ifdeinit(void *ctx)
 //==============================================================================
 /**
  * @brief  Function up the network.
- * @param  cfg   configuration structure
+ * @param  cfg          configuration structure
+ * @param  cfg_size     configuration size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_ifup(void *ctx, const NET_SIPC_config_t *cfg)
+int SIPC_ifup(void *ctx, const NET_SIPC_config_t *cfg, size_t cfg_size)
 {
+        if (cfg_size != sizeof(*cfg)) {
+                return EINVAL;
+        }
+
         sipc_t *sipc = ctx;
 
         int err = EINVAL;
@@ -768,11 +773,16 @@ int SIPC_ifdown(void *ctx)
 /**
  * @brief  Function returns interface status.
  * @param  status       status container
+ * @param  status_size  status size (at least)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_ifstatus(void *ctx, NET_SIPC_status_t *status)
+int SIPC_ifstatus(void *ctx, NET_SIPC_status_t *status, size_t status_size)
 {
+        if (status_size < sizeof(*status)) {
+                return EINVAL;
+        }
+
         sipc_t *sipc = ctx;
 
         if (sipc) {
@@ -861,11 +871,16 @@ int SIPC_socket_destroy(void *ctx, SIPC_socket_t *socket)
  * @brief  Function connect socket to selected address.
  * @param  socket    socket
  * @param  addr      sipc address
+ * @param  addr_size sipc address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_connect(void *ctx, SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
+int SIPC_socket_connect(void *ctx, SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr, size_t addr_size)
 {
+        if (addr_size != sizeof(*addr)) {
+                return EINVAL;
+        }
+
         sipc_t *sipc = ctx;
 
         if (addr->port == 0) {
@@ -950,13 +965,18 @@ int SIPC_socket_shutdown(void *ctx, SIPC_socket_t *socket, NET_shut_t how)
 //==============================================================================
 /**
  * @brief  Function bind selected address with socket.
- * @param  socket     socket
- * @param  addr          inet address
+ * @param  socket       socket
+ * @param  addr         inet address
+ * @param  addr_size    inet address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_bind(void *ctx, SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr)
+int SIPC_socket_bind(void *ctx, SIPC_socket_t *socket, const NET_SIPC_sockaddr_t *addr, size_t addr_size)
 {
+        if (addr_size != sizeof(*addr)) {
+                return EINVAL;
+        }
+
         sipc_t *sipc = ctx;
 
         if (addr->port == 0) {
@@ -1068,7 +1088,8 @@ int SIPC_socket_recv(void          *ctx,
  * @param  buf          buffer for data
  * @param  len          number of bytes to receive
  * @param  flags        flags
- * @param  sockaddr     socket address
+ * @param  addr         socket address
+ * @param  addr_size    socket address size
  * @param  recved       number of received bytes
  * @return One of @ref errno value.
  */
@@ -1078,10 +1099,11 @@ int SIPC_socket_recvfrom(void                *ctx,
                          void                *buf,
                          size_t               len,
                          NET_flags_t          flags,
-                         NET_SIPC_sockaddr_t *sockaddr,
+                         NET_SIPC_sockaddr_t *addr,
+                         size_t               addr_size,
                          size_t              *recved)
 {
-        UNUSED_ARG7(ctx, socket, buf, len, flags, sockaddr, recved);
+        UNUSED_ARG8(ctx, socket, buf, len, flags, addr, addr_size, recved);
         return ENOTSUP;
 }
 
@@ -1190,7 +1212,8 @@ int SIPC_socket_send(void          *ctx,
  * @param  buf          buffer to send
  * @param  len          number of bytes to send
  * @param  flags        flags
- * @param  to_sockaddr  socket address
+ * @param  to_addr      socket address
+ * @param  to_addr_size socket address size
  * @param  sent         number of sent bytes
  * @return One of @ref errno value.
  */
@@ -1200,10 +1223,11 @@ int SIPC_socket_sendto(void                      *ctx,
                        const void                *buf,
                        size_t                     len,
                        NET_flags_t                flags,
-                       const NET_SIPC_sockaddr_t *to_sockaddr,
+                       const NET_SIPC_sockaddr_t *to_addr,
+                       size_t                     to_addr_size,
                        size_t                    *sent)
 {
-        UNUSED_ARG7(ctx, socket, buf, len, flags, to_sockaddr, sent);
+        UNUSED_ARG8(ctx, socket, buf, len, flags, to_addr, to_addr_size, sent);
         return ENOTSUP;
 }
 
@@ -1212,12 +1236,13 @@ int SIPC_socket_sendto(void                      *ctx,
  * @brief  Function gets host address by name.
  * @param  name         address name
  * @param  addr         received address
+ * @param  addr_size    address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_gethostbyname(void *ctx, const char *name, NET_SIPC_sockaddr_t *sock_addr)
+int SIPC_gethostbyname(void *ctx, const char *name, NET_SIPC_sockaddr_t *addr, size_t addr_size)
 {
-        UNUSED_ARG3(ctx, name, sock_addr);
+        UNUSED_ARG4(ctx, name, addr, addr_size);
 
         return ENOTSUP;
 }
@@ -1294,15 +1319,22 @@ int SIPC_socket_get_send_timeout(void *ctx, SIPC_socket_t *socket, uint32_t *tim
 /**
  * @brief  Function returns address of socket (remote connection address).
  * @param  socket    socket
- * @param  sockaddr     socket address (address and port)
+ * @param  addr      socket address (address and port)
+ * @param  addr_size address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int SIPC_socket_getaddress(void *ctx, SIPC_socket_t *socket, NET_SIPC_sockaddr_t *sockaddr)
+int SIPC_socket_getaddress(void *ctx, SIPC_socket_t *socket, NET_SIPC_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG1(ctx);
 
-        return sockaddr->port = socket->port;
+        if (addr_size != sizeof(*addr)) {
+                return EINVAL;
+        }
+
+        addr->port = socket->port;
+
+        return 0;
 }
 
 //==============================================================================

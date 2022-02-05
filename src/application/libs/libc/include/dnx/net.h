@@ -178,7 +178,7 @@ int_main(client, STACK_DEPTH_LOW, int argc, char *argv[])
                 socket_set_recv_timeout(socket, 2000);
 
                 do {
-                        if (socket_connect(socket, &SERVER_ADDR) == 0) {
+                        if (socket_connect(socket, &SERVER_ADDR, sizeof(SERVER_ADDR) == 0) {
 
                                 // send string to server
                                 int sz = socket_write(socket, HELLO, strlen(HELLO));
@@ -222,17 +222,216 @@ extern "C" {
 #include <stdint.h>
 #include <libc/source/syscall.h>
 #include <stddef.h>
-#include <net/netm.h>   // to remove in future
+//#include <net/netm.h>   // to remove in future
 #include <dnx/misc.h>
 #include <errno.h>
 
 /*==============================================================================
   Exported macros
 ==============================================================================*/
+/*------------------------------------------------------------------------------
+  INET NETWORK FAMILY
+------------------------------------------------------------------------------*/
+/** Macro creates IPv4 address for INET family network. */
+#define NET_INET_IPv4(a, b, c, d)               (((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((c & 0xFF) << 8) | ((d & 0xFF)))
+
+/** Macro creates ANY address for INET family network. */
+#define NET_INET_IPv4_ANY                       NET_INET_IPv4(0,0,0,0)
+
+/** Macro creates LOOPBACK address for INET family network. */
+#define NET_INET_IPv4_LOOPBACK                  NET_INET_IPv4(127,0,0,1)
+
+/** Macro creates BROADCAST address for INET family network. */
+#define NET_INET_IPv4_BROADCAST                 NET_INET_IPv4(255,255,255,255)
+
+/** Macro gets part <i>a</i> of INET family network address. */
+#define NET_INET_IPv4_a(ip)                     ((ip >> 24) & 0xFF)
+
+/** Macro gets part <i>b</i> of INET family network address. */
+#define NET_INET_IPv4_b(ip)                     ((ip >> 16) & 0xFF)
+
+/** Macro gets part <i>c</i> of INET family network address. */
+#define NET_INET_IPv4_c(ip)                     ((ip >> 8)  & 0xFF)
+
+/** Macro gets part <i>d</i> of INET family network address. */
+#define NET_INET_IPv4_d(ip)                     ((ip >> 0)  & 0xFF)
+
+/*------------------------------------------------------------------------------
+  SIPC NETWORK FAMILY
+------------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------------
+  CANNET NETWORK FAMILY
+------------------------------------------------------------------------------*/
+#define NET_CANNET_MAX_PORT             7
+#define NET_CANNET_CAN_ID_MASK          0x10003FFF
+#define NET_CANNET_ADDR_BROADCAST       0x3FFF
+#define NET_CANNET_ADDR_ANY             0x0000
 
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct _libc_socket SOCKET;
+
+/*------------------------------------------------------------------------------
+  GENERIC NETWORK
+------------------------------------------------------------------------------*/
+/** Network family. */
+typedef enum {
+        NET_FAMILY__INET,                       //!< Internet network.
+        NET_FAMILY__SIPC,                       //!< Serial Inter-Processor Communication
+        NET_FAMILY__CANNET,                     //!< CAN network Communication
+        _NET_FAMILY__COUNT
+} NET_family_t;
+
+/** Protocol selection. Not all protocols are available for all family networks. */
+typedef enum {
+        NET_PROTOCOL__DATAGRAM,                         //!< DATAGRAM type protocol
+        NET_PROTOCOL__STREAM,                           //!< STREAM type protocol
+        NET_PROTOCOL__UDP = NET_PROTOCOL__DATAGRAM,     //!< UDP protocol.
+        NET_PROTOCOL__TCP = NET_PROTOCOL__STREAM,       //!< TCP protocol.
+        _NET_PROTOCOL__COUNT,                           //!< number of protocols
+} NET_protocol_t;
+
+/** Control flags. */
+typedef enum {
+        NET_FLAGS__NONE      = 0,               //!< Flags not set.
+        NET_FLAGS__NOCOPY    = (1 << 0),        //!< Buffer is not internally copy.
+        NET_FLAGS__COPY      = (1 << 1),        //!< Buffer is internally copy.
+        NET_FLAGS__MORE      = (1 << 2),        //!< More transfers.
+        NET_FLAGS__REWIND    = (1 << 3),        //!< Read stream index is rewind.
+        NET_FLAGS__FREEBUF   = (1 << 4),        //!< Skip unread bytes after read and free buffer.
+} NET_flags_t;
+
+/** Socket shutdown direction. */
+typedef enum {
+        NET_SHUT__RD   = (1 << 0),              //!< Shutdown read direction.
+        NET_SHUT__WR   = (1 << 1),              //!< Shutdown write direction.
+        NET_SHUT__RDWR = (NET_SHUT__RD | NET_SHUT__WR)  //!< Shutdown both directions.
+} NET_shut_t;
+
+/** Generic socket address. This type accept all network family addresses. */
+typedef void NET_generic_sockaddr_t;
+
+/** Generic interface configuration. This type accept all network family configurations. */
+typedef void NET_generic_config_t;
+
+/** Generic network status. This type accept all network family statuses. */
+typedef void NET_generic_status_t;
+
+/** Socket object definition. Protected object fields. */
+typedef struct ksocket ksocket_t;
+
+/*------------------------------------------------------------------------------
+  INET NETWORK FAMILY
+------------------------------------------------------------------------------*/
+/** INET network address: IPv4. */
+typedef uint32_t NET_INET_IPv4_t;
+
+/** INET socket address. This type contains IPv4 address and port. */
+typedef struct {
+        NET_INET_IPv4_t addr;                   /*!< IPv4 address.*/
+        u16_t           port;                   /*!< Port.*/
+} NET_INET_sockaddr_t;
+
+/** INET network state. */
+typedef enum {
+        NET_INET_STATE__NOT_CONFIGURED,         //!< Network not configured.
+        NET_INET_STATE__STATIC_IP,              //!< Static IP configuration.
+        NET_INET_STATE__DHCP_CONFIGURING,       //!< DHCP address is configuring.
+        NET_INET_STATE__DHCP_CONFIGURED,        //!< DHCP address configured.
+        NET_INET_STATE__LINK_DISCONNECTED       //!< Network interface not connected.
+} NET_INET_state_t;
+
+/** INET configuration mode. */
+typedef enum {
+        NET_INET_MODE__STATIC,                  //!< Configure static IP.
+        NET_INET_MODE__DHCP_START,              //!< Start DHCP client.
+        NET_INET_MODE__DHCP_INFORM,             //!< Inform DHCP server.
+        NET_INET_MODE__DHCP_RENEW,              //!< Renew DHCP connection.
+} NET_INET_mode_t;
+
+/** INET configuration. */
+typedef struct {
+        NET_INET_mode_t mode;                   /*!< Configuration mode.*/
+        NET_INET_IPv4_t address;                /*!< Address if static mode selected.*/
+        NET_INET_IPv4_t mask;                   /*!< Network mask if static mode selected.*/
+        NET_INET_IPv4_t gateway;                /*!< Gateway address if static mode selected.*/
+} NET_INET_config_t;
+
+/** INET status. */
+typedef struct {
+        NET_INET_state_t state;                 /*!< Connection state.*/
+        NET_INET_IPv4_t  address;               /*!< Connection address.*/
+        NET_INET_IPv4_t  mask;                  /*!< Connection network mask.*/
+        NET_INET_IPv4_t  gateway;               /*!< Connection gateway.*/
+        u8_t             hw_addr[6];            /*!< MAC address.*/
+        u64_t            tx_bytes;              /*!< Number of transmitted bytes.*/
+        u64_t            rx_bytes;              /*!< Number of received bytes.*/
+        u64_t            tx_packets;            /*!< Number of transmitted packets.*/
+        u64_t            rx_packets;            /*!< Number of received packets.*/
+} NET_INET_status_t;
+
+/*------------------------------------------------------------------------------
+  SIPC NETWORK FAMILY
+------------------------------------------------------------------------------*/
+/** SIPC network state. */
+typedef enum {
+        NET_SIPC_STATE__DOWN,                   //!< Network not configured.
+        NET_SIPC_STATE__UP,                     //!< Network configured.
+} NET_SIPC_state_t;
+
+/** SIPC configuration. */
+typedef struct {
+        u16_t MTU;                              //!< Maximal Transfer Unit
+} NET_SIPC_config_t;
+
+/** SIPC status. */
+typedef struct {
+        NET_SIPC_state_t state;                 /*!< Connection state.*/
+        u16_t            MTU;                   /*!< Transfer size. */
+        u64_t            tx_bytes;              /*!< Number of transmitted bytes.*/
+        u64_t            rx_bytes;              /*!< Number of received bytes.*/
+        u64_t            tx_packets;            /*!< Number of transmitted packets.*/
+        u64_t            rx_packets;            /*!< Number of received packets.*/
+} NET_SIPC_status_t;
+
+/** SIPC socket address. */
+typedef struct {
+        u8_t             port;                   /*!< Port.*/
+} NET_SIPC_sockaddr_t;
+
+
+/*------------------------------------------------------------------------------
+  CANNET NETWORK FAMILY
+------------------------------------------------------------------------------*/
+/** CANNET network state. */
+typedef enum {
+        NET_CANNET_STATE__DOWN,                 //!< Network not configured.
+        NET_CANNET_STATE__UP,                   //!< Network configured.
+} NET_CANNET_state_t;
+
+/** CANNET configuration. */
+typedef struct {
+        u16_t             addr;                 //!< device address.
+} NET_CANNET_config_t;
+
+/** CANNET status. */
+typedef struct {
+        NET_CANNET_state_t state;               /*!< Connection state.*/
+        u16_t              addr;                /*!< Address.*/
+        u16_t              MTU;                 /*!< Transfer size. */
+        u64_t              tx_bytes;            /*!< Number of transmitted bytes.*/
+        u64_t              rx_bytes;            /*!< Number of received bytes.*/
+        u64_t              tx_packets;          /*!< Number of transmitted packets.*/
+        u64_t              rx_packets;          /*!< Number of received packets.*/
+} NET_CANNET_status_t;
+
+/** SIPC socket address. */
+typedef struct {
+        u16_t addr;                             /*!< Address.*/
+        u8_t  port;                             /*!< Port.*/
+} NET_CANNET_sockaddr_t;
 
 /*==============================================================================
   Exported objects
@@ -317,9 +516,9 @@ static inline int iflist(char *netname[], size_t netname_len)
  * @see ifdown(), ifstatus()
  */
 //==============================================================================
-static inline int ifup(const char *netname, const NET_generic_config_t *config)
+static inline int ifup(const char *netname, const NET_generic_config_t *config, size_t config_size)
 {
-        int err = _libc_syscall(_LIBC_SYS_NETIFUP, netname, config);
+        int err = _libc_syscall(_LIBC_SYS_NETIFUP, netname, config, &config_size);
         return err ? -1 : 0;
 }
 
@@ -355,12 +554,31 @@ static inline int ifdown(const char *netname)
  * @see ifup(), ifdown()
  */
 //==============================================================================
-static inline int ifstatus(const char *netname, NET_family_t *family, NET_generic_status_t *status)
+static inline int ifstatus(const char *netname, NET_family_t *family, NET_generic_status_t *status, size_t status_size)
 {
-        int err = _libc_syscall(_LIBC_SYS_NETIFSTATUS, netname, family, status);
+        int err = _libc_syscall(_LIBC_SYS_NETIFSTATUS, netname, family, status, &status_size);
         return err ? -1 : 0;
 }
 
+//==============================================================================
+/**
+ * @brief  Create new socket descriptor.
+ *
+ * @param  netname      network name
+ * @param  protocol     protocol
+ *
+ * @return On success descriptor is returned, otherwise -1 and @ref errno value is set
+ *         appropriately.
+ *
+ * @see socket_open()
+ */
+//==============================================================================
+static inline int socket(const char *netname, NET_protocol_t protocol)
+{
+        int fd;
+        int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, &fd, netname, protocol);
+        return err ? errno : fd;
+}
 
 //==============================================================================
 /**
@@ -375,12 +593,36 @@ static inline int ifstatus(const char *netname, NET_family_t *family, NET_generi
  * @see socket_close()
  */
 //==============================================================================
-static inline SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
-{
-        SOCKET *socket;
-        int err = _libc_syscall(_LIBC_SYS_NETSOCKETCREATE, netname, &protocol, &socket);
-        return err ? NULL : socket;
-}
+extern SOCKET *socket_open(const char *netname, NET_protocol_t protocol);
+
+//==============================================================================
+/**
+ * @brief Creates an endpoint for communication and returns a socket according
+ *        to given descriptor.
+ *
+ * @param fd    socket descriptor
+ *
+ * @return On error @b NULL is returned and @ref errno value is set appropriately,
+ *         otherwise new socket pointer.
+ *
+ * @see socket_close(), socket_open(), socket()
+ */
+//==============================================================================
+extern SOCKET *socket_fdopen(int fd);
+
+//==============================================================================
+/**
+ * @brief Return socket descriptor from SOCKET object.
+ *
+ * @param socket        socket object
+ *
+ * @return On error @b -1 is returned and @ref errno value is set appropriately,
+ *         otherwise socket descriptor.
+ *
+ * @see socket_close(), socket_open(), socket()
+ */
+//==============================================================================
+extern int socket_fileno(SOCKET *socket);
 
 //==============================================================================
 /**
@@ -394,11 +636,7 @@ static inline SOCKET *socket_open(const char *netname, NET_protocol_t protocol)
  * @see socket_shutdown(), socket_open()
  */
 //==============================================================================
-static inline int socket_close(SOCKET *socket)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETSOCKETDESTROY, socket);
-        return err ? -1 : 0;
-}
+extern int socket_close(SOCKET *socket);
 
 //==============================================================================
 /**
@@ -417,11 +655,7 @@ static inline int socket_close(SOCKET *socket)
  *         appropriately.
  */
 //==============================================================================
-static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETBIND, socket, sockAddr);
-        return err ? -1 : 0;
-}
+extern int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size);
 
 //==============================================================================
 /**
@@ -436,11 +670,7 @@ static inline int socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *sock
  * @see socket_disconnect()
  */
 //==============================================================================
-static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockAddr)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETCONNECT, socket, sockAddr);
-        return err ? -1 : 0;
-}
+extern int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size);
 
 //==============================================================================
 /**
@@ -454,11 +684,7 @@ static inline int socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *s
  * @see socket_connect()
  */
 //==============================================================================
-static inline int socket_disconnect(SOCKET *socket)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETDISCONNECT, socket);
-        return err ? -1 : 0;
-}
+extern int socket_disconnect(SOCKET *socket);
 
 //==============================================================================
 /**
@@ -472,11 +698,7 @@ static inline int socket_disconnect(SOCKET *socket)
  * @see socket_accept(), socket_bind()
  */
 //==============================================================================
-static inline int socket_listen(SOCKET *socket)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETLISTEN, socket);
-        return err ? -1 : 0;
-}
+extern int socket_listen(SOCKET *socket);
 
 //==============================================================================
 /**
@@ -491,11 +713,7 @@ static inline int socket_listen(SOCKET *socket)
  * @see socket_listen(), socket_bind()
  */
 //==============================================================================
-static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETACCEPT, socket, new_socket);
-        return err ? -1 : 0;
-}
+extern int socket_accept(SOCKET *socket, SOCKET **new_socket);
 
 //==============================================================================
 /**
@@ -513,12 +731,7 @@ static inline int socket_accept(SOCKET *socket, SOCKET **new_socket)
  * @see socket_connect(), socket_accept(), socket_recvfrom(), socket_read()
  */
 //==============================================================================
-static inline int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags)
-{
-        size_t rcved;
-        int err = _libc_syscall(_LIBC_SYS_NETRECV, socket, buf, &len, &flags, &rcved);
-        return err ? -1 : (int)rcved;
-}
+extern int socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags);
 
 //==============================================================================
 /**
@@ -560,16 +773,12 @@ static inline int socket_read(SOCKET *socket, void *buf, size_t len)
  * @see socket_connect(), socket_accept(), socket_recv(), socket_read()
  */
 //==============================================================================
-static inline int socket_recvfrom(SOCKET                 *socket,
-                                  char                   *buf,
-                                  size_t                  len,
-                                  NET_flags_t             flags,
-                                  NET_generic_sockaddr_t *from_sockaddr)
-{
-        size_t rcved;
-        int err = _libc_syscall(_LIBC_SYS_NETRECVFROM, socket, buf, &len, &flags, from_sockaddr, &rcved);
-        return err ? -1 : (int)rcved;
-}
+extern int socket_recvfrom(SOCKET                 *socket,
+                           char                   *buf,
+                           size_t                  len,
+                           NET_flags_t             flags,
+                           NET_generic_sockaddr_t *from_sockaddr,
+                           size_t                  from_sockaddr_size);
 
 //==============================================================================
 /**
@@ -588,12 +797,7 @@ static inline int socket_recvfrom(SOCKET                 *socket,
  * @see socket_connect(), socket_sendto(), socket_write()
  */
 //==============================================================================
-static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags)
-{
-        size_t sent;
-        int err = _libc_syscall(_LIBC_SYS_NETSEND, socket, buf, &len, &flags, &sent);
-        return err ? -1 : (int)sent;
-}
+extern int socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags);
 
 //==============================================================================
 /**
@@ -614,7 +818,7 @@ static inline int socket_send(SOCKET *socket, const void *buf, size_t len, NET_f
 //==============================================================================
 static inline int socket_write(SOCKET *socket, const void *buf, size_t len)
 {
-        return socket_send(socket, buf, len, NET_FLAGS__NONE);
+        return socket_send(socket, buf, len, NET_FLAGS__COPY);
 }
 
 //==============================================================================
@@ -635,16 +839,12 @@ static inline int socket_write(SOCKET *socket, const void *buf, size_t len)
  * @see socket_connect(), socket_send(), socket_write()
  */
 //==============================================================================
-static inline int socket_sendto(SOCKET                       *socket,
-                                const void                   *buf,
-                                size_t                        len,
-                                NET_flags_t                   flags,
-                                const NET_generic_sockaddr_t *to_sockaddr)
-{
-        size_t sent;
-        int err = _libc_syscall(_LIBC_SYS_NETSENDTO, socket, buf, &len, &flags, to_sockaddr, &sent);
-        return err ? -1 : (int)sent;
-}
+extern int socket_sendto(SOCKET                       *socket,
+                         const void                   *buf,
+                         size_t                        len,
+                         NET_flags_t                   flags,
+                         const NET_generic_sockaddr_t *to_sockaddr,
+                         size_t                        to_sockaddr_size);
 
 //==============================================================================
 /**
@@ -659,11 +859,7 @@ static inline int socket_sendto(SOCKET                       *socket,
  * @see socket_close()
  */
 //==============================================================================
-static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETSHUTDOWN, socket, &how);
-        return err ? -1 : 0;
-}
+extern int socket_shutdown(SOCKET *socket, NET_shut_t how);
 
 //==============================================================================
 /**
@@ -678,11 +874,7 @@ static inline int socket_shutdown(SOCKET *socket, NET_shut_t how)
  * @see socket_set_send_timeout()
  */
 //==============================================================================
-static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETSETRECVTIMEOUT, socket, &timeout);
-        return err ? -1 : 0;
-}
+extern int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout);
 
 //==============================================================================
 /**
@@ -697,11 +889,7 @@ static inline int socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
  * @see socket_set_recv_timeout()
  */
 //==============================================================================
-static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETSETSENDTIMEOUT, socket, &timeout);
-        return err ? -1 : 0;
-}
+extern int socket_set_send_timeout(SOCKET *socket, uint32_t timeout);
 
 //==============================================================================
 /**
@@ -716,11 +904,7 @@ static inline int socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
  * @see socket_connect(), socket_bind()
  */
 //==============================================================================
-static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr)
-{
-        int err = _libc_syscall(_LIBC_SYS_NETGETADDRESS, socket, addr);
-        return err ? -1 : 0;
-}
+extern int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *addr, size_t addr_size);
 
 //==============================================================================
 /**
@@ -736,9 +920,10 @@ static inline int socket_get_address(SOCKET *socket, NET_generic_sockaddr_t *add
 //==============================================================================
 static inline int get_host_by_name(const char             *netname,
                                    const char             *name,
-                                   NET_generic_sockaddr_t *sock_addr)
+                                   NET_generic_sockaddr_t *sock_addr,
+                                   size_t                  sock_addr_size)
 {
-        int err = _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, netname, name, sock_addr);
+        int err = _libc_syscall(_LIBC_SYS_NETGETHOSTBYNAME, netname, name, sock_addr, &sock_addr_size);
         return err ? -1 : 0;
 }
 

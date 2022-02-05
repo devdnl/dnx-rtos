@@ -557,12 +557,17 @@ int INET_ifdeinit(void *ctx)
 //==============================================================================
 /**
  * @brief  Function up the network.
- * @param  cfg   configuration structure
+ * @param  cfg          configuration structure
+ * @oaram  cfg_size     configuration size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_ifup(void *ctx, const NET_INET_config_t *cfg)
+int INET_ifup(void *ctx, const NET_INET_config_t *cfg, size_t cfg_size)
 {
+        if (cfg_size != sizeof(*cfg)) {
+                return EINVAL;
+        }
+
         inet_t *inet = ctx;
 
         int err = EINVAL;
@@ -638,11 +643,16 @@ int INET_ifdown(void *ctx)
 /**
  * @brief  Function returns interface status.
  * @param  status       status container
+ * @param  status_size  status size (at least)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_ifstatus(void *ctx, NET_INET_status_t *status)
+int INET_ifstatus(void *ctx, NET_INET_status_t *status, size_t status_size)
 {
+        if (status_size < sizeof(*status)) {
+                return EINVAL;
+        }
+
         inet_t *inet = ctx;
 
         int err = ENONET;
@@ -749,12 +759,17 @@ int INET_socket_destroy(void *ctx, INET_socket_t *inet_sock)
  * @brief  Function connect socket to selected address.
  * @param  inet_sock    socket
  * @param  addr         inet address
+ * @param  addr_size    address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_socket_connect(void *ctx, INET_socket_t *inet_sock, const NET_INET_sockaddr_t *addr)
+int INET_socket_connect(void *ctx, INET_socket_t *inet_sock, const NET_INET_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG1(ctx);
+
+        if (addr_size != sizeof(*addr)) {
+                return EINVAL;
+        }
 
         ip_addr_t IP;
         create_lwIP_addr(&IP, &addr->addr);
@@ -799,12 +814,17 @@ int INET_socket_shutdown(void *ctx, INET_socket_t *inet_sock, NET_shut_t how)
  * @brief  Function bind selected address with socket.
  * @param  inet_sock     socket
  * @param  addr          inet address
+ * @param  addr_size     address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_socket_bind(void *ctx, INET_socket_t *inet_sock, const NET_INET_sockaddr_t *addr)
+int INET_socket_bind(void *ctx, INET_socket_t *inet_sock, const NET_INET_sockaddr_t *addr, size_t addr_size)
 {
         UNUSED_ARG1(ctx);
+
+        if (addr_size != sizeof(*addr)) {
+                return EINVAL;
+        }
 
         ip_addr_t IP;
         create_lwIP_addr(&IP, &addr->addr);
@@ -892,12 +912,13 @@ int INET_socket_recv(void          *ctx,
 //==============================================================================
 /**
  * @brief  Function receive data from selected address.
- * @param  inet_sock    socket
- * @param  buf          buffer for data
- * @param  len          number of bytes to receive
- * @param  flags        flags
- * @param  sockaddr     socket address
- * @param  recved       number of received bytes
+ * @param  inet_sock            socket
+ * @param  buf                  buffer for data
+ * @param  len                  number of bytes to receive
+ * @param  flags                flags
+ * @param  sockaddr             socket address
+ * @param  sockaddr_size        socket address size
+ * @param  recved               number of received bytes
  * @return One of @ref errno value.
  */
 //==============================================================================
@@ -907,9 +928,14 @@ int INET_socket_recvfrom(void                *ctx,
                          size_t               len,
                          NET_flags_t          flags,
                          NET_INET_sockaddr_t *sockaddr,
+                         size_t               sockaddr_size,
                          size_t              *recved)
 {
         UNUSED_ARG2(ctx, flags);
+
+        if (sockaddr_size != sizeof(*sockaddr)) {
+                return EINVAL;
+        }
 
         int err = EPERM;
 
@@ -1023,12 +1049,13 @@ int INET_socket_send(void          *ctx,
 //==============================================================================
 /**
  * @brief  Function send buffer to selected address.
- * @param  inet_sock    socket
- * @param  buf          buffer to send
- * @param  len          number of bytes to send
- * @param  flags        flags
- * @param  to_sockaddr  socket address
- * @param  sent         number of sent bytes
+ * @param  inet_sock            socket
+ * @param  buf                  buffer to send
+ * @param  len                  number of bytes to send
+ * @param  flags                flags
+ * @param  to_sockaddr          socket address
+ * @param  to_sockaddr_size     socket address size
+ * @param  sent                 number of sent bytes
  * @return One of @ref errno value.
  */
 //==============================================================================
@@ -1038,9 +1065,14 @@ int INET_socket_sendto(void                      *ctx,
                        size_t                     len,
                        NET_flags_t                flags,
                        const NET_INET_sockaddr_t *to_sockaddr,
+                       size_t                     to_sockaddr_size,
                        size_t                    *sent)
 {
         UNUSED_ARG1(ctx);
+
+        if (to_sockaddr_size != sizeof(*to_sockaddr)) {
+                return EINVAL;
+        }
 
         int err = EPERM;
 
@@ -1059,14 +1091,14 @@ int INET_socket_sendto(void                      *ctx,
                         create_addr(&sockaddr.addr, &lwip_addr);
 
                         // connect to new address
-                        err = INET_socket_connect(ctx, inet_sock, to_sockaddr);
+                        err = INET_socket_connect(ctx, inet_sock, to_sockaddr, sizeof(*to_sockaddr));
 
                         if (!err) {
                                 err = INET_socket_send(ctx, inet_sock, buf, len, flags, sent);
                         }
 
                         // reset the remote address and port number of the conn.
-                        INET_socket_connect(ctx, inet_sock, &sockaddr);
+                        INET_socket_connect(ctx, inet_sock, &sockaddr, sizeof(sockaddr));
                 }
         }
 
@@ -1076,14 +1108,19 @@ int INET_socket_sendto(void                      *ctx,
 //==============================================================================
 /**
  * @brief  Function gets host address by name.
- * @param  name         address name
- * @param  addr         received address
+ * @param  name                 address name
+ * @param  addr                 received address
+ * @param  sock_addr_size       recieved address size (input)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_gethostbyname(void *ctx, const char *name, NET_INET_sockaddr_t *sock_addr)
+int INET_gethostbyname(void *ctx, const char *name, NET_INET_sockaddr_t *sock_addr, size_t sock_addr_size)
 {
         UNUSED_ARG1(ctx);
+
+        if (sock_addr_size != sizeof(*sock_addr)) {
+                return EINVAL;
+        }
 
         int err = EINVAL;
 
@@ -1163,14 +1200,19 @@ int INET_socket_get_send_timeout(void *ctx, INET_socket_t *inet_sock, uint32_t *
 //==============================================================================
 /**
  * @brief  Function returns address of socket (remote connection address).
- * @param  inet_sock    socket
- * @param  sockaddr     socket address (address and port)
+ * @param  inet_sock            socket
+ * @param  sockaddr             socket address (address and port)
+ * @param  sockaddr_size        socket address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int INET_socket_getaddress(void *ctx, INET_socket_t *inet_sock, NET_INET_sockaddr_t *sockaddr)
+int INET_socket_getaddress(void *ctx, INET_socket_t *inet_sock, NET_INET_sockaddr_t *sockaddr, size_t sockaddr_size)
 {
         UNUSED_ARG1(ctx);
+
+        if (sockaddr_size != sizeof(*sockaddr)) {
+                return EINVAL;
+        }
 
         ip_addr_t lwip_addr;
         int err = err_to_errno(

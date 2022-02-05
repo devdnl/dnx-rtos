@@ -103,7 +103,7 @@ API_FS_INIT(fatfs, void **fs_handle, const char *src_path, const char *opts)
                 }
 
                 if (!err) {
-                        err = sys_fopen(src_path, hdl->read_only ? "r" : "r+", &hdl->fsfile);
+                        err = sys_fopen(src_path, hdl->read_only ? O_RDONLY : O_RDWR, &hdl->fsfile);
                 }
 
                 if (!err) {

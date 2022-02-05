@@ -434,7 +434,7 @@ static void handle_cmd_PASV(struct thread *self)
         memset(&status, 0, sizeof(status));
         NET_family_t family;
 
-        if (ifstatus("inet", &family, &status) == 0) {
+        if (ifstatus("inet", &family, &status, sizeof(status)) == 0) {
 
                 int n = snprintf(self->buf, sizeof(self->buf),
                                  "227 =%d,%d,%d,%d,%d,%d\r\n",
@@ -924,7 +924,7 @@ static int serve(void *arg)
                                 .port = self->data_port
                         };
 
-                        int err = socket_bind(self->sock_pasv, &ADDR_ANY);
+                        int err = socket_bind(self->sock_pasv, &ADDR_ANY, sizeof(ADDR_ANY));
                         if (!err) {
                                 err = socket_listen(self->sock_pasv);
                         }
@@ -940,7 +940,7 @@ static int serve(void *arg)
 
 
         NET_INET_sockaddr_t addr;
-        socket_get_address(self->socket, &addr);
+        socket_get_address(self->socket, &addr, sizeof(addr));
 
         VERBOSE("New connection from: %d.%d.%d.%d\n",
                 NET_INET_IPv4_a(addr.addr),
@@ -1044,7 +1044,7 @@ int main(int argc, char *argv[])
                         .port = FTP_PORT
                 };
 
-                if (socket_bind(socket, &ADDR_ANY) == 0) {
+                if (socket_bind(socket, &ADDR_ANY, sizeof(ADDR_ANY)) == 0) {
 
                         if (socket_listen(socket) == 0) {
                                 int err;

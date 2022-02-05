@@ -371,7 +371,7 @@ static void start_DHCP_client(void)
          * 2. Command setup network interface.
          */
         errno = 0;
-        if (ifup("inet", &cfg_dhcp) != 0) {
+        if (ifup("inet", &cfg_dhcp, sizeof(cfg_dhcp)) != 0) {
                 perror("ifup");
         }
         #endif

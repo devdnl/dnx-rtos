@@ -137,7 +137,7 @@ typedef void NET_generic_config_t;
 typedef void NET_generic_status_t;
 
 /** Socket object definition. Protected object fields. */
-typedef struct socket SOCKET;
+typedef struct ksocket ksocket_t;
 
 /*------------------------------------------------------------------------------
   INET NETWORK FAMILY
@@ -262,27 +262,27 @@ extern int   _net_ifadd(const char*, NET_family_t, const char*);
 extern int   _net_ifrm(const char*);
 extern int   _net_ifdelete(const char*);
 extern int   _net_iflist(char**, size_t, size_t*);
-extern int   _net_ifup(const char*, const NET_generic_config_t*);
+extern int   _net_ifup(const char*, const NET_generic_config_t*, size_t);
 extern int   _net_ifdown(const char*);
-extern int   _net_ifstatus(const char*, NET_family_t*, NET_generic_status_t*);
-extern int   _net_gethostbyname(const char*, const char*, NET_generic_sockaddr_t*);
-extern int   _net_socket_create(const char*, NET_protocol_t, SOCKET**);
-extern int   _net_socket_destroy(SOCKET*);
-extern int   _net_socket_bind(SOCKET*, const NET_generic_sockaddr_t*);
-extern int   _net_socket_listen(SOCKET*);
-extern int   _net_socket_accept(SOCKET*, SOCKET**);
-extern int   _net_socket_recv(SOCKET*, void*, size_t, NET_flags_t, size_t*);
-extern int   _net_socket_recvfrom(SOCKET*, void*, size_t, NET_flags_t, NET_generic_sockaddr_t*, size_t*);
-extern int   _net_socket_send(SOCKET*, const void*, size_t, NET_flags_t, size_t*);
-extern int   _net_socket_sendto(SOCKET*, const void*, size_t, NET_flags_t, const NET_generic_sockaddr_t*, size_t*);
-extern int   _net_socket_set_recv_timeout(SOCKET*, uint32_t);
-extern int   _net_socket_set_send_timeout(SOCKET*, uint32_t);
-extern int   _net_socket_get_recv_timeout(SOCKET*, uint32_t*);
-extern int   _net_socket_get_send_timeout(SOCKET*, uint32_t*);
-extern int   _net_socket_connect(SOCKET*, const NET_generic_sockaddr_t*);
-extern int   _net_socket_disconnect(SOCKET*);
-extern int   _net_socket_shutdown(SOCKET*, NET_shut_t);
-extern int   _net_socket_getaddress(SOCKET*, NET_generic_sockaddr_t*);
+extern int   _net_ifstatus(const char*, NET_family_t*, NET_generic_status_t*, size_t);
+extern int   _net_gethostbyname(const char*, const char*, NET_generic_sockaddr_t*, size_t);
+extern int   _net_socket_create(const char*, NET_protocol_t, ksocket_t**);
+extern int   _net_socket_destroy(ksocket_t*);
+extern int   _net_socket_bind(ksocket_t*, const NET_generic_sockaddr_t*, size_t);
+extern int   _net_socket_listen(ksocket_t*);
+extern int   _net_socket_accept(ksocket_t*, ksocket_t**);
+extern int   _net_socket_recv(ksocket_t*, void*, size_t, NET_flags_t, size_t*);
+extern int   _net_socket_recvfrom(ksocket_t*, void*, size_t, NET_flags_t, NET_generic_sockaddr_t*, size_t, size_t*);
+extern int   _net_socket_send(ksocket_t*, const void*, size_t, NET_flags_t, size_t*);
+extern int   _net_socket_sendto(ksocket_t*, const void*, size_t, NET_flags_t, const NET_generic_sockaddr_t*, size_t, size_t*);
+extern int   _net_socket_set_recv_timeout(ksocket_t*, uint32_t);
+extern int   _net_socket_set_send_timeout(ksocket_t*, uint32_t);
+extern int   _net_socket_get_recv_timeout(ksocket_t*, uint32_t*);
+extern int   _net_socket_get_send_timeout(ksocket_t*, uint32_t*);
+extern int   _net_socket_connect(ksocket_t*, const NET_generic_sockaddr_t*, size_t);
+extern int   _net_socket_disconnect(ksocket_t*);
+extern int   _net_socket_shutdown(ksocket_t*, NET_shut_t);
+extern int   _net_socket_getaddress(ksocket_t*, NET_generic_sockaddr_t*, size_t);
 extern u16_t _net_hton_u16(NET_family_t, u16_t);
 extern u32_t _net_hton_u32(NET_family_t, u32_t);
 extern u64_t _net_hton_u64(NET_family_t, u64_t);

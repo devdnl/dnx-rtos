@@ -78,7 +78,7 @@ Brief    Network management.
 /*==============================================================================
   Local object types
 ==============================================================================*/
-struct socket {
+struct ksocket {
         res_header_t header;
         NET_family_t family;
         const char  *netname;
@@ -127,7 +127,7 @@ static kmtx_t *netm_mutex;
  * @return One of @ref errno value.
  */
 //==============================================================================
-static int socket_alloc(SOCKET **socket, NET_family_t family, const char *netname)
+static int socket_alloc(ksocket_t **socket, NET_family_t family, const char *netname)
 {
         static const uint8_t net_socket_size[_NET_FAMILY__COUNT] = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -142,7 +142,7 @@ static int socket_alloc(SOCKET **socket, NET_family_t family, const char *netnam
         };
 
         int err = _kzalloc(_MM_NET,
-                           _mm_align(sizeof(SOCKET)) + net_socket_size[family],
+                           _mm_align(sizeof(ksocket_t)) + net_socket_size[family],
                            NULL, 0, 0, cast(void**, socket));
         if (!err) {
                 (*socket)->header.self = *socket;
@@ -151,7 +151,7 @@ static int socket_alloc(SOCKET **socket, NET_family_t family, const char *netnam
                 (*socket)->family      = family;
                 (*socket)->ctx         = cast(void *,
                                               cast(size_t, *socket)
-                                              + _mm_align(sizeof(SOCKET)));
+                                              + _mm_align(sizeof(ksocket_t)));
         }
 
         return err;
@@ -163,7 +163,7 @@ static int socket_alloc(SOCKET **socket, NET_family_t family, const char *netnam
  * @param socket        socket to free
  */
 //==============================================================================
-static void socket_free(SOCKET **socket)
+static void socket_free(ksocket_t **socket)
 {
         (*socket)->header.self = NULL;
         (*socket)->header.type = RES_TYPE_UNKNOWN;
@@ -178,7 +178,7 @@ static void socket_free(SOCKET **socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-static bool is_socket_valid(SOCKET *socket)
+static bool is_socket_valid(ksocket_t *socket)
 {
         return _mm_is_object_in_heap(socket)
             && (socket->header.type == RES_TYPE_SOCKET)
@@ -186,7 +186,7 @@ static bool is_socket_valid(SOCKET *socket)
             && (socket->family < _NET_FAMILY__COUNT)
             && (socket->netname != NULL)
             && (socket->ctx == cast(void *, cast(size_t, socket)
-                                          + _mm_align(sizeof(SOCKET))));
+                                          + _mm_align(sizeof(ksocket_t))));
 }
 
 //==============================================================================
@@ -406,10 +406,11 @@ int _net_iflist(char *netname[], size_t netname_len, size_t *count)
  * @brief Function setup network interface.
  * @param netname       network name
  * @param config        configuration object (generic)
+ * @param config_size   size of configuration structure
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_ifup(const char *netname, const NET_generic_config_t *config)
+int _net_ifup(const char *netname, const NET_generic_config_t *config, size_t config_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -428,7 +429,7 @@ int _net_ifup(const char *netname, const NET_generic_config_t *config)
         if (netname) {
                 size_t n = 0;
                 void *ctx = get_stack_context(netname, &n);
-                err = call_proxy_function(net_list[n].family, ctx, config);
+                err = call_proxy_function(net_list[n].family, ctx, config, config_size);
         }
 
         return err;
@@ -472,10 +473,11 @@ int _net_ifdown(const char *netname)
  * @param  netname      network name
  * @param  family       network family
  * @param  status       network status
+ * @param  status_size  size of status structure
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_ifstatus(const char *netname, NET_family_t *family,  NET_generic_status_t *status)
+int _net_ifstatus(const char *netname, NET_family_t *family,  NET_generic_status_t *status, size_t status_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -491,11 +493,11 @@ int _net_ifstatus(const char *netname, NET_family_t *family,  NET_generic_status
 
         int err = EINVAL;
 
-        if (netname && family && status) {
+        if (netname && family && status && status_size) {
                 size_t n = 0;
                 void *ctx = get_stack_context(netname, &n);
                 *family = net_list[n].family;
-                err = call_proxy_function(net_list[n].family, ctx, status);
+                err = call_proxy_function(net_list[n].family, ctx, status, status_size);
         }
 
         return err;
@@ -510,7 +512,7 @@ int _net_ifstatus(const char *netname, NET_family_t *family,  NET_generic_status
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_create(const char *netname, NET_protocol_t protocol, SOCKET **socket)
+int _net_socket_create(const char *netname, NET_protocol_t protocol, ksocket_t **socket)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -556,7 +558,7 @@ int _net_socket_create(const char *netname, NET_protocol_t protocol, SOCKET **so
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_destroy(SOCKET *socket)
+int _net_socket_destroy(ksocket_t *socket)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -587,11 +589,12 @@ int _net_socket_destroy(SOCKET *socket)
 /**
  * @brief Function bind socket with address.
  * @param socket        socket to bind
- * @param addr          addres to bind
+ * @param addr          address to bind
+ * @param addr_size     address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
+int _net_socket_bind(ksocket_t *socket, const NET_generic_sockaddr_t *addr, size_t addr_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -605,9 +608,9 @@ int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
                 #endif
         };
 
-        if (is_socket_valid(socket) && addr) {
+        if (is_socket_valid(socket) && addr && addr_size) {
                 void *ctx = get_stack_context(socket->netname, NULL);
-                return call_proxy_function(socket->family, ctx, socket->ctx, addr);
+                return call_proxy_function(socket->family, ctx, socket->ctx, addr, addr_size);
         } else {
                 return EINVAL;
         }
@@ -620,7 +623,7 @@ int _net_socket_bind(SOCKET *socket, const NET_generic_sockaddr_t *addr)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_listen(SOCKET *socket)
+int _net_socket_listen(ksocket_t *socket)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -650,7 +653,7 @@ int _net_socket_listen(SOCKET *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_accept(SOCKET *socket, SOCKET **new_socket)
+int _net_socket_accept(ksocket_t *socket, ksocket_t **new_socket)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -697,7 +700,7 @@ int _net_socket_accept(SOCKET *socket, SOCKET **new_socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags, size_t *recved)
+int _net_socket_recv(ksocket_t *socket, void *buf, size_t len, NET_flags_t flags, size_t *recved)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -728,15 +731,17 @@ int _net_socket_recv(SOCKET *socket, void *buf, size_t len, NET_flags_t flags, s
  * @param len           bytes to receive
  * @param flags         control flags
  * @param sockaddr      obtained address of received bytes
+ * @param sockaddr_size address size
  * @param recved        number of received bytes
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_recvfrom(SOCKET                 *socket,
+int _net_socket_recvfrom(ksocket_t              *socket,
                          void                   *buf,
                          size_t                  len,
                          NET_flags_t             flags,
                          NET_generic_sockaddr_t *sockaddr,
+                         size_t                  sockaddr_size,
                          size_t                 *recved)
 {
         PROXY_TABLE = {
@@ -751,10 +756,10 @@ int _net_socket_recvfrom(SOCKET                 *socket,
                 #endif
         };
 
-        if (is_socket_valid(socket) && buf && len && sockaddr && recved) {
+        if (is_socket_valid(socket) && buf && len && sockaddr && sockaddr_size&& recved) {
                 void *ctx = get_stack_context(socket->netname, NULL);
                 return call_proxy_function(socket->family, ctx, socket->ctx, buf,
-                                           len, flags, sockaddr, recved);
+                                           len, flags, sockaddr, sockaddr_size, recved);
         } else {
                 return EINVAL;
         }
@@ -771,7 +776,7 @@ int _net_socket_recvfrom(SOCKET                 *socket,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t flags, size_t *sent)
+int _net_socket_send(ksocket_t *socket, const void *buf, size_t len, NET_flags_t flags, size_t *sent)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -806,11 +811,12 @@ int _net_socket_send(SOCKET *socket, const void *buf, size_t len, NET_flags_t fl
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_sendto(SOCKET                       *socket,
+int _net_socket_sendto(ksocket_t                    *socket,
                        const void                   *buf,
                        size_t                        len,
                        NET_flags_t                   flags,
                        const NET_generic_sockaddr_t *to_addr,
+                       size_t                        to_addr_size,
                        size_t                       *sent)
 {
         PROXY_TABLE = {
@@ -825,10 +831,10 @@ int _net_socket_sendto(SOCKET                       *socket,
                 #endif
         };
 
-        if (is_socket_valid(socket) && buf && len && to_addr && sent) {
+        if (is_socket_valid(socket) && buf && len && to_addr && to_addr_size && sent) {
                 void *ctx = get_stack_context(socket->netname, NULL);
                 return call_proxy_function(socket->family, ctx, socket->ctx, buf,
-                                           len, flags, to_addr, sent);
+                                           len, flags, to_addr, to_addr_size, sent);
         } else {
                 return EINVAL;
         }
@@ -842,7 +848,7 @@ int _net_socket_sendto(SOCKET                       *socket,
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
+int _net_socket_set_recv_timeout(ksocket_t *socket, uint32_t timeout)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -872,7 +878,7 @@ int _net_socket_set_recv_timeout(SOCKET *socket, uint32_t timeout)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
+int _net_socket_set_send_timeout(ksocket_t *socket, uint32_t timeout)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -902,7 +908,7 @@ int _net_socket_set_send_timeout(SOCKET *socket, uint32_t timeout)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_get_recv_timeout(SOCKET *socket, uint32_t *timeout)
+int _net_socket_get_recv_timeout(ksocket_t *socket, uint32_t *timeout)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -932,7 +938,7 @@ int _net_socket_get_recv_timeout(SOCKET *socket, uint32_t *timeout)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_get_send_timeout(SOCKET *socket, uint32_t *timeout)
+int _net_socket_get_send_timeout(ksocket_t *socket, uint32_t *timeout)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -959,10 +965,11 @@ int _net_socket_get_send_timeout(SOCKET *socket, uint32_t *timeout)
  * @brief Function connect socket to selected address.
  * @param socket        socket used for connection
  * @param addr          address where socket is connecting
+ * @param addr_size     address size
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
+int _net_socket_connect(ksocket_t *socket, const NET_generic_sockaddr_t *addr, size_t addr_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -976,9 +983,9 @@ int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
                 #endif
         };
 
-        if (is_socket_valid(socket) && addr) {
+        if (is_socket_valid(socket) && addr && addr_size) {
                 void *ctx = get_stack_context(socket->netname, NULL);
-                return call_proxy_function(socket->family, ctx, socket->ctx, addr);
+                return call_proxy_function(socket->family, ctx, socket->ctx, addr, addr_size);
         } else {
                 return EINVAL;
         }
@@ -991,7 +998,7 @@ int _net_socket_connect(SOCKET *socket, const NET_generic_sockaddr_t *addr)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_disconnect(SOCKET *socket)
+int _net_socket_disconnect(ksocket_t *socket)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1021,7 +1028,7 @@ int _net_socket_disconnect(SOCKET *socket)
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
+int _net_socket_shutdown(ksocket_t *socket, NET_shut_t how)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1048,10 +1055,11 @@ int _net_socket_shutdown(SOCKET *socket, NET_shut_t how)
  * @brief Function return address to which socket is connected.
  * @param socket        socket
  * @param sockaddr      address of connection
+ * @param sockaddr_size size of address
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_socket_getaddress(SOCKET *socket, NET_generic_sockaddr_t *sockaddr)
+int _net_socket_getaddress(ksocket_t *socket, NET_generic_sockaddr_t *sockaddr, size_t sockaddr_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1065,9 +1073,9 @@ int _net_socket_getaddress(SOCKET *socket, NET_generic_sockaddr_t *sockaddr)
                 #endif
         };
 
-        if (is_socket_valid(socket) && sockaddr) {
+        if (is_socket_valid(socket) && sockaddr && sockaddr_size) {
                 void *ctx = get_stack_context(socket->netname, NULL);
-                return call_proxy_function(socket->family, ctx, socket->ctx, sockaddr);
+                return call_proxy_function(socket->family, ctx, socket->ctx, sockaddr, sockaddr_size);
         } else {
                 return EINVAL;
         }
@@ -1079,10 +1087,11 @@ int _net_socket_getaddress(SOCKET *socket, NET_generic_sockaddr_t *sockaddr)
  * @param netname       network name
  * @param name          host name
  * @param addr          obtained address
+ * @param addr_size     size of address structure
  * @return One of @ref errno value.
  */
 //==============================================================================
-int _net_gethostbyname(const char *netname, const char *name, NET_generic_sockaddr_t *addr)
+int _net_gethostbyname(const char *netname, const char *name, NET_generic_sockaddr_t *addr, size_t addr_size)
 {
         PROXY_TABLE = {
                 #if __ENABLE_TCPIP_STACK__ > 0
@@ -1103,7 +1112,7 @@ int _net_gethostbyname(const char *netname, const char *name, NET_generic_sockad
                 NET_family_t family = get_net_family_by_name(netname);
                 if (family < _NET_FAMILY__COUNT) {
                         void *ctx = get_stack_context(netname, NULL);
-                        err = call_proxy_function(family, ctx, name, addr);
+                        err = call_proxy_function(family, ctx, name, addr, addr_size);
                 }
         }
 

@@ -1935,7 +1935,9 @@ static void process_destroy_all_resources(_process_t *proc)
                 for (size_t i = 0; i < ARRAY_SIZE(chain->resource); i++) {
                         if (chain->resource[i]) {
                                 int err = resource_destroy(chain->resource[i]);
-                                if (err != ESUCC) {
+                                if (!err) {
+                                        chain->resource[i] = NULL;
+                                } else {
                                         printk("PROCESS: PID %d: unknown object %p\n", proc->pid, chain->resource[i]);
                                 }
                         }
@@ -2310,7 +2312,7 @@ static int resource_destroy(res_header_t *resource)
 
         case RES_TYPE_SOCKET:
 #if _ENABLE_NETWORK_ == _YES_
-                _net_socket_destroy(cast(SOCKET*, res2free));
+                _net_socket_destroy(cast(ksocket_t*, res2free));
                 break;
 #else
                 return ENOTSUP;
