@@ -37,7 +37,7 @@ Brief   NVM driver
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define TIMEOUT_MS              100
+#define TIMEOUT_MS              1000
 #define RDP_KEY                 0x00A5
 #define FLASH_KEY1              0x45670123
 #define FLASH_KEY2              0xCDEF89AB
