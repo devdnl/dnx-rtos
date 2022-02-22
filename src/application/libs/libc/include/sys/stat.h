@@ -94,6 +94,18 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+#ifdef DOXYGEN
+/** @brief File information. */
+struct stat {
+        u64_t   st_size;        /*!< Total size, in bytes.*/
+        dev_t   st_dev;         /*!< ID of device containing file.*/
+        mode_t  st_mode;        /*!< Protection, file type.*/
+        uid_t   st_uid;         /*!< User ID of owner.*/
+        gid_t   st_gid;         /*!< Group ID of owner.*/
+        time_t  st_ctime;       /*!< Time of creation.*/
+        time_t  st_mtime;       /*!< Time of last modification.*/
+};
+#endif
 
 /*==============================================================================
   Exported objects
@@ -176,8 +188,8 @@ static inline int mknod(const char *pathname, const char *mod_name, int major, i
 //==============================================================================
 static inline int mkdir(const char *pathname, mode_t mode)
 {
-        int err = _libc_syscall(_LIBC_SYS_MKDIR, pathname, &mode);
-        return err ? -1 : 0;
+        extern int _libc_mkdir(const char *pathname, mode_t mode);
+        return _libc_mkdir(pathname, mode);
 }
 
 //==============================================================================

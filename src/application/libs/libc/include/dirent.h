@@ -55,6 +55,8 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+typedef struct _libc_dir DIR;
+
 #ifdef DOXYGEN
         /**
          * @brief Directory container
@@ -66,15 +68,11 @@ extern "C" {
         /* type defined in sys/types.h */
         /** @brief Directory entry. */
         typedef struct dirent {
-                char   *name;           /*!< File name.*/
-                u64_t   size;           /*!< File size in bytes.*/
-                tfile_t filetype;       /*!< File type.*/
-                dev_t   dev;            /*!< Device address (if file type is driver).*/
+                const char *d_name;         //!< File name
+                u64_t       size;           //!< File size in bytes
+                mode_t      mode;           //!< File mode (protection, file type)
+                dev_t       dev;            //!< Device address (if file type is driver)
         } dirent_t;
-#else
-        #ifndef __DIR_TYPE_DEFINED__
-                typedef struct vfs_dir DIR;
-        #endif
 #endif
 
 /*==============================================================================
@@ -138,9 +136,8 @@ extern "C" {
 //==============================================================================
 static inline DIR *opendir(const char *name)
 {
-        DIR *dir = NULL;
-        int err = _libc_syscall(_LIBC_SYS_OPENDIR, name, &dir);
-        return err ? NULL : dir;
+        extern DIR *_libc_opendir(const char *name);
+        return _libc_opendir(name);
 }
 
 //==============================================================================
@@ -192,8 +189,8 @@ static inline DIR *opendir(const char *name)
 //==============================================================================
 static inline int closedir(DIR *dir)
 {
-        int err = _libc_syscall(_LIBC_SYS_CLOSEDIR, dir);
-        return err ? -1 : 0;
+        extern int _libc_closedir(DIR *dir);
+        return _libc_closedir(dir);
 }
 
 //==============================================================================
@@ -247,9 +244,8 @@ static inline int closedir(DIR *dir)
 //==============================================================================
 static inline struct dirent *readdir(DIR *dir)
 {
-        struct dirent *dirent = NULL;
-        int err = _libc_syscall(_LIBC_SYS_READDIR, dir, &dirent);
-        return err ? NULL : dirent;
+        extern struct dirent *_libc_readdir(DIR *dir);
+        return _libc_readdir(dir);
 }
 
 //==============================================================================
@@ -296,7 +292,8 @@ static inline struct dirent *readdir(DIR *dir)
 //==============================================================================
 static inline void seekdir(DIR *dir, u32_t seek)
 {
-        _libc_syscall(_LIBC_SYS_DIRSEEK, dir, &seek);
+        extern void _libc_seekdir(DIR *dir, u32_t seek);
+        _libc_seekdir(dir, seek);
 }
 
 //==============================================================================
@@ -344,9 +341,8 @@ static inline void seekdir(DIR *dir, u32_t seek)
 //==============================================================================
 static inline i32_t telldir(DIR *dir)
 {
-        u32_t seek = 0;
-        int err = _libc_syscall(_LIBC_SYS_DIRTELL, dir, &seek);
-        return err ? -1 : (i32_t)seek;
+        extern i32_t _libc_telldir(DIR *dir);
+        return _libc_telldir(dir);
 }
 
 //==============================================================================

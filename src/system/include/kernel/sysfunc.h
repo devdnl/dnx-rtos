@@ -2574,6 +2574,7 @@ static inline int sys_statfs(const char *path, struct statfs *statfs)
  *
  * @param path          path to file
  * @param flags         flags
+ * @param mode          mode (O_CREAT)
  * @param file          pointer to file object
  *
  * @return One of @ref errno value.
@@ -2597,7 +2598,7 @@ static inline int sys_statfs(const char *path, struct statfs *statfs)
  * @see sys_fclose()
  */
 //==============================================================================
-extern int sys_fopen(const char *path, int flags, kfile_t **file);
+extern int sys_fopen(const char *path, int flags, mode_t mode, kfile_t **file);
 
 //==============================================================================
 /**

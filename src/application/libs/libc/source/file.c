@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <dirent.h>
 #include "common.h"
 
 /*==============================================================================
@@ -141,14 +142,24 @@ static u32_t parse_flags(const char *str)
  *
  * @param  path         file path
  * @param  flags        file open flags
+ * @param  mode         optional argument in case of O_CREAT flag
  *
  * @return On success file descriptor is returned (fd >= 0), otherwise -1.
  */
 //==============================================================================
-int open(const char *path, int flags)
+int open(const char *path, int flags, ...)
 {
+        mode_t mode = 0600;
+
+        if (flags & O_CREAT) {
+                va_list arg;
+                va_start(arg, flags);
+                mode = va_arg(arg, mode_t);
+                va_end(arg);
+        }
+
         int fd;
-        int err = _libc_syscall(_LIBC_SYS_OPEN, &fd, path, &flags);
+        int err = _libc_syscall(_LIBC_SYS_OPEN, &fd, path, &flags, &mode);
         return err ? -1 : fd;
 }
 
@@ -204,7 +215,7 @@ FILE *_libc_fopen(const char *path, const char *mode)
                 f->tmppath = NULL;
                 f->flag.eof = false;
                 f->flag.error = false;
-                f->fd = open(path, parse_flags(mode));
+                f->fd = open(path, parse_flags(mode), 0600);
                 if (f->fd >= 0) {
                         return f;
                 }
@@ -809,6 +820,191 @@ int _libc_fstat(int fd, struct stat *buf)
                 errno = EINVAL;
                 return -1;
         }
+}
+
+//==============================================================================
+/**
+ * @brief Function creates new directory.
+ *
+ * The mkdir() attempts to create a directory named <i>pathname</i>. The
+ * argument <i>mode</i> specifies the permissions to use.
+ *
+ * @param pathname      directory name
+ * @param mode          directory permissions
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref EEXIST
+ * @exception | @ref ENOENT
+ * @exception | @ref ENOSPC
+ * @exception | ...
+ *
+ * @return On success, \b 0 is returned. On error, \b -1 is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+int _libc_mkdir(const char *pathname, mode_t mode)
+{
+        int fd = open(pathname, O_CREAT | O_DIRECTORY, mode);
+        if (fd >= 0) {
+                return close(fd);
+        } else {
+                return -1;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Function opens selected directory.
+ *
+ * Function opens a directory stream corresponding to the directory <i>name</i>, and
+ * returns a pointer to the directory stream. The stream is positioned at the first
+ * entry in the directory.
+ *
+ * @param name          directory path
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
+ *
+ * @return A pointer to the directory stream. On error, <b>NULL</b> is returned,
+ * and <b>errno</b> is set appropriately.
+ */
+//==============================================================================
+DIR *_libc_opendir(const char *name)
+{
+        DIR *dir = _libc_malloc(sizeof(*dir));
+        if (dir) {
+
+                dir->fd = open(name, O_DIRECTORY);
+                if (dir->fd >= 0) {
+                        return dir;
+                }
+
+                _libc_free(dir);
+        }
+
+        return NULL;
+}
+
+//==============================================================================
+/**
+ * @brief Function closes selected directory stream.
+ *
+ * Function closes the directory stream associated with <i>dir</i>. The directory
+ * stream descriptor <i>dir</i> is not available after this call.
+ *
+ * @param dir           pinter to directory object
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
+ *
+ * @return Return \b 0 on success. On error, \b -1 is returned,
+ * and <b>errno</b> is set appropriately.
+ */
+//==============================================================================
+int _libc_closedir(DIR *dir)
+{
+        int err = -1;
+
+        if (dir) {
+                err = close(dir->fd);
+                if (!err) {
+                        _libc_free(dir);
+                }
+        } else {
+                errno = EINVAL;
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief Function reads entry from opened directory stream.
+ *
+ * Function returns a pointer to object <b>dirent_t</b> type representing the
+ * next directory entry in the directory stream pointed to by <i>dir</i>.<p>
+ *
+ * @param dir           directory object
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref EACCES
+ * @exception | @ref ENOENT
+ * @exception | ...
+ *
+ * @return On success, function returns a pointer to a <b>dirent_t</b> type. If
+ * the end of the directory stream is reached, field <b>name</b> of <b>dirent_t</b>
+ * type is <b>NULL</b>. If an error occurs, NULL-object and <b>errno</b> is set
+ * appropriately.
+ */
+//==============================================================================
+struct dirent *_libc_readdir(DIR *dir)
+{
+        struct dirent *dirent = NULL;
+
+        if (dir) {
+                int err = _libc_syscall(_LIBC_SYS_DIRREAD, &dir->fd, &dirent);
+                if (err) {
+                        dirent = NULL;
+                }
+        }
+
+        return dirent;
+}
+
+//==============================================================================
+/**
+ * Set the position of a directory stream.
+ *
+ * @param dir   directory object
+ * @param seek  pointer position
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return The function shall not return a value.
+ */
+//==============================================================================
+void _libc_seekdir(DIR *dir, u32_t seek)
+{
+        if (dir) {
+                _libc_syscall(_LIBC_SYS_DIRSEEK, &dir->fd, &seek);
+        }
+}
+
+//==============================================================================
+/**
+ * Return current location of a named directory stream.
+ *
+ * @param dir   directory object
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return Upon successful completion, the function shall return the current
+ *         location of the specified directory stream. On error, -1 is rturned,
+ *         and errno is set appropriately.
+ */
+//==============================================================================
+i32_t _libc_telldir(DIR *dir)
+{
+        i32_t pos = -1;
+
+        if (dir) {
+                u32_t seek = 0;
+                int err = _libc_syscall(_LIBC_SYS_DIRTELL, &dir->fd, &seek);
+                if (!err) {
+                        pos = (i32_t)seek;
+                }
+        }
+
+        return pos;
 }
 
 /*==============================================================================

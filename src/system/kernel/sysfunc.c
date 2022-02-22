@@ -105,18 +105,19 @@ int sys_closedir(kdir_t *dir)
  *
  * @param[in]  *name             file path
  * @param[in]   flags            flags
+ * @param[in]   mode             mode (O_CREAT)
  * @param[out] **file            pointer to file pointer
  *
  * @return One of errno values
  */
 //==============================================================================
-int sys_fopen(const char *name, int flags, kfile_t **file)
+int sys_fopen(const char *name, int flags, mode_t mode, kfile_t **file)
 {
         struct vfs_path cpath;
         cpath.CWD  = NULL;
         cpath.PATH = name;
 
-        int r = _vfs_fopen(&cpath, flags, file);
+        int r = _vfs_fopen(&cpath, flags, mode, file);
         if (r == ESUCC) {
                 _process_register_resource(_kworker_proc, cast(res_header_t*, *file));
         }

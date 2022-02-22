@@ -105,7 +105,7 @@ API_FS_INIT(ext4fs, void **fs_handle, const char *src_path, const char *opts)
 
                 bool read_only = sys_stropt_is_flag(opts, "ro");
 
-                err = sys_fopen(src_path, read_only ? O_RDONLY : O_RDWR, cast(kfile_t**, &hdl->dev));
+                err = sys_fopen(src_path, read_only ? O_RDONLY : O_RDWR, 0, cast(kfile_t**, &hdl->dev));
                 if (err) goto finish;
 
                 struct stat st;

@@ -366,7 +366,7 @@ int CANNET_ifinit(void **ctx, const char *if_path)
                 };
 
                 int merr  = sys_mutex_create(KMTX_TYPE_RECURSIVE, &cannet->mutex);
-                int ferr  = sys_fopen(if_path, O_RDWR, &cannet->if_file);
+                int ferr  = sys_fopen(if_path, O_RDWR, 0, &cannet->if_file);
                 int tierr = sys_thread_create(input_thread, &attr, cannet, &cannet->if_thread);
 
                 if (merr or tierr or ferr) {

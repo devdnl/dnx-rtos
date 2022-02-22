@@ -2129,7 +2129,7 @@ static int process_apply_attributes(_process_t *proc, const _process_attr_t *att
                         cpath.PATH = attr->p_stdin;
 
                         kfile_t *file;
-                        err = _vfs_fopen(&cpath, O_RDONLY, &file);
+                        err = _vfs_fopen(&cpath, O_RDONLY, 0, &file);
                         if (!err) {
                                 int fd;
                                 err = _process_descriptor_allocate(proc, &fd, &file->header);
@@ -2150,7 +2150,7 @@ static int process_apply_attributes(_process_t *proc, const _process_attr_t *att
                         cpath.PATH = attr->p_stdout;
 
                         kfile_t *file;
-                        err = _vfs_fopen(&cpath, O_RDWR | O_APPEND, &file);
+                        err = _vfs_fopen(&cpath, O_RDWR | O_APPEND, 0, &file);
                         if (!err) {
                                 int fd;
                                 err = _process_descriptor_allocate(proc, &fd, &file->header);
@@ -2171,7 +2171,7 @@ static int process_apply_attributes(_process_t *proc, const _process_attr_t *att
                         cpath.PATH = attr->p_stdout;
 
                         kfile_t *file;
-                        err = _vfs_fopen(&cpath, O_RDWR | O_APPEND, &file);
+                        err = _vfs_fopen(&cpath, O_RDWR | O_APPEND, 0, &file);
                         if (!err) {
                                 int fd;
                                 err = _process_descriptor_allocate(proc, &fd, &file->header);
@@ -2388,7 +2388,7 @@ static int analyze_shebang(_process_t *proc, const char *cmd, char **cmdarg)
         struct vfs_path path;
         path.CWD  = proc->cwd;
         path.PATH = filename;
-        err       = _vfs_fopen(&path, O_RDONLY, &file);
+        err       = _vfs_fopen(&path, O_RDONLY, 0, &file);
         if (err) goto finish;
 
         // check that file is set to execute

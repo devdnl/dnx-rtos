@@ -558,13 +558,13 @@ static int configure(tty_t *tty, const TTY_config_t *conf)
 {
         kfile_t *in, *out;
 
-        int err = sys_fopen(conf->input_file, O_RDWR, &in);
+        int err = sys_fopen(conf->input_file, O_RDWR, 0, &in);
 
         if (!err) {
                 if (strcmp(conf->input_file, conf->output_file) == 0) {
                         out = in;
                 } else {
-                        err = sys_fopen(conf->output_file, O_RDONLY, &out);
+                        err = sys_fopen(conf->output_file, O_RDONLY, 0, &out);
                 }
         }
 

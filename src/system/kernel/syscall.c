@@ -117,12 +117,9 @@ typedef enum {
         SYSCALL_MKNOD,                  // int errno (const char *pathname, const char *mod_name, int *major, int *minor)
         SYSCALL_GETMNTENTRY,            // int errno (size_t *seek, struct mntent *mntent)
         SYSCALL_MKFIFO,                 // int errno (const char *pathname, mode_t *mode)
-        SYSCALL_MKDIR,                  // int errno (const char *pathname, mode_t *mode)
-        SYSCALL_OPENDIR,                // int errno (const char *pathname, DIR**)
-        SYSCALL_CLOSEDIR,               // int errno (DIR *dir)
-        SYSCALL_DIRSEEK,                // int errno (DIR *dir, const uint32_t *seek)
-        SYSCALL_DIRTELL,                // int errno (DIR *dir, u32_t *pos)
-        SYSCALL_READDIR,                // int errno (DIR *dir, dirent_t *dirent)
+        SYSCALL_DIRSEEK,                // int errno (int *fd_dir, const uint32_t *seek)
+        SYSCALL_DIRTELL,                // int errno (int *fd_dir, u32_t *pos)
+        SYSCALL_DIRREAD,                // int errno (int *fd_dir, dirent_t **dirent)
         SYSCALL_REMOVE,                 // int errno (const char *path)
         SYSCALL_RENAME,                 // int errno (const char *old_name, const char *new_name)
         SYSCALL_CHMOD,                  // int errno (const char *pathname, mode_t *mode)
@@ -130,7 +127,7 @@ typedef enum {
         SYSCALL_STATFS,                 // int errno (const char *path, struct statfs *buf)
         SYSCALL_STAT,                   // int errno (const char *pathname, struct stat *buf)
         SYSCALL_FSTAT,                  // int errno (int *fd, struct stat *buf)
-        SYSCALL_OPEN,                   // int errno (int *fd, const char *path, int flags)
+        SYSCALL_OPEN,                   // int errno (int *fd, const char *path, int flags, mode_t mode)
         SYSCALL_WRITE,                  // int errno (int *fd, const void *src, size_t *count, size_t *written)
         SYSCALL_READ,                   // int errno (int *fd, void *dst, size_t *count, size_t *read)
         SYSCALL_SEEK64,                 // int errno (int *fd, i64_t *seek, int *origin)
@@ -142,30 +139,30 @@ typedef enum {
         SYSCALL_DRIVERINIT,             // int errno (const char *mod_name, int *major, int *minor  const char *node_path, const void *config)
         SYSCALL_DRIVERRELEASE,          // int errno (const char *mod_name, int *major, int *minor)
         SYSCALL_KERNELPANICINFO,        // int errno (kernel_panic_info_t *info)
-        SYSCALL_NETADD,                 // int errno (char *netname, NETM_family_t *family, const char *if_path)
+        SYSCALL_NETADD,                 // int errno (char *netname, NET_family_t *family, const char *if_path)
         SYSCALL_NETRM,                  // int errno (char *netname)
         SYSCALL_NETIFLIST,              // int errno (char *netname[], size_t *netname_len, size_t *count)
-        SYSCALL_NETIFUP,                // int errno (const char *netname, const NETM_generic_config_t *config, size_t *config_size)
+        SYSCALL_NETIFUP,                // int errno (const char *netname, const NET_generic_config_t *config, size_t *config_size)
         SYSCALL_NETIFDOWN,              // int errno (const char *netname)
-        SYSCALL_NETIFSTATUS,            // int errno (const char *netname, NETM_family_t *family, NETM_generic_status_t *status, size_t *status_size)
+        SYSCALL_NETIFSTATUS,            // int errno (const char *netname, NET_family_t *family, NET_generic_status_t *status, size_t *status_size)
         SYSCALL_NETGETHOSTBYNAME,       // int errno (const char *netname, const char *name, void *addr, size_t *addr_size)
-        SYSCALL_NETSOCKETCREATE,        // int errno (int *fd, const char *netname, NETM_protocol_t *protocol)
-        SYSCALL_NETBIND,                // int errno (int *fd, const NETM_generic_sockaddr_t *addr, size_t *addr_size)
+        SYSCALL_NETSOCKETCREATE,        // int errno (int *fd, const char *netname, NET_protocol_t *protocol)
+        SYSCALL_NETBIND,                // int errno (int *fd, const NET_generic_sockaddr_t *addr, size_t *addr_size)
         SYSCALL_NETLISTEN,              // int errno (int *fd)
         SYSCALL_NETACCEPT,              // int errno (int *fd, int *new_fd)
-        SYSCALL_NETRECV,                // int errno (int *fd, void *buf, size_t *len, NETM_flags_t *flags, size_t *rcved)
-        SYSCALL_NETSEND,                // int errno (int *fd, const void *buf,size_t *len, NETM_flags_t *flags, size_t *sent)
+        SYSCALL_NETRECV,                // int errno (int *fd, void *buf, size_t *len, NET_flags_t *flags, size_t *rcved)
+        SYSCALL_NETSEND,                // int errno (int *fd, const void *buf,size_t *len, NET_flags_t *flags, size_t *sent)
         SYSCALL_NETSETRECVTIMEOUT,      // int errno (int *fd, uint32_t *timeout)
         SYSCALL_NETSETSENDTIMEOUT,      // int errno (int *fd, uint32_t *timeout)
-        SYSCALL_NETCONNECT,             // int errno (int *fd, const NETM_generic_sockaddr_t *addr, size_t *addr_size)
+        SYSCALL_NETCONNECT,             // int errno (int *fd, const NET_generic_sockaddr_t *addr, size_t *addr_size)
         SYSCALL_NETDISCONNECT,          // int errno (int *fd)
-        SYSCALL_NETSHUTDOWN,            // int errno (int *fd, NETM_shut_t *how)
-        SYSCALL_NETSENDTO,              // int errno (int *fd, const void *buf, size_t *len, NETM_flags_t *flags, const NETM_generic_sockaddr_t *to_sockaddr, size_t *to_sockaddr_size, size_t *sent)
-        SYSCALL_NETRECVFROM,            // int errno (int *fd, void *buf, size_t *len, NETM_flags_t *flags, NETM_generic_sockaddr_t *from_sockaddr, size_t *from_sockaddr_size, size_t *rcved)
-        SYSCALL_NETGETADDRESS,          // int errno (int *fd, NETM_generic_sockaddr_t *addr, size_t *addr_size)
-        SYSCALL_NETHTON16,              // int errno (NETM_family_t *family, uint16_t *value_in, uint16_t *value_out)
-        SYSCALL_NETHTON32,              // int errno (NETM_family_t *family, uint32_t *value_in, uint32_t *value_out)
-        SYSCALL_NETHTON64,              // int errno (NETM_family_t *family, uint64_t *value_in, uint64_t *value_out)
+        SYSCALL_NETSHUTDOWN,            // int errno (int *fd, NET_shut_t *how)
+        SYSCALL_NETSENDTO,              // int errno (int *fd, const void *buf, size_t *len, NET_flags_t *flags, const NET_generic_sockaddr_t *to_sockaddr, size_t *to_sockaddr_size, size_t *sent)
+        SYSCALL_NETRECVFROM,            // int errno (int *fd, void *buf, size_t *len, NET_flags_t *flags, NET_generic_sockaddr_t *from_sockaddr, size_t *from_sockaddr_size, size_t *rcved)
+        SYSCALL_NETGETADDRESS,          // int errno (int *fd, NET_generic_sockaddr_t *addr, size_t *addr_size)
+        SYSCALL_NETHTON16,              // int errno (NET_family_t *family, uint16_t *value_in, uint16_t *value_out)
+        SYSCALL_NETHTON32,              // int errno (NET_family_t *family, uint32_t *value_in, uint32_t *value_out)
+        SYSCALL_NETHTON64,              // int errno (NET_family_t *family, uint64_t *value_in, uint64_t *value_out)
         SYSCALL_MSLEEP,                 // int errno (const uint32_t *mseconds)
         SYSCALL_USLEEP,                 // int errno (const uint32_t *useconds)
         SYSCALL_GETUID,                 // int errno (uid_t *uid)
@@ -217,11 +214,8 @@ static int syscall_mount(syscallrq_t *rq);
 static int syscall_umount(syscallrq_t *rq);
 static int syscall_getmntentry(syscallrq_t *rq);
 static int syscall_mknod(syscallrq_t *rq);
-static int syscall_mkdir(syscallrq_t *rq);
 static int syscall_mkfifo(syscallrq_t *rq);
-static int syscall_opendir(syscallrq_t *rq);
-static int syscall_closedir(syscallrq_t *rq);
-static int syscall_readdir(syscallrq_t *rq);
+static int syscall_dirread(syscallrq_t *rq);
 static int syscall_remove(syscallrq_t *rq);
 static int syscall_rename(syscallrq_t *rq);
 static int syscall_chmod(syscallrq_t *rq);
@@ -348,12 +342,9 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_SHMDESTROY] = syscall_shmdestroy,
         [SYSCALL_GETMNTENTRY] = syscall_getmntentry,
         [SYSCALL_MKNOD] = syscall_mknod,
-        [SYSCALL_MKDIR] = syscall_mkdir,
         [SYSCALL_MKFIFO] = syscall_mkfifo,
-        [SYSCALL_OPENDIR] = syscall_opendir,
-        [SYSCALL_CLOSEDIR] = syscall_closedir,
         [SYSCALL_CLOSE] = syscall_close,
-        [SYSCALL_READDIR] = syscall_readdir,
+        [SYSCALL_DIRREAD] = syscall_dirread,
         [SYSCALL_REMOVE] = syscall_remove,
         [SYSCALL_RENAME] = syscall_rename,
         [SYSCALL_CHMOD] = syscall_chmod,
@@ -711,30 +702,6 @@ static int syscall_mknod(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall create directory.
- *
- * @param  rq                   syscall request
- *
- * @return One of errno value.
- */
-//==============================================================================
-static int syscall_mkdir(syscallrq_t *rq)
-{
-#if __OS_ENABLE_MKDIR__ == _YES_
-        struct vfs_path path;
-        path.CWD  = _process_get_CWD(GETPROCESS());
-        path.PATH = LOADARG(const char *);
-        GETARG(mode_t *, mode);
-
-        return _vfs_mkdir(&path, *mode);
-#else
-        UNUSED_ARG1(rq);
-        return ENOSYS;
-#endif
-}
-
-//==============================================================================
-/**
  * @brief  This syscall create FIFO pipe.
  *
  * @param  rq                   syscall request
@@ -759,67 +726,6 @@ static int syscall_mkfifo(syscallrq_t *rq)
 
 //==============================================================================
 /**
- * @brief  This syscall open selected directory.
- *
- * @param  rq                   syscall request
- *
- * @return One of errno value.
- */
-//==============================================================================
-static int syscall_opendir(syscallrq_t *rq)
-{
-        struct vfs_path path;
-        path.CWD  = _process_get_CWD(GETPROCESS());
-        path.PATH = LOADARG(const char *);
-        GETARG(kdir_t**, DIR);
-
-        kdir_t *dir = NULL;
-        int  err = _vfs_opendir(&path, &dir);
-        if (!err) {
-                err = _process_register_resource(GETPROCESS(), cast(res_header_t*, dir));
-                if (err) {
-                        _vfs_closedir(dir);
-                        dir = NULL;
-                } else {
-                        *DIR = dir;
-                }
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief  This syscall close selected directory.
- *
- * @param  rq                   syscall request
- *
- * @return One of errno value.
- */
-//==============================================================================
-static int syscall_closedir(syscallrq_t *rq)
-{
-        GETARG(kdir_t *, dir);
-
-        int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, dir), RES_TYPE_DIR);
-        if (err == EFAULT) {
-                res_header_t *res;
-                if (_process_descriptor_get_resource(GETPROCESS(), 2, &res) == 0) {
-                        const char *msg = "*** Error: object is not a dir! ***\n";
-                        size_t wrcnt;
-                        _vfs_fwrite(msg, strlen(msg), &wrcnt, cast(kfile_t*, res));
-                }
-
-                pid_t pid = 0;
-                _process_get_pid(GETPROCESS(), &pid);
-                _process_kill(pid);
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
  * @brief  This syscall read selected directory.
  *
  * @param  rq                   syscall request
@@ -827,12 +733,23 @@ static int syscall_closedir(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static int syscall_readdir(syscallrq_t *rq)
+static int syscall_dirread(syscallrq_t *rq)
 {
-        GETARG(kdir_t *, dir);
+        GETARG(int *, fd);
         GETARG(dirent_t **, dirent);
 
-        return _vfs_readdir(dir, dirent);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                if (res->type == RES_TYPE_DIR) {
+                        err = _vfs_readdir(res->self, dirent);
+
+                } else {
+                        err = EINVAL;
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -1030,16 +947,42 @@ static int syscall_open(syscallrq_t *rq)
         path.CWD  = _process_get_CWD(GETPROCESS());
         path.PATH = LOADARG(const char *);
         GETARG(int *, flags);
+        GETARG(mode_t *, mode);
 
+        int err = EFAULT;
         int desc;
-        kfile_t *file;
-        int err = _vfs_fopen(&path, *flags, &file);
-        if (!err) {
-                err = _process_descriptor_allocate(GETPROCESS(), &desc, &file->header);
-                if (err) {
-                        _vfs_fclose(file, true);
+
+        if (*flags & O_DIRECTORY) {
+
+                if (*flags & O_CREAT) {
+                        err = _vfs_mkdir(&path, *mode);
                 } else {
-                        *fd = desc;
+                        err = 0;
+                }
+
+                if (not err) {
+                        kdir_t *dir;
+                        err = _vfs_opendir(&path, &dir);
+                        if (!err) {
+                                err = _process_descriptor_allocate(GETPROCESS(), &desc, &dir->header);
+                                if (err) {
+                                        _vfs_closedir(dir);
+                                } else {
+                                        *fd = desc;
+                                }
+                        }
+                }
+
+        } else {
+                kfile_t *file;
+                err = _vfs_fopen(&path, *flags, *mode, &file);
+                if (!err) {
+                        err = _process_descriptor_allocate(GETPROCESS(), &desc, &file->header);
+                        if (err) {
+                                _vfs_fclose(file, true);
+                        } else {
+                                *fd = desc;
+                        }
                 }
         }
 
@@ -3372,10 +3315,21 @@ static int syscall_threadexit(syscallrq_t *rq)
 //==============================================================================
 static int syscall_dirseek(syscallrq_t *rq)
 {
-        GETARG(kdir_t*, dir);
+        GETARG(int*, fd);
         GETARG(const u32_t*, seek);
 
-        return _vfs_seekdir(dir, *seek);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                if (res->type == RES_TYPE_DIR) {
+                        err = _vfs_seekdir(res->self, *seek);
+
+                } else {
+                        err = EINVAL;
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================
@@ -3389,10 +3343,21 @@ static int syscall_dirseek(syscallrq_t *rq)
 //==============================================================================
 static int syscall_dirtell(syscallrq_t *rq)
 {
-        GETARG(kdir_t*, dir);
+        GETARG(int *, fd);
         GETARG(u32_t *, pos);
 
-        return _vfs_telldir(dir, pos);
+        res_header_t *res;
+        int err = _process_descriptor_get_resource(GETPROCESS(), *fd, &res);
+        if (!err) {
+                if (res->type == RES_TYPE_DIR) {
+                        err = _vfs_telldir(res->self, pos);
+
+                } else {
+                        err = EINVAL;
+                }
+        }
+
+        return err;
 }
 
 //==============================================================================

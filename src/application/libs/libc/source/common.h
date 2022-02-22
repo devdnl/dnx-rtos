@@ -66,6 +66,10 @@ struct _libc_socket {
         int fd;
 };
 
+struct _libc_dir {
+        int fd;
+};
+
 typedef struct {
         /** buffer used to store temporary time structure */
         struct tm _tmbuf;

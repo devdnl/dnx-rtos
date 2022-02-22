@@ -839,12 +839,13 @@ int _vfs_statfs(const struct vfs_path *path, struct statfs *statfs)
  *
  * @param[in]  *name             file path
  * @param[in]  flags             file flags (O_RDONLY, O_WRONLY, O_RDWR, O_CREAT, O_TRUNC, O_APPEND, O_NONBLOCK, O_EXCL)
+ * @param[in]  mode              mode
  * @param[out] **file            pointer to file pointer
  *
  * @return One of errno values
  */
 //==============================================================================
-int _vfs_fopen(const struct vfs_path *path, int flags, kfile_t **file)
+int _vfs_fopen(const struct vfs_path *path, int flags, mode_t mode, kfile_t **file)
 {
         if (!path || !path->PATH || !file) {
                 return EINVAL;
@@ -880,6 +881,10 @@ int _vfs_fopen(const struct vfs_path *path, int flags, kfile_t **file)
                                                      &file_obj->f_lseek,
                                                      external_path,
                                                      flags);
+
+                        if (!err && (flags & O_CREAT)) {
+                                err = fs->interface->fs_chmod(fs->handle, external_path, mode);
+                        }
 
                         struct stat stat;
                         if (!err) {

@@ -992,7 +992,7 @@ static size_t get_file_content(struct file_info *file, u8_t *buff, size_t size, 
                              _CPUCTL_VENDOR_NAME);
 
                 kfile_t *pll;
-                if (sys_fopen(CLK_FILE_PATH, O_RDWR, &pll) == ESUCC) {
+                if (sys_fopen(CLK_FILE_PATH, O_RDWR, 0, &pll) == ESUCC) {
 
                         CLK_info_t clkinf;
                         clkinf.iterator = 0;

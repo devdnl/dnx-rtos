@@ -664,7 +664,7 @@ int SIPC_ifinit(void **ctx, const char *if_path)
 
                 sipc->run = true;
 
-                int ferr  = sys_fopen(if_path, O_RDWR, &sipc->if_file);
+                int ferr  = sys_fopen(if_path, O_RDWR, 0, &sipc->if_file);
                 int merr  = sys_mutex_create(KMTX_TYPE_NORMAL, &sipc->socket_list_mtx);
                 int serr  = sys_mutex_create(KMTX_TYPE_NORMAL, &sipc->packet_send_mtx);
                 int lerr  = _llist_create_krn(_MM_NET, list_cmp_functor, NULL, &sipc->socket_list);
