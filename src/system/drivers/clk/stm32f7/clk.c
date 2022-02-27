@@ -84,7 +84,7 @@ static bool is_APB2_divided(void);
 //==============================================================================
 API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG4(device_handle, major, minor, config);
+        UNUSED_ARG3(device_handle, major, minor);
 
         int err = ESUCC;
 
@@ -124,7 +124,9 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         //----------------------------------------------------------------------
         // LSE OSCILLATOR
         //----------------------------------------------------------------------
-        if (__CLK_LSE_ON__) {
+        bool lseoff = sys_stropt_is_flag(config, "lseoff");
+
+        if (__CLK_LSE_ON__ && !lseoff) {
 
                 SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
                 SET_BIT(PWR->CR1, PWR_CR1_DBP);
@@ -179,7 +181,7 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         //----------------------------------------------------------------------
         // RTC clock selection
         //----------------------------------------------------------------------
-        if ( (  (__CLK_RTC_SRC__ == LL_RCC_RTC_CLKSOURCE_LSE && __CLK_LSE_ON__)
+        if ( (  (__CLK_RTC_SRC__ == LL_RCC_RTC_CLKSOURCE_LSE && __CLK_LSE_ON__ && !lseoff)
              || (__CLK_RTC_SRC__ == LL_RCC_RTC_CLKSOURCE_LSI && __CLK_LSI_ON__)
              || (__CLK_RTC_SRC__ == LL_RCC_RTC_CLKSOURCE_HSE_RTC && __CLK_HSE_ON__) )
 

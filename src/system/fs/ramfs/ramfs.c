@@ -912,25 +912,22 @@ API_FS_WRITE(ramfs,
 {
         struct RAMFS *hdl = fs_handle;
 
-        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (!err) {
+        int err = ENOENT;
 
-                err = ENOENT;
+        struct opened_file_info *opened_file = fhdl;
+        if (opened_file && opened_file->child) {
+                node_t *node = opened_file->child;
 
-                struct opened_file_info *opened_file = fhdl;
-                if (opened_file && opened_file->child) {
-                        node_t *node = opened_file->child;
+                sys_gettime(&node->mtime);
 
-                        sys_gettime(&node->mtime);
+                if (S_ISDEV(node->mode)) {
+                        dev_t dev = node->data.dev_t;
+                        err = sys_driver_write(dev, src, count, fpos, wrcnt, fattr);
 
-                        if (S_ISDEV(node->mode)) {
-                                dev_t dev = node->data.dev_t;
-                                sys_mutex_unlock(hdl->resource_mtx);
-                                return sys_driver_write(dev, src, count, fpos, wrcnt, fattr);
-
-                        } else if (S_ISFIFO(node->mode)) {
+                } else if (S_ISFIFO(node->mode)) {
+                        err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+                        if (!err) {
                                 pipe_t *pipe = node->data.pipe_t;
-                                sys_mutex_unlock(hdl->resource_mtx);
 
                                 err = sys_pipe_write(pipe, src, count, wrcnt, fattr.non_blocking_wr);
                                 if (!err) {
@@ -940,15 +937,16 @@ API_FS_WRITE(ramfs,
                                                 node->size = size;
                                         }
                                 }
+                                sys_mutex_unlock(hdl->resource_mtx);
+                        }
 
-                                return err;
-
-                        } else if (S_ISREG(node->mode)) {
+                } else if (S_ISREG(node->mode)) {
+                        err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+                        if (!err) {
                                 err = write_regular_file(node, src, count, *fpos, wrcnt);
+                                sys_mutex_unlock(hdl->resource_mtx);
                         }
                 }
-
-                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return err;
@@ -980,23 +978,20 @@ API_FS_READ(ramfs,
 {
         struct RAMFS *hdl = fs_handle;
 
-        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (!err) {
+        int err = ENOENT;
 
-                err = ENOENT;
+        struct opened_file_info *opened_file = fhdl;
+        if (opened_file && opened_file->child) {
+                node_t *node = opened_file->child;
 
-                struct opened_file_info *opened_file = fhdl;
-                if (opened_file && opened_file->child) {
-                        node_t *node = opened_file->child;
+                if (S_ISDEV(node->mode)) {
+                        dev_t dev = node->data.dev_t;
+                        err = sys_driver_read(dev, dst, count, fpos, rdcnt, fattr);
 
-                        if (S_ISDEV(node->mode)) {
-                                dev_t dev = node->data.dev_t;
-                                sys_mutex_unlock(hdl->resource_mtx);
-                                return sys_driver_read(dev, dst, count, fpos, rdcnt, fattr);
-
-                        } else if (S_ISFIFO(node->mode)) {
+                } else if (S_ISFIFO(node->mode)) {
+                        err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+                        if (!err) {
                                 pipe_t *pipe = node->data.pipe_t;
-                                sys_mutex_unlock(hdl->resource_mtx);
 
                                 err = sys_pipe_read(pipe, dst, count, rdcnt, fattr.non_blocking_rd);
                                 if (!err) {
@@ -1006,15 +1001,16 @@ API_FS_READ(ramfs,
                                                 node->size = size;
                                         }
                                 }
+                                sys_mutex_unlock(hdl->resource_mtx);
+                        }
 
-                                return err;
-
-                        } else if (S_ISREG(node->mode)) {
+                } else if (S_ISREG(node->mode)) {
+                        err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
+                        if (!err) {
                                 err = read_regular_file(node, dst, count, *fpos, rdcnt);
+                                sys_mutex_unlock(hdl->resource_mtx);
                         }
                 }
-
-                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return err;
@@ -1034,49 +1030,42 @@ API_FS_READ(ramfs,
 //==============================================================================
 API_FS_IOCTL(ramfs, void *fs_handle, void *fhdl, int request, void *arg)
 {
-        struct RAMFS *hdl = fs_handle;
+        UNUSED_ARG1(fs_handle);
 
-        int err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-        if (!err) {
+        int err = ENOENT;
 
-                err = ENOENT;
+        struct opened_file_info *opened_file = fhdl;
+        if (opened_file && opened_file->child) {
+                if (S_ISDEV(opened_file->child->mode)) {
+                        dev_t dev = opened_file->child->data.dev_t;
+                        err = sys_driver_ioctl(dev, request, arg);
 
-                struct opened_file_info *opened_file = fhdl;
-                if (opened_file && opened_file->child) {
-                        if (S_ISDEV(opened_file->child->mode)) {
-                                dev_t dev = opened_file->child->data.dev_t;
-                                sys_mutex_unlock(hdl->resource_mtx);
-                                return sys_driver_ioctl(dev, request, arg);
+                } else if (S_ISFIFO(opened_file->child->mode)) {
 
-                        } else if (S_ISFIFO(opened_file->child->mode)) {
+                        switch (request) {
+                        case IOCTL_PIPE__CLOSE: {
+                                pipe_t *pipe = opened_file->child->data.pipe_t;
+                                err = sys_pipe_close(pipe);
+                                break;
+                        }
 
-                                switch (request) {
-                                case IOCTL_PIPE__CLOSE: {
-                                        pipe_t *pipe = opened_file->child->data.pipe_t;
-                                        sys_mutex_unlock(hdl->resource_mtx);
-                                        return sys_pipe_close(pipe);
-                                }
+                        case IOCTL_PIPE__CLEAR: {
+                                pipe_t *pipe = opened_file->child->data.pipe_t;
+                                err = sys_pipe_clear(pipe);
+                                break;
+                        }
 
-                                case IOCTL_PIPE__CLEAR: {
-                                        pipe_t *pipe = opened_file->child->data.pipe_t;
-                                        sys_mutex_unlock(hdl->resource_mtx);
-                                        return sys_pipe_clear(pipe);
-                                }
+                        case IOCTL_PIPE__PERMANENT: {
+                                pipe_t *pipe = opened_file->child->data.pipe_t;
+                                err = sys_pipe_permanent(pipe);
+                                break;
+                        }
 
-                                case IOCTL_PIPE__PERMANENT: {
-                                        pipe_t *pipe = opened_file->child->data.pipe_t;
-                                        sys_mutex_unlock(hdl->resource_mtx);
-                                        return sys_pipe_permanent(pipe);
-                                }
-
-                                default:
-                                        err = EBADRQC;
-                                        break;
-                                }
+                        default:
+                                err = EBADRQC;
+                                break;
                         }
                 }
-
-                sys_mutex_unlock(hdl->resource_mtx);
         }
 
         return err;

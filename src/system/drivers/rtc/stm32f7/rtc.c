@@ -107,6 +107,7 @@ API_MOD_INIT(RTC, void **device_handle, u8_t major, u8_t minor, const void *conf
         int err = ESUCC;
 
         SET_BIT(RCC->APB1ENR, RCC_APB1ENR_PWREN);
+        SET_BIT(PWR->CR1, PWR_CR1_DBP);
 
         if (!(RCC->BDCR & RCC_BDCR_RTCEN)) {
 
