@@ -148,27 +148,18 @@ struct tm {
 #endif /* DOXYGEN */
 
 #ifndef DOXYGEN /* Doxygen description in time.h */
-#ifndef __CLOCK_TYPE_DEFINED__
 /** @brief Clock representation type. */
 typedef u64_t clock_t;
-#define __CLOCK_TYPE_DEFINED__
-#endif
 #endif /* DOXYGEN */
 
 #ifndef DOXYGEN /* Doxygen description in time.h */
-#ifndef __TIME_TYPE_DEFINED__
 /** @brief Time representation type. */
-typedef u32_t time_t;
-#define __TIME_TYPE_DEFINED__
-#endif
+typedef i64_t time_t;
 #endif /* DOXYGEN */
 
 #ifndef DOXYGEN /* Doxygen description in sys/time.h */
-#ifndef __SUSECONDS_TYPE_DEFINED__
 /** @brief Subseconds time representation */
 typedef u32_t suseconds_t;
-#define __SUSECONDS_TYPE_DEFINED__
-#endif
 #endif
 
 #ifndef DOXYGEN

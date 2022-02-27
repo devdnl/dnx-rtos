@@ -3763,7 +3763,7 @@ static inline int sys_vsscanf(const char *str, const char *format, va_list args)
 //==============================================================================
 static inline u64_t sys_time_get_reference(void)
 {
-        return _kernel_get_time_ms();
+        return _kernel_get_uptime_ms();
 }
 
 //==============================================================================
@@ -3795,7 +3795,7 @@ static inline u64_t sys_time_get_reference(void)
 //==============================================================================
 static inline bool sys_time_is_expired(u64_t time_ref, u64_t time)
 {
-        return (_kernel_get_time_ms() - time_ref >= time);
+        return (_kernel_get_uptime_ms() - time_ref >= time);
 }
 
 //==============================================================================
@@ -5072,7 +5072,7 @@ static inline size_t sys_get_mem_size(void)
 //==============================================================================
 static inline u64_t sys_get_uptime_ms(void)
 {
-        return _kernel_get_time_ms();
+        return _kernel_get_uptime_ms();
 }
 
 //==============================================================================
@@ -5611,7 +5611,7 @@ static inline time_t sys_mktime(struct tm *timeptr)
         return _mktime(timeptr);
 #else
         UNUSED_ARG1(timeptr);
-        return _kernel_get_time_ms() / 1000;
+        return _kernel_get_uptime_ms() / 1000;
 #endif
 }
 

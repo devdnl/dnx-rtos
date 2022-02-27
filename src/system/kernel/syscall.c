@@ -552,14 +552,14 @@ int _syscall_kworker_process(int argc, char *argv[])
         _task_get_process_container(_THIS_TASK, &_kworker_proc, NULL);
         _assert(_kworker_proc);
 
-        u64_t sync_period_ref = _kernel_get_time_ms();
+        u64_t sync_period_ref = _kernel_get_uptime_ms();
 
         for (;;) {
                 _sleep_ms(1000);
 
-                if ( (_kernel_get_time_ms() - sync_period_ref) >= FS_CACHE_SYNC_PERIOD_MS) {
+                if ( (_kernel_get_uptime_ms() - sync_period_ref) >= FS_CACHE_SYNC_PERIOD_MS) {
                         _vfs_sync();
-                        sync_period_ref = _kernel_get_time_ms();
+                        sync_period_ref = _kernel_get_uptime_ms();
                 }
         }
 
@@ -2930,7 +2930,7 @@ static int syscall_getuptimems(syscallrq_t *rq)
         GETARG(uint64_t*, uptime_ms);
 
         if (uptime_ms) {
-                *uptime_ms = _kernel_get_time_ms();
+                *uptime_ms = _kernel_get_uptime_ms();
                 return 0;
         } else {
                 return EINVAL;

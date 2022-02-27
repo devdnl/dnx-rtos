@@ -88,9 +88,7 @@ extern "C" {
  *
  * @see clock()
  */
-#ifndef __CLOCK_TYPE_DEFINED__
 typedef u64_t clock_t;
-#endif
 
 /**
  * @brief Type representing time.
@@ -106,9 +104,7 @@ typedef u64_t clock_t;
  *
  * @see time(), mktime()
  */
-#ifndef __TIME_TYPE_DEFINED__
-typedef u32_t time_t;
-#endif
+typedef i64_t time_t;
 
 /**
  * @brief Structure representing a calendar date and time broken down into components.

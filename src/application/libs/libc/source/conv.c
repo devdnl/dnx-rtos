@@ -614,7 +614,7 @@ time_t _libc_mktime(struct tm *tm)
 
                 yday += tm->tm_mday - 1;
 
-                return tm->tm_sec + tm->tm_min * SECS_MIN + tm->tm_hour * SECS_HOUR
+                return cast(time_t, tm->tm_sec) + tm->tm_min * SECS_MIN + tm->tm_hour * SECS_HOUR
                        + yday * SECS_DAY + (tm->tm_year - 70) * SECS_YEAR + ((tm->tm_year - 69) / 4) * SECS_DAY
                        - ((tm->tm_year - 1) / 100) * SECS_DAY + ((tm->tm_year + 299) / 400) * SECS_DAY;
         } else {

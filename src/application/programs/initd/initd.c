@@ -335,7 +335,7 @@ static void print_system_log_messages(void)
 
         while (true) {
                 if (syslog_read(global->str, sizeof(global->str), &t, &t)) {
-                        printf("[%u.%06u] %s\n", t.tv_sec, t.tv_usec, global->str);
+                        printf("[%lld.%06lu] %s\n", t.tv_sec, t.tv_usec, global->str);
                 } else {
                         break;
                 }

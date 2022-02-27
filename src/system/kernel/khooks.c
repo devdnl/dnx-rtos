@@ -89,7 +89,7 @@ void vApplicationIdleHook(void)
                 vTaskPrioritySet(xTaskGetIdleTaskHandle(), 0);
         }
 
-        u64_t now = _kernel_get_time_ms();
+        u64_t now = _kernel_get_uptime_ms();
         if ((now - sanity_check_tref >= 1000) || _kernel_panic_trap_proc) {
                 sanity_check_tref = now;
 
