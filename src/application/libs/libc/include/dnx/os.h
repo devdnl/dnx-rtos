@@ -241,32 +241,6 @@ static inline clock_t get_uptime_ms(void)
 
 //==============================================================================
 /**
- * @brief Function returns system uptime in seconds.
- *
- * The function get_uptime() return 32-bit run time value in seconds.
- *
- * @return Uptime value in seconds.
- *
- * @b Example
- * @code
-        #include <dnx/os.h>
-
-        // ...
-
-        printf("System works: %llu seconds\n", get_uptime());
-
-        // ...
-
-   @endcode
- */
-//==============================================================================
-static inline clock_t get_uptime(void)
-{
-        return get_uptime_ms() / 1000;
-}
-
-//==============================================================================
-/**
  * @brief Function returns an average CPU load.
  *
  * The function get_average_CPU_load() fill average CPU load container

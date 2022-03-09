@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
                         }
                 }
 
-                u32_t uptime = get_uptime();
+                u32_t uptime = get_uptime_ms() / 1000;
                 u32_t udays  = (uptime / (3600 * 24));
                 u32_t uhrs   = (uptime / 3600) % 24;
                 u32_t umins  = (uptime / 60) % 60;
