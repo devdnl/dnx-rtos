@@ -174,9 +174,8 @@ typedef struct {
  * Type represent pin state on port selected by index.
  */
 typedef struct {
-        u8_t port_idx;          /*!< Port index.*/
-        u8_t pin_idx;           /*!< Pin index.*/
-        int  state;             /*!< Pin state.*/
+        GPIO_pin_in_port_t pin; /*!< Pin address.*/
+        int state;              /*!< Pin state.*/
 } GPIO_pin_in_port_state_t;
 
 /*==============================================================================
@@ -268,7 +267,6 @@ typedef struct {
  *  @return On success 0 is returned, otherwise -1 and @ref errno code is set
  */
 #define IOCTL_GPIO__GET_PIN_STATE_IN_PORT       _IOR(GPIO, 9, GPIO_pin_in_port_state_t*)
-
 
 /*==============================================================================
   Exported objects
