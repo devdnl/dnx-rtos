@@ -1032,8 +1032,8 @@ static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
  * is bigger that 2. The <i>cnt_init</i> is an initial value of semaphore.
  * Semaphore can be used for task synchronization.
  *
- * @param cnt_max       max count value (1 for binary)
- * @param cnt_init      initial value (0 or 1 for binary)
+ * @param ctr_max       max count value (1 for binary)
+ * @param ctr_init      initial value (0 or 1 for binary)
  *
  * @exception | @ref EINVAL
  * @exception | @ref ENOMEM
@@ -1088,7 +1088,29 @@ static inline int thread_stat(pid_t pid, tid_t tid, thread_stat_t *stat)
  * @see semaphore_delete()
  */
 //==============================================================================
-extern sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init);
+extern sem_t *semaphore_new(size_t ctr_max, size_t ctr_init);
+
+//==============================================================================
+/**
+ * @brief  Function get semaphore descriptor.
+ *
+ * @param  sem          semaphore object
+ *
+ * @return File descriptor.
+ */
+//==============================================================================
+extern int semaphore_getd(sem_t *sem);
+
+//==============================================================================
+/**
+ * @brief  Function create new semaphore object by using descriptor.
+ *
+ * @param  fd           semaphore descriptor
+ *
+ * @return Semaphore object.
+ */
+//==============================================================================
+extern sem_t *semaphore_new_fd(int fd);
 
 //==============================================================================
 /**
@@ -1190,7 +1212,7 @@ extern void semaphore_delete(sem_t *sem);
  * @see semaphore_signal()
  */
 //==============================================================================
-extern bool semaphore_wait(sem_t *sem, const u32_t timeout);
+extern bool semaphore_wait(sem_t *sem, u32_t timeout);
 
 //==============================================================================
 /**
@@ -1279,6 +1301,66 @@ extern int semaphore_get_value(sem_t *sem);
 
 //==============================================================================
 /**
+ * @brief Function open new semaphore.
+ *
+ * @param ctr_max       max count value (1 for binary)
+ * @param ctr_init      initial value (0 or 1 for binary)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref ESRCH
+ *
+ * @return On success semaphore descriptor is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @see close()
+ */
+//==============================================================================
+extern int sem_open(size_t ctr_max, size_t ctr_init, int flags);
+
+//==============================================================================
+/**
+ * @brief  Function wait for semaphore.
+ *
+ * @param  fd           semaphore descriptor
+ * @param  timeout      wait timeout in milliseconds
+ *
+ * @return On success 0 is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+extern int sem_wait(int fd, u32_t timeout);
+
+//==============================================================================
+/**
+ * @brief  Function signal semaphore.
+ *
+ * @param  fd           semaphore descriptor
+ *
+ * @return On success 0 is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+extern int sem_signal(int fd);
+
+//==============================================================================
+/**
+ * @brief  Function get semaphore value.
+ *
+ * @param  fd           semaphore descriptor
+ * @param  ctr          counter value
+ *
+ * @return On success semaphore value is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b> is set appropriately.
+ */
+//==============================================================================
+extern int sem_getvalue(int fd);
+
+//==============================================================================
+/**
  * @brief Function creates new mutex object.
  *
  * The function mutex_new() creates new mutex of type <i>type</i>.
@@ -1336,6 +1418,29 @@ extern int semaphore_get_value(sem_t *sem);
  */
 //==============================================================================
 extern mutex_t *mutex_new(enum mutex_type type);
+
+//==============================================================================
+/**
+ * @brief  Function create new mutex object by using descriptor.
+ *
+ * @param  fd           mutex descriptor
+ *
+ * @return On success, pointer to the mutex object is returned. On error,
+ * <b>NULL</b> pointer is returned.
+ */
+//==============================================================================
+extern mutex_t *mutex_new_fd(int fd);
+
+//==============================================================================
+/**
+ * @brief  Function return descriptor of selected mutex object.
+ *
+ * @param  mutext       mutex object
+ *
+ * @return Mutex descriptor.
+ */
+//==============================================================================
+extern int mutex_getd(mutex_t *mutex);
 
 //==============================================================================
 /**
@@ -1584,6 +1689,49 @@ extern bool mutex_unlock(mutex_t *mutex);
 
 //==============================================================================
 /**
+ * @brief  Function open new mutex.
+ *
+ * @param  type         mutex type
+ * @param  flags        O-flags
+ *
+ * @return On success semaphore descriptor is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @see close()
+ */
+//==============================================================================
+extern int mut_open(enum mutex_type type, int flags);
+
+//==============================================================================
+/**
+ * @brief  Function lock selected mutex.
+ *
+ * @param  fd           mutex descriptor
+ * @param  timeout      wait timeout in milliseconds
+ *
+ * @return On success 0 is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+extern int mut_lock(int fd, u32_t timeout);
+
+//==============================================================================
+/**
+ * @brief  Function unlock selected mutex.
+ *
+ * @param  fd           mutex descriptor
+ *
+ * @return On success 0 is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+extern int mut_unlock(int fd);
+
+//==============================================================================
+/**
  * @brief Function creates new queue object.
  *
  * The function queue_new() create new queue with length <i>length</i>
@@ -1645,7 +1793,30 @@ extern bool mutex_unlock(mutex_t *mutex);
  * @see queue_delete()
  */
 //==============================================================================
-extern queue_t *queue_new(const size_t length, const size_t item_size);
+extern queue_t *queue_new(size_t length, size_t item_size);
+
+//==============================================================================
+/**
+ * @brief  Get queue descriptor.
+ *
+ * @param  queue        queue object
+ *
+ * @return Queue descriptor.
+ */
+//==============================================================================
+extern int queue_getd(queue_t *queue);
+
+//==============================================================================
+/**
+ * @brief  Create new queue object by using existing queue descriptor.
+ *
+ * @param  fd           queue descriptor
+ *
+ * @return On success returns pointer to the created object or <b>NULL</b> on
+ * error.
+ */
+//==============================================================================
+extern queue_t *queue_new_fd(int fd);
 
 //==============================================================================
 /**
@@ -1832,7 +2003,7 @@ extern bool queue_reset(queue_t *queue);
  * @see queue_receive(), queue_receive_peek()
  */
 //==============================================================================
-extern bool queue_send(queue_t *queue, const void *item, const u32_t timeout);
+extern bool queue_send(queue_t *queue, const void *item, u32_t timeout);
 
 //==============================================================================
 /**
@@ -1897,7 +2068,7 @@ extern bool queue_send(queue_t *queue, const void *item, const u32_t timeout);
  * @see queue_send(), queue_receive_peek()
  */
 //==============================================================================
-extern bool queue_receive(queue_t *queue, void *item, const u32_t timeout);
+extern bool queue_receive(queue_t *queue, void *item, u32_t timeout);
 
 //==============================================================================
 /**
@@ -1961,7 +2132,7 @@ extern bool queue_receive(queue_t *queue, void *item, const u32_t timeout);
  * @see queue_send(), queue_receive()
  */
 //==============================================================================
-extern bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout);
+extern bool queue_receive_peek(queue_t *queue, void *item, u32_t timeout);
 
 //==============================================================================
 /**
@@ -2063,6 +2234,134 @@ extern int queue_get_number_of_items(queue_t *queue);
  */
 //==============================================================================
 extern int queue_get_space_available(queue_t *queue);
+
+//==============================================================================
+/**
+ * @brief Open new queue descriptor.
+ *
+ * @param length        queue length
+ * @param item_size     size of item
+ * @param flags         flags
+ *
+ * @return On success queue descriptor is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b> is set appropriately.
+ *
+ * @see close()
+ */
+//==============================================================================
+extern int q_open(size_t length, size_t item_size, int flags);
+
+//==============================================================================
+/**
+ * @brief Function removes all items from queue.
+ *
+ * The function queue_reset() reset the selected queue pointed by
+ * <i>fd</i>.
+ *
+ * @param fd        queue descriptor
+ *
+ * @exception | @ref EBUSY
+ * @exception | @ref EINVAL
+ *
+ * @return On success true is returned, otherwise false.
+ */
+//==============================================================================
+extern int q_reset(int fd);
+
+//==============================================================================
+/**
+ * @brief Function writes value to queue.
+ *
+ * The function q_send() send specified item pointed by <i>item</i>
+ * to queue pointed by <i>fd</i>. If queue is full then system try to send
+ * item for <i>timeout</i> milliseconds. If <i>timeout</i> is set to zero then
+ * sending is aborted immediately if queue is full, and <b>false</b> value is
+ * returned.
+ *
+ * @param fd        queue descriptor
+ * @param item      item to send
+ * @param timeout   send timeout (0 for polling)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOSPC
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ */
+//==============================================================================
+extern int q_send(int fd, const void *item, u32_t timeout);
+
+//==============================================================================
+/**
+ * @brief Function receives item from queue.
+ *
+ * The function q_recv() receive top item from queue pointed by
+ * <i>fd</i> and copy it to the item pointed by <i>item</i>. The item is
+ * removed from queue. Try of receive is doing for time <i>timeout</i>. If item
+ * was successfully received, then <b>true</b> is returned, otherwise <b>false</b>.
+ *
+ * @param fd            queue descriptor
+ * @param item          item destination
+ * @param timeout       send timeout (0 for polling)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref EAGAIN
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ */
+//==============================================================================
+extern int q_recv(int fd, void *item, u32_t timeout);
+
+//==============================================================================
+/**
+ * @brief Function receives item from queue without remove.
+ *
+ * The function q_recv_peek() is similar to q_recv(),
+ * expect that top item is not removed from the queue.
+ *
+ * @param fd            queue descriptor
+ * @param item          item destination
+ * @param timeout       send timeout (0 for polling)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref EAGAIN
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ */
+//==============================================================================
+extern int q_recv_peek(int fd, void *item, u32_t timeout);
+
+//==============================================================================
+/**
+ * @brief Function returns number of items stored in queue.
+ *
+ * The function q_items() returns a number of items
+ * stored in the queue pointed by <i>fd</i>.
+ *
+ * @param fd            queue descriptor
+ *
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return Number of items stored in the queue. On error, -1 is returned.
+ */
+//==============================================================================
+extern int q_items(int fd);
+
+//==============================================================================
+/**
+ * @brief Function returns available space in queue.
+ *
+ * The function q_space() returns a number of free
+ * items available in the queue pointed by <i>fd</i>.
+ *
+ * @param fd            queue descriptor
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return Number of free items available in the queue. On error, -1 is returned.
+ */
+//==============================================================================
+extern int q_space(int fd);
 
 #ifdef __cplusplus
 }

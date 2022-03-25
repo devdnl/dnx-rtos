@@ -151,6 +151,88 @@ pid_t process_create(const char *cmd, const process_attr_t *attr)
         return err ? 0 : pid;
 }
 
+
+//==============================================================================
+/**
+ * @brief  Function open new mutex.
+ *
+ * @param  type         mutex type
+ * @param  flags        O-flags
+ *
+ * @return On success semaphore descriptor is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @see close()
+ */
+//==============================================================================
+int mut_open(enum mutex_type type, int flags)
+{
+        int fd;
+        int err = _libc_syscall(_LIBC_SYS_MUTEXOPEN, &type, &fd, &flags);
+        return err ? -1 : fd;
+}
+
+//==============================================================================
+/**
+ * @brief  Function lock selected mutex.
+ *
+ * @param  fd           mutex descriptor
+ * @param  timeout      wait timeout in milliseconds
+ *
+ * @return On success 0 is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+int mut_lock(int fd, u32_t timeout)
+{
+        int err = _libc_syscall(_LIBC_SYS_MUTEXLOCK, &fd, &timeout);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Function unlock selected mutex.
+ *
+ * @param  fd           mutex descriptor
+ *
+ * @return On success 0 is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+int mut_unlock(int fd)
+{
+        int err = _libc_syscall(_LIBC_SYS_MUTEXUNLOCK, &fd);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Function create new mutex object by using descriptor.
+ *
+ * @param  fd           mutex descriptor
+ *
+ * @return On success, pointer to the mutex object is returned. On error,
+ * <b>NULL</b> pointer is returned.
+ */
+//==============================================================================
+mutex_t *mutex_new_fd(int fd)
+{
+        if (fd < 0) {
+                errno = EINVAL;
+                return NULL;
+        }
+
+        mutex_t *mutex = malloc(sizeof(*mutex));
+        if (mutex) {
+                mutex->fd = fd;
+        }
+
+        return mutex;
+}
+
 //==============================================================================
 /**
  * @brief Function creates new mutex object.
@@ -171,18 +253,25 @@ pid_t process_create(const char *cmd, const process_attr_t *attr)
 //==============================================================================
 mutex_t *mutex_new(enum mutex_type type)
 {
-        mutex_t *mutex = malloc(sizeof(*mutex));
-        if (mutex) {
-                int err = _libc_syscall(_LIBC_SYS_MUTEXOPEN, &type, &mutex->fd);
+        return mutex_new_fd(mut_open(type, 0));
+}
 
-                if (!err) {
-                        return mutex;
-                }
-
-                free(mutex);
+//==============================================================================
+/**
+ * @brief  Function return descriptor of selected mutex object.
+ *
+ * @param  mutext       mutex object
+ *
+ * @return Mutex descriptor.
+ */
+//==============================================================================
+int mutex_getd(mutex_t *mutex)
+{
+        if (mutex && mutex->fd) {
+                return mutex->fd;
+        } else {
+                return -1;
         }
-
-        return NULL;
 }
 
 //==============================================================================
@@ -201,7 +290,7 @@ mutex_t *mutex_new(enum mutex_type type)
 void mutex_delete(mutex_t *mutex)
 {
         if (mutex && (mutex->fd >= 0)) {
-                _libc_syscall(_LIBC_SYS_CLOSE, &mutex->fd);
+                close(mutex->fd);
                 free(mutex);
         }
 }
@@ -231,8 +320,7 @@ bool mutex_lock(mutex_t *mutex, const u32_t timeout)
         bool locked = false;
 
         if (mutex && (mutex->fd >= 0)) {
-                int err = _libc_syscall(_LIBC_SYS_MUTEXLOCK, &mutex->fd, &timeout);
-                locked = (err == 0);
+                locked = mut_lock(mutex->fd, timeout) == 0;
         }
 
         return locked;
@@ -258,11 +346,117 @@ bool mutex_unlock(mutex_t *mutex)
         bool unlocked = false;
 
         if (mutex && (mutex->fd >= 0)) {
-                int err = _libc_syscall(_LIBC_SYS_MUTEXUNLOCK, &mutex->fd);
-                unlocked = (err == 0);
+                unlocked = mut_unlock(mutex->fd) == 0;
         }
 
         return unlocked;
+}
+
+//==============================================================================
+/**
+ * @brief Function open new semaphore.
+ *
+ * @param ctr_max       max count value (1 for binary)
+ * @param ctr_init      initial value (0 or 1 for binary)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOMEM
+ * @exception | @ref ESRCH
+ *
+ * @return On success semaphore descriptor is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ *
+ * @see close()
+ */
+//==============================================================================
+int sem_open(size_t ctr_max, size_t ctr_init, int flags)
+{
+        int fd;
+        int err = _libc_syscall(_LIBC_SYS_SEMAPHOREOPEN, &ctr_max, &ctr_init, &fd, &flags);
+        return err ? -1 : fd;
+}
+
+//==============================================================================
+/**
+ * @brief  Function wait for semaphore.
+ *
+ * @param  fd           semaphore descriptor
+ * @param  timeout      wait timeout in milliseconds
+ *
+ * @return On success 0 is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+int sem_wait(int fd, u32_t timeout)
+{
+        int err = _libc_syscall(_LIBC_SYS_SEMAPHOREWAIT, &fd, &timeout);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Function signal semaphore.
+ *
+ * @param  fd           semaphore descriptor
+ *
+ * @return On success 0 is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b>
+ * is set appropriately.
+ */
+//==============================================================================
+int sem_signal(int fd)
+{
+        int err = _libc_syscall(_LIBC_SYS_SEMAPHORESIGNAL, &fd);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief  Function get semaphore value.
+ *
+ * @param  fd           semaphore descriptor
+ * @param  ctr          counter value
+ *
+ * @return On success semaphore value is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b> is set appropriately.
+ */
+//==============================================================================
+int sem_getvalue(int fd)
+{
+        if (fd < 0) {
+                errno = EINVAL;
+                return -1;
+        }
+
+        size_t ctr;
+        int err = _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &fd, &ctr);
+        return err ? -1 : (int)ctr;
+}
+
+//==============================================================================
+/**
+ * @brief  Function create new semaphore object by using descriptor.
+ *
+ * @param  fd           semaphore descriptor
+ *
+ * @return Semaphore object.
+ */
+//==============================================================================
+sem_t *semaphore_new_fd(int fd)
+{
+        if (fd < 0) {
+                errno = EINVAL;
+                return NULL;
+        }
+
+        sem_t *sem = malloc(sizeof(*sem));
+        if (sem) {
+                sem->fd = fd;
+        }
+
+        return sem;
 }
 
 //==============================================================================
@@ -274,8 +468,8 @@ bool mutex_unlock(mutex_t *mutex)
  * is bigger that 2. The <i>cnt_init</i> is an initial value of semaphore.
  * Semaphore can be used for task synchronization.
  *
- * @param cnt_max       max count value (1 for binary)
- * @param cnt_init      initial value (0 or 1 for binary)
+ * @param ctr_max       max count value (1 for binary)
+ * @param ctr_init      initial value (0 or 1 for binary)
  *
  * @exception | @ref EINVAL
  * @exception | @ref ENOMEM
@@ -286,20 +480,9 @@ bool mutex_unlock(mutex_t *mutex)
  * is set appropriately.
  */
 //==============================================================================
-sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
+sem_t *semaphore_new(const size_t ctr_max, const size_t ctr_init)
 {
-        sem_t *sem = malloc(sizeof(*sem));
-        if (sem) {
-                int err = _libc_syscall(_LIBC_SYS_SEMAPHOREOPEN, &cnt_max, &cnt_init, &sem->fd);
-
-                if (!err) {
-                        return sem;
-                }
-
-                free(sem);
-        }
-
-        return NULL;
+        return semaphore_new_fd(sem_open(ctr_max, ctr_init, 0));
 }
 
 //==============================================================================
@@ -320,7 +503,7 @@ sem_t *semaphore_new(const size_t cnt_max, const size_t cnt_init)
 void semaphore_delete(sem_t *sem)
 {
         if (sem && (sem->fd >= 0)) {
-                _libc_syscall(_LIBC_SYS_CLOSE, &sem->fd);
+                close(sem->fd);
                 free(sem);
         }
 }
@@ -393,8 +576,7 @@ bool semaphore_wait(sem_t *sem, const u32_t timeout)
         bool ready = false;
 
         if (sem && (sem->fd >= 0)) {
-                int err = _libc_syscall(_LIBC_SYS_SEMAPHOREWAIT, &sem->fd, &timeout);
-                ready = (err == 0);
+                ready = sem_wait(sem->fd, timeout) == 0;
         }
 
         return ready;
@@ -457,8 +639,7 @@ bool semaphore_signal(sem_t *sem)
         bool signalled = false;
 
         if (sem && (sem->fd >= 0)) {
-                int err = _libc_syscall(_LIBC_SYS_SEMAPHORESIGNAL, &sem->fd);
-                signalled = (err == 0);
+                signalled = sem_signal(sem->fd) == 0;
         }
 
         return signalled;
@@ -498,14 +679,212 @@ int semaphore_get_value(sem_t *sem)
         int value = -1;
 
         if (sem && (sem->fd >= 0)) {
-                size_t val = 0;
-                int err = _libc_syscall(_LIBC_SYS_SEMAPHOREGETVALUE, &sem->fd, &val);
-                if (err == 0) {
-                        value = val;
-                }
+                value = sem_getvalue(sem->fd);
         }
 
         return value;
+}
+
+//==============================================================================
+/**
+ * @brief  Function get semaphore descriptor.
+ *
+ * @param  sem          semaphore object
+ *
+ * @return File descriptor.
+ */
+//==============================================================================
+int semaphore_getd(sem_t *sem)
+{
+        if (sem && (sem->fd >= 0)) {
+                return sem->fd;
+        } else {
+                return -1;
+        }
+}
+
+//==============================================================================
+/**
+ * @brief Open new queue descriptor.
+ *
+ * @param length        queue length
+ * @param item_size     size of item
+ * @param flags         flags
+ *
+ * @return On success queue descriptor is returned.
+ * On error, <b>-1</b> is returned, and <b>errno</b> is set appropriately.
+ *
+ * @see close()
+ */
+//==============================================================================
+int q_open(size_t length, size_t item_size, int flags)
+{
+        int fd;
+        int err = _libc_syscall(_LIBC_SYS_QUEUEOPEN, &length, &item_size, &fd, &flags);
+        return err ? -1 : fd;
+}
+
+//==============================================================================
+/**
+ * @brief Function removes all items from queue.
+ *
+ * The function queue_reset() reset the selected queue pointed by
+ * <i>fd</i>.
+ *
+ * @param fd        queue descriptor
+ *
+ * @exception | @ref EBUSY
+ * @exception | @ref EINVAL
+ *
+ * @return On success true is returned, otherwise false.
+ */
+//==============================================================================
+int q_reset(int fd)
+{
+        int err = _libc_syscall(_LIBC_SYS_QUEUERESET, &fd);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function writes value to queue.
+ *
+ * The function q_send() send specified item pointed by <i>item</i>
+ * to queue pointed by <i>fd</i>. If queue is full then system try to send
+ * item for <i>timeout</i> milliseconds. If <i>timeout</i> is set to zero then
+ * sending is aborted immediately if queue is full, and <b>false</b> value is
+ * returned.
+ *
+ * @param fd        queue descriptor
+ * @param item      item to send
+ * @param timeout   send timeout (0 for polling)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref ENOSPC
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ */
+//==============================================================================
+int q_send(int fd, const void *item, u32_t timeout)
+{
+        int err = _libc_syscall(_LIBC_SYS_QUEUESEND, &fd, item, &timeout);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function receives item from queue.
+ *
+ * The function q_recv() receive top item from queue pointed by
+ * <i>fd</i> and copy it to the item pointed by <i>item</i>. The item is
+ * removed from queue. Try of receive is doing for time <i>timeout</i>. If item
+ * was successfully received, then <b>true</b> is returned, otherwise <b>false</b>.
+ *
+ * @param fd            queue descriptor
+ * @param item          item destination
+ * @param timeout       send timeout (0 for polling)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref EAGAIN
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ */
+//==============================================================================
+int q_recv(int fd, void *item, u32_t timeout)
+{
+        int err = _libc_syscall(_LIBC_SYS_QUEUERECEIVE, &fd, item, &timeout);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function receives item from queue without remove.
+ *
+ * The function q_recv_peek() is similar to q_recv(),
+ * expect that top item is not removed from the queue.
+ *
+ * @param fd            queue descriptor
+ * @param item          item destination
+ * @param timeout       send timeout (0 for polling)
+ *
+ * @exception | @ref EINVAL
+ * @exception | @ref EAGAIN
+ *
+ * @return On success, <b>true</b> is returned. On error, <b>false</b> is returned.
+ */
+//==============================================================================
+int q_recv_peek(int fd, void *item, u32_t timeout)
+{
+        int err = _libc_syscall(_LIBC_SYS_QUEUERECEIVEPEEK, &fd, item, &timeout);
+        return err ? -1 : 0;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns number of items stored in queue.
+ *
+ * The function q_items() returns a number of items
+ * stored in the queue pointed by <i>fd</i>.
+ *
+ * @param fd            queue descriptor
+ *
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return Number of items stored in the queue. On error, -1 is returned.
+ */
+//==============================================================================
+int q_items(int fd)
+{
+        size_t count = 0;
+        int err = _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &fd, &count);
+        return err ? -1 : (int)count;
+}
+
+//==============================================================================
+/**
+ * @brief Function returns available space in queue.
+ *
+ * The function q_space() returns a number of free
+ * items available in the queue pointed by <i>fd</i>.
+ *
+ * @param fd            queue descriptor
+ *
+ * @exception | @ref EINVAL
+ *
+ * @return Number of free items available in the queue. On error, -1 is returned.
+ */
+//==============================================================================
+int q_space(int fd)
+{
+        size_t count = 0;
+        int err = _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &fd, &count);
+        return err ? -1 : (int)count;
+}
+
+//==============================================================================
+/**
+ * @brief  Create new queue object by using existing queue descriptor.
+ *
+ * @param  fd           queue descriptor
+ *
+ * @return On success returns pointer to the created object or <b>NULL</b> on
+ * error.
+ */
+//==============================================================================
+queue_t *queue_new_fd(int fd)
+{
+        if (fd < 0) {
+                errno = EINVAL;
+                return NULL;
+        }
+
+        queue_t *queue = malloc(sizeof(*queue));
+        if (queue) {
+                queue->fd = fd;
+        }
+
+        return queue;
 }
 
 //==============================================================================
@@ -529,18 +908,25 @@ int semaphore_get_value(sem_t *sem)
 //==============================================================================
 queue_t *queue_new(const size_t length, const size_t item_size)
 {
-        queue_t *queue = malloc(sizeof(*queue));
-        if (queue) {
-                int err = _libc_syscall(_LIBC_SYS_QUEUEOPEN, &length, &item_size, &queue->fd);
+        return queue_new_fd(q_open(length, item_size, 0));
+}
 
-                if (!err) {
-                        return queue;
-                }
-
-                free(queue);
+//==============================================================================
+/**
+ * @brief  Get queue descriptor.
+ *
+ * @param  queue        queue object
+ *
+ * @return Queue descriptor.
+ */
+//==============================================================================
+int queue_getd(queue_t *queue)
+{
+        if (queue && (queue->fd >= 0)) {
+                return queue->fd;
+        } else {
+                return -1;
         }
-
-        return NULL;
 }
 
 //==============================================================================
@@ -560,7 +946,7 @@ queue_t *queue_new(const size_t length, const size_t item_size)
 void queue_delete(queue_t *queue)
 {
         if (queue && (queue->fd >= 0)) {
-                _libc_syscall(_LIBC_SYS_CLOSE, &queue->fd);
+                close(queue->fd);
                 free(queue);
         }
 }
@@ -585,8 +971,7 @@ bool queue_reset(queue_t *queue)
         bool done = false;
 
         if (queue && (queue->fd >= 0)) {
-                int err = _libc_syscall(_LIBC_SYS_QUEUERESET, &queue->fd);
-                done = (err == 0);
+                done = q_reset(queue->fd) == 0;
         }
 
         return done;
@@ -617,8 +1002,7 @@ bool queue_send(queue_t *queue, const void *item, const u32_t timeout)
         bool done = false;
 
         if (queue && (queue->fd >= 0)) {
-                int err = _libc_syscall(_LIBC_SYS_QUEUESEND, &queue->fd, item, &timeout);
-                done = (err == 0);
+                done = q_send(queue->fd, item, timeout) == 0;
         }
 
         return done;
@@ -648,8 +1032,7 @@ bool queue_receive(queue_t *queue, void *item, const u32_t timeout)
         bool done = false;
 
         if (queue && (queue->fd >= 0)) {
-                int err = _libc_syscall(_LIBC_SYS_QUEUERECEIVE, &queue->fd, item, &timeout);
-                done = (err == 0);
+                done = q_recv(queue->fd, item, timeout) == 0;
         }
 
         return done;
@@ -677,8 +1060,7 @@ bool queue_receive_peek(queue_t *queue, void *item, const u32_t timeout)
         bool done = false;
 
         if (queue && (queue->fd >= 0)) {
-                int err = _libc_syscall(_LIBC_SYS_QUEUERECEIVEPEEK, &queue->fd, item, &timeout);
-                done = (err == 0);
+                done = q_recv_peek(queue->fd, item, timeout) == 0;
         }
 
         return done;
@@ -703,9 +1085,7 @@ int queue_get_number_of_items(queue_t *queue)
         int items = -1;
 
         if (queue && (queue->fd >= 0)) {
-                size_t count = 0;
-                int err = _libc_syscall(_LIBC_SYS_QUEUEITEMSCOUNT, &queue->fd, &count);
-                if (err == 0) items = count;
+                items = q_items(queue->fd);
         }
 
         return items;
@@ -730,9 +1110,7 @@ int queue_get_space_available(queue_t *queue)
         int items = -1;
 
         if (queue && (queue->fd >= 0)) {
-                size_t count = 0;
-                int err = _libc_syscall(_LIBC_SYS_QUEUEFREESPACE, &queue->fd, &count);
-                if (err == 0) items = count;
+                items = q_space(queue->fd);
         }
 
         return items;

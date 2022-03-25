@@ -71,6 +71,8 @@
 #define PID_MIN                         1
 #define PID_MAX                         999
 
+#define SHARED_DESCRIPTOR               (1 << 15)
+
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
@@ -162,6 +164,7 @@ static _avg_CPU_load_t avg_CPU_load_calc;
 static _avg_CPU_load_t avg_CPU_load_result;
 static kmtx_t          *process_mtx;
 static kmtx_t          *kworker_mtx;
+static dchain_t        shared_desctab;
 
 /*==============================================================================
   Exported object definitions
@@ -1665,17 +1668,25 @@ u8_t _process_get_curr_syscall(_process_t *proc, tid_t tid)
  * @param  process      process
  * @param  descriptor   descriptor destination
  * @param  res          resource pointer
+ * @param  shared       shared descriptor
  *
  * @return One of errno value.
  */
 //==============================================================================
-int _process_descriptor_allocate(_process_t *process, int *desc, res_header_t *res)
+int _process_descriptor_allocate(_process_t *process, int *desc, res_header_t *res, bool shared)
 {
         int err = EMFILE;
 
         ATOMIC(process_mtx) {
 
-                dchain_t *chain = &process->desctab;
+                dchain_t *chain = NULL;
+
+                if (shared) {
+                        chain = &shared_desctab;
+                } else {
+                        chain = &process->desctab;
+                }
+
                 int node = 0;
                 bool found = false;
 
@@ -1683,7 +1694,7 @@ int _process_descriptor_allocate(_process_t *process, int *desc, res_header_t *r
                         for (size_t i = 0; not found and(i < ARRAY_SIZE(chain->resource)); i++) {
                                 if (chain->resource[i] == NULL) {
                                         chain->resource[i] = res;
-                                        *desc = (node << 4) | i;
+                                        *desc = (node << 4) | i | (shared ? SHARED_DESCRIPTOR : 0);
                                         found = true;
                                         err   = ESUCC;
                                         break;
@@ -1724,7 +1735,15 @@ int _process_descriptor_free(_process_t *process, int desc, res_type_t rtype)
 
         ATOMIC(process_mtx) {
 
-                dchain_t *chain = &process->desctab;
+                dchain_t *chain = NULL;
+
+                if (desc & SHARED_DESCRIPTOR) {
+                        chain = &shared_desctab;
+                        desc &= ~SHARED_DESCRIPTOR;
+                } else {
+                        chain = &process->desctab;
+                }
+
                 int node = 0;
 
                 while (chain) {
@@ -1769,7 +1788,15 @@ int _process_descriptor_get_resource(_process_t *process, int desc, res_header_t
 
         ATOMIC(process_mtx) {
 
-                dchain_t *chain = &process->desctab;
+                dchain_t *chain = NULL;
+
+                if (desc & SHARED_DESCRIPTOR) {
+                        chain = &shared_desctab;
+                        desc &= ~SHARED_DESCRIPTOR;
+                } else {
+                        chain = &process->desctab;
+                }
+
                 int node = 0;
 
                 while (chain) {
@@ -2132,7 +2159,7 @@ static int process_apply_attributes(_process_t *proc, const _process_attr_t *att
                         err = _vfs_fopen(&cpath, O_RDONLY, 0, &file);
                         if (!err) {
                                 int fd;
-                                err = _process_descriptor_allocate(proc, &fd, &file->header);
+                                err = _process_descriptor_allocate(proc, &fd, &file->header, false);
                                 if (err) goto finish;
                         } else {
                                 goto finish;
@@ -2153,7 +2180,7 @@ static int process_apply_attributes(_process_t *proc, const _process_attr_t *att
                         err = _vfs_fopen(&cpath, O_RDWR | O_APPEND, 0, &file);
                         if (!err) {
                                 int fd;
-                                err = _process_descriptor_allocate(proc, &fd, &file->header);
+                                err = _process_descriptor_allocate(proc, &fd, &file->header, false);
                                 if (err) goto finish;
                         } else {
                                 goto finish;
@@ -2174,7 +2201,7 @@ static int process_apply_attributes(_process_t *proc, const _process_attr_t *att
                         err = _vfs_fopen(&cpath, O_RDWR | O_APPEND, 0, &file);
                         if (!err) {
                                 int fd;
-                                err = _process_descriptor_allocate(proc, &fd, &file->header);
+                                err = _process_descriptor_allocate(proc, &fd, &file->header, false);
                                 if (err) goto finish;
                         } else {
                                 goto finish;

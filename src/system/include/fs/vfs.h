@@ -105,6 +105,10 @@ extern "C" {
 #define O_DIRECTORY                             0200000
 #endif
 
+#ifndef O_SHARED
+#define O_SHARED                                0400000
+#endif
+
 /* modes */
 #define S_IRWXU                                 0000700    /* RWX mask for owner */
 #define S_IRUSR                                 0000400    /* R for owner */

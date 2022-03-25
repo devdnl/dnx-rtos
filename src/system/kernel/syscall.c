@@ -92,15 +92,15 @@ typedef enum {
         SYSCALL_SETCWD,                 // int errno (const char *cwd)
         SYSCALL_SYSLOGREAD,             // int errno (char *str, size_t *len, const struct timeval *from, struct timeval *current, size_t *count)
         SYSCALL_THREADCREATE,           // int errno (thread_func_t, _thread_attr_t *attr, void *arg, tid_t *tid)
-        SYSCALL_SEMAPHOREOPEN,          // int errno (const size_t *cnt_max, const size_t *cnt_init, int *fd)
+        SYSCALL_SEMAPHOREOPEN,          // int errno (const size_t *cnt_max, const size_t *cnt_init, int *fd, int *flags)
         SYSCALL_SEMAPHOREWAIT,          // int errno (int *fd_semaphore, uint32_t *timeout)
         SYSCALL_SEMAPHORESIGNAL,        // int errno (int *fd_semaphore)
         SYSCALL_SEMAPHOREGETVALUE,      // int errno (int *fd_semaphore, size_t *value)
-        SYSCALL_MUTEXOPEN,              // int errno (const enum kmtx_type *mt, int *fd)
+        SYSCALL_MUTEXOPEN,              // int errno (const enum kmtx_type *mt, int *fd, int *flags)
         SYSCALL_MUTEXLOCK,              // int errno (int *mutex, uint32_t *timeout)
         SYSCALL_MUTEXUNLOCK,            // int errno (int *mutex)
         SYSCALL_CLOSE,                  // int errno (int *fd)
-        SYSCALL_QUEUEOPEN,              // int errno (const size_t *length, const size_t *item_size, int *fd)
+        SYSCALL_QUEUEOPEN,              // int errno (const size_t *length, const size_t *item_size, int *fd, int *flags)
         SYSCALL_QUEUERESET,             // int errno (int *fd_queue)
         SYSCALL_QUEUESEND,              // int errno (int *fd_queue, const void *item, const uint32_t *timeout)
         SYSCALL_QUEUERECEIVE,           // int errno (int *fd_queue, void *item, const uint32_t *timeout)
@@ -964,7 +964,7 @@ static int syscall_open(syscallrq_t *rq)
                         kdir_t *dir;
                         err = _vfs_opendir(&path, &dir);
                         if (!err) {
-                                err = _process_descriptor_allocate(GETPROCESS(), &desc, &dir->header);
+                                err = _process_descriptor_allocate(GETPROCESS(), &desc, &dir->header, *flags);
                                 if (err) {
                                         _vfs_closedir(dir);
                                 } else {
@@ -977,7 +977,7 @@ static int syscall_open(syscallrq_t *rq)
                 kfile_t *file;
                 err = _vfs_fopen(&path, *flags, *mode, &file);
                 if (!err) {
-                        err = _process_descriptor_allocate(GETPROCESS(), &desc, &file->header);
+                        err = _process_descriptor_allocate(GETPROCESS(), &desc, &file->header, *flags & O_SHARED);
                         if (err) {
                                 _vfs_fclose(file, true);
                         } else {
@@ -1717,12 +1717,13 @@ static int syscall_semaphoreopen(syscallrq_t *rq)
         GETARG(const size_t *, cnt_max);
         GETARG(const size_t *, cnt_init);
         GETARG(int *, fd);
+        GETARG(int *, flags);
 
         int desc = -1;
         ksem_t *sem = NULL;
         int err = _semaphore_create(*cnt_max, *cnt_init, &sem);
         if (not err) {
-                err = _process_descriptor_allocate(GETPROCESS(), &desc, &sem->header);
+                err = _process_descriptor_allocate(GETPROCESS(), &desc, &sem->header, *flags & O_SHARED);
                 if (err) {
                         _semaphore_destroy(sem);
                 } else {
@@ -1814,12 +1815,13 @@ static int syscall_mutexopen(syscallrq_t *rq)
 {
         GETARG(const enum kmtx_type *, type);
         GETARG(int *, fd);
+        GETARG(int *, flags);
 
         int desc = -1;
         kmtx_t *mtx = NULL;
         int err = _mutex_create(*type, &mtx);
         if (not err) {
-                err = _process_descriptor_allocate(GETPROCESS(), &desc, &mtx->header);
+                err = _process_descriptor_allocate(GETPROCESS(), &desc, &mtx->header, *flags & O_SHARED);
                 if (err) {
                         _mutex_destroy(mtx);
                 } else {
@@ -1889,12 +1891,13 @@ static int syscall_queueopen(syscallrq_t *rq)
         GETARG(const size_t *, length);
         GETARG(const size_t *, item_size);
         GETARG(int *, fd);
+        GETARG(int *, flags);
 
         int desc = -1;
         kqueue_t *queue = NULL;
         int err = _queue_create(*length, *item_size, &queue);
         if (not err) {
-                err = _process_descriptor_allocate(GETPROCESS(), &desc, &queue->header);
+                err = _process_descriptor_allocate(GETPROCESS(), &desc, &queue->header, *flags & O_SHARED);
                 if (err) {
                         _queue_destroy(queue);
                 } else {
@@ -2199,7 +2202,7 @@ static int syscall_netsocketcreate(syscallrq_t *rq)
         ksocket_t *socket;
         int err = _net_socket_create(netname, *protocol, &socket);
         if (!err) {
-                err = _process_descriptor_allocate(GETPROCESS(), fd, cast(res_header_t*, socket));
+                err = _process_descriptor_allocate(GETPROCESS(), fd, cast(res_header_t*, socket), false);
                 if (err) {
                         _net_socket_destroy(socket);
                 }
@@ -2289,7 +2292,7 @@ static int syscall_netaccept(syscallrq_t *rq)
                 ksocket_t *socknew;
                 err = _net_socket_accept(res->self, &socknew);
                 if (!err) {
-                        err = _process_descriptor_allocate(GETPROCESS(), new_fd, cast(res_header_t*, socknew));
+                        err = _process_descriptor_allocate(GETPROCESS(), new_fd, cast(res_header_t*, socknew), false);
                         if (err) {
                                 _net_socket_destroy(socknew);
                         }

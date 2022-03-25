@@ -101,7 +101,7 @@ extern int         _process_set_CWD                     (_process_t*, const char
 extern int         _process_register_resource           (_process_t*, res_header_t*);
 extern int         _process_release_resource            (_process_t*, res_header_t*, res_type_t);
 extern int         _process_descriptor_free             (_process_t *process, int desc, res_type_t rtype);
-extern int         _process_descriptor_allocate         (_process_t *process, int *desc, res_header_t *res);
+extern int         _process_descriptor_allocate         (_process_t *process, int *desc, res_header_t *res, bool shared);
 extern int         _process_descriptor_get_resource     (_process_t *process, int desc, res_header_t **res);
 extern const char *_process_get_name                    (_process_t*);
 extern size_t      _process_get_count                   (void);
