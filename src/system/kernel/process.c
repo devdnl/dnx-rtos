@@ -1611,7 +1611,7 @@ void _process_exit_kernelspace(_process_t *proc)
                 ATOMIC(process_mtx) {
                         tid_t i = _process_get_active_thread(proc);
                         proc->taskdata[i].kernelspace = false;
-                        proc->taskdata[i].curr_syscall = 0xFF;
+                        proc->taskdata[i].curr_syscall = NO_SYSCALL;
                 }
         }
 }
