@@ -69,6 +69,10 @@
 #define is_proc_valid(proc)             (_mm_is_object_in_heap(proc) && ((res_header_t*)proc)->type == RES_TYPE_PROCESS)
 #define is_tid_in_range(proc, tid)      (tid < _process_get_max_threads(proc))
 
+#define STDIN_FD                        0
+#define STDOUT_FD                       1
+#define STDERR_FD                       2
+
 /*==============================================================================
   Local object types
 ==============================================================================*/
@@ -1005,7 +1009,7 @@ static int syscall_close(syscallrq_t *rq)
         int err = _process_descriptor_free(GETPROCESS(), *desc, RES_TYPE_UNKNOWN);
         if (err) {
                 res_header_t *res;
-                if (_process_descriptor_get_resource(GETPROCESS(), 2, &res) == 0) {
+                if (_process_descriptor_get_resource(GETPROCESS(), STDERR_FD, &res) == 0) {
                         const char *msg = "*** Error: descriptor is not valid! ***\n";
                         size_t wrcnt;
                         _vfs_fwrite(msg, strlen(msg), &wrcnt, cast(kfile_t*, res));
@@ -1013,7 +1017,8 @@ static int syscall_close(syscallrq_t *rq)
 
                 pid_t pid = 0;
                 _process_get_pid(GETPROCESS(), &pid);
-                _process_kill(pid);
+                printk("fd close: PID %d: descriptor %d not exists!\n",
+                       pid, *desc);
         }
 
         return err;
@@ -1370,7 +1375,7 @@ static int syscall_free(syscallrq_t *rq)
         int err = _process_release_resource(GETPROCESS(), cast(res_header_t*, mem) - 1, RES_TYPE_MEMORY);
         if (err) {
                 res_header_t *res;
-                if (_process_descriptor_get_resource(GETPROCESS(), 2, &res) == 0) {
+                if (_process_descriptor_get_resource(GETPROCESS(), STDERR_FD, &res) == 0) {
                         const char *msg = "*** Error: double free or corruption ***\n";
                         size_t wrcnt;
                         _vfs_fwrite(msg, strlen(msg), &wrcnt, cast(kfile_t*, res));

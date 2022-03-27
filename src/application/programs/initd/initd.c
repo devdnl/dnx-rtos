@@ -231,7 +231,7 @@ static void initialize_additional_drivers(void)
          */
         driver_init("ETH", 0, 0, "/dev/eth");
         fd = open("/dev/eth", O_RDWR);
-        if (fd) {
+        if (fd >= 0) {
                 static const ETH_config_t CONF = {
                         .MAC = {0xC2, 0x70, 0x50, 0xFF, 0xFF, 0x78},
                 };

@@ -1733,6 +1733,10 @@ int _process_descriptor_free(_process_t *process, int desc, res_type_t rtype)
 {
         int err = ENOENT;
 
+        if (desc < 0) {
+                return err;
+        }
+
         ATOMIC(process_mtx) {
 
                 dchain_t *chain = NULL;
@@ -1785,6 +1789,10 @@ int _process_descriptor_free(_process_t *process, int desc, res_type_t rtype)
 int _process_descriptor_get_resource(_process_t *process, int desc, res_header_t **res)
 {
         int err = ENOENT;
+
+        if (desc < 0) {
+                return err;
+        }
 
         ATOMIC(process_mtx) {
 
