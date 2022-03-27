@@ -1042,7 +1042,11 @@ static int syscall_write(syscallrq_t *rq)
                         err = _vfs_fwrite(buf, *count, wrctr, cast(kfile_t*, res));
 
                 } else if (res->type == RES_TYPE_SOCKET) {
+                        #if _ENABLE_NETWORK_ == _YES_
                         err = _net_socket_send(res->self, buf, *count, NETM_FLAGS__COPY, wrctr);
+                        #else
+                        err = ENOTSUP;
+                        #endif
 
                 } else {
                         err = EINVAL;
@@ -1075,7 +1079,11 @@ static int syscall_read(syscallrq_t *rq)
                         err = _vfs_fread(buf, *count, rdctr, cast(kfile_t*, res));
 
                 } else if (res->type == RES_TYPE_SOCKET) {
+                        #if _ENABLE_NETWORK_ == _YES_
                         err = _net_socket_recv(res->self, buf, *count, 0, rdctr);
+                        #else
+                        err = ENOTSUP;
+                        #endif
 
                 } else {
                         err = EINVAL;
