@@ -79,6 +79,7 @@ driver_release("TIMENC", 0, 1);
   Include files
 ==============================================================================*/
 #include "drivers/ioctl_macros.h"
+#include "gpio/gpio_ioctl.h"
 
 #ifdef __cplusplus
 extern "C" {

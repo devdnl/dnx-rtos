@@ -2617,7 +2617,7 @@ extern int sys_fopen(const char *path, int flags, mode_t mode, kfile_t **file);
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // ...
 
                sys_fclose(file);
@@ -2655,7 +2655,7 @@ extern int sys_fclose(kfile_t *file);
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // ...
 
                const char buf[10] = {0,1,2,3,4,5,6,7,8,9};
@@ -2703,7 +2703,7 @@ static inline int sys_fwrite(const void *ptr, size_t size, size_t *wrcnt, kfile_
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // ...
 
                char buf[10];
@@ -2754,7 +2754,7 @@ static inline int sys_fread(void *ptr, size_t size, size_t *rdcnt, kfile_t *file
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // ...
 
                sys_fseek(file, 0, SEEK_SET);
@@ -2801,7 +2801,7 @@ static inline int sys_fseek(kfile_t *file, i64_t offset, int mode)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // ...
 
                i64_t seek = 0;
@@ -2857,7 +2857,7 @@ static inline int sys_ftell(kfile_t *file, i64_t *lseek)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/dev/tty0", "r", &file) == ESUCC) {
+        if (sys_fopen("/dev/tty0", O_RDONLY, 0, &file) == ESUCC) {
                 int err = sys_ioctl(file, IOCTL_TTY__CLEAR_SCR);
 
                 // ...
@@ -2876,7 +2876,7 @@ static inline int sys_ftell(kfile_t *file, i64_t *lseek)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/dev/tty0", "r", &file) == ESUCC) {
+        if (sys_fopen("/dev/tty0", O_RDONLY, 0, &file) == ESUCC) {
                 int row = -1;
                 int err = sys_ioctl(file, IOCTL_TTY__GET_ROW, &row);
 
@@ -2922,7 +2922,7 @@ static inline int sys_ioctl(kfile_t *file, int rq, ...)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/dev/tty0", "r", &file) == ESUCC) {
+        if (sys_fopen("/dev/tty0", O_RDONLY, 0, &file) == ESUCC) {
                 // ...
 
                 struct stat buf;
@@ -2966,7 +2966,7 @@ static inline int sys_fstat(kfile_t *file, struct stat *buf)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // ...
 
                const char buf[10] = {0,1,2,3,4,5,6,7,8,9};
@@ -3012,7 +3012,7 @@ static inline int sys_fflush(kfile_t *file)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // file operations...
 
                int eof = 0;
@@ -3054,7 +3054,7 @@ static inline int sys_feof(kfile_t *file, int *eof)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // file operations...
 
                int error = 0;
@@ -3098,7 +3098,7 @@ static inline int sys_clearerr(kfile_t *file)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // file operations...
 
                int error = 0;
@@ -3141,7 +3141,7 @@ static inline int sys_ferror(kfile_t *file, int *error)
         // ...
 
         FILE *file = NULL;
-        if (sys_fopen("/foo/bar", "w+", &file) == ESUCC) {
+        if (sys_fopen("/foo/bar", O_WRONLY | O_CREAT, 0666, &file) == ESUCC) {
                // ...
 
                sys_rewind(file);

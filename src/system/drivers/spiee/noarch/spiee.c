@@ -458,7 +458,7 @@ static int configure(SPIEE_t *hdl, const SPIEE_config_t *cfg)
                 }
 
                 if (!err) {
-                        err = sys_fopen(cfg->spi_path, "r+", &hdl->spi_dev);
+                        err = sys_fopen(cfg->spi_path, O_RDWR, 0, &hdl->spi_dev);
                         if (!err) {
                                 hdl->memory_size = cfg->memory_size;
                                 hdl->page_size   = cfg->page_size;

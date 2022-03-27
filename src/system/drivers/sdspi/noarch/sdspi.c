@@ -334,7 +334,7 @@ static int configure(SDSPI_t *hdl, const SDSPI_config_t *sdspi_cfg)
                 }
         }
 
-        err = sys_fopen(sdspi_cfg->filepath, "r+", &hdl->SPI_file);
+        err = sys_fopen(sdspi_cfg->filepath, O_RDWR, 0, &hdl->SPI_file);
         if (!err) {
 
                 hdl->timeout_ms = sdspi_cfg->timeout;

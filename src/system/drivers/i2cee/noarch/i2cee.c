@@ -428,7 +428,7 @@ static int configure(I2CEE_t *hdl, const I2CEE_config_t *cfg)
                 }
 
                 if (!err) {
-                        err = sys_fopen(cfg->i2c_path, "r+", &hdl->i2c_dev);
+                        err = sys_fopen(cfg->i2c_path, O_RDWR, 0, &hdl->i2c_dev);
                         if (!err) {
                                 hdl->memory_size       = cfg->memory_size;
                                 hdl->page_size         = cfg->page_size;
