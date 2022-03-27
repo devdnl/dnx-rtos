@@ -777,7 +777,7 @@ USBH_StatusTypeDef USBH_MSC_Read(USBH_HandleTypeDef *phost,
 
   timeout = phost->Timer;
 
-  u64_t tref = sys_get_uptime_ms();
+  clock_t tref = sys_get_uptime_ms();
 
   while (USBH_MSC_RdWrProcess(phost, lun) == USBH_BUSY)
   {
@@ -786,7 +786,7 @@ USBH_StatusTypeDef USBH_MSC_Read(USBH_HandleTypeDef *phost,
       MSC_Handle->state = MSC_IDLE;
       return USBH_FAIL;
     }
-    if (sys_time_is_expired(tref, 5000)) {
+    if (sys_is_time_expired(tref, 5000)) {
       MSC_Handle->state = MSC_IDLE;
       return USBH_FAIL;
     }

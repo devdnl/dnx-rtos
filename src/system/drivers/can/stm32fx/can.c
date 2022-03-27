@@ -897,12 +897,12 @@ static int set_init_mode(CAN_t *hdl)
         if (!err) {
                 err = EIO;
 
-                u32_t tref = sys_get_uptime_ms();
+                clock_t tref = sys_get_uptime_ms();
 
                 CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_SLEEP);
                 SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_INRQ);
 
-                while (not sys_time_is_expired(tref, INIT_TIMEOUT)) {
+                while (not sys_is_time_expired(tref, INIT_TIMEOUT)) {
                         if (CANX[hdl->major].CAN->MSR & CAN_MSR_INAK) {
                                 hdl->tx_bytes  = 0;
                                 hdl->rx_bytes  = 0;
@@ -934,12 +934,12 @@ static int set_normal_mode(CAN_t *hdl)
         if (!err) {
                 err = EIO;
 
-                u32_t tref = sys_get_uptime_ms();
+                clock_t tref = sys_get_uptime_ms();
 
                 CLEAR_BIT(CANX[hdl->major].CAN->FMR, CAN_FMR_FINIT);
                 CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_INRQ | CAN_MCR_SLEEP);
 
-                while (not sys_time_is_expired(tref, INIT_TIMEOUT)) {
+                while (not sys_is_time_expired(tref, INIT_TIMEOUT)) {
                         if (!(CANX[hdl->major].CAN->MSR & CAN_MSR_INAK)) {
                                 err = ESUCC;
                                 break;
@@ -1095,9 +1095,9 @@ static int send_msg(CAN_t *hdl, const CAN_msg_t *msg, u32_t timeout_ms)
         bool  loop    = true;
         u32_t timeout = max(1, timeout_ms);
 
-        u32_t tref = sys_get_uptime_ms();
+        clock_t tref = sys_get_uptime_ms();
 
-        while (loop && !sys_time_is_expired(tref, timeout)) {
+        while (loop && !sys_is_time_expired(tref, timeout)) {
 
                 err = ETIME;
 

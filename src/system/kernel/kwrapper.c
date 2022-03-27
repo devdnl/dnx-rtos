@@ -140,7 +140,7 @@ void _kernel_start(void)
  * @return a OS time in milliseconds
  */
 //==============================================================================
-u64_t _kernel_get_uptime_ms(void)
+clock_t _kernel_get_uptime_ms(void)
 {
         return (_tick_counter * (1000/(configTICK_RATE_HZ)));
 }

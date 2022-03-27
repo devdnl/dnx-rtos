@@ -3739,112 +3739,34 @@ static inline int sys_vsscanf(const char *str, const char *format, va_list args)
 
 //==============================================================================
 /**
- * @brief Function gets time reference.
- *
- * @note Function can be used only by file system or driver code.
- *
- * @return System timer value.
- *
- * @b Example
- * @code
-        // ...
-
-        u64_t tref = sys_time_get_reference();
-
-        while (!sys_time_is_expired(tref, 2000)) {
-                // ...
-        }
-
-        // ...
-   @endcode
- *
- * @see sys_time_is_expired(), sys_time_set_expired(), sys_time_diff()
- */
-//==============================================================================
-static inline u64_t sys_time_get_reference(void)
-{
-        return _kernel_get_uptime_ms();
-}
-
-//==============================================================================
-/**
- * @brief Check if time expired.
+ * @brief Check if timer expired.
  *
  * @note Function can be used only by file system or driver code.
  *
  * @param time_ref      time reference
  * @param time          time to check
  *
- * @return If time expired then @b true is returned, otherwise @b false.
+ * @return If timer expired then @b true is returned, otherwise @b false.
  *
  * @b Example
  * @code
         // ...
 
-        u64_t tref = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
 
-        while (!sys_time_is_expired(tref, 2000)) {
+        while (!sys_is_time_expired(tref, 2000)) {
                 // ...
         }
 
         // ...
    @endcode
  *
- * @see sys_time_get_reference(), sys_time_set_expired(), sys_time_diff()
+ * @see sys_get_uptime_ms(), sys_is_time_expired()
  */
 //==============================================================================
-static inline bool sys_time_is_expired(u64_t time_ref, u64_t time)
+static inline bool sys_is_time_expired(clock_t time_ref, u32_t time)
 {
         return (_kernel_get_uptime_ms() - time_ref >= time);
-}
-
-//==============================================================================
-/**
- * @brief Set time reference as expired.
- *
- * @note Function can be used only by file system or driver code.
- *
- * @return Expired time value.
- *
- * @b Example
- * @code
-        // ...
-
-        u64_t tref = sys_time_set_expired();
-
-        while (!sys_time_is_expired(tref, 2000)) {
-                // this code will not be executed because time expired
-                // ...
-        }
-
-        // ...
-   @endcode
- *
- * @see sys_time_get_reference(), sys_time_is_expired(), sys_time_diff()
- */
-//==============================================================================
-static inline u64_t sys_time_set_expired(void)
-{
-        return UINT64_MAX;
-}
-
-//==============================================================================
-/**
- * @brief Calculate difference between <i>time1</i> and <i>time2</i>.
- *
- * @note Function can be used only by file system or driver code.
- *
- * @param time1        time reference 1
- * @param time2        time reference 2
- *
- * @return Returns difference between timer1 and timer2 (in ticks).
- *
- * @see sys_time_get_reference(), sys_time_set_expired(), sys_time_set_expired()
- */
-//==============================================================================
-static inline int sys_time_diff(u32_t time1, u32_t time2)
-{
-        return time1 - time2;
 }
 
 //==============================================================================
@@ -5070,7 +4992,7 @@ static inline size_t sys_get_mem_size(void)
  * @see sys_get_tick_counter()
  */
 //==============================================================================
-static inline u64_t sys_get_uptime_ms(void)
+static inline clock_t sys_get_uptime_ms(void)
 {
         return _kernel_get_uptime_ms();
 }

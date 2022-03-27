@@ -531,9 +531,9 @@ static int wait_for_write_finish(SPIEE_t *hdl)
         t.separated = false;
         t.next      = NULL;
 
-        u32_t tref = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
 
-        while (not sys_time_is_expired(tref, 1000)) {
+        while (not sys_is_time_expired(tref, 1000)) {
 
                 int err = sys_ioctl(hdl->spi_dev, IOCTL_SPI__TRANSCEIVE, &t);
                 if (!err) {

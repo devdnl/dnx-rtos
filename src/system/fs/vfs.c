@@ -883,7 +883,11 @@ int _vfs_fopen(const struct vfs_path *path, int flags, mode_t mode, kfile_t **fi
                                                      flags);
 
                         if (!err && (flags & O_CREAT)) {
+                                #if __OS_ENABLE_CHMOD__ == _YES_
                                 err = fs->interface->fs_chmod(fs->handle, external_path, mode);
+                                #else
+                                UNUSED_ARG1(mode);
+                                #endif
                         }
 
                         struct stat stat;

@@ -109,14 +109,14 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         if (__CLK_LSI_ON__) {
                 LL_RCC_LSI_Enable();
 
-                u64_t tref = sys_time_get_reference();
-                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                clock_t tref = sys_get_uptime_ms();
+                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                         if (LL_RCC_LSI_IsReady()) {
                                 break;
                         }
                 }
 
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                         printk("CLK: LSI timeout");
                 }
         }
@@ -139,14 +139,14 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                         } else {
                                 LL_RCC_LSE_Enable();
 
-                                u64_t tref = sys_time_get_reference();
-                                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                clock_t tref = sys_get_uptime_ms();
+                                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                                         if (LL_RCC_LSE_IsReady()) {
                                                 break;
                                         }
                                 }
 
-                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                         printk("CLK: LSE timeout");
                                 }
                         }
@@ -165,14 +165,14 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                 } else {
                         LL_RCC_HSE_Enable();
 
-                        u64_t tref = sys_time_get_reference();
-                        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        clock_t tref = sys_get_uptime_ms();
+                        while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                                 if (LL_RCC_HSE_IsReady()) {
                                         break;
                                 }
                         }
 
-                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                 printk("CLK: HSE timeout");
                         }
                 }
@@ -206,14 +206,14 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
 
                 LL_RCC_PLL_Enable();
 
-                u64_t tref = sys_time_get_reference();
-                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                clock_t tref = sys_get_uptime_ms();
+                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                         if (LL_RCC_PLL_IsReady()) {
                                 break;
                         }
                 }
 
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                         printk("CLK: PLL timeout");
                 }
         }
@@ -235,14 +235,14 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
 
                 LL_RCC_PLLI2S_Enable();
 
-                u64_t tref = sys_time_get_reference();
-                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                clock_t tref = sys_get_uptime_ms();
+                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                         if (LL_RCC_PLLI2S_IsReady()) {
                                 break;
                         }
                 }
 
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                         printk("CLK: PLLI2S timeout");
                 }
         }
@@ -263,14 +263,14 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
 
                 LL_RCC_PLLSAI_Enable();
 
-                u64_t tref = sys_time_get_reference();
-                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                clock_t tref = sys_get_uptime_ms();
+                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                         if (LL_RCC_PLLSAI_IsReady()) {
                                 break;
                         }
                 }
 
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                         printk("CLK: PLLSAI timeout");
                 }
         }
@@ -760,9 +760,9 @@ static int configure_core_voltage_and_flash_latency(void)
                 #if defined(PWR_CR1_ODEN)
                 if (!err && (VOS == PWR_REGULATOR_VOLTAGE_SCALE0)) {
                         SET_BIT(PWR->CR1, PWR_CR1_ODEN);
-                        u64_t tref = sys_time_get_reference();
+                        clock_t tref = sys_get_uptime_ms();
                         while (not (PWR->CSR1 & PWR_CSR1_ODRDY)) {
-                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                         printk("CLK: VOS0 timeout");
                                         err = ETIME;
                                         break;
@@ -775,8 +775,8 @@ static int configure_core_voltage_and_flash_latency(void)
         }
 
         if (!err) {
-                u64_t tref = sys_time_get_reference();
-                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                clock_t tref = sys_get_uptime_ms();
+                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                         MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY_Msk, __CLK_FLASH_LATENCY__);
                         if ((FLASH->ACR & FLASH_ACR_LATENCY_Msk) == __CLK_FLASH_LATENCY__) {
                                 break;

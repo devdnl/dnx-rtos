@@ -100,14 +100,14 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
         if (__CLK_LSI_ON__) {
                 LL_RCC_LSI_Enable();
 
-                u64_t tref = sys_time_get_reference();
-                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                clock_t tref = sys_get_uptime_ms();
+                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                         if (LL_RCC_LSI_IsReady()) {
                                 break;
                         }
                 }
 
-                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                         printk("CLK: LSI timeout");
                 }
         }
@@ -127,14 +127,14 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                         } else {
                                 LL_RCC_LSE_Enable();
 
-                                u64_t tref = sys_time_get_reference();
-                                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                clock_t tref = sys_get_uptime_ms();
+                                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                                         if (LL_RCC_LSE_IsReady()) {
                                                 break;
                                         }
                                 }
 
-                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                         printk("CLK: LSE timeout");
                                 }
                         }
@@ -153,14 +153,14 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                 } else {
                         LL_RCC_HSE_Enable();
 
-                        u64_t tref = sys_time_get_reference();
-                        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        clock_t tref = sys_get_uptime_ms();
+                        while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                                 if (LL_RCC_HSE_IsReady()) {
                                         break;
                                 }
                         }
 
-                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                 printk("CLK: HSE timeout");
                         }
                 }
@@ -200,9 +200,9 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                 LL_RCC_PLL1_SetVCOInputRange(pll_input_range);
                 LL_RCC_PLL1_Enable();
 
-                u64_t tref = sys_time_get_reference();
+                clock_t tref = sys_get_uptime_ms();
                 while (not LL_RCC_PLL1_IsReady()) {
-                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                 printk("CLK: PLL1 timeout");
                                 break;
                         }
@@ -228,9 +228,9 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                 LL_RCC_PLL2_SetVCOInputRange(pll_input_range);
                 LL_RCC_PLL2_Enable();
 
-                u64_t tref = sys_time_get_reference();
+                clock_t tref = sys_get_uptime_ms();
                 while (not LL_RCC_PLL2_IsReady()) {
-                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                 printk("CLK: PLL2 timeout");
                                 break;
                         }
@@ -256,9 +256,9 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
                 LL_RCC_PLL3_SetVCOInputRange(pll_input_range);
                 LL_RCC_PLL3_Enable();
 
-                u64_t tref = sys_time_get_reference();
+                clock_t tref = sys_get_uptime_ms();
                 while (not LL_RCC_PLL3_IsReady()) {
-                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                 printk("CLK: PLL3 timeout");
                                 break;
                         }
@@ -960,9 +960,9 @@ static int configure_core_voltage_and_flash_latency(void)
 
                 u32_t VOS_tmp = (VOS == PWR_REGULATOR_VOLTAGE_SCALE0) ? PWR_REGULATOR_VOLTAGE_SCALE1 : VOS;
                 MODIFY_REG(PWR->D3CR, PWR_D3CR_VOS_Msk, VOS_tmp);
-                u64_t tref = sys_time_get_reference();
+                clock_t tref = sys_get_uptime_ms();
                 while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
-                        if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                        if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                 printk("CLK: VOS1-3 timeout");
                                 err = ETIME;
                                 break;
@@ -975,9 +975,9 @@ static int configure_core_voltage_and_flash_latency(void)
                 if (!err && (VOS == PWR_REGULATOR_VOLTAGE_SCALE0)) {
                         SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
                         SET_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN);
-                        tref = sys_time_get_reference();
+                        clock_t tref = sys_get_uptime_ms();
                         while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
-                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                         printk("CLK: VOS0 timeout");
                                         err = ETIME;
                                         break;
@@ -990,8 +990,8 @@ static int configure_core_voltage_and_flash_latency(void)
 
         // flash latency and programming delay
         if (!err) {
-                u64_t tref = sys_time_get_reference();
-                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                clock_t tref = sys_get_uptime_ms();
+                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                         WRITE_REG(FLASH->ACR, FLASH_ACR);
                         if ((FLASH->ACR & FLASH_ACR_LATENCY_Msk) == FLASH_ACR) {
                                 break;

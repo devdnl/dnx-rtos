@@ -113,7 +113,7 @@ API_MOD_INIT(I2CEE, void **device_handle, u8_t major, u8_t minor, const void *co
                                 if (hdl0) {
                                         hdl->main = hdl0->main;
                                 } else {
-                                        dev_dbg(hdl, "initialize minor 0 device first!", 0);
+                                        dev_dbg(hdl, "initialize minor 0 device first!");
                                         err = EFAULT;
                                 }
                         }

@@ -234,8 +234,8 @@ API_MOD_WRITE(SPI,
         struct SPI_slave *hdl = device_handle;
 
         // check if device is switched to RAW mode
-        u32_t tref     = sys_time_get_reference();
-        bool  RAW_mode = false;
+        clock_t tref = sys_get_uptime_ms();
+        bool RAW_mode = false;
 
         while (sys_device_is_locked(&_SPI[hdl->major]->RAW_mode)) {
 
@@ -244,7 +244,7 @@ API_MOD_WRITE(SPI,
                 if (sys_device_get_access(&_SPI[hdl->major]->RAW_mode) == ESUCC) {
                         break;
                 } else {
-                        if (sys_time_is_expired(tref, DEV_LOCK_TIMEOUT)) {
+                        if (sys_is_time_expired(tref, DEV_LOCK_TIMEOUT)) {
                                 return ETIME;
                         } else {
                                 sys_sleep_ms(10);
@@ -302,8 +302,8 @@ API_MOD_READ(SPI,
         struct SPI_slave *hdl = device_handle;
 
         // check if device is switched to RAW mode
-        u32_t tref     = sys_time_get_reference();
-        bool  RAW_mode = false;
+        clock_t tref = sys_get_uptime_ms();
+        bool RAW_mode = false;
 
         while (sys_device_is_locked(&_SPI[hdl->major]->RAW_mode)) {
 
@@ -312,7 +312,7 @@ API_MOD_READ(SPI,
                 if (sys_device_get_access(&_SPI[hdl->major]->RAW_mode) == ESUCC) {
                         break;
                 } else {
-                        if (sys_time_is_expired(tref, DEV_LOCK_TIMEOUT)) {
+                        if (sys_is_time_expired(tref, DEV_LOCK_TIMEOUT)) {
                                 return ETIME;
                         } else {
                                 sys_sleep_ms(10);
@@ -418,8 +418,8 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         SPI_transceive_t *tr = arg;
                         if (tr->count) {
                                 // check if device is switched to RAW mode
-                                u32_t tref     = sys_time_get_reference();
-                                bool  RAW_mode = false;
+                                clock_t tref = sys_get_uptime_ms();
+                                bool RAW_mode = false;
 
                                 while (sys_device_is_locked(&_SPI[hdl->major]->RAW_mode)) {
 
@@ -428,7 +428,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                                         if (sys_device_get_access(&_SPI[hdl->major]->RAW_mode) == ESUCC) {
                                                 break;
                                         } else {
-                                                if (sys_time_is_expired(tref, DEV_LOCK_TIMEOUT)) {
+                                                if (sys_is_time_expired(tref, DEV_LOCK_TIMEOUT)) {
                                                         return ETIME;
                                                 } else {
                                                         sys_sleep_ms(10);
@@ -484,11 +484,7 @@ API_MOD_IOCTL(SPI, void *device_handle, int request, void *arg)
                         if (!err) {
                                 slave_deselect(hdl);
                                 _SPI_LLD__apply_config(hdl);
-
-                                if (_SPI_LLD__transceive(hdl, byte, NULL, 1)) {
-                                        err = ESUCC;
-                                }
-
+                                err = _SPI_LLD__transceive(hdl, byte, NULL, 1);
                                 sys_mutex_unlock(_SPI[hdl->major]->periph_protect_mtx);
                         } else {
                                 err = EBUSY;

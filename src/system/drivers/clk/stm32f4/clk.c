@@ -621,9 +621,9 @@ static int configure_core_voltage_and_flash_latency(void)
                 #if defined(PWR_CR_ODEN)
                 if (!err && (VOS == PWR_REGULATOR_VOLTAGE_SCALE0)) {
                         SET_BIT(PWR->CR, PWR_CR_ODEN);
-                        u64_t tref = sys_time_get_reference();
+                        clock_t tref = sys_get_uptime_ms();
                         while (not (PWR->CSR & PWR_CSR_ODRDY)) {
-                                if (sys_time_is_expired(tref, TIMEOUT_MS)) {
+                                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
                                         printk("CLK: VOS0 timeout");
                                         err = ETIME;
                                         break;
@@ -636,8 +636,8 @@ static int configure_core_voltage_and_flash_latency(void)
         }
 
         if (!err) {
-                u64_t tref = sys_time_get_reference();
-                while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+                clock_t tref = sys_get_uptime_ms();
+                while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
                         MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY_Msk, _CLK_CFG__FLASH_LATENCY);
                         if ((FLASH->ACR & FLASH_ACR_LATENCY_Msk) == _CLK_CFG__FLASH_LATENCY) {
                                 break;
@@ -671,9 +671,9 @@ static void enable_prefetch_buffer(void)
 //==============================================================================
 static int wait_for_flag(u32_t flag, u32_t timeout)
 {
-        u32_t timer = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
         while (RCC_GetFlagStatus(flag) == RESET) {
-                if (sys_time_is_expired(timer, timeout)) {
+                if (sys_is_time_expired(tref, timeout)) {
                         return ETIME;
                 }
         }

@@ -207,7 +207,7 @@ static inline I2C_TypeDef *get_I2C(I2C_dev_t *hdl)
 //==============================================================================
 static void reset(I2C_dev_t *hdl, bool reinit)
 {
-        dev_dbg(hdl, "interface reset", 0);
+        dev_dbg(hdl, "interface reset");
 
         I2C_TypeDef *i2c = get_I2C(hdl);
 
@@ -233,11 +233,11 @@ static void reset(I2C_dev_t *hdl, bool reinit)
                                                  &SCL_mode);
 
                 if (err) {
-                        dev_dbg(hdl, "invalid SCL pin - recovery skipped", 0);
+                        dev_dbg(hdl, "invalid SCL pin - recovery skipped");
                 }
 
                 if ((state == 0) && (err == 0)) {
-                        dev_dbg(hdl, "detected SDA low - bus recovery", 0);
+                        dev_dbg(hdl, "detected SDA low - bus recovery");
 
                         #if defined(ARCH_stm32f3) || defined(ARCH_stm32f7)
                         int mode = GPIO_MODE__OD;

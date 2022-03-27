@@ -216,7 +216,7 @@ static inline I2C_periph_t *get_I2C(I2C_dev_t *hdl)
 //==============================================================================
 static void reset(I2C_dev_t *hdl, bool reinit)
 {
-        dev_dbg(hdl, "interface reset", 0);
+        dev_dbg(hdl, "interface reset");
 
         I2C_periph_t *i2c = get_I2C(hdl);
 
@@ -259,11 +259,11 @@ static void reset(I2C_dev_t *hdl, bool reinit)
                                                  &SCL_mode);
 
                 if (err) {
-                        dev_dbg(hdl, "invalid SCL pin - recovery skipped", 0);
+                        dev_dbg(hdl, "invalid SCL pin - recovery skipped");
                 }
 
                 if ((state == 0) && (err == 0)) {
-                        dev_dbg(hdl, "detected SDA low - bus recovery", 0);
+                        dev_dbg(hdl, "detected SDA low - bus recovery");
 
                         #if defined(ARCH_stm32f1)
                         int mode = GPIO_MODE__OD_10MHz;
@@ -342,11 +342,11 @@ static int wait_for_event_poll(I2C_dev_t *hdl, u32_t flags, u32_t timeout_ms)
         u32_t CST = 1000 / __OS_TASK_SCHED_FREQ__;         // 1000/f = T in ms
 
         I2C_periph_t *i2c = get_I2C(hdl);
-        u32_t tref = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
 
         while (!(i2c->SR1 & flags)) {
 
-                if (sys_time_is_expired(tref, timeout_ms)) {
+                if (sys_is_time_expired(tref, timeout_ms)) {
                         dev_dbg(hdl, "event poll timeout (SR1: %Xh)", flags);
                         reset(hdl, true);
                         return EIO;
@@ -612,7 +612,7 @@ int _I2C_LLD__master_send_address(I2C_dev_t *hdl, bool write, size_t count)
 
                 finish:
                 if (err) {
-                        dev_dbg(hdl, "send 10-bit address error", 0);
+                        dev_dbg(hdl, "send 10-bit address error");
                 }
 
                 return err;
@@ -632,7 +632,7 @@ int _I2C_LLD__master_send_address(I2C_dev_t *hdl, bool write, size_t count)
 
                 int err =  wait_for_event_poll(hdl, PI2C_SR1_ADDR, _I2C_TIMEOUT_BYTE_TRANSFER);
                 if (err) {
-                        dev_dbg(hdl, "send 7-bit address error", 0);
+                        dev_dbg(hdl, "send 7-bit address error");
                 }
 
                 return err;
@@ -710,16 +710,16 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                dev_dbg(hdl, "DMA Rx event error", 0);
+                                                dev_dbg(hdl, "DMA Rx event error");
                                         }
                                 } else {
-                                        dev_dbg(hdl, "DMA receive error", 0);
+                                        dev_dbg(hdl, "DMA receive error");
                                 }
 
                                 _DMA_DDI_release(dmad);
                                 goto finish;
                         } else {
-                                dev_dbg(hdl, "DMA read channel in use, using IRQ mode", 0);
+                                dev_dbg(hdl, "DMA read channel in use, using IRQ mode");
                         }
                 }
 #endif
@@ -823,7 +823,7 @@ int _I2C_LLD__master_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rd
         *rdcnt = n;
 
         if (err) {
-                dev_dbg(hdl, "receive error", 0);
+                dev_dbg(hdl, "receive error");
         }
 
         return err;
@@ -909,20 +909,20 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
                                         if (!err) {
                                                 n = count;
                                         } else {
-                                                dev_dbg(hdl, "write not finished correctly", 0);
+                                                dev_dbg(hdl, "write not finished correctly");
                                         }
                                 } else {
-                                        dev_dbg(hdl, "DMA Tx event error", 0);
+                                        dev_dbg(hdl, "DMA Tx event error");
                                 }
                         } else {
-                                dev_dbg(hdl, "DMA write error", 0);
+                                dev_dbg(hdl, "DMA write error");
                         }
 
                         _DMA_DDI_release(dmad);
                         goto finish;
 
                 } else {
-                        dev_dbg(hdl, "DMA write channel in use, using IRQ mode", 0);
+                        dev_dbg(hdl, "DMA write channel in use, using IRQ mode");
                 }
         }
 #endif
@@ -953,7 +953,7 @@ int _I2C_LLD__master_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, siz
         *wrcnt = n;
 
         if (err) {
-                dev_dbg(hdl, "transmit error", 0);
+                dev_dbg(hdl, "transmit error");
         }
 
         return err;
@@ -1043,7 +1043,7 @@ int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size
 
         *wrctr = 0;
 
-        u32_t tref = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
 
         clear_address_event(hdl);
 
@@ -1057,8 +1057,8 @@ int _I2C_LLD__slave_transmit(I2C_dev_t *hdl, const u8_t *src, size_t count, size
                                 i2c->DR = 0;
                         }
 
-                } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
-                        dev_dbg(hdl, "slave transmit timeout", 0);
+                } else if (sys_is_time_expired(tref, _I2C_DEVICE_TIMEOUT)) {
+                        dev_dbg(hdl, "slave transmit timeout");
                         _I2C_LLD__master_stop(hdl);
                         err = ETIME;
                         break;
@@ -1107,7 +1107,7 @@ int _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdc
 
         *rdctr = 0;
 
-        u32_t tref = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
 
         while (true) {
                 if (i2c->SR1 & PI2C_SR1_RXNE) {
@@ -1120,8 +1120,8 @@ int _I2C_LLD__slave_receive(I2C_dev_t *hdl, u8_t *dst, size_t count, size_t *rdc
                                 (void)tmp;
                         }
 
-                } else if (sys_time_is_expired(tref, _I2C_DEVICE_TIMEOUT)) {
-                        dev_dbg(hdl, "slave receive timeout", 0);
+                } else if (sys_is_time_expired(tref, _I2C_DEVICE_TIMEOUT)) {
+                        dev_dbg(hdl, "slave receive timeout");
                         _I2C_LLD__master_stop(hdl);
                         err = ETIME;
                         break;

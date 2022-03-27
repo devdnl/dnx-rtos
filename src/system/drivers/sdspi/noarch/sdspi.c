@@ -47,8 +47,8 @@
 typedef struct {
         u8_t       major;
         u8_t       minor;
-        kfile_t      *SPI_file;
-        kmtx_t    *protect_mtx;
+        kfile_t    *SPI_file;
+        kmtx_t     *protect_mtx;
         u32_t      timeout_ms;
         SD_type_t  type;
         bool       initialized;
@@ -481,10 +481,10 @@ static int SPI_receive_block(SDSPI_t *hdl, u8_t *block, size_t count)
 static u8_t card_wait_ready(SDSPI_t *hdl)
 {
         u8_t response;
-        u32_t timer = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
 
         while ((response = SPI_transive(hdl, 0xFF)) != 0xFF
-              && !sys_time_is_expired(timer, hdl->timeout_ms));
+              && !sys_is_time_expired(tref, hdl->timeout_ms));
 
         return response;
 }
@@ -564,9 +564,9 @@ static u8_t card_send_cmd(SDSPI_t *hdl, SD_cmd_t cmd, u32_t arg)
 static bool card_receive_data_block(SDSPI_t *hdl, u8_t *buff)
 {
         u8_t token;
-        u32_t timer = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
         while ((token = SPI_transive(hdl, 0xFF)) == 0xFF
-              && !sys_time_is_expired(timer, hdl->timeout_ms));
+              && !sys_is_time_expired(tref, hdl->timeout_ms));
 
         if (token != 0xFE) {
                 return false;
@@ -731,14 +731,20 @@ static int card_initialize(SDSPI_t *hdl)
         SPI_deselect_card(hdl);
         for (int n = 0; n < 50; n++) {
                 static const u8_t BYTE = 0xFF;
-                sys_ioctl(hdl->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, &BYTE);
+                err = sys_ioctl(hdl->SPI_file, IOCTL_SPI__TRANSMIT_NO_SELECT, &BYTE);
+                if (err) {
+                        dev_dbg(hdl, "SPI trasfer fail: %d", err);
+                        return err;
+                }
         }
 
         hdl->type.type   = SD_TYPE__UNKNOWN;
         hdl->type.block  = false;
         hdl->initialized = false;
 
-        u32_t timer = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
+
+        err = ENOMEDIUM;
 
         if (card_send_cmd(hdl, SD_CMD__CMD0, 0) == 0x01) {
                 if (card_send_cmd(hdl, SD_CMD__CMD8, 0x1AA) == 0x01) { /* check SDHC card */
@@ -747,13 +753,13 @@ static int card_initialize(SDSPI_t *hdl)
                         SPI_receive_block(hdl, OCR, sizeof(OCR));
 
                         if (OCR[2] == 0x01 && OCR[3] == 0xAA) {
-                                while ( !sys_time_is_expired(timer, hdl->timeout_ms)
+                                while ( !sys_is_time_expired(tref, hdl->timeout_ms)
                                       && card_send_cmd(hdl, SD_CMD__ACMD41, 1UL << 30) ) {
 
                                         sys_sleep_ms(1);
                                 }
 
-                                if ( !sys_time_is_expired(timer, hdl->timeout_ms)
+                                if ( !sys_is_time_expired(tref, hdl->timeout_ms)
                                    && card_send_cmd(hdl, SD_CMD__CMD58, 0) == 0 ) {
 
                                         SPI_receive_block(hdl, OCR, sizeof(OCR));
@@ -777,14 +783,14 @@ static int card_initialize(SDSPI_t *hdl)
                         }
 
                         /* Wait for leaving idle state */
-                        while ( !sys_time_is_expired(timer, hdl->timeout_ms)
+                        while ( !sys_is_time_expired(tref, hdl->timeout_ms)
                               && card_send_cmd(hdl, cmd, 0)) {
 
                                 sys_sleep_ms(1);
                         }
 
                         /* set R/W block length to 512 */
-                        if ( !sys_time_is_expired(timer, hdl->timeout_ms)
+                        if ( !sys_is_time_expired(tref, hdl->timeout_ms)
                            || card_send_cmd(hdl, SD_CMD__CMD16, SECTOR_SIZE) != 0) {
 
                                 hdl->type.type   = SD_TYPE__UNKNOWN;
@@ -795,8 +801,6 @@ static int card_initialize(SDSPI_t *hdl)
                                 err = ESUCC;
                         }
                 }
-        } else {
-                err = ENOMEDIUM;
         }
 
         if (!err) {
@@ -809,9 +813,9 @@ static int card_initialize(SDSPI_t *hdl)
                 if (card_send_cmd(hdl, SD_CMD__CMD9, 0) == 0) {
                         u8_t token;
 
-                        u32_t timer = sys_time_get_reference();
+                        clock_t tref = sys_get_uptime_ms();
                         while ( (token = SPI_transive(hdl, 0xFF)) == 0xFF
-                              && !sys_time_is_expired(timer, hdl->timeout_ms));
+                              && !sys_is_time_expired(tref, hdl->timeout_ms));
 
                         if (token == 0xFE) {
                                 u8_t CSD[16];

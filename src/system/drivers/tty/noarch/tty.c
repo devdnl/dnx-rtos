@@ -772,13 +772,13 @@ static int switch_terminal(tty_io_t *io, int term_no)
 
                 tty_t *tty = io->tty[io->current_tty];
 
-                u64_t tref = sys_time_get_reference();
+                clock_t tref = sys_get_uptime_ms();
 
-                while (not ttycmd_is_idle(tty->vtcmd) && not sys_time_is_expired(tref, 1000)) {
+                while (not ttycmd_is_idle(tty->vtcmd) && not sys_is_time_expired(tref, 1000)) {
                         sys_sleep_ms(50);
                 }
 
-                if (not sys_time_is_expired(tref, 1000)) {
+                if (not sys_is_time_expired(tref, 1000)) {
 
                         io->current_tty = term_no;
 

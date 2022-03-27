@@ -471,9 +471,9 @@ static void enable_prefetch_buffer(void)
 //==============================================================================
 static int wait_for_flag(u32_t flag, u32_t timeout)
 {
-        u32_t timer = sys_time_get_reference();
+        clock_t timer = sys_get_uptime_ms();
         while (RCC_GetFlagStatus(flag) == RESET) {
-                if (sys_time_is_expired(timer, timeout)) {
+                if (sys_is_time_expired(timer, timeout)) {
                         return ETIME;
                 }
         }

@@ -52,9 +52,9 @@
 ==============================================================================*/
 #if __OS_ENABLE_TIMEMAN__ == _YES_
 static kfile_t  *RTC;
-static time_t last_sec;
-static u32_t  last_msec;
-static u32_t  usec;
+static time_t  last_sec;
+static clock_t last_msec;
+static u32_t   usec;
 #endif
 
 /*==============================================================================
@@ -100,7 +100,7 @@ static int open_RTC(void)
 //==============================================================================
 static void simulate_usec(struct timeval *timeval)
 {
-        u32_t ms_now = sys_get_uptime_ms();
+        clock_t ms_now = sys_get_uptime_ms();
 
         if (last_sec != timeval->tv_sec) {
                 usec = 0;

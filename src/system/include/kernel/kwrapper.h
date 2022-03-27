@@ -87,7 +87,7 @@ enum kmtx_type {
 // TODO kwrapper: automatically detected ISR functions
 
 extern void     _kernel_start                      (void);
-extern u64_t    _kernel_get_uptime_ms              (void);
+extern clock_t  _kernel_get_uptime_ms              (void);
 extern u64_t    _kernel_get_tick_counter           (void);
 extern int      _kernel_get_number_of_tasks        (void);
 extern void     _kernel_scheduler_lock             (void);

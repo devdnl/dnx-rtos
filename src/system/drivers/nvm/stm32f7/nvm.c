@@ -596,9 +596,9 @@ static int FLASH_wait_for_operation_finish(void)
 {
         int err = ETIME;
 
-        u32_t tref = sys_get_uptime_ms();
+        clock_t tref = sys_get_uptime_ms();
 
-        while (not sys_time_is_expired(tref, TIMEOUT_MS)) {
+        while (not sys_is_time_expired(tref, TIMEOUT_MS)) {
 
                 __DSB();
 

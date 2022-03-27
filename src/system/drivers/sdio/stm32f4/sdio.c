@@ -548,7 +548,7 @@ static int card_initialize(SDIO_t *hdl)
         hdl->card.block  = false;
         hdl->initialized = false;
 
-        u32_t timer = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
 
         catcherr(err = card_send_cmd(SD_CMD__CMD0, CMD_RESP_NONE, 0), finish);
 
@@ -556,7 +556,7 @@ static int card_initialize(SDIO_t *hdl)
         catcherr(err = card_get_response(&resp, RESP_R7), finish);
 
         if (resp.RESPONSE[0] == 0x1AA) {
-                while (!sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)) {
+                while (!sys_is_time_expired(tref, _SDIO_CFG_CARD_TIMEOUT)) {
 
                         catcherr(err = card_send_cmd(SD_CMD__CMD55, CMD_RESP_SHORT, 0), finish);
                         catcherr(err = card_get_response(&resp, RESP_R1), finish);
@@ -662,18 +662,18 @@ static int card_send_cmd(uint32_t cmd, cmd_resp_t resp, uint32_t arg)
                   | (resp & SDIO_CMD_WAITRESP)
                   | SDIO_CMD_CPSMEN;
 
-        u32_t timer = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
 
         if (resp == CMD_RESP_NONE) {
-                while (  !sys_time_is_expired(timer, COMMAND_TIMEOUT)
+                while (  !sys_is_time_expired(tref, COMMAND_TIMEOUT)
                       && !(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDSENT)));
 
         } else {
-                while (  !sys_time_is_expired(timer, COMMAND_TIMEOUT)
+                while (  !sys_is_time_expired(tref, COMMAND_TIMEOUT)
                       && !(SDIO->STA & (SDIO_STA_CTIMEOUT | SDIO_STA_CMDREND | SDIO_STA_CCRCFAIL)));
         }
 
-        if (  sys_time_is_expired(timer, COMMAND_TIMEOUT)
+        if (  sys_is_time_expired(tref, COMMAND_TIMEOUT)
            || (SDIO->STA & SDIO_STA_CTIMEOUT) ) {
                 printk("SDIO: Command Timeout Error");
                 return ETIME;
@@ -962,18 +962,18 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
                         if (!err) {
                                 err = err_ev;
 
-                                u32_t timer = sys_time_get_reference();
+                                clock_t tref = sys_get_uptime_ms();
 
-                                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                                while (  !sys_is_time_expired(tref, _SDIO_CFG_CARD_TIMEOUT)
                                       && (SDIO->STA & (SDIO_STA_RXACT | SDIO_STA_TXACT)) );
 
-                                while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                                while (  !sys_is_time_expired(tref, _SDIO_CFG_CARD_TIMEOUT)
                                       && !(SDIO->STA & ( SDIO_STA_DCRCFAIL
                                                        | SDIO_STA_DTIMEOUT
                                                        | SDIO_STA_DBCKEND
                                                        | SDIO_STA_STBITERR)) );
 
-                                if (sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)) {
+                                if (sys_is_time_expired(tref, _SDIO_CFG_CARD_TIMEOUT)) {
                                         printk("SDIO: timeout");
                                         err = ETIME;
 
@@ -1054,12 +1054,12 @@ static int card_transfer_block(SDIO_t *hdl, uint32_t cmd, uint32_t address,
                                 SDIO_CTRL->count--;
                         }
 
-                        u32_t timer = sys_time_get_reference();
+                        clock_t tref = sys_get_uptime_ms();
 
-                        while (  !sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)
+                        while (  !sys_is_time_expired(tref, _SDIO_CFG_CARD_TIMEOUT)
                               && (SDIO->STA & (SDIO_STA_RXACT | SDIO_STA_TXACT)) );
 
-                        if (sys_time_is_expired(timer, _SDIO_CFG_CARD_TIMEOUT)) {
+                        if (sys_is_time_expired(tref, _SDIO_CFG_CARD_TIMEOUT)) {
                                 printk("SDIO: timeout");
                                 err = ETIME;
                         }

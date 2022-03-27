@@ -721,7 +721,7 @@ static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
 {
         int err = hdl->run ? ESUCC : EPERM;
 
-        u64_t tref = sys_get_uptime_ms();
+        clock_t tref = sys_get_uptime_ms();
 
         while (true) {
                 err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT);
@@ -734,7 +734,7 @@ static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
                         if ((DmaTxDesc->Status & ETH_DMATXDESC_OWN) != (uint32_t) RESET) {
                                 sys_mutex_unlock(hdl->mutex);
 
-                                if (sys_get_uptime_ms() - tref >= hdl->tx_timeout_ms) {
+                                if (sys_is_time_expired(tref, hdl->tx_timeout_ms)) {
                                         err = ETIME;
                                         break;
                                 }
@@ -789,7 +789,7 @@ static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
 {
         int err = hdl->run ? ESUCC : EPERM;
 
-        u64_t tref = sys_get_uptime_ms();
+        clock_t tref = sys_get_uptime_ms();
 
         while (!err) {
                 sys_thread_yield();
@@ -800,7 +800,7 @@ static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
                         if (HAL_ETH_GetReceivedFrame_IT(&hdl->eth) != HAL_OK) {
                                 sys_mutex_unlock(hdl->mutex);
 
-                                if (sys_get_uptime_ms() - tref >= hdl->rx_timeout_ms) {
+                                if (sys_is_time_expired(tref, hdl->rx_timeout_ms)) {
                                         err = ETIME;
                                         break;
                                 }

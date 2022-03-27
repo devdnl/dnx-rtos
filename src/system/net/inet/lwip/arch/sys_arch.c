@@ -404,8 +404,8 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
         LWIP_ASSERT("sys_arch.c: wrong semaphore object!", (sem != NULL));
 
         if (sem && *sem) {
-                u32_t start_time = sys_get_uptime_ms();
-                int   sem_status = 0;
+                clock_t start_time = sys_get_uptime_ms();
+                int sem_status = 0;
 
                 if (timeout) {
                         sem_status = sys_semaphore_wait(*sem, timeout);
@@ -566,7 +566,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
         LWIP_ASSERT("sys_arch.c: wrong mbox message destination!", (msg != NULL));
 
         if (mbox && *mbox) {
-                u32_t start_time = sys_get_uptime_ms();
+                clock_t start_time = sys_get_uptime_ms();
 
                 if (sys_queue_receive(*mbox,
                                       &(*msg),

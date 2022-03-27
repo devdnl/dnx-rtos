@@ -94,6 +94,7 @@ extern "C" {
 #ifndef DOXYGEN
 #define _ENUMBER        43      //!< total supported errors
 #endif
+#define __ELASTERROR    2000    /* Users can add values starting here */
 
 /*==============================================================================
   Exported object types

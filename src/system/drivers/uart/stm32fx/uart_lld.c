@@ -676,14 +676,14 @@ int _UART_LLD__turn_on(struct UART_mem *hdl)
                                         }
 
                                         if (err or (dmabuf->desc == 0)) {
-                                                dev_dbg(hdl, "DMA not accessible, using IRQ mode", 0);
+                                                dev_dbg(hdl, "DMA not accessible, using IRQ mode");
                                                 sys_free(cast(void*, &dmabuf));
                                         } else {
                                                 uarthdl->DMA = dmabuf;
                                         }
 
                                 } else {
-                                        dev_dbg(hdl, "no free memory to enable DMA mode", 0);
+                                        dev_dbg(hdl, "no free memory to enable DMA mode");
                                 }
 
                                 err = 0;
@@ -786,7 +786,7 @@ int _UART_LLD__configure(struct UART_mem *hdl, const struct UART_rich_config *co
                 PCLK = freq.PCLK2_Frequency;
                 break;
         default:
-                dev_dbg(hdl, "invalid CLKSRC!", 0);
+                dev_dbg(hdl, "invalid CLKSRC!");
                 break;
         }
 #elif defined(ARCH_stm32f7) || defined(ARCH_stm32f3)

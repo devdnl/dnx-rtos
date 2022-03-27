@@ -867,14 +867,14 @@ int CANNET_socket_recvfrom(void                  *ctx,
         }
 
         *recved = 0;
-        u32_t tref = sys_time_get_reference();
+        clock_t tref = sys_get_uptime_ms();
 
         addr->addr = 0;
         addr->port = socket->port;
 
         int err = ETIME;
 
-        while (!sys_time_is_expired(tref, socket->recv_timeout) and (len > 0)) {
+        while (!sys_is_time_expired(tref, socket->recv_timeout) and (len > 0)) {
 
                 err = cannetbuf__read(socket->rx_buf, buf, len, recved);
                 if (!err) {

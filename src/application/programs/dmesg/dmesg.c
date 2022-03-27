@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
                         char str[128];
 
                         while (syslog_read(str, sizeof(str), &t, &t)) {
-                                printf("[%u.%06u] %s\n", t.tv_sec, t.tv_usec, str);
+                                printf("[%llu.%06lu] %s\n", t.tv_sec, t.tv_usec, str);
                         }
 
                         if (loop) {

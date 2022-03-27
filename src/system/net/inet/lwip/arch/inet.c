@@ -117,12 +117,12 @@ static void clear_rx_tx_counters(inet_t *inet)
 //==============================================================================
 static bool is_init_done(inet_t *inet)
 {
-        u32_t timer = sys_get_uptime_ms();
-        while (not inet->ready && not sys_time_is_expired(timer, INIT_TIMEOUT)) {
+        clock_t tref = sys_get_uptime_ms();
+        while (not inet->ready && not sys_is_time_expired(tref, INIT_TIMEOUT)) {
                 sys_sleep_ms(1);
         }
 
-        return not sys_time_is_expired(timer, INIT_TIMEOUT);
+        return not sys_is_time_expired(tref, INIT_TIMEOUT);
 }
 
 //==============================================================================
@@ -345,9 +345,9 @@ static int DHCP_start_client(inet_t *inet)
                         if (dhcp_start(&inet->netif) == ERR_OK) {
 //                                netif_set_up(&inet->netif);
 
-                                u32_t timer = sys_get_uptime_ms();
+                                clock_t tref = sys_get_uptime_ms();
 
-                                while (not sys_time_is_expired(timer, DHCP_TIMEOUT)) {
+                                while (not sys_is_time_expired(tref, DHCP_TIMEOUT)) {
 
                                         if (dhcp_supplied_address(&inet->netif)) {
                                                 inet->configured = true;
@@ -410,8 +410,8 @@ static int DHCP_renew_connection(inet_t *inet)
 
                 if (dhcp_renew(&inet->netif) == ERR_OK) {
 
-                        u32_t timeout = sys_get_uptime_ms();
-                        while (not sys_time_is_expired(timeout, DHCP_TIMEOUT)) {
+                        clock_t tref = sys_get_uptime_ms();
+                        while (not sys_is_time_expired(tref, DHCP_TIMEOUT)) {
 
                                 if (DHCP_get_state(inet) == DHCP_STATE_BOUND) {
                                         status = ESUCC;

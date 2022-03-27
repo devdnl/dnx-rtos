@@ -46,7 +46,7 @@ struct ttycmd {
         void           *self;
         char            token[VT100_TOKEN_LEN + 1];
         u8_t            token_cnt;
-        u32_t           timer;
+        clock_t         timer;
 };
 
 /*==============================================================================
@@ -152,7 +152,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                         memset(this->token, 0, VT100_TOKEN_LEN);
                         this->token[0]  = c;
                         this->token_cnt = 1;
-                        this->timer     = sys_time_get_reference();
+                        this->timer     = sys_get_uptime_ms();
                         return TTYCMD_BUSY;
 
                 } else if (this->token_cnt) {
@@ -190,7 +190,7 @@ ttycmd_resp_t ttycmd_analyze(ttycmd_t *this, const char c)
                                 else if (strcmp(VT100_F12_VT     , this->token) == 0) return TTYCMD_KEY_F12;
                                 else return TTYCMD_BUSY;
                         } else {
-                                if (  sys_time_is_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
+                                if (  sys_is_time_expired(this->timer, VT100_TOKEN_READ_TIMEOUT)
                                    || this->token_cnt >= VT100_TOKEN_LEN ) {
 
                                         this->token_cnt = 0;

@@ -553,12 +553,12 @@ static int recovery_usb_connection(USBH_t *hdl)
 
         int err = USBH_ReEnumerate(&hdl->hUSBHost); // start re-enumeration
         if (!err) {
-                u64_t tref = sys_get_uptime_ms();
+                clock_t tref = sys_get_uptime_ms();
 
                 while (not hdl->class_active) {
                         sys_sleep_ms(100);
 
-                        if (sys_time_is_expired(tref, RECOVERY_TIMEOUT)) {
+                        if (sys_is_time_expired(tref, RECOVERY_TIMEOUT)) {
                                 err = EIO;
                                 break;
                         }

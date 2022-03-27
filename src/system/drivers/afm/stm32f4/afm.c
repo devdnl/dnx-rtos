@@ -91,8 +91,8 @@ API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor, const void *conf
                 SET_BIT(RCC->AHB1ENR, RCC_AHB1ENR_BKPSRAMEN);
 
                 SET_BIT(PWR->CSR, PWR_CSR_BRE);
-                u64_t tref = sys_get_uptime_ms();
-                while (not sys_time_is_expired(tref, 500)) {
+                clock_t tref = sys_get_uptime_ms();
+                while (not sys_is_time_expired(tref, 500)) {
                         if (PWR->CSR & PWR_CSR_BRR) {
                                 break;
                         }

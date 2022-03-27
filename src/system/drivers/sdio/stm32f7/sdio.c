@@ -304,7 +304,7 @@ API_MOD_WRITE(SDIO,
 
                                 err = card_wait_ready(hdl);
                                 if (err) {
-                                        dev_dbg(hdl, "card busy at write transfer", 0);
+                                        dev_dbg(hdl, "card busy at write transfer");
                                 }
 
                                 if (hdl->mode == _SDIO_MODE_POLLING) {
@@ -330,7 +330,7 @@ API_MOD_WRITE(SDIO,
 
                                 } else {
                                         err = EFAULT;
-                                        dev_dbg(hdl, "unknown card mode!", 0);
+                                        dev_dbg(hdl, "unknown card mode!");
                                 }
 
                                 if (!err) {
@@ -393,7 +393,7 @@ API_MOD_READ(SDIO,
 
                                 err = card_wait_ready(hdl);
                                 if (err) {
-                                        dev_dbg(hdl, "card busy at read transfer", 0);
+                                        dev_dbg(hdl, "card busy at read transfer");
                                 }
 
                                 if (hdl->mode == _SDIO_MODE_POLLING) {
@@ -419,7 +419,7 @@ API_MOD_READ(SDIO,
 
                                 } else {
                                         err = EFAULT;
-                                        dev_dbg(hdl, "unknown card mode!", 0);
+                                        dev_dbg(hdl, "unknown card mode!");
                                 }
 
                                 if (!err) {
@@ -535,7 +535,7 @@ void HAL_SD_MspInit(SD_HandleTypeDef *hsd)
                 major = 1;
 #endif
         } else {
-                dev_dbg(hdl, "init: unknown SDMMC instance", 0);
+                dev_dbg(hdl, "init: unknown SDMMC instance");
                 return;
         }
 
@@ -568,7 +568,7 @@ void HAL_SD_MspDeInit(SD_HandleTypeDef *hsd)
                 major = 1;
 #endif
         } else {
-                dev_dbg(hdl, "deinit: unknown SDMMC instance", 0);
+                dev_dbg(hdl, "deinit: unknown SDMMC instance");
                 return;
         }
 
@@ -621,7 +621,7 @@ static int card_initialize(SDIO_t *hdl)
 //                        hdl->hsd.hdma = dmah;
 //
 //                } else {
-                        dev_dbg(hdl, "DMA not accessible, using IRQ mode", 0);
+                        dev_dbg(hdl, "DMA not accessible, using IRQ mode");
                         hdl->mode = _SDIO_MODE_IRQ;
                         err = 0;
 //                }
@@ -657,9 +657,9 @@ static int card_initialize(SDIO_t *hdl)
 
                         if (SDMMC[hdl->major].bus_wide != SDMMC_BUS_WIDE_1B) {
                                 if (HAL_SD_ConfigWideBusOperation(&hdl->hsd, SDMMC_BUS_WIDE_4B) == SD_HAL_OK) {
-                                        dev_dbg(hdl, "switched to 4-bit bus", 0);
+                                        dev_dbg(hdl, "switched to 4-bit bus");
                                 } else {
-                                        dev_dbg(hdl, "4-bit bus not supported", 0);
+                                        dev_dbg(hdl, "4-bit bus not supported");
                                 }
                         }
 

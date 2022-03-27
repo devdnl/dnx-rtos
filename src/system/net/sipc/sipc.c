@@ -1050,12 +1050,12 @@ int SIPC_socket_recv(void          *ctx,
                 return ECONNREFUSED;
         }
 
-        int   err  = ETIME;
-        u32_t tref = sys_time_get_reference();
+        int err = ETIME;
+        clock_t tref = sys_get_uptime_ms();
 
         *recved = 0;
 
-        while (!sys_time_is_expired(tref, socket->recv_timeout)) {
+        while (!sys_is_time_expired(tref, socket->recv_timeout)) {
 
                 err = sipcbuf__read(socket->rxbuf, buf, len, recved);
                 if (!err) {

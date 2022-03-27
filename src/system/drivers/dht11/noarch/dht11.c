@@ -218,9 +218,9 @@ API_MOD_READ(DHT11,
         // set start bit and calculate timeout value
         set_pin_low(hdl);
         sys_thread_yield();
-        u32_t start   = sys_get_uptime_ms();
+        clock_t start = sys_get_uptime_ms();
         i32_t timeout = 0;
-        while (not sys_time_is_expired(start, 2)) {
+        while (not sys_is_time_expired(start, 2)) {
                 timeout++;
         }
 
