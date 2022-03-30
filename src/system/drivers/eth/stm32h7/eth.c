@@ -515,7 +515,7 @@ static int eth_start(struct eth *hdl)
                                         MACConf.DuplexMode = (conf->duplex == ETH_DUPLEX__FULL) ? ETH_FULLDUPLEX_MODE : ETH_HALFDUPLEX_MODE;
                                         HAL_ETH_SetMACConfig(&hdl->eth, &MACConf);
 
-                                        err = HAL_ETH_Start(&hdl->eth);
+                                        err = HAL_ETH_Start_IT(&hdl->eth);
                                         if (!err) {
                                                 hdl->run = true;
                                         }
@@ -781,7 +781,7 @@ static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
                                         break;
                                 }
 
-                                sys_semaphore_wait(hdl->rx_semaphore, 5);
+                                sys_semaphore_wait(hdl->rx_semaphore, 50);
                                 continue;
                         }
 
