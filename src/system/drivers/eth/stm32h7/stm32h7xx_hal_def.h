@@ -1,11 +1,11 @@
 /*==============================================================================
-File    stm32f4xx_hal_def.h
+File    stm32h7xx_hal_def.h
 
 Author  Daniel Zorychta
 
-Brief   .
+Brief   Ethernet HAL definitions.
 
-        Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
+        Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
 
         This program is free software; you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ Brief   .
 ==============================================================================*/
 
 /**
-@defgroup ETH_STM32FX_STM32F4XX_HAL_DEF_H_ ETH_STM32FX_STM32F4XX_HAL_DEF_H_
+@defgroup ETH_STM32FX_STM32H7XX_HAL_DEF_H_ ETH_STM32FX_STM32H7XX_HAL_DEF_H_
 
 Detailed Doxygen description.
 */
@@ -40,17 +40,9 @@ Detailed Doxygen description.
 #include <stddef.h>
 #include "drivers/driver.h"
 
-#if defined(ARCH_stm32f1)
-#include "stm32f10x.h"
-#include "stm32f1/lib/stm32f10x_rcc.h"
-#define ETH_CPU_CACHE_ALIGN 1
-#elif defined(ARCH_stm32f4)
-#include "stm32f4xx.h"
-#include "stm32f4/lib/stm32f4xx_rcc.h"
-#define ETH_CPU_CACHE_ALIGN 1
-#elif defined(ARCH_stm32f7)
-#include "stm32f7xx.h"
-#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
+#if defined(ARCH_stm32h7)
+#include "stm32h7xx.h"
+#include "stm32h7/lib/stm32h7xx_ll_rcc.h"
 #define ETH_CPU_CACHE_ALIGN 32
 #endif
 
@@ -58,7 +50,7 @@ Detailed Doxygen description.
 extern "C" {
 #endif
 
-#if defined(ARCH_stm32f1) || defined(ARCH_stm32f4) || defined(ARCH_stm32f7)
+#if defined(ARCH_stm32h7)
 
 /*==============================================================================
   Exported macros
@@ -66,6 +58,7 @@ extern "C" {
 #define assert_param(...)
 #define HAL_GetTick()                   sys_get_uptime_ms()
 #define HAL_Delay(_ms)                  sys_sleep_ms(_ms)
+#define HAL_MAX_DELAY                   _MAX_DELAY_MS
 #define __HAL_UNLOCK(heth)              (heth->Lock = HAL_UNLOCKED)
 #define __HAL_LOCK(heth)                (heth->Lock = HAL_LOCKED)
 #define __weak                          __attribute__ ((weak))
@@ -76,9 +69,10 @@ extern "C" {
 #define ETH_TX_BUF_SIZE                 ETH_MAX_PACKET_SIZE /* buffer size for transmit              */
 
 /* RX & TX buffers alignment to CPU cache lines (size align) */
+#define ETH_RX_BUFFER_SIZE              (1536UL)
 #define ETH_ALIGN_MASK                  (ETH_CPU_CACHE_ALIGN - 1)
-#define ETH_RX_BUF_SIZE_ALIGN           ((ETH_MAX_PACKET_SIZE + ETH_ALIGN_MASK) & ~ETH_ALIGN_MASK)
-#define ETH_TX_BUF_SIZE_ALIGN           ((ETH_MAX_PACKET_SIZE + ETH_ALIGN_MASK) & ~ETH_ALIGN_MASK)
+#define ETH_RX_BUF_SIZE_ALIGN           ((ETH_RX_BUFFER_SIZE + ETH_ALIGN_MASK) & ~ETH_ALIGN_MASK)
+#define ETH_TX_BUF_SIZE_ALIGN           ((ETH_RX_BUFFER_SIZE + ETH_ALIGN_MASK) & ~ETH_ALIGN_MASK)
 
 /* Section 2: PHY configuration section */
 /* LAN8742A PHY Address*/

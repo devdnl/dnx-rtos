@@ -6,15 +6,21 @@ ifeq ($(__ENABLE_ETH__), _YES_)
       CSRC_ARCH   += drivers/eth/stm32fx/eth.c
       CSRC_ARCH   += drivers/eth/stm32fx/stm32f4xx_hal_eth.c
       CXXSRC_ARCH += 
-   endif
+    endif
 	ifeq ($(TARGET), stm32f4)
       CSRC_ARCH   += drivers/eth/stm32fx/eth.c
       CSRC_ARCH   += drivers/eth/stm32fx/stm32f4xx_hal_eth.c
       CXXSRC_ARCH += 
-   endif
+    endif
 	ifeq ($(TARGET), stm32f7)
       CSRC_ARCH   += drivers/eth/stm32fx/eth.c
       CSRC_ARCH   += drivers/eth/stm32fx/stm32f4xx_hal_eth.c
       CXXSRC_ARCH += 
-   endif
+    endif
+	ifeq ($(TARGET), stm32h7)
+      CSRC_ARCH   += drivers/eth/stm32h7/eth.c
+      CSRC_ARCH   += drivers/eth/stm32h7/stm32h7xx_hal_eth.c
+      CSRC_ARCH   += drivers/eth/stm32h7/stm32h7xx_hal_eth_ex.c
+      CXXSRC_ARCH += 
+    endif
 endif

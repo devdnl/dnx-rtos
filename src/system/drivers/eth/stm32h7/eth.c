@@ -5,7 +5,7 @@
 
 @brief   This driver support Ethernet interface.
 
-@note    Copyright (C) 2020 Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -31,15 +31,8 @@
 ==============================================================================*/
 #include "drivers/driver.h"
 #include "eth_ioctl.h"
-#include "stm32f4xx_hal_eth.h"
-
-#if defined(ARCH_stm32f1)
-#include "stm32f10x.h"
-#elif defined(ARCH_stm32f4)
-#include "stm32f4xx.h"
-#elif defined(ARCH_stm32f7)
-#include "stm32f7xx.h"
-#endif
+#include "stm32h7xx_hal_eth.h"
+#include "stm32h7xx.h"
 
 /*==============================================================================
   Local macros
@@ -49,25 +42,11 @@
 #define MUTEX_TIMEOUT           10000
 #define PHY_BSR_LINK_STATUS     (1 << 2)
 
-#if defined(ARCH_stm32f1)
-#define AHBxENR                  AHBENR
-#define RCC_AHBxENR_ETHMACRXEN   RCC_AHBENR_ETHMACRXEN
-#define RCC_AHBxENR_ETHMACTXEN   RCC_AHBENR_ETHMACTXEN
-#define RCC_AHBxENR_ETHMACEN     RCC_AHBENR_ETHMACEN
-#define CPU_CACHE_ALIGN          1
-#elif defined(ARCH_stm32f4)
 #define AHBxENR                  AHB1ENR
-#define RCC_AHBxENR_ETHMACRXEN   RCC_AHB1ENR_ETHMACRXEN
-#define RCC_AHBxENR_ETHMACTXEN   RCC_AHB1ENR_ETHMACTXEN
-#define RCC_AHBxENR_ETHMACEN     RCC_AHB1ENR_ETHMACEN
-#define CPU_CACHE_ALIGN          1
-#elif defined(ARCH_stm32f7)
-#define AHBxENR                  AHB1ENR
-#define RCC_AHBxENR_ETHMACRXEN   RCC_AHB1ENR_ETHMACRXEN
-#define RCC_AHBxENR_ETHMACTXEN   RCC_AHB1ENR_ETHMACTXEN
-#define RCC_AHBxENR_ETHMACEN     RCC_AHB1ENR_ETHMACEN
+#define RCC_AHBxENR_ETHMACRXEN   RCC_AHB1ENR_ETH1RXEN
+#define RCC_AHBxENR_ETHMACTXEN   RCC_AHB1ENR_ETH1TXEN
+#define RCC_AHBxENR_ETHMACEN     RCC_AHB1ENR_ETH1MACEN
 #define CPU_CACHE_ALIGN          32
-#endif
 
 #if CPU_CACHE_ALIGN != ETH_CPU_CACHE_ALIGN
 #error "CPU cache alignments are different!"
@@ -103,6 +82,9 @@ struct eth {
         u32_t               rx_timeout_ms;
         u32_t               tx_timeout_ms;
         u8_t                descs_and_buffs[DESCS_BUFFS_SIZE];
+
+        ETH_TxPacketConfig  tx_config;
+
         struct {
                 u32_t rx_packets;
                 u32_t tx_packets;
@@ -162,7 +144,7 @@ API_MOD_INIT(ETH, void **device_handle, u8_t major, u8_t minor, const void *conf
                 return ENODEV;
         }
 
-        int err = sys_zalloc(sizeof(struct eth), device_handle);
+        int err = sys_zalloc2(sizeof(struct eth), "SRAM1", _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, device_handle);
         if (!err) {
                 struct eth *hdl = *device_handle;
 
@@ -516,32 +498,43 @@ static int eth_start(struct eth *hdl)
 
                         hdl->eth.Instance = ETH;
                         hdl->eth.Init.MACAddr = hdl->MAC_addr;
-                        hdl->eth.Init.AutoNegotiation = conf->auto_negotiation ? ETH_AUTONEGOTIATION_ENABLE : ETH_AUTONEGOTIATION_DISABLE;
-                        hdl->eth.Init.Speed = (conf->speed == ETH_SPEED__100Mbps) ? ETH_SPEED_100M : ETH_SPEED_10M;
-                        hdl->eth.Init.DuplexMode = (conf->duplex == ETH_DUPLEX__FULL) ? ETH_MODE_FULLDUPLEX : ETH_MODE_HALFDUPLEX;
-                        hdl->eth.Init.RxMode = ETH_RXINTERRUPT_MODE;
-                        hdl->eth.Init.ChecksumMode = __ETH_CHECKSUM_BY_HARDWARE__;
-                        hdl->eth.Init.PhyAddress = __ETH_PHY_ADDRESS__;
-
+                        hdl->eth.Init.RxDesc = hdl->DMA_rx_desc;
+                        hdl->eth.Init.TxDesc = hdl->DMA_tx_desc;
+                        hdl->eth.Init.RxBuffLen = ETH_RX_BUFFER_SIZE;
+                        HAL_ETH_DescAssignMemory()
                         while (true) {
                                 err = HAL_ETH_Init(&hdl->eth);
                                 if (!err) {
-                                        /* Initialize Tx Descriptors list: Chain Mode */
-                                        HAL_ETH_DMATxDescListInit(&hdl->eth, hdl->DMA_tx_desc,
-                                                                  hdl->tx_buff, __ETH_TXBUFNB__);
+                                        memset(&hdl->tx_config, 0, sizeof(hdl->tx_config));
+                                        hdl->tx_config.Attributes = ETH_TX_PACKETS_FEATURES_CSUM | ETH_TX_PACKETS_FEATURES_CRCPAD;
+                                        hdl->tx_config.ChecksumCtrl = ETH_CHECKSUM_IPHDR_PAYLOAD_INSERT_PHDR_CALC;
+                                        hdl->tx_config.CRCPadCtrl = ETH_CRC_PAD_INSERT;
 
-                                        /* Initialize Rx Descriptors list: Chain Mode  */
-                                        HAL_ETH_DMARxDescListInit(&hdl->eth, hdl->DMA_rx_desc,
-                                                                  hdl->rx_buff, __ETH_RXBUFNB__);
 
-                                        err = HAL_ETH_Start(&hdl->eth);
+
+                                        // TODO PHY configuration
+
+                        // TODO other settings
+//                        hdl->eth.Init.AutoNegotiation = conf->auto_negotiation ? ETH_AUTONEGOTIATION_ENABLE : ETH_AUTONEGOTIATION_DISABLE;
+//                        hdl->eth.Init.Speed = (conf->speed == ETH_SPEED__100Mbps) ? ETH_SPEED_100M : ETH_SPEED_10M;
+//                        hdl->eth.Init.DuplexMode = (conf->duplex == ETH_DUPLEX__FULL) ? ETH_MODE_FULLDUPLEX : ETH_MODE_HALFDUPLEX;
+//                        hdl->eth.Init.RxMode = ETH_RXINTERRUPT_MODE;
+//                        hdl->eth.Init.ChecksumMode = __ETH_CHECKSUM_BY_HARDWARE__;
+//                        hdl->eth.Init.PhyAddress = __ETH_PHY_ADDRESS__;
+
+                                        ETH_MACConfigTypeDef MACConf;
+                                        HAL_ETH_GetMACConfig(&hdl->eth, &MACConf);
+                                        MACConf.DuplexMode = duplex;
+                                        MACConf.Speed = speed;
+                                        HAL_ETH_SetMACConfig(&hdl->eth, &MACConf);
+                                        err = HAL_ETH_Start_IT(&hdl->eth);
                                         if (!err) {
                                                 hdl->run = true;
                                         }
 
                                 } else if (err and conf->auto_negotiation) {
                                         printk("ETH: disabling auto-negotiation");
-                                        hdl->eth.Init.AutoNegotiation = ETH_AUTONEGOTIATION_DISABLE;
+//                                        hdl->eth.Init.AutoNegotiation = ETH_AUTONEGOTIATION_DISABLE;
                                         continue;
                                 }
 
@@ -606,7 +599,7 @@ static int eth_get_info(struct eth *hdl, ETH_status_t *status)
                 if (hdl->run) {
                         u32_t reg;
 
-                        if (HAL_ETH_ReadPHYRegister(&hdl->eth, PHY_BSR, &reg) == HAL_OK) {
+                        if (HAL_ETH_ReadPHYRegister(&hdl->eth, __ETH_PHY_ADDRESS__, PHY_BSR, &reg) == HAL_OK) {
 
                                 if (reg & PHY_BSR_LINK_STATUS) {
                                         status->link_status = ETH_LINK_STATUS__CONNECTED;
@@ -617,7 +610,7 @@ static int eth_get_info(struct eth *hdl, ETH_status_t *status)
                                 status->link_status = ETH_LINK_STATUS__PHY_ERROR;
                         }
 
-                        if (HAL_ETH_ReadPHYRegister(&hdl->eth, __ETH_PHY_SR__, &reg) == HAL_OK) {
+                        if (HAL_ETH_ReadPHYRegister(&hdl->eth, __ETH_PHY_ADDRESS__, __ETH_PHY_SR__, &reg) == HAL_OK) {
 
                                 if (reg & __ETH_PHY_SPEED_STATUS_BM__) {
                                         status->speed = ETH_SPEED__10Mbps;
@@ -651,14 +644,8 @@ static int eth_get_info(struct eth *hdl, ETH_status_t *status)
                         break;
                 case HAL_ETH_STATE_READY:
                 case HAL_ETH_STATE_BUSY:
-                case HAL_ETH_STATE_BUSY_TX:
-                case HAL_ETH_STATE_BUSY_RX:
-                case HAL_ETH_STATE_BUSY_TX_RX:
-                case HAL_ETH_STATE_BUSY_WR:
-                case HAL_ETH_STATE_BUSY_RD:
                         status->state = ETH_STATE__READY;
                         break;
-                case HAL_ETH_STATE_TIMEOUT:
                 case HAL_ETH_STATE_ERROR:
                         status->state = ETH_STATE__ERROR;
                         break;
@@ -722,9 +709,20 @@ static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
 
         clock_t tref = sys_get_uptime_ms();
 
+        hdl->tx_config.Length = pkt->length;
+        hdl->tx_config.TxBuffer = pkt->payload;
+
         while (true) {
                 err = sys_mutex_lock(hdl->mutex, MUTEX_TIMEOUT);
                 if (!err) {
+                        ETH_DMADescTypeDef *dmatxdesc = (ETH_DMADescTypeDef *)(&hdl->eth.TxDescList)->TxDesc[hdl->eth.TxDescList.CurTxDesc];
+                        _cpuctl_invalidate_dcache_by_addr((uint32_t*)dmatxdesc, sizeof(*dmatxdesc));
+
+                        err = HAL_ETH_Transmit(&hdl->eth, &hdl->tx_config, hdl->tx_timeout_ms);
+
+
+
+
 
                         __IO ETH_DMADescTypeDef *DmaTxDesc = hdl->eth.TxDesc;
 
@@ -759,6 +757,11 @@ static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
                                 /* Resume DMA transmission*/
                                 hdl->eth.Instance->DMATPDR = 0;
                         }
+
+
+
+
+
 
                         /* update statistics */
                         update_dropped_rx_frames(hdl);
@@ -927,8 +930,8 @@ void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *heth)
 //==============================================================================
 static void update_dropped_rx_frames(struct eth *hdl)
 {
-        u32_t DMAMFBOCR = ETH->DMAMFBOCR;
-        u32_t MFC = (DMAMFBOCR & ETH_DMAMFBOCR_MFC) >> ETH_DMAMFBOCR_MFC_Pos;
+        u32_t DMACMFCR = ETH->DMACMFCR;
+        u32_t MFC = (DMACMFCR & ETH_DMACMFCR_MFC) >> ETH_DMACMFCR_MFC_Pos;
         hdl->stats.rx_dropped_frames += MFC;
 }
 

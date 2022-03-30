@@ -227,20 +227,25 @@ static void initialize_additional_drivers(void)
         driver_init("RTC", 0, 0, "/dev/rtc");
 
         /*
-         * 3. If needed the Ethernet driver is initialized.
+         * 3. Ethernet interface initialization and MAC setup
          */
         driver_init("ETH", 0, 0, "/dev/eth");
+
         fd = open("/dev/eth", O_RDWR);
         if (fd >= 0) {
-                static const ETH_config_t CONF = {
+                ETH_config_t conf = {
                         .MAC = {0xC2, 0x70, 0x50, 0xFF, 0xFF, 0x78},
+                        .auto_negotiation = true,
+                        .speed = ETH_SPEED__100Mbps,
+                        .duplex = ETH_DUPLEX__FULL,
                 };
-                ioctl(fd, IOCTL_ETH__CONFIGURE, &CONF);
 
-                #if !_ENABLE_NETWORK_
+                ioctl(fd, IOCTL_ETH__CONFIGURE, &conf);
                 ioctl(fd, IOCTL_ETH__START);
-                #endif
+
                 close(fd);
+        } else {
+                perror("eth");
         }
 }
 

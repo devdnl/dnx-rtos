@@ -81,10 +81,10 @@ else
     this:AddExtraWidget("Label", "LabelState", "State")
 
     this.AddPinSpeed = function(this, portLetter, pinNumber)
-        this:AddItem("2 MHz", "_GPIO_SPEED_LOW")
-        this:AddItem("25 MHz", "_GPIO_SPEED_MEDIUM")
-        this:AddItem("50 MHz", "_GPIO_SPEED_HIGH")
-        this:AddItem("100 MHz", "_GPIO_SPEED_VERY_HIGH")
+        this:AddItem("Low", "_GPIO_SPEED_LOW")
+        this:AddItem("Medium", "_GPIO_SPEED_MEDIUM")
+        this:AddItem("High", "_GPIO_SPEED_HIGH")
+        this:AddItem("Very high", "_GPIO_SPEED_VERY_HIGH")
     end
 
     this.AddPinAF = function(this, portLetter, pinNumber)

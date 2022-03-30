@@ -231,13 +231,6 @@ typedef struct {
 } ETH_packet_t;
 
 /**
- * Type represent configuration.
- */
-typedef struct {
-        u8_t MAC[6];
-} ETH_config_t;
-
-/**
  * Type represent ethernet status.
  */
 typedef struct {
@@ -253,12 +246,12 @@ typedef struct {
                 ETH_LINK_STATUS__PHY_ERROR,          /*!< PHY error.*/
         } link_status;
 
-        enum {
+        enum ETH_speed {
                 ETH_SPEED__10Mbps,
                 ETH_SPEED__100Mbps,
         } speed;
 
-        enum {
+        enum ETH_duplex {
                 ETH_DUPLEX__HALF,
                 ETH_DUPLEX__FULL,
         } duplex;
@@ -271,6 +264,16 @@ typedef struct {
         u64_t tx_bytes;
         u32_t rx_dropped_frames;
 } ETH_status_t;
+
+/**
+ * Type represent configuration.
+ */
+typedef struct {
+        u8_t MAC[6];
+        enum ETH_speed speed;
+        enum ETH_duplex duplex;
+        bool auto_negotiation;
+} ETH_config_t;
 
 /**
  * Type represent packet waiting with selected timeout.

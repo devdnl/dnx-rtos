@@ -55,13 +55,6 @@ this:AddItem("Yes", "ETH_CHECKSUM_BY_HARDWARE")
 #define __ETH_CHECKSUM_BY_HARDWARE__ ETH_CHECKSUM_BY_HARDWARE
 
 /*--
-this:AddWidget("Combobox", "Link speed")
-this:AddItem("10 Mbps", "ETH_SPEED_10M")
-this:AddItem("100 Mbps", "ETH_SPEED_100M")
---*/
-#define __ETH_SPEED__ ETH_SPEED_100M
-
-/*--
 this:AddWidget("Spinbox", 3, 256, "Number of RX buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
@@ -129,15 +122,6 @@ this:AddWidget("Spinbox", 100, 2000, "Reset delay [ms]")
 this:AddWidget("Spinbox", 100, 2000, "Setup delay [ms]")
 --*/
 #define __ETH_PHY_CONFIG_DELAY__ 500
-
-/*--
-this:AddWidget("Combobox", "Auto negotiation")
-this:AddItem("Disable", "ETH_AUTONEGOTIATION_DISABLE")
-this:AddItem("Enable", "ETH_AUTONEGOTIATION_ENABLE")
-this:SetToolTip("If auto negotiation is enabled then link should be connected to PHY. "..
-                "If link is not connected then module does not initialize.")
---*/
-#define __ETH_PHY_AUTONEGOTIATION__ ETH_AUTONEGOTIATION_DISABLE
 
 #endif /* _ETH_FLAGS_H_ */
 /*==============================================================================

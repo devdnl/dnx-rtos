@@ -147,7 +147,7 @@
   */
 #define ETH_TIMEOUT_SWRESET               ((uint32_t)500)
 #define ETH_TIMEOUT_LINKED_STATE          ((uint32_t)5000)
-#define ETH_TIMEOUT_AUTONEGO_COMPLETED    ((uint32_t)5000)
+#define ETH_TIMEOUT_AUTONEGO_COMPLETED    ((uint32_t)1000)
 
 /**
   * @}
@@ -383,6 +383,8 @@ HAL_StatusTypeDef HAL_ETH_Init(ETH_HandleTypeDef *heth)
     /* Get tick */
     tickstart = HAL_GetTick();
 
+    printk("ETH: auto-negotiation in progress...");
+
     /* Wait until the auto-negotiation will be completed */
     do
     {
@@ -402,6 +404,8 @@ HAL_StatusTypeDef HAL_ETH_Init(ETH_HandleTypeDef *heth)
         /* Process Unlocked */
         __HAL_UNLOCK(heth);
 
+        printk("ETH: auto-negotiation timeout.");
+
         return HAL_TIMEOUT;
       }
 
@@ -418,6 +422,8 @@ HAL_StatusTypeDef HAL_ETH_Init(ETH_HandleTypeDef *heth)
 
       /* Set the ETH peripheral state to READY */
       heth->State = HAL_ETH_STATE_READY;
+
+      printk("ETH: auto-negotiation read result error.");
 
       /* Return HAL_ERROR */
       return HAL_ERROR;
@@ -445,6 +451,10 @@ HAL_StatusTypeDef HAL_ETH_Init(ETH_HandleTypeDef *heth)
       /* Set Ethernet speed to 100M following the auto-negotiation */
       (heth->Init).Speed = ETH_SPEED_100M;
     }
+
+    printk("ETH: auto-negotiated parameters: %d Mbps/%s Duplex.",
+           ((heth->Init).Speed == ETH_SPEED_10M) ? 10 : 100,
+           ((heth->Init).DuplexMode == ETH_MODE_HALFDUPLEX) ? "Half" : "Full");
   }
   else /* AutoNegotiation Disable */
   {
