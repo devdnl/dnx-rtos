@@ -114,7 +114,7 @@ this:AddWidget("Combobox", "PB7 Fast Mode + Enable")
 this:AddItem("Default value", "(0 << SYSCFG_PMCR_I2C_PB7_FMP_Pos)")
 this:AddItem("It forces FM+ drive capability on PB7 pin", "(1 << SYSCFG_PMCR_I2C_PB7_FMP_Pos)")
 --*/
-#define __AFM_PB7_FMP__ (0 << SYSCFG_PMC_PB7_FMP_Pos)
+#define __AFM_PB7_FMP__ (0 << SYSCFG_PMCR_I2C_PB7_FMP_Pos)
 
 /*--
 this:AddWidget("Combobox", "PB6 Fast Mode + Enable")
