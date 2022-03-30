@@ -67,11 +67,10 @@ static int   apply_static_IP_configuration(inet_t *inet, const ip_addr_t *ip_add
 /*==============================================================================
   External function prototypes
 ==============================================================================*/
-extern int   _inetdrv_hardware_init    (inet_t *inet);
-extern int   _inetdrv_hardware_deinit  (inet_t *inet);
 extern err_t _inetdrv_handle_output    (struct netif *netif, struct pbuf *p);
 extern void  _inetdrv_handle_input     (inet_t *inet, u32_t timeout);
 extern bool  _inetdrv_is_link_connected(inet_t *inet);
+extern int   _inetdrv_get_MAC          (inet_t *inet, u8_t MAC[6]);
 
 /*==============================================================================
   Local objects
@@ -80,7 +79,7 @@ static bool initialized;
 static const u32_t ACCESS_TIMEOUT = 10000;
 static const u32_t DHCP_TIMEOUT   = 5000;
 static const u32_t INIT_TIMEOUT   = 5000;
-static const u32_t INPUT_TIMEOUT  = 5000;
+static const u32_t INPUT_TIMEOUT  = 1000;
 static const u32_t LINK_POLL_TIME = 250;
 
 /*==============================================================================
@@ -132,9 +131,11 @@ static bool is_init_done(inet_t *inet)
 //==============================================================================
 static void restore_configuration(inet_t *inet)
 {
+        int err;
         bool was_DHCP;
         ip_addr_t ip_addr, gw, netmask;
 
+        printk("INET: Link disconnected");
         inet->disconnected = true;
 
         if ((DHCP_get_state(inet) != DHCP_STATE_OFF)) {
@@ -142,9 +143,9 @@ static void restore_configuration(inet_t *inet)
                 dhcp_stop(&inet->netif);
                 was_DHCP = true;
         } else {
-                ip_addr = inet->netif.ip_addr;
-                gw      = inet->netif.gw;
-                netmask = inet->netif.netmask;
+                ip_addr  = inet->netif.ip_addr;
+                gw       = inet->netif.gw;
+                netmask  = inet->netif.netmask;
                 was_DHCP = false;
         }
 
@@ -152,11 +153,29 @@ static void restore_configuration(inet_t *inet)
 
         if (sys_mutex_lock(inet->access, _MAX_DELAY_MS) == ESUCC) {
 
-                while (!_inetdrv_is_link_connected(inet)) {
-                        sys_msleep(LINK_POLL_TIME);
+                while (true) {
+                        _inetdrv_get_MAC(inet, inet->netif.hwaddr);
+
+                        if (_inetdrv_is_link_connected(inet)) {
+                                inet->disconnected = false;
+                                printk("INET: Link connected");
+                                break;
+                        } else {
+                                sys_sleep_ms(LINK_POLL_TIME);
+                        }
+
+                        if (not inet->thread_run) {
+                                return;
+                        }
                 }
 
-                inet->disconnected = false;
+                err = sys_ioctl(inet->if_file, IOCTL_ETH__STOP);
+                if (err) printk("INET: ETH stop fail (%d)", err);
+
+                _inetdrv_get_MAC(inet, inet->netif.hwaddr);
+
+                err = sys_ioctl(inet->if_file, IOCTL_ETH__START);
+                if (err) printk("INET: ETH start fail (%d)", err);
 
                 if (inet->configured) {
                         if (was_DHCP) {
@@ -168,6 +187,24 @@ static void restore_configuration(inet_t *inet)
 
                 sys_mutex_unlock(inet->access);
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Check if MAC address is set.
+ *
+ * @param  inet         inet instance
+ *
+ * @return True if MAC set, otherwise false.
+ */
+//==============================================================================
+bool is_mac_set(inet_t *inet)
+{
+        for (size_t i = 0; i < ARRAY_SIZE(inet->netif.hwaddr); i++) {
+                if (inet->netif.hwaddr[i]) return true;
+        }
+
+        return false;
 }
 
 //==============================================================================
@@ -198,35 +235,25 @@ static int network_interface_thread(void *arg)
                 sys_msleep(1000);
         }
 
-        /* initialize interface */
-        if (_inetdrv_hardware_init(inet) == ESUCC) {
+        while (inet->thread_run) {
 
-                inet->ready = true;
-
-                while (inet->thread_run && inet->disconnected) {
-                        sys_msleep(100);
-                        inet->disconnected = not _inetdrv_is_link_connected(inet);
-                }
-
-                while (inet->thread_run) {
+                inet->disconnected = not _inetdrv_is_link_connected(inet);
+                if (inet->disconnected or not is_mac_set(inet)) {
+                        inet->ready = false;
+                        restore_configuration(inet);
+                        sys_sleep_ms(500);
+                } else {
+                        inet->ready = true;
                         _inetdrv_handle_input(inet, INPUT_TIMEOUT);
-
-                        inet->disconnected = not _inetdrv_is_link_connected(inet);
-                        if (inet->disconnected) {
-                                restore_configuration(inet);
-                        }
                 }
-
-                _inetdrv_hardware_deinit(inet);
         }
 
-        // error occurred
         return -1;
 }
 
 //==============================================================================
 /**
- * @brief Function createNETM_INET_IPv4_t address from lwIP address.
+ * @brief Function create NETM_INET_IPv4_t address from lwIP address.
  * @param addr          INET address
  * @param lwip_addr     lwIP address
  */

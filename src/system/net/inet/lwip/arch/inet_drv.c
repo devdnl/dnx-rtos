@@ -61,73 +61,6 @@
 /*==============================================================================
   Function definitions
 ==============================================================================*/
-//==============================================================================
-/**
- * @brief  Function initializes hardware interface.
- *         The function should be used to initialize interface parameters like
- *         MAC address, etc. By using this function the network interface should
- *         be started.
- *
- * @param  inet         inet container
- *
- * @return One of @ref errno value.
- *
- * @note   Called from network interface thread.
- */
-//==============================================================================
-int _inetdrv_hardware_init(inet_t *inet)
-{
-        int err;
-        ETH_status_t status;
-
-        /* wait for Ethernet interface to be configured */
-        while (true) {
-                err = sys_ioctl(inet->if_file, IOCTL_ETH__GET_STATUS, &status);
-                if (!err) {
-                        if (status.configured) {
-                                break;
-                        } else {
-                                sys_sleep_ms(500);
-                        }
-                } else {
-                        LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_init: MAC get fail\n"));
-                        return err;
-                }
-        }
-
-        /* copy MAC address to lwip library */
-        memcpy(inet->netif.hwaddr, status.MAC, sizeof(inet->netif.hwaddr));
-
-        /* start Ethernet interface */
-        err = sys_ioctl(inet->if_file, IOCTL_ETH__START);
-        if (err) {
-                LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_init: start fail\n"));
-                return err;
-        }
-
-        return err;
-}
-
-//==============================================================================
-/**
- * @brief  Function de-initialize configured network interface.
- *
- * @param  inet         inet container
- *
- * @return One of @ref errno value.
- *
- * @note   Called from network interface thread.
- */
-//==============================================================================
-int _inetdrv_hardware_deinit(inet_t *inet)
-{
-        int err = sys_ioctl(inet->if_file, IOCTL_ETH__STOP);
-        if (err) {
-                LWIP_DEBUGF(LWIP_DBG_LEVEL_SERIOUS, ("_inetdrv_hardware_deinit: stop fail\n"));
-        }
-
-        return err;
-}
 
 //==============================================================================
 /**
@@ -151,7 +84,7 @@ void _inetdrv_handle_input(inet_t *inet, u32_t timeout)
 {
         sys_ioctl(inet->if_file, IOCTL_ETH__SET_RX_TIMEOUT, &timeout);
 
-        while (true) {
+        while (inet->thread_run) {
                 ETH_packet_t pkt;
                 pkt.payload = inet->frame;
                 pkt.length  = sizeof(inet->frame);
@@ -231,8 +164,6 @@ err_t _inetdrv_handle_output(struct netif *netif, struct pbuf *p)
  * @param  inet                 inet container
  *
  * @return If link is connected then true is returned, otherwise false.
- *
- * @note   Called at system startup.
  */
 //==============================================================================
 bool _inetdrv_is_link_connected(inet_t *inet)
@@ -244,6 +175,28 @@ bool _inetdrv_is_link_connected(inet_t *inet)
         } else {
                 return false;
         }
+}
+
+//==============================================================================
+/**
+ * @brief  Function return MAC address.
+ *
+ * @param  inet                 inet container
+ * @param  MAC                  MAC address buffer
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+int _inetdrv_get_MAC(inet_t *inet, u8_t MAC[6])
+{
+        ETH_status_t status;
+        int err = sys_ioctl(inet->if_file, IOCTL_ETH__GET_STATUS, &status);
+        if (!err) {
+                memcpy(MAC, status.MAC, sizeof(status.MAC));
+                return 0;
+        }
+
+        return err;
 }
 
 /*==============================================================================

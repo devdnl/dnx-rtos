@@ -62,7 +62,10 @@ extern "C" {
 #define __HAL_UNLOCK(heth)              (heth->Lock = HAL_UNLOCKED)
 #define __HAL_LOCK(heth)                (heth->Lock = HAL_LOCKED)
 #define __weak                          __attribute__ ((weak))
+
+#ifndef UNUSED
 #define UNUSED(_x)                      UNUSED_ARG1(_x)
+#endif
 
 /* Definition of the Ethernet driver buffers size and count */
 #define ETH_RX_BUF_SIZE                 ETH_MAX_PACKET_SIZE /* buffer size for receive               */
@@ -71,7 +74,7 @@ extern "C" {
 /* RX & TX buffers alignment to CPU cache lines (size align) */
 #define ETH_RX_BUFFER_SIZE              (1536UL)
 #define ETH_ALIGN_MASK                  (ETH_CPU_CACHE_ALIGN - 1)
-#define ETH_RX_BUF_SIZE_ALIGN           ((ETH_RX_BUFFER_SIZE + ETH_ALIGN_MASK) & ~ETH_ALIGN_MASK)
+#define ETH_RX_BUF_SIZE_ALIGN           ((ETH_RX_BUFFER_SIZE + sizeof(uint32_t) + ETH_ALIGN_MASK) & ~ETH_ALIGN_MASK)
 #define ETH_TX_BUF_SIZE_ALIGN           ((ETH_RX_BUFFER_SIZE + ETH_ALIGN_MASK) & ~ETH_ALIGN_MASK)
 
 /* Section 2: PHY configuration section */

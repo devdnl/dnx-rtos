@@ -56,19 +56,19 @@ extern "C" {
   Exported object types
 ==============================================================================*/
 typedef struct {
-        kmtx_t         *access;
-        kfile_t           *if_file;
-        tid_t           if_thread;
-        struct netif    netif;
-        uint            rx_packets;
-        uint            tx_packets;
-        uint            rx_bytes;
-        uint            tx_bytes;
-        bool            ready:1;
-        bool            disconnected:1;
-        bool            configured:1;
-        bool            thread_run:1;
-        u8_t            frame[ETH_MAX_PACKET_SIZE];
+        kmtx_t       *access;
+        kfile_t      *if_file;
+        tid_t        if_thread;
+        struct netif netif;
+        uint         rx_packets;
+        uint         tx_packets;
+        uint         rx_bytes;
+        uint         tx_bytes;
+        bool         ready:1;
+        bool         disconnected:1;
+        bool         configured:1;
+        bool         thread_run:1;
+        u8_t         frame[IOCTL_ETH_MAX_PACKET_SIZE];
 } inet_t;
 
 /*==============================================================================

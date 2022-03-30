@@ -48,13 +48,6 @@ this:AddExtraWidget("Label", "LabelGeneral", "General", -1, "bold")
 this:AddExtraWidget("Void", "VoidGeneral")
 ++*/
 /*--
-this:AddWidget("Combobox", "Hardware checksum")
-this:AddItem("No", "ETH_CHECKSUM_BY_SOFTWARE")
-this:AddItem("Yes", "ETH_CHECKSUM_BY_HARDWARE")
---*/
-#define __ETH_CHECKSUM_BY_HARDWARE__ ETH_CHECKSUM_BY_HARDWARE
-
-/*--
 this:AddWidget("Combobox", "Link speed")
 this:AddItem("10 Mbps", "ETH_SPEED_10M")
 this:AddItem("100 Mbps", "ETH_SPEED_100M")
@@ -62,13 +55,13 @@ this:AddItem("100 Mbps", "ETH_SPEED_100M")
 #define __ETH_SPEED__ ETH_SPEED_100M
 
 /*--
-this:AddWidget("Spinbox", 3, 256, "Number of RX buffers")
+this:AddWidget("Spinbox", 4, 256, "Number of RX buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
 #define __ETH_RXBUFNB__ 10
 
 /*--
-this:AddWidget("Spinbox", 2, 256, "Number of Tx buffers")
+this:AddWidget("Spinbox", 4, 256, "Number of Tx buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
 #define __ETH_TXBUFNB__ 10

@@ -161,8 +161,8 @@ extern "C" {
 /**
  * Max packet size
  */
-#ifndef ETH_MAX_PACKET_SIZE
-#define ETH_MAX_PACKET_SIZE                     1524U
+#ifndef IOCTL_ETH_MAX_PACKET_SIZE
+#define IOCTL_ETH_MAX_PACKET_SIZE               1524U
 #endif
 
 /**
