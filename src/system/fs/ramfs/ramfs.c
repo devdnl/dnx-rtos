@@ -925,19 +925,15 @@ API_FS_WRITE(ramfs,
                         err = sys_driver_write(dev, src, count, fpos, wrcnt, fattr);
 
                 } else if (S_ISFIFO(node->mode)) {
-                        err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-                        if (!err) {
-                                pipe_t *pipe = node->data.pipe_t;
+                        pipe_t *pipe = node->data.pipe_t;
 
-                                err = sys_pipe_write(pipe, src, count, wrcnt, fattr.non_blocking_wr);
-                                if (!err) {
-                                        if (*wrcnt > 0) {
-                                                size_t size = 0;
-                                                err = sys_pipe_get_length(pipe, &size);
-                                                node->size = size;
-                                        }
+                        err = sys_pipe_write(pipe, src, count, wrcnt, fattr.non_blocking_wr);
+                        if (!err) {
+                                if (*wrcnt > 0) {
+                                        size_t size = 0;
+                                        err = sys_pipe_get_length(pipe, &size);
+                                        node->size = size;
                                 }
-                                sys_mutex_unlock(hdl->resource_mtx);
                         }
 
                 } else if (S_ISREG(node->mode)) {
@@ -989,19 +985,15 @@ API_FS_READ(ramfs,
                         err = sys_driver_read(dev, dst, count, fpos, rdcnt, fattr);
 
                 } else if (S_ISFIFO(node->mode)) {
-                        err = sys_mutex_lock(hdl->resource_mtx, MTX_TIMEOUT);
-                        if (!err) {
-                                pipe_t *pipe = node->data.pipe_t;
+                        pipe_t *pipe = node->data.pipe_t;
 
-                                err = sys_pipe_read(pipe, dst, count, rdcnt, fattr.non_blocking_rd);
-                                if (!err) {
-                                        if (*rdcnt > 0) {
-                                                size_t size;
-                                                err = sys_pipe_get_length(pipe, &size);
-                                                node->size = size;
-                                        }
+                        err = sys_pipe_read(pipe, dst, count, rdcnt, fattr.non_blocking_rd);
+                        if (!err) {
+                                if (*rdcnt > 0) {
+                                        size_t size;
+                                        err = sys_pipe_get_length(pipe, &size);
+                                        node->size = size;
                                 }
-                                sys_mutex_unlock(hdl->resource_mtx);
                         }
 
                 } else if (S_ISREG(node->mode)) {

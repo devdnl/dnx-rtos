@@ -990,6 +990,8 @@ int main(int argc, char *argv[])
                 }
 
                 if (is_clear_cmd(cmd)) {
+                        const char *clear = VT100_CLEAR_SCREEN;
+                        fwrite(clear, 1, strlen(clear), stdout);
                         ioctl(fileno(stdout), IOCTL_TTY__CLEAR_SCR);
                         continue;
                 }
