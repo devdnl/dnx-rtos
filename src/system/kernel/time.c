@@ -147,6 +147,7 @@ int _gettime(struct timeval *timeval)
 
                         if (!err) {
                                 simulate_usec(timeval);
+                                _vfs_fseek(RTC, 0, VFS_SEEK_SET);
                         }
                 }
         }
