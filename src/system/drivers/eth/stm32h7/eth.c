@@ -101,6 +101,7 @@ static int eth_flush(struct eth *hdl);
 static int packet_receive(struct eth *hdl, ETH_packet_t *pkt);
 static int packet_send(struct eth *hdl, const ETH_packet_t *pkt);
 static void update_dropped_rx_frames(struct eth *hdl);
+static int configure_PHY(struct eth *hdl);
 
 /*==============================================================================
   Local objects
@@ -487,8 +488,6 @@ static int eth_start(struct eth *hdl)
         if (!err) {
                 if (not hdl->run and hdl->configured) {
 
-                        const ETH_config_t *conf = &hdl->config;
-
                         HAL_ETH_DeInit(&hdl->eth);
 
                         hdl->eth.Instance = ETH;
@@ -497,36 +496,15 @@ static int eth_start(struct eth *hdl)
                         hdl->eth.Init.TxDesc = hdl->DMA_tx_desc;
                         hdl->eth.Init.RxBuffLen = ETH_RX_BUFFER_SIZE;
 
-                        while (true) {
-                                err = HAL_ETH_Init(&hdl->eth);
+                        err = HAL_ETH_Init(&hdl->eth);
+                        if (!err) {
+                                err = configure_PHY(hdl);
                                 if (!err) {
-                                        // TODO PHY configuration
-
-                        // TODO other settings
-//                        hdl->eth.Init.AutoNegotiation = conf->auto_negotiation ? ETH_AUTONEGOTIATION_ENABLE : ETH_AUTONEGOTIATION_DISABLE;
-//                        hdl->eth.Init.Speed = (conf->speed == ETH_SPEED__100Mbps) ? ETH_SPEED_100M : ETH_SPEED_10M;
-//                        hdl->eth.Init.DuplexMode = (conf->duplex == ETH_DUPLEX__FULL) ? ETH_MODE_FULLDUPLEX : ETH_MODE_HALFDUPLEX;
-//                        hdl->eth.Init.RxMode = ETH_RXINTERRUPT_MODE;
-
-                                        ETH_MACConfigTypeDef MACConf;
-                                        HAL_ETH_GetMACConfig(&hdl->eth, &MACConf);
-
-                                        MACConf.Speed = (conf->speed == ETH_SPEED__100Mbps) ? ETH_SPEED_100M : ETH_SPEED_10M;
-                                        MACConf.DuplexMode = (conf->duplex == ETH_DUPLEX__FULL) ? ETH_FULLDUPLEX_MODE : ETH_HALFDUPLEX_MODE;
-                                        HAL_ETH_SetMACConfig(&hdl->eth, &MACConf);
-
                                         err = HAL_ETH_Start_IT(&hdl->eth);
                                         if (!err) {
                                                 hdl->run = true;
                                         }
-
-                                } else if (err and conf->auto_negotiation) {
-                                        printk("ETH: disabling auto-negotiation");
-//                                        hdl->eth.Init.AutoNegotiation = ETH_AUTONEGOTIATION_DISABLE; // TODO
-                                        continue;
                                 }
-
-                                break;
                         }
 
                         printk("ETH: start %s (%d)", err ? "fail" : "success", err);
@@ -723,8 +701,6 @@ static int packet_send(struct eth *hdl, const ETH_packet_t *pkt)
 
                 err = HAL_ETH_Transmit(&hdl->eth, &tx_config, hdl->tx_timeout_ms);
 
-//                printk("Send packet: %d, %lu\n", err, hdl->eth.TxDescList.CurTxDesc); // TEST
-
                 /* update statistics */
                 update_dropped_rx_frames(hdl);
                 hdl->stats.tx_packets++;
@@ -763,8 +739,6 @@ static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
                                 size_t length = *rx_buff;
                                 uint8_t *buffer = cast(typeof(buffer), &rx_buff[1]);
 
-//                                printk("recv %p:%lu", buffer, length); // TEST
-
                                 _cpuctl_invalidate_dcache_by_addr((uint32_t*)buffer, length);
                                 memcpy(pkt->payload, buffer, min(pkt->length, length));
 
@@ -789,6 +763,105 @@ static int packet_receive(struct eth *hdl, ETH_packet_t *pkt)
                 }
 
                 break;
+        }
+
+        return err;
+}
+
+//==============================================================================
+/**
+ * @brief  PHY configuration.
+ *
+ * @param  hdl          driver handle
+ *
+ * @return On success 0 is returned.
+ */
+//==============================================================================
+static int configure_PHY(struct eth *hdl)
+{
+        enum ETH_speed  speed  = hdl->config.speed;
+        enum ETH_duplex duplex = hdl->config.duplex;
+        uint32_t phyreg;
+
+        int err = HAL_ETH_WritePHYRegister(&hdl->eth, __ETH_PHY_ADDRESS__, PHY_BCR, PHY_RESET);
+        if (err) goto phy_conf;
+
+        /* Delay to assure PHY reset */
+        sys_sleep_ms(PHY_RESET_DELAY);
+
+        if (hdl->config.auto_negotiation) {
+
+                clock_t tref = sys_get_uptime_ms();
+
+                /* We wait for linked status */
+                do {
+                        sys_sleep_ms(50);
+
+                        HAL_ETH_ReadPHYRegister(&hdl->eth, __ETH_PHY_ADDRESS__, PHY_BSR, &phyreg);
+
+                        if (sys_is_time_expired(tref, 5000)) {
+                                err = ETIME;
+                                goto phy_conf;
+                        }
+
+                } while (((phyreg & PHY_LINKED_STATUS) != PHY_LINKED_STATUS));
+
+
+                /* Enable Auto-Negotiation */
+                err = HAL_ETH_WritePHYRegister(&hdl->eth, __ETH_PHY_ADDRESS__, PHY_BCR, PHY_AUTONEGOTIATION);
+                if (err) goto phy_conf;
+
+                /* Get tick */
+                tref = sys_get_uptime_ms();
+
+                printk("ETH: auto-negotiation in progress...");
+
+                /* Wait until the auto-negotiation will be completed */
+                do {
+                        HAL_ETH_ReadPHYRegister(&hdl->eth, __ETH_PHY_ADDRESS__, PHY_BSR, &phyreg);
+
+                        /* Check for the Timeout */
+                        if (sys_is_time_expired(tref, 1000)) {
+                                printk("ETH: auto-negotiation timeout.");
+                                err = ETIME;
+                                goto phy_conf;
+                        }
+
+                } while (((phyreg & PHY_AUTONEGO_COMPLETE) != PHY_AUTONEGO_COMPLETE));
+
+                /* Read the result of the auto-negotiation */
+                err = HAL_ETH_ReadPHYRegister(&hdl->eth, __ETH_PHY_ADDRESS__, PHY_SR, &phyreg);
+                if (err) {
+                        printk("ETH: auto-negotiation read result error.");
+                        goto phy_conf;
+                }
+
+                /* Configure the MAC with the Duplex Mode fixed by the auto-negotiation process */
+                duplex = (phyreg & PHY_DUPLEX_STATUS) ? ETH_DUPLEX__FULL  : ETH_DUPLEX__HALF;
+                speed  = (phyreg & PHY_SPEED_STATUS)  ? ETH_SPEED__10Mbps : ETH_SPEED__100Mbps;
+
+                printk("ETH: auto-negotiated parameters: %d Mbps/%s Duplex.",
+                       (speed  == ETH_SPEED__10Mbps) ? 10 : 100,
+                       (duplex == ETH_DUPLEX__HALF)  ? "Half" : "Full");
+
+                err = ESUCC;
+        }
+
+        phy_conf:
+        if (err) {
+                err = HAL_ETH_WritePHYRegister(&eth->eth, __ETH_PHY_ADDRESS__, PHY_BCR,
+                                               (speed << 13) | (duplex << 8));
+                HAL_Delay(PHY_CONFIG_DELAY);
+        }
+
+        if (!err) {
+                ETH_MACConfigTypeDef MACConf;
+                HAL_ETH_GetMACConfig(&hdl->eth, &MACConf);
+
+                MACConf.Speed = (speed == ETH_SPEED__100Mbps) ? ETH_SPEED_100M : ETH_SPEED_10M;
+                MACConf.DuplexMode = (duplex == ETH_DUPLEX__FULL) ? ETH_FULLDUPLEX_MODE : ETH_HALFDUPLEX_MODE;
+
+                HAL_ETH_SetMACConfig(&hdl->eth, &MACConf);
         }
 
         return err;
@@ -932,8 +1005,6 @@ void HAL_ETH_WakeUpCallback(ETH_HandleTypeDef *heth)
 //==============================================================================
 void HAL_ETH_RxAllocateCallback(uint8_t **buff)
 {
-//        printk("Rx Desc Idx: %lu", eth->eth.RxDescList.RxDescIdx); // TEST
-
         *buff = eth->rx_buff
               + (eth->eth.RxDescList.RxDescIdx * ETH_RX_BUF_SIZE_ALIGN)
               + sizeof(uint32_t); // first 4 bytes used for packet length
@@ -952,8 +1023,6 @@ void HAL_ETH_RxAllocateCallback(uint8_t **buff)
 void HAL_ETH_RxLinkCallback(void **pStart, void **pEnd, uint8_t *buff, uint16_t Length)
 {
         UNUSED_ARG1(pEnd);
-
-//        printk("%s(): %p-%p, %p:%u", __func__, *pStart, *pEnd, buff, Length);
 
         uint32_t *rx_buff = cast(void*, (buff - sizeof(uint32_t)));
         *rx_buff = Length;
