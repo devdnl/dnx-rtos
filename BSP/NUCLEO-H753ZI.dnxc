@@ -12,7 +12,7 @@
 			};
 			[3]={
 				["key"]="__ENABLE_AFM__";
-				["value"]="_NO_";
+				["value"]="_YES_";
 			};
 			[4]={
 				["key"]="__ENABLE_CLK__";
@@ -28,7 +28,7 @@
 			};
 			[7]={
 				["key"]="__ENABLE_ETH__";
-				["value"]="_NO_";
+				["value"]="_YES_";
 			};
 			[8]={
 				["key"]="__ENABLE_SPI__";
@@ -84,7 +84,7 @@
 			};
 			[21]={
 				["key"]="__ENABLE_DMA__";
-				["value"]="_NO_";
+				["value"]="_YES_";
 			};
 			[22]={
 				["key"]="__ENABLE_DCI__";
@@ -161,6 +161,140 @@
 			[1]={
 				["key"]="__ZERO_CFG_EXAMPLE__";
 				["value"]="_NO_";
+			};
+		};
+		["arch/stm32h7/afm_flags.h"]={
+			[1]={
+				["key"]="__AFM_PC3SO__";
+				["value"]="(0 << SYSCFG_PMCR_PC3SO_Pos)";
+			};
+			[2]={
+				["key"]="__AFM_PC2SO__";
+				["value"]="(0 << SYSCFG_PMCR_PC2SO_Pos)";
+			};
+			[3]={
+				["key"]="__AFM_PA1SO__";
+				["value"]="(0 << SYSCFG_PMCR_PA1SO_Pos)";
+			};
+			[4]={
+				["key"]="__AFM_PA0SO__";
+				["value"]="(0 << SYSCFG_PMCR_PA0SO_Pos)";
+			};
+			[5]={
+				["key"]="__AFM_MII_RMII_SEL__";
+				["value"]="(4 << SYSCFG_PMCR_EPIS_SEL_Pos)";
+			};
+			[6]={
+				["key"]="__AFM_BOOSTVDDSEL__";
+				["value"]="(0 << SYSCFG_PMCR_BOOSTVDDSEL_Pos)";
+			};
+			[7]={
+				["key"]="__AFM_BOOSTEREN__";
+				["value"]="(0 << SYSCFG_PMCR_BOOSTEN_Pos)";
+			};
+			[8]={
+				["key"]="__AFM_PB9_FMP__";
+				["value"]="(0 << SYSCFG_PMCR_I2C_PB9_FMP_Pos)";
+			};
+			[9]={
+				["key"]="__AFM_PB8_FMP__";
+				["value"]="(0 << SYSCFG_PMCR_I2C_PB8_FMP_Pos)";
+			};
+			[10]={
+				["key"]="__AFM_PB7_FMP__";
+				["value"]="(0 << SYSCFG_PMCR_I2C_PB7_FMP_Pos)";
+			};
+			[11]={
+				["key"]="__AFM_PB6_FMP__";
+				["value"]="(0 << SYSCFG_PMCR_I2C_PB6_FMP_Pos)";
+			};
+			[12]={
+				["key"]="__AFM_I2C4_FMP__";
+				["value"]="(0 << SYSCFG_PMCR_I2C4_FMP_Pos)";
+			};
+			[13]={
+				["key"]="__AFM_I2C3_FMP__";
+				["value"]="(0 << SYSCFG_PMCR_I2C3_FMP_Pos)";
+			};
+			[14]={
+				["key"]="__AFM_I2C2_FMP__";
+				["value"]="(0 << SYSCFG_PMCR_I2C2_FMP_Pos)";
+			};
+			[15]={
+				["key"]="__AFM_I2C1_FMP__";
+				["value"]="(0 << SYSCFG_PMCR_I2C1_FMP_Pos)";
+			};
+			[16]={
+				["key"]="__AFM_AXISRAML__";
+				["value"]="(0 << SYSCFG_CFGR_AXISRAML_Pos)";
+			};
+			[17]={
+				["key"]="__AFM_ITCML__";
+				["value"]="(0 << SYSCFG_CFGR_ITCML_Pos)";
+			};
+			[18]={
+				["key"]="__AFM_DTCML__";
+				["value"]="(0 << SYSCFG_CFGR_DTCML_Pos)";
+			};
+			[19]={
+				["key"]="__AFM_SRAM1L__";
+				["value"]="(0 << SYSCFG_CFGR_SRAM1L_Pos)";
+			};
+			[20]={
+				["key"]="__AFM_SRAM2L__";
+				["value"]="(0 << SYSCFG_CFGR_SRAM2L_Pos)";
+			};
+			[21]={
+				["key"]="__AFM_SRAM3L__";
+				["value"]="(0 << SYSCFG_CFGR_SRAM3L_Pos)";
+			};
+			[22]={
+				["key"]="__AFM_SRAM4L__";
+				["value"]="(0 << SYSCFG_CFGR_SRAM4L_Pos)";
+			};
+			[23]={
+				["key"]="__AFM_BKRAML__";
+				["value"]="(0 << SYSCFG_CFGR_BKRAML_Pos)";
+			};
+			[24]={
+				["key"]="__AFM_CM7L__";
+				["value"]="(0 << SYSCFG_CFGR_CM7L_Pos)";
+			};
+			[25]={
+				["key"]="__AFM_FLASHL__";
+				["value"]="(0 << SYSCFG_CFGR_FLASHL_Pos)";
+			};
+			[26]={
+				["key"]="__AFM_PVDL__";
+				["value"]="(0 << SYSCFG_CFGR_PVDL_Pos)";
+			};
+			[27]={
+				["key"]="__AFM_HSLV__";
+				["value"]="(0 << SYSCFG_CCCSR_HSLV_Pos)";
+			};
+			[28]={
+				["key"]="__AFM_CS__";
+				["value"]="(0 << SYSCFG_CCCSR_CS_Pos)";
+			};
+			[29]={
+				["key"]="__AFM_PCC__";
+				["value"]="0";
+			};
+			[30]={
+				["key"]="__AFM_NCC__";
+				["value"]="0";
+			};
+			[31]={
+				["key"]="__AFM_CMP_EN__";
+				["value"]="(0 << SYSCFG_CCCSR_EN_Pos)";
+			};
+			[32]={
+				["key"]="__AFM_D1SBRST__";
+				["value"]="(0 << SYSCFG_UR13_D1SBRST_Pos)";
+			};
+			[33]={
+				["key"]="__AFM_D1STPRST__";
+				["value"]="(0 << SYSCFG_UR14_D1STPRST_Pos)";
 			};
 		};
 		["arch/stm32h7/clk_flags.h"]={
@@ -487,24 +621,74 @@
 				["value"]="_YES_";
 			};
 			[9]={
-				["key"]="__CPU_ICACHE_ENABLE__";
+				["key"]="__CPU_SHOW_AND_CLEAR_RESET_SOURCE__";
 				["value"]="_YES_";
 			};
 			[10]={
+				["key"]="__CPU_ICACHE_ENABLE__";
+				["value"]="_YES_";
+			};
+			[11]={
 				["key"]="__CPU_DCACHE_ENABLE__";
 				["value"]="_NO_";
 			};
-			[11]={
+			[12]={
 				["key"]="__CPU_VTOR_TAB_POSITION__";
 				["value"]="0x00000";
 			};
-			[12]={
+			[13]={
 				["key"]="__CUSTOM_LD_SCRIPT__";
 				["value"]="_NO_";
 			};
-			[13]={
+			[14]={
 				["key"]="__CUSTOM_LD_SCRIPT_FILE__";
 				["value"]="\"./config/custom_script.ld\"";
+			};
+		};
+		["arch/stm32h7/eth_flags.h"]={
+			[1]={
+				["key"]="__ETH_SPEED__";
+				["value"]="ETH_SPEED_100M";
+			};
+			[2]={
+				["key"]="__ETH_RXBUFNB__";
+				["value"]="10";
+			};
+			[3]={
+				["key"]="__ETH_TXBUFNB__";
+				["value"]="10";
+			};
+			[4]={
+				["key"]="__ETH_DEVICE__";
+				["value"]="LAN8742A";
+			};
+			[5]={
+				["key"]="__ETH_PHY_SR__";
+				["value"]="31";
+			};
+			[6]={
+				["key"]="__ETH_PHY_SPEED_STATUS_BM__";
+				["value"]="0x0004";
+			};
+			[7]={
+				["key"]="__ETH_PHY_DUPLEX_STATUS_BM__";
+				["value"]="0x0010";
+			};
+			[8]={
+				["key"]="__ETH_PHY_ADDRESS__";
+				["value"]="0";
+			};
+			[9]={
+				["key"]="__ETH_PHY_RESET_DELAY__";
+				["value"]="250";
+			};
+			[10]={
+				["key"]="__ETH_PHY_CONFIG_DELAY__";
+				["value"]="500";
+			};
+			[11]={
+				["key"]="__ETH_PHY_AUTONEGOTIATION__";
+				["value"]="ETH_AUTONEGOTIATION_ENABLE";
 			};
 		};
 		["arch/stm32h7/gpio_flags.h"]={
@@ -530,19 +714,19 @@
 			};
 			[6]={
 				["key"]="__GPIO_PA_PIN_1_NAME__";
-				["value"]="PA1_NC";
+				["value"]="ETH_RMII_REF_CLK";
 			};
 			[7]={
 				["key"]="__GPIO_PA_PIN_1_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[8]={
 				["key"]="__GPIO_PA_PIN_1_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[9]={
 				["key"]="__GPIO_PA_PIN_1_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[10]={
 				["key"]="__GPIO_PA_PIN_1_STATE__";
@@ -550,19 +734,19 @@
 			};
 			[11]={
 				["key"]="__GPIO_PA_PIN_2_NAME__";
-				["value"]="PA2_NC";
+				["value"]="ETH_MDIO";
 			};
 			[12]={
 				["key"]="__GPIO_PA_PIN_2_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[13]={
 				["key"]="__GPIO_PA_PIN_2_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[14]={
 				["key"]="__GPIO_PA_PIN_2_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[15]={
 				["key"]="__GPIO_PA_PIN_2_STATE__";
@@ -650,19 +834,19 @@
 			};
 			[36]={
 				["key"]="__GPIO_PA_PIN_7_NAME__";
-				["value"]="PA7_NC";
+				["value"]="ETH_RMII_RX_DV";
 			};
 			[37]={
 				["key"]="__GPIO_PA_PIN_7_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[38]={
 				["key"]="__GPIO_PA_PIN_7_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[39]={
 				["key"]="__GPIO_PA_PIN_7_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[40]={
 				["key"]="__GPIO_PA_PIN_7_STATE__";
@@ -1090,19 +1274,19 @@
 			};
 			[146]={
 				["key"]="__GPIO_PB_PIN_13_NAME__";
-				["value"]="PB13_NC";
+				["value"]="ETH_RMII_TXD1";
 			};
 			[147]={
 				["key"]="__GPIO_PB_PIN_13_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[148]={
 				["key"]="__GPIO_PB_PIN_13_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[149]={
 				["key"]="__GPIO_PB_PIN_13_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[150]={
 				["key"]="__GPIO_PB_PIN_13_STATE__";
@@ -1170,19 +1354,19 @@
 			};
 			[166]={
 				["key"]="__GPIO_PC_PIN_1_NAME__";
-				["value"]="PC1_NC";
+				["value"]="ETH_MDC";
 			};
 			[167]={
 				["key"]="__GPIO_PC_PIN_1_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[168]={
 				["key"]="__GPIO_PC_PIN_1_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[169]={
 				["key"]="__GPIO_PC_PIN_1_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[170]={
 				["key"]="__GPIO_PC_PIN_1_STATE__";
@@ -1230,19 +1414,19 @@
 			};
 			[181]={
 				["key"]="__GPIO_PC_PIN_4_NAME__";
-				["value"]="PC4_NC";
+				["value"]="ETH_RMII_RXD0";
 			};
 			[182]={
 				["key"]="__GPIO_PC_PIN_4_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[183]={
 				["key"]="__GPIO_PC_PIN_4_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[184]={
 				["key"]="__GPIO_PC_PIN_4_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[185]={
 				["key"]="__GPIO_PC_PIN_4_STATE__";
@@ -1250,19 +1434,19 @@
 			};
 			[186]={
 				["key"]="__GPIO_PC_PIN_5_NAME__";
-				["value"]="PC5_NC";
+				["value"]="ETH_RMII_RXD1";
 			};
 			[187]={
 				["key"]="__GPIO_PC_PIN_5_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[188]={
 				["key"]="__GPIO_PC_PIN_5_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[189]={
 				["key"]="__GPIO_PC_PIN_5_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[190]={
 				["key"]="__GPIO_PC_PIN_5_STATE__";
@@ -2650,19 +2834,19 @@
 			};
 			[536]={
 				["key"]="__GPIO_PG_PIN_11_NAME__";
-				["value"]="PG11_NC";
+				["value"]="ETH_RMII_TX_EN";
 			};
 			[537]={
 				["key"]="__GPIO_PG_PIN_11_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[538]={
 				["key"]="__GPIO_PG_PIN_11_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[539]={
 				["key"]="__GPIO_PG_PIN_11_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[540]={
 				["key"]="__GPIO_PG_PIN_11_STATE__";
@@ -2690,19 +2874,19 @@
 			};
 			[546]={
 				["key"]="__GPIO_PG_PIN_13_NAME__";
-				["value"]="PG13_NC";
+				["value"]="ETH_RMII_TXD0";
 			};
 			[547]={
 				["key"]="__GPIO_PG_PIN_13_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[548]={
 				["key"]="__GPIO_PG_PIN_13_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP";
 			};
 			[549]={
 				["key"]="__GPIO_PG_PIN_13_AF__";
-				["value"]="0";
+				["value"]="11";
 			};
 			[550]={
 				["key"]="__GPIO_PG_PIN_13_STATE__";
@@ -4256,6 +4440,10 @@
 				["key"]="__EEFS_LOG_ENABLE__";
 				["value"]="_NO_";
 			};
+			[2]={
+				["key"]="__EEFS_CACHE_SIZE__";
+				["value"]="8";
+			};
 		};
 		["filesystems/ext4fs_flags.h"]={
 			[1]={
@@ -4324,6 +4512,10 @@
 				["key"]="__FLATFS_LOG_ENABLE__";
 				["value"]="_NO_";
 			};
+			[2]={
+				["key"]="__FLATFS_INDEX_SIZE__";
+				["value"]="0";
+			};
 		};
 		["filesystems/ramfs_flags.h"]={
 			[1]={
@@ -4335,6 +4527,56 @@
 			[1]={
 				["key"]="__ROMFS_CFG_EXEC_FILES__";
 				["value"]="_YES_";
+			};
+		};
+		["network/cannet_flags.h"]={
+			[1]={
+				["key"]="__NETWORK_CANNET_MAX_SOCKET_BUFFER_LENGTH__";
+				["value"]="256";
+			};
+			[2]={
+				["key"]="__NETWORK_CANNET_MAX_SOCKETS__";
+				["value"]="16";
+			};
+			[3]={
+				["key"]="__NETWORK_CANNET_SEND_REPETITIONS__";
+				["value"]="3";
+			};
+			[4]={
+				["key"]="__NETWORK_CANNET_SEND_REPETITIONS_INTERVAL_MIN__";
+				["value"]="3";
+			};
+			[5]={
+				["key"]="__NETWORK_CANNET_SEND_REPETITIONS_INTERVAL_MAX__";
+				["value"]="250";
+			};
+			[6]={
+				["key"]="__NETWORK_CANNET_DEBUG_ON__";
+				["value"]="_NO_";
+			};
+		};
+		["network/network_flags.h"]={
+			[1]={
+				["key"]="__ENABLE_TCPIP_STACK__";
+				["value"]="_YES_";
+			};
+			[2]={
+				["key"]="__ENABLE_SIPC_STACK__";
+				["value"]="_NO_";
+			};
+			[3]={
+				["key"]="__ENABLE_CANNET_STACK__";
+				["value"]="_NO_";
+			};
+		};
+		["network/sipc_flags.h"]={
+			[1]={
+				["key"]="__NETWORK_SIPC_DEBUG_ON__";
+				["value"]="_NO_";
+			};
+			[2]={
+				["key"]="__NETWORK_SIPC_RECV_BUF_SIZE__";
+				["value"]="2048";
 			};
 		};
 		["network/tcpip_flags.h"]={
@@ -4963,34 +5205,6 @@
 				["value"]="LWIP_DBG_OFF";
 			};
 		};
-      ["network/network_flags.h"]={
-         [1.000000]={
-            ["key"]="__ENABLE_TCPIP_STACK__";
-            ["value"]="_NO_";
-         };
-         [2.000000]={
-            ["key"]="__ENABLE_SIPC_STACK__";
-            ["value"]="_NO_";
-         };
-         [3.000000]={
-            ["key"]="__ENABLE_CANNET_STACK__";
-            ["value"]="_NO_";
-         };
-      };
-		["network/sipc_flags.h"]={
-			[1]={
-				["key"]="__NETWORK_SIPC_INTERFACE_PATH__";
-				["value"]="\"/dev/nc\"";
-			};
-			[2]={
-				["key"]="__NETWORK_SIPC_DEBUG_ON__";
-				["value"]="_NO_";
-			};
-			[3]={
-				["key"]="__NETWORK_SIPC_RECV_BUF_SIZE__";
-				["value"]="2048";
-			};
-		};
 		["os/os_flags.h"]={
 			[1]={
 				["key"]="__OS_TASK_MIN_STACK_DEPTH__";
@@ -5122,7 +5336,7 @@
 			};
 			[33]={
 				["key"]="__OS_SYSTEM_MSG_ROWS__";
-				["value"]="24";
+				["value"]="128";
 			};
 			[34]={
 				["key"]="__OS_SYSTEM_CACHE_SYNC_PERIOD__";
