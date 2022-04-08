@@ -110,6 +110,9 @@ extern "C" {
 #define PHY_SPEED_STATUS                ((uint16_t)__ETH_PHY_SPEED_STATUS_BM__)  /*!< PHY Speed mask                                  */
 #define PHY_DUPLEX_STATUS               ((uint16_t)__ETH_PHY_DUPLEX_STATUS_BM__)  /*!< PHY Duplex mask                                 */
 
+#define CM7_CPUID                       ((uint32_t)0x00000003)
+#define CM4_CPUID                       ((uint32_t)0x00000001)
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
@@ -141,6 +144,19 @@ static inline uint32_t HAL_RCC_GetHCLKFreq(void)
         LL_RCC_ClocksTypeDef freq;
         LL_RCC_GetSystemClocksFreq(&freq);
         return freq.HCLK_Frequency;
+}
+
+/**
+  * @brief  Returns the current CPU ID.
+  * @retval CPU identifier
+  */
+static inline uint32_t HAL_GetCurrentCPUID(void)
+{
+        if (((SCB->CPUID & 0x000000F0U) >> 4 ) == 0x7U) {
+                return  CM7_CPUID;
+        } else {
+                return CM4_CPUID;
+        }
 }
 
 #endif

@@ -38,22 +38,52 @@
 /*==============================================================================
   Local symbolic constants/macros
 ==============================================================================*/
-#define TIMEOUT_MS                      250
-#define LSE_TIMEOUT_MS                  5000
+#define TIMEOUT_MS                              250
+#define LSE_TIMEOUT_MS                          5000
 
-#define PWR_REGULATOR_VOLTAGE_SCALE0    (0)
-#define PWR_REGULATOR_VOLTAGE_SCALE1    ((1*PWR_D3CR_VOS_1) | (1*PWR_D3CR_VOS_0))
-#define PWR_REGULATOR_VOLTAGE_SCALE2    ((1*PWR_D3CR_VOS_1) | (0*PWR_D3CR_VOS_0))
-#define PWR_REGULATOR_VOLTAGE_SCALE3    ((0*PWR_D3CR_VOS_1) | (1*PWR_D3CR_VOS_0))
+#if defined(PWR_SRDCR_VOS)
+#define PWR_REGULATOR_VOLTAGE_SCALE0            (PWR_SRDCR_VOS_1 | PWR_SRDCR_VOS_0)
+#define PWR_REGULATOR_VOLTAGE_SCALE1            (PWR_SRDCR_VOS_1)
+#define PWR_REGULATOR_VOLTAGE_SCALE2            (PWR_SRDCR_VOS_0)
+#define PWR_REGULATOR_VOLTAGE_SCALE3            (0U)
+#else
+#define PWR_REGULATOR_VOLTAGE_SCALE0            (0U)
+#define PWR_REGULATOR_VOLTAGE_SCALE1            (PWR_D3CR_VOS_1 | PWR_D3CR_VOS_0)
+#define PWR_REGULATOR_VOLTAGE_SCALE2            (PWR_D3CR_VOS_1)
+#define PWR_REGULATOR_VOLTAGE_SCALE3            (PWR_D3CR_VOS_0)
+#endif
 
-#define FLASH_ACR_WRHIGHFREQ_MSK        (FLASH_ACR_WRHIGHFREQ_1 | FLASH_ACR_WRHIGHFREQ_0)
-#define FLASH_ACR_WRHIGHFREQ_00         ((0*FLASH_ACR_WRHIGHFREQ_1) | (0*FLASH_ACR_WRHIGHFREQ_0))
-#define FLASH_ACR_WRHIGHFREQ_01         ((0*FLASH_ACR_WRHIGHFREQ_1) | (1*FLASH_ACR_WRHIGHFREQ_0))
-#define FLASH_ACR_WRHIGHFREQ_10         ((1*FLASH_ACR_WRHIGHFREQ_1) | (0*FLASH_ACR_WRHIGHFREQ_0))
+#define FLASH_ACR_WRHIGHFREQ_MSK                (FLASH_ACR_WRHIGHFREQ_1 | FLASH_ACR_WRHIGHFREQ_0)
+#define FLASH_ACR_WRHIGHFREQ_00                 ((0*FLASH_ACR_WRHIGHFREQ_1) | (0*FLASH_ACR_WRHIGHFREQ_0))
+#define FLASH_ACR_WRHIGHFREQ_01                 ((0*FLASH_ACR_WRHIGHFREQ_1) | (1*FLASH_ACR_WRHIGHFREQ_0))
+#define FLASH_ACR_WRHIGHFREQ_10                 ((1*FLASH_ACR_WRHIGHFREQ_1) | (0*FLASH_ACR_WRHIGHFREQ_0))
+
+/** PWREx Supply configuration */
+#define PWR_LDO_SUPPLY                          PWR_CR3_LDOEN                                                               /*!< Core domains are supplied from the LDO                                                                     */
+#if defined (SMPS)
+#define PWR_DIRECT_SMPS_SUPPLY                  PWR_CR3_SMPSEN                                                              /*!< Core domains are supplied from the SMPS only                                                               */
+#define PWR_SMPS_1V8_SUPPLIES_LDO               (PWR_CR3_SMPSLEVEL_0 | PWR_CR3_SMPSEN    | PWR_CR3_LDOEN)                   /*!< The SMPS 1.8V output supplies the LDO which supplies the Core domains                                       */
+#define PWR_SMPS_2V5_SUPPLIES_LDO               (PWR_CR3_SMPSLEVEL_1 | PWR_CR3_SMPSEN    | PWR_CR3_LDOEN)                   /*!< The SMPS 2.5V output supplies the LDO which supplies the Core domains                                       */
+#define PWR_SMPS_1V8_SUPPLIES_EXT_AND_LDO       (PWR_CR3_SMPSLEVEL_0 | PWR_CR3_SMPSEXTHP | PWR_CR3_SMPSEN | PWR_CR3_LDOEN)  /*!< The SMPS 1.8V output supplies an external circuits and the LDO. The Core domains are supplied from the LDO */
+#define PWR_SMPS_2V5_SUPPLIES_EXT_AND_LDO       (PWR_CR3_SMPSLEVEL_1 | PWR_CR3_SMPSEXTHP | PWR_CR3_SMPSEN | PWR_CR3_LDOEN)  /*!< The SMPS 2.5V output supplies an external circuits and the LDO. The Core domains are supplied from the LDO */
+#define PWR_SMPS_1V8_SUPPLIES_EXT               (PWR_CR3_SMPSLEVEL_0 | PWR_CR3_SMPSEXTHP | PWR_CR3_SMPSEN | PWR_CR3_BYPASS) /*!< The SMPS 1.8V output supplies an external source which supplies the Core domains                            */
+#define PWR_SMPS_2V5_SUPPLIES_EXT               (PWR_CR3_SMPSLEVEL_1 | PWR_CR3_SMPSEXTHP | PWR_CR3_SMPSEN | PWR_CR3_BYPASS) /*!< The SMPS 2.5V output supplies an external source which supplies the Core domains                            */
+#endif /* defined (SMPS) */
+#define PWR_EXTERNAL_SOURCE_SUPPLY              PWR_CR3_BYPASS                                                              /*!< The SMPS disabled and the LDO Bypass. The Core domains are supplied from an external source                 */
+
+#if defined (SMPS)
+#define PWR_SUPPLY_CONFIG_MASK                  (PWR_CR3_SMPSLEVEL | PWR_CR3_SMPSEXTHP | PWR_CR3_SMPSEN | PWR_CR3_LDOEN | PWR_CR3_BYPASS)
+#else
+#define PWR_SUPPLY_CONFIG_MASK                  (PWR_CR3_SCUEN | PWR_CR3_LDOEN | PWR_CR3_BYPASS)
+#endif
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
+typedef struct {
+        u8_t major;
+        u8_t minor;
+} clk_t;
 
 /*==============================================================================
   Local function prototypes
@@ -61,10 +91,17 @@
 static u32_t get_pll_input_freq(void);
 static void  get_pll_input_parameters(u32_t *pll_input_freq, u32_t *pll_input_range, u32_t *pll_ouput_range);
 static int   configure_core_voltage_and_flash_latency(void);
+static int   configure_power_supply(uint32_t supply_source);
+static int   control_voltage_scaling(uint32_t voltage_scaling);
 
 /*==============================================================================
   Local object definitions
 ==============================================================================*/
+MODULE_NAME(CLK);
+
+// makes dev_dbg() happy
+static const clk_t dummy_hdl = {.major = 0, .minor = 0};
+static const clk_t *const hdl = &dummy_hdl;
 
 /*==============================================================================
   Exported object definitions
@@ -90,7 +127,10 @@ API_MOD_INIT(CLK, void **device_handle, u8_t major, u8_t minor, const void *conf
 {
         UNUSED_ARG4(device_handle, major, minor, config);
 
-        int err = ESUCC;
+        int err = configure_power_supply(__CLK_SUPPLY_SOURCE__);
+        if (err) {
+                goto finish;
+        }
 
         LL_RCC_DeInit();
 
@@ -878,6 +918,32 @@ static void get_pll_input_parameters(u32_t *pll_input_freq, u32_t *pll_input_ran
 
 //==============================================================================
 /**
+ * @brief  Wait for selected flag in the selected register.
+ *
+ * @param  reg          pointer to register
+ * @param  mask         bit mask
+ * @param  timeout_ms   timeout in milliseconds
+ * @param  msg          timeout message
+ *
+ * @return One of errno value.
+ */
+//==============================================================================
+static int wait_for_flag(volatile uint32_t *reg, uint32_t mask, uint32_t timeout_ms, const char *msg)
+{
+        clock_t tref = sys_get_uptime_ms();
+        while (not (*reg & mask)) {
+                if (sys_is_time_expired(tref, timeout_ms)) {
+                        dev_dbg(hdl, "%s", msg);
+                        return ETIME;
+                }
+                sys_sleep_ms(1);
+        }
+
+        return ESUCC;
+}
+
+//==============================================================================
+/**
  * @brief  Function calculate core voltage regulator parameters and flash wait
  *         states according to target frequency.
  *
@@ -954,37 +1020,85 @@ static int configure_core_voltage_and_flash_latency(void)
                 FLASH_ACR = FLASH_ACR_LATENCY_4WS | FLASH_ACR_WRHIGHFREQ_10;
         }
 
-        // Set the core voltage
-        if ((PWR->CSR1 & PWR_CSR1_ACTVOS) != VOS) {
-                SET_BIT(PWR->CR3, PWR_CR3_LDOEN);
+        if (  (VOS == PWR_REGULATOR_VOLTAGE_SCALE3)
+           || (VOS == PWR_REGULATOR_VOLTAGE_SCALE2)
+           || (VOS == PWR_REGULATOR_VOLTAGE_SCALE1)
+           || (VOS == PWR_REGULATOR_VOLTAGE_SCALE0) ) {
 
-                u32_t VOS_tmp = (VOS == PWR_REGULATOR_VOLTAGE_SCALE0) ? PWR_REGULATOR_VOLTAGE_SCALE1 : VOS;
-                MODIFY_REG(PWR->D3CR, PWR_D3CR_VOS_Msk, VOS_tmp);
-                clock_t tref = sys_get_uptime_ms();
-                while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
-                        if (sys_is_time_expired(tref, TIMEOUT_MS)) {
-                                printk("CLK: VOS1-3 timeout");
-                                err = ETIME;
-                                break;
-                        }
-
-                        sys_sleep_ms(1);
+                err = control_voltage_scaling(PWR_REGULATOR_VOLTAGE_SCALE3);
+                if (err) {
+                        dev_dbg(hdl, "VOS3 switch error");
+                        return err;
                 }
 
-                // Enable core boost voltage
-                if (!err && (VOS == PWR_REGULATOR_VOLTAGE_SCALE0)) {
-                        SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
-                        SET_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN);
-                        clock_t tref = sys_get_uptime_ms();
-                        while (not (PWR->D3CR & PWR_D3CR_VOSRDY)) {
-                                if (sys_is_time_expired(tref, TIMEOUT_MS)) {
-                                        printk("CLK: VOS0 timeout");
-                                        err = ETIME;
-                                        break;
-                                }
+                err = wait_for_flag(&PWR->D3CR, PWR_D3CR_VOSRDY, TIMEOUT_MS, "VOS3 switch timeout");
+                if (err) {
+                        return err;
+                }
 
-                                sys_sleep_ms(1);
-                        }
+                err = wait_for_flag(&PWR->CSR1, PWR_CSR1_ACTVOSRDY, TIMEOUT_MS, "VOS3 switch timeout");
+                if (err) {
+                        return err;
+                }
+        }
+
+        if (  (VOS == PWR_REGULATOR_VOLTAGE_SCALE2)
+           || (VOS == PWR_REGULATOR_VOLTAGE_SCALE1)
+           || (VOS == PWR_REGULATOR_VOLTAGE_SCALE0) ) {
+
+                err = control_voltage_scaling(PWR_REGULATOR_VOLTAGE_SCALE2);
+                if (err) {
+                        dev_dbg(hdl, "VOS2 switch error");
+                        return err;
+                }
+
+                err = wait_for_flag(&PWR->D3CR, PWR_D3CR_VOSRDY, TIMEOUT_MS, "VOS2 switch timeout");
+                if (err) {
+                        return err;
+                }
+
+                err = wait_for_flag(&PWR->CSR1, PWR_CSR1_ACTVOSRDY, TIMEOUT_MS, "VOS2 switch timeout");
+                if (err) {
+                        return err;
+                }
+        }
+
+        if (  (VOS == PWR_REGULATOR_VOLTAGE_SCALE1)
+           || (VOS == PWR_REGULATOR_VOLTAGE_SCALE0) ) {
+
+                err = control_voltage_scaling(PWR_REGULATOR_VOLTAGE_SCALE1);
+                if (err) {
+                        dev_dbg(hdl, "VOS1 switch error");
+                        return err;
+                }
+
+                err = wait_for_flag(&PWR->D3CR, PWR_D3CR_VOSRDY, TIMEOUT_MS, "VOS1 switch timeout");
+                if (err) {
+                        return err;
+                }
+
+                err = wait_for_flag(&PWR->CSR1, PWR_CSR1_ACTVOSRDY, TIMEOUT_MS, "VOS1 switch timeout");
+                if (err) {
+                        return err;
+                }
+        }
+
+        if (VOS == PWR_REGULATOR_VOLTAGE_SCALE0) {
+
+                err = control_voltage_scaling(PWR_REGULATOR_VOLTAGE_SCALE0);
+                if (err) {
+                        dev_dbg(hdl, "VOS0 switch error");
+                        return err;
+                }
+
+                err = wait_for_flag(&PWR->D3CR, PWR_D3CR_VOSRDY, TIMEOUT_MS, "VOS0 switch timeout");
+                if (err) {
+                        return err;
+                }
+
+                err = wait_for_flag(&PWR->CSR1, PWR_CSR1_ACTVOSRDY, TIMEOUT_MS, "VOS0 switch timeout");
+                if (err) {
+                        return err;
                 }
         }
 
@@ -1000,6 +1114,192 @@ static int configure_core_voltage_and_flash_latency(void)
         }
 
         return err;
+}
+
+//==============================================================================
+/**
+ * @brief Configure the system Power Supply.
+ * @param  SupplySource : Specifies the Power Supply source to set after a
+ *                        system startup.
+ *         This parameter can be one of the following values :
+ *            @arg PWR_DIRECT_SMPS_SUPPLY : The SMPS supplies the Vcore Power
+ *                                          Domains. The LDO is Bypassed.
+ *            @arg PWR_SMPS_1V8_SUPPLIES_LDO : The SMPS 1.8V output supplies
+ *                                             the LDO. The Vcore Power Domains
+ *                                             are supplied from the LDO.
+ *            @arg PWR_SMPS_2V5_SUPPLIES_LDO : The SMPS 2.5V output supplies
+ *                                             the LDO. The Vcore Power Domains
+ *                                             are supplied from the LDO.
+ *            @arg PWR_SMPS_1V8_SUPPLIES_EXT_AND_LDO : The SMPS 1.8V output
+ *                                                     supplies external
+ *                                                     circuits and the LDO.
+ *                                                     The Vcore Power Domains
+ *                                                     are supplied from the
+ *                                                     LDO.
+ *            @arg PWR_SMPS_2V5_SUPPLIES_EXT_AND_LDO : The SMPS 2.5V output
+ *                                                     supplies external
+ *                                                     circuits and the LDO.
+ *                                                     The Vcore Power Domains
+ *                                                     are supplied from the
+ *                                                     LDO.
+ *            @arg PWR_SMPS_1V8_SUPPLIES_EXT : The SMPS 1.8V output supplies
+ *                                             external circuits. The LDO is
+ *                                             Bypassed. The Vcore Power
+ *                                             Domains are supplied from
+ *                                             external source.
+ *            @arg PWR_SMPS_2V5_SUPPLIES_EXT : The SMPS 2.5V output supplies
+ *                                             external circuits. The LDO is
+ *                                             Bypassed. The Vcore Power
+ *                                             Domains are supplied from
+ *                                             external source.
+ *            @arg PWR_LDO_SUPPLY : The LDO regulator supplies the Vcore Power
+ *                                  Domains. The SMPS regulator is Bypassed.
+ *            @arg PWR_EXTERNAL_SOURCE_SUPPLY : The SMPS and the LDO are
+ *                                              Bypassed. The Vcore Power
+ *                                              Domains are supplied from
+ *                                              external source.
+ * @note   The PWR_LDO_SUPPLY and PWR_EXTERNAL_SOURCE_SUPPLY are used by all
+ *         H7 lines.
+ *         The PWR_DIRECT_SMPS_SUPPLY, PWR_SMPS_1V8_SUPPLIES_LDO,
+ *         PWR_SMPS_2V5_SUPPLIES_LDO, PWR_SMPS_1V8_SUPPLIES_EXT_AND_LDO,
+ *         PWR_SMPS_2V5_SUPPLIES_EXT_AND_LDO, PWR_SMPS_1V8_SUPPLIES_EXT and
+ *         PWR_SMPS_2V5_SUPPLIES_EXT are used only for lines that supports SMPS
+ *         regulator.
+ * @retval HAL status.
+ */
+//==============================================================================
+static int configure_power_supply(uint32_t supply_source)
+{
+        /* Check if supply source was configured */
+#if defined (PWR_CR3_SCUEN)
+        if ((PWR->CR3 & PWR_CR3_SCUEN) == 0U)
+#else
+        if ((PWR->CR3 & (PWR_CR3_SMPSEN | PWR_CR3_LDOEN | PWR_CR3_BYPASS)) != (PWR_CR3_SMPSEN | PWR_CR3_LDOEN))
+#endif
+        {
+                if ((PWR->CR3 & PWR_SUPPLY_CONFIG_MASK) != supply_source) {
+                        /* Supply configuration update locked, can't apply a new supply config */
+                        dev_dbg(hdl, "supply configuration update locked");
+                        return EIO;
+                } else {
+                        /*
+                          Supply configuration update locked, but new supply configuration
+                          matches with old supply configuration : nothing to do
+                         */
+                        return ESUCC;
+                }
+        }
+
+        MODIFY_REG (PWR->CR3, PWR_SUPPLY_CONFIG_MASK, supply_source);
+
+        int err = wait_for_flag(&PWR->CSR1, PWR_CSR1_ACTVOSRDY, TIMEOUT_MS,
+                                "configure supply timeout");
+        if (err) {
+                return err;
+        }
+
+#if defined (SMPS)
+        /* When the SMPS supplies external circuits verify that SDEXTRDY flag is set */
+        if ((supply_source == PWR_SMPS_1V8_SUPPLIES_EXT_AND_LDO) ||
+            (supply_source == PWR_SMPS_2V5_SUPPLIES_EXT_AND_LDO) ||
+            (supply_source == PWR_SMPS_1V8_SUPPLIES_EXT)         ||
+            (supply_source == PWR_SMPS_2V5_SUPPLIES_EXT)) {
+
+                err = wait_for_flag(&PWR->CR3, PWR_CR3_SMPSEXTRDY, TIMEOUT_MS,
+                                    "run SMPS timeout");
+                if (err) {
+                        return err;
+                }
+        }
+#endif
+
+        return ESUCC;
+}
+
+//==============================================================================
+/**
+ * @brief Configure the main internal regulator output voltage.
+ * @param  VoltageScaling : Specifies the regulator output voltage to achieve
+ *                          a tradeoff between performance and power
+ *                          consumption.
+ *          This parameter can be one of the following values :
+ *            @arg PWR_REGULATOR_VOLTAGE_SCALE0 : Regulator voltage output
+ *                                                Scale 0 mode.
+ *            @arg PWR_REGULATOR_VOLTAGE_SCALE1 : Regulator voltage output
+ *                                                range 1 mode.
+ *            @arg PWR_REGULATOR_VOLTAGE_SCALE2 : Regulator voltage output
+ *                                                range 2 mode.
+ *            @arg PWR_REGULATOR_VOLTAGE_SCALE3 : Regulator voltage output
+ *                                                range 3 mode.
+ * @note   For STM32H74x and STM32H75x lines, configuring Voltage Scale 0 is
+ *         only possible when Vcore is supplied from LDO (Low DropOut). The
+ *         SYSCFG Clock must be enabled through __HAL_RCC_SYSCFG_CLK_ENABLE()
+ *         macro before configuring Voltage Scale 0.
+ *         To enter low power mode , and if current regulator voltage is
+ *         Voltage Scale 0 then first switch to Voltage Scale 1 before entering
+ *         low power mode.
+ * @retval HAL Status
+ */
+//==============================================================================
+int control_voltage_scaling(uint32_t voltage_scaling)
+{
+        /* Get the voltage scaling  */
+        if ((PWR->CSR1 & PWR_CSR1_ACTVOS) == voltage_scaling) {
+                return ESUCC;
+        }
+
+#if defined (PWR_SRDCR_VOS)
+        /* Set the voltage range */
+        MODIFY_REG (PWR->SRDCR, PWR_SRDCR_VOS, voltage_scaling);
+#else
+#if defined(SYSCFG_PWRCR_ODEN) /* STM32H74xxx and STM32H75xxx lines */
+        if (voltage_scaling == PWR_REGULATOR_VOLTAGE_SCALE0) {
+
+                if ((PWR->CR3 & PWR_CR3_LDOEN) == PWR_CR3_LDOEN) {
+                        MODIFY_REG (PWR->D3CR, PWR_D3CR_VOS, PWR_REGULATOR_VOLTAGE_SCALE1);
+
+                        int err = wait_for_flag(&PWR->CSR1, PWR_CSR1_ACTVOSRDY, TIMEOUT_MS,
+                                                "voltage scale switch timeout");
+                        if (err) {
+                                return err;
+                        }
+
+                        SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
+                        SET_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN);
+                        dev_dbg(hdl, "enabled power overdrive");
+                } else {
+                        dev_dbg(hdl, "VOS0 is only possible when LDO is enabled");
+                        return EIO;
+                }
+        } else {
+                if ((PWR->CSR1 & PWR_CSR1_ACTVOS) == PWR_REGULATOR_VOLTAGE_SCALE1) {
+
+                        if ((SYSCFG->PWRCR & SYSCFG_PWRCR_ODEN) != 0U) {
+                                CLEAR_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN);
+
+                                int err = wait_for_flag(&PWR->CSR1, PWR_CSR1_ACTVOSRDY, TIMEOUT_MS,
+                                                        "voltage scale switch timeout");
+                                if (err) {
+                                        return err;
+                                }
+                        }
+                }
+
+                /* Set the voltage range */
+                MODIFY_REG (PWR->D3CR, PWR_D3CR_VOS, voltage_scaling);
+        }
+#else  /* STM32H72xxx and STM32H73xxx lines */
+        MODIFY_REG(PWR->D3CR, PWR_D3CR_VOS, voltage_scaling);
+#endif /* defined (SYSCFG_PWRCR_ODEN) */
+#endif /* defined (PWR_SRDCR_VOS) */
+
+        int err = wait_for_flag(&PWR->CSR1, PWR_CSR1_ACTVOSRDY, TIMEOUT_MS,
+                                "voltage scale switch timeout");
+        if (err) {
+                return err;
+        }
+
+        return ESUCC;
 }
 
 /*==============================================================================

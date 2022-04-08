@@ -46,6 +46,27 @@ this:SetEvent("PostDiscard", function() this:CalculateFreq() end)
 // Oscillators Configuration
 //==============================================================================
 /*--
+this:AddExtraWidget("Label", "LABEL_SUPPLY_SOURCE", "Supply source", -1, "bold")
+this:AddExtraWidget("Label", "LABEL_VoidSupplySource1", "\t\t\t\t\t\t\t", -1, "bold")
+this:AddExtraWidget("Void", "VoidSupplySource2")
+++*/
+/*--
+this:AddWidget("Combobox", "Supply source")
+this:AddItem("LDO supply", "PWR_LDO_SUPPLY")
+this:AddItem("External supply source", "PWR_EXTERNAL_SOURCE_SUPPLY")
+this:AddItem("Direct SMPS supply", "PWR_DIRECT_SMPS_SUPPLY")
+this:AddItem("SMPS supplies LDO 1.8V", "PWR_SMPS_1V8_SUPPLIES_LDO")
+this:AddItem("SMPS supplies LDO 2.5V", "PWR_SMPS_2V5_SUPPLIES_LDO")
+this:AddItem("SMPS supplies EXT and LDO 1.8V", "PWR_SMPS_1V8_SUPPLIES_EXT_AND_LDO")
+this:AddItem("SMPS supplies EXT and LDO 2.5V", "PWR_SMPS_2V5_SUPPLIES_EXT_AND_LDO")
+this:AddItem("SMPS supplies EXT 1.8V", "PWR_SMPS_1V8_SUPPLIES_EXT")
+this:AddItem("SMPS supplies EXT 2.5V", "PWR_SMPS_2V5_SUPPLIES_EXT")
+this:AddExtraWidget("Label", "LABEL_SUPPLY_SOURCE_EXTRA", "")
+--*/
+#define __CLK_SUPPLY_SOURCE__ PWR_LDO_SUPPLY
+
+/*--
+this:AddExtraWidget("Label", "LABEL_OSCILLATORS", "\nOscillators", -1, "bold")
 this:AddExtraWidget("Label", "LABEL_OSCILLATORS", "Oscillators", -1, "bold")
 this:AddExtraWidget("Label", "LABEL_VoidOsc1", "\t\t\t\t\t\t\t", -1, "bold")
 this:AddExtraWidget("Void", "VoidOsc2")
