@@ -32,7 +32,7 @@ Brief   Flexible Memory Controller
 Driver handles ...
 
 \section drv-fmc-sup-arch Supported architectures
-\li stm32f4
+\li stm32f4, stm32f7, stm32h7
 
 \section drv-fmc-ddesc Details
 \subsection drv-fmc-ddesc-num Meaning of major and minor numbers
@@ -87,23 +87,6 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-/**
- *  @brief  Example IOCTL request.
- *  @param  [WR,RD] ioctl() params...
- *  @return On success 0 is returned, otherwise -1.
- *
- *  @b Example
- *  @code
-    #include <sys/ioctl.h>
-
-    //...
-
-
-
-    //...
-    @endcode
- */
-#define IOCTL_FMC__EXAMPLE     _IO(FMC, 0x00)
 
 /*==============================================================================
   Exported object types

@@ -104,12 +104,12 @@ this:AddItem("3 x HCLK periods", "3")
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row precharge delay")
 --*/
-#define __FMC_SDRAM_TRP__ 16
+#define __FMC_SDRAM_TRP__ 2
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row cycle delay")
 --*/
-#define __FMC_SDRAM_TRC__ 16
+#define __FMC_SDRAM_TRC__ 7
 
 /*--
 this:AddWidget("Spinbox", 1, 3, "CAS Latency")
@@ -119,12 +119,12 @@ this:AddWidget("Spinbox", 1, 3, "CAS Latency")
 /*--
 this:AddWidget("Spinbox", 1, 16, "Self refresh time")
 --*/
-#define __FMC_SDRAM_TRAS__ 16
+#define __FMC_SDRAM_TRAS__ 4
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Exit Self-refresh delay")
 --*/
-#define __FMC_SDRAM_TXSR__ 16
+#define __FMC_SDRAM_TXSR__ 7
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Write Recovery Time")
@@ -136,7 +136,7 @@ this:AddWidget("Spinbox", 1, 16, "Load to Active delay")
 this:SetToolTip("Define the delay between a Load Mode Register command and an "..
                 "Active or Refresh command.")
 --*/
-#define __FMC_SDRAM_TMRD__ 16
+#define __FMC_SDRAM_TMRD__ 2
 
 /*--
 this:AddWidget("Spinbox", 1, 15, "Number of Auto-refresh")
@@ -159,7 +159,7 @@ this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 this:SetEvent("clicked", function() this:SDRAMEn(1) end)
 --*/
-#define __FMC_SDRAM_1_ENABLE__ 1
+#define __FMC_SDRAM_1_ENABLE__ 0
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")
@@ -196,7 +196,7 @@ this:AddItem("11 bits", "3")
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row to column delay")
 --*/
-#define __FMC_SDRAM_1_TRCD__ 16
+#define __FMC_SDRAM_1_TRCD__ 2
 
 /*--
 this:AddWidget("Spinbox", 1, 2048, "Heap regions")
@@ -219,7 +219,7 @@ this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 this:SetEvent("clicked", function() this:SDRAMEn(2) end)
 --*/
-#define __FMC_SDRAM_2_ENABLE__ 0
+#define __FMC_SDRAM_2_ENABLE__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")
@@ -256,7 +256,7 @@ this:AddItem("11 bits", "3")
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row to column delay")
 --*/
-#define __FMC_SDRAM_2_TRCD__ 16
+#define __FMC_SDRAM_2_TRCD__ 2
 
 /*--
 this:AddWidget("Spinbox", 1, 2048, "Heap regions")
