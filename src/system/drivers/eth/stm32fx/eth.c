@@ -520,7 +520,7 @@ static int eth_start(struct eth *hdl)
                         hdl->eth.Init.Speed = (conf->speed == ETH_SPEED__100Mbps) ? ETH_SPEED_100M : ETH_SPEED_10M;
                         hdl->eth.Init.DuplexMode = (conf->duplex == ETH_DUPLEX__FULL) ? ETH_MODE_FULLDUPLEX : ETH_MODE_HALFDUPLEX;
                         hdl->eth.Init.RxMode = ETH_RXINTERRUPT_MODE;
-                        hdl->eth.Init.ChecksumMode = __ETH_CHECKSUM_BY_HARDWARE__;
+                        hdl->eth.Init.ChecksumMode = ETH_CHECKSUM_BY_HARDWARE;
                         hdl->eth.Init.PhyAddress = __ETH_PHY_ADDRESS__;
 
                         while (true) {

@@ -79,7 +79,7 @@
 				["value"]="_NO_";
 			};
 			[20]={
-				["key"]="__ENABLE_FMC__";
+				["key"]="__ENABLE_EMI__";
 				["value"]="_NO_";
 			};
 			[21]={
@@ -599,97 +599,97 @@
 				["value"]="ETH_AUTONEGOTIATION_DISABLE";
 			};
 		};
-		["arch/stm32f4/fmc_flags.h"]={
+		["arch/stm32f4/emi_flags.h"]={
 			[1]={
-				["key"]="__FMC_SDRAM_RPIPE__";
+				["key"]="__EMI_SDRAM_RPIPE__";
 				["value"]="0";
 			};
 			[2]={
-				["key"]="__FMC_SDRAM_RBURST__";
+				["key"]="__EMI_SDRAM_RBURST__";
 				["value"]="0";
 			};
 			[3]={
-				["key"]="__FMC_SDRAM_SDCLK__";
+				["key"]="__EMI_SDRAM_SDCLK__";
 				["value"]="2";
 			};
 			[4]={
-				["key"]="__FMC_SDRAM_TRP__";
+				["key"]="__EMI_SDRAM_TRP__";
 				["value"]="16";
 			};
 			[5]={
-				["key"]="__FMC_SDRAM_TRC__";
+				["key"]="__EMI_SDRAM_TRC__";
 				["value"]="16";
 			};
 			[6]={
-				["key"]="__FMC_SDRAM_CAS__";
+				["key"]="__EMI_SDRAM_CAS__";
 				["value"]="3";
 			};
 			[7]={
-				["key"]="__FMC_SDRAM_TRAS__";
+				["key"]="__EMI_SDRAM_TRAS__";
 				["value"]="16";
 			};
 			[8]={
-				["key"]="__FMC_SDRAM_TXSR__";
+				["key"]="__EMI_SDRAM_TXSR__";
 				["value"]="16";
 			};
 			[9]={
-				["key"]="__FMC_SDRAM_TMRD__";
+				["key"]="__EMI_SDRAM_TMRD__";
 				["value"]="16";
 			};
 			[10]={
-				["key"]="__FMC_SDRAM_NRFS__";
+				["key"]="__EMI_SDRAM_NRFS__";
 				["value"]="8";
 			};
 			[11]={
-				["key"]="__FMC_SDRAM_REFRESH_RATE_MS__";
+				["key"]="__EMI_SDRAM_REFRESH_RATE_MS__";
 				["value"]="64";
 			};
 			[12]={
-				["key"]="__FMC_SDRAM_1_ENABLE__";
+				["key"]="__EMI_SDRAM_1_ENABLE__";
 				["value"]="0";
 			};
 			[13]={
-				["key"]="__FMC_SDRAM_1_NB__";
+				["key"]="__EMI_SDRAM_1_NB__";
 				["value"]="1";
 			};
 			[14]={
-				["key"]="__FMC_SDRAM_1_MWID__";
+				["key"]="__EMI_SDRAM_1_MWID__";
 				["value"]="1";
 			};
 			[15]={
-				["key"]="__FMC_SDRAM_1_NR__";
+				["key"]="__EMI_SDRAM_1_NR__";
 				["value"]="1";
 			};
 			[16]={
-				["key"]="__FMC_SDRAM_1_NC__";
+				["key"]="__EMI_SDRAM_1_NC__";
 				["value"]="0";
 			};
 			[17]={
-				["key"]="__FMC_SDRAM_1_TRCD__";
+				["key"]="__EMI_SDRAM_1_TRCD__";
 				["value"]="16";
 			};
 			[18]={
-				["key"]="__FMC_SDRAM_2_ENABLE__";
+				["key"]="__EMI_SDRAM_2_ENABLE__";
 				["value"]="1";
 			};
 			[19]={
-				["key"]="__FMC_SDRAM_2_NB__";
+				["key"]="__EMI_SDRAM_2_NB__";
 				["value"]="1";
 			};
 			[20]={
-				["key"]="__FMC_SDRAM_2_MWID__";
+				["key"]="__EMI_SDRAM_2_MWID__";
 				["value"]="1";
 			};
 			[21]={
-				["key"]="__FMC_SDRAM_2_NR__";
+				["key"]="__EMI_SDRAM_2_NR__";
 				["value"]="1";
 			};
 			[22]={
-				["key"]="__FMC_SDRAM_2_NC__";
+				["key"]="__EMI_SDRAM_2_NC__";
 				["value"]="0";
 			};
 			[23]={
-				["key"]="__FMC_SDRAM_2_TRCD__";
+				["key"]="__EMI_SDRAM_2_TRCD__";
 				["value"]="16";
 			};
 		};

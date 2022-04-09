@@ -48,13 +48,6 @@ this:AddExtraWidget("Label", "LabelGeneral", "General", -1, "bold")
 this:AddExtraWidget("Void", "VoidGeneral")
 ++*/
 /*--
-this:AddWidget("Combobox", "Hardware checksum")
-this:AddItem("No", "ETH_CHECKSUM_BY_SOFTWARE")
-this:AddItem("Yes", "ETH_CHECKSUM_BY_HARDWARE")
---*/
-#define __ETH_CHECKSUM_BY_HARDWARE__ ETH_CHECKSUM_BY_HARDWARE
-
-/*--
 this:AddWidget("Combobox", "Link speed")
 this:AddItem("10 Mbps", "ETH_SPEED_10M")
 this:AddItem("100 Mbps", "ETH_SPEED_100M")

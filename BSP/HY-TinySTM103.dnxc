@@ -75,7 +75,7 @@
 				["value"]="_NO_";
 			};
 			[19]={
-				["key"]="__ENABLE_FMC__";
+				["key"]="__ENABLE_EMI__";
 				["value"]="_NO_";
 			};
 			[20]={

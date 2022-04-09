@@ -48,13 +48,6 @@ this:AddExtraWidget("Label", "LabelGeneral", "General", -1, "bold")
 this:AddExtraWidget("Void", "VoidGeneral")
 ++*/
 /*--
-this:AddWidget("Combobox", "Hardware checksum")
-this:AddItem("No", "ETH_CHECKSUM_BY_SOFTWARE")
-this:AddItem("Yes", "ETH_CHECKSUM_BY_HARDWARE")
---*/
-#define __ETH_CHECKSUM_BY_HARDWARE__ ETH_CHECKSUM_BY_HARDWARE
-
-/*--
 this:AddWidget("Spinbox", 3, 256, "Number of RX buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
@@ -64,7 +57,7 @@ this:SetToolTip("Each buffer is 1524 B long.")
 this:AddWidget("Spinbox", 2, 256, "Number of Tx buffers")
 this:SetToolTip("Each buffer is 1524 B long.")
 --*/
-#define __ETH_TXBUFNB__ 10
+#define __ETH_TXBUFNB__ 3
 
 /*--
 this:AddExtraWidget("Label", "LabelPHY", "\nPHY", -1, "bold")
