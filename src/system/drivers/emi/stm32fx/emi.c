@@ -84,6 +84,8 @@ Brief    External Memory Interface
 #elif defined(ARCH_stm32f4)
 #define FMC_BANK_5_6            FMC_Bank5_6
 #define FMC_ENABLE()
+#define SDRAM1_ADDRESS          0xC0000000
+#define SDRAM2_ADDRESS          0xD0000000
 #define FMC_SDCRx_NC_Pos        (0U)
 #define FMC_SDCRx_NR_Pos        (2U)
 #define FMC_SDCRx_MWID_Pos      (4U)
@@ -102,6 +104,8 @@ Brief    External Memory Interface
 #elif defined(ARCH_stm32f7)
 #define FMC_BANK_5_6            FMC_Bank5_6
 #define FMC_ENABLE()
+#define SDRAM1_ADDRESS          0xC0000000
+#define SDRAM2_ADDRESS          0xD0000000
 #define FMC_SDCRx_NC_Pos        (0U)
 #define FMC_SDCRx_NR_Pos        (2U)
 #define FMC_SDCRx_MWID_Pos      (4U)
@@ -120,6 +124,8 @@ Brief    External Memory Interface
 #elif defined(ARCH_stm32h7)
 #define FMC_BANK_5_6            FMC_Bank5_6_R
 #define FMC_ENABLE()            SET_BIT(FMC_Bank1_R->BTCR[0], FMC_BCR1_FMCEN)
+#define SDRAM1_ADDRESS          0xC0000000
+#define SDRAM2_ADDRESS          0xD0000000
 #endif
 
 /*==============================================================================
@@ -178,9 +184,9 @@ API_MOD_INIT(EMI, void **device_handle, u8_t major, u8_t minor, const void *conf
                 SET_BIT(RCC->AHB3RSTR, RCC_AHB3RSTR_FMCRST);
                 CLEAR_BIT(RCC->AHB3RSTR, RCC_AHB3RSTR_FMCRST);
 
+#if (__EMI_SDRAM_1_ENABLE__ or __EMI_SDRAM_2_ENABLE__)
                 err = sdram_init();
-
-                FMC_ENABLE();
+#endif
         }
 
         return err;
@@ -336,6 +342,7 @@ API_MOD_STAT(EMI, void *device_handle, struct vfs_dev_stat *device_stat)
         return ESUCC;
 }
 
+#if (__EMI_SDRAM_1_ENABLE__ or __EMI_SDRAM_2_ENABLE__)
 //==============================================================================
 /**
  * @brief  Function test RAM memory.
@@ -612,7 +619,7 @@ static int sdram_init(void)
         int err2 = ESUCC;
 
 #if __EMI_SDRAM_1_ENABLE__ > 0
-        u32_t mem_addr1 = 0xC0000000;
+        u32_t mem_addr1 = SDRAM1_ADDRESS;
 
         size_t mem_size1 = (2 << (__EMI_SDRAM_1_NR__ + 10))      // Row bits (0 - 11 bits: A10)
                          * (2 << (__EMI_SDRAM_1_NC__ +  7))      // Col bits (0 - 8 bits:  A7)
@@ -629,7 +636,7 @@ static int sdram_init(void)
 #endif
 
 #if __EMI_SDRAM_2_ENABLE__ > 0
-        u32_t mem_addr2 = 0xD0000000;
+        u32_t mem_addr2 = SDRAM2_ADDRESS;
 
         size_t mem_size2 = (2 << (__EMI_SDRAM_2_NR__ + 10))      // Row bits (0 - 11 bits: A10)
                          * (2 << (__EMI_SDRAM_2_NC__ +  7))      // Col bits (0 - 8 bits:  A7)
@@ -681,6 +688,7 @@ static int register_heap_regions(void *addr, size_t mem_size, mem_region_t regio
 
         return err;
 }
+#endif
 
 /*==============================================================================
   End of file

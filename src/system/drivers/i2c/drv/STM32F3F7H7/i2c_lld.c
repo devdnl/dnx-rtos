@@ -5,7 +5,7 @@
 
 @brief   This driver support I2C peripherals.
 
-@note    Copyright (C) 2020  Daniel Zorychta <daniel.zorychta@gmail.com>
+@note    Copyright (C) 2022  Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@
 /*==============================================================================
   Include files
 ==============================================================================*/
-#include "i2c_cfg.h"
 #include "drivers/driver.h"
 #include "gpio_ddi.h"
 #include "i2c.h"
@@ -64,21 +63,112 @@
 }                                                       \
 )                                                       \
 
+#if defined(ARCH_stm32f3)
+#define RCC_APBENR_I2C1         RCC->APB1ENR
+#define RCC_APBRSTR_I2C1        RCC->APB1RSTR
+#define RCC_APBENR_I2C2         RCC->APB1ENR
+#define RCC_APBRSTR_I2C2        RCC->APB1RSTR
+#define RCC_APBENR_I2C3         RCC->APB1ENR
+#define RCC_APBRSTR_I2C3        RCC->APB1RSTR
+#define RCC_APBENR_I2C4         RCC->APB1ENR
+#define RCC_APBRSTR_I2C4        RCC->APB1RSTR
+#define RCC_APBENR_I2C5         RCC->APB1ENR
+#define RCC_APBRSTR_I2C5        RCC->APB1RSTR
+#define RCC_APBENR_I2C1EN       RCC_APB1ENR_I2C1EN
+#define RCC_APBRSTR_I2C1RST     RCC_APB1RSTR_I2C1RST
+#define RCC_APBENR_I2C2EN       RCC_APB1ENR_I2C2EN
+#define RCC_APBRSTR_I2C2RST     RCC_APB1RSTR_I2C2RST
+#define RCC_APBENR_I2C3EN       RCC_APB1ENR_I2C3EN
+#define RCC_APBRSTR_I2C3RST     RCC_APB1RSTR_I2C3RST
+#define RCC_APBENR_I2C4EN       RCC_APB1ENR_I2C4EN
+#define RCC_APBRSTR_I2C4RST     RCC_APB1RSTR_I2C4RST
+#define RCC_APBENR_I2C5EN       RCC_APB1ENR_I2C5EN
+#define RCC_APBRSTR_I2C5RST     RCC_APB1RSTR_I2C5RST
+#elif defined(ARCH_stm32f4)
+#define RCC_APBENR_I2C1         RCC->APB1ENR
+#define RCC_APBRSTR_I2C1        RCC->APB1RSTR
+#define RCC_APBENR_I2C2         RCC->APB1ENR
+#define RCC_APBRSTR_I2C2        RCC->APB1RSTR
+#define RCC_APBENR_I2C3         RCC->APB1ENR
+#define RCC_APBRSTR_I2C3        RCC->APB1RSTR
+#define RCC_APBENR_I2C4         RCC->APB1ENR
+#define RCC_APBRSTR_I2C4        RCC->APB1RSTR
+#define RCC_APBENR_I2C5         RCC->APB1ENR
+#define RCC_APBRSTR_I2C5        RCC->APB1RSTR
+#define RCC_APBENR_I2C1EN       RCC_APB1ENR_I2C1EN
+#define RCC_APBRSTR_I2C1RST     RCC_APB1RSTR_I2C1RST
+#define RCC_APBENR_I2C2EN       RCC_APB1ENR_I2C2EN
+#define RCC_APBRSTR_I2C2RST     RCC_APB1RSTR_I2C2RST
+#define RCC_APBENR_I2C3EN       RCC_APB1ENR_I2C3EN
+#define RCC_APBRSTR_I2C3RST     RCC_APB1RSTR_I2C3RST
+#define RCC_APBENR_I2C4EN       RCC_APB1ENR_I2C4EN
+#define RCC_APBRSTR_I2C4RST     RCC_APB1RSTR_I2C4RST
+#define RCC_APBENR_I2C5EN       RCC_APB1ENR_I2C5EN
+#define RCC_APBRSTR_I2C5RST     RCC_APB1RSTR_I2C5RST
+#elif defined(ARCH_stm32f7)
+#define RCC_APBENR_I2C1         RCC->APB1ENR
+#define RCC_APBRSTR_I2C1        RCC->APB1RSTR
+#define RCC_APBENR_I2C2         RCC->APB1ENR
+#define RCC_APBRSTR_I2C2        RCC->APB1RSTR
+#define RCC_APBENR_I2C3         RCC->APB1ENR
+#define RCC_APBRSTR_I2C3        RCC->APB1RSTR
+#define RCC_APBENR_I2C4         RCC->APB1ENR
+#define RCC_APBRSTR_I2C4        RCC->APB1RSTR
+#define RCC_APBENR_I2C5         RCC->APB1ENR
+#define RCC_APBRSTR_I2C5        RCC->APB1RSTR
+#define RCC_APBENR_I2C1EN       RCC_APB1ENR_I2C1EN
+#define RCC_APBRSTR_I2C1RST     RCC_APB1RSTR_I2C1RST
+#define RCC_APBENR_I2C2EN       RCC_APB1ENR_I2C2EN
+#define RCC_APBRSTR_I2C2RST     RCC_APB1RSTR_I2C2RST
+#define RCC_APBENR_I2C3EN       RCC_APB1ENR_I2C3EN
+#define RCC_APBRSTR_I2C3RST     RCC_APB1RSTR_I2C3RST
+#define RCC_APBENR_I2C4EN       RCC_APB1ENR_I2C4EN
+#define RCC_APBRSTR_I2C4RST     RCC_APB1RSTR_I2C4RST
+#define RCC_APBENR_I2C5EN       RCC_APB1ENR_I2C5EN
+#define RCC_APBRSTR_I2C5RST     RCC_APB1RSTR_I2C5RST
+#elif defined(ARCH_stm32h7)
+#define RCC_APBENR_I2C1         RCC->APB1LENR
+#define RCC_APBRSTR_I2C1        RCC->APB1LRSTR
+#define RCC_APBENR_I2C2         RCC->APB1LENR
+#define RCC_APBRSTR_I2C2        RCC->APB1LRSTR
+#define RCC_APBENR_I2C3         RCC->APB1LENR
+#define RCC_APBRSTR_I2C3        RCC->APB1LRSTR
+#define RCC_APBENR_I2C4         RCC->APB4ENR
+#define RCC_APBRSTR_I2C4        RCC->APB4RSTR
+#define RCC_APBENR_I2C5         RCC->APB1LENR
+#define RCC_APBRSTR_I2C5        RCC->APB1LRSTR
+#define RCC_APBENR_I2C1EN       RCC_APB1LENR_I2C1EN
+#define RCC_APBRSTR_I2C1RST     RCC_APB1LRSTR_I2C1RST
+#define RCC_APBENR_I2C2EN       RCC_APB1LENR_I2C2EN
+#define RCC_APBRSTR_I2C2RST     RCC_APB1LRSTR_I2C2RST
+#define RCC_APBENR_I2C3EN       RCC_APB1LENR_I2C3EN
+#define RCC_APBRSTR_I2C3RST     RCC_APB1LRSTR_I2C3RST
+#define RCC_APBENR_I2C4EN       RCC_APB4ENR_I2C4EN
+#define RCC_APBRSTR_I2C4RST     RCC_APB4RSTR_I2C4RST
+#define RCC_APBENR_I2C5EN       RCC_APB1LENR_I2C5EN
+#define RCC_APBRSTR_I2C5RST     RCC_APB1LRSTR_I2C5RST
+#define LL_RCC_I2C1_CLKSOURCE   LL_RCC_I2C123_CLKSOURCE
+#define LL_RCC_I2C2_CLKSOURCE   LL_RCC_I2C123_CLKSOURCE
+#define LL_RCC_I2C3_CLKSOURCE   LL_RCC_I2C123_CLKSOURCE
+#define LL_RCC_I2C5_CLKSOURCE   LL_RCC_I2C1235_CLKSOURCE
+#endif
 
 /*==============================================================================
   Local types, enums definitions
 ==============================================================================*/
 /// type defines configuration of single I2C peripheral
 typedef struct {
-        const I2C_TypeDef      *const I2C;            //!< pointer to the I2C peripheral
+        const I2C_TypeDef       *const I2C;           //!< pointer to the I2C peripheral
         const u32_t             scl_freq;             //!< peripheral SCL frequency [Hz]
         const u32_t             filter;               //!< filters mask
         const u16_t             scl_rise_time_ns;     //!< SCL rise time
         const u16_t             scl_fall_time_ns;     //!< SCL fall time
         const u16_t             data_hold_time_ns;    //!< Data hold time, (tHD:DAT), delay SCL low to data change
         const u16_t             data_setup_time_ns;   //!< Data setup time, (tSU:DAT), delay data setup to SCL high
-        const u32_t             APB1ENR_I2CEN;        //!< mask used to enable I2C clock in the APB1ENR register
-        const u32_t             APB1RSTR_I2CRST;      //!< mask used to reset I2C in the APB1RSTR register
+        __IO u32_t              *APBRSTR;             //!< APB reset register address
+        __IO u32_t              *APBENR;              //!< APB enable register
+        const u32_t             APBENR_I2CEN;         //!< mask used to enable I2C clock in the APB1ENR register
+        const u32_t             APBRSTR_I2CRST;       //!< mask used to reset I2C in the APB1RSTR register
         const IRQn_Type         IRQ_EV_n;             //!< number of event IRQ vector
         const IRQn_Type         IRQ_ER_n;             //!< number of error IRQ vector
         const u32_t             IRQ_priority;         //!< IRQ priority
@@ -110,72 +200,99 @@ MODULE_NAME(I2C);
 
 // peripherals configuration
 static const I2C_info_t I2C_HW[_I2C_NUMBER_OF_PERIPHERALS] = {
-        #if defined(RCC_APB1ENR_I2C1EN)
+        #if defined(RCC_APB1ENR_I2C1EN) || defined(RCC_APB1LENR_I2C1EN)
         {
-                .I2C               = (I2C_TypeDef*)I2C1,
-                .scl_freq          = __I2C1_SCL_FREQ__,
-                .filter            = __I2C1_ANALOG_FILTER_DISABLE__ | ((__I2C1_DIGITAL_FILTER__ << I2C_CR1_DNF_Pos) & I2C_CR1_DNF),
-                .scl_rise_time_ns  = __I2C1_SCL_RISE_TIME_ns__,
-                .scl_fall_time_ns  = __I2C1_SCL_FALL_TIME_ns__,
-                .data_hold_time_ns = __I2C1_DATA_HOLD_TIME_ns__,
-                .data_setup_time_ns= __I2C1_DATA_SETUP_TIME_ns__,
-                .APB1ENR_I2CEN     = RCC_APB1ENR_I2C1EN,
-                .APB1RSTR_I2CRST   = RCC_APB1RSTR_I2C1RST,
-                .IRQ_EV_n          = I2C1_EV_IRQn,
-                .IRQ_ER_n          = I2C1_ER_IRQn,
-                .IRQ_priority      = __I2C1_IRQ_PRIORITY__,
-                .clk_src           = LL_RCC_I2C1_CLKSOURCE
+                .I2C                = (I2C_TypeDef*)I2C1,
+                .scl_freq           = __I2C1_SCL_FREQ__,
+                .filter             = __I2C1_ANALOG_FILTER_DISABLE__ | ((__I2C1_DIGITAL_FILTER__ << I2C_CR1_DNF_Pos) & I2C_CR1_DNF),
+                .scl_rise_time_ns   = __I2C1_SCL_RISE_TIME_ns__,
+                .scl_fall_time_ns   = __I2C1_SCL_FALL_TIME_ns__,
+                .data_hold_time_ns  = __I2C1_DATA_HOLD_TIME_ns__,
+                .data_setup_time_ns = __I2C1_DATA_SETUP_TIME_ns__,
+                .APBENR             = &RCC_APBENR_I2C1,
+                .APBRSTR            = &RCC_APBRSTR_I2C1,
+                .APBENR_I2CEN       = RCC_APBENR_I2C1EN,
+                .APBRSTR_I2CRST     = RCC_APBRSTR_I2C1RST,
+                .IRQ_EV_n           = I2C1_EV_IRQn,
+                .IRQ_ER_n           = I2C1_ER_IRQn,
+                .IRQ_priority       = __I2C1_IRQ_PRIORITY__,
+                .clk_src            = LL_RCC_I2C1_CLKSOURCE
         },
         #endif
-        #if defined(RCC_APB1ENR_I2C2EN)
+        #if defined(RCC_APB1ENR_I2C2EN) || defined(RCC_APB1LENR_I2C2EN)
         {
-                .I2C               = (I2C_TypeDef*)I2C2,
-                .scl_freq          = __I2C2_SCL_FREQ__,
-                .filter            = __I2C2_ANALOG_FILTER_DISABLE__ | ((__I2C2_DIGITAL_FILTER__ << I2C_CR1_DNF_Pos) & I2C_CR1_DNF),
-                .scl_rise_time_ns  = __I2C2_SCL_RISE_TIME_ns__,
-                .scl_fall_time_ns  = __I2C2_SCL_FALL_TIME_ns__,
-                .data_hold_time_ns = __I2C2_DATA_HOLD_TIME_ns__,
-                .data_setup_time_ns= __I2C2_DATA_SETUP_TIME_ns__,
-                .APB1ENR_I2CEN     = RCC_APB1ENR_I2C2EN,
-                .APB1RSTR_I2CRST   = RCC_APB1RSTR_I2C2RST,
-                .IRQ_EV_n          = I2C2_EV_IRQn,
-                .IRQ_ER_n          = I2C2_ER_IRQn,
-                .IRQ_priority      = __I2C2_IRQ_PRIORITY__,
-                .clk_src           = LL_RCC_I2C2_CLKSOURCE
+                .I2C                = (I2C_TypeDef*)I2C2,
+                .scl_freq           = __I2C2_SCL_FREQ__,
+                .filter             = __I2C2_ANALOG_FILTER_DISABLE__ | ((__I2C2_DIGITAL_FILTER__ << I2C_CR1_DNF_Pos) & I2C_CR1_DNF),
+                .scl_rise_time_ns   = __I2C2_SCL_RISE_TIME_ns__,
+                .scl_fall_time_ns   = __I2C2_SCL_FALL_TIME_ns__,
+                .data_hold_time_ns  = __I2C2_DATA_HOLD_TIME_ns__,
+                .data_setup_time_ns = __I2C2_DATA_SETUP_TIME_ns__,
+                .APBENR             = &RCC_APBENR_I2C2,
+                .APBRSTR            = &RCC_APBRSTR_I2C2,
+                .APBENR_I2CEN       = RCC_APBENR_I2C2EN,
+                .APBRSTR_I2CRST     = RCC_APBRSTR_I2C2RST,
+                .IRQ_EV_n           = I2C2_EV_IRQn,
+                .IRQ_ER_n           = I2C2_ER_IRQn,
+                .IRQ_priority       = __I2C2_IRQ_PRIORITY__,
+                .clk_src            = LL_RCC_I2C2_CLKSOURCE
         },
         #endif
-        #if defined(RCC_APB1ENR_I2C3EN)
+        #if defined(RCC_APB1ENR_I2C3EN) || defined(RCC_APB1LENR_I2C3EN)
         {
-                .I2C               = (I2C_TypeDef*)I2C3,
-                .scl_freq          = __I2C3_SCL_FREQ__,
-                .filter            = __I2C3_ANALOG_FILTER_DISABLE__ | ((__I2C3_DIGITAL_FILTER__ << I2C_CR1_DNF_Pos) & I2C_CR1_DNF),
-                .scl_rise_time_ns  = __I2C3_SCL_RISE_TIME_ns__,
-                .scl_fall_time_ns  = __I2C3_SCL_FALL_TIME_ns__,
-                .data_hold_time_ns = __I2C3_DATA_HOLD_TIME_ns__,
-                .data_setup_time_ns= __I2C3_DATA_SETUP_TIME_ns__,
-                .APB1ENR_I2CEN     = RCC_APB1ENR_I2C3EN,
-                .APB1RSTR_I2CRST   = RCC_APB1RSTR_I2C3RST,
-                .IRQ_EV_n          = I2C3_EV_IRQn,
-                .IRQ_ER_n          = I2C3_ER_IRQn,
-                .IRQ_priority      = __I2C3_IRQ_PRIORITY__,
-                .clk_src           = LL_RCC_I2C3_CLKSOURCE
+                .I2C                = (I2C_TypeDef*)I2C3,
+                .scl_freq           = __I2C3_SCL_FREQ__,
+                .filter             = __I2C3_ANALOG_FILTER_DISABLE__ | ((__I2C3_DIGITAL_FILTER__ << I2C_CR1_DNF_Pos) & I2C_CR1_DNF),
+                .scl_rise_time_ns   = __I2C3_SCL_RISE_TIME_ns__,
+                .scl_fall_time_ns   = __I2C3_SCL_FALL_TIME_ns__,
+                .data_hold_time_ns  = __I2C3_DATA_HOLD_TIME_ns__,
+                .data_setup_time_ns = __I2C3_DATA_SETUP_TIME_ns__,
+                .APBENR             = &RCC_APBENR_I2C3,
+                .APBRSTR            = &RCC_APBRSTR_I2C3,
+                .APBENR_I2CEN       = RCC_APBENR_I2C3EN,
+                .APBRSTR_I2CRST     = RCC_APBRSTR_I2C3RST,
+                .IRQ_EV_n           = I2C3_EV_IRQn,
+                .IRQ_ER_n           = I2C3_ER_IRQn,
+                .IRQ_priority       = __I2C3_IRQ_PRIORITY__,
+                .clk_src            = LL_RCC_I2C3_CLKSOURCE
         },
         #endif
-        #if defined(RCC_APB1ENR_I2C4EN)
+        #if defined(RCC_APB1ENR_I2C4EN) || defined(RCC_APB4ENR_I2C4EN)
         {
-                .I2C               = (I2C_TypeDef*)I2C4,
-                .scl_freq          = __I2C4_SCL_FREQ__,
-                .filter            = __I2C4_ANALOG_FILTER_DISABLE__ | ((__I2C4_DIGITAL_FILTER__ << I2C_CR1_DNF_Pos) & I2C_CR1_DNF),
-                .scl_rise_time_ns  = __I2C4_SCL_RISE_TIME_ns__,
-                .scl_fall_time_ns  = __I2C4_SCL_FALL_TIME_ns__,
-                .data_hold_time_ns = __I2C4_DATA_HOLD_TIME_ns__,
-                .data_setup_time_ns= __I2C4_DATA_SETUP_TIME_ns__,
-                .APB1ENR_I2CEN     = RCC_APB1ENR_I2C4EN,
-                .APB1RSTR_I2CRST   = RCC_APB1RSTR_I2C4RST,
-                .IRQ_EV_n          = I2C4_EV_IRQn,
-                .IRQ_ER_n          = I2C4_ER_IRQn,
-                .IRQ_priority      = __I2C4_IRQ_PRIORITY__,
-                .clk_src           = LL_RCC_I2C4_CLKSOURCE
+                .I2C                = (I2C_TypeDef*)I2C4,
+                .scl_freq           = __I2C4_SCL_FREQ__,
+                .filter             = __I2C4_ANALOG_FILTER_DISABLE__ | ((__I2C4_DIGITAL_FILTER__ << I2C_CR1_DNF_Pos) & I2C_CR1_DNF),
+                .scl_rise_time_ns   = __I2C4_SCL_RISE_TIME_ns__,
+                .scl_fall_time_ns   = __I2C4_SCL_FALL_TIME_ns__,
+                .data_hold_time_ns  = __I2C4_DATA_HOLD_TIME_ns__,
+                .data_setup_time_ns = __I2C4_DATA_SETUP_TIME_ns__,
+                .APBENR             = &RCC_APBENR_I2C4,
+                .APBRSTR            = &RCC_APBRSTR_I2C4,
+                .APBENR_I2CEN       = RCC_APBENR_I2C4EN,
+                .APBRSTR_I2CRST     = RCC_APBRSTR_I2C4RST,
+                .IRQ_EV_n           = I2C4_EV_IRQn,
+                .IRQ_ER_n           = I2C4_ER_IRQn,
+                .IRQ_priority       = __I2C4_IRQ_PRIORITY__,
+                .clk_src            = LL_RCC_I2C4_CLKSOURCE
+        },
+        #endif
+        #if defined(RCC_APB1ENR_I2C5EN) || defined(RCC_APB1LENR_I2C5EN)
+        {
+                .I2C                = (I2C_TypeDef*)I2C5,
+                .scl_freq           = __I2C5_SCL_FREQ__,
+                .filter             = __I2C5_ANALOG_FILTER_DISABLE__ | ((__I2C5_DIGITAL_FILTER__ << I2C_CR1_DNF_Pos) & I2C_CR1_DNF),
+                .scl_rise_time_ns   = __I2C5_SCL_RISE_TIME_ns__,
+                .scl_fall_time_ns   = __I2C5_SCL_FALL_TIME_ns__,
+                .data_hold_time_ns  = __I2C5_DATA_HOLD_TIME_ns__,
+                .data_setup_time_ns = __I2C5_DATA_SETUP_TIME_ns__,
+                .APBENR             = &RCC_APBENR_I2C5,
+                .APBRSTR            = &RCC_APBRSTR_I2C5,
+                .APBENR_I2CEN       = RCC_APBENR_I2C5EN,
+                .APBRSTR_I2CRST     = RCC_APBRSTR_I2C5RST,
+                .IRQ_EV_n           = I2C5_EV_IRQn,
+                .IRQ_ER_n           = I2C5_ER_IRQn,
+                .IRQ_priority       = __I2C5_IRQ_PRIORITY__,
+                .clk_src            = LL_RCC_I2C5_CLKSOURCE
         },
         #endif
 };
@@ -239,13 +356,9 @@ static void reset(I2C_dev_t *hdl, bool reinit)
                 if ((state == 0) && (err == 0)) {
                         dev_dbg(hdl, "detected SDA low - bus recovery");
 
-                        #if defined(ARCH_stm32f3) || defined(ARCH_stm32f7)
-                        int mode = GPIO_MODE__OD;
-                        #endif
-
                         _GPIO_DDI_set_pin_mode(recovery->SCL.port_idx,
                                                recovery->SCL.pin_idx,
-                                               mode);
+                                               GPIO_MODE__OD);
 
                         for (int i = 0; i < 10; i++) {
                                 _GPIO_DDI_clear_pin(recovery->SCL.port_idx,
@@ -346,12 +459,12 @@ int _I2C_LLD__init(u8_t major)
         const I2C_info_t *cfg = &I2C_HW[major];
         I2C_TypeDef            *i2c = const_cast(I2C_HW[major].I2C);
 
-        CLEAR_BIT(RCC->APB1ENR, cfg->APB1ENR_I2CEN);
-        SET_BIT(RCC->APB1ENR, cfg->APB1ENR_I2CEN);
+        CLEAR_BIT(*cfg->APBENR, cfg->APBENR_I2CEN);
+        SET_BIT(*cfg->APBENR, cfg->APBENR_I2CEN);
 
-        SET_BIT(RCC->APB1RSTR, cfg->APB1RSTR_I2CRST);
+        SET_BIT(*cfg->APBRSTR, cfg->APBRSTR_I2CRST);
         sys_sleep_ms(10);
-        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1RSTR_I2CRST);
+        CLEAR_BIT(*cfg->APBRSTR, cfg->APBRSTR_I2CRST);
 
         NVIC_EnableIRQ(cfg->IRQ_EV_n);
         NVIC_EnableIRQ(cfg->IRQ_ER_n);
@@ -397,9 +510,9 @@ void _I2C_LLD__release(u8_t major)
         NVIC_DisableIRQ(cfg->IRQ_ER_n);
 
         WRITE_REG(i2c->CR1, 0);
-        SET_BIT(RCC->APB1RSTR, cfg->APB1ENR_I2CEN);
-        CLEAR_BIT(RCC->APB1RSTR, cfg->APB1ENR_I2CEN);
-        CLEAR_BIT(RCC->APB1ENR, cfg->APB1ENR_I2CEN);
+        SET_BIT(*cfg->APBRSTR, cfg->APBRSTR_I2CRST);
+        CLEAR_BIT(*cfg->APBRSTR, cfg->APBRSTR_I2CRST);
+        CLEAR_BIT(*cfg->APBENR, cfg->APBENR_I2CEN);
 
         _I2C[major]->initialized = false;
 }
@@ -1026,7 +1139,7 @@ static void IRQ_ER_handler(u8_t major)
  * @brief  I2C1 Event IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_I2C1EN)
+#if defined(RCC_APB1ENR_I2C1EN) || defined(RCC_APB1LENR_I2C1EN)
 void I2C1_EV_IRQHandler(void)
 {
         IRQ_EV_handler(_I2C1);
@@ -1038,7 +1151,7 @@ void I2C1_EV_IRQHandler(void)
  * @brief  I2C1 Error IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_I2C1EN)
+#if defined(RCC_APB1ENR_I2C1EN) || defined(RCC_APB1LENR_I2C1EN)
 void I2C1_ER_IRQHandler(void)
 {
         IRQ_ER_handler(_I2C1);
@@ -1050,7 +1163,7 @@ void I2C1_ER_IRQHandler(void)
  * @brief  I2C2 Event IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_I2C2EN)
+#if defined(RCC_APB1ENR_I2C2EN) || defined(RCC_APB1LENR_I2C2EN)
 void I2C2_EV_IRQHandler(void)
 {
         IRQ_EV_handler(_I2C2);
@@ -1062,7 +1175,7 @@ void I2C2_EV_IRQHandler(void)
  * @brief  I2C2 Error IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_I2C2EN)
+#if defined(RCC_APB1ENR_I2C2EN) || defined(RCC_APB1LENR_I2C2EN)
 void I2C2_ER_IRQHandler(void)
 {
         IRQ_ER_handler(_I2C2);
@@ -1074,7 +1187,7 @@ void I2C2_ER_IRQHandler(void)
  * @brief  I2C3 Event IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_I2C3EN)
+#if defined(RCC_APB1ENR_I2C3EN) || defined(RCC_APB1LENR_I2C3EN)
 void I2C3_EV_IRQHandler(void)
 {
         IRQ_EV_handler(_I2C3);
@@ -1086,7 +1199,7 @@ void I2C3_EV_IRQHandler(void)
  * @brief  I2C3 Error IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_I2C3EN)
+#if defined(RCC_APB1ENR_I2C3EN) || defined(RCC_APB1LENR_I2C3EN)
 void I2C3_ER_IRQHandler(void)
 {
         IRQ_ER_handler(_I2C3);
@@ -1098,7 +1211,7 @@ void I2C3_ER_IRQHandler(void)
  * @brief  I2C4 Event IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_I2C4EN)
+#if defined(RCC_APB1ENR_I2C4EN) || defined(RCC_APB4ENR_I2C4EN)
 void I2C4_EV_IRQHandler(void)
 {
         IRQ_EV_handler(_I2C4);
@@ -1110,10 +1223,34 @@ void I2C4_EV_IRQHandler(void)
  * @brief  I2C4 Error IRQ handler
  */
 //==============================================================================
-#if defined(RCC_APB1ENR_I2C4EN)
+#if defined(RCC_APB1ENR_I2C4EN) || defined(RCC_APB4ENR_I2C4EN)
 void I2C4_ER_IRQHandler(void)
 {
         IRQ_ER_handler(_I2C4);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief  I2C5 Event IRQ handler
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_I2C5EN) || defined(RCC_APB1LENR_I2C5EN)
+void I2C5_EV_IRQHandler(void)
+{
+        IRQ_EV_handler(_I2C5);
+}
+#endif
+
+//==============================================================================
+/**
+ * @brief  I2C5 Error IRQ handler
+ */
+//==============================================================================
+#if defined(RCC_APB1ENR_I2C5EN) || defined(RCC_APB1LENR_I2C5EN)
+void I2C5_ER_IRQHandler(void)
+{
+        IRQ_ER_handler(_I2C5);
 }
 #endif
 

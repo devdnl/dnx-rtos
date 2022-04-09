@@ -46,6 +46,9 @@
 #elif defined(ARCH_stm32f7)
 #include "stm32f7/stm32f7xx.h"
 #include "stm32f7/lib/stm32f7xx_ll_rcc.h"
+#elif defined(ARCH_stm32h7)
+#include "stm32h7/stm32h7xx.h"
+#include "stm32h7/lib/stm32h7xx_ll_rcc.h"
 #endif
 
 #ifdef __cplusplus
@@ -101,18 +104,22 @@ enum _I2C_major {
         _I2C_NUMBER_OF_PERIPHERALS
 };
 #elif defined(ARCH_stm32f7)
+#elif defined(ARCH_stm32h7)
 enum _I2C_major {
-        #if defined(RCC_APB1ENR_I2C1EN)
+        #if defined(RCC_APB1LENR_I2C1EN)
         _I2C1,
         #endif
-        #if defined(RCC_APB1ENR_I2C2EN)
+        #if defined(RCC_APB1LENR_I2C2EN)
         _I2C2,
         #endif
-        #if defined(RCC_APB1ENR_I2C3EN)
+        #if defined(RCC_APB1LENR_I2C3EN)
         _I2C3,
         #endif
-        #if defined(RCC_APB1ENR_I2C4EN)
+        #if defined(RCC_APB4ENR_I2C4EN)
         _I2C4,
+        #endif
+        #if defined(RCC_APB1LENR_I2C5EN)
+        _I2C5,
         #endif
         _I2C_NUMBER_OF_PERIPHERALS
 };
@@ -138,7 +145,7 @@ typedef struct {
         #if defined(ARCH_stm32f1) || defined(ARCH_stm32f4)
         u16_t                     SR1_mask;             //!< SR1 register mask (to catch specified event in IRQ)
         u8_t                      unexp_event_cnt;      //!< number of unexpected events
-        #elif defined(ARCH_stm32f3) || defined(ARCH_stm32f7)
+        #elif defined(ARCH_stm32f3) || defined(ARCH_stm32f7) || defined(ARCH_stm32h7)
         u8_t                      subaddr[4];
         u8_t                     *subaddr_buf;
         u8_t                      subaddr_len;
