@@ -103,6 +103,8 @@ API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor, const void *conf
                 }
 #endif
 
+                SYSCFG->CMPCR = __AFM_CMP_PD__;
+
                 return ESUCC;
         } else {
                 return ENODEV;

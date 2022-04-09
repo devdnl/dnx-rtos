@@ -30,7 +30,6 @@
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32f7/afm_cfg.h"
 #include "stm32f7/stm32f7xx.h"
 #include "../afm_ioctl.h"
 

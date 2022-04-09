@@ -447,6 +447,8 @@ endif
 #define _STM32H725xx  0x2de676c8
 #define _STM32H723xx  0x69d740ab
 
+#define CORE_CM7
+
 #if (__CPU_SERIES__ == _STM32H742xx )
 #define STM32H742xx
 #elif (__CPU_SERIES__ == _STM32H743xx )

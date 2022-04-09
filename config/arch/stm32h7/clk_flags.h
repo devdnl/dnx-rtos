@@ -67,7 +67,6 @@ this:AddExtraWidget("Label", "LABEL_SUPPLY_SOURCE_EXTRA", "")
 
 /*--
 this:AddExtraWidget("Label", "LABEL_OSCILLATORS", "\nOscillators", -1, "bold")
-this:AddExtraWidget("Label", "LABEL_OSCILLATORS", "Oscillators", -1, "bold")
 this:AddExtraWidget("Label", "LABEL_VoidOsc1", "\t\t\t\t\t\t\t", -1, "bold")
 this:AddExtraWidget("Void", "VoidOsc2")
 ++*/

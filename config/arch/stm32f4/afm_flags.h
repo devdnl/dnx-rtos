@@ -97,6 +97,17 @@ this:AddItem("Enable", "_YES_")
 --*/
 #define __AFM_BKPRAM_ENABLE__ _NO_
 
+/*--
+this:AddExtraWidget("Label", "LabelCMPCR", "\nCompensation cell control", -1, "bold")
+this:AddExtraWidget("Void", "VoidCMPCELL")
+++*/
+/*--
+this:AddWidget("Combobox", "Compensation cell power-down")
+this:AddItem("I/O compensation cell power-down mode", "(0 << SYSCFG_CMPCR_CMP_PD_Pos)")
+this:AddItem("I/O compensation cell enabled", "(1 << SYSCFG_CMPCR_CMP_PD_Pos)")
+--*/
+#define __AFM_CMP_PD__ (0 << SYSCFG_CMPCR_CMP_PD_Pos)
+
 #endif /* _AFIO_FLAGS_H_ */
 /*==============================================================================
   End of file

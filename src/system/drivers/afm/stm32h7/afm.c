@@ -76,6 +76,8 @@ API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor, const void *conf
         if (major == 0 && minor == 0) {
 
                 SET_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
+                __IO uint32_t tmpreg = READ_BIT(RCC->APB4ENR, RCC_APB4ENR_SYSCFGEN);
+                UNUSED_ARG1(tmpreg);
 
                 SYSCFG->PMCR = __AFM_PC3SO__
                              | __AFM_PC2SO__
@@ -108,9 +110,13 @@ API_MOD_INIT(AFM, void **device_handle, u8_t major, u8_t minor, const void *conf
                 SYSCFG->CCCR  = (__AFM_PCC__ << SYSCFG_CCCR_PCC_Pos)
                               | (__AFM_NCC__ << SYSCFG_CCCR_NCC_Pos);
 
-                SYSCFG->CCCSR = __AFM_HSLV__
-                              | __AFM_CS__
-                              | __AFM_CMP_EN__;
+                if (__AFM_CMP_EN__) {
+                        SET_BIT(RCC->CR, RCC_CR_CSION);
+
+                        SYSCFG->CCCSR = __AFM_HSLV__
+                                      | __AFM_CS__
+                                      | __AFM_CMP_EN__;
+                }
 
                 SYSCFG->UR13 = __AFM_D1SBRST__;
                 SYSCFG->UR14 = __AFM_D1STPRST__;
