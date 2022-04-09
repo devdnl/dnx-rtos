@@ -39,7 +39,7 @@ Brief    External Memory Interface
 #include "stm32f4/lib/stm32f4xx_rcc.h"
 #elif defined(ARCH_stm32f7)
 #include "stm32f7/stm32f7xx.h"
-#include "stm32f7/lib/stm32f7xx_rcc.h"
+#include "stm32f7/lib/stm32f7xx_ll_rcc.h"
 #elif defined(ARCH_stm32h7)
 #include "stm32h7/stm32h7xx.h"
 #include "stm32h7/lib/stm32h7xx_ll_rcc.h"
@@ -84,9 +84,39 @@ Brief    External Memory Interface
 #elif defined(ARCH_stm32f4)
 #define FMC_BANK_5_6            FMC_Bank5_6
 #define FMC_ENABLE()
+#define FMC_SDCRx_NC_Pos        (0U)
+#define FMC_SDCRx_NR_Pos        (2U)
+#define FMC_SDCRx_MWID_Pos      (4U)
+#define FMC_SDCRx_NB_Pos        (6U)
+#define FMC_SDCRx_CAS_Pos       (7U)
+#define FMC_SDCRx_SDCLK_Pos     (10U)
+#define FMC_SDCRx_RBURST_Pos    (12U)
+#define FMC_SDCRx_RPIPE_Pos     (13U)
+#define FMC_SDTRx_TMRD_Pos      (0U)
+#define FMC_SDTRx_TXSR_Pos      (4U)
+#define FMC_SDTRx_TRAS_Pos      (8U)
+#define FMC_SDTRx_TRC_Pos       (12U)
+#define FMC_SDTRx_TWR_Pos       (16U)
+#define FMC_SDTRx_TRP_Pos       (20U)
+#define FMC_SDTRx_TRCD_Pos      (24U)
 #elif defined(ARCH_stm32f7)
-#define FMC_BANK_5_6            FMC_Bank5_6_R
+#define FMC_BANK_5_6            FMC_Bank5_6
 #define FMC_ENABLE()
+#define FMC_SDCRx_NC_Pos        (0U)
+#define FMC_SDCRx_NR_Pos        (2U)
+#define FMC_SDCRx_MWID_Pos      (4U)
+#define FMC_SDCRx_NB_Pos        (6U)
+#define FMC_SDCRx_CAS_Pos       (7U)
+#define FMC_SDCRx_SDCLK_Pos     (10U)
+#define FMC_SDCRx_RBURST_Pos    (12U)
+#define FMC_SDCRx_RPIPE_Pos     (13U)
+#define FMC_SDTRx_TMRD_Pos      (0U)
+#define FMC_SDTRx_TXSR_Pos      (4U)
+#define FMC_SDTRx_TRAS_Pos      (8U)
+#define FMC_SDTRx_TRC_Pos       (12U)
+#define FMC_SDTRx_TWR_Pos       (16U)
+#define FMC_SDTRx_TRP_Pos       (20U)
+#define FMC_SDTRx_TRCD_Pos      (24U)
 #elif defined(ARCH_stm32h7)
 #define FMC_BANK_5_6            FMC_Bank5_6_R
 #define FMC_ENABLE()            SET_BIT(FMC_Bank1_R->BTCR[0], FMC_BCR1_FMCEN)
@@ -95,23 +125,17 @@ Brief    External Memory Interface
 /*==============================================================================
   Local object types
 ==============================================================================*/
-typedef struct {
-        void  *start;
-        size_t size;
-} FMC_t;
 
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int SDRAM_init(void);
+static int sdram_init(void);
 static int register_heap_regions(void *addr, size_t mem_size, mem_region_t region[],
                                  size_t region_num, size_t region_size);
 
 /*==============================================================================
   Local object
 ==============================================================================*/
-MODULE_NAME(FMC);
-
 #if __EMI_SDRAM_1_ENABLE__ > 0
 static mem_region_t sdram1_heap[__EMI_SDRAM_1_HEAP_REGIONS__ + 1];
 #endif
@@ -142,24 +166,19 @@ static mem_region_t sdram2_heap[__EMI_SDRAM_2_HEAP_REGIONS__ + 1];
 //==============================================================================
 API_MOD_INIT(EMI, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
-        UNUSED_ARG1(config);
+        UNUSED_ARG2(device_handle, config);
 
         int err = EFAULT;
 
         if (major == 0 && minor == 0) {
-                err = sys_zalloc(sizeof(FMC_t), device_handle);
-                if (!err) {
-                        //...
-                }
-
                 SET_BIT(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN);
                 volatile u32_t tmpreg = READ_BIT(RCC->AHB3ENR, RCC_AHB3ENR_FMCEN);
-                UNUSED(tmpreg);
+                UNUSED_ARG1(tmpreg);
 
                 SET_BIT(RCC->AHB3RSTR, RCC_AHB3RSTR_FMCRST);
                 CLEAR_BIT(RCC->AHB3RSTR, RCC_AHB3RSTR_FMCRST);
 
-                err = SDRAM_init();
+                err = sdram_init();
 
                 FMC_ENABLE();
         }
@@ -327,7 +346,7 @@ API_MOD_STAT(EMI, void *device_handle, struct vfs_dev_stat *device_stat)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-static int ram_test(void *address, size_t size)
+static int sdram_test(void *address, size_t size)
 {
         static const u32_t PATTERN[] = {
                 0x08080808,
@@ -338,7 +357,7 @@ static int ram_test(void *address, size_t size)
 
         int err = 0;
 
-        printk("FMC: memory test @ %p of %u bytes", address, size);
+        printk("EMI: memory test @ %p of %u bytes", address, size);
 
         for (size_t i = 0; i < ARRAY_SIZE(PATTERN); i++) {
 
@@ -354,7 +373,7 @@ static int ram_test(void *address, size_t size)
                 len = size / sizeof(u32_t);
                 while (len) {
                         if (*ptr != PATTERN[i]) {
-                                printk("FMC: error @ %p", ptr);
+                                printk("EMI: error @ %p", ptr);
                                 err = EFAULT;
                                 break;
                         }
@@ -375,7 +394,7 @@ static int ram_test(void *address, size_t size)
         len = size / sizeof(u32_t);
         while (len) {
                 if (*ptr != len) {
-                        printk("FMC: error @ %p", ptr);
+                        printk("EMI: error @ %p", ptr);
                         err = EFAULT;
                         break;
                 }
@@ -383,7 +402,7 @@ static int ram_test(void *address, size_t size)
                 len--;
         }
 
-        printk("FMC: memory test success.");
+        printk("EMI: memory test success.");
 
         return err;
 }
@@ -393,7 +412,7 @@ static int ram_test(void *address, size_t size)
  * @brief  Wait while the SDRAM is busy.
  */
 //==============================================================================
-static void wait_while_sdram_busy(void)
+static void sdram_wait_while_busy(void)
 {
 #if defined(ARCH_stm32f1)
 #error No FMC implementation!
@@ -408,12 +427,49 @@ static void wait_while_sdram_busy(void)
 
 //==============================================================================
 /**
+ * @brief  Calcualte SDRAM refresh rate.
+ *
+ * @return Calculated refresh rate.
+ */
+//==============================================================================
+static u32_t sdram_calculate_refresh_rate(void)
+{
+        u32_t fmc_freq = 0;
+
+#if defined(ARCH_stm32f1)
+#elif defined(ARCH_stm32f4)
+        LL_RCC_ClocksTypeDef freq;
+        LL_RCC_GetSystemClocksFreq(&freq);
+        fmc_freq = freq.HCLK_Frequency;
+#elif defined(ARCH_stm32f7)
+        LL_RCC_ClocksTypeDef freq;
+        LL_RCC_GetSystemClocksFreq(&freq);
+        fmc_freq = freq.HCLK_Frequency;
+#elif defined(ARCH_stm32h7)
+        fmc_freq = LL_RCC_GetFMCClockFreq(LL_RCC_FMC_CLKSOURCE);
+#endif
+
+        i32_t NR = max((2 << (__EMI_SDRAM_1_NR__ + 10)),
+                       (2 << (__EMI_SDRAM_2_NR__ + 10)));
+        i32_t MHz = fmc_freq / __EMI_SDRAM_SDCLK__ / 1000000;
+        i32_t SRR = (((__EMI_SDRAM_REFRESH_RATE_MS__ * 1000) / NR) * MHz) - 20;
+
+        if (SRR < 41) {
+                printk("EMI: incorrect SDRAM refresh rate.");
+                SRR = 41;
+        }
+
+        return SRR;
+}
+
+//==============================================================================
+/**
  * @brief Function initialize SDRAM controller.
  *
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-static int SDRAM_init(void)
+static int sdram_init(void)
 {
         /*
          * 1. Program the memory device features into the FMC_SDCRx register.
@@ -462,12 +518,13 @@ static int SDRAM_init(void)
 
         FMC_ENABLE();
 
+        /* From this point software is sending commands to SDRAM chips.*/
         /*
          * 3. Set MODE bits to '001' and configure the Target Bank bits
          *    (CTB1 and/or CTB2) in the FMC_SDCMR register to start delivering
          *    the clock to the memory (SDCKE is driven high).
          */
-        wait_while_sdram_busy();
+        sdram_wait_while_busy();
 
         FMC_BANK_5_6->SDCMR = (SDRAM_CMD__CLK_CFG_EN)
                             | (__EMI_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
@@ -486,7 +543,7 @@ static int SDRAM_init(void)
          *    (CTB1 and/or CTB2) in the FMC_SDCMR register to issue
          *    a “Precharge All” command.
          */
-        wait_while_sdram_busy();
+        sdram_wait_while_busy();
 
         FMC_BANK_5_6->SDCMR = (SDRAM_CMD__PRECHARGE_ALL)
                             | (__EMI_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
@@ -500,7 +557,7 @@ static int SDRAM_init(void)
          *    datasheet for the number of Auto-refresh commands that should be
          *    issued. Typical number is 8.
          */
-        wait_while_sdram_busy();
+        sdram_wait_while_busy();
 
         FMC_BANK_5_6->SDCMR = (SDRAM_CMD__AUTOREFRESH)
                             | (__EMI_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
@@ -521,7 +578,7 @@ static int SDRAM_init(void)
          *       banks, this step has to be repeated twice, once for each bank,
          *       and the Target Bank bits set accordingly.
          */
-        wait_while_sdram_busy();
+        sdram_wait_while_busy();
 
         u32_t MRD = SDRAM_MODE_REG_WRITE_BURST_MODE_SINGLE_LOCATION_ACCESS
                   | SDRAM_MODE_REG_OPERATING_MODE_STANDARD
@@ -540,37 +597,16 @@ static int SDRAM_init(void)
          *    rate corresponds to the delay between refresh cycles. Its value
          *    must be adapted to SDRAM devices.
          */
-        wait_while_sdram_busy();
+        sdram_wait_while_busy();
 
-        u32_t fmc_freq = 0;
-#if defined(ARCH_stm32f1)
-#elif defined(ARCH_stm32f4)
-        LL_RCC_ClocksTypeDef freq;
-        LL_RCC_GetSystemClocksFreq(&freq);
-        fmc_freq = HCLK_Frequency;
-#elif defined(ARCH_stm32f7)
-        LL_RCC_ClocksTypeDef freq;
-        LL_RCC_GetSystemClocksFreq(&freq);
-        fmc_freq = HCLK_Frequency;
-#elif defined(ARCH_stm32h7)
-        fmc_freq = LL_RCC_GetFMCClockFreq(LL_RCC_FMC_CLKSOURCE);
-#endif
-
-        i32_t NR  = max((2 << (__EMI_SDRAM_1_NR__ + 10)), (2 << (__EMI_SDRAM_2_NR__ + 10)));
-        i32_t MHz = fmc_freq / __EMI_SDRAM_SDCLK__ / 1000000;
-        i32_t SRR = (((__EMI_SDRAM_REFRESH_RATE_MS__ * 1000) / NR) * MHz) - 20;
-
-        if (SRR < 41) {
-                printk("FMC: incorrect SDRAM refresh rate.");
-                SRR = 41;
-        }
-
+        u32_t SRR = sdram_calculate_refresh_rate();
         FMC_BANK_5_6->SDRTR |= (SRR << FMC_SDRTR_COUNT_Pos);
 
-        wait_while_sdram_busy();
+        sdram_wait_while_busy();
+
 
         /*
-         * Register memory regions in system
+         * Register memory regions in system.
          */
         int err1 = ESUCC;
         int err2 = ESUCC;
@@ -584,7 +620,7 @@ static int SDRAM_init(void)
                          * (8 << (__EMI_SDRAM_1_MWID__   ))      // Bus width
                          / (8);                                  // Bits per byte
 
-        err1 = ram_test((void*)mem_addr1, mem_size1);
+        err1 = sdram_test((void*)mem_addr1, mem_size1);
         if (!err1) {
                 err1 = register_heap_regions((void*)mem_addr1, mem_size1,
                                              sdram1_heap, ARRAY_SIZE(sdram1_heap),
@@ -601,7 +637,7 @@ static int SDRAM_init(void)
                          * (8 << (__EMI_SDRAM_2_MWID__   ))      // Bus width
                          / (8);                                  // Bits per byte
 
-        err2 = ram_test((void*)mem_addr2, mem_size2);
+        err2 = sdram_test((void*)mem_addr2, mem_size2);
         if (!err2) {
                 err2 = register_heap_regions((void*)mem_addr2, mem_size2,
                                              sdram2_heap, ARRAY_SIZE(sdram2_heap),
