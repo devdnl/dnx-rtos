@@ -362,11 +362,11 @@ static inline const char *get_OS_version(void)
 
 //==============================================================================
 /**
- * @brief Function returns a codename of operating system version.
+ * @brief Function returns a commit hash of operating system version.
  *
- * The function get_OS_codename() return a codename string.
+ * The function get_OS_commithash() return a commit hash string.
  *
- * @return Codename string.
+ * @return Commit hash string.
  *
  * @b Example
  * @code
@@ -374,17 +374,17 @@ static inline const char *get_OS_version(void)
 
         // ...
 
-        printf("Codename: %s\n", get_OS_codename());
+        printf("Commit hash: %s\n", get_OS_commithash());
 
         // ...
 
    @endcode
  */
 //==============================================================================
-static inline const char *get_OS_codename(void)
+static inline const char *get_OS_commithash(void)
 {
         const char *buf = NULL;
-        int err = _libc_syscall(_LIBC_SYS_GETOSCODENAME, &buf);
+        int err = _libc_syscall(_LIBC_SYS_GETOSCOMMITHASH, &buf);
         return err ? "" : buf;
 }
 

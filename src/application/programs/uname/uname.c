@@ -69,10 +69,10 @@ int main(int argc, char *argv[])
         (void) argc;
         (void) argv;
 
-        printf("%s %s \"%s\" ["COMMIT_HASH"], %s %s, %s\n",
+        printf("%s %s (%s), %s %s, %s\n",
                get_OS_name(),
                get_OS_version(),
-               get_OS_codename(),
+               get_OS_commithash(),
                get_kernel_name(),
                get_kernel_version(),
                get_platform_name());

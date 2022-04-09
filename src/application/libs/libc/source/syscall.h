@@ -175,7 +175,7 @@ typedef enum {
         _LIBC_SYS_GETPLATFORMNAME,        // int errno (const char **ref)
         _LIBC_SYS_GETOSNAME,              // int errno (const char **ref)
         _LIBC_SYS_GETOSVER,               // int errno (const char **ref)
-        _LIBC_SYS_GETOSCODENAME,          // int errno (const char **ref)
+        _LIBC_SYS_GETOSCOMMITHASH,        // int errno (const char **ref)
         _LIBC_SYS_GETKERNELNAME,          // int errno (const char **ref)
         _LIBC_SYS_GETKERNELVER,           // int errno (const char **ref)
         _LIBC_SYS_GETHOSTNAME,            // int errno (char *buf, size_t *buf_len)

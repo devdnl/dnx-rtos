@@ -178,7 +178,7 @@ typedef enum {
         SYSCALL_GETPLATFORMNAME,        // int errno (const char **ref)
         SYSCALL_GETOSNAME,              // int errno (const char **ref)
         SYSCALL_GETOSVER,               // int errno (const char **ref)
-        SYSCALL_GETOSCODENAME,          // int errno (const char **ref)
+        SYSCALL_GETOSCOMMITHASH,        // int errno (const char **ref)
         SYSCALL_GETKERNELNAME,          // int errno (const char **ref)
         SYSCALL_GETKERNELVER,           // int errno (const char **ref)
         SYSCALL_GETHOSTNAME,            // int errno (char *buf, size_t *buf_len)
@@ -300,7 +300,7 @@ static int syscall_getavgcpuload(syscallrq_t *rq);
 static int syscall_getplatformname(syscallrq_t *rq);
 static int syscall_getosname(syscallrq_t *rq);
 static int syscall_getosver(syscallrq_t *rq);
-static int syscall_getoscodename(syscallrq_t *rq);
+static int syscall_getoscommithash(syscallrq_t *rq);
 static int syscall_getkernelname(syscallrq_t *rq);
 static int syscall_getkernelver(syscallrq_t *rq);
 static int syscall_gethostname(syscallrq_t *rq);
@@ -424,7 +424,7 @@ static const syscallfunc_t syscalltab[] = {
         [SYSCALL_GETPLATFORMNAME] = syscall_getplatformname,
         [SYSCALL_GETOSNAME] = syscall_getosname,
         [SYSCALL_GETOSVER] = syscall_getosver,
-        [SYSCALL_GETOSCODENAME] = syscall_getoscodename,
+        [SYSCALL_GETOSCOMMITHASH] = syscall_getoscommithash,
         [SYSCALL_GETKERNELNAME] = syscall_getkernelname,
         [SYSCALL_GETKERNELVER] = syscall_getkernelver,
         [SYSCALL_GETHOSTNAME] = syscall_gethostname,
@@ -461,9 +461,9 @@ static const syscallfunc_t syscalltab[] = {
   Exported objects
 ==============================================================================*/
 _process_t *_kworker_proc;
-const char *const dnx_RTOS_version = "3.0.1";
+const char *const dnx_RTOS_version = "3.0.0";
 const char *const dnx_RTOS_name = "dnx RTOS";
-const char *const dnx_RTOS_codename = "Hawk";
+const char *const dnx_RTOS_commit_hash = COMMIT_HASH;
 const char *const dnx_RTOS_platform_name = _CPUCTL_PLATFORM_NAME;
 
 /*==============================================================================
@@ -3041,12 +3041,12 @@ static int syscall_getosver(syscallrq_t *rq)
  * @return One of errno value.
  */
 //==============================================================================
-static int syscall_getoscodename(syscallrq_t *rq)
+static int syscall_getoscommithash(syscallrq_t *rq)
 {
         GETARG(const char **, ref);
 
         if (ref) {
-                *ref = dnx_RTOS_codename;
+                *ref = dnx_RTOS_commit_hash;
                 return 0;
         } else {
                 return EINVAL;
