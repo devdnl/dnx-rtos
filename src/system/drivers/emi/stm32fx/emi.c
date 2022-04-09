@@ -1,9 +1,9 @@
 /*==============================================================================
-File     fmc.c
+File     emi.c
 
 Author   Daniel Zorychta
 
-Brief    Flexible Memory Controller
+Brief    External Memory Interface
 
          Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -30,7 +30,7 @@ Brief    Flexible Memory Controller
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "../fmc_ioctl.h"
+#include "../emi_ioctl.h"
 
 #if defined(ARCH_stm32f1)
 #error No FMC implementation!
@@ -112,12 +112,12 @@ static int register_heap_regions(void *addr, size_t mem_size, mem_region_t regio
 ==============================================================================*/
 MODULE_NAME(FMC);
 
-#if __FMC_SDRAM_1_ENABLE__ > 0
-static mem_region_t sdram1_heap[__FMC_SDRAM_1_HEAP_REGIONS__ + 1];
+#if __EMI_SDRAM_1_ENABLE__ > 0
+static mem_region_t sdram1_heap[__EMI_SDRAM_1_HEAP_REGIONS__ + 1];
 #endif
 
-#if __FMC_SDRAM_2_ENABLE__ > 0
-static mem_region_t sdram2_heap[__FMC_SDRAM_2_HEAP_REGIONS__ + 1];
+#if __EMI_SDRAM_2_ENABLE__ > 0
+static mem_region_t sdram2_heap[__EMI_SDRAM_2_HEAP_REGIONS__ + 1];
 #endif
 
 /*==============================================================================
@@ -140,7 +140,7 @@ static mem_region_t sdram2_heap[__FMC_SDRAM_2_HEAP_REGIONS__ + 1];
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_INIT(FMC, void **device_handle, u8_t major, u8_t minor, const void *config)
+API_MOD_INIT(EMI, void **device_handle, u8_t major, u8_t minor, const void *config)
 {
         UNUSED_ARG1(config);
 
@@ -176,7 +176,7 @@ API_MOD_INIT(FMC, void **device_handle, u8_t major, u8_t minor, const void *conf
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_RELEASE(FMC, void *device_handle)
+API_MOD_RELEASE(EMI, void *device_handle)
 {
         UNUSED_ARG1(device_handle);
         return ENOTSUP;
@@ -192,7 +192,7 @@ API_MOD_RELEASE(FMC, void *device_handle)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_OPEN(FMC, void *device_handle, u32_t flags)
+API_MOD_OPEN(EMI, void *device_handle, u32_t flags)
 {
         UNUSED_ARG2(device_handle, flags);
         return ENOTSUP;
@@ -208,7 +208,7 @@ API_MOD_OPEN(FMC, void *device_handle, u32_t flags)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_CLOSE(FMC, void *device_handle, bool force)
+API_MOD_CLOSE(EMI, void *device_handle, bool force)
 {
         UNUSED_ARG2(device_handle, force);
         return ESUCC;
@@ -228,7 +228,7 @@ API_MOD_CLOSE(FMC, void *device_handle, bool force)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_WRITE(FMC,
+API_MOD_WRITE(EMI,
               void             *device_handle,
               const u8_t       *src,
               size_t            count,
@@ -254,7 +254,7 @@ API_MOD_WRITE(FMC,
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_READ(FMC,
+API_MOD_READ(EMI,
              void            *device_handle,
              u8_t            *dst,
              size_t           count,
@@ -277,7 +277,7 @@ API_MOD_READ(FMC,
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_IOCTL(FMC, void *device_handle, int request, void *arg)
+API_MOD_IOCTL(EMI, void *device_handle, int request, void *arg)
 {
         UNUSED_ARG3(device_handle, request, arg);
         return ENOTSUP;
@@ -292,7 +292,7 @@ API_MOD_IOCTL(FMC, void *device_handle, int request, void *arg)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_FLUSH(FMC, void *device_handle)
+API_MOD_FLUSH(EMI, void *device_handle)
 {
         UNUSED_ARG1(device_handle);
         return ESUCC;
@@ -308,7 +308,7 @@ API_MOD_FLUSH(FMC, void *device_handle)
  * @return One of errno value (errno.h).
  */
 //==============================================================================
-API_MOD_STAT(FMC, void *device_handle, struct vfs_dev_stat *device_stat)
+API_MOD_STAT(EMI, void *device_handle, struct vfs_dev_stat *device_stat)
 {
         UNUSED_ARG1(device_handle);
 
@@ -420,23 +420,23 @@ static int SDRAM_init(void)
          *    The SDRAM clock frequency, RBURST and RPIPE must be programmed
          *    in the FMC_SDCR1 register.
          */
-        FMC_BANK_5_6->SDCR[0] = ((__FMC_SDRAM_RPIPE__  & 3) << FMC_SDCRx_RPIPE_Pos)
-                              | ((__FMC_SDRAM_RBURST__ & 1) << FMC_SDCRx_RBURST_Pos)
-                              | ((__FMC_SDRAM_SDCLK__  & 3) << FMC_SDCRx_SDCLK_Pos)
-                              | ((__FMC_SDRAM_CAS__    & 3) << FMC_SDCRx_CAS_Pos)
-                              | ((__FMC_SDRAM_1_NB__   & 1) << FMC_SDCRx_NB_Pos)
-                              | ((__FMC_SDRAM_1_MWID__ & 3) << FMC_SDCRx_MWID_Pos)
-                              | ((__FMC_SDRAM_1_NR__   & 3) << FMC_SDCRx_NR_Pos)
-                              | ((__FMC_SDRAM_1_NC__   & 3) << FMC_SDCRx_NC_Pos);
+        FMC_BANK_5_6->SDCR[0] = ((__EMI_SDRAM_RPIPE__  & 3) << FMC_SDCRx_RPIPE_Pos)
+                              | ((__EMI_SDRAM_RBURST__ & 1) << FMC_SDCRx_RBURST_Pos)
+                              | ((__EMI_SDRAM_SDCLK__  & 3) << FMC_SDCRx_SDCLK_Pos)
+                              | ((__EMI_SDRAM_CAS__    & 3) << FMC_SDCRx_CAS_Pos)
+                              | ((__EMI_SDRAM_1_NB__   & 1) << FMC_SDCRx_NB_Pos)
+                              | ((__EMI_SDRAM_1_MWID__ & 3) << FMC_SDCRx_MWID_Pos)
+                              | ((__EMI_SDRAM_1_NR__   & 3) << FMC_SDCRx_NR_Pos)
+                              | ((__EMI_SDRAM_1_NC__   & 3) << FMC_SDCRx_NC_Pos);
 
-        FMC_BANK_5_6->SDCR[1] = ((__FMC_SDRAM_RPIPE__  & 3) << FMC_SDCRx_RPIPE_Pos)
-                              | ((__FMC_SDRAM_RBURST__ & 1) << FMC_SDCRx_RBURST_Pos)
-                              | ((__FMC_SDRAM_SDCLK__  & 3) << FMC_SDCRx_SDCLK_Pos)
-                              | ((__FMC_SDRAM_CAS__    & 3) << FMC_SDCRx_CAS_Pos)
-                              | ((__FMC_SDRAM_2_NB__   & 1) << FMC_SDCRx_NB_Pos)
-                              | ((__FMC_SDRAM_2_MWID__ & 3) << FMC_SDCRx_MWID_Pos)
-                              | ((__FMC_SDRAM_2_NR__   & 3) << FMC_SDCRx_NR_Pos)
-                              | ((__FMC_SDRAM_2_NC__   & 3) << FMC_SDCRx_NC_Pos);
+        FMC_BANK_5_6->SDCR[1] = ((__EMI_SDRAM_RPIPE__  & 3) << FMC_SDCRx_RPIPE_Pos)
+                              | ((__EMI_SDRAM_RBURST__ & 1) << FMC_SDCRx_RBURST_Pos)
+                              | ((__EMI_SDRAM_SDCLK__  & 3) << FMC_SDCRx_SDCLK_Pos)
+                              | ((__EMI_SDRAM_CAS__    & 3) << FMC_SDCRx_CAS_Pos)
+                              | ((__EMI_SDRAM_2_NB__   & 1) << FMC_SDCRx_NB_Pos)
+                              | ((__EMI_SDRAM_2_MWID__ & 3) << FMC_SDCRx_MWID_Pos)
+                              | ((__EMI_SDRAM_2_NR__   & 3) << FMC_SDCRx_NR_Pos)
+                              | ((__EMI_SDRAM_2_NC__   & 3) << FMC_SDCRx_NC_Pos);
 
         /*
          * 2. Program the memory device timing into the FMC_SDTRx register.
@@ -444,21 +444,21 @@ static int SDRAM_init(void)
          *    register.
          *
          */
-        FMC_BANK_5_6->SDTR[0] = (((__FMC_SDRAM_1_TRCD__ - 1) & 0xF) << FMC_SDTRx_TRCD_Pos)
-                              | (((__FMC_SDRAM_TRP__    - 1) & 0xF) << FMC_SDTRx_TRP_Pos)
-                              | (((__FMC_SDRAM_TWR__    - 1) & 0xF) << FMC_SDTRx_TWR_Pos)
-                              | (((__FMC_SDRAM_TRC__    - 1) & 0xF) << FMC_SDTRx_TRC_Pos)
-                              | (((__FMC_SDRAM_TRAS__   - 1) & 0xF) << FMC_SDTRx_TRAS_Pos)
-                              | (((__FMC_SDRAM_TXSR__   - 1) & 0xF) << FMC_SDTRx_TXSR_Pos)
-                              | (((__FMC_SDRAM_TMRD__   - 1) & 0xF) << FMC_SDTRx_TMRD_Pos);
+        FMC_BANK_5_6->SDTR[0] = (((__EMI_SDRAM_1_TRCD__ - 1) & 0xF) << FMC_SDTRx_TRCD_Pos)
+                              | (((__EMI_SDRAM_TRP__    - 1) & 0xF) << FMC_SDTRx_TRP_Pos)
+                              | (((__EMI_SDRAM_TWR__    - 1) & 0xF) << FMC_SDTRx_TWR_Pos)
+                              | (((__EMI_SDRAM_TRC__    - 1) & 0xF) << FMC_SDTRx_TRC_Pos)
+                              | (((__EMI_SDRAM_TRAS__   - 1) & 0xF) << FMC_SDTRx_TRAS_Pos)
+                              | (((__EMI_SDRAM_TXSR__   - 1) & 0xF) << FMC_SDTRx_TXSR_Pos)
+                              | (((__EMI_SDRAM_TMRD__   - 1) & 0xF) << FMC_SDTRx_TMRD_Pos);
 
-        FMC_BANK_5_6->SDTR[1] = (((__FMC_SDRAM_2_TRCD__ - 1) & 0xF) << FMC_SDTRx_TRCD_Pos)
-                              | (((__FMC_SDRAM_TRP__    - 1) & 0xF) << FMC_SDTRx_TRP_Pos)
-                              | (((__FMC_SDRAM_TWR__    - 1) & 0xF) << FMC_SDTRx_TWR_Pos)
-                              | (((__FMC_SDRAM_TRC__    - 1) & 0xF) << FMC_SDTRx_TRC_Pos)
-                              | (((__FMC_SDRAM_TRAS__   - 1) & 0xF) << FMC_SDTRx_TRAS_Pos)
-                              | (((__FMC_SDRAM_TXSR__   - 1) & 0xF) << FMC_SDTRx_TXSR_Pos)
-                              | (((__FMC_SDRAM_TMRD__   - 1) & 0xF) << FMC_SDTRx_TMRD_Pos);
+        FMC_BANK_5_6->SDTR[1] = (((__EMI_SDRAM_2_TRCD__ - 1) & 0xF) << FMC_SDTRx_TRCD_Pos)
+                              | (((__EMI_SDRAM_TRP__    - 1) & 0xF) << FMC_SDTRx_TRP_Pos)
+                              | (((__EMI_SDRAM_TWR__    - 1) & 0xF) << FMC_SDTRx_TWR_Pos)
+                              | (((__EMI_SDRAM_TRC__    - 1) & 0xF) << FMC_SDTRx_TRC_Pos)
+                              | (((__EMI_SDRAM_TRAS__   - 1) & 0xF) << FMC_SDTRx_TRAS_Pos)
+                              | (((__EMI_SDRAM_TXSR__   - 1) & 0xF) << FMC_SDTRx_TXSR_Pos)
+                              | (((__EMI_SDRAM_TMRD__   - 1) & 0xF) << FMC_SDTRx_TMRD_Pos);
 
         FMC_ENABLE();
 
@@ -470,8 +470,8 @@ static int SDRAM_init(void)
         wait_while_sdram_busy();
 
         FMC_BANK_5_6->SDCMR = (SDRAM_CMD__CLK_CFG_EN)
-                            | (__FMC_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
-                            | (__FMC_SDRAM_2_ENABLE__ * FMC_SDCMR_CTB2)
+                            | (__EMI_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
+                            | (__EMI_SDRAM_2_ENABLE__ * FMC_SDCMR_CTB2)
                             | (1 << FMC_SDCMR_NRFS_Pos);
 
         /*
@@ -489,8 +489,8 @@ static int SDRAM_init(void)
         wait_while_sdram_busy();
 
         FMC_BANK_5_6->SDCMR = (SDRAM_CMD__PRECHARGE_ALL)
-                            | (__FMC_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
-                            | (__FMC_SDRAM_2_ENABLE__ * FMC_SDCMR_CTB2)
+                            | (__EMI_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
+                            | (__EMI_SDRAM_2_ENABLE__ * FMC_SDCMR_CTB2)
                             | (1 << FMC_SDCMR_NRFS_Pos);
 
         /*
@@ -503,9 +503,9 @@ static int SDRAM_init(void)
         wait_while_sdram_busy();
 
         FMC_BANK_5_6->SDCMR = (SDRAM_CMD__AUTOREFRESH)
-                            | (__FMC_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
-                            | (__FMC_SDRAM_2_ENABLE__ * FMC_SDCMR_CTB2)
-                            | (((__FMC_SDRAM_NRFS__ - 1) & 0xF) << FMC_SDCMR_NRFS_Pos);
+                            | (__EMI_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
+                            | (__EMI_SDRAM_2_ENABLE__ * FMC_SDCMR_CTB2)
+                            | (((__EMI_SDRAM_NRFS__ - 1) & 0xF) << FMC_SDCMR_NRFS_Pos);
 
         /*
          * 7. Configure the MRD field according to your SDRAM device, set the
@@ -525,13 +525,13 @@ static int SDRAM_init(void)
 
         u32_t MRD = SDRAM_MODE_REG_WRITE_BURST_MODE_SINGLE_LOCATION_ACCESS
                   | SDRAM_MODE_REG_OPERATING_MODE_STANDARD
-                  | (__FMC_SDRAM_CAS__ << SDRAM_MODE_REG_CAS_LATENCY_Pos)
+                  | (__EMI_SDRAM_CAS__ << SDRAM_MODE_REG_CAS_LATENCY_Pos)
                   | SDRAM_MODE_REG_BURST_TYPE_SEQUENTIAL
                   | SDRAM_MODE_REG_BURST_LENGTH_1;
 
         FMC_BANK_5_6->SDCMR = (SDRAM_CMD__LOADMODEREG)
-                            | (__FMC_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
-                            | (__FMC_SDRAM_2_ENABLE__ * FMC_SDCMR_CTB2)
+                            | (__EMI_SDRAM_1_ENABLE__ * FMC_SDCMR_CTB1)
+                            | (__EMI_SDRAM_2_ENABLE__ * FMC_SDCMR_CTB2)
                             | (1 << FMC_SDCMR_NRFS_Pos)
                             | (MRD << FMC_SDCMR_MRD_Pos);
 
@@ -556,9 +556,9 @@ static int SDRAM_init(void)
         fmc_freq = LL_RCC_GetFMCClockFreq(LL_RCC_FMC_CLKSOURCE);
 #endif
 
-        i32_t NR  = max((2 << (__FMC_SDRAM_1_NR__ + 10)), (2 << (__FMC_SDRAM_2_NR__ + 10)));
-        i32_t MHz = fmc_freq / __FMC_SDRAM_SDCLK__ / 1000000;
-        i32_t SRR = (((__FMC_SDRAM_REFRESH_RATE_MS__ * 1000) / NR) * MHz) - 20;
+        i32_t NR  = max((2 << (__EMI_SDRAM_1_NR__ + 10)), (2 << (__EMI_SDRAM_2_NR__ + 10)));
+        i32_t MHz = fmc_freq / __EMI_SDRAM_SDCLK__ / 1000000;
+        i32_t SRR = (((__EMI_SDRAM_REFRESH_RATE_MS__ * 1000) / NR) * MHz) - 20;
 
         if (SRR < 41) {
                 printk("FMC: incorrect SDRAM refresh rate.");
@@ -575,37 +575,37 @@ static int SDRAM_init(void)
         int err1 = ESUCC;
         int err2 = ESUCC;
 
-#if __FMC_SDRAM_1_ENABLE__ > 0
+#if __EMI_SDRAM_1_ENABLE__ > 0
         u32_t mem_addr1 = 0xC0000000;
 
-        size_t mem_size1 = (2 << (__FMC_SDRAM_1_NR__ + 10))      // Row bits (0 - 11 bits: A10)
-                         * (2 << (__FMC_SDRAM_1_NC__ +  7))      // Col bits (0 - 8 bits:  A7)
-                         * (2 << (__FMC_SDRAM_1_NB__     ))      // Banks (2 or 4)
-                         * (8 << (__FMC_SDRAM_1_MWID__   ))      // Bus width
+        size_t mem_size1 = (2 << (__EMI_SDRAM_1_NR__ + 10))      // Row bits (0 - 11 bits: A10)
+                         * (2 << (__EMI_SDRAM_1_NC__ +  7))      // Col bits (0 - 8 bits:  A7)
+                         * (2 << (__EMI_SDRAM_1_NB__     ))      // Banks (2 or 4)
+                         * (8 << (__EMI_SDRAM_1_MWID__   ))      // Bus width
                          / (8);                                  // Bits per byte
 
         err1 = ram_test((void*)mem_addr1, mem_size1);
         if (!err1) {
                 err1 = register_heap_regions((void*)mem_addr1, mem_size1,
                                              sdram1_heap, ARRAY_SIZE(sdram1_heap),
-                                             (__FMC_SDRAM_1_HEAP_REGION_SIZE__ * 1024) & 0xFFFFFFFC);
+                                             (__EMI_SDRAM_1_HEAP_REGION_SIZE__ * 1024) & 0xFFFFFFFC);
         }
 #endif
 
-#if __FMC_SDRAM_2_ENABLE__ > 0
+#if __EMI_SDRAM_2_ENABLE__ > 0
         u32_t mem_addr2 = 0xD0000000;
 
-        size_t mem_size2 = (2 << (__FMC_SDRAM_2_NR__ + 10))      // Row bits (0 - 11 bits: A10)
-                         * (2 << (__FMC_SDRAM_2_NC__ +  7))      // Col bits (0 - 8 bits:  A7)
-                         * (2 << (__FMC_SDRAM_2_NB__     ))      // Banks (2 or 4)
-                         * (8 << (__FMC_SDRAM_2_MWID__   ))      // Bus width
+        size_t mem_size2 = (2 << (__EMI_SDRAM_2_NR__ + 10))      // Row bits (0 - 11 bits: A10)
+                         * (2 << (__EMI_SDRAM_2_NC__ +  7))      // Col bits (0 - 8 bits:  A7)
+                         * (2 << (__EMI_SDRAM_2_NB__     ))      // Banks (2 or 4)
+                         * (8 << (__EMI_SDRAM_2_MWID__   ))      // Bus width
                          / (8);                                  // Bits per byte
 
         err2 = ram_test((void*)mem_addr2, mem_size2);
         if (!err2) {
                 err2 = register_heap_regions((void*)mem_addr2, mem_size2,
                                              sdram2_heap, ARRAY_SIZE(sdram2_heap),
-                                             (__FMC_SDRAM_2_HEAP_REGION_SIZE__ * 1024) & 0xFFFFFFFC);
+                                             (__EMI_SDRAM_2_HEAP_REGION_SIZE__ * 1024) & 0xFFFFFFFC);
         }
 #endif
 

@@ -1,5 +1,5 @@
 /*==============================================================================
-File    fmc_ioctl.h
+File    emi_ioctl.h
 
 Author  Daniel Zorychta
 
@@ -26,54 +26,54 @@ Brief   Flexible Memory Controller
 ==============================================================================*/
 
 /**
-@defgroup drv-fmc FMC Driver (Flexible Memory Controller)
+@defgroup drv-emi EMI Driver (Flexible Memory Controller)
 
-\section drv-fmc-desc Description
+\section drv-emi-desc Description
 Driver handles ...
 
-\section drv-fmc-sup-arch Supported architectures
+\section drv-emi-sup-arch Supported architectures
 \li stm32f4, stm32f7, stm32h7
 
-\section drv-fmc-ddesc Details
-\subsection drv-fmc-ddesc-num Meaning of major and minor numbers
+\section drv-emi-ddesc Details
+\subsection drv-emi-ddesc-num Meaning of major and minor numbers
 \todo Meaning of major and minor numbers
 
-\subsubsection drv-fmc-ddesc-numres Numeration restrictions
+\subsubsection drv-emi-ddesc-numres Numeration restrictions
 \todo Numeration restrictions
 
-\subsection drv-fmc-ddesc-init Driver initialization
+\subsection drv-emi-ddesc-init Driver initialization
 To initialize driver the following code can be used:
 
 @code
-driver_init("FMC", 0, 0, "/dev/FMC0-0");
+driver_init("EMI", 0, 0, "/dev/EMI0-0");
 @endcode
 @code
-driver_init("FMC", 0, 1, "/dev/FMC0-1");
+driver_init("EMI", 0, 1, "/dev/EMI0-1");
 @endcode
 
-\subsection drv-fmc-ddesc-release Driver release
+\subsection drv-emi-ddesc-release Driver release
 To release driver the following code can be used:
 @code
-driver_release("FMC", 0, 0);
+driver_release("EMI", 0, 0);
 @endcode
 @code
-driver_release("FMC", 0, 1);
+driver_release("EMI", 0, 1);
 @endcode
 
-\subsection drv-fmc-ddesc-cfg Driver configuration
+\subsection drv-emi-ddesc-cfg Driver configuration
 \todo Driver configuration
 
-\subsection drv-fmc-ddesc-write Data write
+\subsection drv-emi-ddesc-write Data write
 \todo Data write
 
-\subsection drv-fmc-ddesc-read Data read
+\subsection drv-emi-ddesc-read Data read
 \todo Data read
 
 @{
 */
 
-#ifndef _FMC_IOCTL_H_
-#define _FMC_IOCTL_H_
+#ifndef _EMI_IOCTL_H_
+#define _EMI_IOCTL_H_
 
 /*==============================================================================
   Include files
@@ -108,7 +108,7 @@ extern "C" {
 }
 #endif
 
-#endif /* _FMC_IOCTL_H_ */
+#endif /* _EMI_IOCTL_H_ */
 /**@}*/
 /*==============================================================================
   End of file

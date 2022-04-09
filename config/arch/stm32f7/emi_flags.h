@@ -1,9 +1,9 @@
 /*==============================================================================
-File     fmc_flags.h
+File     emi_flags.h
 
 Author   Daniel Zorychta
 
-Brief    Flexible Memory Controller
+Brief    External Memory Interface
 
          Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
 
@@ -31,11 +31,11 @@ Brief    Flexible Memory Controller
  *       All other flag definitions and statements are ignored.
  */
 
-#ifndef _FMC_FLAGS_H_
-#define _FMC_FLAGS_H_
+#ifndef _EMI_FLAGS_H_
+#define _EMI_FLAGS_H_
 
 /*--
-this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > FMC",
+this:SetLayout("TitledGridBack", 2, "Home > Microcontroller > EMI",
                function() this:LoadFile("arch/arch_flags.h") end)
 ++*/
 
@@ -84,14 +84,14 @@ this:AddItem("No delay", "0")
 this:AddItem("1 HCLK delay", "1")
 this:AddItem("2 HCLK delay", "2")
 --*/
-#define __FMC_SDRAM_RPIPE__ 0
+#define __EMI_SDRAM_RPIPE__ 0
 
 /*--
 this:AddWidget("Combobox", "Burst read mode")
 this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 --*/
-#define __FMC_SDRAM_RBURST__ 1
+#define __EMI_SDRAM_RBURST__ 1
 
 /*--
 this:AddWidget("Combobox", "SDRAM clock period")
@@ -99,54 +99,54 @@ this:AddItem("SDCLK disabled", "0")
 this:AddItem("2 x HCLK periods", "2")
 this:AddItem("3 x HCLK periods", "3")
 --*/
-#define __FMC_SDRAM_SDCLK__ 2
+#define __EMI_SDRAM_SDCLK__ 2
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row precharge delay")
 --*/
-#define __FMC_SDRAM_TRP__ 16
+#define __EMI_SDRAM_TRP__ 16
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row cycle delay")
 --*/
-#define __FMC_SDRAM_TRC__ 16
+#define __EMI_SDRAM_TRC__ 16
 
 /*--
 this:AddWidget("Spinbox", 1, 3, "CAS Latency")
 --*/
-#define __FMC_SDRAM_CAS__ 3
+#define __EMI_SDRAM_CAS__ 3
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Self refresh time")
 --*/
-#define __FMC_SDRAM_TRAS__ 16
+#define __EMI_SDRAM_TRAS__ 16
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Exit Self-refresh delay")
 --*/
-#define __FMC_SDRAM_TXSR__ 16
+#define __EMI_SDRAM_TXSR__ 16
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Write Recovery Time")
 --*/
-#define __FMC_SDRAM_TWR__ 2
+#define __EMI_SDRAM_TWR__ 2
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Load to Active delay")
 this:SetToolTip("Define the delay between a Load Mode Register command and an "..
                 "Active or Refresh command.")
 --*/
-#define __FMC_SDRAM_TMRD__ 16
+#define __EMI_SDRAM_TMRD__ 16
 
 /*--
 this:AddWidget("Spinbox", 1, 15, "Number of Auto-refresh")
 --*/
-#define __FMC_SDRAM_NRFS__ 8
+#define __EMI_SDRAM_NRFS__ 8
 
 /*--
 this:AddWidget("Spinbox", 1, 128, "Refresh rate [ms]")
 --*/
-#define __FMC_SDRAM_REFRESH_RATE_MS__ 64
+#define __EMI_SDRAM_REFRESH_RATE_MS__ 64
 
 //------------------------------------------------------------------------------
 /*--
@@ -159,14 +159,14 @@ this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 this:SetEvent("clicked", function() this:SDRAMEn(1) end)
 --*/
-#define __FMC_SDRAM_1_ENABLE__ 1
+#define __EMI_SDRAM_1_ENABLE__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")
 this:AddItem("2 internal banks", "0")
 this:AddItem("4 internal banks", "1")
 --*/
-#define __FMC_SDRAM_1_NB__ 1
+#define __EMI_SDRAM_1_NB__ 1
 
 /*--
 this:AddWidget("Combobox", "Data bus width")
@@ -174,7 +174,7 @@ this:AddItem("8 bits", "0")
 this:AddItem("16 bits", "1")
 this:AddItem("32 bits", "2")
 --*/
-#define __FMC_SDRAM_1_MWID__ 1
+#define __EMI_SDRAM_1_MWID__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of row address bits")
@@ -182,7 +182,7 @@ this:AddItem("11 bits", "0")
 this:AddItem("12 bits", "1")
 this:AddItem("13 bits", "2")
 --*/
-#define __FMC_SDRAM_1_NR__ 1
+#define __EMI_SDRAM_1_NR__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of column address bits")
@@ -191,22 +191,22 @@ this:AddItem("9 bits", "1")
 this:AddItem("10 bits", "2")
 this:AddItem("11 bits", "3")
 --*/
-#define __FMC_SDRAM_1_NC__ 0
+#define __EMI_SDRAM_1_NC__ 0
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row to column delay")
 --*/
-#define __FMC_SDRAM_1_TRCD__ 16
+#define __EMI_SDRAM_1_TRCD__ 16
 
 /*--
 this:AddWidget("Spinbox", 1, 2048, "Heap regions")
 --*/
-#define __FMC_SDRAM_1_HEAP_REGIONS__ 1
+#define __EMI_SDRAM_1_HEAP_REGIONS__ 1
 
 /*--
 this:AddWidget("Spinbox", 1, 65536, "Heap region size [KiB]")
 --*/
-#define __FMC_SDRAM_1_HEAP_REGION_SIZE__ 8192
+#define __EMI_SDRAM_1_HEAP_REGION_SIZE__ 8192
 
 //------------------------------------------------------------------------------
 /*--
@@ -219,14 +219,14 @@ this:AddItem("Disable", "0")
 this:AddItem("Enable", "1")
 this:SetEvent("clicked", function() this:SDRAMEn(2) end)
 --*/
-#define __FMC_SDRAM_2_ENABLE__ 0
+#define __EMI_SDRAM_2_ENABLE__ 0
 
 /*--
 this:AddWidget("Combobox", "Number of internal banks")
 this:AddItem("2 internal banks", "0")
 this:AddItem("4 internal banks", "1")
 --*/
-#define __FMC_SDRAM_2_NB__ 1
+#define __EMI_SDRAM_2_NB__ 1
 
 /*--
 this:AddWidget("Combobox", "Data bus width")
@@ -234,7 +234,7 @@ this:AddItem("8 bits", "0")
 this:AddItem("16 bits", "1")
 this:AddItem("32 bits", "2")
 --*/
-#define __FMC_SDRAM_2_MWID__ 1
+#define __EMI_SDRAM_2_MWID__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of row address bits")
@@ -242,7 +242,7 @@ this:AddItem("11 bits", "0")
 this:AddItem("12 bits", "1")
 this:AddItem("13 bits", "2")
 --*/
-#define __FMC_SDRAM_2_NR__ 1
+#define __EMI_SDRAM_2_NR__ 1
 
 /*--
 this:AddWidget("Combobox", "Number of column address bits")
@@ -251,22 +251,22 @@ this:AddItem("9 bits", "1")
 this:AddItem("10 bits", "2")
 this:AddItem("11 bits", "3")
 --*/
-#define __FMC_SDRAM_2_NC__ 0
+#define __EMI_SDRAM_2_NC__ 0
 
 /*--
 this:AddWidget("Spinbox", 1, 16, "Row to column delay")
 --*/
-#define __FMC_SDRAM_2_TRCD__ 16
+#define __EMI_SDRAM_2_TRCD__ 16
 
 /*--
 this:AddWidget("Spinbox", 1, 2048, "Heap regions")
 --*/
-#define __FMC_SDRAM_2_HEAP_REGIONS__ 1
+#define __EMI_SDRAM_2_HEAP_REGIONS__ 1
 
 /*--
 this:AddWidget("Spinbox", 1, 65536, "Heap region size [KiB]")
 --*/
-#define __FMC_SDRAM_2_HEAP_REGION_SIZE__ 8192
+#define __EMI_SDRAM_2_HEAP_REGION_SIZE__ 8192
 
 
 //------------------------------------------------------------------------------
@@ -275,24 +275,24 @@ this:AddWidget("Spinbox", 1, 65536, "Heap region size [KiB]")
 /*--
 this.SDRAMEn = function(self, SDRAM)
     local en = false
-    if this:GetFlagValue("__FMC_SDRAM_"..SDRAM.."_ENABLE__") ~= "0" then
+    if this:GetFlagValue("__EMI_SDRAM_"..SDRAM.."_ENABLE__") ~= "0" then
         en = true
     end
 
-    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_NB__")
-    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_MWID__")
-    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_NR__")
-    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_NC__")
-    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_TRCD__")
-    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_HEAP_REGIONS__")
-    this:Enable(en, "__FMC_SDRAM_"..SDRAM.."_HEAP_REGION_SIZE__")
+    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_NB__")
+    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_MWID__")
+    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_NR__")
+    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_NC__")
+    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_TRCD__")
+    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_HEAP_REGIONS__")
+    this:Enable(en, "__EMI_SDRAM_"..SDRAM.."_HEAP_REGION_SIZE__")
 end
 
 this:SDRAMEn(1)
 this:SDRAMEn(2)
 ++*/
 
-#endif /* _FMC_FLAGS_H_ */
+#endif /* _EMI_FLAGS_H_ */
 /*==============================================================================
   End of file
 ==============================================================================*/
