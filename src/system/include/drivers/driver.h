@@ -70,12 +70,12 @@ extern "C" {
         _kmalloc(_MM_MOD, size_t__size, NULL, _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  sys_zalloc2
-#define sys_zalloc2(size_t__size, prefreg, required, required_mask, void__ppmem)\
-        _kzalloc(_MM_MOD, size_t__size, prefreg, required, required_mask, void__ppmem, _module_get_ID(_module_name_))
+#define sys_zalloc2(size_t__size, prefreg_name, required_features, required_features_mask, void__ppmem)\
+        _kzalloc(_MM_MOD, size_t__size, prefreg_name, required_features, required_features_mask, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  sys_malloc2
-#define sys_malloc2(size_t__size, prefreg, required, required_mask, void__ppmem)\
-        _kzalloc(_MM_MOD, size_t__size, prefreg, required, required_mask, void__ppmem, _module_get_ID(_module_name_))
+#define sys_malloc2(size_t__size, prefreg_name, required_features, required_features_mask, void__ppmem)\
+        _kzalloc(_MM_MOD, size_t__size, prefreg_name, required_features, required_features_mask, void__ppmem, _module_get_ID(_module_name_))
 
 #undef  sys_free
 #define sys_free(void__ppmem)\

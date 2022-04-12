@@ -181,7 +181,7 @@ static int copy_file(const char *src, const char *dst)
         }
 
         if (src_file and dst_file) {
-                int n;
+                size_t n;
                 errno = 0;
                 while ((n = fread(global->buffer, 1, global->buffer_size, src_file)) > 0) {
                         if (ferror(src_file)) {
@@ -191,10 +191,12 @@ static int copy_file(const char *src, const char *dst)
                         }
 
                         errno = 0;
-                        fwrite(global->buffer, 1, n, dst_file);
+                        size_t m = fwrite(global->buffer, 1, n, dst_file);
                         if (ferror(dst_file)) {
                                 err = errno;
                                 perror(dst);
+                                break;
+                        } else if (m != n) {
                                 break;
                         }
                 }
