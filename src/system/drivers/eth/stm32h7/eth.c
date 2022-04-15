@@ -142,7 +142,7 @@ API_MOD_INIT(ETH, void **device_handle, u8_t major, u8_t minor, const void *conf
                 return ENODEV;
         }
 
-        int err = sys_zalloc2(sizeof(struct eth), "SRAM1", _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, device_handle);
+        int err = sys_zalloc2(sizeof(struct eth), "!SRAM1", _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE, device_handle);
         if (!err) {
                 struct eth *hdl = *device_handle;
 

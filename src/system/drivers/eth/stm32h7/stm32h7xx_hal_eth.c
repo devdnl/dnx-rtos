@@ -932,6 +932,7 @@ HAL_StatusTypeDef HAL_ETH_Transmit(ETH_HandleTypeDef *heth, ETH_TxPacketConfig *
     }
 
     /* Ensure completion of descriptor preparation before transmission start */
+    __DMB();
     __DSB();
 
     dmatxdesc = (ETH_DMADescTypeDef *)(&heth->TxDescList)->TxDesc[heth->TxDescList.CurTxDesc];

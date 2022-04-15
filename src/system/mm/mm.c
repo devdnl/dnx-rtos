@@ -605,7 +605,7 @@ const char *_mm_get_region_name(const void *ptr)
  * @param[in]      mpur             memory purpose
  * @param[in]      size             object size
  * @param[in]      clear            clear allocated block
- * @param[in]      prefreg          preferred memory region (reference name)
+ * @param[in]      prefreg          preferred memory region (reference name or !<reg-name> for force)
  * @param[in]      required         required region features (DMA, cacheable)
  * @param[in]      required_mask    required region features mask (DMA, cacheable)
  * @param[out]     mem              pointer to memory block pointer
