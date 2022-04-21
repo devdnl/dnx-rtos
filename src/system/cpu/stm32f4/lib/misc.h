@@ -32,8 +32,8 @@ Detailed Doxygen description.
 */
 /**@{*/
 
-#ifndef _MISC_H_
-#define _MISC_H_
+#ifndef _STM32F4_MISC_H_
+#define _STM32F4_MISC_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -87,7 +87,7 @@ extern void NVIC_SetVectorTable(uint32_t NVIC_VectTab, uint32_t Offset);
 }
 #endif
 
-#endif /* _MISC_H_ */
+#endif /* _STM32F4_MISC_H_ */
 
 /**@}*/
 /*==============================================================================

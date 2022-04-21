@@ -4,7 +4,7 @@
   * @author  MCD Application Team
   * @version  V3.0.0
   * @date  04/06/2009
-  * @brief  This file contains all the functions prototypes for the 
+  * @brief  This file contains all the functions prototypes for the
   *         miscellaneous firmware library functions.
   ******************************************************************************
   * @copy
@@ -17,11 +17,11 @@
   * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
   *
   * <h2><center>&copy; COPYRIGHT 2009 STMicroelectronics</center></h2>
-  */ 
+  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MISC_H
-#define __MISC_H
+#ifndef _STM32F1_MISC_H_
+#define _STM32F1_MISC_H_
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x.h"
@@ -38,8 +38,8 @@
   * @{
   */
 
-/** 
-  * @brief  NVIC Init Structure definition  
+/**
+  * @brief  NVIC Init Structure definition
   */
 
 typedef struct
@@ -58,7 +58,7 @@ typedef struct
   * @{
   */
 
-/** @defgroup Vector_Table_Base 
+/** @defgroup Vector_Table_Base
   * @{
   */
 
@@ -70,7 +70,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup System_Low_Power 
+/** @defgroup System_Low_Power
   * @{
   */
 
@@ -84,7 +84,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup Preemption_Priority_Group 
+/** @defgroup Preemption_Priority_Group
   * @{
   */
 
@@ -115,7 +115,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SysTick_clock_source 
+/** @defgroup SysTick_clock_source
   * @{
   */
 
@@ -149,7 +149,7 @@ void NVIC_SetVectorTable(uint32_t NVIC_VectTab, uint32_t Offset);
 void NVIC_SystemLPConfig(uint8_t LowPowerMode, FunctionalState NewState);
 void SysTick_CLKSourceConfig(uint32_t SysTick_CLKSource);
 
-#endif /* __MISC_H */
+#endif /* _STM32F1_MISC_H_ */
 
 /**
   * @}

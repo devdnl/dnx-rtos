@@ -113,7 +113,7 @@ GLOBAL_VARIABLES_SECTION {
                 char       *cmd_args;
                 uint16_t    data_port;
                 char        CWD[256];
-                char        buf[4096];
+                char        buf[8192];
                 int         bufsz;
                 bool        quit;
         } thread[8];
@@ -234,27 +234,48 @@ static int receive_file(struct thread *self, const char *mode, SOCKET *socket)
         FILE *file = fopen(self->cmd_args, mode);
         if (file) {
 
-                int sz;
-                do {
-                        sz = socket_read(socket, self->buf, sizeof(self->buf));
-                        if (sz > 0) {
-                                if (fwrite(self->buf, 1, sz, file) != (size_t)sz) {
-                                        VERBOSE("File write error %d", errno);
-                                        break;
-                                }
-                        } else {
-                                if (errno == ECONNABORTED) {
-                                        VERBOSE("Connection aborted - OK\n");
+                err = 0;
+                bool xfer_end = false;
+
+                while (not err and not xfer_end) {
+                        size_t buflen = sizeof(self->buf);
+                        size_t blksz  = 0;
+                        char   *buf   = self->buf;
+
+                        while (buflen > 0) {
+                                int sz = socket_read(socket, buf, buflen);
+                                if (sz > 0) {
+                                        buflen -= sz;
+                                        buf += sz;
+                                        blksz += sz;
+
+                                } else if (sz == 0) {
                                         err = 0;
+                                        break;
 
                                 } else {
-                                        VERBOSE("Connection error %d\n", errno);
-                                }
+                                        if (errno == ECONNABORTED) {
+                                                VERBOSE("Connection aborted - OK\n");
+                                                xfer_end = true;
+                                                err = 0;
 
-                                break;
+                                        } else {
+                                                VERBOSE("Connection error %d\n", errno);
+                                                xfer_end = true;
+                                                err = errno;
+                                        }
+
+                                        break;
+                                }
                         }
 
-                } while (sz > 0);
+                        if (not err) {
+                                if (fwrite(self->buf, 1, blksz, file) != blksz) {
+                                        VERBOSE("File write error %d\n", errno);
+                                        break;
+                                }
+                        }
+                }
 
                 fclose(file);
         }

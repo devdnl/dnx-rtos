@@ -32,8 +32,8 @@ Detailed Doxygen description.
 */
 /**@{*/
 
-#ifndef _MISC_H_
-#define _MISC_H_
+#ifndef _STM32H7_MISC_H_
+#define _STM32H7_MISC_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +43,7 @@ extern "C" {
   Include files
 ==============================================================================*/
 #include "stm32h7xx.h"
+#include "kernel/errno.h"
 
 /*==============================================================================
   Exported macros
@@ -64,9 +65,37 @@ extern "C" {
 #define NVIC_PriorityGroup_4         ((uint32_t)0x300) /* 4 bits for pre-emption priority
                                                           0 bits for subpriority */
 
+#define assert_param(...)
+#define HAL_GetTick()                   sys_get_uptime_ms()
+#define HAL_Delay(_ms)                  sys_sleep_ms(_ms)
+#define __weak                          __attribute__ ((weak))
+
+#ifndef UNUSED
+#define UNUSED(_x)                      UNUSED_ARG1(_x)
+#endif
+
+#define HAL_DMA_ERROR_NONE              0
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/
+/**
+  * @brief  HAL Status structures definition
+  */
+typedef enum {
+        HAL_OK = ESUCC,
+        HAL_TIMEOUT = ETIME,
+        HAL_BUSY = EBUSY,
+        HAL_ERROR = EIO,
+} HAL_StatusTypeDef;
+
+/**
+ * @brief  HAL lock type.
+ */
+typedef enum {
+        HAL_UNLOCKED,
+        HAL_LOCKED
+} HAL_LockTypeDef;
 
 /*==============================================================================
   Exported objects
@@ -86,7 +115,7 @@ extern void NVIC_SetVectorTable(uint32_t NVIC_VectTab, uint32_t Offset);
 }
 #endif
 
-#endif /* _MISC_H_ */
+#endif /* _STM32H7_MISC_H_ */
 
 /**@}*/
 /*==============================================================================

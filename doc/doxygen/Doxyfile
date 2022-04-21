@@ -745,6 +745,7 @@ WARN_LOGFILE           =
 
 INPUT                  = " ." \
                          manual.h \
+                         ../../src/system/drivers/sdmmc/sdmmc_ioctl.h \
                          ../../src/system/drivers/ltdc/ltdc_ioctl.h \
                          ../../src/system/drivers/timenc/timenc_ioctl.h \
                          ../../src/system/drivers/zero/zero_ioctl.h \

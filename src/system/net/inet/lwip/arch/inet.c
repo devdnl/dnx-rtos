@@ -920,6 +920,7 @@ int INET_socket_recv(void          *ctx,
         }
 
         if (!err) {
+                len = min(len, UINT16_MAX);
                 u16_t sz = netbuf_copy_partial(inet_sock->netbuf, buf, len, inet_sock->seek);
                 inet_sock->seek += sz;
                 *recved          = sz;
@@ -972,6 +973,7 @@ int INET_socket_recvfrom(void                *ctx,
                 struct netbuf *netbuf;
                 err = err_to_errno(netconn_recv(inet_sock->netconn, &netbuf));
                 if (!err) {
+                        len = min(len, UINT16_MAX);
                         *recved = netbuf_copy(netbuf, buf, len);
 
                         ip_addr_t *fromaddr = netbuf_fromaddr(netbuf);

@@ -1010,7 +1010,7 @@ API_FS_OPENDIR(flatfs, void *fs_handle, const char *path, kdir_t *dir)
                                         u32_t mask = (1 << bit);
                                         if (hdl->bitmap.word[i] & mask) {
 
-                                                printk("diropen() node: %lu", node); // TEST
+                                                DBG("diropen() node: %lu", node); // TEST
 
                                                 blk_file_t *blk = cast(blk_file_t*, hdl->block[0]);
                                                 err = file_block_read(hdl, node, blk);
@@ -1610,7 +1610,7 @@ static int check_bitmaps_coherency_and_repair(flatfs_t *hdl)
                                                         }
                                                 }
 
-                                                printk("FLATFS: fixed incoherent node %u in block %u",
+                                                MSG("fixed incoherent node %u in block %u",
                                                        node, address);
 
                                         } else if (hdl->force_check and (bmp_pri->word[i] & mask)) {
@@ -1628,7 +1628,7 @@ static int check_bitmaps_coherency_and_repair(flatfs_t *hdl)
                                                         bmp_sec->word[i] &= ~mask;
                                                         bmp_sec_dirty = true;
 
-                                                        printk("FLATFS: removed incoherent node %u in block %u",
+                                                        MSG("removed incoherent node %u in block %u",
                                                                node, address);
                                                 }
                                         }

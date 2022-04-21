@@ -382,8 +382,10 @@ static int configure(LTDC_t *hdl, const LTDC_config_t *config)
                 hdl->user_framebuffer = false;
 
                 dev_dbg(hdl, "allocated framebuffer @ %p-%p",
-                        hdl->framebuffer, cast(uint32_t, hdl->framebuffer) + hdl->framebuffer_size);
+                        hdl->framebuffer, cast(uint32_t, hdl->framebuffer) + hdl->framebuffer_size - 1);
         }
+
+        dev_dbg(hdl, "framebuffer size: %ux%u px", __LTDC_WIDTH__, __LTDC_HEIGHT__);
 
         hdl->ltdc.Instance = LTDC;
         hdl->ltdc.Init.HSPolarity = __LTDC_HSPOLARITY__;

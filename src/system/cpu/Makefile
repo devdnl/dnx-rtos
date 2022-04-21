@@ -50,6 +50,7 @@ CSRC_ARCH   += cpu/stm32h7/cpuctl.c
 CSRC_ARCH   += cpu/stm32h7/stm32h7xx_vectors.c
 CSRC_ARCH   += cpu/stm32h7/lib/misc.c
 CSRC_ARCH   += cpu/stm32h7/lib/stm32h7xx_ll_rcc.c
+CSRC_ARCH   += cpu/stm32h7/lib/stm32h7xx_ll_delayblock.c
 HDRLOC_ARCH += cpu/stm32h7/stm32h7xx
 HDRLOC_ARCH += cpu/stm32h7
 HDRLOC_ARCH += cpu/lib/CMSIS

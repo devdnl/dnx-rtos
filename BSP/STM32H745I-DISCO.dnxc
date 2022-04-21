@@ -130,6 +130,10 @@
 				["key"]="__ENABLE_LTDC__";
 				["value"]="_YES_";
 			};
+			[33.000000]={
+				["key"]="__ENABLE_SDMMC__";
+				["value"]="_YES_";
+			};
 		};
 		["arch/noarch/part_flags.h"]={
 			[1.000000]={
@@ -15938,7 +15942,7 @@
 			};
 			[12.000000]={
 				["key"]="__CLK_PLL1_Q__";
-				["value"]="1";
+				["value"]="8";
 			};
 			[13.000000]={
 				["key"]="__CLK_PLL1_R_ENABLE__";
@@ -16228,7 +16232,7 @@
 			};
 			[11.000000]={
 				["key"]="__CPU_DCACHE_ENABLE__";
-				["value"]="_NO_";
+				["value"]="_YES_";
 			};
 			[12.000000]={
 				["key"]="__CPU_VTOR_TAB_POSITION__";
@@ -17170,11 +17174,11 @@
 			};
 			[192.000000]={
 				["key"]="__GPIO_PC_PIN_6_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[193.000000]={
 				["key"]="__GPIO_PC_PIN_6_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[194.000000]={
 				["key"]="__GPIO_PC_PIN_6_AF__";
@@ -17190,15 +17194,15 @@
 			};
 			[197.000000]={
 				["key"]="__GPIO_PC_PIN_7_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[198.000000]={
 				["key"]="__GPIO_PC_PIN_7_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[199.000000]={
 				["key"]="__GPIO_PC_PIN_7_AF__";
-				["value"]="0";
+				["value"]="12";
 			};
 			[200.000000]={
 				["key"]="__GPIO_PC_PIN_7_STATE__";
@@ -17210,15 +17214,15 @@
 			};
 			[202.000000]={
 				["key"]="__GPIO_PC_PIN_8_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[203.000000]={
 				["key"]="__GPIO_PC_PIN_8_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[204.000000]={
 				["key"]="__GPIO_PC_PIN_8_AF__";
-				["value"]="0";
+				["value"]="12";
 			};
 			[205.000000]={
 				["key"]="__GPIO_PC_PIN_8_STATE__";
@@ -17230,15 +17234,15 @@
 			};
 			[207.000000]={
 				["key"]="__GPIO_PC_PIN_9_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[208.000000]={
 				["key"]="__GPIO_PC_PIN_9_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[209.000000]={
 				["key"]="__GPIO_PC_PIN_9_AF__";
-				["value"]="0";
+				["value"]="12";
 			};
 			[210.000000]={
 				["key"]="__GPIO_PC_PIN_9_STATE__";
@@ -17250,15 +17254,15 @@
 			};
 			[212.000000]={
 				["key"]="__GPIO_PC_PIN_10_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[213.000000]={
 				["key"]="__GPIO_PC_PIN_10_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[214.000000]={
 				["key"]="__GPIO_PC_PIN_10_AF__";
-				["value"]="0";
+				["value"]="12";
 			};
 			[215.000000]={
 				["key"]="__GPIO_PC_PIN_10_STATE__";
@@ -17270,15 +17274,15 @@
 			};
 			[217.000000]={
 				["key"]="__GPIO_PC_PIN_11_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[218.000000]={
 				["key"]="__GPIO_PC_PIN_11_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[219.000000]={
 				["key"]="__GPIO_PC_PIN_11_AF__";
-				["value"]="0";
+				["value"]="12";
 			};
 			[220.000000]={
 				["key"]="__GPIO_PC_PIN_11_STATE__";
@@ -17290,15 +17294,15 @@
 			};
 			[222.000000]={
 				["key"]="__GPIO_PC_PIN_12_SPEED__";
-				["value"]="_GPIO_SPEED_LOW";
+				["value"]="_GPIO_SPEED_VERY_HIGH";
 			};
 			[223.000000]={
 				["key"]="__GPIO_PC_PIN_12_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[224.000000]={
 				["key"]="__GPIO_PC_PIN_12_AF__";
-				["value"]="0";
+				["value"]="12";
 			};
 			[225.000000]={
 				["key"]="__GPIO_PC_PIN_12_STATE__";
@@ -17414,11 +17418,11 @@
 			};
 			[253.000000]={
 				["key"]="__GPIO_PD_PIN_2_MODE__";
-				["value"]="_GPIO_MODE_IN";
+				["value"]="_GPIO_MODE_AF_PP_PU";
 			};
 			[254.000000]={
 				["key"]="__GPIO_PD_PIN_2_AF__";
-				["value"]="0";
+				["value"]="12";
 			};
 			[255.000000]={
 				["key"]="__GPIO_PD_PIN_2_STATE__";
@@ -20135,6 +20139,88 @@
 			[12.000000]={
 				["key"]="__LTDC_PCPOLARITY__";
 				["value"]="LTDC_PCPOLARITY_IPC";
+			};
+		};
+		["arch/stm32h7/sdmmc_flags.h"]={
+			[1.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_CLOCK_EDGE__";
+				["value"]="SDMMC_CLOCK_EDGE_RISING";
+			};
+			[2.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_HW_FLOW_CTRL__";
+				["value"]="SDMMC_HARDWARE_FLOW_CONTROL_ENABLE";
+			};
+			[3.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_BUS_WIDE__";
+				["value"]="SDMMC_BUS_WIDE_8B";
+			};
+			[4.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_CKDIV__";
+				["value"]="1";
+			};
+			[5.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_TIMEOUT__";
+				["value"]="500";
+			};
+			[6.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_PWRSAVE__";
+				["value"]="SDMMC_CLOCK_POWER_SAVE_DISABLE";
+			};
+			[7.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_TYPE__";
+				["value"]="_SDMMC_TYPE_MMC";
+			};
+			[8.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_MODE__";
+				["value"]="_SDMMC_MODE_DMA";
+			};
+			[9.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_SPEED_MODE__";
+				["value"]="SDMMC_SPEED_MODE_DDR";
+			};
+			[10.000000]={
+				["key"]="__SDMMC_CFG_SDMMC1_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
+			};
+			[11.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_CLOCK_EDGE__";
+				["value"]="SDMMC_CLOCK_EDGE_RISING";
+			};
+			[12.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_HW_FLOW_CTRL__";
+				["value"]="SDMMC_HARDWARE_FLOW_CONTROL_ENABLE";
+			};
+			[13.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_BUS_WIDE__";
+				["value"]="SDMMC_BUS_WIDE_1B";
+			};
+			[14.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_CKDIV__";
+				["value"]="1";
+			};
+			[15.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_TIMEOUT__";
+				["value"]="500";
+			};
+			[16.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_PWRSAVE__";
+				["value"]="SDMMC_CLOCK_POWER_SAVE_DISABLE";
+			};
+			[17.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_TYPE__";
+				["value"]="_SDMMC_TYPE_MMC";
+			};
+			[18.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_MODE__";
+				["value"]="_SDMMC_MODE_IRQ";
+			};
+			[19.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_SPEED_MODE__";
+				["value"]="SDMMC_SPEED_MODE_DEFAULT";
+			};
+			[20.000000]={
+				["key"]="__SDMMC_CFG_SDMMC2_IRQ_PRIORITY__";
+				["value"]="__CPU_DEFAULT_IRQ_PRIORITY__";
 			};
 		};
 		["arch/stm32h7/uart_flags.h"]={

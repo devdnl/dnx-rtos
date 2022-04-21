@@ -43,6 +43,7 @@ Detailed Doxygen description.
 #if defined(ARCH_stm32h7)
 #include "stm32h7xx.h"
 #include "stm32h7/lib/stm32h7xx_ll_rcc.h"
+#include "stm32h7/lib/misc.h"
 #define ETH_CPU_CACHE_ALIGN 32
 #endif
 
@@ -55,13 +56,9 @@ extern "C" {
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define assert_param(...)
-#define HAL_GetTick()                   sys_get_uptime_ms()
-#define HAL_Delay(_ms)                  sys_sleep_ms(_ms)
 #define HAL_MAX_DELAY                   _MAX_DELAY_MS
 #define __HAL_UNLOCK(heth)              (heth->Lock = HAL_UNLOCKED)
 #define __HAL_LOCK(heth)                (heth->Lock = HAL_LOCKED)
-#define __weak                          __attribute__ ((weak))
 
 #ifndef UNUSED
 #define UNUSED(_x)                      UNUSED_ARG1(_x)
@@ -116,17 +113,6 @@ extern "C" {
 /*==============================================================================
   Exported object types
 ==============================================================================*/
-typedef enum {
-        HAL_OK = ESUCC,
-        HAL_TIMEOUT = ETIME,
-        HAL_BUSY = EBUSY,
-        HAL_ERROR = EIO,
-} HAL_StatusTypeDef;
-
-typedef enum {
-        HAL_UNLOCKED,
-        HAL_LOCKED
-} HAL_LockTypeDef;
 
 /*==============================================================================
   Exported objects
