@@ -241,10 +241,11 @@ extern "C" {
         _PROGMAN_CXX const size_t __builtin_app_##_name_##_ss__ = stack_depth;\
         _PROGMAN_CXX int __builtin_app_##_name_##_main(argc, argv)
 
-#define stdin  (((_libc_app_ctx_t*)(*_libc_app_ctx))->_stdin)
-#define stdout (((_libc_app_ctx_t*)(*_libc_app_ctx))->_stdout)
-#define stderr (((_libc_app_ctx_t*)(*_libc_app_ctx))->_stderr)
-#define global ((struct _GVAR_STRUCT_NAME*)(*_libc_global))
+#define stdin  (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stdin)
+#define stdout (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stdout)
+#define stderr (((_libc_app_ctx_t*)(_libc_appctx_get()))->_stderr)
+#define _getglobal ((struct _GVAR_STRUCT_NAME*const)_libc_global_get())
+#define global _getglobal
 
 /*==============================================================================
   Exported object types
@@ -254,8 +255,6 @@ typedef struct _libc_file FILE;
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-extern void **_libc_global;
-extern void **_libc_app_ctx;
 
 /*==============================================================================
   Exported functions

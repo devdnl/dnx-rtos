@@ -57,6 +57,7 @@ GLOBAL_VARIABLES_SECTION {
 
 static const char *CAN_MODE[] = {"INIT", "NORMAL", "SLEEP"};
 static const char *BUS_STATUS[] = {"OK", "WARNING", "PASSIVE", "OFF"};
+static const char *CAN_FRAME_MODE[] = {"CLASSIC", "FD without BRS", "FD with BRS"};
 
 /*==============================================================================
   Exported objects
@@ -94,14 +95,16 @@ int main(int argc, char *argv[])
                         errno = 0;
                         err = ioctl(fd, IOCTL_CAN__GET_STATUS, &global->status);
                         if (!err) {
-                                printf("Speed      : %lu bps\n", global->status.baud_bps);
-                                printf("Mode       : %s\n", CAN_MODE[global->status.mode]);
-                                printf("Bus status : %s\n", BUS_STATUS[global->status.can_bus_status]);
-                                printf("RX errors  : %u\n", global->status.rx_error_ctr);
-                                printf("TX errors  : %u\n", global->status.tx_error_ctr);
-                                printf("RX overruns: %lu\n", global->status.rx_overrun_ctr);
-                                printf("TX frames  : %llu (%llu bytes)\n", global->status.tx_frames, global->status.tx_bytes);
-                                printf("RX frames  : %llu (%llu bytes)\n", global->status.rx_frames, global->status.rx_bytes);
+                                printf("Nominal speed: %lu bps\n", global->status.nominal_baud_bps);
+                                printf("Data speed   : %lu bps\n", global->status.data_baud_bps);
+                                printf("Mode         : %s\n", CAN_MODE[global->status.mode]);
+                                printf("Frame mode   : %s\n", CAN_FRAME_MODE[global->status.frame_mode]);
+                                printf("Bus status   : %s\n", BUS_STATUS[global->status.can_bus_status]);
+                                printf("RX errors    : %u\n", global->status.rx_error_ctr);
+                                printf("TX errors    : %u\n", global->status.tx_error_ctr);
+                                printf("RX overruns  : %lu\n", global->status.rx_overrun_ctr);
+                                printf("TX frames    : %llu (%llu bytes)\n", global->status.tx_frames, global->status.tx_bytes);
+                                printf("RX frames    : %llu (%llu bytes)\n", global->status.rx_frames, global->status.rx_bytes);
                         } else {
                                 perror(argv[1]);
                         }

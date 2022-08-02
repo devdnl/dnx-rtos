@@ -54,8 +54,6 @@
 /*==============================================================================
   Local macros
 ==============================================================================*/
-#define SYSCALL_QUEUE_LENGTH            4
-
 #define FS_CACHE_SYNC_PERIOD_MS         (1000 * __OS_SYSTEM_CACHE_SYNC_PERIOD__)
 
 #define GETARG(type, var)               type var = va_arg(rq->args, type)
@@ -213,7 +211,6 @@ typedef int (*syscallfunc_t)(syscallrq_t*);
 ==============================================================================*/
 static int syscall_do(void *rq);
 
-static int syscall_getruntimectx(syscallrq_t *rq);
 static int syscall_mount(syscallrq_t *rq);
 static int syscall_umount(syscallrq_t *rq);
 static int syscall_getmntentry(syscallrq_t *rq);
@@ -337,7 +334,7 @@ static int syscall_isheapaddr(syscallrq_t *rq);
 ==============================================================================*/
 /* syscall table */
 static const syscallfunc_t syscalltab[] = {
-        [SYSCALL_GETRUNTIMECTX] = syscall_getruntimectx,
+        [SYSCALL_GETRUNTIMECTX] = NULL,         // handled directly by syscall function
         [SYSCALL_MOUNT] = syscall_mount,
         [SYSCALL_UMOUNT] = syscall_umount,
         [SYSCALL_SHMCREATE] = syscall_shmcreate,
@@ -520,7 +517,18 @@ __attribute__((section (".syscall"))) int syscall(syscall_t syscall, va_list arg
 {
         int err = ENOSYS;
 
-        if (syscall < _SYSCALL_COUNT) {
+        if (syscall == SYSCALL_GETRUNTIMECTX) {
+                /*
+                 * NOTE: handled separately because this syscall should work as
+                 *       fast as possible.
+                 */
+                _dnxrtctx_t *ctx = va_arg(args, _dnxrtctx_t*);
+                ctx->global_ref  = &_global;
+                ctx->errno_ref   = &_errno;
+                ctx->app_ctx_ref = &_app_ctx;
+                err = 0;
+
+        } else if (syscall < _SYSCALL_COUNT) {
                 _process_clean_up_killed_processes();
 
                 syscallrq_t syscallrq = {
@@ -590,26 +598,6 @@ static int syscall_do(void *rq)
         _process_exit_kernelspace(sysrq->client_proc);
 
         return err;
-}
-
-//==============================================================================
-/**
- * @brief  This syscall return dnx RTOS runtime context.
- *
- * @param  rq                   syscall request
- *
- * @return One of errno value.
- */
-//==============================================================================
-static int syscall_getruntimectx(syscallrq_t *rq)
-{
-        GETARG(_dnxrtctx_t*, ctx);
-
-        ctx->global_ref  = &_global;
-        ctx->errno_ref   = &_errno;
-        ctx->app_ctx_ref = &_app_ctx;
-
-        return 0;
 }
 
 //==============================================================================

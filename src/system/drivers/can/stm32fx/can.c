@@ -29,7 +29,7 @@ Brief   CAN driver
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32fx/can_cfg.h"
+#include "config.h"
 #include "../can_ioctl.h"
 
 #if defined(ARCH_stm32f1)
@@ -136,21 +136,22 @@ enum CAN_COUNT {
 };
 
 typedef struct {
-        u8_t     major;
-        u32_t    send_timeout;
-        u32_t    recv_timeout;
-        u32_t    txpend_ctr;
-        u32_t    rxpend_ctr;
-        kmtx_t *config_mtx;
-        kmtx_t *txmbox_mtx[TX_MAILBOXES];
-        kqueue_t *txrdy_q[TX_MAILBOXES];
-        kqueue_t *rxqueue_q;
-        u64_t    tx_frames;
-        u64_t    tx_bytes;
-        u64_t    rx_frames;
-        u64_t    rx_bytes;
-        u32_t    rx_overrun;
-        u32_t    baud;
+        u8_t       major;
+        u8_t       minor;
+        u32_t      send_timeout;
+        u32_t      recv_timeout;
+        u32_t      txpend_ctr;
+        u32_t      rxpend_ctr;
+        kmtx_t     *config_mtx;
+        kmtx_t     *txmbox_mtx[TX_MAILBOXES];
+        kqueue_t   *txrdy_q[TX_MAILBOXES];
+        kqueue_t   *rxqueue_q;
+        u64_t      tx_frames;
+        u64_t      tx_bytes;
+        u64_t      rx_frames;
+        u64_t      rx_bytes;
+        u32_t      rx_overrun;
+        u32_t      baud;
         CAN_mode_t mode;
 } CAN_t;
 
@@ -265,6 +266,7 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
                         CAN_t *hdl = *device_handle;
 
                         hdl->major        = major;
+                        hdl->minor        = 0;
                         hdl->recv_timeout = _MAX_DELAY_MS;
                         hdl->send_timeout = _MAX_DELAY_MS;
                         hdl->mode         = CAN_MODE__INIT;
@@ -274,7 +276,7 @@ API_MOD_INIT(CAN, void **device_handle, u8_t major, u8_t minor, const void *conf
                                 goto finish;
                         }
 
-                        err = sys_queue_create(RX_MAILBOXES * RX_FIFO_DEPTH,
+                        err = sys_queue_create(RX_FIFO_DEPTH,
                                                sizeof(CAN_FIFOMailBox_TypeDef),
                                                &hdl->rxqueue_q);
                         if (err) {
@@ -481,23 +483,16 @@ API_MOD_WRITE(CAN,
 
         int err = EINVAL;
 
-        if ((count % sizeof(CAN_msg_t)) == 0) {
+        if (count == sizeof(CAN_msg_t)) {
 
-                while (count >= sizeof(CAN_msg_t)) {
+                const CAN_msg_t *msg = (void*)src;
 
-                        const CAN_msg_t *msg = (void*)src;
+                u32_t timeout_ms = fattr.non_blocking_wr ? 0 : hdl->send_timeout;
 
-                        u32_t timeout_ms = fattr.non_blocking_wr ? 0 : hdl->send_timeout;
+                err = send_msg(hdl, msg, timeout_ms);
 
-                        err = send_msg(hdl, msg, timeout_ms);
-
-                        if (!err) {
-                                *wrcnt += sizeof(CAN_msg_t);
-                                src    += sizeof(CAN_msg_t);
-                                count  -= sizeof(CAN_msg_t);
-                        } else {
-                                break;
-                        }
+                if (!err) {
+                        *wrcnt += sizeof(CAN_msg_t);
                 }
         }
 
@@ -532,24 +527,14 @@ API_MOD_READ(CAN,
 
         int err = EINVAL;
 
-        if ((count % sizeof(CAN_msg_t)) == 0) {
+        if (count == sizeof(CAN_msg_t)) {
 
-                while (count >= sizeof(CAN_msg_t)) {
+                u32_t timeout_ms = fattr.non_blocking_rd ? 0 : hdl->recv_timeout;
 
-                        CAN_msg_t msg;
-                        u32_t timeout_ms = fattr.non_blocking_rd ? 0 : hdl->recv_timeout;
+                err = recv_msg(hdl, cast(CAN_msg_t*, dst), timeout_ms);
 
-                        err = recv_msg(hdl, &msg, timeout_ms);
-
-                        if (!err) {
-                                memcpy(dst, &msg, sizeof(CAN_msg_t));
-
-                                *rdcnt += sizeof(CAN_msg_t);
-                                dst    += sizeof(CAN_msg_t);
-                                count  -= sizeof(CAN_msg_t);
-                        } else {
-                                break;
-                        }
+                if (!err) {
+                        *rdcnt += sizeof(CAN_msg_t);
                 }
         }
 
@@ -659,6 +644,7 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
 
                         // CAN mode
                         status->mode = hdl->mode;
+                        status->frame_mode = CAN_FRAME_MODE__CLASSIC;
 
                         // error countes
                         status->rx_error_ctr   = ((CANX[hdl->major].CAN->ESR & CAN_ESR_REC) >> 24);
@@ -672,7 +658,8 @@ API_MOD_IOCTL(CAN, void *device_handle, int request, void *arg)
                         status->rx_bytes  = hdl->rx_bytes;
 
                         // baud
-                        status->baud_bps = hdl->baud;
+                        status->nominal_baud_bps = hdl->baud;
+                        status->data_baud_bps = hdl->baud;
 
                         err = ESUCC;
                 }
@@ -789,7 +776,7 @@ static int configure(CAN_t *hdl, const CAN_config_t *cfg)
 {
         int err = sys_mutex_lock(hdl->config_mtx, MTX_TIMEOUT);
         if (!err) {
-                SET_BIT(CANX[hdl->major].CAN->MCR, (CAN_MCR_DBF * _CAN_CFG__DEBUG_FREEZE)
+                SET_BIT(CANX[hdl->major].CAN->MCR, (CAN_MCR_DBF * __CAN_CFG_DEBUG_FREEZE__)
                                                  | CAN_MCR_TXFP
                                                  | CAN_MCR_RFLM);
 
@@ -815,12 +802,6 @@ static int configure(CAN_t *hdl, const CAN_config_t *cfg)
                         CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_AWUM);
                 }
 
-                if (cfg->time_triggered_comm) {
-                        SET_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_TTCM);
-                } else {
-                        CLEAR_BIT(CANX[hdl->major].CAN->MCR, CAN_MCR_TTCM);
-                }
-
                 if (cfg->loopback) {
                         SET_BIT(CANX[hdl->major].CAN->BTR, CAN_BTR_LBKM);
                 } else {
@@ -833,33 +814,33 @@ static int configure(CAN_t *hdl, const CAN_config_t *cfg)
                         CLEAR_BIT(CANX[hdl->major].CAN->BTR, CAN_BTR_SILM);
                 }
 
-                u32_t SJW = cfg->SJW;
-                u32_t TS1 = cfg->TS1;
-                u32_t TS2 = cfg->TS2;
-                u32_t BRP = cfg->prescaler;
+                u32_t SJW = cfg->nominal_bit_rate.SJW;
+                u32_t TS1 = cfg->nominal_bit_rate.TS1;
+                u32_t TS2 = cfg->nominal_bit_rate.TS2;
+                u32_t BRP = cfg->nominal_bit_rate.prescaler;
 
                 if ((SJW < 1) || (SJW > 4)) {
                         SJW = min(4, SJW);
                         SJW = max(1, SJW);
-                        printk("%s%d-%d: SJW out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0, SJW);
+                        dev_dbg(hdl, "SJW out of range! Applied %d", SJW);
                 }
 
                 if ((TS1 < 1) || (TS1 > 15)) {
                         TS1 = min(15, TS1);
                         TS1 = max(1, TS1);
-                        printk("%s%d-%d: TS1 out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0,  TS1);
+                        dev_dbg(hdl, "TS1 out of range! Applied %d", TS1);
                 }
 
                 if ((TS2 < 1) || (TS2 > 7)) {
                         TS2 = min(7, TS2);
                         TS2 = max(1, TS2);
-                        printk("%s%d-%d: TS2 out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0,  TS2);
+                        dev_dbg(hdl, "TS2 out of range! Applied %d", TS2);
                 }
 
                 if ((BRP < 1) || (BRP > 1024)) {
                         BRP = min(1024, BRP);
                         BRP = max(1, BRP);
-                        printk("%s%d-%d: BRP out of range! Applied %d", GET_MODULE_NAME(), hdl->major, 0,  BRP);
+                        dev_dbg(hdl, "BRP out of range! Applied %d", BRP);
                 }
 
                 CANX[hdl->major].CAN->BTR = (CAN_BTR_LBKM * cfg->loopback)
@@ -873,8 +854,8 @@ static int configure(CAN_t *hdl, const CAN_config_t *cfg)
                 LL_RCC_GetSystemClocksFreq(&freq);
                 u32_t PCLK = freq.PCLK1_Frequency;
 
-                hdl->baud = PCLK / (cfg->prescaler * (1 + TS1 + TS2));
-                printk("%s%d-%d: baud rate: %u bps", GET_MODULE_NAME(), hdl->major, 0,  hdl->baud);
+                hdl->baud = PCLK / (cfg->nominal_bit_rate.prescaler * (1 + TS1 + TS2));
+                dev_dbg(hdl, "baud rate: %u bps", hdl->baud);
 
                 sys_mutex_unlock(hdl->config_mtx);
         }
@@ -1087,6 +1068,10 @@ static int disable_filter(CAN_t *hdl, u32_t filter_no)
 //==============================================================================
 static int send_msg(CAN_t *hdl, const CAN_msg_t *msg, u32_t timeout_ms)
 {
+        if (msg->data_length > 8) {
+                return EILSEQ;
+        }
+
         sys_context_switch_lock();
         hdl->txpend_ctr++;
         sys_context_switch_unlock();
@@ -1144,7 +1129,7 @@ static int send_msg(CAN_t *hdl, const CAN_msg_t *msg, u32_t timeout_ms)
                                                 }
 
                                         } else {
-                                                printk("%s%d-%d: message send abort", GET_MODULE_NAME(), hdl->major, 0);
+                                                dev_dbg(hdl, "message send abort in buffer %lu", i);
                                                 SET_BIT(CANX[hdl->major].CAN->TSR, CAN_TSR_ABRQ0 << (i * 8));
                                                 sys_sleep_ms(1);
                                         }

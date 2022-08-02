@@ -47,15 +47,6 @@ Brief    Syscall handling.
 ==============================================================================*/
 typedef int (*syscall_func)(_libc_syscall_t, va_list);
 
-/**
- * @brief dnx RTOS application context.
- */
-typedef struct {
-        void **global_ref;
-        void **app_ctx_ref;
-        int   *errno_ref;
-} dnxrtctx_t;
-
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
@@ -78,23 +69,6 @@ typedef struct {
 
 //==============================================================================
 /**
- * @brief  Get dnx RTOS application context.
- *
- * @param  retptr       return pointer
- * @param  ...          arguments
- */
-//==============================================================================
-static int dnx_syscall_vargs(int syscall, ...)
-{
-        va_list args;
-        va_start(args, syscall);
-        int err = dnx_syscall(syscall, args);
-        va_end(args);
-        return err;
-}
-
-//==============================================================================
-/**
  * @brief  Syscall function.
  *
  * @param  syscall      syscall number
@@ -105,27 +79,10 @@ static int dnx_syscall_vargs(int syscall, ...)
 //==============================================================================
 int _libc_syscall(_libc_syscall_t syscall, ...)
 {
-        /*
-         * This part of code is called if dnx RTOS context is not referenced.
-         */
-        if (_libc_global == NULL) {
-                dnxrtctx_t dnxctx;
-                int err = dnx_syscall_vargs(_LIBC_SYS_GETRUNTIMECTX, &dnxctx);
-                if (!err) {
-                        _libc_global  = dnxctx.global_ref;
-                        _libc_errno   = dnxctx.errno_ref;
-                        _libc_app_ctx = dnxctx.app_ctx_ref;
-                }
-        }
-
-        /*
-         * dnx RTOS syscall execution.
-         */
         va_list args;
         va_start(args, syscall);
         int err = dnx_syscall(syscall, args);
         va_end(args);
-
         return err;
 }
 

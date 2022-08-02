@@ -29,7 +29,6 @@ Brief   LCD-TFT Display Controller module
   Include files
 ==============================================================================*/
 #include "drivers/driver.h"
-#include "stm32h7/ltdc_cfg.h"
 #include "../ltdc_ioctl.h"
 #include "stm32h7xx_hal_ltdc.h"
 
@@ -372,7 +371,7 @@ static int configure(LTDC_t *hdl, const LTDC_config_t *config)
                 hdl->user_framebuffer = true;
 
         } else {
-                err = sys_zalloc2(sizeof(LTDC_t), config->mem_region_name,
+                err = sys_zalloc2(hdl->framebuffer_size, config->mem_region_name,
                                   _MM_FLAG__DMA_CAPABLE, _MM_FLAG__DMA_CAPABLE,
                                   &hdl->framebuffer);
                 if (err) {

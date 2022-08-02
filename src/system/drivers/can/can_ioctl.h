@@ -383,30 +383,51 @@ typedef struct {
 } CAN_filter_t;
 
 /**
+ * Frame setup.
+ */
+typedef enum {
+        CAN_FRAME_MODE__CLASSIC,
+        CAN_FRAME_MODE__FD_WITHOUT_BIT_RATE_SWITCH,
+        CAN_FRAME_MODE__FD_WITH_BIT_RATE_SWITCH,
+} CAN_frame_mode_t;
+
+/**
  * Type represent configuration container.
  */
 typedef struct {
         bool  loopback;                 /*!< Loopback mode. */
         bool  silent;                   /*!< Silent mode. */
-        bool  time_triggered_comm;      /*!< Time triggered communication. */
         bool  auto_bus_off_management;  /*!< Automatic bus off management. */
         bool  auto_wake_up;             /*!< Automatic wake up. */
         bool  auto_retransmission;      /*!< Auto retransmission. */
-        u32_t SJW;                      /*!< Resynchronization jump width <1,n> */
-        u32_t TS1;                      /*!< Time segment 1 <1,n> */
-        u32_t TS2;                      /*!< Time segment 2 <1,n> */
-        u32_t prescaler;                /*!< Peripheral prescaler <1,n> */
+
+        /* control bits and data bits in classic CAN communication */
+        struct {
+                u32_t SJW;              /*!< Resynchronization jump width <1,n> */
+                u32_t TS1;              /*!< Time segment 1 <1,n> */
+                u32_t TS2;              /*!< Time segment 2 <1,n> */
+                u32_t prescaler;        /*!< Peripheral prescaler <1,n> */
+        } nominal_bit_rate;
+
+        /* data bits in FD CAN communication if bit rate switch is enabled */
+        struct {
+                u32_t SJW;              /*!< Resynchronization jump width <1,n> */
+                u32_t TS1;              /*!< Time segment 1 <1,n> */
+                u32_t TS2;              /*!< Time segment 2 <1,n> */
+                u32_t prescaler;        /*!< Peripheral prescaler <1,n> */
+        } data_bit_rate;
 } CAN_config_t;
 
 /**
- * Type represent CAN message with timeout control.
+ * Type represent classic/FD CAN message.
  */
 typedef struct {
+        CAN_frame_mode_t frame_mode;    /*!< Frame mode. */
         u32_t ID;                       /*!< Message identifier. */
         bool  extended_ID;              /*!< Extended identifier (true). */
         bool  remote_transmission;      /*!< Remote transmission (true). */
-        u32_t data_length;              /*!< Data length. */
-        u8_t  data[8];                  /*!< Data buffer (8 bytes). */
+        u32_t data_length;              /*!< Data length (0-8, 12, 16, 20, 24, 32, 48, 64). */
+        u8_t  data[64];                 /*!< Data buffer holder up to 64 bytes. */
 } CAN_msg_t;
 
 /**
@@ -428,9 +449,11 @@ typedef struct {
         u64_t rx_bytes;
         u64_t rx_frames;
         u32_t rx_overrun_ctr;
-        u32_t baud_bps;
+        u32_t nominal_baud_bps;
+        u32_t data_baud_bps;
         CAN_bus_status_t can_bus_status;
         CAN_mode_t mode;
+        CAN_frame_mode_t frame_mode;
         u8_t rx_error_ctr;
         u8_t tx_error_ctr;
 } CAN_status_t;

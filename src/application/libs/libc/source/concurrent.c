@@ -56,6 +56,15 @@ struct _libc_queue {
 };
 
 /**
+ * @brief dnx RTOS application context.
+ */
+typedef struct {
+        void **global_ref;
+        void **app_ctx_ref;
+        int   *errno_ref;
+} dnxrtctx_t;
+
+/**
  * @brief Process attributes passed to the syscall.
  */
 typedef struct {
@@ -92,6 +101,48 @@ typedef struct {
 /*==============================================================================
   Function definitions
 ==============================================================================*/
+//==============================================================================
+/**
+ * @brief  Function return pointer to application global variables.
+ *
+ * @return Global variables pointer.
+ */
+//==============================================================================
+void *_libc_global_get(void)
+{
+        dnxrtctx_t dnxctx;
+        _libc_syscall(_LIBC_SYS_GETRUNTIMECTX, &dnxctx);
+        return *dnxctx.global_ref;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return pointer to errno variable.
+ *
+ * @return Errno variable pointer.
+ */
+//==============================================================================
+int *_libc_errno_get(void)
+{
+        dnxrtctx_t dnxctx;
+        _libc_syscall(_LIBC_SYS_GETRUNTIMECTX, &dnxctx);
+        return dnxctx.errno_ref;
+}
+
+//==============================================================================
+/**
+ * @brief  Function return application context variable.
+ *
+ * @return Application context variable pointer.
+ */
+//==============================================================================
+void *_libc_appctx_get(void)
+{
+        dnxrtctx_t dnxctx;
+        _libc_syscall(_LIBC_SYS_GETRUNTIMECTX, &dnxctx);
+        return *dnxctx.app_ctx_ref;
+}
+
 //==============================================================================
 /**
  * @brief  Setup stdio by libc.
@@ -145,12 +196,13 @@ pid_t process_create(const char *cmd, const process_attr_t *attr)
         sys_attr.at_init_ctx  = (void*)attr;
         sys_attr.app_ctx_size = sizeof(_libc_app_ctx_t);
 
+        // keep _syscall_process_attr_t as small as possible because is stored
+        // on stack.
         static_assert(sizeof(_libc_app_ctx_t) < 128, "_libc_app_ctx_t is bigger than 128 bytes!");
 
         int err = _libc_syscall(_LIBC_SYS_PROCESSCREATE, cmd, &sys_attr, &pid);
         return err ? 0 : pid;
 }
-
 
 //==============================================================================
 /**

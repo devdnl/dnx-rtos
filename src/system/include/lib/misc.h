@@ -601,6 +601,37 @@ extern "C" {
 //==============================================================================
 #define auto_type __auto_type
 
+//==============================================================================
+/**
+ * @brief  Offset of macro.
+ *
+ * @param  type         base type
+ * @param  member       type member
+ *
+ * @return Base container address.
+ */
+//==============================================================================
+#ifndef offsetof
+#define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#endif
+
+//==============================================================================
+/**
+ * @brief  Container of selected object.
+ *
+ * @param  ptr          pointer to object
+ * @param  type         type of container that ptr is member
+ * @param  member       member of container
+ *
+ * @return Address of object base container.
+ */
+//==============================================================================
+#ifndef container_of
+#define container_of(ptr, type, member) ({                      \
+        const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
+        (type *)( (char *)__mptr - offsetof(type,member) );})
+#endif
+
 /*==============================================================================
   Exported object types
 ==============================================================================*/

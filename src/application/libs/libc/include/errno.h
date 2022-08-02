@@ -41,8 +41,6 @@ The file provides all error codes.
 /*==============================================================================
   Exported macros
 ==============================================================================*/
-#define errno           (*_libc_errno)
-
 #define ESUCC            0      //!< Success
 #define EPERM            1      //!< Operation not permitted
 #define ENOENT           2      //!< No such file or directory
@@ -99,15 +97,7 @@ typedef int error_t;
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-/**
- * @brief Error number variable.
- *
- * This variable contains error number. Value can be cleared by writing 0.
- * Variable exists independently in each application and is set by miscellaneous
- * system functions.
- */
-//extern int _errno;
-extern int *_libc_errno;
+#define errno           (*_libc_errno_get())
 
 /*==============================================================================
   Exported functions

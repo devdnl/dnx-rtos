@@ -88,13 +88,13 @@ typedef struct {
 /*==============================================================================
   Exported objects
 ==============================================================================*/
-extern int   *_libc_errno;
-extern void **_libc_global;
-extern void **_libc_app_ctx;
 
 /*==============================================================================
   Exported functions
 ==============================================================================*/
+extern void *_libc_global_get(void);
+extern int  *_libc_errno_get(void);
+extern void *_libc_appctx_get(void);
 extern void *_libc_malloc(size_t size);
 extern void  _libc_free(void *mem);
 extern int close(int fd);

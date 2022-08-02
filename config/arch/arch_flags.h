@@ -473,92 +473,92 @@
 #         end
 #     end
 #
-#     uC.PERIPH["STM32H723VExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H723VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H723ZExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H723ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725AExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725IExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725RExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725RGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725VExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725ZExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H725ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H730ABxxQ"]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H730IBxxQ"]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H730VBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H730ZBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H733VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H733ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H735AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H735IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H735RGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H735VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H735ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H742AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742BGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742XGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742VIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H742ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true}
-#     uC.PERIPH["STM32H743AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743BGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743XGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743VIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H743ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H745BGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H745IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H745XGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H745ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H745BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H745IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H745XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H745ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747BGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747XGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H747ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H750IBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H750VBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H750XBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H750ZBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H753AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H753BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H753IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H753VIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H753XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H753ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H755BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H755IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H755XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H755ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H757AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H757BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H757IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H757XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
-#     uC.PERIPH["STM32H757ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true}
+#     uC.PERIPH["STM32H723VExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H723VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H723ZExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H723ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725AExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725IExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725RExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725RGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725VExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725ZExx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H725ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H730ABxxQ"]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H730IBxxQ"]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H730VBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H730ZBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H733VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H733ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H735AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H735IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H735RGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H735VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H735ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H742AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742BGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742XGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742VIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H742ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, CAN=true}
+#     uC.PERIPH["STM32H743AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743BGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743VGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743XGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743VIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H743ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H745BGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H745IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H745XGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H745ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H745BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H745IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H745XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H745ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747AGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747BGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747XGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747ZGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H747ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H750IBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H750VBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H750XBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H750ZBxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H753AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H753BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H753IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H753VIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H753XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H753ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H755BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H755IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H755XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H755ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H757AIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H757BIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H757IIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H757XIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
+#     uC.PERIPH["STM32H757ZIxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, ETH=true, LTDC=true, CAN=true}
 #     uC.PERIPH["STM32H7A3AGxxQ"]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, LTDC=true}
 #     uC.PERIPH["STM32H7A3IGxx" ]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, LTDC=true}
 #     uC.PERIPH["STM32H7A3IGxxQ"]={GPIO=true, CLK=true, AFM=true, DMA=true, UART=true, I2C=true, SDMMC=true, EMI=true, LTDC=true}
@@ -692,6 +692,7 @@ include ./config/arch/$(__CPU_ARCH__)/cpu_flags.h
 #include "stm32h7/i2c_flags.h"
 #include "stm32h7/ltdc_flags.h"
 #include "stm32h7/sdmmc_flags.h"
+#include "stm32h7/can_flags.h"
 #endif
 
 #/*--

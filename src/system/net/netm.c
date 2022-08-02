@@ -233,6 +233,12 @@ static NETM_family_t get_net_family_by_name(const char *netname)
 {
         NETM_family_t family = _NETM_FAMILY__COUNT;
 
+        sys_critical_section_begin();
+        if (not netm_mutex) {
+                sys_mutex_create(KMTX_TYPE_RECURSIVE, &netm_mutex);
+        }
+        sys_critical_section_end();
+
         if (sys_mutex_lock(netm_mutex, _MAX_DELAY_MS) == 0) {
 
                 for (size_t n = 0; n < ARRAY_SIZE(net_list); n++) {

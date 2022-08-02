@@ -48,6 +48,7 @@
 #define SECS_DAY                86400
 #define SECS_YEAR               31536000
 #define YEARSIZE(year)          (is_leap_year(year) ? 366 : 365)
+#define _tmbuf                  (((_libc_app_ctx_t*)(_libc_appctx_get()))->_tmbuf)
 
 /*==============================================================================
   Local object types
@@ -715,7 +716,7 @@ struct tm *_libc_localtime_r(const time_t *timer, struct tm *tmbuf)
 //==============================================================================
 struct tm *gmtime(const time_t *timer)
 {
-        return _libc_gmtime_r(timer, &(((_libc_app_ctx_t*)(*_libc_app_ctx))->_tmbuf));
+        return _libc_gmtime_r(timer, &_tmbuf);
 }
 
 //==============================================================================
@@ -759,7 +760,7 @@ struct tm *gmtime_r(const time_t *timer, struct tm *tm)
 //==============================================================================
 struct tm *localtime(const time_t *timer)
 {
-        return _libc_localtime_r(timer, &(((_libc_app_ctx_t*)(*_libc_app_ctx))->_tmbuf));
+        return _libc_localtime_r(timer, &_tmbuf);
 }
 
 //==============================================================================

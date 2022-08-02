@@ -288,7 +288,7 @@ void _cpuctl_init(void)
         _mm_register_region(&axisram, AXISRAM_HEAP_START, AXISRAM_HEAP_SIZE, dma_cache, "AXISRAM");
 
         if (DTCM_SIZE > 0) {
-                _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, _MM_FLAG__DMA_CAPABLE, _CPUCTL_FAST_MEM);
+                _mm_register_region(&dtcm, DTCM_START, DTCM_SIZE, 0, _CPUCTL_FAST_MEM);
         }
 
         if (SRAM1_SIZE > 0) {

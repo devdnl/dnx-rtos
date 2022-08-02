@@ -104,6 +104,21 @@ enum _I2C_major {
         _I2C_NUMBER_OF_PERIPHERALS
 };
 #elif defined(ARCH_stm32f7)
+enum _I2C_major {
+        #if defined(RCC_APB1ENR_I2C1EN)
+        _I2C1,
+        #endif
+        #if defined(RCC_APB1ENR_I2C2EN)
+        _I2C2,
+        #endif
+        #if defined(RCC_APB1ENR_I2C3EN)
+        _I2C3,
+        #endif
+        #if defined(RCC_APB1ENR_I2C4EN)
+        _I2C4,
+        #endif
+        _I2C_NUMBER_OF_PERIPHERALS
+};
 #elif defined(ARCH_stm32h7)
 enum _I2C_major {
         #if defined(RCC_APB1LENR_I2C1EN)

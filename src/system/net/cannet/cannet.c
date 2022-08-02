@@ -608,6 +608,8 @@ int CANNET_socket_connect(void *ctx, CANNET_socket_t *socket, const NETM_CANNET_
                         DEBUG("[%u] socket_connect: try %i, socket [%u:%u]", try,
                               cannet->addr, socket->addr_remote, socket->port);
 
+                        cannetbuf__clear(socket->rx_buf);
+
                         err = send_connect_frame(cannet, socket, 0);
                         if (!err) {
                                 answer_t answer;
@@ -1296,6 +1298,8 @@ static int unregister_socket(cannet_t *cannet, CANNET_socket_t *socket)
                                 break;
                         }
                 }
+
+                cannetbuf__clear(socket->rx_buf);
 
                 sys_mutex_unlock(cannet->mutex);
         }

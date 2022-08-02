@@ -604,15 +604,27 @@ static int card_write_blocks_DMA(SDMMC_t *hdl, const u8_t *src, uint32_t block_a
 {
         int err = EFAULT;
 
-        _cpuctl_clean_invalidate_dcache_by_addr(const_cast(src), blocks * BLOCKSIZE);
+        bool mem_dma = sys_is_mem_dma_capable(src);
+
+        if (mem_dma) {
+                _cpuctl_clean_invalidate_dcache_by_addr(const_cast(src), blocks * BLOCKSIZE);
+        }
 
         if (SDMMC[SDMMC_1].card_type == _SDMMC_TYPE_SDCARD) {
                 #if IS_SD_USING
-                err = HAL_SD_WriteBlocks_DMA(&hdl->handle.sd, src, block_address, blocks);
+                if (mem_dma) {
+                        err = HAL_SD_WriteBlocks_DMA(&hdl->handle.sd, src, block_address, blocks);
+                } else {
+                        err = HAL_SD_WriteBlocks_IT(&hdl->handle.sd, src, block_address, blocks);
+                }
                 #endif
         } else {
                 #if IS_MMC_USING
-                err = HAL_MMC_WriteBlocks_DMA(&hdl->handle.mmc, src, block_address, blocks);
+                if (mem_dma) {
+                        err = HAL_MMC_WriteBlocks_DMA(&hdl->handle.mmc, src, block_address, blocks);
+                } else {
+                        err = HAL_MMC_WriteBlocks_IT(&hdl->handle.mmc, src, block_address, blocks);
+                }
                 #endif
         }
 
@@ -704,15 +716,27 @@ static int card_read_blocks_DMA(SDMMC_t *hdl, u8_t *dst, uint32_t block_address,
 {
         int err = EFAULT;
 
-        _cpuctl_clean_invalidate_dcache_by_addr(dst, blocks * BLOCKSIZE);
+        bool mem_dma = sys_is_mem_dma_capable(dst);
+
+        if (mem_dma) {
+                _cpuctl_clean_invalidate_dcache_by_addr(dst, blocks * BLOCKSIZE);
+        }
 
         if (SDMMC[SDMMC_1].card_type == _SDMMC_TYPE_SDCARD) {
                 #if IS_SD_USING
-                err = HAL_SD_ReadBlocks_DMA(&hdl->handle.sd, dst, block_address, blocks);
+                if (mem_dma) {
+                        err = HAL_SD_ReadBlocks_DMA(&hdl->handle.sd, dst, block_address, blocks);
+                } else {
+                        err = HAL_SD_ReadBlocks_IT(&hdl->handle.sd, dst, block_address, blocks);
+                }
                 #endif
         } else {
                 #if IS_MMC_USING
-                err = HAL_MMC_ReadBlocks_DMA(&hdl->handle.mmc, dst, block_address, blocks);
+                if (mem_dma) {
+                        err = HAL_MMC_ReadBlocks_DMA(&hdl->handle.mmc, dst, block_address, blocks);
+                } else {
+                        err = HAL_MMC_ReadBlocks_IT(&hdl->handle.mmc, dst, block_address, blocks);
+                }
                 #endif
         }
 
