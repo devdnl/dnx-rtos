@@ -111,9 +111,9 @@ int main(int argc, char *argv[])
                        "%u %s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(28)
                        "%u %s"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(39)
                        "%u.%u%%"VT100_CURSOR_BACKWARD(90)VT100_CURSOR_FORWARD(46)
-                       "%s\n",
+                       "%s (%s)\n",
                        mnt.mnt_fsname, dtotal, unit, dfree, unit,
-                       percent / 10, percent % 10, mnt.mnt_dir);
+                       percent / 10, percent % 10, mnt.mnt_dir, mnt.mnt_src);
         }
 
         return EXIT_SUCCESS;

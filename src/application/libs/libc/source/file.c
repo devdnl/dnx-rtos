@@ -546,6 +546,7 @@ int _libc_fseek(FILE *file, int64_t offset, int mode)
                 if (seek < 0) {
                         return -1;
                 } else {
+                        file->flag.eof = false;
                         return 0;
                 }
 

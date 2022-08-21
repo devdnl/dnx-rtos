@@ -84,6 +84,7 @@ drivers configuration, and starting needed applications/daemons.
 \li \subpage page-drivers
 
 \section sec-drivers Drivers
+\li \subpage drv-fbridge
 \li \subpage drv-sdmmc
 \li \subpage drv-ltdc
 \li \subpage drv-timenc

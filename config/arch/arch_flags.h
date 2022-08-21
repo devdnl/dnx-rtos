@@ -1120,6 +1120,15 @@ __ENABLE_LTDC__=_NO_
 __ENABLE_SDMMC__=_NO_
 #*/
 
+#/*--
+# this:PutWidgets("FBRIDGE")
+# this:SetToolTip("File Bridge")
+#--*/
+#define __ENABLE_FBRIDGE__ _NO_
+#/*
+__ENABLE_FBRIDGE__=_NO_
+#*/
+
 #// MODULE LIST END
 #//-----------------------------------------------------------------------------
 #/*-- save current configuration if CPU was changed

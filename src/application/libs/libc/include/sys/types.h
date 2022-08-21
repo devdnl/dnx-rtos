@@ -205,6 +205,7 @@ struct timespec {
 struct mntent {
         const char *mnt_fsname; //!< Device or server for file system
         const char *mnt_dir;    //!< Directory mounted on
+        const char *mnt_src;    //!< Source path
         u64_t       mnt_total;  //!< Device total size in bytes
         u64_t       mnt_free;   //!< Device free space in bytes
 };

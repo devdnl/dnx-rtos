@@ -48,6 +48,7 @@
   Local types, enums definitions
 ==============================================================================*/
 typedef struct FS_entry {
+        const char         *source_path;
         const char         *mount_point;
         struct FS_entry    *parent;
         void               *handle;
@@ -234,7 +235,7 @@ int _vfs_mount(const struct vfs_path   *src_path,
                 _kfree(_MM_KRN, cast(void**, &cwd_mount_point));
         }
 
-        if (cwd_src_path) {
+        if (err && cwd_src_path) {
                 _kfree(_MM_KRN, cast(void**, &cwd_src_path));
         }
 
@@ -313,6 +314,7 @@ int _vfs_getmntentry(int seek, struct mntent *mntent)
 
         if (!err) {
                 mntent->mnt_dir   = fs->mount_point;
+                mntent->mnt_src   = fs->source_path;
                 mntent->mnt_free  = 0;
                 mntent->mnt_total = 0;
 
@@ -1370,8 +1372,13 @@ static int new_FS_entry(FS_entry_t         *parent_FS,
         if (!err) {
                 err = fs_interface->fs_init(&new_FS->handle, fs_src_file, opts);
                 if (!err) {
+                        if (isstreq(fs_src_file, "/" )) {
+                                fs_src_file = "-";
+                        }
+
                         new_FS->interface     = fs_interface;
                         new_FS->mount_point   = fs_mount_point;
+                        new_FS->source_path   = fs_src_file;
                         new_FS->parent        = parent_FS;
                         new_FS->children_cnt  = 0;
                         *fs_entry             = new_FS;
@@ -1410,6 +1417,10 @@ static int delete_FS_entry(FS_entry_t *this)
 
                         if (this->mount_point) {
                                 _kfree(_MM_KRN, cast(void**, &this->mount_point));
+                        }
+
+                        if (this->source_path) {
+                                _kfree(_MM_KRN, cast(void**, &this->source_path));
                         }
 
                         _kfree(_MM_KRN, cast(void**, &this));
