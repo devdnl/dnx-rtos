@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
                                 if (stat(dirent->d_name, &st) == 0) {
 
                                         const char *type;
-                                        switch (S_IFMT(st.st_mode)) {
+                                        switch (st.st_mode & S_IFMT) {
                                         case S_IFDIR:  type = VT100_FONT_COLOR_LIGHT_BLUE"d"; break;
                                         case S_IFDEV:  type = VT100_FONT_COLOR_MAGENTA"c";    break;
                                         case S_IFLNK:  type = VT100_FONT_COLOR_CYAN"l";       break;

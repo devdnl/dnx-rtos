@@ -5,7 +5,7 @@ Author   Daniel Zorychta
 
 Brief    Shared memory functions.
 
-         Copyright (C) 2016 Daniel Zorychta <daniel.zorychta@gmail.com>
+         Copyright (C) 2022 Daniel Zorychta <daniel.zorychta@gmail.com>
 
          This program is free software; you can redistribute it and/or modify
          it under the terms of the GNU General Public License as published by
@@ -111,9 +111,8 @@ extern "C" {
 //==============================================================================
 static inline int shmget(const char *key, size_t size)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_SHMCREATE, &r, key, &size);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_SHMCREATE, key, &size);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -173,9 +172,8 @@ static inline int shmget(const char *key, size_t size)
 //==============================================================================
 static inline int shmrm(const char *key)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_SHMDESTROY, &r, key);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_SHMDESTROY, key);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -230,9 +228,8 @@ static inline int shmrm(const char *key)
 //==============================================================================
 static inline int shmat(const char *key, void **mem, size_t *size)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_SHMATTACH, &r, key, mem, &size);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_SHMATTACH, key, mem, &size);
+        return err ? -1 : 0;
 }
 
 //==============================================================================
@@ -297,9 +294,8 @@ static inline int shmat(const char *key, void **mem, size_t *size)
 //==============================================================================
 static inline int shmdt(const char *key)
 {
-        int r = -1;
-        _libc_syscall(_LIBC_SYS_SHMDETACH, &r, key);
-        return r;
+        int err = _libc_syscall(_LIBC_SYS_SHMDETACH, key);
+        return err ? -1 : 0;
 }
 
 #ifdef __cplusplus

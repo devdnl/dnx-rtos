@@ -393,7 +393,7 @@ int _vfs_mkdir(const struct vfs_path *path, mode_t mode)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-                        err = fs->interface->fs_mkdir(fs->handle, external_path, S_IPMT(mode));
+                        err = fs->interface->fs_mkdir(fs->handle, external_path, mode & S_IPMT);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -428,7 +428,7 @@ int _vfs_mkfifo(const struct vfs_path *path, mode_t mode)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-                        err = fs->interface->fs_mkfifo(fs->handle, external_path, S_IPMT(mode));
+                        err = fs->interface->fs_mkfifo(fs->handle, external_path, mode & S_IPMT);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));
@@ -720,7 +720,7 @@ int _vfs_chmod(const struct vfs_path *path, mode_t mode)
                 FS_entry_t *fs;
                 err = get_path_base_FS(cwd_path, &external_path, &fs);
                 if (!err) {
-                        err = fs->interface->fs_chmod(fs->handle, external_path, S_IPMT(mode));
+                        err = fs->interface->fs_chmod(fs->handle, external_path, mode & S_IPMT);
                 }
 
                 _kfree(_MM_KRN, cast(void**, &cwd_path));

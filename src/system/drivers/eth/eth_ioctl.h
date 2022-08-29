@@ -231,6 +231,22 @@ typedef struct {
 } ETH_packet_t;
 
 /**
+ * Type represent speed.
+ */
+enum ETH_speed {
+        ETH_SPEED__10Mbps,
+        ETH_SPEED__100Mbps,
+};
+
+/**
+ * Type represent duplex mode.
+ */
+enum ETH_duplex {
+        ETH_DUPLEX__HALF,/**< ETH_DUPLEX__HALF */
+        ETH_DUPLEX__FULL,/**< ETH_DUPLEX__FULL */
+};
+
+/**
  * Type represent ethernet status.
  */
 typedef struct {
@@ -246,16 +262,8 @@ typedef struct {
                 ETH_LINK_STATUS__PHY_ERROR,          /*!< PHY error.*/
         } link_status;
 
-        enum ETH_speed {
-                ETH_SPEED__10Mbps,
-                ETH_SPEED__100Mbps,
-        } speed;
-
-        enum ETH_duplex {
-                ETH_DUPLEX__HALF,
-                ETH_DUPLEX__FULL,
-        } duplex;
-
+        enum ETH_speed speed;
+        enum ETH_duplex duplex;
         bool  configured;
         u8_t  MAC[6];
         u64_t rx_packets;

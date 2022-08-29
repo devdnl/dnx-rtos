@@ -129,15 +129,15 @@ extern "C" {
 #define S_ISGID                                 0002000    /* set group id on execution */
 #define S_ISVTX                                 0001000    /* save swapped text even after use */
 
-#define S_IPMT(mode_t_m)                        ((mode_t_m) & 000777)
-#define S_IFMT(mode_t_m)                        ((mode_t_m) & 070000)
+#define S_IPMT                                  (000777)
+#define S_IFMT                                  (070000)
 
-#define S_ISREG(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFREG)
-#define S_ISDIR(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFDIR)
-#define S_ISDEV(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFDEV)
-#define S_ISLNK(mode_t_m)                       (S_IFMT(mode_t_m) == S_IFLNK)
-#define S_ISPROG(mode_t_m)                      (S_IFMT(mode_t_m) == S_IFPROG)
-#define S_ISFIFO(mode_t_m)                      (S_IFMT(mode_t_m) == S_IFIFO)
+#define S_ISREG(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFREG)
+#define S_ISDIR(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFDIR)
+#define S_ISDEV(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFDEV)
+#define S_ISLNK(mode_t_m)                       ((mode_t_m & S_IFMT) == S_IFLNK)
+#define S_ISPROG(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFPROG)
+#define S_ISFIFO(mode_t_m)                      ((mode_t_m & S_IFMT) == S_IFIFO)
 
 #define S_IFREG                                 0000000
 #define S_IFDIR                                 0010000

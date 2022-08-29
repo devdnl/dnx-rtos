@@ -147,6 +147,16 @@ int vsscanf(const char *str, const char *format, va_list args)
                                         int64_t v = value * sign;
 
                                         switch (long_ctr) {
+                                        case -2: {
+                                                int8_t *var = va_arg(args, int8_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case -1: {
+                                                int16_t *var = va_arg(args, int16_t*);
+                                                *var = v;
+                                                break;
+                                        }
                                         default:
                                         case 0: {
                                                 int *var = va_arg(args, int*);
@@ -212,6 +222,16 @@ int vsscanf(const char *str, const char *format, va_list args)
                                         int64_t v = value * sign;
 
                                         switch (long_ctr) {
+                                        case -2: {
+                                                int8_t *var = va_arg(args, int8_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case -1: {
+                                                int16_t *var = va_arg(args, int16_t*);
+                                                *var = v;
+                                                break;
+                                        }
                                         default:
                                         case 0: {
                                                 int *var = va_arg(args, int*);
@@ -260,6 +280,16 @@ int vsscanf(const char *str, const char *format, va_list args)
                                         int64_t v = value * sign;
 
                                         switch (long_ctr) {
+                                        case -2: {
+                                                int8_t *var = va_arg(args, int8_t*);
+                                                *var = v;
+                                                break;
+                                        }
+                                        case -1: {
+                                                int16_t *var = va_arg(args, int16_t*);
+                                                *var = v;
+                                                break;
+                                        }
                                         default:
                                         case 0: {
                                                 int *var = va_arg(args, int*);
@@ -335,6 +365,12 @@ int vsscanf(const char *str, const char *format, va_list args)
 
                         case 'l':
                                 long_ctr++;
+                                chr = *format++;
+                                goto loop;
+                                break;
+
+                        case 'h':
+                                long_ctr--;
                                 chr = *format++;
                                 goto loop;
                                 break;

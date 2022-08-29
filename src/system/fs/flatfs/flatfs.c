@@ -133,7 +133,7 @@ typedef struct {
  */
 typedef struct {
         kmtx_t      *mtx;
-        kfile_t        *disc;
+        kfile_t     *disc;
         llist_t     *open_files;
         bool         read_only;
         bool         force_check;
@@ -153,11 +153,20 @@ typedef struct {
 #endif
 } flatfs_t;
 
+/*
+ * Readdir specified dir entry
+ */
+typedef struct {
+        u64_t  size;            //!< File size in bytes
+        mode_t mode;            //!< File mode (protection, file type)
+        dev_t  dev;             //!< Device address (if file type is driver)
+        char   name[];          //!< File name placeholder
+} readdir_dirent_t;
+
 /*==============================================================================
   Local function prototypes
 ==============================================================================*/
-static int dir_entry_cmp(const void *a, const void *b);
-static void dir_entry_dtor(void *obj);
+static int readdir_dirent_llist_cmp(const void *a, const void *b);
 static u32_t calc_crc32(const void *buf, size_t buflen, u32_t init);
 static int block_read(flatfs_t *hdl, u32_t address, void *dst, size_t blocks);
 static int block_write(flatfs_t *hdl, u32_t address, const void *src, size_t blocks);
@@ -436,7 +445,7 @@ API_FS_OPEN(flatfs, void *fs_handle, void **fhdl, fpos_t *fpos, const char *path
                         /*
                          * Opened block should be a regular file
                          */
-                        if (S_IFMT(blk->mode) == S_IFREG) {
+                        if (S_ISREG(blk->mode)) {
 
                                 if (!err) {
                                         if (flags & O_TRUNC) {
@@ -997,66 +1006,65 @@ API_FS_OPENDIR(flatfs, void *fs_handle, const char *path, kdir_t *dir)
 
                 const char *dir_name = path;
                 size_t dir_name_len = strlen(path);
+                llist_t *list = NULL;
 
                 if (not err) {
-                        llist_t *list;
-                        err = sys_llist_create(dir_entry_cmp, dir_entry_dtor, &list);
+                        err = sys_llist_create(readdir_dirent_llist_cmp, NULL, &list);
+                }
 
-                        if (not err) {
-                                dir->d_hdl = list;
+                if (not err) {
+                        dir->d_hdl = list;
 
-                                foreach_file_node(hdl) {
+                        foreach_file_node(hdl) {
 
-                                        u32_t mask = (1 << bit);
-                                        if (hdl->bitmap.word[i] & mask) {
-
-                                                DBG("diropen() node: %lu", node); // TEST
-
-                                                blk_file_t *blk = cast(blk_file_t*, hdl->block[0]);
-                                                err = file_block_read(hdl, node, blk);
-                                                if (!err) {
-
-                                                        if (strncmp(blk->name, dir_name, dir_name_len) == 0) {
-
-                                                                sys_strlcpy(hdl->tmp_path, &blk->name[dir_name_len], sizeof(hdl->tmp_path));
-                                                                char *slash = strchr(hdl->tmp_path, '/');
-                                                                if (slash) *slash = '\0';
-
-                                                                size_t len = strsize(hdl->tmp_path);
-                                                                char *name;
-                                                                err = sys_zalloc(len, cast(void**, &name));
-                                                                if (!err) {
-                                                                        sys_strlcpy(name, hdl->tmp_path, len);
-
-                                                                        dirent_t entry;
-                                                                        entry.d_name =  name;
-                                                                        entry.dev = 0;
-                                                                        entry.mode = blk->mode;
-                                                                        entry.size = blk->size;
-
-                                                                        err = sys_llist_push_emplace_back(list, sizeof(entry), &entry) ? 0 : ENOMEM;
-                                                                        if (not err) {
-                                                                                sys_llist_unique(list);
-                                                                        }
-                                                                }
-                                                        }
-                                                }
-                                        }
-
-                                        if (err) {
-                                                goto finish;
-                                        }
+                                u32_t mask = (1 << bit);
+                                if ((hdl->bitmap.word[i] & mask) == 0) {
+                                        continue;
                                 }
 
-                                finish:
+                                DBG("diropen() node: %lu", node);
+
+                                blk_file_t *blk = cast(blk_file_t*, hdl->block[0]);
+                                err = file_block_read(hdl, node, blk);
+                                if (err) {
+                                        goto finish;
+                                }
+
+                                if (strncmp(blk->name, dir_name, dir_name_len) != 0) {
+                                        continue;
+                                }
+
+                                sys_strlcpy(hdl->tmp_path, &blk->name[dir_name_len], sizeof(hdl->tmp_path));
+                                char *slash = strchr(hdl->tmp_path, '/');
+                                if (slash) *slash = '\0';
+
+                                readdir_dirent_t *entry;
+                                size_t name_sz  = strsize(hdl->tmp_path);
+                                size_t entry_sz = sizeof(*entry) + name_sz;
+
+                                err = sys_zalloc(entry_sz, cast(void**, &entry));
+                                if (err) {
+                                        goto finish;
+                                }
+
+                                entry->dev = 0;
+                                entry->mode = blk->mode;
+                                entry->size = blk->size;
+                                sys_strlcpy(entry->name, hdl->tmp_path, name_sz);
+
+                                err = sys_llist_push_back(list, entry) ? 0 : ENOMEM;
                                 if (not err) {
-
-                                        dir->d_seek = 0;
-                                        dir->d_items = sys_llist_size(list);
-                                        dir->dirent.d_name = NULL;
-                                } else {
-                                        sys_llist_destroy(dir->d_hdl);
+                                        sys_llist_unique(list);
                                 }
+                        }
+
+                        finish:
+                        if (not err) {
+                                dir->d_seek = 0;
+                                dir->d_items = sys_llist_size(list);
+                                dir->dirent.d_name = NULL;
+                        } else {
+                                sys_llist_destroy(dir->d_hdl);
                         }
                 }
 
@@ -1105,12 +1113,12 @@ API_FS_READDIR(flatfs, void *fs_handle, kdir_t *dir)
         if (!err) {
                 err = ENOENT;
 
-                llist_iterator_t i = sys_llist_iterator(dir->d_hdl);
-
-                for (dirent_t *entry = sys_llist_range(&i, dir->d_seek, dir->d_seek);
-                     entry; entry = sys_llist_iterator_next(&i)) {
-
-                        dir->dirent = *entry;
+                readdir_dirent_t *entry = sys_llist_at(dir->d_hdl, dir->d_seek);
+                if (entry) {
+                        dir->dirent.d_name = entry->name;
+                        dir->dirent.dev    = entry->dev;
+                        dir->dirent.mode   = entry->mode;
+                        dir->dirent.size   = entry->size;
                         dir->d_seek++;
                         err = 0;
                 }
@@ -1147,7 +1155,7 @@ API_FS_REMOVE(flatfs, void *fs_handle, const char *path)
 
                 err = node_find(hdl, path, MAX_FILE_NAME_LEN, FIND_ANY_NODE, file, &df_node_num);
                 if (not err) {
-                        if (S_IFMT(file->mode) == S_IFDIR) {
+                        if (S_ISDIR(file->mode)) {
 
                                 sys_strlcpy(hdl->tmp_path, path, sizeof(hdl->tmp_path));
                                 sys_strlcat(hdl->tmp_path, "/", sizeof(hdl->tmp_path));
@@ -1255,7 +1263,7 @@ API_FS_CHMOD(flatfs, void *fs_handle, const char *path, mode_t mode)
 
                 err = node_find(hdl, path, MAX_FILE_NAME_LEN, FIND_ANY_NODE, file, &node);
                 if (!err) {
-                        file->mode = S_IPMT(file->mode) | S_IPMT(mode);
+                        file->mode = (file->mode & S_IPMT) | (mode & S_IPMT);
                         err = file_block_write(hdl, node, file);
                 }
 
@@ -1352,25 +1360,22 @@ API_FS_SYNC(flatfs, void *fs_handle)
  * @return Compare result.
  */
 //==============================================================================
-static int dir_entry_cmp(const void *a, const void *b)
+static int readdir_dirent_llist_cmp(const void *a, const void *b)
 {
-        const dirent_t *entry_a = a;
-        const dirent_t *entry_b = b;
+        readdir_dirent_t *entry_a = const_cast(a);
+        readdir_dirent_t *entry_b = const_cast(b);
 
-        return strcmp(entry_a->d_name, entry_b->d_name);
-}
+        size_t n = strcmp(entry_a->name, entry_b->name);
 
-//==============================================================================
-/**
- * @brief  Dir entry destructor.
- *
- * @param  obj          object to destroy
- */
-//==============================================================================
-static void dir_entry_dtor(void *obj)
-{
-        const dirent_t *entry = obj;
-        sys_free((void*)&entry->d_name);
+        if (n == 0) {
+                if (S_ISDIR(entry_a->mode)) {
+                        entry_b->mode = entry_a->mode;
+                } else if (S_ISDIR(entry_b->mode)) {
+                        entry_a->mode = entry_b->mode;
+                }
+        }
+
+        return n;
 }
 
 //==============================================================================
@@ -1732,7 +1737,7 @@ static int node_find(flatfs_t *hdl, const char *name, size_t name_len, mode_t mo
 
                         if (check_file_block_coherency(hdl, blk) == 0) {
                                 if (    (strncmp(name, blk->name, name_len) == 0)
-                                    and (  (S_IFMT(blk->mode) == mode)
+                                    and (  ((blk->mode & S_IFMT) == mode)
                                         or (mode == FIND_ANY_NODE)) ) {
 
                                         DBG("found file '%s' in node %u in block %u",

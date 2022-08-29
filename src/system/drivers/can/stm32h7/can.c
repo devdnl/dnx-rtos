@@ -343,7 +343,7 @@ API_MOD_WRITE(CAN,
                 err = send_msg(hdl, msg, timeout_ms);
 
                 if (!err) {
-                        *wrcnt += sizeof(CAN_msg_t) + msg->data_length;
+                        *wrcnt += sizeof(CAN_msg_t);
                 }
         }
 

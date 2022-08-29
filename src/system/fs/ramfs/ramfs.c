@@ -259,7 +259,7 @@ API_FS_MKDIR(ramfs, void *fs_handle, const char *path, mode_t mode)
 
                                 node_t *child;
                                 err = new_node(hdl, parent, child_name,
-                                               S_IPMT(mode) | S_IFDIR,
+                                               (mode & S_IPMT) | S_IFDIR,
                                                NULL, &child);
                                 if (err) {
                                         sys_free(cast(void**, &child_name));
@@ -305,7 +305,7 @@ API_FS_MKFIFO(ramfs, void *fs_handle, const char *path, mode_t mode)
 
                                 node_t *child;
                                 err = new_node(hdl, parent, child_name,
-                                               S_IPMT(mode) | S_IFIFO,
+                                               (mode & S_IPMT) | S_IFIFO,
                                                NULL, &child);
                                 if (err) {
                                         sys_free(cast(void**, &child_name));
@@ -562,7 +562,7 @@ API_FS_CHMOD(ramfs, void *fs_handle, const char *path, mode_t mode)
                 node_t *target;
                 err = get_node(path, &hdl->root_dir, 0, NULL, &target);
                 if (!err) {
-                        target->mode = S_IFMT(target->mode) | S_IPMT(mode);
+                        target->mode = (target->mode & S_IFMT) | (mode & S_IPMT);
                 }
 
                 sys_mutex_unlock(hdl->resource_mtx);

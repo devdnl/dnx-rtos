@@ -337,7 +337,7 @@ static bool command_hint(void)
                                                 } else  {
                                                         strlcpy(line, dirent->d_name, PROMPT_LINE_LEN - (global->line - line));
 
-                                                        if (S_IFMT(dirent->mode) == S_IFDIR) {
+                                                        if (S_ISDIR(dirent->mode)) {
                                                                 strlcat(global->line, "/", PROMPT_LINE_LEN);
                                                         }
 

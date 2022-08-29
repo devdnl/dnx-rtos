@@ -244,16 +244,16 @@ extern "C" {
 #define NET_INET_IPv4_BROADCAST                 NET_INET_IPv4(255,255,255,255)
 
 /** Macro gets part <i>a</i> of INET family network address. */
-#define NET_INET_IPv4_a(ip)                     ((ip >> 24) & 0xFF)
+#define NET_INET_IPv4_a(ip)                     ((uint8_t)((ip >> 24) & 0xFF))
 
 /** Macro gets part <i>b</i> of INET family network address. */
-#define NET_INET_IPv4_b(ip)                     ((ip >> 16) & 0xFF)
+#define NET_INET_IPv4_b(ip)                     ((uint8_t)((ip >> 16) & 0xFF))
 
 /** Macro gets part <i>c</i> of INET family network address. */
-#define NET_INET_IPv4_c(ip)                     ((ip >> 8)  & 0xFF)
+#define NET_INET_IPv4_c(ip)                     ((uint8_t)((ip >> 8)  & 0xFF))
 
 /** Macro gets part <i>d</i> of INET family network address. */
-#define NET_INET_IPv4_d(ip)                     ((ip >> 0)  & 0xFF)
+#define NET_INET_IPv4_d(ip)                     ((uint8_t)((ip >> 0)  & 0xFF))
 
 /*------------------------------------------------------------------------------
   SIPC NETWORK FAMILY

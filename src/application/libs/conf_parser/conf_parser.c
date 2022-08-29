@@ -47,6 +47,7 @@ static const char *pair_get_key(const pair_t *pair);
 static const char *pair_get_value(const pair_t *pair);
 static char *skip_leading_spaces(char *str);
 static void remove_trailing_spaces(char *str);
+static void clear_conf(conf_parser_t *this);
 
 /*==============================================================================
   Local objects
@@ -104,14 +105,7 @@ conf_parser_t *conf_parser__new(const char *path)
 //==============================================================================
 void conf_parser__delete(conf_parser_t *this)
 {
-        pair_t *pair = this->pair;
-
-        while (pair) {
-                pair_t *next = pair->next;
-                free(pair);
-                pair = next;
-        }
-
+        clear_conf(this);
         free(this);
 }
 
@@ -133,6 +127,8 @@ int conf_parser__load_file(conf_parser_t *this, const char *path)
         if (not fp) {
                 return conf_parser_status__file_error;
         }
+
+        clear_conf(this);
 
         size_t n = 0;
 
@@ -168,6 +164,8 @@ int conf_parser__load_file(conf_parser_t *this, const char *path)
 int conf_parser__load_buffer(conf_parser_t *this, const char *buf, size_t bufsz)
 {
         if (not this and not buf and not bufsz) return conf_parser_status__arg_error;
+
+        clear_conf(this);
 
         size_t n = 0;
 
@@ -544,6 +542,26 @@ static const char *pair_get_key(const pair_t *pair)
 static const char *pair_get_value(const pair_t *pair)
 {
         return &pair->data[pair->value_offset];
+}
+
+//==============================================================================
+/**
+ * @brief  Clear configuration.
+ *
+ * @param  this         parser instance
+ */
+//==============================================================================
+static void clear_conf(conf_parser_t *this)
+{
+        pair_t *pair = this->pair;
+
+        while (pair) {
+                pair_t *next = pair->next;
+                free(pair);
+                pair = next;
+        }
+
+        this->pair = NULL;
 }
 
 /*==============================================================================

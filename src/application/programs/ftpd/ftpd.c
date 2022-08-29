@@ -144,8 +144,11 @@ static int send_file_list(struct thread *self, SOCKET *socket)
         int n = 0;
 
         struct stat fsta;
-        if (stat(self->cmd_args, &fsta) == 0) {
+        if (stat(self->cmd_args, &fsta) != 0) {
+                fsta.st_mode = S_IFDIR;
+        }
 
+        if (not S_ISDIR(fsta.st_mode)) {
                 char *name = malloc(strsize(self->cmd_args));
                 if (name) {
                         strcpy(name, self->cmd_args);
